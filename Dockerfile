@@ -39,8 +39,14 @@ RUN chmod +x /usr/local/bin/tailwindcss \
 # Placeholder settings for `collectstatic` only — it never opens the database
 # and needs no real secrets. The runtime container gets its actual
 # SECRET_KEY/DEBUG/ALLOWED_HOSTS from the environment; nothing is baked in.
+#
+# The placeholder still has to clear `MIN_SECRET_KEY_LENGTH` in core/settings,
+# because this step runs with DEBUG=False and that guard does not know the
+# difference between a build and a deployment. Padding it is enough — the
+# value never reaches the runtime image, let alone signs anything.
 RUN mkdir -p /app/data \
-    && SECRET_KEY=build-time-placeholder DEBUG=False ALLOWED_HOSTS=localhost \
+    && SECRET_KEY=build-time-placeholder-not-used-at-runtime-0000000000 \
+       DEBUG=False ALLOWED_HOSTS=localhost \
        uv run python manage.py collectstatic --noinput
 
 
@@ -67,4 +73,18 @@ VOLUME ["/app/data"]
 EXPOSE 8000
 
 # Apply migrations, then hand off to gunicorn.
-CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3"]
+#
+# `gthread` rather than the default `sync` worker. A sync worker serves one
+# connection at a time and blocks in recv() until a whole request arrives, so
+# a browser's speculative pre-connect — Chrome opens sockets before it has
+# anything to send — ties up an entire worker until the timeout expires and
+# the arbiter SIGKILLs it, logging `WORKER TIMEOUT ... (no URI read)`. A
+# handful of those idle sockets is enough to stall every worker while real
+# requests wait in the backlog. Threads absorb idle connections without
+# burning a process each.
+#
+# Two processes instead of three also cuts SQLite write contention (see the
+# DATABASES OPTIONS in core/settings.py); concurrency comes from the threads.
+# `--access-logfile -` puts request lines on stdout alongside the tracebacks
+# the LOGGING config now emits.
+CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn core.wsgi:application --bind 0.0.0.0:8000 --worker-class gthread --workers 2 --threads 4 --timeout 60 --graceful-timeout 30 --access-logfile - --error-logfile -"]
