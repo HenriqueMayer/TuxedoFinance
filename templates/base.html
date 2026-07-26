@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+{% comment %}
+CashFlow base layout (PRD §9 — Design System).
+
+Every page in the project MUST extend this template and reuse the partials
+below instead of hand-rolling one-off markup (PRD risk R2).
+
+Blocks:
+  {% block title %}   — <title> content, defaults to "CashFlow".
+  {% block content %}  — page body, rendered inside <main>.
+
+Partials included here:
+  partials/navbar_public.html — shown to anonymous visitors.
+  partials/navbar_app.html    — shown to authenticated users.
+  partials/messages.html      — renders Django `messages` with semantic colors.
+  partials/footer.html        — shared footer.
+
+Design tokens (PRD §9.1): dark bg-slate-950, surfaces bg-slate-900/60 +
+backdrop-blur, borders border-slate-800, primary gradient
+from-indigo-500 via-violet-500 to-fuchsia-500, Income emerald-400,
+Expense rose-400, Investment amber-400, primary text slate-100,
+secondary text slate-400, focus ring ring-indigo-500. Font: Inter
+(font-sans). Monetary values: tabular-nums font-semibold.
+
+Production static strategy (PRD §10.6): in development (DEBUG=True) Tailwind
+loads from the Play CDN with zero build step. In production (DEBUG=False)
+the same utility classes are served from the compiled, WhiteNoise-served
+`css/output.css` bundle — built from `tailwind/input.css` with the
+standalone Tailwind CLI (see Dockerfile). `DEBUG` is exposed to every
+template by `core.context_processors.debug_flag`.
+{% endcomment %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CashFlow{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    {% if DEBUG %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    {% else %}
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    {% endif %}
+</head>
+<body class="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-100 antialiased">
+    {% if request.user.is_authenticated %}
+        {% include 'partials/navbar_app.html' %}
+    {% else %}
+        {% include 'partials/navbar_public.html' %}
+    {% endif %}
+
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+        {% include 'partials/messages.html' %}
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include 'partials/footer.html' %}
+</body>
+</html>

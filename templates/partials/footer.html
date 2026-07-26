@@ -1,0 +1,15 @@
+{% comment %}
+Shared footer, included automatically by base.html on every screen.
+{% endcomment %}
+<footer class="border-t border-slate-800 bg-slate-950">
+    <div class="mx-auto flex w-full max-w-7xl flex-col items-center gap-3 px-4 py-8 text-center sm:flex-row sm:justify-between sm:gap-4 sm:text-left sm:px-6 lg:px-8">
+        <div class="flex items-center gap-2">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-xs font-bold text-white">
+                CF
+            </span>
+            <span class="text-sm font-semibold text-slate-200">CashFlow</span>
+        </div>
+        <p class="text-sm text-slate-400">Personal finance tracking, simplified.</p>
+        <p class="text-sm text-slate-500">&copy; {% now 'Y' %} <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300">HenriqueMayer</a>. All rights reserved.</p>
+    </div>
+</footer>

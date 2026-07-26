@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% comment %}
+Dashboard (PRD FR05, FR15, §8.5, Sprint 7). Stat cards, a forward-looking
+outlook table, and recent transactions for the logged-in user only
+(`DashboardIndexView.get_context_data`). Balance uses a neutral/primary tone
+(no single semantic color owns it); Income is emerald, Expenses rose,
+Investments amber, per PRD §9.1.
+
+Month navigation is a plain `?month=YYYY-MM` link pair — no JS, same
+convention as the transaction list filter.
+{% endcomment %}
+
+{% block title %}Dashboard — CashFlow{% endblock %}
+
+{% block content %}
+{% url 'transactions:create' as create_url %}
+<div class="space-y-8">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-100">Dashboard</h1>
+            <p class="mt-1 text-sm text-slate-400">Your cash flow at a glance, {{ request.user.username }}.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'dashboard:reports' %}"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                Reports
+            </a>
+            <a href="{{ create_url }}"
+               class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                New Transaction
+            </a>
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+            <a href="?month={{ previous_month_param }}" aria-label="Previous month"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                &larr;
+            </a>
+            <div>
+                <p class="text-lg font-semibold text-slate-100">{{ selected_month_date|date:'F Y' }}</p>
+                <p class="text-sm text-slate-400">
+                    {% if is_current_month %}Current month
+                    {% elif is_future_month %}Projection
+                    {% else %}Past month{% endif %}
+                </p>
+            </div>
+            <a href="?month={{ next_month_param }}" aria-label="Next month"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                &rarr;
+            </a>
+        </div>
+        {% if not is_current_month %}
+            <a href="{% url 'dashboard:index' %}"
+               class="rounded text-sm font-medium text-indigo-400 transition hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                Back to this month
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {% with current_balance_fmt=current_balance|floatformat:2 projected_balance_fmt=projected_balance|floatformat:2 income_month_fmt=income_month|floatformat:2 expense_month_fmt=expense_month|floatformat:2 investment_month_fmt=investment_month|floatformat:2 balance_month_fmt=balance_month|floatformat:2 %}
+            {% include 'partials/stat_card.html' with label='Current Balance' value=CURRENCY_SYMBOL|add:' '|add:current_balance_fmt %}
+            {% include 'partials/stat_card.html' with label='Income (month)' value=CURRENCY_SYMBOL|add:' '|add:income_month_fmt value_class='text-emerald-400' %}
+            {% include 'partials/stat_card.html' with label='Expenses (month)' value=CURRENCY_SYMBOL|add:' '|add:expense_month_fmt value_class='text-rose-400' %}
+            {% include 'partials/stat_card.html' with label='Investments (month)' value=CURRENCY_SYMBOL|add:' '|add:investment_month_fmt value_class='text-amber-400' %}
+            {% include 'partials/stat_card.html' with label='Balance (month)' value=CURRENCY_SYMBOL|add:' '|add:balance_month_fmt %}
+            {% include 'partials/stat_card.html' with label='Projected (end of month)' value=CURRENCY_SYMBOL|add:' '|add:projected_balance_fmt %}
+        {% endwith %}
+    </div>
+
+    <div class="space-y-4">
+        <div>
+            <h2 class="text-xl font-semibold text-slate-100">Outlook</h2>
+            <p class="mt-1 text-sm text-slate-400">
+                The next months, projected from your fixed transactions and open installment plans.
+                Change a fixed transaction and every month after it follows.
+            </p>
+        </div>
+
+        <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60">
+            <table class="w-full min-w-[40rem] text-sm">
+                <thead>
+                    <tr class="border-b border-slate-800 text-left text-slate-400">
+                        <th scope="col" class="px-5 py-3 font-medium">Month</th>
+                        <th scope="col" class="px-5 py-3 text-right font-medium">Income</th>
+                        <th scope="col" class="px-5 py-3 text-right font-medium">Expenses</th>
+                        <th scope="col" class="px-5 py-3 text-right font-medium">Investments</th>
+                        <th scope="col" class="px-5 py-3 text-right font-medium">Net</th>
+                        <th scope="col" class="px-5 py-3 text-right font-medium">Projected balance</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800">
+                    {% for row in outlook %}
+                        <tr class="{% if row.is_selected_month %}bg-slate-800/40{% endif %}">
+                            <td class="whitespace-nowrap px-5 py-3 font-medium text-slate-100">
+                                {{ row.date|date:'M Y' }}
+                                {% if row.is_current_month %}
+                                    <span class="ml-1.5 inline-flex items-center rounded-full border border-slate-700 px-2 py-0.5 text-xs font-medium text-slate-400">
+                                        Now
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-5 py-3 text-right tabular-nums text-emerald-400">{{ CURRENCY_SYMBOL }} {{ row.income|floatformat:2 }}</td>
+                            <td class="px-5 py-3 text-right tabular-nums text-rose-400">{{ CURRENCY_SYMBOL }} {{ row.expenses|floatformat:2 }}</td>
+                            <td class="px-5 py-3 text-right tabular-nums text-amber-400">{{ CURRENCY_SYMBOL }} {{ row.investments|floatformat:2 }}</td>
+                            <td class="px-5 py-3 text-right font-semibold tabular-nums {% if row.balance < 0 %}text-rose-400{% else %}text-slate-100{% endif %}">
+                                {{ CURRENCY_SYMBOL }} {{ row.balance|floatformat:2 }}
+                            </td>
+                            <td class="px-5 py-3 text-right font-semibold tabular-nums {% if row.projected_balance < 0 %}text-rose-400{% else %}text-slate-100{% endif %}">
+                                {{ CURRENCY_SYMBOL }} {{ row.projected_balance|floatformat:2 }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-slate-100">Recent transactions</h2>
+            <a href="{% url 'transactions:list' %}" class="rounded text-sm font-medium text-indigo-400 transition hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                View all
+            </a>
+        </div>
+
+        {% if recent_transactions %}
+            <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60">
+                <ul class="divide-y divide-slate-800">
+                    {% for transaction in recent_transactions %}
+                        <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="space-y-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <p class="font-medium text-slate-100">{{ transaction.title }}</p>
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
+                                        {% if transaction.transaction_type == 'INCOME' %}bg-emerald-500/10 text-emerald-400
+                                        {% elif transaction.transaction_type == 'EXPENSE' %}bg-rose-500/10 text-rose-400
+                                        {% else %}bg-amber-500/10 text-amber-400
+                                        {% endif %}">
+                                        {{ transaction.get_transaction_type_display }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-slate-400">
+                                    {{ transaction.category.name }} &middot; {{ transaction.payment_method.name }}
+                                    &middot; {{ transaction.transaction_date|date:'M j, Y' }}
+                                </p>
+                            </div>
+                            <p class="text-lg font-semibold tabular-nums
+                                {% if transaction.transaction_type == 'INCOME' %}text-emerald-400
+                                {% elif transaction.transaction_type == 'EXPENSE' %}text-rose-400
+                                {% else %}text-amber-400
+                                {% endif %}">
+                                {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}{{ CURRENCY_SYMBOL }} {{ transaction.amount|floatformat:2 }}
+                            </p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            {% include 'partials/empty_state.html' with title='No transactions yet' message='Record your first transaction to see it here and start tracking your cash flow.' cta_url=create_url cta_label='New Transaction' %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

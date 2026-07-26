@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% comment %}
+Shared create/update form for Transaction (PRD §13, Sprint 6 — 6.3.2/6.3.3).
+Renders transactions.forms.TransactionForm (already scoped to the requesting
+user, so `category`/`payment_method` only list that user's own records)
+through the shared partials/form_field.html renderer (PRD §9.4).
+{% endcomment %}
+
+{% block title %}{% if form.instance.pk %}Edit Transaction{% else %}New Transaction{% endif %} — CashFlow{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md space-y-6">
+    <h1 class="text-3xl font-bold text-slate-100">
+        {% if form.instance.pk %}Edit Transaction{% else %}New Transaction{% endif %}
+    </h1>
+
+    <form method="post" class="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="space-y-1.5">
+                {% for error in form.non_field_errors %}
+                    <p class="text-sm text-rose-400">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% include 'partials/form_field.html' with field=form.title %}
+        {% include 'partials/form_field.html' with field=form.amount %}
+        {% include 'partials/form_field.html' with field=form.transaction_type %}
+        {% include 'partials/form_field.html' with field=form.category %}
+        {% include 'partials/form_field.html' with field=form.payment_method %}
+        {% include 'partials/form_field.html' with field=form.installments %}
+        {% include 'partials/form_field.html' with field=form.transaction_date %}
+
+        <div class="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+            {{ form.is_fixed }}
+            <div>
+                <label for="{{ form.is_fixed.id_for_label }}" class="block text-sm font-medium text-slate-300">
+                    {{ form.is_fixed.label }}
+                </label>
+                {% if form.is_fixed.help_text %}
+                    <p class="text-sm text-slate-500">{{ form.is_fixed.help_text }}</p>
+                {% endif %}
+                {% for error in form.is_fixed.errors %}
+                    <p class="text-sm text-rose-400">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% include 'partials/form_field.html' with field=form.fixed_until %}
+
+        {% include 'partials/form_field.html' with field=form.notes %}
+
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                Save
+            </button>
+            <a href="{% url 'transactions:list' %}"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
