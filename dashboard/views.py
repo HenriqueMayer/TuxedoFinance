@@ -5,10 +5,32 @@ from django.utils import timezone
 from django.views.generic import TemplateView
 
 from dashboard.charts import build_bar_chart, build_line_chart
-from dashboard.services import add_months, get_account_evolution, get_dashboard_summary
+from dashboard.services import (
+    OUTLOOK_MONTHS,
+    add_months,
+    get_account_evolution,
+    get_dashboard_summary,
+)
 from transactions.models import Transaction
 
 RECENT_TRANSACTIONS_LIMIT = 5
+
+
+def _is_projectable(year, month):
+    """True when the whole dashboard window around (`year`, `month`) is representable.
+
+    The page renders more than the selected month: it links to both
+    neighbours, and `get_dashboard_summary` builds an outlook running
+    `OUTLOOK_MONTHS` ahead with every row materialised as a `date`. Checking
+    that the selected month is itself in range is therefore not enough —
+    `?month=9999-12` passes that test, then its outlook walks into year 10000
+    and `date()` raises `ValueError: year 10000 is out of range` from inside
+    the service. That is a 500 triggered purely by a query string, so the
+    bounds have to cover the window the view actually builds.
+    """
+    earliest_year, _ = add_months(year, month, -1)
+    latest_year, _ = add_months(year, month, OUTLOOK_MONTHS - 1)
+    return date.min.year <= earliest_year and latest_year <= date.max.year
 
 
 class DashboardIndexView(LoginRequiredMixin, TemplateView):
@@ -34,7 +56,7 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
 
         if year_part.isdigit() and month_part.isdigit():
             year, month = int(year_part), int(month_part)
-            if 1 <= month <= 12 and date.min.year <= year <= date.max.year:
+            if 1 <= month <= 12 and _is_projectable(year, month):
                 return year, month
 
         return today.year, today.month

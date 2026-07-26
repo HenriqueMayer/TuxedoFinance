@@ -44,20 +44,51 @@ INSECURE_SECRET_KEY = 'django-insecure-2ne$gqt=1%7zr5&pb%qp$4tx=7)p_9+#5x@mlscz@
 # likely way to get this wrong, and Django will happily boot with an empty
 # key — so it has to fall through to the fallback and trip the guard below,
 # not sail past it.
+# The placeholder shipped in `.env.example`. Copying that file to `.env` and
+# never filling it in is the most common way to end up with a key that is
+# technically "set" and still worthless. It is not the fallback above, so the
+# guard has to know it by name or it sails straight through.
+PLACEHOLDER_SECRET_KEY = 'change-me-to-a-long-random-secret-key'
+
+# The length `get_random_secret_key()` produces. A shorter key means it was
+# either typed by hand or mangled in transit — most often by Docker Compose
+# expanding an unescaped `$...` inside the value (see `.env.example`), which
+# silently shortens the key and invalidates every existing session.
+MIN_SECRET_KEY_LENGTH = 50
+
 SECRET_KEY = os.environ.get('SECRET_KEY', '').strip() or INSECURE_SECRET_KEY
 
-if not DEBUG and SECRET_KEY == INSECURE_SECRET_KEY:
-    # Refuse to boot rather than serve a production site with a published key.
-    # `check --deploy` warns about this, but nothing forces anyone to run it —
-    # and an instance deployed with the default key looks perfectly healthy
+GENERATE_SECRET_KEY_HINT = (
+    'Generate one with:\n'
+    '  python -c "from django.core.management.utils import '
+    'get_random_secret_key; print(get_random_secret_key())"'
+)
+
+if not DEBUG:
+    # Refuse to boot rather than serve a production site with a guessable key.
+    # `check --deploy` warns about all of this, but nothing forces anyone to
+    # run it — and an instance deployed with a bad key looks perfectly healthy
     # while being trivially forgeable, so this has to fail loudly instead.
-    raise ImproperlyConfigured(
-        'SECRET_KEY is still the insecure development fallback, which is '
-        'published in this repository, while DEBUG is False. Set a real one '
-        'in the environment (or .env) before deploying. Generate one with:\n'
-        '  python -c "from django.core.management.utils import '
-        'get_random_secret_key; print(get_random_secret_key())"'
-    )
+    if SECRET_KEY == INSECURE_SECRET_KEY:
+        raise ImproperlyConfigured(
+            'SECRET_KEY is still the insecure development fallback, which is '
+            'published in this repository, while DEBUG is False. Set a real '
+            f'one in the environment (or .env) before deploying. {GENERATE_SECRET_KEY_HINT}'
+        )
+    if SECRET_KEY == PLACEHOLDER_SECRET_KEY:
+        raise ImproperlyConfigured(
+            'SECRET_KEY is still the placeholder copied from .env.example '
+            f'while DEBUG is False. {GENERATE_SECRET_KEY_HINT}'
+        )
+    if len(SECRET_KEY) < MIN_SECRET_KEY_LENGTH:
+        raise ImproperlyConfigured(
+            f'SECRET_KEY is only {len(SECRET_KEY)} characters long, but '
+            f'{MIN_SECRET_KEY_LENGTH} are expected, while DEBUG is False. If '
+            'the value in .env looks long enough, Docker Compose most likely '
+            'ate part of it: an unescaped `$` starts a variable reference '
+            'there, so `$foo` expands to nothing. Double every `$` in .env '
+            f'(write `$$`), or use a key without one. {GENERATE_SECRET_KEY_HINT}'
+        )
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -130,6 +161,32 @@ DATABASES = {
         # container restarts/recreation (PRD §10.2). Defaults to the
         # project root for local, non-Docker development.
         'NAME': os.environ.get('SQLITE_PATH', str(BASE_DIR / 'db.sqlite3')),
+        # Concurrency hardening. The production image runs several gunicorn
+        # workers against this one file, and SQLite's defaults are tuned for a
+        # single process: on the stock `journal_mode=delete` a writer takes an
+        # exclusive lock that blocks readers outright, so two overlapping
+        # requests surface as `OperationalError: database is locked` — an
+        # intermittent 500 with no obvious trigger.
+        'OPTIONS': {
+            # Readers no longer block the writer and vice versa, which is what
+            # makes multiple workers viable at all. WAL is a property of the
+            # database file, so this survives as soon as it is set once.
+            # `synchronous=NORMAL` is the standard companion to WAL: durable
+            # against process crashes, trading only a power-loss window.
+            'init_command': (
+                'PRAGMA journal_mode=WAL;'
+                'PRAGMA synchronous=NORMAL;'
+            ),
+            # How long a statement waits for a lock before giving up. Django's
+            # default is 5s; the extra headroom absorbs a slow write without
+            # turning it into an error page.
+            'timeout': 20,
+            # Take the write lock when the transaction opens instead of
+            # upgrading mid-way. Upgrading is what produces the unavoidable
+            # "locked" error, because two transactions can each hold a read
+            # lock and then both need to write.
+            'transaction_mode': 'IMMEDIATE',
+        },
     }
 }
 
@@ -275,3 +332,53 @@ LOGOUT_REDIRECT_URL = 'pages:landing'
 
 CURRENCY = os.environ.get('CURRENCY', DEFAULT_CURRENCY)
 CURRENCY_SYMBOL = get_currency(CURRENCY).symbol
+
+
+# Logging
+# https://docs.djangoproject.com/en/6.0/topics/logging/
+#
+# Django's built-in configuration is useless for a container deployment: its
+# `console` handler carries a `require_debug_true` filter, and the `django`
+# logger's only other handler is `mail_admins`. With DEBUG=False and no mail
+# backend — i.e. exactly how this image runs — an unhandled exception renders
+# the bare "Server Error (500)" page and the traceback is dropped on the
+# floor. `docker compose logs` then shows nothing at all, which turns any
+# production 500 into guesswork.
+#
+# Replacing it with an unfiltered stream handler puts tracebacks on stdout,
+# where Docker (and every log collector) already looks. Nothing here depends
+# on DEBUG: the traceback is wanted precisely when DEBUG is False.
+
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
+
+LOGGING = {
+    'version': 1,
+    # Third-party loggers keep working instead of being silently switched off.
+    'disable_existing_loggers': False,
+    'formatters': {
+        'app': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'app',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': LOG_LEVEL,
+    },
+    'loggers': {
+        # The logger Django's exception handler writes 500 tracebacks to.
+        # `propagate: False` keeps them from being printed a second time by
+        # the root logger above.
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
