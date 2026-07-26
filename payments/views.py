@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db import IntegrityError
 from django.db.models import ProtectedError
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -32,8 +33,36 @@ class PaymentMethodFormMixin(LoginRequiredMixin):
     def get_queryset(self):
         return PaymentMethod.objects.filter(user=self.request.user)
 
+    def get_form_kwargs(self):
+        # The form needs the owner to check `unique_payment_method_per_user`;
+        # see the docstring in `payments/forms.py` for why Django cannot.
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
-class PaymentMethodCreateView(SuccessMessageMixin, PaymentMethodFormMixin, CreateView):
+    def form_valid(self, form):
+        """Last line of defence for the unique-name constraint.
+
+        The form already rejects duplicates, but that check and the INSERT are
+        not atomic: two submits of the same name — a double-clicked button is
+        enough, since gunicorn runs several threads per worker — can both pass
+        validation before either writes. The loser hits the constraint in the
+        database, and without this it surfaces as a 500.
+        """
+        try:
+            return super().form_valid(form)
+        except IntegrityError:
+            form.add_error('name', 'You already have a payment method with this name.')
+            return self.form_invalid(form)
+
+
+# `PaymentMethodFormMixin` must precede `SuccessMessageMixin` in the bases
+# below. Its `form_valid` can turn a save into a *failure*, and the success
+# message has to stay unwritten when it does — which only holds while the
+# exception propagates through `SuccessMessageMixin.form_valid` instead of
+# being caught underneath it. Reversing the two announces "created" over a
+# form that is still showing an error.
+class PaymentMethodCreateView(PaymentMethodFormMixin, SuccessMessageMixin, CreateView):
     """Create a payment method owned by the logged-in user (PRD 5.2.2)."""
 
     success_message = 'Payment method "%(name)s" created.'
@@ -43,7 +72,7 @@ class PaymentMethodCreateView(SuccessMessageMixin, PaymentMethodFormMixin, Creat
         return super().form_valid(form)
 
 
-class PaymentMethodUpdateView(SuccessMessageMixin, PaymentMethodFormMixin, UpdateView):
+class PaymentMethodUpdateView(PaymentMethodFormMixin, SuccessMessageMixin, UpdateView):
     """Update one of the logged-in user's own payment methods (PRD 5.2.2)."""
 
     success_message = 'Payment method "%(name)s" updated.'
