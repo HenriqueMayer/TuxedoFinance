@@ -2,11 +2,19 @@
 {% load l10n %}
 
 {% comment %}
-Reports (PRD FR16). Three server-rendered charts over one 12-month window:
+Reports (PRD FR16). Four server-rendered charts — the first three over one
+12-month window anchored on today, the fourth over a single chosen month:
 
-  1. Balance evolution     — area + line, `balance_chart` (dashboard.charts).
-  2. Monthly cash flow     — grouped bars, `cashflow_chart`.
-  3. Spending by category  — CSS bars straight from `evolution`.
+  1. Balance evolution           — area + line, `balance_chart` (dashboard.charts).
+  2. Monthly cash flow           — grouped bars, `cashflow_chart`.
+  3. Spending by category        — CSS bars straight from `evolution`.
+  4. Spending by payment method  — single-series bars, `payment_chart`.
+
+Only chart 4 reads the `?month=YYYY-MM` filter, and its `<form>` deliberately
+sits inside that card rather than at the top of the page: a filter in the
+header would look like it moves all four charts, when the other three are
+anchored on today by construction. The form posts back to `#payment-methods`
+so submitting returns the reader to the chart they just filtered.
 
 Every coordinate is computed in `dashboard/charts.py` and interpolated into
 plain `<svg>` attributes here — no charting library, no <canvas>, no JS, in
@@ -24,7 +32,7 @@ stroke, so the primary gradient has to be spelled out as the raw RGB of
 indigo-500 / violet-500 / fuchsia-500. Keep them in sync with PRD §9.1 by
 hand if the palette ever changes.
 
-Both SVGs sit in an `overflow-x-auto` wrapper with a `min-w-[44rem]` canvas:
+Every SVG sits in an `overflow-x-auto` wrapper with a `min-w-[44rem]` canvas:
 on a phone the chart scrolls inside its own card instead of shrinking its
 axis labels into illegibility (same convention as the dashboard outlook
 table).
@@ -233,6 +241,98 @@ because `floatformat` localizes independently of this tag.
         {% else %}
             {% include 'partials/empty_state.html' with title='No expenses recorded yet' message='Once you record an expense, this chart shows which categories take the biggest share.' cta_url=create_url cta_label='New Transaction' %}
         {% endif %}
+    </section>
+
+    {# ---------------------------------------------------------------- #}
+    {# Chart 4 — spending by payment method, for one selected month      #}
+    {# ---------------------------------------------------------------- #}
+    <section id="payment-methods" class="scroll-mt-6 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+        {% with month_label=payment_month_date|date:'F Y' %}
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-100">Spending by payment method</h2>
+                <p class="mt-1 text-sm text-slate-400">
+                    How <span class="font-medium text-slate-300">{{ month_label }}</span>&rsquo;s expenses split across
+                    your cards and accounts &mdash; fixed transactions and open installments included.
+                </p>
+            </div>
+            <form method="get" action="{% url 'dashboard:reports' %}#payment-methods"
+                  class="flex flex-wrap items-end gap-3">
+                <div class="min-w-[10rem] space-y-1.5">
+                    <label for="payment-month" class="block text-sm font-medium text-slate-300">Month</label>
+                    <input type="month" id="payment-month" name="month" value="{{ payment_month_param }}"
+                           class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                </div>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                    Filter
+                </button>
+            </form>
+        </div>
+
+        {% if payment_chart %}
+            <div class="overflow-x-auto">
+                {% localize off %}
+                <svg viewBox="0 0 {{ payment_chart.width }} {{ payment_chart.height }}"
+                     class="h-auto w-full min-w-[44rem]" role="img"
+                     aria-label="Bar chart of expenses per payment method for the selected month">
+                    {% for line in payment_chart.grid %}
+                        <line x1="{{ payment_chart.plot_left }}" y1="{{ line.y }}"
+                              x2="{{ payment_chart.plot_right }}" y2="{{ line.y }}"
+                              class="stroke-slate-800" stroke-width="1" />
+                        <text x="{{ payment_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
+                              text-anchor="end" class="fill-slate-500 text-[11px] tabular-nums">
+                            {{ line.value|floatformat:0 }}
+                        </text>
+                    {% endfor %}
+
+                    {% for group in payment_chart.groups %}
+                        {% for bar in group.bars %}
+                            <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                                  width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                  class="fill-rose-400/80">
+                                <title>{{ group.label.name }}: {{ CURRENCY_SYMBOL }} {{ group.label.total|floatformat:2 }} &middot; {{ group.label.share|floatformat:"-1" }}% of the month</title>
+                            </rect>
+                            {# The share rides above its own bar, so "how is it distributed" is answerable without a hover. #}
+                            <text x="{{ group.center }}" y="{{ bar.value_y }}" text-anchor="middle"
+                                  class="fill-slate-300 text-[11px] font-semibold tabular-nums">
+                                {{ group.label.share|floatformat:"-1" }}%
+                            </text>
+                        {% endfor %}
+                        {# Truncated to what fits one slot; the list below always spells the name out in full. #}
+                        <text x="{{ group.center }}" y="{{ payment_chart.label_y }}" text-anchor="middle"
+                              class="fill-slate-500 text-[11px]">
+                            {{ group.label.name|truncatechars:payment_chart.label_chars }}
+                        </text>
+                    {% endfor %}
+                </svg>
+                {% endlocalize %}
+            </div>
+
+            <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                {% for method in payment_breakdown.methods %}
+                    <li class="flex items-center gap-2">
+                        <span class="h-2.5 w-2.5 shrink-0 rounded-sm bg-rose-400"></span>
+                        <span class="text-slate-300">{{ method.name }}</span>
+                        <span class="font-semibold tabular-nums text-rose-400">
+                            {{ CURRENCY_SYMBOL }} {{ method.total|floatformat:2 }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <p class="text-sm text-slate-400">
+                Total spent in {{ month_label }}:
+                <span class="font-semibold tabular-nums text-slate-200">{{ CURRENCY_SYMBOL }} {{ payment_breakdown.total|floatformat:2 }}</span>
+                {% if payment_breakdown.shown < payment_breakdown.used %}
+                    &mdash; charted across the {{ payment_breakdown.shown }} biggest of
+                    {{ payment_breakdown.used }} methods used, so the shares above stop short of 100%.
+                {% endif %}
+            </p>
+        {% else %}
+            {% include 'partials/empty_state.html' with title='No expenses in '|add:month_label message='Pick another month, or record an expense to see which card or account it came from.' cta_url=create_url cta_label='New Transaction' %}
+        {% endif %}
+        {% endwith %}
     </section>
 </div>
 {% endblock %}

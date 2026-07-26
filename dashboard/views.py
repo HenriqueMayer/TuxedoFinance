@@ -10,10 +10,40 @@ from dashboard.services import (
     add_months,
     get_account_evolution,
     get_dashboard_summary,
+    get_expenses_by_payment_method,
 )
 from transactions.models import Transaction
 
 RECENT_TRANSACTIONS_LIMIT = 5
+
+
+def _selected_month(request, in_range):
+    """Parse `?month=YYYY-MM` off `request`, falling back to the current month.
+
+    Both screens read the same param under the same forgiving contract: the
+    value arrives in a query string, so a malformed or out-of-range one falls
+    back to today's month rather than raising a 400. They differ only in
+    `in_range`, since they build different windows around the month.
+    """
+    today = timezone.localdate()
+    year_part, _, month_part = request.GET.get('month', '').partition('-')
+
+    if year_part.isdigit() and month_part.isdigit():
+        year, month = int(year_part), int(month_part)
+        if 1 <= month <= 12 and in_range(year, month):
+            return year, month
+
+    return today.year, today.month
+
+
+def _is_representable(year, month):
+    """True when the selected month itself can be built as a `date`.
+
+    All the reports page needs: it projects nothing off the selected month —
+    the charts around it are anchored on today — so the only hard requirement
+    is that `date(year, month, 1)` does not raise for the label.
+    """
+    return date.min.year <= year <= date.max.year
 
 
 def _is_projectable(year, month):
@@ -50,16 +80,7 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
 
     def get_selected_month(self):
         """Parse `?month=YYYY-MM`, falling back to the current month."""
-        today = timezone.localdate()
-        raw = self.request.GET.get('month', '')
-        year_part, _, month_part = raw.partition('-')
-
-        if year_part.isdigit() and month_part.isdigit():
-            year, month = int(year_part), int(month_part)
-            if 1 <= month <= 12 and _is_projectable(year, month):
-                return year, month
-
-        return today.year, today.month
+        return _selected_month(self.request, _is_projectable)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -82,14 +103,24 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
 
     Two charts over the same 12-month window — balance evolution (line) and
     monthly cash flow (grouped bars) — plus a spending-by-category breakdown.
-    All three are server-rendered SVG/CSS: the view turns the numeric series
-    from `dashboard.services` into pixel coordinates via `dashboard.charts`,
-    so the template only interpolates attributes and no JavaScript runs.
+    All are server-rendered SVG/CSS: the view turns the numeric series from
+    `dashboard.services` into pixel coordinates via `dashboard.charts`, so the
+    template only interpolates attributes and no JavaScript runs.
+
+    A fourth chart splits **one** month's expenses across the payment methods
+    that paid them, and it alone reads `?month=YYYY-MM`. The window of the
+    other three stays anchored on today by construction: they are about the
+    shape of the account over time, and re-anchoring them on a picked month
+    would ask a different question than the one the page exists to answer.
 
     Scoped to `request.user` like every other internal screen (PRD R3).
     """
 
     template_name = 'dashboard/reports.html'
+
+    def get_selected_month(self):
+        """Parse `?month=YYYY-MM` for the payment-method breakdown."""
+        return _selected_month(self.request, _is_representable)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -122,5 +153,32 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
                     'values': [float(row['investments']) for row in months],
                 },
             ],
+        )
+
+        payment_year, payment_month = self.get_selected_month()
+        breakdown = get_expenses_by_payment_method(
+            self.request.user, payment_year, payment_month
+        )
+        context['payment_breakdown'] = breakdown
+        context['payment_month_date'] = date(payment_year, payment_month, 1)
+        context['payment_month_param'] = f'{payment_year:04d}-{payment_month:02d}'
+        # No bars means no chart: `build_bar_chart` divides the plot by the
+        # number of labels, and a month with no expenses has none. The template
+        # renders its empty state off this being `None`.
+        context['payment_chart'] = (
+            build_bar_chart(
+                # Whole rows as labels, like the month charts above — the
+                # template reads `.name`/`.share` straight off each group.
+                breakdown['methods'],
+                [
+                    {
+                        'name': 'Expenses',
+                        'tone': 'expense',
+                        'values': [float(row['total']) for row in breakdown['methods']],
+                    }
+                ],
+            )
+            if breakdown['methods']
+            else None
         )
         return context
