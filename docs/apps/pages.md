@@ -9,7 +9,6 @@ The public presentation site — a single landing page. No models, no forms, no 
 | `pages/views.py` | `LandingView(TemplateView)` |
 | `pages/urls.py` | `app_name = 'pages'`; one route, `landing` |
 | `pages/models.py` | empty — this app has no data |
-| `pages/tests.py` | 1 test |
 | `templates/pages/landing.html` | the actual page content |
 
 ## View
@@ -37,7 +36,3 @@ Extends `base.html`. Four sections, all built from the standard design-system co
 2. **How it works** — a static 3-step explanation (Record → Classify → Review), mirroring PRD §3 (Purpose).
 3. **Features** — a 4-card grid (Types & categories, Payment methods, Fixed vs. variable, Consolidated dashboard) using the standard `sm:grid-cols-2 lg:grid-cols-4` indicator-grid pattern with inline SVG icons.
 4. **Final CTA banner** — a gradient-tinted panel repeating the Sign up / Log in buttons.
-
-## Tests (`pages/tests.py`)
-
-One test: `LandingViewTests.test_landing_page_is_public` — asserts a `GET /` returns `200` and renders `pages/landing.html` with no authentication. This is the only test in the suite that doesn't touch `LoginRequiredMixin` at all, by design (FR01: the landing page must be reachable without login).

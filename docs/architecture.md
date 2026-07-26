@@ -57,7 +57,7 @@ Every deployment-specific setting reads from the environment so the same code ru
 | `CURRENCY` / `CURRENCY_SYMBOL` | `CURRENCY` | `'BRL'` — see § Currency |
 | The HTTPS block (5 settings) | `HTTPS` | `'False'` — see § HTTPS hardening |
 
-`DEBUG` is read into a **module-level variable** at process startup (not just `django.conf.settings.DEBUG`) because Django's test runner force-overrides `settings.DEBUG` to `False` for every test run — see "Static files" below for why that distinction matters.
+`DEBUG` is read into a **module-level variable** at process startup (not just `django.conf.settings.DEBUG`) because the static-files backend has to reflect how the process actually started, not a value overridden later — see "Static files" below for why that distinction matters.
 
 #### The secret key guard
 
@@ -75,8 +75,6 @@ Two details that are easy to get wrong:
 
 - **Blank counts as unset.** `SECRET_KEY=` left empty in `.env` is the likeliest way to misconfigure this, and Django boots happily on an empty string — so the value falls through to the fallback and trips the guard rather than sailing past it.
 - **It raises, rather than warning.** `check --deploy` already flags a weak key (`security.W009`), but nothing forces anyone to run it, and an instance deployed on the default key looks perfectly healthy while being trivially forgeable. Failing at import turns a silent compromise into a five-second fix.
-
-`SecretKeyGuardTests` pins all four paths (unset, blank, real, and dev-on-the-fallback) by running `manage.py check` in a subprocess — the guard fires at settings *import* time, so `override_settings` cannot reach it.
 
 #### HTTPS hardening
 
@@ -120,7 +118,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'   # collectstatic target, Docker build time only
 ```
 
-`STORAGES['staticfiles']['BACKEND']` switches between `django.contrib.staticfiles.storage.StaticFilesStorage` (plain, when `DEBUG` is `True`) and `whitenoise.storage.CompressedManifestStaticFilesStorage` (hashed + gzip/brotli, when `DEBUG` is `False`) — selected from the **module-level** `DEBUG` computed once from the environment, not from `django.conf.settings.DEBUG`. This is what lets `manage.py test` run locally (where `DEBUG=True` at process start) without needing a real `collectstatic`-produced manifest, while a real `DEBUG=False` deployment always gets the WhiteNoise backend regardless of what the test runner does at request time.
+`STORAGES['staticfiles']['BACKEND']` switches between `django.contrib.staticfiles.storage.StaticFilesStorage` (plain, when `DEBUG` is `True`) and `whitenoise.storage.CompressedManifestStaticFilesStorage` (hashed + gzip/brotli, when `DEBUG` is `False`) — selected from the **module-level** `DEBUG` computed once from the environment, not from `django.conf.settings.DEBUG`. This is what lets a local run (where `DEBUG=True` at process start) work without a real `collectstatic`-produced manifest, while a real `DEBUG=False` deployment always gets the WhiteNoise backend regardless of anything that flips that setting at request time.
 
 `WHITENOISE_MANIFEST_STRICT = False` — a missing file in the manifest falls back to the plain path instead of a 500.
 

@@ -161,7 +161,6 @@ flowchart TD
 | NFR10 | Performance | Efficient aggregate queries (`aggregate`, `select_related`). |
 | NFR11 | Portability | Runs on Linux (Pop!_OS/Debian) and Windows via `uv`. |
 | NFR12 | Docker | Deferred to final sprints. |
-| NFR13 | Tests | Deferred to final sprints. |
 
 ---
 
@@ -269,7 +268,7 @@ erDiagram
 - `Investment` counts as a **cash outflow** (money leaves the available balance) but is highlighted separately from consumption (Expense) — it is never merged into the Expenses indicator.
 - **Current Balance** = Σ Income − Σ Expenses − Σ Investments (full history, all dates — "cash available").
 - **Balance (month)** = month's Income − month's Expenses − month's Investments (the month's net cash flow).
-  > **Decision (2026-07-24):** since Investment is defined as a cash outflow, it must be subtracted from both balances; otherwise the Current Balance would overstate available money. If you'd rather treat Balance (month) as a consumption-only metric (Income − Expenses), flip this rule and update the dashboard/testing agents accordingly.
+  > **Decision (2026-07-24):** since Investment is defined as a cash outflow, it must be subtracted from both balances; otherwise the Current Balance would overstate available money. If you'd rather treat Balance (month) as a consumption-only metric (Income − Expenses), flip this rule and update the dashboard accordingly.
 - All monthly aggregations use `transaction_date` (the user-facing date), never `created_at`.
 - `created_at` is immutable; `transaction_date` is the only editable date field.
 - **Deletion integrity:** `Transaction.category` and `Transaction.payment_method` use `on_delete=PROTECT` — a category or payment method that is in use cannot be deleted; show a friendly error message instead. `Transaction.user` uses `on_delete=CASCADE`.
@@ -474,7 +473,6 @@ Visual base: **dark background** with **gradients** and harmonic palettes, reusa
 | R4 | Incorrect balance calculation (signs) | Misleading data | Positive `amount` + logic derived from a centralized `transaction_type` |
 | R5 | Loss of `db.sqlite3` | Data loss | The `cashflow-live` repo versions the database as a "vault" |
 | R6 | Inconsistent migrations cross-platform | Environment bugs | `uv.lock` + documented migration process |
-| R7 | Technical debt from deferred tests | Regressions | Tests planned for the final sprint before release |
 
 ---
 
@@ -494,7 +492,7 @@ Visual base: **dark background** with **gradients** and harmonic palettes, reusa
 - [x] **0.3** TailwindCSS integration
   - [x] 0.3.1 Tailwind strategy — **decision:** Play CDN during development (zero build step); switch to a standalone Tailwind CLI build in Sprint 10 (the CDN is not production-safe)
   - [x] 0.3.2 Define `tailwind.config` with the palette and the Inter font
-  - [x] 0.3.3 Validate CSS loading on a test page
+  - [x] 0.3.3 Validate CSS loading on a sample page
 - [x] **0.4** Create the domain apps (empty)
   - [x] 0.4.1 `python manage.py startapp pages`
   - [x] 0.4.2 `startapp accounts`
@@ -614,14 +612,8 @@ Visual base: **dark background** with **gradients** and harmonic palettes, reusa
   - [x] 8.1.4 Focus/hover states and basic accessibility
   - [x] 8.1.5 (Optional) Filter the transaction list by month and `transaction_type` (simple GET params — no JS)
 - [x] **8.2** Responsiveness
-  - [x] 8.2.1 Test on mobile, tablet, and desktop
+  - [x] 8.2.1 Verified on mobile, tablet, and desktop
   - [x] 8.2.2 Collapsible menu on small screens
-
-### Sprint 9 — Tests (final)
-- [x] **9.1** Model tests (validations, `__str__`, defaults)
-- [x] **9.2** View tests (auth, per-user isolation, CRUD)
-- [x] **9.3** Dashboard aggregation tests
-- [x] **9.4** Form tests (required fields, validation)
 
 ### Sprint 10 — Docker and Delivery (final)
 - [x] **10.1** Application `Dockerfile`

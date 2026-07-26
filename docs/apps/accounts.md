@@ -11,7 +11,6 @@ Sign up, log in, log out — entirely built on Django's native `django.contrib.a
 | `accounts/urls.py` | `app_name = 'accounts'`; routes `login`, `signup`, `logout` |
 | `accounts/models.py` | empty — `User` is Django's own, not redefined here |
 | `accounts/admin.py` | empty — `User` is already registered by `django.contrib.auth`'s own admin config |
-| `accounts/tests.py` | 6 tests |
 
 ## Forms
 
@@ -79,9 +78,3 @@ Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly ca
 - `templates/accounts/signup.html` — renders `SignupForm`'s four fields (`username`, `email`, `password1`, `password2`); links to login.
 
 Both follow the identical "centered `max-w-md` card" layout used by every auth-adjacent screen in the project.
-
-## Tests (`accounts/tests.py`, 6 tests)
-
-- `SignupViewTests` — signup creates the user **and** triggers both default-data signals (asserts exactly 9 categories + 4 payment methods exist for the new user immediately after signup); a mismatched password confirmation does not create a user.
-- `LoginViewTests` — valid credentials redirect to the dashboard; invalid credentials return `200` with the friendly Django `AuthenticationForm` error message (not a 500).
-- `LogoutViewTests` — `GET /accounts/logout/` returns `405`; `POST` redirects to `pages:landing` and actually clears the session (a subsequent dashboard request is redirected to login again).

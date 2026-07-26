@@ -114,7 +114,7 @@ Not defined in this codebase — used as-is from `django.contrib.auth`. Referenc
 
 - `Meta.ordering = ['-transaction_date', '-created_at']` — newest transaction date first, ties broken by creation order.
 - `__str__`: `"{title} ({transaction_type display})"`.
-- `MAX_INSTALLMENTS = 48` — a class constant, referenced by the model validator, the form widget's `max` attribute, the help text, and the tests, so the ceiling is defined in exactly one place.
+- `MAX_INSTALLMENTS = 48` — a class constant, referenced by the model validator, the form widget's `max` attribute, and the help text, so the ceiling is defined in exactly one place.
 - `is_installment_plan` (property): `installments > 1`.
 - `installment_amount` (property): `amount / installments`, quantized to 2 decimal places with `ROUND_HALF_UP`. **Presentation-only** — the rounded parts may not re-sum to `amount` to the cent (e.g. `100.00 / 3` → `33.33` ×3 = `99.99`), so no balance calculation ever derives from it.
 - `last_fixed_offset` (property): how many months after the start the fixed recurrence last pays, or `None` when open-ended. Clamped at `0`, so a `fixed_until` before the start month pays once rather than a negative number of times.
@@ -152,7 +152,7 @@ Computed in `dashboard/services.py::get_dashboard_summary()`, PRD §8.5. Every "
 - **Balance (month)** = the selected month's Income − Expenses − Investments, scoped via `transaction_date` (never `created_at`). The selected month defaults to the current one and may be in the future.
 - **Projected Balance** = Current Balance rolled forward to the end of the selected month; equal to Current Balance when the selected month *is* the current month.
 
-> **Decision (2026-07-24):** Investment is defined as a cash outflow, so it is subtracted from *both* balances above — otherwise Current Balance would overstate the money actually available. Investment is **never merged into the Expenses indicator**; the dashboard shows it as a separate stat card (`investment_month`) precisely so the user can see where that money went without it inflating "Expenses". If this rule is ever revisited (e.g. treating Balance (month) as consumption-only, Income − Expenses), update `get_dashboard_summary()` and the accompanying tests in `dashboard/tests.py` together — they currently encode this exact formula against hand-computed fixtures.
+> **Decision (2026-07-24):** Investment is defined as a cash outflow, so it is subtracted from *both* balances above — otherwise Current Balance would overstate the money actually available. Investment is **never merged into the Expenses indicator**; the dashboard shows it as a separate stat card (`investment_month`) precisely so the user can see where that money went without it inflating "Expenses". If this rule is ever revisited (e.g. treating Balance (month) as consumption-only, Income − Expenses), `get_dashboard_summary()` is the single place that encodes it.
 
 ### Recurrence: when a transaction hits a month
 
@@ -181,7 +181,7 @@ The fix is not to version the row, it is to **end it**:
 | Salary | 2000 | Jan | **May** |
 | Salary | 3000 | Jun | *(empty)* |
 
-January–May report 2000, June onward reports 3000, no month is double-counted at the handover, and both rows stay individually editable. `DashboardProjectionTests.test_ending_a_fixed_salary_preserves_past_months` pins exactly this scenario.
+January–May report 2000, June onward reports 3000, no month is double-counted at the handover, and both rows stay individually editable.
 
 Two consequences worth stating plainly:
 
@@ -199,7 +199,7 @@ Two consequences worth stating plainly:
 3. **`installments > 1` is only valid when the payment method's `method_type` is `CREDIT_CARD`.** Enforced server-side in `TransactionForm.clean()` (`transactions/forms.py`) — not in the model, because the rule spans two fields and only applies to user-submitted data.
 4. **Blank means 1.** The form field is `required = False`; `clean_installments()` turns a missing value into `1`. An explicit `0` is *not* defaulted — it falls through to the model's `MinValueValidator(1)` and is rejected, so a bad value can never be silently rewritten into a valid one.
 
-**Rounding never loses money.** `installment_amount` rounds to the cent, so R$ 100.00 in 3× gives 33.33 — three of which is 99.99. `amount_for_month` gives the remainder to the **final** installment (33.33, 33.33, **33.34**), so the occurrences always re-sum to exactly `amount`. `TransactionRecurrenceTests.test_last_installment_absorbs_the_rounding_remainder` pins this.
+**Rounding never loses money.** `installment_amount` rounds to the cent, so R$ 100.00 in 3× gives 33.33 — three of which is 99.99. `amount_for_month` gives the remainder to the **final** installment (33.33, 33.33, **33.34**), so the occurrences always re-sum to exactly `amount`.
 
 > **Scope note:** this models an installment *purchase*, not a credit-card *statement*. There is no billing-cycle/closing-date concept — the first installment lands in the purchase's own calendar month, not in the month the card's bill would actually arrive. Adding real statement cycles would be a separate feature on `PaymentMethod`.
 
@@ -261,5 +261,5 @@ Format modules are read once and cached by Django, so changing `CURRENCY` requir
 
 #### What is deliberately *not* localized
 
-- **Form inputs.** Django form fields keep `localize=False` (the default), so `<input type="number">` still renders `value="12345.67"` and still parses a submitted `12345.67`. This matters more than it looks: the HTML spec only accepts a dot-decimal `value`, so a localized `value="12345,67"` would be rejected by the browser and the amount field would come up **empty on every edit**. Worse, `sanitize_separators` would read a submitted `1234.50` as `123450` — a dot means "thousands" under this format. `NumberFormatTests` pins both directions.
-- **SVG coordinates and CSS widths** on the reports page. Django localizes raw floats rendered through `{{ }}`, which would emit `x="90,83"` and `width: 33,33%` — both invalid. The chart markup is wrapped in `{% localize off %}` (and the bar width uses `|unlocalize`), with `DashboardReportsViewTests.test_chart_coordinates_are_never_localized` guarding it. Axis labels inside the SVG stay formatted, because `floatformat` localizes independently of that tag.
+- **Form inputs.** Django form fields keep `localize=False` (the default), so `<input type="number">` still renders `value="12345.67"` and still parses a submitted `12345.67`. This matters more than it looks: the HTML spec only accepts a dot-decimal `value`, so a localized `value="12345,67"` would be rejected by the browser and the amount field would come up **empty on every edit**. Worse, `sanitize_separators` would read a submitted `1234.50` as `123450` — a dot means "thousands" under this format.
+- **SVG coordinates and CSS widths** on the reports page. Django localizes raw floats rendered through `{{ }}`, which would emit `x="90,83"` and `width: 33,33%` — both invalid. The chart markup is therefore wrapped in `{% localize off %}` (and the bar width uses `|unlocalize`). Axis labels inside the SVG stay formatted, because `floatformat` localizes independently of that tag.

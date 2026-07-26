@@ -188,11 +188,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # The manifest-hashing backend is only selected when DEBUG is False *at
 # process startup* (i.e. a real deployment, where the Docker image always
 # runs `collectstatic` at build time — see Dockerfile). This is checked
-# against the module-level `DEBUG` above, not `django.conf.settings.DEBUG`:
-# Django's test runner force-overrides the latter to False for every test
-# run so templates render the production `{% if DEBUG %}` branch (as they
-# would in real life), without requiring a local, uncollected `staticfiles/`
-# manifest just to run `manage.py test`.
+# against the module-level `DEBUG` above, not `django.conf.settings.DEBUG`,
+# so anything that flips that setting after startup cannot demand a local,
+# uncollected `staticfiles/` manifest in a development run.
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
