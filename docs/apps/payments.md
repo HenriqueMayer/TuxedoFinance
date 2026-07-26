@@ -13,7 +13,6 @@ Full CRUD for `PaymentMethod`, plus the default-payment-method seeding signal (F
 | `payments/signals.py` | `seed_default_payment_methods` |
 | `payments/apps.py` | `PaymentsConfig.ready()` wires the signal |
 | `payments/admin.py` | `PaymentMethodAdmin` |
-| `payments/tests.py` | 24 tests |
 | `templates/payments/{list,form,confirm_delete}.html` | screens |
 
 For the `PaymentMethod` model's fields, constraints, and the `MethodType` enum, see [data-model.md § PaymentMethod](../data-model.md#paymentmethod-paymentsmodelspy).
@@ -94,9 +93,3 @@ list_display = ('name', 'method_type', 'user', 'created_at')
 list_filter = ('user', 'method_type')
 search_fields = ('name',)
 ```
-
-## Tests (`payments/tests.py`, 24 tests)
-
-- **`PaymentMethodModelTests`** — default seeding (4 methods, one per type), `__str__` includes the type's display label **and omits it when the name already is that label** (two dedup tests: the seeded `Credit Card` default, and a case/whitespace variant `' pix '`), timestamp behavior, per-user uniqueness, `ProtectedError` on delete-while-referenced.
-- **`PaymentMethodViewTests`** — auth required on all 4 routes; list/update/delete isolation across users; full create/update/delete round-trip; the `ProtectedError` → friendly-message path.
-- **`PaymentMethodFormTests`** — required fields; an invalid `method_type` value (not one of the four choices) is rejected; a valid submission passes.

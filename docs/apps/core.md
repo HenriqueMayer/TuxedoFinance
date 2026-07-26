@@ -11,7 +11,6 @@ The project package — no models, no views, no URLs of its own beyond the root 
 | `core/context_processors.py` | Two custom context processors, registered in `TEMPLATES[0]['OPTIONS']['context_processors']`. |
 | `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR20). |
 | `core/formats/en/formats.py` | Locale number-format override driven by `settings.CURRENCY` (FR19). |
-| `core/tests.py` | 21 tests — the currency registry, the active number format, and the `SECRET_KEY` / HTTPS settings guards. |
 | `core/wsgi.py` | Standard `django-admin startproject` WSGI entrypoint; used by `gunicorn` in production (`core.wsgi:application`, see the `Dockerfile` `CMD`). |
 | `core/asgi.py` | Standard ASGI entrypoint; unused in this project (no async views, no channels) but kept as Django scaffolding. |
 
@@ -64,7 +63,7 @@ One entry pairs a symbol with the separators that currency is written with, beca
 - `core/settings.py` → `CURRENCY_SYMBOL = get_currency(CURRENCY).symbol`
 - `core/formats/en/formats.py` → `DECIMAL_SEPARATOR` / `THOUSAND_SEPARATOR`
 
-so they cannot drift apart. `ActiveCurrencyTests` asserts that agreement holds for whatever `CURRENCY` is configured.
+so they cannot drift apart, whatever `CURRENCY` is configured.
 
 Two deliberate constraints on this module:
 
@@ -75,4 +74,4 @@ Adding a currency is one line in `CURRENCIES` and nothing else.
 
 ## Why no models/views here
 
-`core` is intentionally empty of domain logic, per the "no over-engineering" house rule — it exists purely to wire the six domain apps together (settings, root routing, the two context processors, and the currency/format configuration above). Business logic always lives in the owning domain app. `core` is not in `INSTALLED_APPS` and has no migrations; `core/tests.py` is still collected, because Django's test runner discovers tests by walking packages rather than by reading `INSTALLED_APPS`.
+`core` is intentionally empty of domain logic, per the "no over-engineering" house rule — it exists purely to wire the six domain apps together (settings, root routing, the two context processors, and the currency/format configuration above). Business logic always lives in the owning domain app. `core` is not in `INSTALLED_APPS` and has no migrations.

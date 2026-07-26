@@ -9,12 +9,11 @@ Technical documentation for every part of the CashFlow codebase — what each pi
 | [architecture.md](architecture.md) | Stack, `core/settings.py`, URL routing, context processors, middleware, the request/response flow common to every screen. |
 | [data-model.md](data-model.md) | The ERD, all four models and their fields, and every business rule (positive amounts, balance formulas, `PROTECT`/`CASCADE`/`SET_NULL` deletion behavior, uniqueness, default-data seeding). |
 | [frontend.md](frontend.md) | The design system (colors, typography, component classes), the dev/prod Tailwind strategy, `base.html`, and every reusable partial. |
-| [testing.md](testing.md) | How the test suite is organized, how to run it, and the assertion patterns repeated across every app. |
 | [deployment.md](deployment.md) | How the Docker image is built (two-stage `Dockerfile`, Tailwind CLI compile step, WhiteNoise) and how `docker-compose.yml` wires it up. |
 
 ## Per-app reference (`apps/`)
 
-One doc per Django app, each covering its models, forms, views, URLs, signals, admin config, templates, and test coverage in full:
+One doc per Django app, each covering its models, forms, views, URLs, signals, admin config, and templates in full:
 
 - [apps/core.md](apps/core.md) — project-wide settings glue, the currency registry, and the number-format override; no models/views of its own.
 - [apps/pages.md](apps/pages.md) — the public landing page.

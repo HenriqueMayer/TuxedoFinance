@@ -13,7 +13,6 @@ Full CRUD for `Category`, including subcategories via a self-relationship, plus 
 | `categories/signals.py` | `seed_default_categories` |
 | `categories/apps.py` | `CategoriesConfig.ready()` wires the signal |
 | `categories/admin.py` | `CategoryAdmin` |
-| `categories/tests.py` | 24 tests |
 | `templates/categories/{list,form,confirm_delete}.html` | screens |
 
 For the `Category` model's fields and constraints, see [data-model.md § Category](../data-model.md#category-categoriesmodelspy).
@@ -128,9 +127,3 @@ search_fields = ('name',)
 
 - `list.html` — one row per category, showing "Subcategory of {parent}" or "Top-level category"; Edit/Delete actions; `partials/empty_state.html` when the user has none (shouldn't normally happen post-signup, but reachable if all categories are deleted — though `PROTECT` blocks deleting any still in use).
 - `form.html` / `confirm_delete.html` — the standard shared card layout (see [frontend.md](../frontend.md)).
-
-## Tests (`categories/tests.py`, 24 tests)
-
-- **`CategoryModelTests`** — default seeding count/names, `__str__` (top-level vs. subcategory), `created_at` immutability, per-user uniqueness (`IntegrityError` on duplicate, allowed across different users), `ProtectedError` on delete-while-referenced.
-- **`CategoryViewTests`** — auth required on all 4 routes; list only shows own categories; `404` (not another user's data) on update/delete of another user's category; full create/update/delete round-trip; the `ProtectedError` → friendly-message path end-to-end via `messages`.
-- **`CategoryFormTests`** — `name` required; `parent_category` queryset scoped to the requesting user; a category cannot be set as its own parent on edit; a valid subcategory submission passes validation.

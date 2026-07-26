@@ -72,7 +72,7 @@ This project is a **GitHub template repository**. Use it to start your own indep
 
 `db.sqlite3` is a single file — there is no separate database server to install or configure.
 
-Unlike the usual Django convention, this file is **tracked in version control** here, and ships with the schema already migrated and no data in it. A fresh clone is therefore runnable straight away, and any test or demo data you record is versioned alongside your code instead of being lost on the next clone.
+Unlike the usual Django convention, this file is **tracked in version control** here, and ships with the schema already migrated and no data in it. A fresh clone is therefore runnable straight away, and any demo data you record is versioned alongside your code instead of being lost on the next clone.
 
 If you would rather follow the standard convention, where every environment generates its own database and data is never committed, stop tracking it:
 
@@ -221,7 +221,6 @@ A short pass to run through before putting an instance in front of real data:
 - **Set `HTTPS=True` if the instance is served over TLS.** Confirm with `manage.py check --deploy`, which should report no issues.
 - **Apply migrations** — `python manage.py migrate`. The Docker image does this on container start; run it yourself otherwise.
 - **Build the CSS and collect static files** — `python manage.py collectstatic --noinput`, after building `static/css/output.css`. The Docker image does both at build time. Make sure the bundle reflects your current templates.
-- **Run the tests** — `uv run python manage.py test`.
 - **Keep `.env` out of version control**, or use your platform's secret store.
 - **Start from an empty database.** If you are keeping `db.sqlite3` tracked, make sure the committed file holds no real data; otherwise untrack it as described above.
 
