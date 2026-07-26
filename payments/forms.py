@@ -19,13 +19,35 @@ class PaymentMethodForm(forms.ModelForm):
     No FK scoping is needed here (unlike `CategoryForm`'s `parent_category`)
     since `PaymentMethod` has no self-relationship — per-user isolation is
     already handled by the owning views (`get_queryset` + `form_valid`).
+
+    The owning `user` is still required, so the form can enforce the model's
+    `unique_payment_method_per_user` constraint itself. Django will not do it:
+    `user` is not one of `Meta.fields`, and `Model.validate_unique()` skips any
+    constraint that touches an excluded field. The duplicate therefore passed
+    validation and only failed at INSERT, as an uncaught `IntegrityError` — a
+    500 on submit. Every account is seeded with "Credit Card", "Debit Card",
+    "Checking Account" and "PIX" (`payments/signals.py`), so reusing one of
+    those names is among the first things a new user is likely to try.
     """
 
     class Meta:
         model = PaymentMethod
         fields = ('name', 'method_type')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+
+    def clean_name(self):
+        """Reject a name this user already used, as a field error rather than a 500."""
+        name = self.cleaned_data['name']
+        # Matched exactly, like the database constraint it stands in for —
+        # `iexact` here would reject names SQLite would happily have stored.
+        duplicates = PaymentMethod.objects.filter(user=self.user, name=name)
+        if self.instance.pk:
+            duplicates = duplicates.exclude(pk=self.instance.pk)
+        if duplicates.exists():
+            raise forms.ValidationError('You already have a payment method with this name.')
+        return name

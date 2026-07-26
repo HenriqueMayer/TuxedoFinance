@@ -19,6 +19,12 @@ class CategoryForm(forms.ModelForm):
     `parent_category` choices are restricted to the user's own categories
     and, when editing, exclude the instance itself so a category can never
     become its own parent.
+
+    `user` also lets the form enforce the model's `unique_category_per_user`
+    constraint. Django will not do it: `user` is not one of `Meta.fields`, and
+    `Model.validate_unique()` skips any constraint that touches an excluded
+    field, so a duplicate name passed validation and only failed at INSERT, as
+    an uncaught `IntegrityError` — a 500 on submit.
     """
 
     class Meta:
@@ -27,6 +33,7 @@ class CategoryForm(forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
         queryset = Category.objects.filter(user=user)
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
@@ -34,3 +41,15 @@ class CategoryForm(forms.ModelForm):
         self.fields['parent_category'].required = False
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+
+    def clean_name(self):
+        """Reject a name this user already used, as a field error rather than a 500."""
+        name = self.cleaned_data['name']
+        # Matched exactly, like the database constraint it stands in for —
+        # `iexact` here would reject names SQLite would happily have stored.
+        duplicates = Category.objects.filter(user=self.user, name=name)
+        if self.instance.pk:
+            duplicates = duplicates.exclude(pk=self.instance.pk)
+        if duplicates.exists():
+            raise forms.ValidationError('You already have a category with this name.')
+        return name
