@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% comment %}
+Log in page (PRD §13, Sprint 3 — 3.2.1). Renders accounts.forms.LoginForm
+(a styled subclass of Django's native AuthenticationForm) through the shared
+partials/form_field.html renderer (PRD §9.4). Invalid credentials surface as
+a non-field error (PRD 3.3.2); valid credentials redirect to `next` or
+`LOGIN_REDIRECT_URL` (the dashboard) via Django's default LoginView behavior.
+{% endcomment %}
+
+{% block title %}Log in — CashFlow{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md">
+    <div class="mb-6 text-center">
+        <h1 class="text-3xl font-bold text-slate-100">Welcome back</h1>
+        <p class="mt-2 text-sm text-slate-400">Log in to see your dashboard.</p>
+    </div>
+
+    <form method="post" class="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="space-y-1.5">
+                {% for error in form.non_field_errors %}
+                    <p class="text-sm text-rose-400">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% include 'partials/form_field.html' with field=form.username %}
+        {% include 'partials/form_field.html' with field=form.password %}
+
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <button type="submit"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+            Log in
+        </button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-slate-400">
+        Don't have an account?
+        <a href="{% url 'accounts:signup' %}" class="rounded font-medium text-indigo-400 transition hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">Sign up</a>
+    </p>
+</div>
+{% endblock %}

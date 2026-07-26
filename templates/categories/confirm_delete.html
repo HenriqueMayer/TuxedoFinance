@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% comment %}
+Delete confirmation for Category (PRD §13, Sprint 4 — 4.2.4). Deletion is
+never a plain link/GET — it requires a POST from this confirmation page.
+{% endcomment %}
+
+{% block title %}Delete Category — CashFlow{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md space-y-6">
+    <h1 class="text-3xl font-bold text-slate-100">Delete Category</h1>
+
+    <div class="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+        <p class="text-sm text-slate-300">
+            Are you sure you want to delete <span class="font-semibold text-slate-100">{{ category.name }}</span>?
+            This action cannot be undone.
+        </p>
+
+        <form method="post" class="flex items-center gap-3">
+            {% csrf_token %}
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                Delete
+            </button>
+            <a href="{% url 'categories:list' %}"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

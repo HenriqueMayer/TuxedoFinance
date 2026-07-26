@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    volumes:
+      # Named volume for the db.sqlite3 file — survives `docker compose down`/`up` and container recreation.
+      - db-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  db-data:

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% comment %}
+Shared create/update form for Category (PRD §13, Sprint 4 — 4.2.2/4.2.3).
+Renders categories.forms.CategoryForm (already scoped to the requesting
+user, so `parent_category` only lists that user's own categories) through
+the shared partials/form_field.html renderer (PRD §9.4).
+{% endcomment %}
+
+{% block title %}{% if form.instance.pk %}Edit Category{% else %}New Category{% endif %} — CashFlow{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md space-y-6">
+    <h1 class="text-3xl font-bold text-slate-100">
+        {% if form.instance.pk %}Edit Category{% else %}New Category{% endif %}
+    </h1>
+
+    <form method="post" class="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/60 p-6" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="space-y-1.5">
+                {% for error in form.non_field_errors %}
+                    <p class="text-sm text-rose-400">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% include 'partials/form_field.html' with field=form.name %}
+        {% include 'partials/form_field.html' with field=form.parent_category %}
+
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                Save
+            </button>
+            <a href="{% url 'categories:list' %}"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

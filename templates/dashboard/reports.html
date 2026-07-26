@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load l10n %}
+
+{% comment %}
+Reports (PRD FR16). Three server-rendered charts over one 12-month window:
+
+  1. Balance evolution     — area + line, `balance_chart` (dashboard.charts).
+  2. Monthly cash flow     — grouped bars, `cashflow_chart`.
+  3. Spending by category  — CSS bars straight from `evolution`.
+
+Every coordinate is computed in `dashboard/charts.py` and interpolated into
+plain `<svg>` attributes here — no charting library, no <canvas>, no JS, in
+line with the project's zero-JS rule. Tooltips are native SVG <title>
+elements, which browsers surface on hover without any script.
+
+Colors follow PRD §9.1: Income emerald, Expense rose, Investment amber,
+balance on the indigo→fuchsia primary gradient. The `tone` values coming out
+of charts.py are semantic ('income'/'expense'/'investment') and mapped to
+Tailwind classes here, so design tokens stay in the template layer.
+
+The <linearGradient> stops below are the only literal color values in the
+project: Tailwind's from-*/via-*/to-* utilities do not apply to an SVG
+stroke, so the primary gradient has to be spelled out as the raw RGB of
+indigo-500 / violet-500 / fuchsia-500. Keep them in sync with PRD §9.1 by
+hand if the palette ever changes.
+
+Both SVGs sit in an `overflow-x-auto` wrapper with a `min-w-[44rem]` canvas:
+on a phone the chart scrolls inside its own card instead of shrinking its
+axis labels into illegibility (same convention as the dashboard outlook
+table).
+
+Every block that interpolates a *coordinate* is wrapped in
+{% templatetag openblock %} localize off {% templatetag closeblock %}. The
+project formats numbers Brazilian-style (R$ 1.000,00), and Django localizes
+raw floats rendered through {{ }} — which would emit `x="90,83"` and silently
+break every chart. Coordinates are markup, not money, so localization is
+switched off around them. The axis labels inside keep their formatting
+because `floatformat` localizes independently of this tag.
+{% endcomment %}
+
+{% block title %}Reports — CashFlow{% endblock %}
+
+{% block content %}
+{% url 'transactions:create' as create_url %}
+<div class="space-y-8">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-100">Reports</h1>
+            <p class="mt-1 text-sm text-slate-400">
+                How your account has moved over the last months &mdash; and where it is heading.
+            </p>
+        </div>
+        <a href="{% url 'dashboard:index' %}"
+           class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+            Back to dashboard
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {% with now_fmt=evolution.current_month.closing_balance|floatformat:2 closing_fmt=evolution.closing_balance|floatformat:2 net_change_fmt=evolution.net_change|floatformat:2 %}
+            {% include 'partials/stat_card.html' with label='Balance now' value=CURRENCY_SYMBOL|add:' '|add:now_fmt %}
+            {% include 'partials/stat_card.html' with label='Projected (end of window)' value=CURRENCY_SYMBOL|add:' '|add:closing_fmt %}
+            {% if evolution.net_change < 0 %}
+                {% include 'partials/stat_card.html' with label='Net change (12 months)' value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-rose-400' %}
+            {% else %}
+                {% include 'partials/stat_card.html' with label='Net change (12 months)' value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-emerald-400' %}
+            {% endif %}
+            {% include 'partials/stat_card.html' with label='Best month' value=evolution.best_month.date|date:'M Y' %}
+        {% endwith %}
+    </div>
+
+    {# ---------------------------------------------------------------- #}
+    {# Chart 1 — balance evolution                                       #}
+    {# ---------------------------------------------------------------- #}
+    <section class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+        <div>
+            <h2 class="text-xl font-semibold text-slate-100">Balance evolution</h2>
+            <p class="mt-1 text-sm text-slate-400">
+                Your balance at the close of each month. Everything after
+                <span class="font-medium text-slate-300">{{ evolution.current_month.date|date:'F Y' }}</span>
+                is projected from your fixed transactions and open installment plans.
+            </p>
+        </div>
+
+        <div class="overflow-x-auto">
+            {% localize off %}
+            <svg viewBox="0 0 {{ balance_chart.width }} {{ balance_chart.height }}"
+                 class="h-auto w-full min-w-[44rem]" role="img"
+                 aria-label="Line chart of the account balance at the end of each month">
+                <defs>
+                    <linearGradient id="balance-area" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgb(139 92 246)" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="rgb(139 92 246)" stop-opacity="0" />
+                    </linearGradient>
+                    <linearGradient id="balance-line" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="rgb(99 102 241)" />
+                        <stop offset="50%" stop-color="rgb(139 92 246)" />
+                        <stop offset="100%" stop-color="rgb(217 70 239)" />
+                    </linearGradient>
+                </defs>
+
+                {% for line in balance_chart.grid %}
+                    <line x1="{{ balance_chart.plot_left }}" y1="{{ line.y }}"
+                          x2="{{ balance_chart.plot_right }}" y2="{{ line.y }}"
+                          class="stroke-slate-800" stroke-width="1" />
+                    <text x="{{ balance_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
+                          text-anchor="end" class="fill-slate-500 text-[11px] tabular-nums">
+                        {{ line.value|floatformat:0 }}
+                    </text>
+                {% endfor %}
+
+                <line x1="{{ balance_chart.plot_left }}" y1="{{ balance_chart.zero_y }}"
+                      x2="{{ balance_chart.plot_right }}" y2="{{ balance_chart.zero_y }}"
+                      class="stroke-slate-600" stroke-width="1" stroke-dasharray="4 4" />
+
+                <polygon points="{{ balance_chart.area }}" fill="url(#balance-area)" />
+                <polyline points="{{ balance_chart.line }}" fill="none"
+                          stroke="url(#balance-line)" stroke-width="2.5"
+                          stroke-linecap="round" stroke-linejoin="round" />
+
+                {% for point in balance_chart.points %}
+                    <circle cx="{{ point.x }}" cy="{{ point.y }}" r="3.5"
+                            class="fill-slate-950 {% if point.label.is_future %}stroke-violet-400/60{% else %}stroke-violet-400{% endif %}"
+                            stroke-width="2">
+                        <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} (projected){% endif %}</title>
+                    </circle>
+                    <text x="{{ point.x }}" y="{{ balance_chart.label_y }}" text-anchor="middle"
+                          class="text-[11px] {% if point.label.is_current_month %}fill-slate-200 font-semibold{% else %}fill-slate-500{% endif %}">
+                        {{ point.label.date|date:'M' }}
+                    </text>
+                {% endfor %}
+            </svg>
+            {% endlocalize %}
+        </div>
+
+        <p class="text-sm text-slate-400">
+            Opening balance {{ CURRENCY_SYMBOL }} {{ evolution.opening_balance|floatformat:2 }}
+            &rarr; projected {{ CURRENCY_SYMBOL }} {{ evolution.closing_balance|floatformat:2 }}
+            <span class="{% if evolution.net_change < 0 %}text-rose-400{% else %}text-emerald-400{% endif %} font-semibold tabular-nums">
+                ({% if evolution.net_change >= 0 %}+{% endif %}{{ CURRENCY_SYMBOL }} {{ evolution.net_change|floatformat:2 }})
+            </span>
+        </p>
+    </section>
+
+    {# ---------------------------------------------------------------- #}
+    {# Chart 2 — monthly cash flow                                       #}
+    {# ---------------------------------------------------------------- #}
+    <section class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-100">Monthly cash flow</h2>
+                <p class="mt-1 text-sm text-slate-400">
+                    What comes in and what goes out each month, side by side.
+                </p>
+            </div>
+            <ul class="flex flex-wrap items-center gap-4">
+                {% for entry in cashflow_chart.legend %}
+                    <li class="flex items-center gap-2 text-sm text-slate-400">
+                        <span class="h-2.5 w-2.5 rounded-sm
+                            {% if entry.tone == 'income' %}bg-emerald-400
+                            {% elif entry.tone == 'expense' %}bg-rose-400
+                            {% else %}bg-amber-400{% endif %}"></span>
+                        {{ entry.name }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="overflow-x-auto">
+            {% localize off %}
+            <svg viewBox="0 0 {{ cashflow_chart.width }} {{ cashflow_chart.height }}"
+                 class="h-auto w-full min-w-[44rem]" role="img"
+                 aria-label="Grouped bar chart of income, expenses and investments per month">
+                {% for line in cashflow_chart.grid %}
+                    <line x1="{{ cashflow_chart.plot_left }}" y1="{{ line.y }}"
+                          x2="{{ cashflow_chart.plot_right }}" y2="{{ line.y }}"
+                          class="stroke-slate-800" stroke-width="1" />
+                    <text x="{{ cashflow_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
+                          text-anchor="end" class="fill-slate-500 text-[11px] tabular-nums">
+                        {{ line.value|floatformat:0 }}
+                    </text>
+                {% endfor %}
+
+                {% for group in cashflow_chart.groups %}
+                    {% for bar in group.bars %}
+                        <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                              width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                              class="{% if bar.tone == 'income' %}fill-emerald-400/80
+                                     {% elif bar.tone == 'expense' %}fill-rose-400/80
+                                     {% else %}fill-amber-400/80{% endif %}">
+                            <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
+                        </rect>
+                    {% endfor %}
+                    <text x="{{ group.center }}" y="{{ cashflow_chart.label_y }}" text-anchor="middle"
+                          class="text-[11px] {% if group.label.is_current_month %}fill-slate-200 font-semibold{% else %}fill-slate-500{% endif %}">
+                        {{ group.label.date|date:'M' }}
+                    </text>
+                {% endfor %}
+            </svg>
+            {% endlocalize %}
+        </div>
+    </section>
+
+    {# ---------------------------------------------------------------- #}
+    {# Chart 3 — spending by category                                    #}
+    {# ---------------------------------------------------------------- #}
+    <section class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+        <div>
+            <h2 class="text-xl font-semibold text-slate-100">Where the money goes</h2>
+            <p class="mt-1 text-sm text-slate-400">
+                Your biggest expense categories across the same 12 months, recurrences included.
+            </p>
+        </div>
+
+        {% if evolution.expenses_by_category %}
+            <ul class="space-y-4">
+                {% for category in evolution.expenses_by_category %}
+                    <li class="space-y-1.5">
+                        <div class="flex items-baseline justify-between gap-4">
+                            <p class="truncate font-medium text-slate-200">{{ category.name }}</p>
+                            <p class="shrink-0 text-sm tabular-nums text-slate-400">
+                                <span class="font-semibold text-rose-400">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
+                                &middot; {{ category.share }}%
+                            </p>
+                        </div>
+                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
+                            <div class="h-full rounded-full bg-gradient-to-r from-rose-500 to-fuchsia-500"
+                                 style="width: {{ category.bar_width|unlocalize }}%"></div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            {% include 'partials/empty_state.html' with title='No expenses recorded yet' message='Once you record an expense, this chart shows which categories take the biggest share.' cta_url=create_url cta_label='New Transaction' %}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

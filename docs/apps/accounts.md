@@ -1,0 +1,87 @@
+# `accounts`
+
+Sign up, log in, log out — entirely built on Django's native `django.contrib.auth`. No custom `User` model.
+
+## Files
+
+| File | Contents |
+|---|---|
+| `accounts/forms.py` | `SignupForm`, `LoginForm` — thin, styled subclasses of Django's native forms |
+| `accounts/views.py` | `LoginView`, `SignupView` |
+| `accounts/urls.py` | `app_name = 'accounts'`; routes `login`, `signup`, `logout` |
+| `accounts/models.py` | empty — `User` is Django's own, not redefined here |
+| `accounts/admin.py` | empty — `User` is already registered by `django.contrib.auth`'s own admin config |
+| `accounts/tests.py` | 6 tests |
+
+## Forms
+
+### `SignupForm(UserCreationForm)`
+
+```python
+class SignupForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ('username', 'email')
+```
+
+Adds `email` as a required field on top of Django's native `UserCreationForm` (which normally only asks for `username` + two password fields). `__init__` forces `email` to `required = True` and applies the shared `INPUT_CLASSES` design-system string (see [frontend.md § Shared component classes](../frontend.md#shared-component-classes-prd-9394-not-extracted-into-template-tags--copied-verbatim-per-use)) to every field's widget — `partials/form_field.html` renders labels/errors/help text but never injects classes itself, so every form is responsible for styling its own widgets this way.
+
+### `LoginForm(AuthenticationForm)`
+
+A pure styling subclass — no field/validation changes over Django's native `AuthenticationForm`. Invalid credentials surface through the form's own `error_messages['invalid_login']`, rendered by the template as a non-field error (never a raw 500 or an unhandled exception).
+
+## Views
+
+### `LoginView(SuccessMessageMixin, AuthLoginView)`
+
+```python
+class LoginView(SuccessMessageMixin, AuthLoginView):
+    template_name = 'accounts/login.html'
+    authentication_form = LoginForm
+    redirect_authenticated_user = True
+    success_message = 'Welcome back, %(username)s.'
+```
+
+- `redirect_authenticated_user=True` — an already-logged-in visitor who navigates to `/accounts/login/` is sent straight to `LOGIN_REDIRECT_URL` instead of seeing the form again.
+- On success, redirects to `?next=` if present, otherwise `settings.LOGIN_REDIRECT_URL` (`dashboard:index`) — this is Django's built-in `LoginView` behavior, unmodified.
+- `SuccessMessageMixin` reads `username` from the bound `AuthenticationForm`'s `cleaned_data` to fill in `success_message`.
+
+### `SignupView(SuccessMessageMixin, CreateView)`
+
+```python
+class SignupView(SuccessMessageMixin, CreateView):
+    form_class = SignupForm
+    template_name = 'accounts/signup.html'
+    success_url = reverse_lazy('dashboard:index')
+    success_message = 'Welcome to CashFlow, %(username)s. Your account is ready.'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        login(self.request, self.object)
+        return response
+```
+
+Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly calls Django's `login()` after `super().form_valid(form)` saves the user — this **auto-logs-in** the new account and sends them straight to the dashboard, rather than redirecting to the login page and making them re-enter credentials. This is what makes signup → first-transaction a seamless flow: by the time `SignupView` redirects, the `post_save` signals in `categories` and `payments` have already run (Django signals fire synchronously inside `User.objects.create_user()`/`form.save()`), so the new user's default categories and payment methods already exist.
+
+## Routes
+
+| Path | Name | View | Notes |
+|---|---|---|---|
+| `/accounts/login/` | `accounts:login` | `LoginView` | |
+| `/accounts/signup/` | `accounts:signup` | `SignupView` | |
+| `/accounts/logout/` | `accounts:logout` | Django's native `LogoutView` | **POST-only** |
+
+`LogoutView` is used directly from `django.contrib.auth.views` with zero customization — modern Django's `LogoutView` rejects `GET` requests (returns `405`), so every logout control in the UI is a `<form method="post">` with a submit button, never a plain `<a href>` link (see `partials/navbar_app.html`).
+
+## Templates
+
+- `templates/accounts/login.html` — renders `LoginForm` via `partials/form_field.html`; preserves `?next=` as a hidden input so post-login redirect targets survive a failed first attempt; links to signup.
+- `templates/accounts/signup.html` — renders `SignupForm`'s four fields (`username`, `email`, `password1`, `password2`); links to login.
+
+Both follow the identical "centered `max-w-md` card" layout used by every auth-adjacent screen in the project.
+
+## Tests (`accounts/tests.py`, 6 tests)
+
+- `SignupViewTests` — signup creates the user **and** triggers both default-data signals (asserts exactly 9 categories + 4 payment methods exist for the new user immediately after signup); a mismatched password confirmation does not create a user.
+- `LoginViewTests` — valid credentials redirect to the dashboard; invalid credentials return `200` with the friendly Django `AuthenticationForm` error message (not a 500).
+- `LogoutViewTests` — `GET /accounts/logout/` returns `405`; `POST` redirects to `pages:landing` and actually clears the session (a subsequent dashboard request is redirected to login again).
