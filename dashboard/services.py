@@ -3,7 +3,9 @@
 Every figure on the dashboard is derived from `Transaction.amount_for_month`
 / `amount_through_month`, which decide how much a transaction contributes to
 a given month: a fixed transaction repeats every month, an installment plan
-spreads over consecutive months, a one-off lands once.
+spreads over consecutive months, a one-off lands once — and all three start
+from the month the *payment* clears, which on a credit card with a billing
+cycle is later than the month of the purchase.
 
 That recurrence cannot be expressed as a `Sum(..., filter=Q(...))` over
 `transaction_date`, so these helpers fetch the user's transactions **once**
@@ -51,9 +53,9 @@ def add_months(year, month, offset):
 def _projection_queryset(user, with_category=False, with_payment_method=False):
     """The user's transactions, with only the columns the projection needs.
 
-    `with_category` / `with_payment_method` join the related name for the
-    breakdown charts — one extra join rather than an N+1 per row, and still a
-    single query overall.
+    `with_category` / `with_payment_method` add the related **name** for the
+    breakdown charts. The payment method itself is always joined, cheaply, for
+    the reason in the comment below.
     """
     # Every column `amount_for_month` / `amount_through_month` touches has to
     # be listed: a field left out of `only()` is deferred, and reading it
@@ -67,15 +69,23 @@ def _projection_queryset(user, with_category=False, with_payment_method=False):
         'is_fixed',
         'fixed_until',
         'transaction_date',
+        # `months_from_start` now asks the card which month it is paid in, so
+        # the first two are read for *every* transaction on *every* page — the
+        # join is unconditional for the same reason the columns above are.
+        # Losing it does not break the numbers, it quietly multiplies the
+        # queries by the size of the transaction list. `due_day` moves no money
+        # but rides along for free, and the transaction list renders it.
+        'payment_method__method_type',
+        'payment_method__best_purchase_day',
+        'payment_method__due_day',
     ]
-    queryset = Transaction.objects.filter(user=user)
+    queryset = Transaction.objects.filter(user=user).select_related('payment_method')
 
     if with_category:
         queryset = queryset.select_related('category')
         fields.append('category__name')
 
     if with_payment_method:
-        queryset = queryset.select_related('payment_method')
         fields.append('payment_method__name')
 
     return queryset.only(*fields)

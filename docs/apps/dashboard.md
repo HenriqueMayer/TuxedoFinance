@@ -39,15 +39,28 @@ The original version computed all six totals in one `.aggregate()` call with `Su
 The replacement fetches the user's transactions **once** and folds them in Python:
 
 ```python
-def _projection_queryset(user):
-    return Transaction.objects.filter(user=user).only(
+def _projection_queryset(user, with_category=False, with_payment_method=False):
+    fields = [
         'transaction_type', 'amount', 'installments',
         'is_fixed', 'fixed_until', 'transaction_date',
-    )
+        'payment_method__method_type',
+        'payment_method__best_purchase_day', 'payment_method__due_day',
+    ]
+    queryset = Transaction.objects.filter(user=user).select_related('payment_method')
+
+    if with_category:
+        queryset = queryset.select_related('category')
+        fields.append('category__name')
+
+    if with_payment_method:
+        fields.append('payment_method__name')
+
+    return queryset.only(*fields)
 ```
 
-- Still **one database round-trip** per dashboard render, regardless of how many months the outlook spans — the deferred `.only()` keeps it to the columns the arithmetic actually needs.
+- Still **one database round-trip** per dashboard render, regardless of how many months the outlook spans — the deferred `.only()` keeps it to the columns the arithmetic actually needs, and the joins add columns to that single query rather than queries of their own.
 - **That column list is load-bearing, not an optimization detail.** Anything `amount_for_month` / `amount_through_month` reads must appear in it: a field left out is *deferred*, and touching it later silently costs one extra query **per row**, turning the single round-trip into an N+1 (NFR10). `fixed_until` belongs there for exactly this reason even though no screen displays it.
+- **The `payment_method` join is unconditional** for the same reason. `months_from_start` asks the card which month a purchase is billed in ([billing cycle](../data-model.md#billing-cycle-when-a-card-purchase-actually-leaves-the-account)), so `method_type` and `best_purchase_day` are read for *every* transaction on *every* dashboard page (`due_day` moves no money but rides along for free, and the transaction list renders it). Dropping the join would not change a single number on screen — it would quietly multiply the query count by the size of the transaction list. `with_payment_method` therefore only adds the method's **name**, for the breakdown chart's labels.
 - What it gives up versus the old pure-SQL version is that work now scales with the user's transaction count in Python rather than in SQLite. For a personal finance app that is the right trade: correctness of the forecast is the entire feature, and the row counts are in the thousands at most. If a user's history ever made this slow, the fix is to cache the fold or snapshot closed months — not to go back to `Sum(filter=...)`, which cannot express recurrence at all.
 - `_totals(...)` folds once per month; the outlook's running balance is accumulated month-to-month rather than recomputing a cumulative fold per row, so the whole outlook costs `OUTLOOK_MONTHS + 2` passes over an in-memory list.
 

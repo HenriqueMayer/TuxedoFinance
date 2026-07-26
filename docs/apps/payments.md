@@ -1,6 +1,6 @@
 # `payments`
 
-Full CRUD for `PaymentMethod`, plus the default-payment-method seeding signal (FR14). Structurally the twin of [`categories`](categories.md) — same view/signal shape, minus the self-relationship.
+Full CRUD for `PaymentMethod`, plus the default-payment-method seeding signal (FR14). Structurally the twin of [`categories`](categories.md) — same view/signal shape, minus the self-relationship, plus the credit card **billing cycle** that decides which month a purchase is actually paid in.
 
 ## Files
 
@@ -17,16 +17,26 @@ Full CRUD for `PaymentMethod`, plus the default-payment-method seeding signal (F
 
 For the `PaymentMethod` model's fields, constraints, and the `MethodType` enum, see [data-model.md § PaymentMethod](../data-model.md#paymentmethod-paymentsmodelspy).
 
+## Billing cycle
+
+`best_purchase_day` is what lets a purchase leave the account in a later month than it was made — a card opening its statement on the 24th subtracts a 20 June purchase from June and a 25 June one from July. `due_day` is a reminder of which day of that month the bill goes out and never moves a transaction between months. `statement_offset()` is the entire rule and lives on this model; `Transaction.months_from_start` is its only consumer, so nothing else in the project has to know a statement exists.
+
+The full rule, the worked example, and why `due_day` is deliberately inert are in [data-model.md § Billing cycle](../data-model.md#billing-cycle-when-a-card-purchase-actually-leaves-the-account). What matters *here* is that this app owns it: adding a card type or changing how a cycle is described is a change to `payments/`, not to the dashboard.
+
 ## Form (`PaymentMethodForm`)
 
 ```python
 class PaymentMethodForm(forms.ModelForm):
     class Meta:
         model = PaymentMethod
-        fields = ('name', 'method_type')
+        fields = ('name', 'method_type', 'best_purchase_day', 'due_day')
 ```
 
 No FK scoping is needed in `__init__` (unlike `CategoryForm`'s `parent_category`) since `PaymentMethod` has no self-relationship — per-user isolation is fully handled by the owning views' `get_queryset()` and `form_valid()`. `__init__` only applies the shared `INPUT_CLASSES` styling string to each widget.
+
+`clean_name()` enforces `unique_payment_method_per_user` itself: `user` is not in `Meta.fields`, and `Model.validate_unique()` skips any constraint touching an excluded field, so without it a duplicate reached the INSERT as an uncaught `IntegrityError` (a 500 on submit).
+
+`clean()` enforces the one billing-cycle rule — credit cards only. It is cross-field, and enforced server-side rather than by hiding the inputs, because the project is deliberately zero-JS: the day fields are always rendered and cannot react to the `method_type` dropdown. The two days are otherwise independent: `best_purchase_day` alone is a complete cycle, and `due_day` alone is a harmless reminder. `templates/payments/form.html` groups them in their own bordered block with a heading, so they read as one optional section rather than two loose numbers.
 
 ## Views
 
@@ -89,7 +99,7 @@ One payment method **per `MethodType`** (4 total), each named after its own type
 ## Admin
 
 ```python
-list_display = ('name', 'method_type', 'user', 'created_at')
+list_display = ('name', 'method_type', 'best_purchase_day', 'due_day', 'user', 'created_at')
 list_filter = ('user', 'method_type')
 search_fields = ('name',)
 ```

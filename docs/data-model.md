@@ -42,6 +42,8 @@ erDiagram
         integer user_id FK
         string name
         string method_type "CREDIT_CARD | DEBIT_CARD | CHECKING_ACCOUNT | PIX"
+        integer best_purchase_day "1-31, nullable — day the statement opens"
+        integer due_day "1-31, nullable — day the bill is paid"
         datetime created_at
         datetime updated_at
     }
@@ -87,12 +89,17 @@ Not defined in this codebase — used as-is from `django.contrib.auth`. Referenc
 | `user` | FK → `AUTH_USER_MODEL` | `on_delete=CASCADE`, `related_name='payment_methods'` |
 | `name` | `CharField(max_length=100)` | free-form label, e.g. "Nubank Credit" |
 | `method_type` | `CharField(choices=MethodType)` | see enum below |
+| `best_purchase_day` | `PositiveSmallIntegerField(null=True, blank=True)` | `MinValueValidator(1)` + `MaxValueValidator(31)` — day the statement opens; credit card only |
+| `due_day` | `PositiveSmallIntegerField(null=True, blank=True)` | `MinValueValidator(1)` + `MaxValueValidator(31)` — day the bill is paid; credit card only; display-only, shifts nothing |
 | `created_at` | `DateTimeField(auto_now_add=True)` | |
 | `updated_at` | `DateTimeField(auto_now=True)` | |
 
 - `Meta.ordering = ['name']`.
 - `Meta.constraints`: `UniqueConstraint(user, name)` named `unique_payment_method_per_user`.
 - `__str__`: `"{name} ({method_type display})"`, e.g. `"Nubank Credit (Credit Card)"` — **except** when the name already *is* the type label (case- and whitespace-insensitive), where it returns just the name. The FR14 defaults are named exactly after their own type, so the unconditional form rendered `"Credit Card (Credit Card)"` in every dropdown.
+- `has_billing_cycle` (property): `method_type == CREDIT_CARD` **and** `best_purchase_day` set. `due_day` is not part of it — it moves no money. `PaymentMethodForm.clean()` rejects either field on a non-credit-card method.
+- `statement_offset(purchase_date)` (method): whole months from a purchase to the month it comes off the balance — `0` or `1`, and `0` without a cycle. See [Billing cycle](#billing-cycle-when-a-card-purchase-actually-leaves-the-account) below.
+- `due_date_in(year, month)` (method): the due day clamped to that month's length, so a due day of 31 still resolves in February. `None` when the card records no due day.
 
 ### `Transaction` (`transactions/models.py`)
 
@@ -117,7 +124,12 @@ Not defined in this codebase — used as-is from `django.contrib.auth`. Referenc
 - `MAX_INSTALLMENTS = 48` — a class constant, referenced by the model validator, the form widget's `max` attribute, and the help text, so the ceiling is defined in exactly one place.
 - `is_installment_plan` (property): `installments > 1`.
 - `installment_amount` (property): `amount / installments`, quantized to 2 decimal places with `ROUND_HALF_UP`. **Presentation-only** — the rounded parts may not re-sum to `amount` to the cent (e.g. `100.00 / 3` → `33.33` ×3 = `99.99`), so no balance calculation ever derives from it.
-- `last_fixed_offset` (property): how many months after the start the fixed recurrence last pays, or `None` when open-ended. Clamped at `0`, so a `fixed_until` before the start month pays once rather than a negative number of times.
+- `calendar_months_to(year, month)` (method): raw month distance from `transaction_date`, with no billing cycle applied — the distance between two dates the user typed.
+- `billing_offset` (property): `payment_method.statement_offset(transaction_date)`, i.e. how many months later than the purchase the money leaves. `0` for everything except a credit card with a cycle.
+- `months_from_start(year, month)` (method): `calendar_months_to(...) − billing_offset`. **The origin is the month the payment clears, not the month of the purchase** — this single subtraction is what moves every downstream figure onto the billing month.
+- `last_fixed_offset` (property): how many months after the start the fixed recurrence last pays, or `None` when open-ended. Measured on `calendar_months_to`, **not** `months_from_start`: `transaction_date` and `fixed_until` both describe the charge, so a billing cycle moves the whole run of payments later without adding or removing any. Clamped at `0`, so a `fixed_until` before the start month pays once rather than a negative number of times.
+- `billed_month` (property): first day of the month this comes off the balance — the month `months_from_start` counts from, and the **first** one for a recurrence. Display only; `None` when the arithmetic runs off the end of the calendar, which `months_from_start` (plain integers) does not care about.
+- `payment_date` (property): the exact day the money leaves — the purchase date without a cycle, otherwise the card's due day inside `billed_month`, so the two can never name different months. `None` when the card records no `due_day`; callers fall back to `billed_month`.
 
 ## Enums
 
@@ -160,11 +172,11 @@ This is the single most important rule in the data model, because it is what mak
 
 | Shape | Condition | Contributes |
 |---|---|---|
-| Fixed | `is_fixed=True` | `amount`, in **every** month from its own month through `fixed_until` (inclusive) — indefinitely when `fixed_until` is empty |
+| Fixed | `is_fixed=True` | `amount`, in **every** month from its start month through `fixed_until` (inclusive) — indefinitely when `fixed_until` is empty |
 | Installment plan | `installments > 1` | one installment per month, for `installments` consecutive months |
-| One-off | neither | `amount`, in its own month only |
+| One-off | neither | `amount`, in its start month only |
 
-The three are mutually exclusive: `TransactionForm.clean()` rejects `is_fixed` together with `installments > 1`, because "repeats forever" and "ends after N months" are contradictory recurrences and a silent precedence rule would make the projection unexplainable.
+"Start month" is the month the payment clears, which is the purchase month for every method **except** a credit card with a billing cycle — see [Billing cycle](#billing-cycle-when-a-card-purchase-actually-leaves-the-account) below. The three shapes are mutually exclusive: `TransactionForm.clean()` rejects `is_fixed` together with `installments > 1`, because "repeats forever" and "ends after N months" are contradictory recurrences and a silent precedence rule would make the projection unexplainable.
 
 Nothing is materialized. There are **no** future-dated child rows and no scheduler — future months are computed on read from the transactions that already exist. That is exactly what makes editing work the way you would expect: change a fixed salary's `amount` and every month it covers re-projects immediately, with no backfill and no rows to clean up. Note the scope of "every month it covers" — see the next subsection.
 
@@ -195,13 +207,49 @@ Two consequences worth stating plainly:
 `installments` records how many times a purchase was split. Four rules define it:
 
 1. **`amount` is always the full total, never the value of one installment.** A 3× purchase of R$ 300.00 stores `amount=300.00, installments=3`; the R$ 100.00 monthly value is derived by `installment_amount`. Storing the total keeps the transaction list honest about what was actually bought, and keeps one row per purchase.
-2. **The cost is spread one installment per month**, starting in the transaction's own month — see the recurrence table above. A 3× purchase in January costs 100 in January, 100 in February, 100 in March, and nothing afterwards.
+2. **The cost is spread one installment per month**, starting in the month the first installment is *paid* — see the recurrence table above. On a card with no billing cycle that is the purchase's own month: a 3× purchase in January costs 100 in January, 100 in February, 100 in March, and nothing afterwards. With a cycle, the whole run starts on the first bill instead.
 3. **`installments > 1` is only valid when the payment method's `method_type` is `CREDIT_CARD`.** Enforced server-side in `TransactionForm.clean()` (`transactions/forms.py`) — not in the model, because the rule spans two fields and only applies to user-submitted data.
 4. **Blank means 1.** The form field is `required = False`; `clean_installments()` turns a missing value into `1`. An explicit `0` is *not* defaulted — it falls through to the model's `MinValueValidator(1)` and is rejected, so a bad value can never be silently rewritten into a valid one.
 
 **Rounding never loses money.** `installment_amount` rounds to the cent, so R$ 100.00 in 3× gives 33.33 — three of which is 99.99. `amount_for_month` gives the remainder to the **final** installment (33.33, 33.33, **33.34**), so the occurrences always re-sum to exactly `amount`.
 
-> **Scope note:** this models an installment *purchase*, not a credit-card *statement*. There is no billing-cycle/closing-date concept — the first installment lands in the purchase's own calendar month, not in the month the card's bill would actually arrive. Adding real statement cycles would be a separate feature on `PaymentMethod`.
+> **Scope note:** this models an installment *purchase*, not a credit-card *statement*. `installments` is a property of the purchase; which month each installment falls in is decided by the card, in the next section.
+
+### Billing cycle: when a card purchase actually leaves the account
+
+A credit card does not take the money when you buy something — it takes it on the bill the purchase lands on, which for a purchase made after the statement opens is the following month. Without that, a purchase made on the 26th showed up in the same month's balance even though the account is not touched until the next bill, and the forecast for the current month was wrong by however much was spent after the statement closed.
+
+Two optional fields on `PaymentMethod` describe the cycle, and only the first of them moves money:
+
+| Field | Meaning |
+|---|---|
+| `best_purchase_day` | the day the new statement **opens**. Buying on this day or later puts the charge on the *next* month's bill — which is precisely what makes it the "best" day to buy. **This field alone decides which month a purchase is subtracted from.** |
+| `due_day` | the day of that month the bill is **paid**. A reminder, shown on the payment method list and in the transaction badge; it never changes which month a purchase falls in. |
+
+`statement_offset(purchase_date)` is therefore a single shift:
+
+- `purchase_date.day >= best_purchase_day` → `+1` month, otherwise `0`.
+
+Worked example, a card opening on the **24th**:
+
+| Purchase | Comes off the balance in | Offset |
+|---|---|---|
+| Pillow, 20 June | **June** | 0 |
+| Toy, 25 June | **July** | +1 |
+| Toy, 25 July | **August** | +1 |
+
+Two purchases five days apart, one month apart on the balance.
+
+> **Why `due_day` is deliberately inert.** An earlier version added a second `+1` when `due_day < best_purchase_day`, on the reasoning that a bill due on the 4th cannot be paid in a month whose statement closes on the 24th. It is defensible in cash-flow terms and it was wrong for this app: on a 24/04 card it pushed a 25 July purchase all the way out to September, when what the user wants to see is the purchase landing on the next month's bill. The month is the unit the dashboard works in, so the opening day decides it and the due day only labels the day within it.
+
+Rules that fall out of this:
+
+- **The opening day is enough.** `has_billing_cycle` requires only `best_purchase_day`; either field may be filled in without the other. A card with just a due day shifts nothing and simply displays the reminder.
+- **Credit cards only.** Debit, PIX and a checking account take the money on the purchase date; there is no statement for a purchase to fall on the far side of. The form rejects the fields on those types (it cannot hide them: the project is zero-JS, so they cannot appear and disappear as `method_type` changes).
+- **No cycle means no shift.** Both fields default to `NULL`, so existing data and any card whose dates the user has not filled in behave exactly as they did before the feature existed.
+- **Short months are clamped.** A cycle opening on the 31st still opens in February — `min(best_purchase_day, days_in_month)` — and a due day of 31 resolves to the 28th/30th via `due_date_in()`.
+- **The offset moves a recurrence, it does not resize it.** A fixed transaction charged January–June is six payments on any card; the cycle only decides which six months the money leaves in. That is why `last_fixed_offset` measures the calendar distance from `transaction_date` to `fixed_until` rather than going through `months_from_start`.
+- **`transaction_date` stays the purchase date.** It is what the user actually knows and what the transaction list shows; the derived payment date is displayed next to it as a badge when the two differ.
 
 ### Date semantics
 

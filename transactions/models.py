@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
@@ -26,6 +27,14 @@ class Transaction(models.Model):
     by `amount_for_month`, not by `transaction_date` alone: a fixed transaction
     repeats every month, an installment plan spreads over consecutive months,
     and everything else lands once on its own month.
+
+    Where that run of months *starts* is decided by the payment method, not by
+    `transaction_date` either. A credit card with a billing cycle
+    (`PaymentMethod.statement_offset`) defers a purchase made on or after the
+    card's best purchase day to the next month's bill, so on a card opening on
+    the 24th a purchase made 25 June comes out of July rather than June. Every
+    other method — and any card whose best purchase day is left blank — takes
+    the money on the purchase date, an offset of zero.
 
     A fixed transaction runs from `transaction_date` until `fixed_until`
     (inclusive, by month), or forever when `fixed_until` is empty. This is how
@@ -103,29 +112,105 @@ class Transaction(models.Model):
             Decimal('0.01'), rounding=ROUND_HALF_UP
         )
 
-    def months_from_start(self, year, month):
-        """Whole months from this transaction's own month to (`year`, `month`).
+    def calendar_months_to(self, year, month):
+        """Whole months from `transaction_date`'s own month to (`year`, `month`).
 
-        Negative when the target month precedes the transaction.
+        Purchase-date arithmetic, with no billing cycle applied — the raw
+        distance between two things the user typed. `months_from_start` is the
+        one that knows about credit card statements.
         """
         return (year - self.transaction_date.year) * 12 + (
             month - self.transaction_date.month
         )
 
     @property
+    def billing_offset(self):
+        """Months between buying this and paying for it (`statement_offset`).
+
+        Zero for everything except a credit card with a best purchase day set,
+        so a project that never fills that day in behaves exactly as it did
+        before the column existed.
+        """
+        return self.payment_method.statement_offset(self.transaction_date)
+
+    def months_from_start(self, year, month):
+        """Whole months from the month this is **paid** to (`year`, `month`).
+
+        Negative when the target month precedes the payment. Note the shift:
+        the origin is the month the money leaves the account, not the month of
+        the purchase. A card that opens its cycle on the 24th turns a purchase
+        made on 25 June into a July payment, and every figure downstream —
+        balances, projections, the reports charts — follows from that one
+        subtraction.
+        """
+        return self.calendar_months_to(year, month) - self.billing_offset
+
+    @property
     def last_fixed_offset(self):
         """Offset of the final month a fixed transaction pays, or `None`.
 
-        `None` means open-ended. A `fixed_until` earlier than the start month
-        clamps to 0 rather than going negative: the form rejects that combination,
-        but a fixture or data migration could still produce it, and one payment
-        is a saner reading of it than a negative number of payments.
+        `None` means open-ended. Deliberately measured on the **calendar**
+        distance from `transaction_date` to `fixed_until`, not through
+        `months_from_start`: both dates are things the user recorded about the
+        charge, so a billing cycle moves the whole run of payments later
+        without adding or removing any. A subscription charged every month from
+        January to June is six payments on any card; the cycle only decides
+        which six months the money actually leaves in.
+
+        A `fixed_until` earlier than the start month clamps to 0 rather than
+        going negative: the form rejects that combination, but a fixture or
+        data migration could still produce it, and one payment is a saner
+        reading of it than a negative number of payments.
         """
         if not self.is_fixed or self.fixed_until is None:
             return None
         return max(
-            0, self.months_from_start(self.fixed_until.year, self.fixed_until.month)
+            0, self.calendar_months_to(self.fixed_until.year, self.fixed_until.month)
         )
+
+    @property
+    def billed_month(self):
+        """First day of the month this comes off the balance, for display (FR11).
+
+        The same month `months_from_start` counts from — for a recurrence, the
+        **first** one, since the rest simply follow one month apart. `None`
+        only when the arithmetic runs off the end of the calendar (a December
+        9999 purchase billed the following month). That is a display concern,
+        not a projection one: `months_from_start` stays in plain integers and
+        keeps working there.
+        """
+        index = (
+            self.transaction_date.year * 12
+            + self.transaction_date.month
+            - 1
+            + self.billing_offset
+        )
+        year, month = index // 12, index % 12 + 1
+        if not date.min.year <= year <= date.max.year:
+            return None
+        return date(year, month, 1)
+
+    @property
+    def payment_date(self):
+        """The exact day the money leaves, when the card records a due day.
+
+        The purchase date itself when there is no billing cycle. On a card with
+        one, the due day within `billed_month` — the two always agree on the
+        month, so the badge on the transaction list can never name a month the
+        dashboard disagrees with. `None` when the card has no `due_day`: the
+        month is known, the day genuinely is not, and callers fall back to
+        `billed_month`.
+        """
+        if not self.billing_offset:
+            return self.transaction_date
+
+        billed = self.billed_month
+        if billed is None:
+            return None
+        day = self.payment_method.due_date_in(billed.year, billed.month)
+        if day is None:
+            return None
+        return date(billed.year, billed.month, day)
 
     def amount_for_month(self, year, month):
         """How much this transaction adds to (`year`, `month`) — PRD §8.5.

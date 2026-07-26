@@ -32,7 +32,29 @@ class PaymentMethodForm(forms.ModelForm):
 
     class Meta:
         model = PaymentMethod
-        fields = ('name', 'method_type')
+        fields = ('name', 'method_type', 'best_purchase_day', 'due_day')
+        widgets = {
+            'best_purchase_day': forms.NumberInput(attrs={'min': '1', 'max': '31'}),
+            'due_day': forms.NumberInput(attrs={'min': '1', 'max': '31'}),
+        }
+        labels = {
+            'best_purchase_day': 'Best purchase day',
+            'due_day': 'Due day',
+        }
+        help_texts = {
+            'best_purchase_day': (
+                'Credit cards only. The day the new statement opens — buying on '
+                'this day or later moves the charge to the next month. This is '
+                'the field that decides which month the dashboard subtracts a '
+                'purchase from. Leave it empty to have purchases hit the month '
+                'they were made.'
+            ),
+            'due_day': (
+                'Credit cards only, optional. The day of the month the bill is '
+                'paid, shown as a reminder — it never changes which month a '
+                'purchase is subtracted from.'
+            ),
+        }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,3 +73,32 @@ class PaymentMethodForm(forms.ModelForm):
         if duplicates.exists():
             raise forms.ValidationError('You already have a payment method with this name.')
         return name
+
+    def clean(self):
+        """Restrict the billing cycle to credit cards.
+
+        The two days are independent on purpose: `best_purchase_day` alone is
+        enough to decide which month a purchase is paid in, and `due_day` is a
+        reminder that moves no money, so either can be filled in without the
+        other.
+
+        The fields are always rendered — the project is deliberately zero-JS,
+        so they cannot appear and disappear as `method_type` changes — which is
+        why the credit-card rule is enforced here rather than in the widget.
+        """
+        cleaned_data = super().clean()
+        method_type = cleaned_data.get('method_type')
+
+        # Only reachable once `method_type` itself is valid; otherwise the user
+        # already has an error on that field and a second one adds nothing.
+        if method_type and method_type != PaymentMethod.MethodType.CREDIT_CARD:
+            for field in ('best_purchase_day', 'due_day'):
+                if cleaned_data.get(field) is not None:
+                    self.add_error(
+                        field,
+                        'Only credit cards have a billing cycle — every other '
+                        'payment method takes the money on the purchase date. '
+                        'Clear this field.',
+                    )
+
+        return cleaned_data
