@@ -54,19 +54,19 @@ Sign up from the landing page and your account arrives with the default categori
 
 ## Using this repository as a template
 
-This project is meant to be **forked** and run as your own independent local instance — not deployed straight from this repository. Each fork owns its own database and data.
+This project is a **GitHub template repository**. Use it to start your own independent local instance — it is not meant to be deployed straight from here. Each instance owns its own database and data.
 
-### 1. Fork and clone
+### 1. Create your own repository
 
-1. Click **Use this template** (or **Fork**) on [github.com/HenriqueMayer/django-finance-template](https://github.com/HenriqueMayer/django-finance-template).
-2. Clone your fork:
+1. Click **Use this template** → **Create a new repository** on [github.com/HenriqueMayer/django-finance-template](https://github.com/HenriqueMayer/django-finance-template).
+2. Clone the repository it creates:
 
    ```bash
-   git clone git@github.com:<your-username>/django-finance-template.git
-   cd django-finance-template
+   git clone git@github.com:<your-username>/<your-repository>.git
+   cd <your-repository>
    ```
 
-3. Follow [Setup](#setup) above.
+3. Follow [Setup](#setup) above: `uv sync`, `manage.py migrate`, create a superuser, and run the server. From there it is your own project — change it however you like.
 
 ### 2. The local database (`db.sqlite3`)
 
@@ -81,26 +81,7 @@ git rm --cached db.sqlite3
 echo 'db.sqlite3' >> .gitignore
 ```
 
-Do this before deploying a fork that will hold real data. The Docker setup points production at a separate volume-mounted file regardless, but a stale development database should not ship in the image either.
-
-### 3. Syncing your fork with future template updates
-
-To pull in changes made to the original template after you forked it:
-
-```bash
-git remote add upstream git@github.com:HenriqueMayer/django-finance-template.git
-git fetch upstream
-git merge upstream/main   # or: git rebase upstream/main
-```
-
-Because `db.sqlite3` is a tracked binary file, a merge or rebase from `upstream` conflicts on it whenever both sides have changed. Keep your own copy:
-
-```bash
-git checkout --ours db.sqlite3
-git add db.sqlite3
-```
-
-Untracking it as described above avoids the conflict entirely.
+Do this before deploying an instance that will hold real data. The Docker setup points production at a separate volume-mounted file regardless, but a stale development database should not ship in the image either.
 
 ## Project layout
 
@@ -248,4 +229,4 @@ A short pass to run through before putting an instance in front of real data:
 
 Copyright &copy; 2026 [Henrique Mayer](https://github.com/HenriqueMayer). All rights reserved.
 
-See [LICENSE](LICENSE) for the full terms. Forking this repository for your own personal, local use is expected and welcome; any other use, redistribution, or reuse of the code beyond that requires the copyright holder's permission.
+See [LICENSE](LICENSE) for the full terms. Using this repository as a template for your own personal, local instance is expected and welcome; any other use, redistribution, or reuse of the code beyond that requires the copyright holder's permission.

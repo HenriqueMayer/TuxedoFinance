@@ -49,8 +49,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', '').strip() or INSECURE_SECRET_KEY
 if not DEBUG and SECRET_KEY == INSECURE_SECRET_KEY:
     # Refuse to boot rather than serve a production site with a published key.
     # `check --deploy` warns about this, but nothing forces anyone to run it —
-    # and a fork deployed with the default key looks perfectly healthy while
-    # being trivially forgeable, so this has to fail loudly instead.
+    # and an instance deployed with the default key looks perfectly healthy
+    # while being trivially forgeable, so this has to fail loudly instead.
     raise ImproperlyConfigured(
         'SECRET_KEY is still the insecure development fallback, which is '
         'published in this repository, while DEBUG is False. Set a real one '
