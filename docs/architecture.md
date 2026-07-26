@@ -61,7 +61,7 @@ Every deployment-specific setting reads from the environment so the same code ru
 
 #### The secret key guard
 
-The dev fallback is committed to a public template repository, so it is public knowledge: anyone holding it can forge session cookies and password-reset tokens against a fork still running on it. Settings therefore **refuse to import** when `DEBUG=False` and the key is still the fallback:
+The dev fallback is committed to a public template repository, so it is public knowledge: anyone holding it can forge session cookies and password-reset tokens against an instance still running on it. Settings therefore **refuse to import** when `DEBUG=False` and the key is still the fallback:
 
 ```python
 INSECURE_SECRET_KEY = 'django-insecure-...'
@@ -74,7 +74,7 @@ if not DEBUG and SECRET_KEY == INSECURE_SECRET_KEY:
 Two details that are easy to get wrong:
 
 - **Blank counts as unset.** `SECRET_KEY=` left empty in `.env` is the likeliest way to misconfigure this, and Django boots happily on an empty string — so the value falls through to the fallback and trips the guard rather than sailing past it.
-- **It raises, rather than warning.** `check --deploy` already flags a weak key (`security.W009`), but nothing forces anyone to run it, and a fork deployed on the default key looks perfectly healthy while being trivially forgeable. Failing at import turns a silent compromise into a five-second fix.
+- **It raises, rather than warning.** `check --deploy` already flags a weak key (`security.W009`), but nothing forces anyone to run it, and an instance deployed on the default key looks perfectly healthy while being trivially forgeable. Failing at import turns a silent compromise into a five-second fix.
 
 `SecretKeyGuardTests` pins all four paths (unset, blank, real, and dev-on-the-fallback) by running `manage.py check` in a subprocess — the guard fires at settings *import* time, so `override_settings` cannot reach it.
 

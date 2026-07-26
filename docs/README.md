@@ -1,6 +1,6 @@
 # CashFlow Documentation
 
-Technical documentation for every part of the CashFlow codebase — what each piece does and why, not just what it is. For product scope, sprint history, and the design-system spec this code implements, see [`ProductRequirementsDocument.md`](../ProductRequirementsDocument.md) (the PRD) at the repo root; for fork/setup/Docker operator instructions, see the root [`README.md`](../README.md).
+Technical documentation for every part of the CashFlow codebase — what each piece does and why, not just what it is. For product scope, sprint history, and the design-system spec this code implements, see [`ProductRequirementsDocument.md`](../ProductRequirementsDocument.md) (the PRD) at the repo root; for template/setup/Docker operator instructions, see the root [`README.md`](../README.md).
 
 ## Where to start
 
