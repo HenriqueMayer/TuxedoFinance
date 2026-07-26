@@ -1,6 +1,6 @@
 # `dashboard`
 
-Two screens over the same data: the **index** (six aggregate indicators, a forward-looking outlook table, and a recent-transactions list) and **reports** (charts of how the account evolves over a year). The index is `LOGIN_REDIRECT_URL` — the first screen every user sees after signing up or logging in.
+Two screens over the same data: the **index** (six aggregate indicators, a forward-looking outlook table, and a recent-transactions list) and **reports** (charts of how the account evolves over a year, plus a per-month breakdown of which payment method paid for what). The index is `LOGIN_REDIRECT_URL` — the first screen every user sees after signing up or logging in.
 
 Both are a **forecast**, not a report of the past: the month the index shows can be navigated forward, and fixed transactions and open installment plans recur into those future months automatically.
 
@@ -8,7 +8,7 @@ Both are a **forecast**, not a report of the past: the month the index shows can
 
 | File | Contents |
 |---|---|
-| `dashboard/services.py` | `get_dashboard_summary(user, year, month)`, `get_account_evolution(user)`, `add_months()`, `OUTLOOK_MONTHS`, `EVOLUTION_MONTHS` |
+| `dashboard/services.py` | `get_dashboard_summary(user, year, month)`, `get_account_evolution(user)`, `get_expenses_by_payment_method(user, year, month)`, `add_months()`, `OUTLOOK_MONTHS`, `EVOLUTION_MONTHS` |
 | `dashboard/charts.py` | `build_line_chart()`, `build_bar_chart()` — SVG geometry only |
 | `dashboard/views.py` | `DashboardIndexView`, `DashboardReportsView` |
 | `dashboard/urls.py` | `app_name = 'dashboard'`; routes `index`, `reports` |
@@ -82,6 +82,24 @@ Two details worth knowing:
 
 `_projection_queryset(user, with_category=True)` adds `select_related('category')` and `category__name` to the deferred column list, so the breakdown reads `category.name` per row without an N+1. The whole function is **one query**, as is `get_dashboard_summary`.
 
+## `get_expenses_by_payment_method(user, year, month)` (`dashboard/services.py`)
+
+The fourth chart on the reports page: **one month's** expenses split across the payment methods that paid for them.
+
+| Key | Meaning |
+|---|---|
+| `methods` | Up to `TOP_PAYMENT_METHODS` (8) rows, biggest first: `name`, `total`, `share`. |
+| `total` | Every method's spending that month, **including** any the cap trimmed. |
+| `shown` / `used` | Rows charted vs. methods actually used. `shown < used` means the drawn shares stop short of 100%, and the template says so. |
+
+- **A single month, deliberately** — the rest of the page spans 12 months. "July went on which card?" is asked one statement cycle at a time, and averaging it over a year blurs exactly the detail being looked for. This is the only part of the page `?month=` moves.
+- **Recurrences count**, on the same `amount_for_month` rules as everything else: a fixed subscription and the current slice of an installment plan both land on the month they are actually paid, not on the month they were recorded.
+- **Expense only**, like `_expenses_by_category` — income arrives independently of how anything is paid, and Investment stays a distinct outflow (PRD §8.5).
+- Grouping by **name** is safe because `unique_payment_method_per_user` makes it unique within a user; the aggregation never crosses users, since the queryset starts from `user=user` (PRD R3).
+- `TOP_PAYMENT_METHODS` (8) is higher than `TOP_CATEGORIES` (6) because these bars are vertical: the ceiling is how many axis labels fit side by side, not how tall the card grows.
+
+`_projection_queryset(user, with_payment_method=True)` joins `payment_method__name` the same way the category breakdown joins its own — **one query**. The reports page therefore costs **two** transaction queries in total (this one plus `get_account_evolution`), because the two cover different windows: folding both from one fetch would couple two independent services to save a query that SQLite answers from the same page cache.
+
 ## `dashboard/charts.py`
 
 Pure geometry: it turns a list of floats into SVG coordinates and knows nothing about money, users, or Django. It exists because the project is zero-JS — there is no charting library to hand data to, so the pixel arithmetic the Django Template Language cannot express has to happen in Python.
@@ -102,40 +120,61 @@ def _bounds(values):
 - **The y-axis always includes zero.** A chart scaled to its own min/max turns a 2% wobble into a cliff; anchoring to zero keeps the slope truthful.
 - **The all-zero case returns an arbitrary symmetric range** rather than dividing by zero — a brand-new account renders a flat line on the baseline instead of a `ZeroDivisionError`.
 - **Tones, not colors.** `build_bar_chart` takes semantic `tone` values (`'income'`/`'expense'`/`'investment'`) and the template maps them to Tailwind classes, so design tokens stay in the template layer with every other color decision ([frontend.md](../frontend.md)).
-- **Labels pass through untouched.** `DashboardReportsView` hands the whole month row in as the label, so the template reads `point.label.date` and `point.label.is_current_month` off each point instead of zipping two lists in the template.
+- **Labels pass through untouched.** `DashboardReportsView` hands the whole month row in as the label, so the template reads `point.label.date` and `point.label.is_current_month` off each point instead of zipping two lists in the template. The payment-method chart uses the same trick with its own rows, reading `group.label.name` / `group.label.share`.
+- **Each bar carries a `value_y`**, a baseline `VALUE_LABEL_OFFSET` above its top. Only the single-series chart has the room to print a caption there, but the geometry belongs here — DTL cannot subtract, and `{{ bar.y|add:"-6" }}` silently renders empty on a float.
+- **`build_bar_chart` needs at least one label.** With none it would divide the plot into zero slots; callers with nothing to draw have an empty state to render instead, which is why `DashboardReportsView` passes `payment_chart=None` for a month with no expenses.
 
 ## View (`DashboardReportsView`)
 
-A `TemplateView` that calls `get_account_evolution()` once and feeds the same 12 rows into both chart builders. Everything else it does is composition — the finance math is in `services.py`, the pixel math in `charts.py`, and the view is the only place that knows both exist.
+A `TemplateView` that calls `get_account_evolution()` once and feeds the same 12 rows into both chart builders, then `get_expenses_by_payment_method()` for the selected month. Everything else it does is composition — the finance math is in `services.py`, the pixel math in `charts.py`, and the view is the only place that knows both exist.
+
+It reads `?month=YYYY-MM` through the same `_selected_month()` helper as the index, but with a laxer bound: `_is_representable` only requires that `date(year, month, 1)` can be built for the label, because nothing here projects a window off the selected month (that is what `_is_projectable` guards on the index). **The month moves the payment-method chart only** — the other three stay anchored on today by construction, since they are about the shape of the account over time and re-anchoring them would ask a different question than the page exists to answer.
 
 ## Template (`templates/dashboard/reports.html`)
 
-Three charts, all server-rendered, no `<script>` anywhere on the page:
+Four charts, all server-rendered, no `<script>` anywhere on the page:
 
 1. **Balance evolution** — an SVG `<polyline>` over a gradient-filled `<polygon>`, with a dashed zero line and one `<circle>` marker per month. Future months get a dimmer stroke.
 2. **Monthly cash flow** — grouped `<rect>` bars, three per month (emerald/rose/amber per PRD §9.1), with a legend.
 3. **Where the money goes** — plain CSS bars (`style="width: {{ category.bar_width }}%"`), no SVG needed.
+4. **Spending by payment method** — one rose `<rect>` per method for the selected month, its share printed above it and its full name + amount listed underneath.
 
-Tooltips are native SVG `<title>` elements: browsers show them on hover with no JavaScript. Both SVGs sit in an `overflow-x-auto` wrapper with a `min-w-[44rem]` canvas — on a phone the chart scrolls inside its own card instead of shrinking its axis labels into illegibility (same convention as the outlook table).
+Tooltips are native SVG `<title>` elements: browsers show them on hover with no JavaScript. Every SVG sits in an `overflow-x-auto` wrapper with a `min-w-[44rem]` canvas — on a phone the chart scrolls inside its own card instead of shrinking its axis labels into illegibility (same convention as the outlook table).
+
+Chart 4 is the only one with a control, and its `<form method="get">` sits **inside that card** rather than in the page header: a filter at the top would look like it moves all four charts. It posts back to `#payment-methods` so submitting returns the reader to the chart they just filtered. Two details in it are load-bearing:
+
+- **Axis labels are truncated** (`truncatechars:14`) — at the 8-method cap each slot is ~80px wide, and untruncated names would collide. The list under the chart always spells them out, which also makes the numbers readable on touch devices, where a `<title>` tooltip never appears.
+- **Shares are printed above the bars**, not only in the tooltips, so "how is it distributed" is answerable without hovering.
 
 ## View (`DashboardIndexView`)
 
 ```python
-def get_selected_month(self):
-    """Parse `?month=YYYY-MM`, falling back to the current month."""
+def _selected_month(request, in_range):
+    """Parse `?month=YYYY-MM` off `request`, falling back to the current month."""
     today = timezone.localdate()
-    raw = self.request.GET.get('month', '')
-    year_part, _, month_part = raw.partition('-')
+    year_part, _, month_part = request.GET.get('month', '').partition('-')
 
     if year_part.isdigit() and month_part.isdigit():
         year, month = int(year_part), int(month_part)
-        if 1 <= month <= 12 and date.min.year <= year <= date.max.year:
+        if 1 <= month <= 12 and in_range(year, month):
             return year, month
 
     return today.year, today.month
 ```
 
 Month selection is a plain `?month=YYYY-MM` GET param — the same zero-JS convention as the transaction list's filter, and the same forgiving behavior: a malformed or out-of-range value silently falls back to the current month rather than raising a `400`. The bounds check matters because `selected_month_date` builds a real `datetime.date`, which would raise `ValueError` on month `13` or year `99999`.
+
+Both screens share the parse and differ only in `in_range`, because they build different windows around the month:
+
+```python
+def _is_projectable(year, month):
+    """True when the whole dashboard window around (year, month) is representable."""
+    earliest_year, _ = add_months(year, month, -1)
+    latest_year, _ = add_months(year, month, OUTLOOK_MONTHS - 1)
+    return date.min.year <= earliest_year and latest_year <= date.max.year
+```
+
+Checking that the *selected* month is in range is not enough on the index: `?month=9999-12` passes that test, and then the outlook walks into year 10000 and `date()` raises `ValueError` from inside the service — a 500 triggered purely by a query string. The reports page projects nothing off the selected month, so it uses the laxer `_is_representable`.
 
 The view also precomputes `previous_month_param` / `next_month_param` (`YYYY-MM` strings) so the template's navigation links stay dumb.
 
@@ -146,11 +185,11 @@ It is a `TemplateView`, not a `ListView` — the "list" here (recent transaction
 | Path | Name | View |
 |---|---|---|
 | `/dashboard/` | `dashboard:index` | `DashboardIndexView` (supports `?month=YYYY-MM`) |
-| `/dashboard/reports/` | `dashboard:reports` | `DashboardReportsView` (no params — always anchored on today) |
+| `/dashboard/reports/` | `dashboard:reports` | `DashboardReportsView` (supports `?month=YYYY-MM`, payment-method chart only) |
 
 `settings.LOGIN_REDIRECT_URL = 'dashboard:index'` — this is where both `LoginView` and `SignupView` send the user on success.
 
-The reports page takes **no** month parameter, unlike the index. Its window is defined relative to today by construction; a `?month=` there would just be a second, subtly different way to ask the same question.
+`?month=` means something narrower on reports than on the index. On the index it moves the whole screen; on reports it moves **only** the payment-method breakdown, because the other three charts are windows relative to today by construction — re-anchoring them on a picked month would just be a second, subtly different way to ask what the index already answers.
 
 ## Template (`templates/dashboard/index.html`)
 

@@ -36,6 +36,19 @@ PADDING_RATIO = 0.08
 # remainder is the gutter that separates one month from the next.
 GROUP_WIDTH_RATIO = 0.68
 
+# Gap between the top of a bar and a caption drawn above it. `_bounds` keeps
+# `PADDING_RATIO` of headroom over the tallest bar, so the caption always has
+# room inside the canvas even when a bar nearly fills the plot.
+VALUE_LABEL_OFFSET = 6
+
+# Rough width of one character at the 11px axis font, used to say how many
+# fit under a slot. Approximate on purpose — an exact answer needs font
+# metrics the server does not have, and this only decides where a label is
+# truncated. `LABEL_MAX_CHARS` stops a chart with one or two bars from
+# allowing a label wider than the canvas.
+LABEL_CHAR_WIDTH = 5.5
+LABEL_MAX_CHARS = 28
+
 
 def _bounds(values):
     """Value range to plot, always including zero so the axis is honest.
@@ -135,6 +148,9 @@ def build_bar_chart(labels, series):
     `series` is a list of `{'name': ..., 'tone': ..., 'values': [...]}`. All
     values are totals, so they are never negative and every bar grows upward
     from the baseline.
+
+    Callers must pass at least one label: with none there is no slot to divide
+    the plot into, and the caller has an empty state to render anyway.
     """
     values = [value for entry in series for value in entry['values']]
     bounds = (0.0, max([*values, 0.0]) * (1 + PADDING_RATIO) or 1.0)
@@ -157,6 +173,9 @@ def build_bar_chart(labels, series):
                     'value': value,
                     'x': round(center - group_width / 2 + bar_width * position, 2),
                     'y': y,
+                    # Baseline for a caption sitting just above the bar; only
+                    # single-series charts have the room to use it.
+                    'value_y': round(y - VALUE_LABEL_OFFSET, 2),
                     # Leave a hairline gutter between bars in a group.
                     'width': round(bar_width * 0.86, 2),
                     'height': round(PLOT_BOTTOM - y, 2),
@@ -168,4 +187,9 @@ def build_bar_chart(labels, series):
         **_frame(bounds),
         'groups': groups,
         'legend': [{'name': e['name'], 'tone': e['tone']} for e in series],
+        # How long a label may be before it starts colliding with its
+        # neighbour. Charts labelled by month ignore it ('Jul' always fits);
+        # the payment-method chart truncates to it, so names stay whole while
+        # there are few bars and shorten as bars are added.
+        'label_chars': min(LABEL_MAX_CHARS, int(_slot_width(count) / LABEL_CHAR_WIDTH)),
     }

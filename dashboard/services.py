@@ -35,6 +35,12 @@ EVOLUTION_PAST_MONTHS = 5
 # stops being a summary and becomes an unreadable second transaction list.
 TOP_CATEGORIES = 6
 
+# Bars in the payment-method breakdown. Higher than `TOP_CATEGORIES` because
+# these bars are vertical: the limit here is how many axis labels fit side by
+# side, not how tall the card grows. Every account starts with four seeded
+# methods (FR14), so the cap only bites for someone tracking several cards.
+TOP_PAYMENT_METHODS = 8
+
 
 def add_months(year, month, offset):
     """Return the (year, month) pair `offset` whole months from (year, month)."""
@@ -42,11 +48,12 @@ def add_months(year, month, offset):
     return index // 12, index % 12 + 1
 
 
-def _projection_queryset(user, with_category=False):
+def _projection_queryset(user, with_category=False, with_payment_method=False):
     """The user's transactions, with only the columns the projection needs.
 
-    `with_category` joins the category name for the breakdown chart — one
-    extra join rather than an N+1 per row, and still a single query overall.
+    `with_category` / `with_payment_method` join the related name for the
+    breakdown charts — one extra join rather than an N+1 per row, and still a
+    single query overall.
     """
     # Every column `amount_for_month` / `amount_through_month` touches has to
     # be listed: a field left out of `only()` is deferred, and reading it
@@ -66,6 +73,10 @@ def _projection_queryset(user, with_category=False):
     if with_category:
         queryset = queryset.select_related('category')
         fields.append('category__name')
+
+    if with_payment_method:
+        queryset = queryset.select_related('payment_method')
+        fields.append('payment_method__name')
 
     return queryset.only(*fields)
 
@@ -206,6 +217,60 @@ def _expenses_by_category(transactions, year, month, months):
         }
         for name, total in ranked[:TOP_CATEGORIES]
     ]
+
+
+def get_expenses_by_payment_method(user, year, month):
+    """Split one month's expenses across the methods that paid for them (FR16).
+
+    Deliberately a **single month**, unlike every other series on the reports
+    page: the question this answers — "July went on which card?" — is asked one
+    statement cycle at a time, and averaging it over the 12-month window would
+    blur exactly the detail being looked for. That is also why it is the only
+    part of the page the `?month=` filter moves.
+
+    Recurrences count, on the same rules as every other figure here: a fixed
+    subscription and the current slice of an installment plan both land on the
+    month they are actually paid, not on the month they were first recorded.
+
+    Expenses only, like `_expenses_by_category` — income arrives independently
+    of how anything is paid, and Investment stays a distinct outflow (§8.5).
+    """
+    transactions = _projection_queryset(user, with_payment_method=True)
+
+    totals = {}
+    for txn in transactions:
+        if txn.transaction_type != Transaction.TransactionType.EXPENSE:
+            continue
+        contribution = txn.amount_for_month(year, month)
+        if contribution:
+            name = txn.payment_method.name
+            totals[name] = totals.get(name, ZERO) + contribution
+
+    overall = sum(totals.values(), start=ZERO)
+    if not overall:
+        return {'total': ZERO, 'methods': [], 'shown': 0, 'used': 0}
+
+    ranked = sorted(totals.items(), key=lambda item: item[1], reverse=True)
+    methods = [
+        {
+            'name': name,
+            'total': total,
+            'share': round(float(total / overall) * 100, 1),
+        }
+        for name, total in ranked[:TOP_PAYMENT_METHODS]
+    ]
+
+    return {
+        # Every method's spending, including any trimmed off by the cap — so the
+        # printed shares stay shares of the month, not of what is drawn.
+        'total': overall,
+        'methods': methods,
+        # `shown` < `used` means the cap trimmed something, and the drawn shares
+        # therefore stop short of 100%. The template says so rather than leaving
+        # the reader to notice the bars do not add up to the total above them.
+        'shown': len(methods),
+        'used': len(ranked),
+    }
 
 
 def get_account_evolution(user):
