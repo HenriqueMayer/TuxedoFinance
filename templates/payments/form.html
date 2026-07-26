@@ -28,6 +28,31 @@ partials/form_field.html renderer (PRD §9.4).
         {% include 'partials/form_field.html' with field=form.name %}
         {% include 'partials/form_field.html' with field=form.method_type %}
 
+        {% comment %}
+        Billing cycle (FR11). Always rendered, for every method type: the
+        project is zero-JS, so these cannot appear only when "Credit Card" is
+        selected — `PaymentMethodForm.clean` rejects them on the other types
+        instead. Grouped under their own heading so it reads as one optional
+        block rather than two loose numbers, and so the empty-means-no-cycle
+        default is stated where someone deciding whether to fill it in is
+        looking.
+        {% endcomment %}
+        <div class="space-y-5 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+            <div>
+                <h2 class="text-sm font-semibold text-slate-200">Credit card billing cycle</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    Optional. Set a best purchase day and a purchase made on or after it
+                    is subtracted from the next month instead of the month it was made.
+                    The due day is only a reminder of when the bill goes out.
+                </p>
+            </div>
+
+            <div class="grid gap-5 sm:grid-cols-2">
+                {% include 'partials/form_field.html' with field=form.best_purchase_day %}
+                {% include 'partials/form_field.html' with field=form.due_day %}
+            </div>
+        </div>
+
         <div class="flex items-center gap-3">
             <button type="submit"
                     class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">

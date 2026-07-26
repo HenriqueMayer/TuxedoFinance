@@ -5,6 +5,13 @@ from payments.models import PaymentMethod
 
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(admin.ModelAdmin):
-    list_display = ('name', 'method_type', 'user', 'created_at')
+    list_display = (
+        'name',
+        'method_type',
+        'best_purchase_day',
+        'due_day',
+        'user',
+        'created_at',
+    )
     list_filter = ('user', 'method_type')
     search_fields = ('name',)

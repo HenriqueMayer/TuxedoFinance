@@ -59,6 +59,11 @@ class TransactionForm(forms.ModelForm):
             'fixed_until': 'Repeat until',
         }
         help_texts = {
+            'transaction_date': (
+                'The date of the purchase. On a credit card with a billing '
+                'cycle, the dashboard still subtracts the money on the month '
+                'the bill is paid, which may be a later month than this one.'
+            ),
             'is_fixed': (
                 'Toggle on for recurring transactions (e.g. subscriptions, rent); '
                 'leave off for one-off, variable ones.'

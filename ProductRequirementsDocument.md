@@ -103,7 +103,7 @@ Give the user control and clarity over their personal finances through:
 | FR08 | Edit transaction | Update the user's own existing transaction. |
 | FR09 | Delete transaction | Removal with confirmation. |
 | FR10 | Manage categories | CRUD for categories and subcategories (self-relationship). |
-| FR11 | Manage payment methods | CRUD for payment methods (name + type). |
+| FR11 | Manage payment methods | CRUD for payment methods (name + type). A credit card may also carry a **billing cycle**: a best purchase day (the day the statement opens), which defers a purchase made on or after it to the next month's bill, and a due day (the day the bill is paid), which is displayed only and shifts nothing. Both optional and independent; see §8.5. |
 | FR12 | Per-user isolation | Each user accesses only their own records. |
 | FR13 | Automatic timestamps | Every model records `created_at` and `updated_at`. |
 | FR14 | Default data seed | On signup, seed the new user with the default categories (domain diagram) and the four payment methods via signals, so the first transaction can be recorded immediately — an empty account cannot create a transaction otherwise, since `category` and `payment_method` are required. |
@@ -232,6 +232,8 @@ erDiagram
         integer user_id FK
         string name "e.g., Nubank Credit, PIX"
         string method_type "Credit Card | Debit Card | Checking Account | PIX"
+        integer best_purchase_day "1-31, optional — day the statement opens"
+        integer due_day "1-31, optional — day the bill is paid"
         datetime created_at
         datetime updated_at
     }
@@ -254,16 +256,20 @@ erDiagram
 | `method_type` | `CREDIT_CARD`, `DEBIT_CARD`, `CHECKING_ACCOUNT`, `PIX` |
 | `is_fixed` | `True` (recurring) / `False` (variable) |
 | `installments` | `1` (single payment) to `Transaction.MAX_INSTALLMENTS` (`48`) |
+| `best_purchase_day` / `due_day` | `1`–`31`, or empty. Credit card only, and independent of each other: `best_purchase_day` alone is a complete cycle, `due_day` is display-only. |
 
 ### 8.5 Business Rules
 
 - `amount` is always stored **positive** (enforce with `MinValueValidator(Decimal('0.01'))`); its effect on the balance depends on `transaction_type`.
 - **Recurrence — which months a transaction affects.** `transaction_date` marks where a transaction *starts*, not the only month it counts in. `Transaction.amount_for_month(year, month)` is the authority:
-  - **Fixed** (`is_fixed=True`) → `amount`, in every month from its own month onward, indefinitely.
+  - **Fixed** (`is_fixed=True`) → `amount`, in every month from its start month onward, indefinitely.
   - **Installment plan** (`installments > 1`) → one installment per month, for `installments` consecutive months, then nothing.
-  - **One-off** → `amount`, in its own month only.
+  - **One-off** → `amount`, in its start month only.
 
   The three are mutually exclusive: `TransactionForm.clean()` rejects `is_fixed` together with `installments > 1`, since "repeats forever" and "ends after N months" contradict each other. Nothing is materialized — there are no future-dated child rows and no scheduler, so editing a fixed transaction re-projects every future month immediately.
+- **Billing cycle — when a card purchase actually leaves the account.** The "start month" above is the month the *bill* is paid, not necessarily the month of the purchase. A credit card with `best_purchase_day` set defers the charge by `PaymentMethod.statement_offset()`: `+1` month when the purchase falls on or after the day the statement opens, `0` otherwise. `due_day` records which day of that month the bill goes out and is never part of the arithmetic. On a card opening on the 24th, a purchase made 20 June comes out of June while one made 25 June comes out of July — five days apart, one month apart on every balance and chart.
+
+  Credit cards only: every other method takes the money on the purchase date. Both days or neither — a half-configured cycle is rejected by `PaymentMethodForm.clean()` rather than guessed. Cards left without a cycle behave exactly as before the feature existed, so it is additive for existing data. The offset shifts a recurrence without resizing it: a fixed charge running January–June is six payments on any card, only the six months it clears in move.
 - **Installments:** `amount` always stores the **full total**, never one installment; the monthly value is derived by `Transaction.installment_amount` (R$ 300.00 in 3x → R$ 100.00/month). `installments > 1` is valid **only** when the selected payment method's `method_type` is `CREDIT_CARD`, enforced in `TransactionForm.clean()`; a blank box means `1`. Rounding never loses money: the final installment absorbs the remainder, so the occurrences re-sum to exactly `amount` (100.00 in 3x → 33.33 / 33.33 / 33.34).
 - `Investment` counts as a **cash outflow** (money leaves the available balance) but is highlighted separately from consumption (Expense) — it is never merged into the Expenses indicator.
 - **Current Balance** = Σ Income − Σ Expenses − Σ Investments (full history, all dates — "cash available").

@@ -29,7 +29,15 @@ with their type and Edit/Delete actions.
                     <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p class="font-medium text-slate-100">{{ payment_method.name }}</p>
-                            <p class="text-sm text-slate-400">{{ payment_method.get_method_type_display }}</p>
+                            <p class="text-sm text-slate-400">
+                                {{ payment_method.get_method_type_display }}
+                                {% if payment_method.has_billing_cycle %}
+                                    &middot; buy before day {{ payment_method.best_purchase_day }}
+                                {% endif %}
+                                {% if payment_method.due_day %}
+                                    &middot; pay on day {{ payment_method.due_day }}
+                                {% endif %}
+                            </p>
                         </div>
                         <div class="flex items-center gap-3">
                             <a href="{% url 'payments:update' payment_method.pk %}"
