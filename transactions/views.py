@@ -16,11 +16,12 @@ class TransactionListView(LoginRequiredMixin, ListView):
     and payment method (NFR10).
 
     Optional filtering (PRD 8.1.5, zero-JS): `?q=` searches the text fields,
-    `?month=YYYY-MM` filters by `transaction_date`'s year/month, and
-    `?type=INCOME|EXPENSE|INVESTMENT` filters by `transaction_type`. All are
-    plain GET params read straight from a `<form method="get">` in the
-    template — invalid/unknown values are silently ignored rather than
-    raising a 400, and the three combine with AND when more than one is set.
+    `?month=YYYY-MM` filters by the month the money actually moves (see
+    `_filter_by_billed_month`), and `?type=INCOME|EXPENSE|INVESTMENT` filters
+    by `transaction_type`. All are plain GET params read straight from a
+    `<form method="get">` in the template — invalid/unknown values are
+    silently ignored rather than raising a 400, and the three combine with AND
+    when more than one is set.
     """
 
     model = Transaction
@@ -47,20 +48,62 @@ class TransactionListView(LoginRequiredMixin, ListView):
                 | Q(payment_method__name__icontains=search)
             )
 
-        month = self.request.GET.get('month')
-        if month:
-            year_part, _, month_part = month.partition('-')
-            if year_part.isdigit() and month_part.isdigit():
-                queryset = queryset.filter(
-                    transaction_date__year=int(year_part),
-                    transaction_date__month=int(month_part),
-                )
-
         transaction_type = self.request.GET.get('type')
         if transaction_type in Transaction.TransactionType.values:
             queryset = queryset.filter(transaction_type=transaction_type)
 
-        return queryset
+        # Month last: it is the one filter that may fall back to a Python
+        # fold, so everything expressible as SQL runs first and narrows the
+        # rows that fold has to walk.
+        return self._filter_by_billed_month(queryset)
+
+    def _filter_by_billed_month(self, queryset):
+        """Narrow `queryset` to the rows that actually charge in `?month=`.
+
+        The month asked for is the month the **money moves**, not the month of
+        the purchase — the same question the dashboard answers, so the two
+        screens can never disagree about which month a transaction belongs to.
+        Two consequences, both of which the plain `transaction_date` filter
+        this replaces got wrong:
+
+          - a credit card purchase made on or after the card's best purchase
+            day is listed under the month its bill is paid — 26 July on a card
+            opening on the 24th is an August row, not a July one; and
+          - a fixed transaction or an open installment plan is listed under
+            **every** month it charges, not only the month it was recorded in.
+            A subscription started in July shows under August, September, and
+            every month after, which is exactly what makes it fixed.
+
+        `Transaction.amount_for_month` owns both rules and neither survives
+        translation to a SQL predicate: the billing shift compares the
+        purchase day against the card's own `best_purchase_day`, and a fixed
+        transaction recurs without bound. So the rows are folded in Python and
+        a **list** comes back — `ListView` paginates one exactly like a
+        queryset. That is the same trade `dashboard.services` makes for the
+        same reason (NFR10): still a single round-trip, over one user's
+        transactions already narrowed by the filters above.
+
+        An absent or malformed value returns the queryset untouched and lazy,
+        so an unfiltered list behaves exactly as it did before.
+        """
+        month = self.request.GET.get('month')
+        if not month:
+            return queryset
+
+        year_part, _, month_part = month.partition('-')
+        if not (year_part.isdigit() and month_part.isdigit()):
+            return queryset
+
+        year, month_number = int(year_part), int(month_part)
+        # `amount_for_month` is plain integer arithmetic on (year * 12 + month)
+        # and would take month 13 without complaint, quietly answering for
+        # January of the following year. An out-of-range month is a malformed
+        # filter, not a different month, so it falls back to unfiltered like
+        # every other bad value here.
+        if not 1 <= month_number <= 12:
+            return queryset
+
+        return [txn for txn in queryset if txn.amount_for_month(year, month_number)]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -125,23 +125,31 @@ class TransactionListView(LoginRequiredMixin, ListView):
                 | Q(category__name__icontains=search)
                 | Q(payment_method__name__icontains=search)
             )
-        month = self.request.GET.get('month')
-        if month:
-            year_part, _, month_part = month.partition('-')
-            if year_part.isdigit() and month_part.isdigit():
-                queryset = queryset.filter(
-                    transaction_date__year=int(year_part),
-                    transaction_date__month=int(month_part),
-                )
         transaction_type = self.request.GET.get('type')
         if transaction_type in Transaction.TransactionType.values:
             queryset = queryset.filter(transaction_type=transaction_type)
-        return queryset
+        return self._filter_by_billed_month(queryset)
+
+    def _filter_by_billed_month(self, queryset):
+        month = self.request.GET.get('month')
+        if not month:
+            return queryset
+        year_part, _, month_part = month.partition('-')
+        if not (year_part.isdigit() and month_part.isdigit()):
+            return queryset
+        year, month_number = int(year_part), int(month_part)
+        if not 1 <= month_number <= 12:
+            return queryset
+        return [txn for txn in queryset if txn.amount_for_month(year, month_number)]
 ```
 
 - `select_related('category', 'payment_method')` avoids an N+1 query when each row in the template renders `transaction.category.name`/`transaction.payment_method.name` (NFR10).
 - `paginate_by = 10` — Django's built-in `ListView` pagination; the template reads `page_obj`/`is_paginated`.
-- **Zero-JS GET-param filtering** (PRD 8.1.5): `?q=` searches text, `?month=YYYY-MM` filters on `transaction_date`'s year/month, and `?type=INCOME|EXPENSE|INVESTMENT` filters on `transaction_type`. All are read straight from query params populated by a plain `<form method="get">` in the template (see below) — there is no JavaScript anywhere in this flow, including no typeahead or live search. Malformed/unknown values (a non-numeric month, an invalid type) are **silently ignored** rather than raising a `400` — the queryset simply falls back to unfiltered for that parameter.
+- **Zero-JS GET-param filtering** (PRD 8.1.5): `?q=` searches text, `?month=YYYY-MM` filters on the **billed** month (see below), and `?type=INCOME|EXPENSE|INVESTMENT` filters on `transaction_type`. All are read straight from query params populated by a plain `<form method="get">` in the template (see below) — there is no JavaScript anywhere in this flow, including no typeahead or live search. Malformed/unknown values (a non-numeric month, a month outside 1–12, an invalid type) are **silently ignored** rather than raising a `400` — the queryset simply falls back to unfiltered for that parameter.
+- **The month filter is the *billed* month, not `transaction_date`** — the same question the dashboard answers, so the two screens can never disagree about which month a transaction belongs to. It matches any row whose `amount_for_month(year, month)` is non-zero, which has two consequences the earlier `transaction_date__year`/`__month` filter got wrong:
+  - a credit card purchase made on or after the card's best purchase day is listed under the month its **bill is paid** — 26 July on a card opening on the 24th is an August row, not a July one (see [data-model.md § Billing cycle](../data-model.md#billing-cycle-when-a-card-purchase-actually-leaves-the-account));
+  - a **fixed** transaction or an open **installment plan** is listed under *every* month it charges, not only the month it was recorded in. A subscription started in July appears under August, September, and every month after — which is precisely what makes it fixed.
+  - Neither rule survives translation to a SQL predicate: the billing shift compares the purchase day against the card's own `best_purchase_day`, and a fixed transaction recurs without bound. So this one filter folds in **Python** and returns a `list`, which `ListView` paginates exactly like a queryset. It is the same trade [`dashboard.services`](dashboard.md) makes for the same reason (NFR10) — still a single round-trip, over one user's rows already narrowed by the search and type filters, which is why it runs **last**.
 - **Free-text search (FR17)** spans everything a row actually displays: `title`, `notes`, and the **names of the related category and payment method**, OR'd together. Searching only `title` would have been the smaller change, but "insurance" not finding the row filed under an Insurance category is exactly the kind of miss that makes a search box feel broken.
   - The search `Q(...)` is applied to a queryset **already filtered by `user`**, so widening the match can never reach another user's rows, even for a term that matches both users' data.
   - The term is `.strip()`ed, so a stray space is not a search for `' '`; an empty result after stripping means "no search", not "search for nothing".
@@ -181,6 +189,6 @@ The only admin in the project with `date_hierarchy` — convenient for browsing 
 
 ## Templates
 
-- `list.html` — the filter bar carries a `<input type="search" name="q">` alongside the month/type controls, submitted by the same `Filter` button; `Clear filters` and the "no matching transactions" empty state both account for an active search term. Each row is color-coded by `transaction_type` (emerald/rose/amber, see [frontend.md § Design tokens](../frontend.md#design-tokens-prd-91)), with a `+`/`−` sign prefix on the amount driven purely by `transaction_type == 'INCOME'` (the stored `amount` itself is always positive — the sign is presentation-only). A `Fixed` badge appears when `is_fixed` is true, and an `Nx` badge when `is_installment_plan` is true; installment rows also show a secondary `6x R$ 500.00` line beneath the total, so the headline figure is unambiguously the full amount. An indigo `Billed <date>` badge appears when — and only when — the payment method's billing cycle moves the money to a different month than the purchase (`billing_offset` is non-zero); showing it otherwise would just repeat the purchase date already printed on the row. It prints `payment_date` when the card records a due day and falls back to `billed_month` (`Billed Aug 2026`) when it does not — either way the month it names is the month the dashboard subtracts on. The month/type filter form and pagination controls live here.
+- `list.html` — the filter bar carries a `<input type="search" name="q">` alongside the month/type controls, submitted by the same `Filter` button; `Clear filters` and the "no matching transactions" empty state both account for an active search term. Each row is color-coded by `transaction_type` (emerald/rose/amber, see [frontend.md § Design tokens](../frontend.md#design-tokens-prd-91)), with a `+`/`−` sign prefix on the amount driven purely by `transaction_type == 'INCOME'` (the stored `amount` itself is always positive — the sign is presentation-only). A `Fixed` badge appears when `is_fixed` is true, and an `Nx` badge when `is_installment_plan` is true; installment rows also show a secondary `6x R$ 500.00` line beneath the total, so the headline figure is unambiguously the full amount. An indigo `Billed <date>` badge appears when — and only when — the payment method's billing cycle moves the money to a different month than the purchase (`billing_offset` is non-zero); showing it otherwise would just repeat the purchase date already printed on the row. It prints `payment_date` when the card records a due day and falls back to `billed_month` (`Billed Aug 2026`) when it does not — either way the month it names is the month the dashboard subtracts on — and the month the filter bar's **`Billed month`** control finds the row under. That control is labelled "Billed month" rather than "Month" precisely because it no longer means `transaction_date`: a July purchase billed in August is found under August, and a fixed row under every month it charges. The month/type filter form and pagination controls live here.
 - `form.html` — renders all 10 fields via `partials/form_field.html`, except `is_fixed`, which gets custom markup (a checkbox + label/help/errors) since it isn't a standard text/select input. `installments` sits directly under `payment_method` and `fixed_until` directly under the `is_fixed` toggle — each sits next to the field it depends on.
 - `confirm_delete.html` — the standard confirm-delete pattern (see [frontend.md](../frontend.md)).

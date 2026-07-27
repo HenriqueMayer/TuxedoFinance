@@ -40,7 +40,8 @@ the active filters survive page navigation.
                    class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-month" class="block text-sm font-medium text-slate-300">Month</label>
+            {% comment %}"Billed", not just "Month": the filter matches the month the money moves, so a card purchase past its best purchase day is found under the month its bill is paid, and a fixed transaction under every month it charges.{% endcomment %}
+            <label for="filter-month" class="block text-sm font-medium text-slate-300">Billed month</label>
             <input type="month" id="filter-month" name="month" value="{{ selected_month }}"
                    class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
