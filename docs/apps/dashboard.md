@@ -193,6 +193,8 @@ The view also precomputes `previous_month_param` / `next_month_param` (`YYYY-MM`
 
 It is a `TemplateView`, not a `ListView` — the "list" here (recent transactions) is a secondary, capped slice (`RECENT_TRANSACTIONS_LIMIT = 5`), not the primary paginated resource (that's `transactions:list`). `select_related` avoids N+1 queries when rendering each recent transaction's category/payment method name.
 
+`_recent_transactions(user, year, month)` scopes that slice to the **selected** month, on the same `amount_for_month` rule as the stat cards above it (§8.5) — a fixed subscription or the live slice of an installment plan shows up here too, not only in the month it was first recorded, and a credit-card purchase appears under the month its bill actually lands in, not its purchase date. That recurrence rule cannot be expressed as a SQL predicate (same reason as `get_dashboard_summary`), so it fetches the user's transactions, folds them in Python, and slices the first `RECENT_TRANSACTIONS_LIMIT` — still one query. Without this, the widget used to show the user's most recent transactions **overall**, independent of which month the rest of the screen was showing — confusing next to stat cards that do change with `?month=`.
+
 ## Routes
 
 | Path | Name | View |
@@ -210,4 +212,4 @@ It is a `TemplateView`, not a `ListView` — the "list" here (recent transaction
 - A **month navigation bar**: `←` / `→` links to the adjacent months, the selected month's name, a "Current month / Projection / Past month" label, and a "Back to this month" link whenever the user has navigated away. All plain `<a href>` — no JS.
 - Six `partials/stat_card.html` includes in a `sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6` grid: **Current Balance** (neutral tone — no single semantic color owns a net figure that can be positive or negative), **Income (month)** (emerald), **Expenses (month)** (rose), **Investments (month)** (amber), **Balance (month)** (neutral), **Projected (end of month)** (neutral). Values are pre-formatted with `floatformat:2` and prefixed with `{{ CURRENCY_SYMBOL }}` before being passed into the partial — `stat_card.html` itself has no currency logic (see [frontend.md](../frontend.md)).
 - An **Outlook table** — one row per upcoming month with Income / Expenses / Investments / Net / running projected balance. The selected row is tinted, the current month carries a `Now` badge, and negative figures turn rose. It sits in an `overflow-x-auto` wrapper with `min-w-[40rem]` so it scrolls inside its own container on mobile instead of forcing the page to scroll sideways.
-- A "Recent transactions" list (up to 5 rows, same color-coded `+`/`−` treatment as `transactions/list.html`), or `partials/empty_state.html` if the user has never recorded one.
+- A "Recent transactions" list (up to 5 rows billed in the **selected** month, same color-coded `+`/`−` treatment as `transactions/list.html`), or `partials/empty_state.html` if nothing bills in that month.

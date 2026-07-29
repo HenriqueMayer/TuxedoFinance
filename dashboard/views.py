@@ -46,6 +46,24 @@ def _is_representable(year, month):
     return date.min.year <= year <= date.max.year
 
 
+def _recent_transactions(user, year, month):
+    """The user's most recent transactions billed in (`year`, `month`).
+
+    Scoped to the selected month on the same `amount_for_month` rule as every
+    other figure on the page (§8.5), so a fixed subscription or the current
+    slice of an installment plan counts here too, not only the month it was
+    first recorded. That rule cannot be expressed as a SQL predicate (see
+    `dashboard.services`), so this folds in Python and slices the tail end —
+    still one query, over one user's rows.
+    """
+    transactions = Transaction.objects.filter(user=user).select_related(
+        'category', 'payment_method'
+    )
+    return [txn for txn in transactions if txn.amount_for_month(year, month)][
+        :RECENT_TRANSACTIONS_LIMIT
+    ]
+
+
 def _is_projectable(year, month):
     """True when the whole dashboard window around (`year`, `month`) is representable.
 
@@ -68,8 +86,9 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
 
     Renders the stat cards (Current Balance, Income/Expenses/Investments for
     the selected month, Balance month, Projected Balance), a forward-looking
-    outlook table, and a recent-transactions list. All data is scoped to
-    `request.user` (PRD R3) and computed by `dashboard.services`.
+    outlook table, and a recent-transactions list scoped to that same selected
+    month. All data is scoped to `request.user` (PRD R3) and computed by
+    `dashboard.services`.
 
     Month selection is a plain `?month=YYYY-MM` GET param (zero-JS, same
     convention as the transaction list filter); an absent or malformed value
@@ -92,9 +111,9 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         context['previous_month_param'] = f'{previous_year:04d}-{previous_month:02d}'
         context['next_month_param'] = f'{next_year:04d}-{next_month:02d}'
 
-        context['recent_transactions'] = Transaction.objects.filter(
-            user=self.request.user
-        ).select_related('category', 'payment_method')[:RECENT_TRANSACTIONS_LIMIT]
+        context['recent_transactions'] = _recent_transactions(
+            self.request.user, year, month
+        )
         return context
 
 
