@@ -22,12 +22,31 @@ class TransactionListView(LoginRequiredMixin, ListView):
     `<form method="get">` in the template — invalid/unknown values are
     silently ignored rather than raising a 400, and the three combine with AND
     when more than one is set.
+
+    `?sort=newest|oldest|updated` reorders the list: `newest`/`oldest` are the
+    `transaction_date` direction (`newest` is the default and matches
+    `Transaction.Meta.ordering`), and `updated` puts the most recently
+    created-or-edited row first regardless of its `transaction_date` — the one
+    the other two can't offer, since a fixed transaction dated in the future
+    or a past-dated entry added today would otherwise sit wherever its date
+    places it. An unknown value falls back to `newest` the same way the other
+    params fall back to unfiltered.
     """
 
     model = Transaction
     template_name = 'transactions/list.html'
     context_object_name = 'transactions'
     paginate_by = 10
+
+    SORT_OPTIONS = {
+        'newest': ('-transaction_date', '-created_at'),
+        'oldest': ('transaction_date', 'created_at'),
+        'updated': ('-updated_at',),
+    }
+
+    def _selected_sort(self):
+        sort = self.request.GET.get('sort')
+        return sort if sort in self.SORT_OPTIONS else 'newest'
 
     def get_queryset(self):
         queryset = Transaction.objects.filter(user=self.request.user).select_related(
@@ -52,9 +71,13 @@ class TransactionListView(LoginRequiredMixin, ListView):
         if transaction_type in Transaction.TransactionType.values:
             queryset = queryset.filter(transaction_type=transaction_type)
 
+        queryset = queryset.order_by(*self.SORT_OPTIONS[self._selected_sort()])
+
         # Month last: it is the one filter that may fall back to a Python
         # fold, so everything expressible as SQL runs first and narrows the
-        # rows that fold has to walk.
+        # rows that fold has to walk. It also has to run after `order_by`,
+        # since the fold below is a plain Python list that keeps whatever
+        # order the queryset already had.
         return self._filter_by_billed_month(queryset)
 
     def _filter_by_billed_month(self, queryset):
@@ -111,6 +134,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('q', '').strip()
         context['selected_month'] = self.request.GET.get('month', '')
         context['selected_type'] = self.request.GET.get('type', '')
+        context['selected_sort'] = self._selected_sort()
         return context
 
 
