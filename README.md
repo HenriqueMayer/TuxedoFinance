@@ -1,106 +1,68 @@
-# CashFlow — Django Personal Finance Tracker
+# CashFlow
 
-CashFlow is a web-based personal finance tracker built with Django full stack (Django Template Language + TailwindCSS + SQLite). It records categorized transactions, classifies them by type and payment method, and projects your balance forward from fixed transactions and installment plans — all server-rendered, with no JavaScript.
+A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered, with no JavaScript build step.
 
-See [`ProductRequirementsDocument.md`](ProductRequirementsDocument.md) for the full product specification, and [`docs/`](docs/README.md) for technical documentation of every app, model, view, and template.
+![CashFlow demo — recording transactions, then the dashboard and reports updating](docs/media/demo.gif)
 
-![CashFlow — recording a fixed income, then the dashboard and reports updating](docs/media/demo.gif)
+## Features
 
-[▶ Watch the full demo](docs/media/demo-2x.mp4) — one minute, 2× speed, no audio.
+- **Dashboard** with current balance, monthly income/expenses/investments, and a projected end-of-month balance
+- **Forward projection** — fixed transactions recur and installment plans spread one payment per month, so future months preview without recording anything in advance
+- **Reports** with four server-rendered charts over a rolling 12-month window
+- **Categories and subcategories** with a per-user default seed on signup
+- **Payment methods** with credit-card billing cycles (statement day and due day) and per-transaction bill overrides
+- **Light/dark theme** toggle with a Darcula-inspired dark palette
+- **Configurable currency** — pick BRL, USD, EUR, GBP, JPY, or CHF; the symbol and number format always match
 
 ## Stack
 
-- Python 3.12
-- Django 6.0
-- TailwindCSS (Play CDN in development; standalone CLI build + WhiteNoise in production)
-- SQLite (native)
-- Dependency management via [`uv`](https://docs.astral.sh/uv/)
-- `gunicorn` + Docker / Docker Compose for deployment
+| | |
+|---|---|
+| Backend | Python 3.12 · Django 6.0 (CBVs, native auth) |
+| Frontend | Django Template Language · TailwindCSS |
+| Database | SQLite (native, no separate service) |
+| Tooling | [`uv`](https://docs.astral.sh/uv/) |
+| Deployment | Docker / Docker Compose · gunicorn · WhiteNoise |
 
-## Prerequisites
+## Quick start
 
-- Python 3.12
-- [`uv`](https://docs.astral.sh/uv/getting-started/installation/) on your `PATH`
+Requires Python 3.12 and [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
 
-## Setup
+```bash
+uv sync
+uv run python manage.py migrate
+uv run python manage.py runserver
+```
 
-1. Install dependencies:
+Open <http://127.0.0.1:8000/>. Sign up from the landing page — your account arrives with the default categories seeded. Add a payment method on the Payments page before recording your first transaction.
 
-   ```bash
-   uv sync
-   ```
+### Docker
 
-2. Apply database migrations:
+Requires Docker with the Compose plugin.
 
-   ```bash
-   uv run python manage.py migrate
-   ```
+```bash
+cp .env.example .env        # then set a real SECRET_KEY
+docker compose up --build
+```
 
-3. (Optional) Create a superuser for the Django admin:
+The container applies migrations and serves the app at <http://localhost:8000/>. Data persists in the `db-data` named volume across restarts; `docker compose down -v` resets it.
 
-   ```bash
-   uv run python manage.py createsuperuser
-   ```
-
-4. Run the development server:
-
-   ```bash
-   uv run python manage.py runserver
-   ```
-
-5. Open `http://127.0.0.1:8000/`.
-
-Sign up from the landing page and your account arrives with the default categories already seeded. Add your first payment method on the Payments page (categories and payment methods are required to record a transaction).
+The image builds the production Tailwind bundle and runs `collectstatic` at build time, so nothing is generated on the fly in production.
 
 ## Using this repository as a template
 
-This project is a **GitHub template repository**. Use it to start your own independent local instance — it is not meant to be deployed straight from here. Each instance owns its own database and data.
+This is a **GitHub template repository**. Click **Use this template** to start your own independent instance — each instance owns its own database and data, and is not meant to be deployed straight from here.
 
-### 1. Create your own repository
-
-1. Click **Use this template** → **Create a new repository** on [github.com/HenriqueMayer/django-finance-template](https://github.com/HenriqueMayer/django-finance-template).
-2. Clone the repository it creates:
-
-   ```bash
-   git clone git@github.com:<your-username>/<your-repository>.git
-   cd <your-repository>
-   ```
-
-3. Follow [Setup](#setup) above: `uv sync`, `manage.py migrate`, create a superuser, and run the server. From there it is your own project — change it however you like.
-
-### 2. The local database (`db.sqlite3`)
-
-`db.sqlite3` is a single file — there is no separate database server to install or configure.
-
-Unlike the usual Django convention, this file is **tracked in version control** here, and ships with the schema already migrated and no data in it. A fresh clone is therefore runnable straight away, and any demo data you record is versioned alongside your code instead of being lost on the next clone.
-
-If you would rather follow the standard convention, where every environment generates its own database and data is never committed, stop tracking it:
+Unlike the usual Django convention, `db.sqlite3` is **tracked in version control** here, shipping with the schema already migrated and no data. A fresh clone is runnable immediately, and any demo data you record is versioned alongside your code. If you would rather follow the standard convention, untrack it before an instance holds real data:
 
 ```bash
 git rm --cached db.sqlite3
 echo 'db.sqlite3' >> .gitignore
 ```
 
-Do this before deploying an instance that will hold real data. The Docker setup points production at a separate volume-mounted file regardless, but a stale development database should not ship in the image either.
-
-## Project layout
-
-```
-core/          # Project configuration (settings, urls, wsgi, asgi)
-pages/         # Public presentation site (landing)
-accounts/      # Sign up, login, logout (native auth)
-dashboard/     # Aggregations, projections, and report charts
-transactions/  # Transaction model + CRUD
-categories/    # Category model + CRUD (self-related)
-payments/      # PaymentMethod model + CRUD
-templates/     # Project-level Django templates
-static/        # Project-level static assets
-tailwind/      # Tailwind CSS source for the production build
-```
-
 ## Choosing your currency
 
-The app ships in Brazilian Real. Switch it with a single setting — `CURRENCY` in `.env`, or an environment variable for a local run:
+The app ships in Brazilian Real. Switch it with one setting — `CURRENCY` in `.env`, or an environment variable:
 
 ```bash
 CURRENCY=USD uv run python manage.py runserver
@@ -112,120 +74,57 @@ CURRENCY=USD uv run python manage.py runserver
 | `USD` | `$ 1,000.00` | | `JPY` | `¥ 1,000.00` |
 | `EUR` | `€ 1.000,00` | | `CHF` | `CHF 1'000.00` |
 
-One setting deliberately controls **both** the symbol and the number format: `$ 1.000,00` (dollar sign, Brazilian separators) would be wrong in every locale, so the two are defined together per currency in [`core/currencies.py`](core/currencies.py). Adding a currency is one line in that file.
+One setting deliberately controls **both** the symbol and the number format — `$ 1.000,00` (dollar sign, Brazilian separators) would be wrong everywhere, so the two are defined together per currency in [`core/currencies.py`](core/currencies.py). An unsupported code raises `ImproperlyConfigured` at startup rather than mislabelling every amount. The interface language stays English whatever you pick.
 
-An unsupported code raises `ImproperlyConfigured` at startup and lists the valid ones, rather than silently labelling every amount with the wrong symbol.
+## Project layout
 
-Two things stay unchanged whatever you pick: the interface language (English — the currency does not switch `LANGUAGE_CODE`), and amount **inputs**, which stay dot-decimal because `<input type="number">` accepts nothing else.
+```
+core/          # Project configuration (settings, urls, wsgi, asgi)
+pages/         # Public landing page
+accounts/      # Sign up, login, logout (native auth)
+dashboard/     # Aggregations, projections, and report charts
+transactions/  # Transaction model + CRUD
+categories/    # Category model + CRUD (self-related)
+payments/      # PaymentMethod model + CRUD
+templates/     # Project-level Django templates
+static/        # Project-level static assets
+tailwind/      # Tailwind CSS source for the production build
+```
 
-## Docker
+## Configuration reference
 
-CashFlow ships as a single lean container: the Django app served by `gunicorn`, plus a named volume that persists `db.sqlite3` across restarts and container recreation. There is no separate database service and no reverse proxy — static files are served in-process by [WhiteNoise](https://whitenoise.readthedocs.io/).
-
-Requires Docker and the Docker Compose plugin (`docker compose version`).
-
-### First run
-
-1. Copy the environment template and fill in real values:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   At minimum, set a real `SECRET_KEY` (never commit `.env` — it is already gitignored):
-
-   ```bash
-   uv run python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-   ```
-
-2. Build and start:
-
-   ```bash
-   docker compose up --build
-   ```
-
-   The container runs `manage.py migrate` before starting `gunicorn`, so the schema is created inside the `db-data` volume on first start.
-
-3. Open `http://localhost:8000/`.
-
-4. (Optional) Create a superuser inside the running container:
-
-   ```bash
-   docker compose exec app python manage.py createsuperuser
-   ```
-
-### What the image does at build time
-
-- Installs dependencies with `uv sync --locked`, matching the committed `uv.lock`.
-- Downloads the standalone Tailwind CSS CLI (a plain binary — no Node.js or npm) and compiles `tailwind/input.css` into `static/css/output.css`.
-- Runs `collectstatic`, so WhiteNoise serves pre-built, hashed, compressed files at runtime. Nothing is generated on the fly in production.
-
-### Persisting data
-
-The `db-data` named volume is mounted at `/app/data`, and `SQLITE_PATH` points Django's `DATABASES` at `/app/data/db.sqlite3`:
-
-- `docker compose down && docker compose up` keeps your data.
-- `docker compose down -v` **deletes** the volume and all data. Use only when you intend to reset.
-
-### Configuration reference
-
-Every setting in `.env.example` maps directly to `core/settings.py`:
+Every variable in `.env.example` maps directly to `core/settings.py`:
 
 | Variable | Purpose | Default if unset |
 |---|---|---|
 | `SECRET_KEY` | Django's cryptographic signing key | insecure development fallback — **required in production** |
 | `DEBUG` | `True` / `False` | `True` |
-| `ALLOWED_HOSTS` | Comma-separated list of allowed hostnames | `localhost,127.0.0.1` |
+| `ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
 | `SQLITE_PATH` | Absolute path to the SQLite file | `<project root>/db.sqlite3` |
-| `CURRENCY` | Currency shown in the UI — sets symbol **and** number format | `BRL` |
-| `HTTPS` | Enables secure cookies, HTTPS redirect, and HSTS | `False` |
+| `CURRENCY` | Currency shown in the UI | `BRL` |
+| `HTTPS` | Secure cookies, HTTPS redirect, HSTS | `False` |
+| `LOG_LEVEL` | Log verbosity on stdout | `INFO` |
 
-### `SECRET_KEY` is enforced, not just recommended
+The app **refuses to start** when `DEBUG=False` and `SECRET_KEY` is unset, blank, still the placeholder from `.env.example`, or still the development fallback committed in `core/settings.py` — anyone holding a published key can forge session cookies. A fresh clone runs with no `.env` at all; the guard only applies once you turn `DEBUG` off.
 
-The development fallback in `core/settings.py` is committed to this public repository, so anyone holding it can forge session cookies and password-reset tokens against an instance still running on it. The app therefore **refuses to start** when `DEBUG=False` and the key is unset, blank, or still that fallback:
-
-```
-django.core.exceptions.ImproperlyConfigured: SECRET_KEY is still the insecure
-development fallback, which is published in this repository, while DEBUG is False.
-```
-
-A fresh clone still runs with no `.env` at all — the guard only applies once you turn `DEBUG` off.
-
-### `HTTPS` — turn on once you actually have TLS
-
-Set `HTTPS=True` and Django sends session and CSRF cookies as `Secure`, redirects HTTP to HTTPS, emits HSTS, and trusts your proxy's `X-Forwarded-Proto` header. `manage.py check --deploy` then returns clean.
-
-Leave it `False` for the default `docker compose up`, which publishes plain HTTP on `:8000`. This is deliberately separate from `DEBUG`, because "not in development" and "served over TLS" are different questions: enabled over plain HTTP, a browser would never send the session cookie back (login appears to succeed, then bounces to the form) and the redirect would loop to an HTTPS port serving nothing.
-
-## Production static files
-
-- **Development** (`DEBUG=True`): Tailwind loads from the Play CDN. No build step.
-- **Production** (`DEBUG=False`): `templates/base.html` links the compiled `static/css/output.css`, built from `tailwind/input.css` with the [standalone Tailwind CLI](https://tailwindcss.com/docs/installation/tailwind-cli) and served by WhiteNoise's `CompressedManifestStaticFilesStorage` (gzip plus hashed filenames for long-lived caching).
-
-To rebuild the CSS locally without Docker — for instance to sanity-check a `DEBUG=False` run before deploying:
-
-```bash
-curl -sLo tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
-chmod +x tailwindcss
-./tailwindcss -i tailwind/input.css -o static/css/output.css --minify
-uv run python manage.py collectstatic --noinput
-```
+Set `HTTPS=True` only once the instance is actually served over TLS — it sends session and CSRF cookies as `Secure`, redirects HTTP to HTTPS, emits HSTS, and trusts `X-Forwarded-Proto`. Over plain HTTP it would break login outright.
 
 ## Before you deploy
 
-A short pass to run through before putting an instance in front of real data:
+- Set a real `SECRET_KEY` and `DEBUG=False`.
+- List your real domains in `ALLOWED_HOSTS`.
+- Set `HTTPS=True` if served over TLS; confirm with `manage.py check --deploy`.
+- Build the Tailwind bundle and run `python manage.py collectstatic --noinput` (the Docker image does both at build time).
+- Keep `.env` out of version control, or use your platform's secret store.
+- Start from an empty database if you are keeping `db.sqlite3` tracked.
 
-- **Set a real `SECRET_KEY`** — long, random, and unique to this instance. This one is enforced: the app will not start without it once `DEBUG=False`.
-- **Turn `DEBUG` off.** `DEBUG=False`.
-- **List your real domains** in `ALLOWED_HOSTS`.
-- **Set `HTTPS=True` if the instance is served over TLS.** Confirm with `manage.py check --deploy`, which should report no issues.
-- **Apply migrations** — `python manage.py migrate`. The Docker image does this on container start; run it yourself otherwise.
-- **Build the CSS and collect static files** — `python manage.py collectstatic --noinput`, after building `static/css/output.css`. The Docker image does both at build time. Make sure the bundle reflects your current templates.
-- **Keep `.env` out of version control**, or use your platform's secret store.
-- **Start from an empty database.** If you are keeping `db.sqlite3` tracked, make sure the committed file holds no real data; otherwise untrack it as described above.
+## Documentation
+
+- [`ProductRequirementsDocument.md`](ProductRequirementsDocument.md) — full product specification, requirements, design system, and sprint history
+- [`docs/`](docs/README.md) — technical reference for every app, model, view, and template
 
 ## License
 
-Copyright &copy; 2026 [Henrique Mayer](https://github.com/HenriqueMayer). All rights reserved.
+Copyright (c) 2026 Henrique Mayer
 
-See [LICENSE](LICENSE) for the full terms. Using this repository as a template for your own personal, local instance is expected and welcome; any other use, redistribution, or reuse of the code beyond that requires the copyright holder's permission.
+Licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). Personal, noncommercial use is permitted — including using this repository as a template for your own personal, local instance; selling this software, or using it for any commercial purpose, is not. See [LICENSE](LICENSE) for the full terms.
