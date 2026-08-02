@@ -196,7 +196,7 @@ Every app namespaces its own URLs with `app_name = '<app>'`, so every reversed U
 
 ## Signals
 
-Two apps wire a `post_save` signal on `User` via `AppConfig.ready()` to seed default data on signup (FR14) — see [apps/categories.md](apps/categories.md) and [apps/payments.md](apps/payments.md) for the exact payloads. Both signals live in `<app>/signals.py`, imported (never called directly) from `<app>/apps.py`.
+One app wires a `post_save` signal on `User` via `AppConfig.ready()` to seed default data on signup (FR14): `categories/signals.py` seeds the 9 default top-level categories — see [apps/categories.md](apps/categories.md) for the exact payload. The signal lives in `categories/signals.py`, imported (never called directly) from `categories/apps.py`. `payments` no longer wires one (reverted 2026-08-02 — `MethodType` is itself an enum, so seeding four rows named after the enum options was redundant; see [apps/payments.md](apps/payments.md#no-default-data-seeding)).
 
 ## Admin
 

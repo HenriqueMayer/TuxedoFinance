@@ -23,32 +23,32 @@ the active filters survive page navigation.
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-100">Transactions</h1>
-            <p class="mt-1 text-sm text-slate-400">Every income, expense, and investment you have recorded.</p>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">Transactions</h1>
+            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">Every income, expense, and investment you have recorded.</p>
         </div>
         <a href="{{ create_url }}"
-           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
             New Transaction
         </a>
     </div>
 
-    <form method="get" class="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:flex-row sm:flex-wrap sm:items-end">
+    <form method="get" class="flex flex-col gap-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div class="min-w-[14rem] flex-[2] space-y-1.5">
-            <label for="filter-search" class="block text-sm font-medium text-slate-300">Search</label>
+            <label for="filter-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Search</label>
             <input type="search" id="filter-search" name="q" value="{{ search_query }}"
                    placeholder="Title, notes, category or payment method"
-                   class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
             {% comment %}"Billed", not just "Month": the filter matches the month the money moves, so a card purchase past its best purchase day is found under the month its bill is paid, and a fixed transaction under every month it charges.{% endcomment %}
-            <label for="filter-month" class="block text-sm font-medium text-slate-300">Billed month</label>
+            <label for="filter-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Billed month</label>
             <input type="month" id="filter-month" name="month" value="{{ selected_month }}"
-                   class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-type" class="block text-sm font-medium text-slate-300">Type</label>
+            <label for="filter-type" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Type</label>
             <select id="filter-type" name="type"
-                    class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
                 <option value="">All types</option>
                 {% for value, label in transaction_type_choices %}
                     <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
@@ -56,9 +56,9 @@ the active filters survive page navigation.
             </select>
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-sort" class="block text-sm font-medium text-slate-300">Sort by</label>
+            <label for="filter-sort" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Sort by</label>
             <select id="filter-sort" name="sort"
-                    class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
                 <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest first</option>
                 <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest first</option>
                 <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>Last updated</option>
@@ -66,12 +66,12 @@ the active filters survive page navigation.
         </div>
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                 Filter
             </button>
             {% if search_query or selected_month or selected_type or selected_sort == 'oldest' %}
                 <a href="{{ list_url }}"
-                   class="rounded text-sm font-medium text-slate-400 transition hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                   class="rounded text-sm font-medium text-slate-600 dark:text-neutral-400 transition hover:text-slate-900 dark:hover:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     Clear filters
                 </a>
             {% endif %}
@@ -79,22 +79,22 @@ the active filters survive page navigation.
     </form>
 
     {% if transactions %}
-        <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60">
-            <ul class="divide-y divide-slate-800">
+        <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335]">
+            <ul class="divide-y divide-slate-200 dark:divide-slate-700">
                 {% for transaction in transactions %}
                     <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                         <div class="space-y-1">
                             <div class="flex flex-wrap items-center gap-2">
-                                <p class="font-medium text-slate-100">{{ transaction.title }}</p>
+                                <p class="font-medium text-slate-900 dark:text-neutral-100">{{ transaction.title }}</p>
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
-                                    {% if transaction.transaction_type == 'INCOME' %}bg-emerald-500/10 text-emerald-400
-                                    {% elif transaction.transaction_type == 'EXPENSE' %}bg-rose-500/10 text-rose-400
-                                    {% else %}bg-amber-500/10 text-amber-400
+                                    {% if transaction.transaction_type == 'INCOME' %}bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400
+                                    {% elif transaction.transaction_type == 'EXPENSE' %}bg-rose-500/10 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400
+                                    {% else %}bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400
                                     {% endif %}">
                                     {{ transaction.get_transaction_type_display }}
                                 </span>
                                 {% if transaction.is_fixed %}
-                                    <span class="inline-flex items-center rounded-full border border-slate-700 px-2.5 py-0.5 text-xs font-medium text-slate-400">
+                                    <span class="inline-flex items-center rounded-full border border-slate-300 dark:border-[#3a3a3a] px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:text-neutral-400">
                                         {% if transaction.fixed_until %}
                                             Fixed &middot; until {{ transaction.fixed_until|date:'M Y' }}
                                         {% else %}
@@ -103,13 +103,13 @@ the active filters survive page navigation.
                                     </span>
                                 {% endif %}
                                 {% if transaction.is_installment_plan %}
-                                    <span class="inline-flex items-center rounded-full border border-slate-700 px-2.5 py-0.5 text-xs font-medium text-slate-400">
+                                    <span class="inline-flex items-center rounded-full border border-slate-300 dark:border-[#3a3a3a] px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:text-neutral-400">
                                         {{ transaction.installments }}x
                                     </span>
                                 {% endif %}
                                 {% comment %}Only when the card's cycle actually moves the money to another month — otherwise this repeats the purchase date below. Falls back to the month alone when the card records no due day.{% endcomment %}
                                 {% if transaction.billing_offset and transaction.billed_month %}
-                                    <span class="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium text-indigo-300">
+                                    <span class="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium text-indigo-700 dark:text-indigo-400">
                                         {% if transaction.is_fixed or transaction.is_installment_plan %}Billed from{% else %}Billed{% endif %}
                                         {% if transaction.payment_date %}
                                             {{ transaction.payment_date|date:'M j, Y' }}
@@ -119,7 +119,7 @@ the active filters survive page navigation.
                                     </span>
                                 {% endif %}
                             </div>
-                            <p class="text-sm text-slate-400">
+                            <p class="text-sm text-slate-600 dark:text-neutral-400">
                                 {{ transaction.category.name }} &middot; {{ transaction.payment_method.name }}
                                 &middot; {{ transaction.transaction_date|date:'M j, Y' }}
                             </p>
@@ -127,25 +127,25 @@ the active filters survive page navigation.
                         <div class="flex items-center gap-4">
                             <div class="sm:text-right">
                                 <p class="text-lg font-semibold tabular-nums
-                                    {% if transaction.transaction_type == 'INCOME' %}text-emerald-400
-                                    {% elif transaction.transaction_type == 'EXPENSE' %}text-rose-400
-                                    {% else %}text-amber-400
+                                    {% if transaction.transaction_type == 'INCOME' %}text-emerald-600 dark:text-emerald-400
+                                    {% elif transaction.transaction_type == 'EXPENSE' %}text-rose-600 dark:text-rose-400
+                                    {% else %}text-amber-600 dark:text-amber-400
                                     {% endif %}">
                                     {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}{{ CURRENCY_SYMBOL }} {{ transaction.amount|floatformat:2 }}
                                 </p>
                                 {% if transaction.is_installment_plan %}
-                                    <p class="text-sm tabular-nums text-slate-400">
+                                    <p class="text-sm tabular-nums text-slate-600 dark:text-neutral-400">
                                         {{ transaction.installments }}x {{ CURRENCY_SYMBOL }} {{ transaction.installment_amount|floatformat:2 }} / month
                                     </p>
                                 {% endif %}
                             </div>
                             <div class="flex items-center gap-3">
                                 <a href="{% url 'transactions:update' transaction.pk %}"
-                                   class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                                     Edit
                                 </a>
                                 <a href="{% url 'transactions:delete' transaction.pk %}"
-                                   class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                                   class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                                     Delete
                                 </a>
                             </div>
@@ -159,20 +159,20 @@ the active filters survive page navigation.
             <nav class="flex items-center justify-between gap-4" aria-label="Pagination">
                 {% if page_obj.has_previous %}
                     <a href="{% querystring page=page_obj.previous_page_number %}"
-                       class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                         Previous
                     </a>
                 {% else %}
                     <span></span>
                 {% endif %}
 
-                <p class="text-sm text-slate-400">
+                <p class="text-sm text-slate-600 dark:text-neutral-400">
                     Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
                 </p>
 
                 {% if page_obj.has_next %}
                     <a href="{% querystring page=page_obj.next_page_number %}"
-                       class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                         Next
                     </a>
                 {% else %}

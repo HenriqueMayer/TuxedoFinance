@@ -6,9 +6,9 @@ from django.contrib.auth.models import User
 # classes into `{{ field }}`; the owning form is responsible for styling its
 # own widgets, which is what the `__init__` overrides below do.
 INPUT_CLASSES = (
-    'w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 '
-    'text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 '
-    'focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
+    'w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 '
+    'text-slate-900 dark:text-neutral-100 placeholder:text-slate-400 dark:placeholder:text-neutral-500 '
+    'focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
 )
 
 

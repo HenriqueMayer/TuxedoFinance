@@ -51,6 +51,20 @@ class Transaction(models.Model):
         EXPENSE = 'EXPENSE', 'Expense'
         INVESTMENT = 'INVESTMENT', 'Investment'
 
+    class BillChoice(models.IntegerChoices):
+        """Manual override of which bill a credit-card charge lands on.
+
+        Empty (`None`) means "let the card's billing cycle decide" — the
+        automatic `PaymentMethod.statement_offset` from `best_purchase_day`.
+        A non-null value overrides that computation: `CURRENT` forces this
+        month's bill (offset 0), `NEXT` forces the following month's (offset 1).
+        Only meaningful for credit card purchases, enforced in
+        `TransactionForm.clean`; stored on the row so the choice persists
+        across edits of `payment_method` or `transaction_date`.
+        """
+        CURRENT = 0, 'Current bill'
+        NEXT = 1, 'Next bill'
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -76,6 +90,16 @@ class Transaction(models.Model):
     installments = models.PositiveSmallIntegerField(
         default=1,
         validators=[MinValueValidator(1), MaxValueValidator(MAX_INSTALLMENTS)],
+    )
+    # Manual override of the credit card's automatic bill-cycle shift. Null
+    # (the default) means "use `PaymentMethod.statement_offset`", preserving
+    # the original behaviour for every row saved before this column existed.
+    # See `BillChoice` above and PRD §8.5 (billing-cycle override).
+    billing_override = models.PositiveSmallIntegerField(
+        choices=BillChoice.choices,
+        null=True,
+        blank=True,
+        default=None,
     )
     is_fixed = models.BooleanField(default=False)
     # Last month a fixed transaction pays out (inclusive). Null = open-ended,
@@ -127,10 +151,16 @@ class Transaction(models.Model):
     def billing_offset(self):
         """Months between buying this and paying for it (`statement_offset`).
 
-        Zero for everything except a credit card with a best purchase day set,
-        so a project that never fills that day in behaves exactly as it did
-        before the column existed.
+        Honors a manual `billing_override` first — `CURRENT` forces this
+        month's bill (0), `NEXT` forces the following month's (1) — and falls
+        back to the card's automatic `statement_offset` from
+        `best_purchase_day` only when the override is empty. So a project
+        that never touches this field behaves exactly as it did before the
+        column existed, while a 23rd-June purchase on a 24th-closing card
+        can still be pushed onto the next bill by setting `NEXT` manually.
         """
+        if self.billing_override is not None:
+            return self.billing_override
         return self.payment_method.statement_offset(self.transaction_date)
 
     def months_from_start(self, year, month):

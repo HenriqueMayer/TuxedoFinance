@@ -96,7 +96,7 @@ Not defined in this codebase — used as-is from `django.contrib.auth`. Referenc
 
 - `Meta.ordering = ['name']`.
 - `Meta.constraints`: `UniqueConstraint(user, name)` named `unique_payment_method_per_user`.
-- `__str__`: `"{name} ({method_type display})"`, e.g. `"Nubank Credit (Credit Card)"` — **except** when the name already *is* the type label (case- and whitespace-insensitive), where it returns just the name. The FR14 defaults are named exactly after their own type, so the unconditional form rendered `"Credit Card (Credit Card)"` in every dropdown.
+- `__str__`: `"{name} ({method_type display})"`, e.g. `"Nubank Credit (Credit Card)"` — **except** when the name already *is* the type label (case- and whitespace-insensitive), where it returns just the name. A user is free to name a method after its own type ("Credit Card", "PIX"), so the unconditional form would render `"Credit Card (Credit Card)"` in every dropdown; the case-fold check keeps that one clean.
 - `has_billing_cycle` (property): `method_type == CREDIT_CARD` **and** `best_purchase_day` set. `due_day` is not part of it — it moves no money. `PaymentMethodForm.clean()` rejects either field on a non-credit-card method.
 - `statement_offset(purchase_date)` (method): whole months from a purchase to the month it comes off the balance — `0` or `1`, and `0` without a cycle. See [Billing cycle](#billing-cycle-when-a-card-purchase-actually-leaves-the-account) below.
 - `due_date_in(year, month)` (method): the due day clamped to that month's length, so a due day of 31 still resolves in February. `None` when the card records no due day.
@@ -272,10 +272,11 @@ Every model has a mandatory `user` FK, and every view that touches these models 
 
 ### Default data seeding (FR14)
 
-A brand-new user cannot create a transaction without at least one `Category` and one `PaymentMethod` (both are required FKs). To avoid a dead-end first-run experience, two `post_save` signals on `User` (`created=True` only) seed:
+A brand-new user cannot create a transaction without at least one `Category` (a required FK). To avoid a dead-end first-run experience, a single `post_save` signal on `User` (`created=True` only) seeds:
 
 - 9 default top-level categories (`categories/signals.py`) — see [apps/categories.md](apps/categories.md#default-category-seeding-fr14).
-- 4 default payment methods, one per `MethodType` (`payments/signals.py`) — see [apps/payments.md](apps/payments.md#default-payment-method-seeding-fr14).
+
+`PaymentMethod` is **not** seeded (reverted 2026-08-02). `method_type` is itself a `TextChoices` enum of the four payment-method options, so seeding four rows named exactly after their own type ("Credit Card (Credit Card)", …) was redundant with the enum and produced a confusing first-run dropdown. A user's real methods are named ("Nubank Credit", "Itaú Debit") and created on the payments page; the transaction form renders an inline "No payment methods yet — add one first" hint linking there when the user has none, so a brand-new account does not hit a dead-end empty dropdown. See [apps/payments.md](apps/payments.md#no-default-data-seeding).
 
 ### Currency display
 

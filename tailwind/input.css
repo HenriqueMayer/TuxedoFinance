@@ -23,6 +23,13 @@
 
 @import 'tailwindcss';
 
+/* Dark mode driven by a `.dark` class on <html> (set by the inline FOUC
+ * script in base.html + toggled by static/js/theme.js). Tailwind v4's
+ * default `dark:` variant listens to `prefers-color-scheme`, so we override
+ * it here to read the class instead — the same convention the dev Play
+ * CDN config uses via `darkMode: 'class'` in base.html. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --font-sans: 'Inter', 'system-ui', 'sans-serif';
 }

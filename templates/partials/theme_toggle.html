@@ -1,0 +1,23 @@
+{% comment %}
+Reusable theme toggle button (PRD §9 — light/dark). A plain `<button id="theme-toggle">`;
+static/js/theme.js wires the click handler. The FOUC inline script in
+base.html already set `.dark` on <html> before this paints, so the right
+icon is shown on first render with no flash.
+
+The two SVG icons take turns via Tailwind's `dark:` variant: the moon shows
+on the light surface (offering "switch to dark"), the sun shows on the dark
+surface. The `aria-label` is the same either way — the toggle isn't labelled
+"toggle to dark"/"toggle to light" because that depends on the current
+state, and the icon itself communicates the affordance.
+{% endcomment %}
+<button type="button" id="theme-toggle" aria-label="Toggle color theme"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-neutral-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    <!-- Moon: visible in light mode only -->
+    <svg class="h-5 w-5 dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+    </svg>
+    <!-- Sun: visible in dark mode only -->
+    <svg class="hidden h-5 w-5 dark:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+    </svg>
+</button>
