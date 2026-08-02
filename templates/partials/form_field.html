@@ -10,14 +10,14 @@ The owning form must style its own widgets (e.g. via Meta.widgets or the
 form's __init__) using the exact design-system input classes below so every
 input/select/textarea in the project looks identical:
 
-  "w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5
-   text-slate-100 placeholder:text-slate-500 focus:border-indigo-500
+  "w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5
+   text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:text-neutral-500 focus:border-indigo-500
    focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
 
 `select` and `textarea` widgets reuse the exact same class string. Wrap a
 group of fields in a form card:
 
-  <form method="post" class="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+  <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6">
       {% csrf_token %}
       {% include 'partials/form_field.html' with field=form.title %}
       ...
@@ -25,18 +25,18 @@ group of fields in a form card:
 {% endcomment %}
 {% if field %}
     <div class="space-y-1.5">
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-300">
-            {{ field.label }}{% if field.field.required %} <span class="text-rose-400">*</span>{% endif %}
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">
+            {{ field.label }}{% if field.field.required %} <span class="text-rose-600 dark:text-rose-400">*</span>{% endif %}
         </label>
 
         {{ field }}
 
         {% if field.help_text %}
-            <p class="text-sm text-slate-500">{{ field.help_text }}</p>
+            <p class="text-sm text-slate-500 dark:text-neutral-500">{{ field.help_text }}</p>
         {% endif %}
 
         {% for error in field.errors %}
-            <p class="text-sm text-rose-400">{{ error }}</p>
+            <p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
         {% endfor %}
     </div>
 {% endif %}

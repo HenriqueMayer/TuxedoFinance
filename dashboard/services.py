@@ -39,8 +39,8 @@ TOP_CATEGORIES = 6
 
 # Bars in the payment-method breakdown. Higher than `TOP_CATEGORIES` because
 # these bars are vertical: the limit here is how many axis labels fit side by
-# side, not how tall the card grows. Every account starts with four seeded
-# methods (FR14), so the cap only bites for someone tracking several cards.
+# side, not how tall the card grows. Payment methods are no longer seeded
+# (FR14), so the cap only bites for someone tracking several cards.
 TOP_PAYMENT_METHODS = 8
 
 

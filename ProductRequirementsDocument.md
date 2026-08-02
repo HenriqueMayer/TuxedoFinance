@@ -87,6 +87,8 @@ Give the user control and clarity over their personal finances through:
 
 > **Scope change (2026-07-25):** "advanced reports/complex charts" was originally listed here as a non-goal. FR16 brings **simple** charts into scope — server-rendered SVG/CSS over the same 12-month projection the dashboard already computes. What stays out is the thing the original exclusion was actually protecting against: interactive/drill-down analytics, a charting library and the JavaScript build step it would drag in, custom date-range pickers, and exportable reports.
 
+> **Scope change (2026-08-02) — theme toggle:** FR21 adds a light/dark theme toggle. The toggle carries ~25 lines of vendored vanilla JS (`static/js/theme.js` + the matching inline `<head>` FOUC script in `base.html`). That is **not** the "JavaScript build step" the §5 exclusion above was protecting against — there is still no npm/Node pipeline, no HTMX, no SPA, no charting library, no JavaScript-driven interactivity anywhere on the charts or the dashboard. The theme-toggle JS is the narrow exception, scoped to flipping a single class on `<html>` and persisting the choice; it deliberately mirrors the weekly-planner's convention. Charts stay server-rendered SVG/CSS, every mutating action stays a normal Django POST + redirect, and the rest of the project's no-JS spirit is preserved.
+
 ---
 
 ## 6. Functional Requirements
@@ -99,20 +101,21 @@ Give the user control and clarity over their personal finances through:
 | FR04 | Route protection | The entire internal area requires authentication (`LoginRequiredMixin`). |
 | FR05 | Dashboard | Displays **Current Balance**, **Income (month)**, **Expenses (month)**, **Investments (month)**, **Balance (month)**, and **Projected Balance (end of month)**. |
 | FR06 | List transactions | Paginated list of the logged-in user's transactions. |
-| FR07 | Create transaction | Form with `title`, `amount`, `transaction_type`, `category`, `payment_method`, `installments`, `transaction_date`, `is_fixed`, `fixed_until`, `notes`. |
+| FR07 | Create transaction | Form with `title`, `amount`, `transaction_type`, `category`, `payment_method`, `installments`, `billing_override`, `transaction_date`, `is_fixed`, `fixed_until`, `notes`. |
 | FR08 | Edit transaction | Update the user's own existing transaction. |
 | FR09 | Delete transaction | Removal with confirmation. |
 | FR10 | Manage categories | CRUD for categories and subcategories (self-relationship). |
 | FR11 | Manage payment methods | CRUD for payment methods (name + type). A credit card may also carry a **billing cycle**: a best purchase day (the day the statement opens), which defers a purchase made on or after it to the next month's bill, and a due day (the day the bill is paid), which is displayed only and shifts nothing. Both optional and independent; see §8.5. |
 | FR12 | Per-user isolation | Each user accesses only their own records. |
 | FR13 | Automatic timestamps | Every model records `created_at` and `updated_at`. |
-| FR14 | Default data seed | On signup, seed the new user with the default categories (domain diagram) and the four payment methods via signals, so the first transaction can be recorded immediately — an empty account cannot create a transaction otherwise, since `category` and `payment_method` are required. |
+| FR14 | Default data seed | On signup, seed the new user **only** with the default categories (domain diagram) via signals, so the first transaction can be recorded immediately — `category` is required. Payment methods are *not* seeded: `method_type` already enumerates the four enum options (Credit Card, Debit Card, PIX, Checking Account), so seeding four rows with those exact same names was redundant. A user's real methods are named ("Nubank Credit", "Itaú Debit") and created on the payments page; the transaction form shows an inline "No payment methods yet" hint linking there when the user has none. |
 | FR15 | Future-month projection | The dashboard can be navigated to any month (`?month=YYYY-MM`, zero-JS) and projects forward: fixed transactions recur every month and installment plans spread one installment per month, so the user sees future performance without recording anything in advance. An outlook table shows the next `OUTLOOK_MONTHS` (6) months with a running projected balance. Editing a fixed transaction re-projects every month it covers immediately — which is why a *change in value* (e.g. a salary raise) is handled by ending the old row and starting a new one instead, see FR18. |
 | FR16 | Reports & charts | A dedicated `/dashboard/reports/` page charts the account's evolution over `EVOLUTION_MONTHS` (12) months — `EVOLUTION_PAST_MONTHS` (5) of history, the current month, and six projected. Four charts: **balance evolution** (line/area of the closing balance per month), **monthly cash flow** (grouped bars of Income/Expenses/Investments), **where the money goes** (top `TOP_CATEGORIES` expense categories, recurrences included), and **spending by payment method** (bars showing how one month's expenses split across the top `TOP_PAYMENT_METHODS` cards/accounts, with each one's share of the month). The last one — and only that one — is filtered by a `?month=YYYY-MM` GET param, since the other three are windows relative to today by construction; the month is picked with a plain `<input type="month">`, the same zero-JS convention as the transaction list filter. All are server-rendered SVG/CSS — no charting library, no JavaScript. |
 | FR17 | Transaction search | The transaction list accepts a free-text `?q=` term matched case-insensitively against `title`, `notes`, and the names of the related category and payment method, so a user can find a specific transaction (e.g. "salary") to edit or delete it. Combines with the existing month/type filters using AND, and is always applied on top of the user's own rows. |
 | FR18 | End a fixed transaction | A fixed transaction has an optional `fixed_until` end month (inclusive; empty = indefinitely). This is how a value change preserves history: when a salary or rent changes, the user **ends the old transaction and adds a new one** starting the month after, instead of editing the single row — an edit applies to every month the row covers, past included, and would retroactively rewrite history. `fixed_until` requires `is_fixed` and cannot precede the starting month. |
 | FR19 | Localized number format | All monetary values are displayed with the configured currency's separators across every screen — dashboard, transaction list, reports and charts — while the UI language remains English. Amount **inputs** remain dot-decimal so browsers accept them and submissions parse correctly. |
 | FR20 | Configurable currency | A single setting, `CURRENCY` (env-driven, default `BRL`), selects the currency shown throughout the app from a registry of supported ones (`BRL`, `USD`, `EUR`, `GBP`, `JPY`, `CHF`). Each entry pairs the symbol with its number format, so `BRL` renders `R$ 1.000,00` and `USD` renders `$ 1,000.00` — the two can never be configured into a mismatched combination. `CURRENCY_SYMBOL` is derived from it, not set separately. An unsupported code raises `ImproperlyConfigured` at startup rather than mislabelling every amount. |
+| FR21 | Light/dark theme toggle | Every screen renders in either a light or a dark theme, toggled by a navbar button. The choice is persisted to `localStorage`, first-time visitors follow the OS `prefers-color-scheme`, and a synchronous inline `<head>` script toggles the `.dark` class on `<html>` before the stylesheet paints so there is no flash of the wrong theme (FOUC). The toggle is wired by `static/js/theme.js` (~25 lines of vendored vanilla JS). The dark palette is tuned to PyCharm Darcula (`#2B2B2B` page, `#313335` surface). |
 
 ### 6.1 UX Flows (Mermaid Flowchart)
 
@@ -219,6 +222,7 @@ erDiagram
         boolean is_fixed
         date fixed_until "last month a fixed row pays; null = forever"
         integer installments "default 1; >1 only for Credit Card"
+        integer billing_override "null=auto, 0=current bill, 1=next bill; Credit Card only"
         date transaction_date "editable"
         text notes "optional"
         integer category_id FK
@@ -270,6 +274,8 @@ erDiagram
 - **Billing cycle — when a card purchase actually leaves the account.** The "start month" above is the month the *bill* is paid, not necessarily the month of the purchase. A credit card with `best_purchase_day` set defers the charge by `PaymentMethod.statement_offset()`: `+1` month when the purchase falls on or after the day the statement opens, `0` otherwise. `due_day` records which day of that month the bill goes out and is never part of the arithmetic. On a card opening on the 24th, a purchase made 20 June comes out of June while one made 25 June comes out of July — five days apart, one month apart on every balance and chart.
 
   Credit cards only: every other method takes the money on the purchase date. Both days or neither — a half-configured cycle is rejected by `PaymentMethodForm.clean()` rather than guessed. Cards left without a cycle behave exactly as before the feature existed, so it is additive for existing data. The offset shifts a recurrence without resizing it: a fixed charge running January–June is six payments on any card, only the six months it clears in move.
+
+- **Billing-cycle override (manual bill choice).** Sometimes a credit-card purchase made *before* the cycle opens still has to land on the *next* bill (a card-closing-on-the-24th purchase made on the 23rd that the issuer nonetheless pushed to the following statement), and the card's automatic `statement_offset` — purely a `day >= best_purchase_day` test — has no way to express that. `Transaction.billing_override` is the user's escape hatch: a `null` value means "use the card's automatic cycle" (the default, so every existing row behaves exactly as before the column existed), `0` ("Current bill") forces this month's bill, and `1` ("Next bill") forces the following month's. The override is honoured *first* by `Transaction.billing_offset`, so every downstream figure — `months_from_start`, `amount_for_month`, `billed_month`, `payment_date`, the dashboard aggregations, the reports charts, the transaction list's billed-month filter — inherits it through the one property they already read. It is exposed in `TransactionForm` as a "Bill choice" select with three options (`Automatic (from card cycle)`, `Current bill`, `Next bill`), always rendered (the project is deliberately zero-JS, so it cannot appear/disappear as `payment_method` changes) and rejected with a field-level error in `TransactionForm.clean()` when set on a non-credit-card method. Credit cards only, by the same reasoning as `installments`.
 - **Installments:** `amount` always stores the **full total**, never one installment; the monthly value is derived by `Transaction.installment_amount` (R$ 300.00 in 3x → R$ 100.00/month). `installments > 1` is valid **only** when the selected payment method's `method_type` is `CREDIT_CARD`, enforced in `TransactionForm.clean()`; a blank box means `1`. Rounding never loses money: the final installment absorbs the remainder, so the occurrences re-sum to exactly `amount` (100.00 in 3x → 33.33 / 33.33 / 33.34).
 - `Investment` counts as a **cash outflow** (money leaves the available balance) but is highlighted separately from consumption (Expense) — it is never merged into the Expenses indicator.
 - **Current Balance** = Σ Income − Σ Expenses − Σ Investments (full history, all dates — "cash available").
@@ -286,46 +292,54 @@ erDiagram
 
 ## 9. Design System
 
-Visual base: **dark background** with **gradients** and harmonic palettes, reusable components, and a modern, responsive aesthetic. All styling is done with **TailwindCSS utility classes** inside the Django Template Language. Every screen shares the same base layout (`base.html`) and the same components.
+Visual base: **light / dark theme** with a PyCharm-Darcula-inspired dark surface, **gradients** for the brand and semantic accents, reusable components, and a modern, responsive aesthetic. All styling is done with **TailwindCSS utility classes** inside the Django Template Language. Every screen shares the same base layout (`base.html`) and the same components.
+
+Theme toggling uses Tailwind's `class` strategy: a synchronous inline `<head>` script reads `localStorage` / `prefers-color-scheme` and toggles a `.dark` class on `<html>` **before** the stylesheet paints, so there is no flash of the wrong theme. The toggle button itself (`partials/theme_toggle.html`) is wired by `static/js/theme.js` — about 25 lines of vendored vanilla JS, **no CDN, no JS build**, deliberately outside the project's no-JS-for-charts rule (see §5 scope note).
 
 > **Assets:** brand assets (logo, icons, custom palette) will live in `docs/assets/`. Until they exist, the tokens below are the placeholders; once assets land, they become the source of truth and this section should be updated to match.
 
 ### 9.1 Colors
 
-| Role | Tailwind token | Usage |
-|------|----------------|-------|
-| Base background | `bg-slate-950` | Main background (dark) |
-| Surface | `bg-slate-900/60` + `backdrop-blur` | Cards, panels |
-| Border | `border-slate-800` | Subtle outlines |
-| Primary (gradient) | `from-indigo-500 via-violet-500 to-fuchsia-500` | Primary buttons, highlights, brand |
-| Income | `text-emerald-400` / `bg-emerald-500/10` | Inflows |
-| Expense | `text-rose-400` / `bg-rose-500/10` | Outflows |
-| Investment | `text-amber-400` / `bg-amber-500/10` | Investments |
-| Primary text | `text-slate-100` | Headings and values |
-| Secondary text | `text-slate-400` | Labels, descriptions |
-| Focus/ring | `ring-indigo-500` | Focus states |
+Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`slate-600` text). Dark is tuned to PyCharm Darcula: warm-neutral `#2B2B2B` page, `#313335` card surface, `#323232` edge — the `neutral-*` family for text so reading is the same on both themes. Cards switched from `border-*` to `ring-1` (the weekly-planner signature card edge).
+
+| Role | Light | Dark (Darcula) | Usage |
+|------|-------|----------------|-------|
+| Page background | `bg-slate-50` | `dark:bg-[#2B2B2B]` | Main background |
+| Surface | `bg-white` + `ring-1 ring-slate-200` | `dark:bg-[#313335]` + `dark:ring-[#323232]` | Cards, panels (the `ring-1` is the edge, not a `border`) |
+| Border/divider | `border-slate-200` / `divide-slate-200` | `dark:border-[#323232]` / `dark:divide-[#323232]` | Tables, list dividers |
+| Sticky navbar | `bg-white/80` + `backdrop-blur` | `dark:bg-[#2B2B2B]/80` | Top bar |
+| Primary (gradient) | `from-indigo-500 via-violet-500 to-fuchsia-500` | (same gradient — the brand identity persists across themes) | Primary buttons, highlights, brand |
+| Income | `text-emerald-600` / `bg-emerald-500/10` | `dark:text-emerald-400` / `dark:bg-emerald-500/15` | Inflows |
+| Expense | `text-rose-600` / `bg-rose-500/10` | `dark:text-rose-400` / `dark:bg-rose-500/15` | Outflows |
+| Investment | `text-amber-600` / `bg-amber-500/10` | `dark:text-amber-400` / `dark:bg-amber-500/15` | Investments |
+| Primary text | `text-slate-900` | `dark:text-neutral-100` | Headings and values |
+| Secondary text | `text-slate-600` | `dark:text-neutral-400` | Labels, descriptions |
+| Tertiary/helper text | `text-slate-500` | `dark:text-neutral-500` | Purchase date, subtle hints |
+| Focus/ring | `ring-indigo-500` | (same) | Focus states; ring offset `ring-offset-slate-50 dark:ring-offset-[#2B2B2B]` |
+
+> The semantic / chart / text tokens are written in their **full light+dark dual form** everywhere they appear — e.g. `text-emerald-600 dark:text-emerald-400` — so a `dark:` variant is never half-paired. The `<linearGradient>` stops inside the reports SVG charts are the only literal RGB values in the project (Tailwind's `from-*/via-*/to-*` utilities do not apply to an SVG `stroke`); those are spelled out as the raw RGB of `indigo-500` / `violet-500` / `fuchsia-500` and apply in both themes.
 
 ### 9.2 Typography
 
 - Family: **Inter** (`font-sans`), fallback system-ui.
-- Scale: heading `text-3xl font-bold`, section `text-xl font-semibold`, body `text-base`, helper `text-sm text-slate-400`.
+- Scale: heading `text-3xl font-bold`, section `text-xl font-semibold`, body `text-base`, helper `text-sm text-slate-600 dark:text-neutral-400`.
 - Numbers/monetary values: `tabular-nums font-semibold`.
 
 ### 9.3 Buttons
 
 ```html
 <!-- Primary (gradient) -->
-<button class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+<button class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
   New Transaction
 </button>
 
 <!-- Secondary -->
-<button class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800">
+<button class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#323232] bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
   Cancel
 </button>
 
 <!-- Destructive -->
-<button class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20">
+<button class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
   Delete
 </button>
 ```
@@ -333,27 +347,27 @@ Visual base: **dark background** with **gradients** and harmonic palettes, reusa
 ### 9.4 Inputs and Forms
 
 ```html
-<label class="block text-sm font-medium text-slate-300 mb-1.5">Amount</label>
+<label class="block text-sm font-medium text-slate-700 dark:text-neutral-300 mb-1.5">Amount</label>
 <input type="text"
-  class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+  class="w-full rounded-xl border border-slate-300 dark:border-[#323232] bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
 
-<!-- Form group -->
-<div class="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+<!-- Form group — a card, edge is `ring-1`, not `border` -->
+<div class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6">
   <!-- form fields -->
 </div>
 ```
 
 - `select` and `textarea` reuse the same `input` classes.
-- Validation errors: message in `text-rose-400 text-sm` below the field.
+- Validation errors: message in `text-rose-600 dark:text-rose-400 text-sm` below the field.
 
 ### 9.5 Grids and Cards (Dashboard)
 
 ```html
 <!-- Indicator grid -->
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-  <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-    <p class="text-sm text-slate-400">Current Balance</p>
-    <p class="mt-2 text-2xl font-bold tabular-nums text-slate-100">$ 0.00</p>
+  <div class="rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+    <p class="text-sm text-slate-600 dark:text-neutral-400">Current Balance</p>
+    <p class="mt-2 text-2xl font-bold tabular-nums text-slate-900 dark:text-neutral-100">$ 0.00</p>
   </div>
   <!-- Income / Expenses / Balance -->
 </div>
@@ -361,16 +375,17 @@ Visual base: **dark background** with **gradients** and harmonic palettes, reusa
 
 ### 9.6 Menu / Navigation
 
-- **Public site:** navbar with the logo (gradient) on the left and `Log in` / `Sign up` buttons on the right.
-- **Authenticated area:** navbar with links (Dashboard, Transactions, Categories, Payments) + a user menu with `Log out`.
-- Active link state: `text-white` + gradient underline; inactive: `text-slate-400 hover:text-slate-200`.
-- Responsive layout: collapsible menu (`hidden md:flex`) on small screens.
+- **Public site:** navbar with the logo (gradient) on the left and a theme toggle + `Log in` / `Sign up` buttons on the right.
+- **Authenticated area:** navbar with links (Dashboard, Reports, Transactions, Categories, Payments) + a theme toggle + a user menu with `Log out`.
+- Active link state: `text-slate-900 dark:text-white` + gradient underline; inactive: `text-slate-600 dark:text-neutral-400`, hover `hover:text-slate-900 dark:hover:text-neutral-200`.
+- Responsive layout: collapsible menu (`hidden md:flex` on desktop, a `<details>` disclosure on mobile — no JS) on small screens.
+- Theme toggle button: `partials/theme_toggle.html` — a sun/moon icon pair swapped by the `dark:` variant, persisted via `static/js/theme.js`.
 
 ### 9.7 Base Components (reusable templates)
 
-- `base.html` — root HTML, `<head>`, navbar, `{% block content %}`, footer.
-- `partials/navbar.html`, `partials/footer.html`, `partials/messages.html`.
-- `partials/stat_card.html`, `partials/transaction_row.html`, `partials/form_field.html`.
+- `base.html` — root HTML, `<head>`, FOUC dark-mode bootstrap script, navbar, `{% block content %}`, footer, `theme.js` include.
+- `partials/navbar_public.html`, `partials/navbar_app.html`, `partials/theme_toggle.html`, `partials/footer.html`, `partials/messages.html`.
+- `partials/stat_card.html`, `partials/form_field.html`, `partials/empty_state.html`.
 
 ---
 
@@ -573,7 +588,7 @@ Visual base: **dark background** with **gradients** and harmonic palettes, reusa
   - [x] 5.2.1 `ListView` isolated per user
   - [x] 5.2.2 `CreateView` / `UpdateView` / `DeleteView`
   - [x] 5.2.3 Templates + routes
-- [x] **5.3** Default payment methods seed (FR14)
+- [x] **5.3** Default payment methods seed (FR14) — *reverted 2026-08-02: `method_type` already enumerates the four options, so seeding four rows with those exact names was redundant. The categories-only seed (Sprint 4.3) stays; payment methods are created by the user on the payments page, and the transaction form shows an inline "No payment methods yet" hint linking there.*
   - [x] 5.3.1 `payments/signals.py`: on `User` `post_save` (created), create one payment method per `method_type`
   - [x] 5.3.2 Wire via `AppConfig.ready()`
 
