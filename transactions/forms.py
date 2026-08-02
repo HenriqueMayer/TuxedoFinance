@@ -9,16 +9,18 @@ from transactions.models import Transaction
 # classes into `{{ field }}`; the owning form is responsible for styling its
 # own widgets, which is what the `__init__` override below does.
 INPUT_CLASSES = (
-    'w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 '
-    'text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 '
-    'focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
+    'w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 '
+    'text-slate-900 dark:text-neutral-100 placeholder:text-slate-400 dark:placeholder:text-neutral-500 '
+    'focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
 )
 
 # `is_fixed` visual toggle: a styled checkbox reusing the same PRD §9.1
 # tokens (slate surface/border, indigo focus ring) since the design system
-# does not define a dedicated checkbox/switch component yet.
+# does not define a dedicated checkbox/switch component yet. The border uses
+# `dark:border-slate-600` rather than the card-edge `dark:border-[#323232]`
+# so the input reads against the `#313335` card surface (see PRD §9.4).
 CHECKBOX_CLASSES = (
-    'h-5 w-5 rounded-md border-slate-700 bg-slate-900/60 text-indigo-500 '
+    'h-5 w-5 rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] text-indigo-500 '
     'focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
 )
 
@@ -39,6 +41,7 @@ class TransactionForm(forms.ModelForm):
             'category',
             'payment_method',
             'installments',
+            'billing_override',
             'transaction_date',
             'is_fixed',
             'fixed_until',
@@ -57,6 +60,7 @@ class TransactionForm(forms.ModelForm):
             'is_fixed': 'Fixed / recurring transaction',
             'installments': 'Installments',
             'fixed_until': 'Repeat until',
+            'billing_override': 'Bill choice',
         }
         help_texts = {
             'transaction_date': (
@@ -79,6 +83,12 @@ class TransactionForm(forms.ModelForm):
                 'or rent changes, end this one and add a new transaction starting '
                 'the month after, so past months keep the old value.'
             ),
+            'billing_override': (
+                'Credit card only. "Automatic" follows the card cycle from its '
+                'best purchase day; pick "Current bill" or "Next bill" to force '
+                'this charge onto one bill or the other. Ignored for every other '
+                'payment method.'
+            ),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -88,9 +98,23 @@ class TransactionForm(forms.ModelForm):
         # Optional in the form (the model column is NOT NULL with default 1):
         # leaving it blank means "single payment", not a validation error.
         self.fields['installments'].required = False
+        # Replace the AutoSelect widget so the empty option carries an
+        # explicit "Automatic (from card cycle)" label rather than Django's
+        # generic "---------" — the default is what most credit-card
+        # purchases should keep.
+        self.fields['billing_override'].widget = forms.Select(
+            attrs={'class': INPUT_CLASSES},
+        )
+        self.fields['billing_override'].choices = [
+            ('', 'Automatic (from card cycle)'),
+            (str(Transaction.BillChoice.CURRENT.value), 'Current bill'),
+            (str(Transaction.BillChoice.NEXT.value), 'Next bill'),
+        ]
         for name, field in self.fields.items():
             if name == 'is_fixed':
                 field.widget.attrs['class'] = CHECKBOX_CLASSES
+            elif name == 'billing_override':
+                continue  # class already set via the widget above
             else:
                 field.widget.attrs['class'] = INPUT_CLASSES
 
@@ -140,6 +164,14 @@ class TransactionForm(forms.ModelForm):
                 'A transaction cannot be both fixed and split into installments: '
                 'a fixed transaction repeats every month, while an installment '
                 'plan ends after the last installment. Pick one.',
+            )
+
+        billing_override = cleaned_data.get('billing_override')
+        if billing_override is not None and not is_credit_card:
+            self.add_error(
+                'billing_override',
+                'Bill choice only applies to credit card payments. Leave it as '
+                f'"Automatic" for "{payment_method}".',
             )
 
         return cleaned_data

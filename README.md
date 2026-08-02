@@ -50,7 +50,7 @@ See [`ProductRequirementsDocument.md`](ProductRequirementsDocument.md) for the f
 
 5. Open `http://127.0.0.1:8000/`.
 
-Sign up from the landing page and your account arrives with the default categories and payment methods already seeded, so you can record a transaction immediately.
+Sign up from the landing page and your account arrives with the default categories already seeded. Add your first payment method on the Payments page (categories and payment methods are required to record a transaction).
 
 ## Using this repository as a template
 

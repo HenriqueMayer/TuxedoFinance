@@ -19,7 +19,7 @@ One doc per Django app, each covering its models, forms, views, URLs, signals, a
 - [apps/pages.md](apps/pages.md) — the public landing page.
 - [apps/accounts.md](apps/accounts.md) — sign up, log in, log out (native Django auth).
 - [apps/categories.md](apps/categories.md) — categories & subcategories, default-category seeding.
-- [apps/payments.md](apps/payments.md) — payment methods, default-payment-method seeding.
+- [apps/payments.md](apps/payments.md) — payment methods, billing cycle, no default-data seeding (FR14).
 - [apps/transactions.md](apps/transactions.md) — the core `Transaction` model, form, and filtered/paginated CRUD.
 - [apps/dashboard.md](apps/dashboard.md) — the aggregation/projection services, the consolidated stat-card view, and the zero-JS SVG report charts.
 

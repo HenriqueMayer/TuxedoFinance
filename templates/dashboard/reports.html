@@ -53,13 +53,13 @@ because `floatformat` localizes independently of this tag.
 <div class="space-y-8">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-100">Reports</h1>
-            <p class="mt-1 text-sm text-slate-400">
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">Reports</h1>
+            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
                 How your account has moved over the last months &mdash; and where it is heading.
             </p>
         </div>
         <a href="{% url 'dashboard:index' %}"
-           class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+           class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
             Back to dashboard
         </a>
     </div>
@@ -69,9 +69,9 @@ because `floatformat` localizes independently of this tag.
             {% include 'partials/stat_card.html' with label='Balance now' value=CURRENCY_SYMBOL|add:' '|add:now_fmt %}
             {% include 'partials/stat_card.html' with label='Projected (end of window)' value=CURRENCY_SYMBOL|add:' '|add:closing_fmt %}
             {% if evolution.net_change < 0 %}
-                {% include 'partials/stat_card.html' with label='Net change (12 months)' value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-rose-400' %}
+                {% include 'partials/stat_card.html' with label='Net change (12 months)' value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-rose-600 dark:text-rose-400' %}
             {% else %}
-                {% include 'partials/stat_card.html' with label='Net change (12 months)' value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-emerald-400' %}
+                {% include 'partials/stat_card.html' with label='Net change (12 months)' value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-emerald-600 dark:text-emerald-400' %}
             {% endif %}
             {% include 'partials/stat_card.html' with label='Best month' value=evolution.best_month.date|date:'M Y' %}
         {% endwith %}
@@ -80,12 +80,12 @@ because `floatformat` localizes independently of this tag.
     {# ---------------------------------------------------------------- #}
     {# Chart 1 — balance evolution                                       #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+    <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
         <div>
-            <h2 class="text-xl font-semibold text-slate-100">Balance evolution</h2>
-            <p class="mt-1 text-sm text-slate-400">
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Balance evolution</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
                 Your balance at the close of each month. Everything after
-                <span class="font-medium text-slate-300">{{ evolution.current_month.date|date:'F Y' }}</span>
+                <span class="font-medium text-slate-700 dark:text-neutral-300">{{ evolution.current_month.date|date:'F Y' }}</span>
                 is projected from your fixed transactions and open installment plans.
             </p>
         </div>
@@ -110,16 +110,16 @@ because `floatformat` localizes independently of this tag.
                 {% for line in balance_chart.grid %}
                     <line x1="{{ balance_chart.plot_left }}" y1="{{ line.y }}"
                           x2="{{ balance_chart.plot_right }}" y2="{{ line.y }}"
-                          class="stroke-slate-800" stroke-width="1" />
+                          class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
                     <text x="{{ balance_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                          text-anchor="end" class="fill-slate-500 text-[11px] tabular-nums">
+                          text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
                         {{ line.value|floatformat:0 }}
                     </text>
                 {% endfor %}
 
                 <line x1="{{ balance_chart.plot_left }}" y1="{{ balance_chart.zero_y }}"
                       x2="{{ balance_chart.plot_right }}" y2="{{ balance_chart.zero_y }}"
-                      class="stroke-slate-600" stroke-width="1" stroke-dasharray="4 4" />
+                      class="stroke-slate-300 dark:stroke-slate-600" stroke-width="1" stroke-dasharray="4 4" />
 
                 <polygon points="{{ balance_chart.area }}" fill="url(#balance-area)" />
                 <polyline points="{{ balance_chart.line }}" fill="none"
@@ -128,12 +128,12 @@ because `floatformat` localizes independently of this tag.
 
                 {% for point in balance_chart.points %}
                     <circle cx="{{ point.x }}" cy="{{ point.y }}" r="3.5"
-                            class="fill-slate-950 {% if point.label.is_future %}stroke-violet-400/60{% else %}stroke-violet-400{% endif %}"
+                            class="fill-white dark:fill-slate-950 {% if point.label.is_future %}stroke-violet-400/60{% else %}stroke-violet-400{% endif %}"
                             stroke-width="2">
                         <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} (projected){% endif %}</title>
                     </circle>
                     <text x="{{ point.x }}" y="{{ balance_chart.label_y }}" text-anchor="middle"
-                          class="text-[11px] {% if point.label.is_current_month %}fill-slate-200 font-semibold{% else %}fill-slate-500{% endif %}">
+                          class="text-[11px] {% if point.label.is_current_month %}fill-slate-800 dark:fill-slate-200 font-semibold{% else %}fill-slate-600 dark:fill-slate-500{% endif %}">
                         {{ point.label.date|date:'M' }}
                     </text>
                 {% endfor %}
@@ -141,10 +141,10 @@ because `floatformat` localizes independently of this tag.
             {% endlocalize %}
         </div>
 
-        <p class="text-sm text-slate-400">
+        <p class="text-sm text-slate-600 dark:text-neutral-400">
             Opening balance {{ CURRENCY_SYMBOL }} {{ evolution.opening_balance|floatformat:2 }}
             &rarr; projected {{ CURRENCY_SYMBOL }} {{ evolution.closing_balance|floatformat:2 }}
-            <span class="{% if evolution.net_change < 0 %}text-rose-400{% else %}text-emerald-400{% endif %} font-semibold tabular-nums">
+            <span class="{% if evolution.net_change < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %} font-semibold tabular-nums">
                 ({% if evolution.net_change >= 0 %}+{% endif %}{{ CURRENCY_SYMBOL }} {{ evolution.net_change|floatformat:2 }})
             </span>
         </p>
@@ -153,17 +153,17 @@ because `floatformat` localizes independently of this tag.
     {# ---------------------------------------------------------------- #}
     {# Chart 2 — monthly cash flow                                       #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+    <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-                <h2 class="text-xl font-semibold text-slate-100">Monthly cash flow</h2>
-                <p class="mt-1 text-sm text-slate-400">
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Monthly cash flow</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
                     What comes in and what goes out each month, side by side.
                 </p>
             </div>
             <ul class="flex flex-wrap items-center gap-4">
                 {% for entry in cashflow_chart.legend %}
-                    <li class="flex items-center gap-2 text-sm text-slate-400">
+                    <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-neutral-400">
                         <span class="h-2.5 w-2.5 rounded-sm
                             {% if entry.tone == 'income' %}bg-emerald-400
                             {% elif entry.tone == 'expense' %}bg-rose-400
@@ -182,9 +182,9 @@ because `floatformat` localizes independently of this tag.
                 {% for line in cashflow_chart.grid %}
                     <line x1="{{ cashflow_chart.plot_left }}" y1="{{ line.y }}"
                           x2="{{ cashflow_chart.plot_right }}" y2="{{ line.y }}"
-                          class="stroke-slate-800" stroke-width="1" />
+                          class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
                     <text x="{{ cashflow_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                          text-anchor="end" class="fill-slate-500 text-[11px] tabular-nums">
+                          text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
                         {{ line.value|floatformat:0 }}
                     </text>
                 {% endfor %}
@@ -200,7 +200,7 @@ because `floatformat` localizes independently of this tag.
                         </rect>
                     {% endfor %}
                     <text x="{{ group.center }}" y="{{ cashflow_chart.label_y }}" text-anchor="middle"
-                          class="text-[11px] {% if group.label.is_current_month %}fill-slate-200 font-semibold{% else %}fill-slate-500{% endif %}">
+                          class="text-[11px] {% if group.label.is_current_month %}fill-slate-800 dark:fill-slate-200 font-semibold{% else %}fill-slate-600 dark:fill-slate-500{% endif %}">
                         {{ group.label.date|date:'M' }}
                     </text>
                 {% endfor %}
@@ -212,10 +212,10 @@ because `floatformat` localizes independently of this tag.
     {# ---------------------------------------------------------------- #}
     {# Chart 3 — spending by category                                    #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+    <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
         <div>
-            <h2 class="text-xl font-semibold text-slate-100">Where the money goes</h2>
-            <p class="mt-1 text-sm text-slate-400">
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Where the money goes</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
                 Your biggest expense categories across the same 12 months, recurrences included.
             </p>
         </div>
@@ -225,13 +225,13 @@ because `floatformat` localizes independently of this tag.
                 {% for category in evolution.expenses_by_category %}
                     <li class="space-y-1.5">
                         <div class="flex items-baseline justify-between gap-4">
-                            <p class="truncate font-medium text-slate-200">{{ category.name }}</p>
-                            <p class="shrink-0 text-sm tabular-nums text-slate-400">
-                                <span class="font-semibold text-rose-400">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
+                            <p class="truncate font-medium text-slate-800 dark:text-neutral-200">{{ category.name }}</p>
+                            <p class="shrink-0 text-sm tabular-nums text-slate-600 dark:text-neutral-400">
+                                <span class="font-semibold text-rose-600 dark:text-rose-400">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
                                 &middot; {{ category.share }}%
                             </p>
                         </div>
-                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
+                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                             <div class="h-full rounded-full bg-gradient-to-r from-rose-500 to-fuchsia-500"
                                  style="width: {{ category.bar_width|unlocalize }}%"></div>
                         </div>
@@ -246,25 +246,25 @@ because `floatformat` localizes independently of this tag.
     {# ---------------------------------------------------------------- #}
     {# Chart 4 — spending by payment method, for one selected month      #}
     {# ---------------------------------------------------------------- #}
-    <section id="payment-methods" class="scroll-mt-6 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+    <section id="payment-methods" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
         {% with month_label=payment_month_date|date:'F Y' %}
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <h2 class="text-xl font-semibold text-slate-100">Spending by payment method</h2>
-                <p class="mt-1 text-sm text-slate-400">
-                    How <span class="font-medium text-slate-300">{{ month_label }}</span>&rsquo;s expenses split across
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Spending by payment method</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                    How <span class="font-medium text-slate-700 dark:text-neutral-300">{{ month_label }}</span>&rsquo;s expenses split across
                     your cards and accounts &mdash; fixed transactions and open installments included.
                 </p>
             </div>
             <form method="get" action="{% url 'dashboard:reports' %}#payment-methods"
                   class="flex flex-wrap items-end gap-3">
                 <div class="min-w-[10rem] space-y-1.5">
-                    <label for="payment-month" class="block text-sm font-medium text-slate-300">Month</label>
+                    <label for="payment-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Month</label>
                     <input type="month" id="payment-month" name="month" value="{{ payment_month_param }}"
-                           class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                           class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
                 </div>
                 <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                     Filter
                 </button>
             </form>
@@ -279,9 +279,9 @@ because `floatformat` localizes independently of this tag.
                     {% for line in payment_chart.grid %}
                         <line x1="{{ payment_chart.plot_left }}" y1="{{ line.y }}"
                               x2="{{ payment_chart.plot_right }}" y2="{{ line.y }}"
-                              class="stroke-slate-800" stroke-width="1" />
+                              class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
                         <text x="{{ payment_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                              text-anchor="end" class="fill-slate-500 text-[11px] tabular-nums">
+                              text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
                             {{ line.value|floatformat:0 }}
                         </text>
                     {% endfor %}
@@ -295,13 +295,13 @@ because `floatformat` localizes independently of this tag.
                             </rect>
                             {# The share rides above its own bar, so "how is it distributed" is answerable without a hover. #}
                             <text x="{{ group.center }}" y="{{ bar.value_y }}" text-anchor="middle"
-                                  class="fill-slate-300 text-[11px] font-semibold tabular-nums">
+                                  class="fill-slate-700 dark:fill-slate-300 text-[11px] font-semibold tabular-nums">
                                 {{ group.label.share|floatformat:"-1" }}%
                             </text>
                         {% endfor %}
                         {# Truncated to what fits one slot; the list below always spells the name out in full. #}
                         <text x="{{ group.center }}" y="{{ payment_chart.label_y }}" text-anchor="middle"
-                              class="fill-slate-500 text-[11px]">
+                              class="fill-slate-600 dark:fill-slate-500 text-[11px]">
                             {{ group.label.name|truncatechars:payment_chart.label_chars }}
                         </text>
                     {% endfor %}
@@ -313,17 +313,17 @@ because `floatformat` localizes independently of this tag.
                 {% for method in payment_breakdown.methods %}
                     <li class="flex items-center gap-2">
                         <span class="h-2.5 w-2.5 shrink-0 rounded-sm bg-rose-400"></span>
-                        <span class="text-slate-300">{{ method.name }}</span>
-                        <span class="font-semibold tabular-nums text-rose-400">
+                        <span class="text-slate-700 dark:text-neutral-300">{{ method.name }}</span>
+                        <span class="font-semibold tabular-nums text-rose-600 dark:text-rose-400">
                             {{ CURRENCY_SYMBOL }} {{ method.total|floatformat:2 }}
                         </span>
                     </li>
                 {% endfor %}
             </ul>
 
-            <p class="text-sm text-slate-400">
+            <p class="text-sm text-slate-600 dark:text-neutral-400">
                 Total spent in {{ month_label }}:
-                <span class="font-semibold tabular-nums text-slate-200">{{ CURRENCY_SYMBOL }} {{ payment_breakdown.total|floatformat:2 }}</span>
+                <span class="font-semibold tabular-nums text-slate-800 dark:text-neutral-200">{{ CURRENCY_SYMBOL }} {{ payment_breakdown.total|floatformat:2 }}</span>
                 {% if payment_breakdown.shown < payment_breakdown.used %}
                     &mdash; charted across the {{ payment_breakdown.shown }} biggest of
                     {{ payment_breakdown.used }} methods used, so the shares above stop short of 100%.

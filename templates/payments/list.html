@@ -13,23 +13,23 @@ with their type and Edit/Delete actions.
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-100">Payment Methods</h1>
-            <p class="mt-1 text-sm text-slate-400">Manage the payment methods used to record your transactions.</p>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">Payment Methods</h1>
+            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">Manage the payment methods used to record your transactions.</p>
         </div>
         <a href="{{ create_url }}"
-           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
             New Payment Method
         </a>
     </div>
 
     {% if payment_methods %}
-        <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60">
-            <ul class="divide-y divide-slate-800">
+        <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335]">
+            <ul class="divide-y divide-slate-200 dark:divide-slate-700">
                 {% for payment_method in payment_methods %}
                     <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <p class="font-medium text-slate-100">{{ payment_method.name }}</p>
-                            <p class="text-sm text-slate-400">
+                            <p class="font-medium text-slate-900 dark:text-neutral-100">{{ payment_method.name }}</p>
+                            <p class="text-sm text-slate-600 dark:text-neutral-400">
                                 {{ payment_method.get_method_type_display }}
                                 {% if payment_method.has_billing_cycle %}
                                     &middot; buy before day {{ payment_method.best_purchase_day }}
@@ -41,11 +41,11 @@ with their type and Edit/Delete actions.
                         </div>
                         <div class="flex items-center gap-3">
                             <a href="{% url 'payments:update' payment_method.pk %}"
-                               class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                                 Edit
                             </a>
                             <a href="{% url 'payments:delete' payment_method.pk %}"
-                               class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                               class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                                 Delete
                             </a>
                         </div>

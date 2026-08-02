@@ -13,35 +13,35 @@ parent (if it is a subcategory) and Edit/Delete actions.
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-100">Categories</h1>
-            <p class="mt-1 text-sm text-slate-400">Organize your transactions with categories and subcategories.</p>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">Categories</h1>
+            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">Organize your transactions with categories and subcategories.</p>
         </div>
         <a href="{{ create_url }}"
-           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
             New Category
         </a>
     </div>
 
     {% if categories %}
-        <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60">
-            <ul class="divide-y divide-slate-800">
+        <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335]">
+            <ul class="divide-y divide-slate-200 dark:divide-slate-700">
                 {% for category in categories %}
                     <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <p class="font-medium text-slate-100">{{ category.name }}</p>
+                            <p class="font-medium text-slate-900 dark:text-neutral-100">{{ category.name }}</p>
                             {% if category.parent_category %}
-                                <p class="text-sm text-slate-400">Subcategory of {{ category.parent_category.name }}</p>
+                                <p class="text-sm text-slate-600 dark:text-neutral-400">Subcategory of {{ category.parent_category.name }}</p>
                             {% else %}
-                                <p class="text-sm text-slate-500">Top-level category</p>
+                                <p class="text-sm text-slate-500 dark:text-neutral-500">Top-level category</p>
                             {% endif %}
                         </div>
                         <div class="flex items-center gap-3">
                             <a href="{% url 'categories:update' category.pk %}"
-                               class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                                 Edit
                             </a>
                             <a href="{% url 'categories:delete' category.pk %}"
-                               class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+                               class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                                 Delete
                             </a>
                         </div>
