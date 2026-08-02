@@ -58,10 +58,11 @@ class PaymentMethod(models.Model):
         ]
 
     def __str__(self):
-        # The FR14 defaults are named exactly after their own type ("Credit
-        # Card", "PIX", ...), so appending the type unconditionally rendered
-        # "Credit Card (Credit Card)" in every dropdown. Only qualify the name
-        # when it actually adds information (e.g. "Nubank Credit (Credit Card)").
+        # A user is free to name a method after its own type ("Credit Card",
+        # "PIX", ...), so appending the type unconditionally would render
+        # "Credit Card (Credit Card)" in every dropdown. Only qualify the
+        # name when it actually adds information (e.g. "Nubank Credit
+        # (Credit Card)").
         type_display = self.get_method_type_display()
         if self.name.strip().casefold() == type_display.casefold():
             return self.name

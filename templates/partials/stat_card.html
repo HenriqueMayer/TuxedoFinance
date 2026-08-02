@@ -5,9 +5,9 @@ Usage (neutral):
   {% include 'partials/stat_card.html' with label='Current Balance' value=CURRENCY_SYMBOL|add:' 0.00' %}
 
 Usage (semantic tone — pass a value_class matching PRD §9.1):
-  {% include 'partials/stat_card.html' with label='Income (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-emerald-400' %}
-  {% include 'partials/stat_card.html' with label='Expenses (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-rose-400' %}
-  {% include 'partials/stat_card.html' with label='Investments (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-amber-400' %}
+  {% include 'partials/stat_card.html' with label='Income (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-emerald-600 dark:text-emerald-400' %}
+  {% include 'partials/stat_card.html' with label='Expenses (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-rose-600 dark:text-rose-400' %}
+  {% include 'partials/stat_card.html' with label='Investments (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-amber-600 dark:text-amber-400' %}
 
 `value` must already be fully formatted by the caller (including the
 currency symbol, sourced from `{{ CURRENCY_SYMBOL }}` — never hardcoded,
@@ -19,7 +19,7 @@ logic. Compose 4 cards in the standard indicator grid:
       ...
   </div>
 {% endcomment %}
-<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-    <p class="text-sm text-slate-400">{{ label }}</p>
-    <p class="mt-2 text-2xl font-bold tabular-nums {{ value_class|default:'text-slate-100' }}">{{ value }}</p>
+<div class="rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+    <p class="text-sm text-slate-600 dark:text-neutral-400">{{ label }}</p>
+    <p class="mt-2 text-2xl font-bold tabular-nums {{ value_class|default:'text-slate-900 dark:text-neutral-100' }}">{{ value }}</p>
 </div>

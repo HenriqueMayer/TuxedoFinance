@@ -1,6 +1,6 @@
 # `payments`
 
-Full CRUD for `PaymentMethod`, plus the default-payment-method seeding signal (FR14). Structurally the twin of [`categories`](categories.md) — same view/signal shape, minus the self-relationship, plus the credit card **billing cycle** that decides which month a purchase is actually paid in.
+Full CRUD for `PaymentMethod`, plus the credit card **billing cycle** that decides which month a purchase is actually paid in. Structurally a near-twin of [`categories`](categories.md) — same view shape, minus the self-relationship, plus the billing-cycle fields. **No default-data seeding**: `method_type` already enumerates the four payment-method options (`MethodType` choices), so seeding four rows with those exact names would just duplicate the enum under a free-form `name`. A user's real methods are named ("Nubank Credit", "Itaú Debit") and created on the payments page; the transaction form shows an inline "No payment methods yet" hint linking there when the user has none (see FR14 / [data-model.md § Default data seeding](../data-model.md#default-data-seeding-fr14)).
 
 ## Files
 
@@ -10,8 +10,7 @@ Full CRUD for `PaymentMethod`, plus the default-payment-method seeding signal (F
 | `payments/forms.py` | `PaymentMethodForm` |
 | `payments/views.py` | `PaymentMethodListView`, `PaymentMethodCreateView`, `PaymentMethodUpdateView`, `PaymentMethodDeleteView` |
 | `payments/urls.py` | `app_name = 'payments'`; routes `list`, `create`, `update`, `delete` |
-| `payments/signals.py` | `seed_default_payment_methods` |
-| `payments/apps.py` | `PaymentsConfig.ready()` wires the signal |
+| `payments/apps.py` | `PaymentsConfig` (no `ready()` override — no signals to wire) |
 | `payments/admin.py` | `PaymentMethodAdmin` |
 | `templates/payments/{list,form,confirm_delete}.html` | screens |
 
@@ -63,29 +62,11 @@ class PaymentMethodDeleteView(LoginRequiredMixin, DeleteView):
 
 Identical pattern to `CategoryDeleteView` — `Transaction.payment_method` also uses `on_delete=PROTECT`, so the same `ProtectedError` → friendly-message handling applies here.
 
-## Default payment method seeding (FR14)
+## No default data seeding
 
-```python
-DEFAULT_PAYMENT_METHODS = (
-    (PaymentMethod.MethodType.CREDIT_CARD, 'Credit Card'),
-    (PaymentMethod.MethodType.DEBIT_CARD, 'Debit Card'),
-    (PaymentMethod.MethodType.CHECKING_ACCOUNT, 'Checking Account'),
-    (PaymentMethod.MethodType.PIX, 'PIX'),
-)
+`PaymentMethod` is **not** seeded on signup (see FR14 / [data-model.md § Default data seeding](../data-model.md#default-data-seeding-fr14)). `method_type` is itself an enum of the four payment-method options (`Credit Card`, `Debit Card`, `PIX`, `Checking Account`), so seeding four rows named exactly after their own type — "Credit Card (Credit Card)", "PIX (PIX)", … — was redundant with the enum and produced an unhelpful first-run dropdown. A user's real methods are named ("Nubank Credit", "Itaú Debit") and created on the payments page.
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL, dispatch_uid='payments_seed_defaults')
-def seed_default_payment_methods(sender, instance, created, **kwargs):
-    if not created:
-        return
-    PaymentMethod.objects.bulk_create(
-        PaymentMethod(user=instance, name=name, method_type=method_type)
-        for method_type, name in DEFAULT_PAYMENT_METHODS
-    )
-```
-
-One payment method **per `MethodType`** (4 total), each named after its own type by default (e.g. `name='PIX', method_type='PIX'`) — the user can rename any of them afterward (e.g. "PIX" → "Personal PIX"), since `name` and `method_type` are independent fields. Wired the same way as `categories`' signal, via `PaymentsConfig.ready()`.
-
-**Why this exists:** identical rationale to categories — `Transaction.payment_method` is a required FK, so a brand-new user needs at least one to exist before they can record their first transaction.
+The downstream consequence is handled in [`transactions`](transactions.md): the transaction form renders an inline "No payment methods yet — add one first" hint linking to `payments:create` when the user has none, so a brand-new account does not hit a dead-end empty dropdown.
 
 ## Routes
 
