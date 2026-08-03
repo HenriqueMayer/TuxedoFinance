@@ -224,7 +224,7 @@ Two optional fields on `PaymentMethod` describe the cycle, and only the first of
 | Field | Meaning |
 |---|---|
 | `best_purchase_day` | the day the new statement **opens**. Buying on this day or later puts the charge on the *next* month's bill — which is precisely what makes it the "best" day to buy. **This field alone decides which month a purchase is subtracted from.** |
-| `due_day` | the day of that month the bill is **paid**. A reminder, shown on the payment method list and in the transaction badge; it never changes which month a purchase falls in. |
+| `due_day` | the day of that month the bill is **paid**. A reminder, shown on the payment method list; it never changes which month a purchase falls in. |
 
 `statement_offset(purchase_date)` is therefore a single shift:
 
@@ -249,7 +249,7 @@ Rules that fall out of this:
 - **No cycle means no shift.** Both fields default to `NULL`, so existing data and any card whose dates the user has not filled in behave exactly as they did before the feature existed.
 - **Short months are clamped.** A cycle opening on the 31st still opens in February — `min(best_purchase_day, days_in_month)` — and a due day of 31 resolves to the 28th/30th via `due_date_in()`.
 - **The offset moves a recurrence, it does not resize it.** A fixed transaction charged January–June is six payments on any card; the cycle only decides which six months the money leaves in. That is why `last_fixed_offset` measures the calendar distance from `transaction_date` to `fixed_until` rather than going through `months_from_start`.
-- **`transaction_date` stays the purchase date.** It is what the user actually knows and what the transaction list shows; the derived payment date is displayed next to it as a badge when the two differ.
+- **`transaction_date` stays the purchase date.** It is what the user actually knows and what the transaction list shows; the month the money actually leaves is derived from the billing cycle and is what the dashboard and the list's `Billed month` filter operate on.
 
 ### Date semantics
 
