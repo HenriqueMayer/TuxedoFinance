@@ -1,0 +1,157 @@
+from django import forms
+
+from core.currencies import CURRENCIES
+from investments.models import ExchangeRate, Investment
+
+# PRD §9.4 — the exact input classes shared by every form in the project.
+# `partials/form_field.html` renders the label/help/errors but never injects
+# classes into `{{ field }}`; the owning form is responsible for styling its
+# own widgets, which is what the `__init__` override below does.
+INPUT_CLASSES = (
+    'w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 '
+    'text-slate-900 dark:text-neutral-100 placeholder:text-slate-400 dark:placeholder:text-neutral-500 '
+    'focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
+)
+
+
+class InvestmentForm(forms.ModelForm):
+    """Create/update form for an `Investment` row.
+
+    Per-user isolation is handled by the owning views (`get_queryset` +
+    `form_valid`); the form has no queryset to filter. The widgets borrow
+    the project's canonical `INPUT_CLASSES` so every field renders the same
+    way as on the transactions / categories / payments forms.
+    """
+
+    class Meta:
+        model = Investment
+        fields = ('title', 'kind', 'amount', 'currency', 'date', 'reason', 'notes')
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'notes': forms.Textarea(attrs={'rows': 4}),
+        }
+        labels = {
+            'kind': 'Type',
+        }
+        help_texts = {
+            'amount': (
+                'Always positive. Pick "Deposit" or "Withdrawal" in Type to '
+                'decide whether this row adds to or subtracts from the '
+                'running investment balance.'
+            ),
+            'currency': (
+                'The currency the amount is denominated in. Defaults to the '
+                "project's base currency. Entries in other currencies are "
+                'converted to the base on the list page using the latest '
+                'exchange rate.'
+            ),
+            'kind': (
+                'A deposit moves money into the investment portfolio; a '
+                'withdrawal moves it back out. The running balance is the '
+                'sum of all deposits minus the sum of all withdrawals.'
+            ),
+            'reason': (
+                'Optional. Useful for withdrawals in particular — record '
+                'why the money left the portfolio so future reads of the '
+                'log do not depend on your memory.'
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = INPUT_CLASSES
+
+
+class ExchangeRateForm(forms.ModelForm):
+    """Form to add (not edit) an exchange rate.
+
+    The model has no `update` view on purpose: rates are append-only. If
+    the rate moved, the user creates a new row with a newer
+    `effective_date`; the old one stays put for history.
+
+    `to_currency` is locked to the project base — the form would
+    technically allow any pair, but the rest of the app only ever reads
+    rates aimed at the base. `from_currency` is restricted to
+    `CURRENCIES - base` so a self-pair cannot be entered (rate 1.0 is
+    implicit and would not mean anything user-visible).
+    """
+
+    class Meta:
+        model = ExchangeRate
+        fields = ('from_currency', 'to_currency', 'rate', 'effective_date', 'notes')
+        widgets = {
+            'effective_date': forms.DateInput(attrs={'type': 'date'}),
+            'rate': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0.00000001'}),
+            'notes': forms.TextInput(),
+        }
+        labels = {
+            'from_currency': 'Currency',
+            'to_currency': 'To',
+        }
+        help_texts = {
+            'rate': (
+                'How many units of the target currency one unit of the source '
+                'is worth. Example: 1 USD = 5.50 BRL, so rate = 5.50.'
+            ),
+            'effective_date': (
+                'When this rate became / becomes valid. The list view always '
+                'uses the most recent rate per pair.'
+            ),
+        }
+
+    def __init__(self, *args, base_currency=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if base_currency is None:
+            from django.conf import settings as django_settings
+
+            base_currency = django_settings.CURRENCY
+        self.base_currency = base_currency
+
+        # Restrict `from_currency` to every supported currency *except* the
+        # base — the model would reject it, but the dropdown should not
+        # offer it in the first place.
+        from investments.services import get_exchange_rate_choices
+
+        self.fields['from_currency'].choices = get_exchange_rate_choices(base_currency)
+
+        # Lock `to_currency` to the project base. Rendered as a disabled
+        # select so the user still sees what they are converting *to*, but
+        # cannot change it from this screen.
+        self.fields['to_currency'].choices = [
+            (base_currency, f'{base_currency} — {CURRENCIES[base_currency].name}'),
+        ]
+        self.fields['to_currency'].initial = base_currency
+        self.fields['to_currency'].disabled = True
+        # Disabled widgets still POST their initial value, but be explicit:
+        self.fields['to_currency'].required = False
+
+        for name, field in self.fields.items():
+            if name == 'to_currency':
+                field.widget.attrs['class'] = INPUT_CLASSES
+            else:
+                field.widget.attrs['class'] = INPUT_CLASSES
+
+    def clean(self):
+        """Re-validate cross-field rules the model cannot.
+
+        `to_currency` is disabled in the widget, but the browser still
+        submits the field (disabled fields POST their `value`). We pin it
+        back to the base here, regardless of what came in, so a forged
+        form cannot smuggle in a different target.
+
+        Also rejects a self-pair (`from == to`) at the form layer in
+        addition to the dropdown-level exclusion, so the rule holds even
+        if a future refactor re-enables the field.
+        """
+        cleaned_data = super().clean()
+        cleaned_data['to_currency'] = self.base_currency
+        from_currency = cleaned_data.get('from_currency')
+        if from_currency == self.base_currency:
+            self.add_error(
+                'from_currency',
+                f'The base currency ({self.base_currency}) does not need a rate — '
+                'it is implicit. Pick a different source currency.',
+            )
+        return cleaned_data
