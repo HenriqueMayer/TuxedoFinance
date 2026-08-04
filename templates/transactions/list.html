@@ -107,17 +107,6 @@ the active filters survive page navigation.
                                         {{ transaction.installments }}x
                                     </span>
                                 {% endif %}
-                                {% comment %}Only when the card's cycle actually moves the money to another month — otherwise this repeats the purchase date below. Falls back to the month alone when the card records no due day.{% endcomment %}
-                                {% if transaction.billing_offset and transaction.billed_month %}
-                                    <span class="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium text-indigo-700 dark:text-indigo-400">
-                                        {% if transaction.is_fixed or transaction.is_installment_plan %}Billed from{% else %}Billed{% endif %}
-                                        {% if transaction.payment_date %}
-                                            {{ transaction.payment_date|date:'M j, Y' }}
-                                        {% else %}
-                                            {{ transaction.billed_month|date:'M Y' }}
-                                        {% endif %}
-                                    </span>
-                                {% endif %}
                             </div>
                             <p class="text-sm text-slate-600 dark:text-neutral-400">
                                 {{ transaction.category.name }} &middot; {{ transaction.payment_method.name }}

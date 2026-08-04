@@ -9,6 +9,8 @@ erDiagram
     USER ||--o{ TRANSACTION : "owns"
     USER ||--o{ CATEGORY : "owns"
     USER ||--o{ PAYMENT_METHOD : "owns"
+    USER ||--o{ INVESTMENT : "owns"
+    USER ||--o{ EXCHANGE_RATE : "owns"
     PAYMENT_METHOD ||--o{ TRANSACTION : "records"
     CATEGORY ||--o{ TRANSACTION : "classifies"
     CATEGORY |o--o{ CATEGORY : "is subcategory of"
@@ -53,6 +55,32 @@ erDiagram
         integer user_id FK
         string name
         integer parent_category_id FK "self-relationship, optional, SET_NULL"
+        datetime created_at
+        datetime updated_at
+    }
+
+    INVESTMENT {
+        integer id PK
+        integer user_id FK
+        string title
+        decimal amount "always positive"
+        string kind "DEPOSIT | WITHDRAWAL"
+        string currency "ISO 4217, defaults to settings.CURRENCY"
+        date date
+        string reason "optional, 255 chars"
+        text notes "optional"
+        datetime created_at
+        datetime updated_at
+    }
+
+    EXCHANGE_RATE {
+        integer id PK
+        integer user_id FK
+        string from_currency "ISO 4217, never equals to_currency"
+        string to_currency "ISO 4217, always equals settings.CURRENCY"
+        decimal rate "18 digits, 8 decimals, >0"
+        date effective_date
+        string notes "optional, 255 chars"
         datetime created_at
         datetime updated_at
     }
@@ -224,7 +252,7 @@ Two optional fields on `PaymentMethod` describe the cycle, and only the first of
 | Field | Meaning |
 |---|---|
 | `best_purchase_day` | the day the new statement **opens**. Buying on this day or later puts the charge on the *next* month's bill — which is precisely what makes it the "best" day to buy. **This field alone decides which month a purchase is subtracted from.** |
-| `due_day` | the day of that month the bill is **paid**. A reminder, shown on the payment method list and in the transaction badge; it never changes which month a purchase falls in. |
+| `due_day` | the day of that month the bill is **paid**. A reminder, shown on the payment method list; it never changes which month a purchase falls in. |
 
 `statement_offset(purchase_date)` is therefore a single shift:
 
@@ -249,7 +277,7 @@ Rules that fall out of this:
 - **No cycle means no shift.** Both fields default to `NULL`, so existing data and any card whose dates the user has not filled in behave exactly as they did before the feature existed.
 - **Short months are clamped.** A cycle opening on the 31st still opens in February — `min(best_purchase_day, days_in_month)` — and a due day of 31 resolves to the 28th/30th via `due_date_in()`.
 - **The offset moves a recurrence, it does not resize it.** A fixed transaction charged January–June is six payments on any card; the cycle only decides which six months the money leaves in. That is why `last_fixed_offset` measures the calendar distance from `transaction_date` to `fixed_until` rather than going through `months_from_start`.
-- **`transaction_date` stays the purchase date.** It is what the user actually knows and what the transaction list shows; the derived payment date is displayed next to it as a badge when the two differ.
+- **`transaction_date` stays the purchase date.** It is what the user actually knows and what the transaction list shows; the month the money actually leaves is derived from the billing cycle and is what the dashboard and the list's `Billed month` filter operate on.
 
 ### Date semantics
 
@@ -312,3 +340,74 @@ Format modules are read once and cached by Django, so changing `CURRENCY` requir
 
 - **Form inputs.** Django form fields keep `localize=False` (the default), so `<input type="number">` still renders `value="12345.67"` and still parses a submitted `12345.67`. This matters more than it looks: the HTML spec only accepts a dot-decimal `value`, so a localized `value="12345,67"` would be rejected by the browser and the amount field would come up **empty on every edit**. Worse, `sanitize_separators` would read a submitted `1234.50` as `123450` — a dot means "thousands" under this format.
 - **SVG coordinates and CSS widths** on the reports page. Django localizes raw floats rendered through `{{ }}`, which would emit `x="90,83"` and `width: 33,33%` — both invalid. The chart markup is therefore wrapped in `{% localize off %}` (and the bar width uses `|unlocalize`). Axis labels inside the SVG stay formatted, because `floatformat` localizes independently of that tag.
+
+### `Investment` (`investments/models.py`)
+
+| Field | Type | Notes |
+|---|---|---|
+| `user` | FK → `AUTH_USER_MODEL` | `on_delete=CASCADE`, `related_name='investments'` |
+| `title` | `CharField(max_length=150)` | |
+| `amount` | `DecimalField(max_digits=10, decimal_places=2)` | `MinValueValidator(Decimal('0.01'))` — always positive, like `Transaction.amount` |
+| `kind` | `CharField(choices=Kind)` | `DEPOSIT` or `WITHDRAWAL` — see enum below |
+| `currency` | `CharField(max_length=3, choices=Currency)` | ISO 4217, validated against `core.currencies.CURRENCIES`, default `settings.CURRENCY` |
+| `date` | `DateField` | when the move happened in real life (user-editable) |
+| `reason` | `CharField(max_length=255, blank=True)` | free-form, especially useful for withdrawals |
+| `notes` | `TextField(blank=True)` | optional |
+| `created_at` | `DateTimeField(auto_now_add=True)` | immutable |
+| `updated_at` | `DateTimeField(auto_now=True)` | |
+
+- `Meta.ordering = ['-date', '-created_at']`.
+- `__str__`: `"{title} ({kind display}, {currency})"`.
+- `signed_amount` (property): `+amount` for `DEPOSIT`, `-amount` for `WITHDRAWAL`. Used by the simulated-total fold and any future code that needs the row's contribution to the running balance.
+
+```python
+# investments/models.py — Investment.Kind
+DEPOSIT = 'DEPOSIT', 'Deposit'
+WITHDRAWAL = 'WITHDRAWAL', 'Withdrawal'
+```
+
+**No FK to `Transaction`.** Deliberately — this is a parallel universe (see [apps/investments.md](apps/investments.md)). The user keeps the two in sync manually: a `Transaction` of type `INVESTMENT` removes money from the dashboard balance, and a matching `Investment` of kind `DEPOSIT` records the move into the portfolio. The model is not coupled so a user can diverge, reseed, or delete the investments log without breaking the transaction log (and vice-versa).
+
+**The `currency` field is independent from `Transaction`.** A single `Transaction` is always denominated in `settings.CURRENCY` (the project's base) — there is no foreign-currency transaction flow. An `Investment`, by contrast, can be in any supported currency; the list view folds the totals per currency and shows a simulated total in the base using the latest `ExchangeRate` (next section).
+
+### `ExchangeRate` (`investments/models.py`)
+
+| Field | Type | Notes |
+|---|---|---|
+| `user` | FK → `AUTH_USER_MODEL` | `on_delete=CASCADE`, `related_name='exchange_rates'` |
+| `from_currency` | `CharField(max_length=3, choices=Currency)` | the foreign currency, never the base |
+| `to_currency` | `CharField(max_length=3, choices=Currency)` | always the project base — locked in the form |
+| `rate` | `DecimalField(max_digits=18, decimal_places=8)` | `MinValueValidator(Decimal('0.00000001'))` — 8 decimals to cover exotic pairs (crypto) |
+| `effective_date` | `DateField` | when the rate became / becomes valid; the list view always uses the most recent per pair |
+| `notes` | `CharField(max_length=255, blank=True)` | optional |
+| `created_at` | `DateTimeField(auto_now_add=True)` | |
+| `updated_at` | `DateTimeField(auto_now=True)` | |
+
+- `Meta.ordering = ['-effective_date', '-created_at']`.
+- `Meta.constraints`: `UniqueConstraint(user, from_currency, to_currency, effective_date)` — a user can have many rows for the same pair (one per `effective_date`), but never two on the same day (that would be ambiguous).
+- `__str__`: `"1 {from} = {rate} {to} (as of {effective_date})"`.
+
+**Append-only by design.** If the rate moves, the user creates a new row with a newer `effective_date`; the old one stays put for history. There is no `update` view. This is what an automated feed would write against (one row per day per pair), so the table is shaped to receive that data without a schema change when the automation lands.
+
+**Direction is always `foreign → base`.** The form hardcodes `to_currency = settings.CURRENCY` and disables the field. Storing the inverse (e.g. `BRL → USD = 0.18`) is not supported — the caller computes `1 / rate` if it ever needs it. Self-pairs (`from == to`) are rejected at the choices level: the base has an implicit rate of 1.0 and never appears in the dropdown.
+
+## Investments business rules
+
+### Per-currency totals
+
+The investments list page shows one card per supported currency (`BRL, USD, EUR, GBP, JPY, CHF`), base first then alphabetical, with the deposited / withdrawn / net balance of that currency. The fold lives in `investments.services.get_per_currency_totals` and reads the **unfiltered** user queryset, so a filtered list never makes the cards lie. Currencies with no entries show as `0,00` (the card is always present, the grid has no holes).
+
+### Simulated total in base
+
+`investments.services.get_simulated_total_in_base` multiplies each currency's balance by its latest `ExchangeRate` and sums the results. The base currency contributes at face value (rate 1.0 implicit). Currencies with a non-zero balance but no rate are **excluded from the sum**, and the list view surfaces the exclusion explicitly (`"{XYZ} excluded — set a rate to include it"`) rather than silently showing a too-low total.
+
+`get_latest_rates` returns the most recent row per `(user, from_currency, to_currency)` pair, by `effective_date` then `created_at`. One query for all the user's rates, reduced in Python — cheap for a personal app, and avoids a DB-side "group by with most recent" that survives ordering only with window functions SQLite does not have.
+
+### Recurrence does not apply
+
+Unlike `Transaction`, an `Investment` has no recurrence shape (`is_fixed` / `installments`). A single row is exactly one move, on the date the user recorded. The dashboard and reports pages project recurrences forward over months; the investments log is a flat history, and the running balance is a simple sum.
+
+### Deletion integrity
+
+`Investment.user` and `ExchangeRate.user` use `on_delete=CASCADE`: deleting a Django `User` deletes their investment data. There is no soft-delete or archival, matching the rest of the project.
+

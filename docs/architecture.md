@@ -29,6 +29,7 @@ dashboard/     # Aggregation + projection services, consolidated view, SVG repor
 transactions/  # Transaction model + CRUD (the core domain entity)
 categories/    # Category model + CRUD (self-referencing) + default-data signal
 payments/      # PaymentMethod model + CRUD + default-data signal
+investments/   # Investment log (deposits / withdrawals per currency) + manual exchange rates
 templates/     # Project-level Django templates (base.html, partials/, per-app screens)
 static/        # Project-level static assets (static/css/output.css is a generated
                # Tailwind build artifact — see frontend.md)
@@ -170,6 +171,7 @@ urlpatterns = [
     path('transactions/', include('transactions.urls')),
     path('categories/', include('categories.urls')),
     path('payments/', include('payments.urls')),
+    path('investments/', include('investments.urls')),
 ]
 ```
 
@@ -179,10 +181,11 @@ Every app namespaces its own URLs with `app_name = '<app>'`, so every reversed U
 |---|---|---|
 | `/` | `pages` | `landing` |
 | `/accounts/` | `accounts` | `login`, `signup`, `logout` |
-| `/dashboard/` | `dashboard` | `index` |
+| `/dashboard/` | `dashboard` | `index`, `reports` (both support `?charts_offset=N`, `?category_month=ALL\|YYYY-MM`, `?payment_month=ALL\|YYYY-MM`, `?payment_method=NAME`) |
 | `/transactions/` | `transactions` | `list`, `create`, `update`, `delete` |
 | `/categories/` | `categories` | `list`, `create`, `update`, `delete` |
 | `/payments/` | `payments` | `list`, `create`, `update`, `delete` |
+| `/investments/` | `investments` | `list`, `create`, `update`, `delete`, `exchange_rates`, `create_exchange_rate`, `delete_exchange_rate` |
 | `/admin/` | Django admin | — |
 
 ## Request flow (a typical authenticated screen)

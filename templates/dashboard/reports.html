@@ -2,19 +2,27 @@
 {% load l10n %}
 
 {% comment %}
-Reports (PRD FR16). Four server-rendered charts — the first three over one
-12-month window anchored on today, the fourth over a single chosen month:
+Reports (PRD FR16). Four server-rendered charts. The first two share one
+12-month window slideable through time via `?charts_offset=N`; the last two
+read their own `?…_month=ALL|YYYY-MM` filters and stay independent of the
+arrows.
 
   1. Balance evolution           — area + line, `balance_chart` (dashboard.charts).
-  2. Monthly cash flow           — grouped bars, `cashflow_chart`.
-  3. Spending by category        — CSS bars straight from `evolution`.
+                                  Window slidable through time.
+  2. Monthly cash flow           — grouped bars, `cashflow_chart`. Same window.
+  3. Spending by category        — CSS bars. `?category_month=ALL|YYYY-MM`.
   4. Spending by payment method  — single-series bars, `payment_chart`.
+                                  `?payment_month=ALL|YYYY-MM`. Each bar is
+                                  a link to a `method-categories` panel
+                                  below, which breaks the chosen method
+                                  down by category for the same window.
 
-Only chart 4 reads the `?month=YYYY-MM` filter, and its `<form>` deliberately
-sits inside that card rather than at the top of the page: a filter in the
-header would look like it moves all four charts, when the other three are
-anchored on today by construction. The form posts back to `#payment-methods`
-so submitting returns the reader to the chart they just filtered.
+All filter params coexist and are preserved across navigation via
+`{% querystring %}`, so offsetting the time-series never loses the
+breakdown month you had open, and vice-versa. Filter forms live inside
+their own cards rather than in the page header — a header filter would
+look like it moves all four charts, but the two time-series are
+slideable, the two breakdowns are independently scoped.
 
 Every coordinate is computed in `dashboard/charts.py` and interpolated into
 plain `<svg>` attributes here — no charting library, no <canvas>, no JS, in
@@ -50,6 +58,7 @@ because `floatformat` localizes independently of this tag.
 
 {% block content %}
 {% url 'transactions:create' as create_url %}
+{% url 'dashboard:reports' as reports_url %}
 <div class="space-y-8">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -78,16 +87,44 @@ because `floatformat` localizes independently of this tag.
     </div>
 
     {# ---------------------------------------------------------------- #}
-    {# Chart 1 — balance evolution                                       #}
+    {# Chart 1 — balance evolution (slideable 12-month window)           #}
     {# ---------------------------------------------------------------- #}
     <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
-        <div>
-            <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Balance evolution</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-                Your balance at the close of each month. Everything after
-                <span class="font-medium text-slate-700 dark:text-neutral-300">{{ evolution.current_month.date|date:'F Y' }}</span>
-                is projected from your fixed transactions and open installment plans.
-            </p>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Balance evolution</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                    Your balance at the close of each month. Everything after
+                    <span class="font-medium text-slate-700 dark:text-neutral-300">{{ evolution.anchor_date|date:'F Y' }}</span>
+                    is projected from your fixed transactions and open installment plans.
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{% querystring charts_offset=previous_offset_param %}" aria-label="Previous window"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    &larr;
+                </a>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900 dark:text-neutral-100">
+                        {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ evolution.months|last|date:'M Y' }}
+                    </p>
+                    <p class="text-xs text-slate-500 dark:text-neutral-500">
+                        {% if evolution.is_anchored_today %}Anchored on today
+                        {% elif evolution.anchor_date < today %}Past window
+                        {% else %}Future window{% endif %}
+                    </p>
+                </div>
+                <a href="{% querystring charts_offset=next_offset_param %}" aria-label="Next window"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    &rarr;
+                </a>
+                {% if not evolution.is_anchored_today %}
+                    <a href="{% querystring charts_offset=0 %}"
+                       class="rounded text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Back to today
+                    </a>
+                {% endif %}
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -151,7 +188,7 @@ because `floatformat` localizes independently of this tag.
     </section>
 
     {# ---------------------------------------------------------------- #}
-    {# Chart 2 — monthly cash flow                                       #}
+    {# Chart 2 — monthly cash flow (same window as chart 1)               #}
     {# ---------------------------------------------------------------- #}
     <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -161,17 +198,27 @@ because `floatformat` localizes independently of this tag.
                     What comes in and what goes out each month, side by side.
                 </p>
             </div>
-            <ul class="flex flex-wrap items-center gap-4">
-                {% for entry in cashflow_chart.legend %}
-                    <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-neutral-400">
-                        <span class="h-2.5 w-2.5 rounded-sm
-                            {% if entry.tone == 'income' %}bg-emerald-400
-                            {% elif entry.tone == 'expense' %}bg-rose-400
-                            {% else %}bg-amber-400{% endif %}"></span>
-                        {{ entry.name }}
-                    </li>
-                {% endfor %}
-            </ul>
+            <div class="flex items-center gap-3">
+                <a href="{% querystring charts_offset=previous_offset_param %}" aria-label="Previous window"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    &larr;
+                </a>
+                <ul class="flex flex-wrap items-center gap-4">
+                    {% for entry in cashflow_chart.legend %}
+                        <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-neutral-400">
+                            <span class="h-2.5 w-2.5 rounded-sm
+                                {% if entry.tone == 'income' %}bg-emerald-400
+                                {% elif entry.tone == 'expense' %}bg-rose-400
+                                {% else %}bg-amber-400{% endif %}"></span>
+                            {{ entry.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+                <a href="{% querystring charts_offset=next_offset_param %}" aria-label="Next window"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    &rarr;
+                </a>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -210,19 +257,43 @@ because `floatformat` localizes independently of this tag.
     </section>
 
     {# ---------------------------------------------------------------- #}
-    {# Chart 3 — spending by category                                    #}
+    {# Chart 3 — spending by category (filter: ALL | YYYY-MM)            #}
     {# ---------------------------------------------------------------- #}
     <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
-        <div>
-            <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Where the money goes</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-                Your biggest expense categories across the same 12 months, recurrences included.
-            </p>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Where the money goes</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                    Your biggest expense categories for
+                    <span class="font-medium text-slate-700 dark:text-neutral-300">{{ category_window_label|lower }}</span>, recurrences included.
+                </p>
+            </div>
+            <form method="get" action="{% url 'dashboard:reports' %}#where"
+                  class="flex flex-wrap items-end gap-3">
+                {% for key, value in request.GET.items %}
+                    {% if key != 'category_month' and key != 'payment_method' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+                <div class="min-w-[12rem] space-y-1.5">
+                    <label for="category-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Window</label>
+                    <select id="category-month" name="category_month"
+                            class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                        {% for value, label in month_choices %}
+                            <option value="{{ value }}" {% if category_month_param == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    Filter
+                </button>
+            </form>
         </div>
 
-        {% if evolution.expenses_by_category %}
+        {% if expenses_by_category %}
             <ul class="space-y-4">
-                {% for category in evolution.expenses_by_category %}
+                {% for category in expenses_by_category %}
                     <li class="space-y-1.5">
                         <div class="flex items-baseline justify-between gap-4">
                             <p class="truncate font-medium text-slate-800 dark:text-neutral-200">{{ category.name }}</p>
@@ -244,24 +315,37 @@ because `floatformat` localizes independently of this tag.
     </section>
 
     {# ---------------------------------------------------------------- #}
-    {# Chart 4 — spending by payment method, for one selected month      #}
+    {# Chart 4 — spending by payment method (filter: ALL | YYYY-MM)      #}
     {# ---------------------------------------------------------------- #}
     <section id="payment-methods" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
-        {% with month_label=payment_month_date|date:'F Y' %}
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Spending by payment method</h2>
                 <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-                    How <span class="font-medium text-slate-700 dark:text-neutral-300">{{ month_label }}</span>&rsquo;s expenses split across
-                    your cards and accounts &mdash; fixed transactions and open installments included.
+                    How
+                    {% if payment_month_param == 'ALL' %}
+                        your expenses across all months
+                    {% else %}
+                        <span class="font-medium text-slate-700 dark:text-neutral-300">{{ payment_window_label }}</span>&rsquo;s expenses
+                    {% endif %}
+                    split across your cards and accounts &mdash; fixed transactions and open installments included.
                 </p>
             </div>
             <form method="get" action="{% url 'dashboard:reports' %}#payment-methods"
                   class="flex flex-wrap items-end gap-3">
-                <div class="min-w-[10rem] space-y-1.5">
-                    <label for="payment-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Month</label>
-                    <input type="month" id="payment-month" name="month" value="{{ payment_month_param }}"
-                           class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                {% for key, value in request.GET.items %}
+                    {% if key != 'payment_month' and key != 'payment_method' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+                <div class="min-w-[12rem] space-y-1.5">
+                    <label for="payment-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Window</label>
+                    <select id="payment-month" name="payment_month"
+                            class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                        {% for value, label in month_choices %}
+                            <option value="{{ value }}" {% if payment_month_param == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <button type="submit"
                         class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
@@ -275,7 +359,7 @@ because `floatformat` localizes independently of this tag.
                 {% localize off %}
                 <svg viewBox="0 0 {{ payment_chart.width }} {{ payment_chart.height }}"
                      class="h-auto w-full min-w-[44rem]" role="img"
-                     aria-label="Bar chart of expenses per payment method for the selected month">
+                     aria-label="Bar chart of expenses per payment method for the selected window">
                     {% for line in payment_chart.grid %}
                         <line x1="{{ payment_chart.plot_left }}" y1="{{ line.y }}"
                               x2="{{ payment_chart.plot_right }}" y2="{{ line.y }}"
@@ -287,21 +371,24 @@ because `floatformat` localizes independently of this tag.
                     {% endfor %}
 
                     {% for group in payment_chart.groups %}
-                        {% for bar in group.bars %}
-                            <rect x="{{ bar.x }}" y="{{ bar.y }}"
-                                  width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                  class="fill-rose-400/80">
-                                <title>{{ group.label.name }}: {{ CURRENCY_SYMBOL }} {{ group.label.total|floatformat:2 }} &middot; {{ group.label.share|floatformat:"-1" }}% of the month</title>
-                            </rect>
+                        <a href="{% querystring payment_method=group.label.name|urlencode %}#method-categories"
+                           class="cursor-pointer">
+                            {% for bar in group.bars %}
+                                <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                                      width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                      class="fill-rose-400/80 hover:fill-rose-500 transition-colors">
+                                    <title>{{ group.label.name }}: {{ CURRENCY_SYMBOL }} {{ group.label.total|floatformat:2 }} &middot; {{ group.label.share|floatformat:"-1" }}% of the window. Click to see categories.</title>
+                                </rect>
+                            {% endfor %}
                             {# The share rides above its own bar, so "how is it distributed" is answerable without a hover. #}
                             <text x="{{ group.center }}" y="{{ bar.value_y }}" text-anchor="middle"
-                                  class="fill-slate-700 dark:fill-slate-300 text-[11px] font-semibold tabular-nums">
+                                  class="fill-slate-700 dark:fill-slate-300 text-[11px] font-semibold tabular-nums pointer-events-none">
                                 {{ group.label.share|floatformat:"-1" }}%
                             </text>
-                        {% endfor %}
+                        </a>
                         {# Truncated to what fits one slot; the list below always spells the name out in full. #}
                         <text x="{{ group.center }}" y="{{ payment_chart.label_y }}" text-anchor="middle"
-                              class="fill-slate-600 dark:fill-slate-500 text-[11px]">
+                              class="fill-slate-600 dark:fill-slate-500 text-[11px] pointer-events-none">
                             {{ group.label.name|truncatechars:payment_chart.label_chars }}
                         </text>
                     {% endfor %}
@@ -322,7 +409,7 @@ because `floatformat` localizes independently of this tag.
             </ul>
 
             <p class="text-sm text-slate-600 dark:text-neutral-400">
-                Total spent in {{ month_label }}:
+                Total spent {% if payment_month_param == 'ALL' %}across all months{% else %}in {{ payment_window_label }}{% endif %}:
                 <span class="font-semibold tabular-nums text-slate-800 dark:text-neutral-200">{{ CURRENCY_SYMBOL }} {{ payment_breakdown.total|floatformat:2 }}</span>
                 {% if payment_breakdown.shown < payment_breakdown.used %}
                     &mdash; charted across the {{ payment_breakdown.shown }} biggest of
@@ -330,9 +417,63 @@ because `floatformat` localizes independently of this tag.
                 {% endif %}
             </p>
         {% else %}
-            {% include 'partials/empty_state.html' with title='No expenses in '|add:month_label message='Pick another month, or record an expense to see which card or account it came from.' cta_url=create_url cta_label='New Transaction' %}
+            {% include 'partials/empty_state.html' with title='No expenses recorded' message='Record an expense to see which card or account it came from.' cta_url=create_url cta_label='New Transaction' %}
         {% endif %}
-        {% endwith %}
+
+        {# ---------------------------------------------------------------- #}
+        {# Method-categories panel — opens when a bar in chart 4 is clicked. #}
+        {# ---------------------------------------------------------------- #}
+        {% if selected_payment_method %}
+            <div id="method-categories" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-rose-200 dark:ring-rose-500/30 bg-rose-50/40 dark:bg-rose-500/5 p-5">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-neutral-100">
+                            Categories in
+                            {% if method_categories_window == 'current month' %}
+                                {{ method_categories_label }}
+                            {% else %}
+                                {{ method_categories_label }}
+                            {% endif %}
+                            paid with
+                            <span class="text-rose-600 dark:text-rose-400">{{ selected_payment_method }}</span>
+                        </h3>
+                        <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                            {% if method_categories_window == 'current month' %}
+                                &ldquo;All time&rdquo; was selected on the chart above, so the panel scopes to the current month for the freshest read.
+                            {% else %}
+                                Top categories for the same window as the chart above.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <a href="?{% for key, value in request.GET.items %}{% if key != 'payment_method' %}{{ key }}={{ value }}{% if not forloop.last %}&{% endif %}{% endif %}{% endfor %}#payment-methods"
+                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                        Close
+                    </a>
+                </div>
+
+                {% if method_categories %}
+                    <ul class="space-y-4">
+                        {% for category in method_categories %}
+                            <li class="space-y-1.5">
+                                <div class="flex items-baseline justify-between gap-4">
+                                    <p class="truncate font-medium text-slate-800 dark:text-neutral-200">{{ category.name }}</p>
+                                    <p class="shrink-0 text-sm tabular-nums text-slate-600 dark:text-neutral-400">
+                                        <span class="font-semibold text-rose-600 dark:text-rose-400">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
+                                        &middot; {{ category.share }}%
+                                    </p>
+                                </div>
+                                <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                                    <div class="h-full rounded-full bg-gradient-to-r from-rose-500 to-fuchsia-500"
+                                         style="width: {{ category.bar_width|unlocalize }}%"></div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    {% include 'partials/empty_state.html' with title='No expenses in this window' message='No transactions were paid with this method in the selected window. Try a different month or a different method.' %}
+                {% endif %}
+            </div>
+        {% endif %}
     </section>
 </div>
 {% endblock %}
