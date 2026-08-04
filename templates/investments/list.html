@@ -6,13 +6,17 @@ user's own entries (`InvestmentListView.get_queryset`), paginated, each row
 color-coded by `kind` (Deposit emerald / Withdrawal rose) per the design
 system's semantic colors already used on the transactions list.
 
-Three stat cards on top: total deposited, total withdrawn, current balance
-(rose when negative, emerald when positive). Totals come from the
-unfiltered queryset, so a filtered list never makes the cards lie.
+The card grid at the top is per-currency, not per-type: one card per
+supported currency (base first, then alphabetical), each showing that
+currency's deposited / withdrawn / net balance, plus a "simulated total
+in {base}" card that adds everything up at the user's latest
+`ExchangeRate` for each foreign currency. Currencies without a rate are
+excluded from the simulation and the card surfaces that explicitly so a
+missing rate can never silently shrink the displayed total.
 
 Optional filters: `?kind=DEPOSIT|WITHDRAWAL` narrows the table, `?q=`
-searches title / reason / notes. Pagination uses `{% querystring %}` so the
-active filters survive page navigation.
+searches title / reason / notes. Pagination uses `{% querystring %}` so
+the active filters survive page navigation.
 {% endcomment %}
 
 {% block title %}Investments — CashFlow{% endblock %}
@@ -20,6 +24,7 @@ active filters survive page navigation.
 {% block content %}
 {% url 'investments:create' as create_url %}
 {% url 'investments:list' as list_url %}
+{% url 'investments:exchange_rates' as exchange_rates_url %}
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -28,22 +33,71 @@ active filters survive page navigation.
                 Manual log of money moved to and from your investment portfolio. Kept independent of your transactions.
             </p>
         </div>
-        <a href="{{ create_url }}"
-           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
-            New Entry
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="{{ exchange_rates_url }}"
+               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                Settings
+            </a>
+            <a href="{{ create_url }}"
+               class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
+                New Entry
+            </a>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {% with deposits_fmt=total_deposits|floatformat:2 withdrawals_fmt=total_withdrawals|floatformat:2 balance_fmt=current_balance|floatformat:2 %}
-            {% include 'partials/stat_card.html' with label='Total deposited' value=CURRENCY_SYMBOL|add:' '|add:deposits_fmt value_class='text-emerald-600 dark:text-emerald-400' %}
-            {% include 'partials/stat_card.html' with label='Total withdrawn' value=CURRENCY_SYMBOL|add:' '|add:withdrawals_fmt value_class='text-rose-600 dark:text-rose-400' %}
-            {% if current_balance < 0 %}
-                {% include 'partials/stat_card.html' with label='Current balance' value=CURRENCY_SYMBOL|add:' '|add:balance_fmt value_class='text-rose-600 dark:text-rose-400' %}
-            {% else %}
-                {% include 'partials/stat_card.html' with label='Current balance' value=CURRENCY_SYMBOL|add:' '|add:balance_fmt value_class='text-emerald-600 dark:text-emerald-400' %}
-            {% endif %}
-        {% endwith %}
+    {# Per-currency cards + simulated total. Rendered as a 2-col grid on   #}
+    {# small screens, 3-col on md, 4-col on xl. The simulated card spans   #}
+    {# the full width to keep its label and (potential) warning prominent. #}
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {% for card in per_currency_cards %}
+            <div class="space-y-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+                <div>
+                    <p class="text-sm font-medium text-slate-600 dark:text-neutral-400">{{ card.code }} &mdash; {{ card.name }}</p>
+                </div>
+                <p class="text-2xl font-bold tabular-nums {% if card.balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">
+                    {{ card.symbol }} {{ card.balance|floatformat:2 }}
+                </p>
+                <dl class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <dt class="text-slate-500 dark:text-neutral-500">Deposited</dt>
+                        <dd class="mt-0.5 font-semibold tabular-nums text-slate-700 dark:text-neutral-300">{{ card.symbol }} {{ card.deposits|floatformat:2 }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-500 dark:text-neutral-500">Withdrawn</dt>
+                        <dd class="mt-0.5 font-semibold tabular-nums text-slate-700 dark:text-neutral-300">{{ card.symbol }} {{ card.withdrawals|floatformat:2 }}</dd>
+                    </div>
+                </dl>
+            </div>
+        {% endfor %}
+    </div>
+
+    {# Simulated total in the base currency. Spans the full width to keep   #}
+    {# the label and the (potential) "missing rate" warning visible without  #}
+    {# crowding the per-currency cards above.                                #}
+    <div class="space-y-3 rounded-2xl ring-2 ring-indigo-200 dark:ring-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/5 p-5">
+        <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <div>
+                <p class="text-sm font-medium text-indigo-700 dark:text-indigo-300">Simulated total in {{ CURRENCY_SYMBOL }}</p>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-neutral-500">
+                    Sum of every currency's balance, converted at your latest exchange rate.
+                </p>
+            </div>
+            <p class="text-3xl font-bold tabular-nums text-indigo-700 dark:text-indigo-300">
+                {{ CURRENCY_SYMBOL }} {{ simulated_total|floatformat:2 }}
+            </p>
+        </div>
+        {% if missing_rate_currencies %}
+            <p class="text-sm text-rose-600 dark:text-rose-400">
+                {{ missing_rate_currencies|join:", " }} excluded &mdash;
+                {% if missing_rate_currencies|length == 1 %}
+                    set a rate
+                {% else %}
+                    set rates
+                {% endif %}
+                to include {% if missing_rate_currencies|length == 1 %}it{% else %}them{% endif %}
+                in the simulation. <a href="{{ exchange_rates_url }}" class="font-semibold underline">Configure rates</a>.
+            </p>
+        {% endif %}
     </div>
 
     <form method="get" class="flex flex-col gap-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 sm:flex-row sm:flex-wrap sm:items-end">
@@ -90,6 +144,9 @@ active filters survive page navigation.
                                     {% else %}bg-rose-500/10 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400{% endif %}">
                                     {{ investment.get_kind_display }}
                                 </span>
+                                <span class="inline-flex items-center rounded-full border border-slate-300 dark:border-[#3a3a3a] px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:text-neutral-400">
+                                    {{ investment.currency }}
+                                </span>
                             </div>
                             <p class="text-sm text-slate-600 dark:text-neutral-400">
                                 {{ investment.date|date:'M j, Y' }}
@@ -102,7 +159,7 @@ active filters survive page navigation.
                             <p class="text-lg font-semibold tabular-nums
                                 {% if investment.kind == 'DEPOSIT' %}text-emerald-600 dark:text-emerald-400
                                 {% else %}text-rose-600 dark:text-rose-400{% endif %}">
-                                {% if investment.kind == 'DEPOSIT' %}+{% else %}-{% endif %}{{ CURRENCY_SYMBOL }} {{ investment.amount|floatformat:2 }}
+                                {% if investment.kind == 'DEPOSIT' %}+{% else %}-{% endif %}{{ investment.currency }} {{ investment.amount|floatformat:2 }}
                             </p>
                             <div class="flex items-center gap-3">
                                 <a href="{% url 'investments:update' investment.pk %}"
