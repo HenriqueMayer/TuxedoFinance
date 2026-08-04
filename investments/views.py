@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -7,24 +8,36 @@ from django.db.models import Q
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
-from investments.forms import InvestmentForm
-from investments.models import Investment
+from investments.forms import ExchangeRateForm, InvestmentForm
+from investments.models import ExchangeRate, Investment
+from investments.services import (
+    get_latest_rates,
+    get_per_currency_totals,
+    get_simulated_total_in_base,
+    get_supported_currencies,
+)
 
 ZERO = Decimal('0.00')
 
 
 class InvestmentListView(LoginRequiredMixin, ListView):
-    """List the logged-in user's investment entries with totals.
+    """List the logged-in user's investment entries with per-currency totals.
 
-    Three stat cards on top — total deposited, total withdrawn, current
-    balance — then the entries themselves (paginated, newest first). Two
-    optional filters: `?kind=DEPOSIT|WITHDRAWAL` narrows the table, `?q=`
-    does a case-insensitive search across `title`, `reason`, and `notes`.
+    The page opens with a grid of cards — one per supported currency
+    (base first, then alphabetical) plus a "simulated total in base"
+    card. Each per-currency card shows that currency's deposited,
+    withdrawn and net balance; the simulated card sums every currency's
+    balance, converted through the user's latest `ExchangeRate`. A
+    currency with no rate yet is excluded from the simulation and the
+    card surfaces that explicitly, instead of silently showing a too-low
+    total.
 
-    The current balance is computed from the **unfiltered** queryset, not
-    from the filtered one, so a user looking at "only withdrawals" still
-    sees the full portfolio number at the top — and is not misled into
-    thinking the filtered slice is the whole picture.
+    Below the cards, a paginated table of the entries themselves with
+    two filters: `?kind=DEPOSIT|WITHDRAWAL` and `?q=` (search across
+    title, reason, notes).
+
+    The cards' totals come from the **unfiltered** queryset, so a
+    filtered list never makes the cards lie.
     """
 
     model = Investment
@@ -53,22 +66,29 @@ class InvestmentListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        base_currency = settings.CURRENCY
 
-        # Totals always come from the unfiltered queryset, so the user sees
-        # the same portfolio number regardless of how the list below is
-        # filtered. Two folds over the small in-memory list is fine.
-        all_entries = Investment.objects.filter(user=self.request.user)
-        total_deposits = sum(
-            (entry.amount for entry in all_entries if entry.kind == Investment.Kind.DEPOSIT),
-            start=ZERO,
+        # Per-currency cards: one bucket per supported currency, even when
+        # the user has no entries in that currency, so the grid never has
+        # a hole. The order is base first, then alphabetical.
+        supported = get_supported_currencies(base_currency)
+        per_currency = get_per_currency_totals(self.request.user, supported)
+
+        # Simulated total in the base currency, using the user's latest
+        # rate per (foreign → base) pair. Returns the total and the list
+        # of currencies excluded because no rate was set.
+        rates = get_latest_rates(self.request.user, base_currency)
+        balances = {code: bucket['balance'] for code, bucket in per_currency.items()}
+        simulated_total, missing_currencies = get_simulated_total_in_base(
+            self.request.user, base_currency, balances, rates
         )
-        total_withdrawals = sum(
-            (entry.amount for entry in all_entries if entry.kind == Investment.Kind.WITHDRAWAL),
-            start=ZERO,
-        )
-        context['total_deposits'] = total_deposits
-        context['total_withdrawals'] = total_withdrawals
-        context['current_balance'] = total_deposits - total_withdrawals
+
+        context['per_currency_cards'] = [
+            per_currency[code] for code in supported
+        ]
+        context['simulated_total'] = simulated_total
+        context['missing_rate_currencies'] = missing_currencies
+        context['base_currency'] = base_currency
         context['kind_choices'] = Investment.Kind.choices
         context['selected_kind'] = self.request.GET.get('kind', '').strip().upper()
         context['search_query'] = self.request.GET.get('q', '').strip()
@@ -121,4 +141,99 @@ class InvestmentDeleteView(LoginRequiredMixin, DeleteView):
         title = self.object.title
         response = super().form_valid(form)
         messages.success(self.request, f'Investment "{title}" deleted.')
+        return response
+
+
+# ---------------------------------------------------------------------------
+# ExchangeRate — manual rates the user sets to convert foreign-currency
+# investments into the project base currency. Rates are append-only; an
+# update is a new row with a newer `effective_date`.
+# ---------------------------------------------------------------------------
+
+
+class ExchangeRateListView(LoginRequiredMixin, ListView):
+    """List the user's exchange rates, grouped by `from_currency`.
+
+    The most recent row per pair is the "current" rate and is rendered
+    prominently; older rows for the same pair are kept in a collapsed
+    history list (no JS, just a `<details>`). Delete is always a POST
+    from the confirm screen — never a plain link/GET.
+    """
+
+    model = ExchangeRate
+    template_name = 'investments/settings/exchange_rates_list.html'
+    context_object_name = 'rates'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return (
+            ExchangeRate.objects.filter(user=self.request.user)
+            .order_by('from_currency', '-effective_date', '-created_at')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        base_currency = settings.CURRENCY
+        context['base_currency'] = base_currency
+        context['create_form'] = ExchangeRateForm(base_currency=base_currency)
+        return context
+
+
+class ExchangeRateCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    """Append a new `ExchangeRate` row for the logged-in user.
+
+    There is no update view on purpose: rates are append-only. If the
+    rate moved, the user creates a new row with a newer
+    `effective_date`; the old one stays put for history.
+    """
+
+    model = ExchangeRate
+    form_class = ExchangeRateForm
+    template_name = 'investments/settings/exchange_rates_list.html'
+    success_url = reverse_lazy('investments:exchange_rates')
+    success_message = 'Exchange rate saved.'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['base_currency'] = settings.CURRENCY
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        # The create form reuses the list page template so the user sees
+        # the current rates above the form and the form inline at the
+        # bottom. The template references the form as `create_form` (set
+        # by the list view), so we re-publish the bound form under that
+        # key on a re-render after an invalid POST — otherwise the form
+        # would appear empty and any field errors would be invisible.
+        context = super().get_context_data(**kwargs)
+        context['base_currency'] = settings.CURRENCY
+        context['rates'] = (
+            ExchangeRate.objects.filter(user=self.request.user)
+            .order_by('from_currency', '-effective_date', '-created_at')
+        )
+        if 'form' in context:
+            context['create_form'] = context['form']
+        return context
+
+
+class ExchangeRateDeleteView(LoginRequiredMixin, DeleteView):
+    """Delete an exchange rate with confirmation (zero-JS POST pattern)."""
+
+    model = ExchangeRate
+    template_name = 'investments/settings/confirm_delete_rate.html'
+    context_object_name = 'rate'
+    success_url = reverse_lazy('investments:exchange_rates')
+
+    def get_queryset(self):
+        return ExchangeRate.objects.filter(user=self.request.user)
+
+    def form_valid(self, form):
+        rate = self.object
+        label = f'1 {rate.from_currency} = {rate.rate} {rate.to_currency}'
+        response = super().form_valid(form)
+        messages.success(self.request, f'Exchange rate ({label}) deleted.')
         return response
