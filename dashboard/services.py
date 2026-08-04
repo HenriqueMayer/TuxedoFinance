@@ -229,29 +229,39 @@ def _expenses_by_category(transactions, year, month, months):
     ]
 
 
-def get_expenses_by_payment_method(user, year, month):
-    """Split one month's expenses across the methods that paid for them (FR16).
+def get_expenses_by_payment_method(user, year=None, month=None, months=1):
+    """Split expenses across the methods that paid for them (FR16).
 
-    Deliberately a **single month**, unlike every other series on the reports
-    page: the question this answers — "July went on which card?" — is asked one
-    statement cycle at a time, and averaging it over the 12-month window would
-    blur exactly the detail being looked for. That is also why it is the only
-    part of the page the `?month=` filter moves.
-
-    Recurrences count, on the same rules as every other figure here: a fixed
-    subscription and the current slice of an installment plan both land on the
-    month they are actually paid, not on the month they were first recorded.
+    Two scopes, picked by the caller:
+      - the default (`year`/`month` set, `months=1`) answers "July went on
+        which card?" — a single-month question the rest of the page averages
+        out and the user is then left unable to read. Recurrences count on
+        the same rules as every other figure here: a fixed subscription and
+        the current slice of an installment plan both land on the month they
+        are actually paid, not on the month they were first recorded.
+      - `year=None, month=None, months=N` aggregates the last N months
+        anchored on today, so the "All time" option on the filter can answer
+        "where does my spending go, in aggregate?" without losing the
+        per-method resolution.
 
     Expenses only, like `_expenses_by_category` — income arrives independently
     of how anything is paid, and Investment stays a distinct outflow (§8.5).
     """
     transactions = _projection_queryset(user, with_payment_method=True)
 
+    if year is not None and month is not None:
+        window = [(year, month)]
+    else:
+        today = timezone.localdate()
+        window = [add_months(today.year, today.month, -step) for step in range(months)]
+
     totals = {}
     for txn in transactions:
         if txn.transaction_type != Transaction.TransactionType.EXPENSE:
             continue
-        contribution = txn.amount_for_month(year, month)
+        contribution = sum(
+            (txn.amount_for_month(*target) for target in window), start=ZERO
+        )
         if contribution:
             name = txn.payment_method.name
             totals[name] = totals.get(name, ZERO) + contribution
@@ -272,7 +282,7 @@ def get_expenses_by_payment_method(user, year, month):
 
     return {
         # Every method's spending, including any trimmed off by the cap — so the
-        # printed shares stay shares of the month, not of what is drawn.
+        # printed shares stay shares of the period, not of what is drawn.
         'total': overall,
         'methods': methods,
         # `shown` < `used` means the cap trimmed something, and the drawn shares
@@ -283,24 +293,96 @@ def get_expenses_by_payment_method(user, year, month):
     }
 
 
-def get_account_evolution(user):
+def get_expenses_by_category_for_method(
+    user, method_name, year=None, month=None, months=1
+):
+    """Top categories paid with a single method, over a window of `months`.
+
+    Companion to the "Spending by payment method" chart: clicking a bar
+    filters the page to a single method, and this answers the next
+    question — "what did I buy on that card, and in which categories?".
+
+    Same rules as every other breakdown on the page:
+      - Expenses only (income / investment are out by §8.5).
+      - Recurrences count via `amount_for_month`, so a fixed subscription
+        on a credit card shows under every month it charges — exactly the
+        shape the dashboard and reports use everywhere else.
+      - The window is a single month when `year`/`month` are set, or the
+        last `months` months from today when they are `None` (the
+        `?payment_month=ALL` case).
+
+    Returns an empty list when the method had no expenses in the window,
+    or when `method_name` is not one of the user's methods — the view
+    treats both as "no data to show" without differentiating.
+    """
+    transactions = _projection_queryset(
+        user, with_category=True, with_payment_method=True
+    )
+
+    if year is not None and month is not None:
+        window = [(year, month)]
+    else:
+        today = timezone.localdate()
+        window = [add_months(today.year, today.month, -step) for step in range(months)]
+
+    totals = {}
+    for txn in transactions:
+        if txn.transaction_type != Transaction.TransactionType.EXPENSE:
+            continue
+        if txn.payment_method.name != method_name:
+            continue
+        contribution = sum(
+            (txn.amount_for_month(*target) for target in window), start=ZERO
+        )
+        if contribution:
+            name = txn.category.name
+            totals[name] = totals.get(name, ZERO) + contribution
+
+    if not totals:
+        return []
+
+    ranked = sorted(totals.items(), key=lambda item: item[1], reverse=True)
+    largest = ranked[0][1]
+    overall = sum(totals.values(), start=ZERO)
+
+    return [
+        {
+            'name': name,
+            'total': total,
+            # Same dual-percent convention as `_expenses_by_category`:
+            # `bar_width` is relative to the biggest (so the top bar always
+            # fills the track), `share` is of all spending on this method.
+            'bar_width': round(float(total / largest) * 100, 2),
+            'share': round(float(total / overall) * 100, 1),
+        }
+        for name, total in ranked[:TOP_CATEGORIES]
+    ]
+
+
+def get_account_evolution(user, offset=0):
     """Month-by-month series for the reports page (FR16).
 
-    Returns `EVOLUTION_MONTHS` consecutive months anchored on today —
-    `EVOLUTION_PAST_MONTHS` of history, the current month, and the rest
-    projected forward on exactly the same recurrence rules as the dashboard
-    outlook. History and forecast share one series on purpose: the charts are
-    about the *shape* of the account over time, and a seam between "real" and
-    "projected" months would only be visual noise (the template marks which
-    is which instead).
+    Returns `EVOLUTION_MONTHS` consecutive months anchored on today — or on
+    today shifted by `offset` whole months, which is how the page's prev/next
+    arrows slide the 12-month window through time. `EVOLUTION_PAST_MONTHS` of
+    history, the (shifted) "current" month, and the rest projected forward
+    on exactly the same recurrence rules as the dashboard outlook.
+
+    History and forecast share one series on purpose. The charts are about
+    the *shape* of the account over time, and a seam between "real" and
+    "projected" months would only be visual noise — the template marks which
+    is which instead. `is_current_month` follows the shifted anchor so the
+    label always sits on the month the user is currently looking at, and
+    `is_future` keeps the dimmer stroke on the projected half of the window.
     """
     today = timezone.localdate()
+    anchor_year, anchor_month = add_months(today.year, today.month, offset)
 
     # One query, folded in memory below — see the module docstring.
     transactions = list(_projection_queryset(user, with_category=True))
 
     start_year, start_month = add_months(
-        today.year, today.month, -EVOLUTION_PAST_MONTHS
+        anchor_year, anchor_month, -EVOLUTION_PAST_MONTHS
     )
 
     # Where the account stood the month *before* the window opens, so the
@@ -313,8 +395,8 @@ def get_account_evolution(user):
 
     months = []
     running_balance = opening_balance
-    for offset in range(EVOLUTION_MONTHS):
-        month_year, month_month = add_months(start_year, start_month, offset)
+    for step in range(EVOLUTION_MONTHS):
+        month_year, month_month = add_months(start_year, start_month, step)
         month_totals = _totals(transactions, month_year, month_month)
         running_balance += month_totals['balance']
         months.append(
@@ -323,19 +405,25 @@ def get_account_evolution(user):
                 'month': month_month,
                 'date': date(month_year, month_month, 1),
                 'is_current_month': (month_year, month_month)
-                == (today.year, today.month),
-                'is_future': (month_year, month_month) > (today.year, today.month),
+                == (anchor_year, anchor_month),
+                'is_future': (month_year, month_month) > (anchor_year, anchor_month),
                 **month_totals,
                 'closing_balance': running_balance,
             }
         )
 
-    # Always present: the window is built around today by construction.
+    # Always present: the window is built around the (shifted) anchor by
+    # construction, so the marker for "what we're looking at" lives in the
+    # series, not in a parallel lookup the view would otherwise have to do.
     current = next(row for row in months if row['is_current_month'])
 
     return {
         'months': months,
         'current_month': current,
+        'anchor_year': anchor_year,
+        'anchor_month': anchor_month,
+        'anchor_date': date(anchor_year, anchor_month, 1),
+        'is_anchored_today': offset == 0,
         'opening_balance': opening_balance,
         'closing_balance': running_balance,
         # Net movement across the whole window — the single number that says

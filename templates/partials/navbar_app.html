@@ -23,6 +23,7 @@ below the md breakpoint per PRD §9.6 (`hidden md:flex` on desktop nav).
 {% url 'transactions:list' as transactions_url %}
 {% url 'categories:list' as categories_url %}
 {% url 'payments:list' as payments_url %}
+{% url 'investments:list' as investments_url %}
 <header class="sticky top-0 z-40 border-b border-slate-200 dark:border-[#323232] bg-white/80 dark:bg-[#2B2B2B]/80 backdrop-blur">
     <nav class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between gap-4">
@@ -57,6 +58,10 @@ below the md breakpoint per PRD §9.6 (`hidden md:flex` on desktop nav).
                    class="relative pb-1 text-sm font-medium transition {% if request.path == payments_url %}text-slate-900 dark:text-white after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-indigo-500 after:via-violet-500 after:to-fuchsia-500{% else %}text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200{% endif %}">
                     Payments
                 </a>
+                <a href="{{ investments_url }}"
+                   class="relative pb-1 text-sm font-medium transition {% if request.path == investments_url %}text-slate-900 dark:text-white after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-indigo-500 after:via-violet-500 after:to-fuchsia-500{% else %}text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200{% endif %}">
+                    Investments
+                </a>
             </div>
 
             <!-- User menu (desktop) -->
@@ -87,6 +92,7 @@ below the md breakpoint per PRD §9.6 (`hidden md:flex` on desktop nav).
                     <a href="{{ transactions_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.path == transactions_url %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">Transactions</a>
                     <a href="{{ categories_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.path == categories_url %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">Categories</a>
                     <a href="{{ payments_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.path == payments_url %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">Payments</a>
+                    <a href="{{ investments_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.path == investments_url %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">Investments</a>
                     <div class="my-2 flex items-center justify-between px-3">
                         {% include 'partials/theme_toggle.html' %}
                     </div>
