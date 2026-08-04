@@ -21,11 +21,12 @@ One doc per Django app, each covering its models, forms, views, URLs, signals, a
 - [apps/categories.md](apps/categories.md) — categories & subcategories, default-category seeding.
 - [apps/payments.md](apps/payments.md) — payment methods, billing cycle, no default-data seeding (FR14).
 - [apps/transactions.md](apps/transactions.md) — the core `Transaction` model, form, and filtered/paginated CRUD.
-- [apps/dashboard.md](apps/dashboard.md) — the aggregation/projection services, the consolidated stat-card view, and the zero-JS SVG report charts.
+- [apps/dashboard.md](apps/dashboard.md) — the aggregation/projection services, the consolidated stat-card view, and the zero-JS SVG report charts (with prev/next time-series navigation, `All time` + month filters on the breakdown charts, and the clickable payment-method drill-down).
+- [apps/investments.md](apps/investments.md) — the parallel investment log (per-currency deposits/withdrawals, simulated total in the base currency, manual `ExchangeRate` management).
 
 ## How this maps to the PRD
 
-The app-by-app breakdown above follows the same domain split as PRD §8.2 ("App Organization by Domain") and the Sprint task list in PRD §13 — each `apps/*.md` doc corresponds to one or two sprints (e.g. `apps/categories.md` covers Sprint 4, `apps/dashboard.md` covers Sprint 7). [data-model.md](data-model.md) consolidates PRD §8.3–§8.5 (data structure, enums, business rules) into one place cross-referenced from every app doc that touches those rules, rather than repeating them per app.
+The app-by-app breakdown above follows the same domain split as PRD §8.2 ("App Organization by Domain") and the Sprint task list in PRD §13 — each `apps/*.md` doc corresponds to one or two sprints (e.g. `apps/categories.md` covers Sprint 4, `apps/dashboard.md` covers Sprint 7, `apps/investments.md` is post-PRD). [data-model.md](data-model.md) consolidates PRD §8.3–§8.5 (data structure, enums, business rules) into one place cross-referenced from every app doc that touches those rules, rather than repeating them per app.
 
 ## Other material in `docs/`
 
