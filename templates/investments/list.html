@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load l10n %}
 
 {% comment %}
 Investments (parallel universe to `Transaction`). Shows only the logged-in
@@ -17,6 +18,26 @@ missing rate can never silently shrink the displayed total.
 Optional filters: `?kind=DEPOSIT|WITHDRAWAL` narrows the table, `?q=`
 searches title / reason / notes. Pagination uses `{% querystring %}` so
 the active filters survive page navigation.
+
+At the bottom of the page (after the list / pagination), one chart
+section sits there:
+
+  - The per-currency sparklines grid: one mini chart per supported
+    currency, each on its own y-axis scale. Plotting every currency on
+    a single axis would collapse the smaller balances (a USD balance of
+    100 against a BRL balance of 50 000 would render as a flat line at
+    the bottom), so each currency gets its own chart. The card shows
+    the code, the current balance, and the trend over the last
+    `TIMESERIES_MONTHS` months.
+
+The section is hidden via `{% if has_investments %}` — six flat-at-
+zero sparklines are not informative, and the empty-state CTA above
+already tells the user to add an entry.
+
+Coordinates are wrapped in `{% localize off %}` blocks around the
+`<text>` and `<polyline>` attributes inside `<svg>`, exactly like the
+Reports charts, so Brazilian-style number formatting never reaches a
+coordinate string.
 {% endcomment %}
 
 {% block title %}Investments — CashFlow{% endblock %}
@@ -206,6 +227,65 @@ the active filters survive page navigation.
         {% include 'partials/empty_state.html' with title='No matching investments' message='Try a different search term or type, or clear the filters to see everything.' cta_url=list_url cta_label='Clear filters' %}
     {% else %}
         {% include 'partials/empty_state.html' with title='No investments recorded yet' message='Add a deposit or withdrawal to start tracking your investment portfolio.' cta_url=create_url cta_label='New Entry' %}
+    {% endif %}
+
+    {# ---------------------------------------------------------------- #}
+    {# Per-currency sparklines (small multiples) below the list. Hidden #}
+    {# when the user has no investments — see the top-of-file            #}
+    {# docstring for the reasoning.                                       #}
+    {# ---------------------------------------------------------------- #}
+    {% if has_investments %}
+        {# -------------------------------------------------------------- #}
+        {# Per-currency sparklines. One mini chart per supported code,    #}
+        {# each on its own scale. The card shows the code, the name, the  #}
+        {# current balance, and a 12-month trend.                          #}
+        {# -------------------------------------------------------------- #}
+        <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Per-currency trend</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                    Cumulative balance per currency over the last 12 months &mdash; one chart per code so a small balance stays readable alongside a large one. Each card shows the running balance in its own currency, not converted to {{ CURRENCY_SYMBOL }}.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+                {% for spark in sparklines %}
+                    <div class="space-y-2 rounded-xl ring-1 ring-slate-200 dark:ring-[#3a3a3a] bg-slate-50 dark:bg-[#2B2B2B] p-4">
+                        <div class="flex items-baseline justify-between gap-2">
+                            <p class="text-sm font-semibold text-slate-900 dark:text-neutral-100">{{ spark.code }}</p>
+                            <p class="text-xs text-slate-500 dark:text-neutral-500 truncate" title="{{ spark.name }}">{{ spark.name }}</p>
+                        </div>
+                        <p class="text-lg font-bold tabular-nums {% if spark.current_balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">
+                            {{ spark.symbol }} {{ spark.current_balance|floatformat:0 }}
+                        </p>
+                        <div class="overflow-x-auto">
+                            {% localize off %}
+                            <svg viewBox="0 0 {{ spark.sparkline.width }} {{ spark.sparkline.height }}"
+                                 class="h-auto w-full min-w-[8rem]"
+                                 role="img"
+                                 aria-label="Sparkline of cumulative {{ spark.code }} balance over the last 12 months">
+                                {% if spark.sparkline.line %}
+                                    <polyline points="{{ spark.sparkline.line }}"
+                                              fill="none"
+                                              stroke-width="1.75"
+                                              stroke-linecap="round"
+                                              stroke-linejoin="round"
+                                              class="{% if spark.code == base_currency %}stroke-indigo-500 dark:stroke-indigo-400{% elif spark.code == 'USD' %}stroke-emerald-500 dark:stroke-emerald-400{% elif spark.code == 'EUR' %}stroke-sky-500 dark:stroke-sky-400{% elif spark.code == 'GBP' %}stroke-violet-500 dark:stroke-violet-400{% elif spark.code == 'JPY' %}stroke-rose-500 dark:stroke-rose-400{% elif spark.code == 'CHF' %}stroke-amber-500 dark:stroke-amber-400{% else %}stroke-slate-500 dark:stroke-slate-400{% endif %}">
+                                        <title>{{ spark.code }} trend over the last 12 months (current: {{ spark.symbol }} {{ spark.current_balance|floatformat:2 }})</title>
+                                    </polyline>
+                                    {% if spark.sparkline.last %}
+                                        <circle cx="{{ spark.sparkline.last.x }}" cy="{{ spark.sparkline.last.y }}" r="2.25"
+                                                class="{% if spark.code == base_currency %}fill-indigo-500 dark:fill-indigo-400{% elif spark.code == 'USD' %}fill-emerald-500 dark:fill-emerald-400{% elif spark.code == 'EUR' %}fill-sky-500 dark:fill-sky-400{% elif spark.code == 'GBP' %}fill-violet-500 dark:fill-violet-400{% elif spark.code == 'JPY' %}fill-rose-500 dark:fill-rose-400{% elif spark.code == 'CHF' %}fill-amber-500 dark:fill-amber-400{% else %}fill-slate-500 dark:fill-slate-400{% endif %}">
+                                        </circle>
+                                    {% endif %}
+                                {% endif %}
+                            </svg>
+                            {% endlocalize %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
     {% endif %}
 </div>
 {% endblock %}

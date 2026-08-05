@@ -101,5 +101,31 @@ bundle — built from `tailwind/input.css` (which declares the matching
     {% include 'partials/footer.html' %}
 
     <script src="{% static 'js/theme.js' %}"></script>
+
+    {% comment %}HTMX (PRD §5 — partial-swap navigation on the Reports
+    page). The script is opt-in per-element via `hx-get` / `hx-target`
+    attributes, so screens that do not use it are unaffected and the
+    Charts 1/2 prev/next arrows and the breakdown selects can swap the
+    `#reports-charts` region in place instead of doing a full page load.
+    Loaded with `defer` so it never blocks the first paint, and from
+    unpkg so it is versioned and cached independently of the app — the
+    only HTMX version we depend on is the one pinned in this tag.{% endcomment %}
+    <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+
+    {% comment %}Smooth-scroll helper used by the Reports page's
+    `hx-on::after-swap` handlers. The bar links and close buttons
+    intentionally drop the URL fragment from the `hx-get` request so the
+    browser does not auto-scroll to it before the swap completes
+    (otherwise the page briefly flickers as the browser and HTMX
+    disagree on the scroll target). After the swap, this helper scrolls
+    to the right element with a smooth animation. The optional-chaining
+    `if (el)` is a no-op when the target is missing — e.g. the bar's
+    method is not in the breakdown and the view returns no panel.{% endcomment %}
+    <script>
+        function scrollToAnchor(id) {
+            var el = document.getElementById(id);
+            if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+    </script>
 </body>
 </html>

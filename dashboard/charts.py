@@ -49,6 +49,18 @@ VALUE_LABEL_OFFSET = 6
 LABEL_CHAR_WIDTH = 5.5
 LABEL_MAX_CHARS = 28
 
+# Sparkline canvas — small enough to fit inside a currency card on the
+# Investments list page, large enough that 12 monthly points stay
+# individually visible. Each currency gets its own y-axis scale, so a
+# BRL balance of 50000 and a USD balance of 100 are both readable
+# inside their own sparkline.
+SPARK_WIDTH = 120
+SPARK_HEIGHT = 40
+# Pixels of inset on every side so the line never touches the edge of
+# the card. The y-axis is implicit (no labels), so a few pixels of
+# headroom reads better than letting the line clip the box.
+SPARK_PADDING = 4
+
 
 def _bounds(values):
     """Value range to plot, always including zero so the axis is honest.
@@ -192,4 +204,67 @@ def build_bar_chart(labels, series):
         # the payment-method chart truncates to it, so names stay whole while
         # there are few bars and shorten as bars are added.
         'label_chars': min(LABEL_MAX_CHARS, int(_slot_width(count) / LABEL_CHAR_WIDTH)),
+    }
+
+
+def build_sparkline(labels, values):
+    """Mini line-chart geometry for the per-currency sparklines.
+
+    The Investments list page renders one sparkline per supported
+    currency in a small-multiples grid, because plotting every currency
+    on a single axis collapses the smaller balances (e.g. a USD balance
+    of 100 against a BRL balance of 50 000) into a flat line at the
+    bottom. Each sparkline gets its own `_bounds`, so a BRL 50 000 and
+    a USD 100 each draw a meaningful line on their own scale.
+
+    Returns a dict shaped like a slimmed-down `build_line_chart`:
+
+      - `width`, `height`: SVG viewBox, fixed to `SPARK_WIDTH`/`SPARK_HEIGHT`.
+      - `points`: list of `{label, value, x, y}` dicts.
+      - `line`: a polyline `points` string ready to drop into a
+        `<polyline points="…">` attribute.
+      - `last`: the same shape as one element of `points`, the
+        right-most one — the template draws a small filled circle
+        there as the "now" marker.
+
+    No grid, no axis labels, no area fill — the page already shows
+    the current balance in big type next to each sparkline, so the
+    chart itself only needs to communicate the *shape* of the trend.
+    Tooltips are still native `<title>` elements the template can
+    attach to the last-point circle.
+    """
+    if not values:
+        return {
+            'width': SPARK_WIDTH,
+            'height': SPARK_HEIGHT,
+            'points': [],
+            'line': '',
+            'last': None,
+        }
+
+    # Reuse the same bounds policy as the main line chart: always
+    # include zero so the line starts at the right vertical position
+    # for a brand-new account (cumulative balance of 0). The padding
+    # gives the line room above/below the extreme values.
+    bounds = _bounds(values)
+    count = len(values)
+    inner_width = SPARK_WIDTH - 2 * SPARK_PADDING
+    inner_height = SPARK_HEIGHT - 2 * SPARK_PADDING
+    slot_width = inner_width / count
+
+    points = []
+    for index, (label, value) in enumerate(zip(labels, values)):
+        lowest, highest = bounds
+        ratio = (value - lowest) / (highest - lowest)
+        y = round(SPARK_PADDING + inner_height - ratio * inner_height, 2)
+        x = round(SPARK_PADDING + slot_width * (index + 0.5), 2)
+        points.append({'label': label, 'value': value, 'x': x, 'y': y})
+
+    line = ' '.join(f'{p["x"]},{p["y"]}' for p in points)
+    return {
+        'width': SPARK_WIDTH,
+        'height': SPARK_HEIGHT,
+        'points': points,
+        'line': line,
+        'last': points[-1],
     }

@@ -359,6 +359,147 @@ def get_expenses_by_category_for_method(
     ]
 
 
+def get_income_by_payment_method(user, year=None, month=None, months=1):
+    """Split income across the methods that received it (FR16).
+
+    Mirror of `get_expenses_by_payment_method` for the new "Income by
+    payment method" chart on the reports page — the same two scopes, the
+    same drill-down, the same `?payment_month=ALL|YYYY-MM` filter, only
+    filtering on `INCOME` rows. Salary hits a bank account, dividends
+    land on a brokerage, transfers arrive on a card: the bar chart is
+    the mirror image of the spending one and answers "where did the
+    money come in on?".
+
+    Two scopes, picked by the caller:
+      - the default (`year`/`month` set, `months=1`) answers "July's income
+        landed where?" — a single-month question. Recurrences count on the
+        same rules as every other figure: a fixed paycheck and the current
+        slice of an installment plan both land on the month they actually
+        pay in.
+      - `year=None, month=None, months=N` aggregates the last N months
+        anchored on today, so the "All time" option on the filter answers
+        "where does my income go, in aggregate?" without losing the
+        per-method resolution.
+
+    Income only, like the expense version. Investment is a cash outflow
+    on the spending side (§8.5) and is not income on this side either —
+    a buy is not a receipt.
+    """
+    transactions = _projection_queryset(user, with_payment_method=True)
+
+    if year is not None and month is not None:
+        window = [(year, month)]
+    else:
+        today = timezone.localdate()
+        window = [add_months(today.year, today.month, -step) for step in range(months)]
+
+    totals = {}
+    for txn in transactions:
+        if txn.transaction_type != Transaction.TransactionType.INCOME:
+            continue
+        contribution = sum(
+            (txn.amount_for_month(*target) for target in window), start=ZERO
+        )
+        if contribution:
+            name = txn.payment_method.name
+            totals[name] = totals.get(name, ZERO) + contribution
+
+    overall = sum(totals.values(), start=ZERO)
+    if not overall:
+        return {'total': ZERO, 'methods': [], 'shown': 0, 'used': 0}
+
+    ranked = sorted(totals.items(), key=lambda item: item[1], reverse=True)
+    methods = [
+        {
+            'name': name,
+            'total': total,
+            'share': round(float(total / overall) * 100, 1),
+        }
+        for name, total in ranked[:TOP_PAYMENT_METHODS]
+    ]
+
+    return {
+        # Every method's income, including any trimmed off by the cap — so
+        # the printed shares stay shares of the period, not of what is drawn.
+        'total': overall,
+        'methods': methods,
+        # `shown` < `used` means the cap trimmed something, and the drawn
+        # shares therefore stop short of 100%. The template says so rather
+        # than leaving the reader to notice the bars do not add up.
+        'shown': len(methods),
+        'used': len(ranked),
+    }
+
+
+def get_income_by_category_for_method(
+    user, method_name, year=None, month=None, months=1
+):
+    """Top categories of income received on a single method, over a window.
+
+    Companion to the "Income by payment method" chart: clicking a bar
+    filters the page to a single method, and this answers the next
+    question — "what kinds of income did I receive there?". A salary
+    account might show "Salary" + "Reimbursements"; a brokerage might
+    show "Dividends" + "Asset sales".
+
+    Same rules as every other breakdown on the page:
+      - Income only (expenses / investment are out by §8.5).
+      - Recurrences count via `amount_for_month`, so a fixed monthly
+        paycheck shows under every month it pays in — the same shape the
+        dashboard and reports use everywhere else.
+      - The window is a single month when `year`/`month` are set, or the
+        last `months` months from today when they are `None` (the
+        `?payment_month=ALL` case).
+
+    Returns an empty list when the method had no income in the window,
+    or when `method_name` is not one of the user's methods — the view
+    treats both as "no data to show" without differentiating.
+    """
+    transactions = _projection_queryset(
+        user, with_category=True, with_payment_method=True
+    )
+
+    if year is not None and month is not None:
+        window = [(year, month)]
+    else:
+        today = timezone.localdate()
+        window = [add_months(today.year, today.month, -step) for step in range(months)]
+
+    totals = {}
+    for txn in transactions:
+        if txn.transaction_type != Transaction.TransactionType.INCOME:
+            continue
+        if txn.payment_method.name != method_name:
+            continue
+        contribution = sum(
+            (txn.amount_for_month(*target) for target in window), start=ZERO
+        )
+        if contribution:
+            name = txn.category.name
+            totals[name] = totals.get(name, ZERO) + contribution
+
+    if not totals:
+        return []
+
+    ranked = sorted(totals.items(), key=lambda item: item[1], reverse=True)
+    largest = ranked[0][1]
+    overall = sum(totals.values(), start=ZERO)
+
+    return [
+        {
+            'name': name,
+            'total': total,
+            # Same dual-percent convention as `_expenses_by_category`:
+            # `bar_width` is relative to the biggest (so the top bar
+            # always fills the track), `share` is of all income on this
+            # method.
+            'bar_width': round(float(total / largest) * 100, 2),
+            'share': round(float(total / overall) * 100, 1),
+        }
+        for name, total in ranked[:TOP_CATEGORIES]
+    ]
+
+
 def get_account_evolution(user, offset=0):
     """Month-by-month series for the reports page (FR16).
 
