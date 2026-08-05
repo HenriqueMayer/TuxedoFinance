@@ -14,14 +14,15 @@ The `Transaction.amount_for_month` and the `Investment.balance` math are complet
 | File | Contents |
 |---|---|
 | `investments/models.py` | `Investment`, `ExchangeRate` |
-| `investments/services.py` | `get_per_currency_totals`, `get_latest_rates`, `get_simulated_total_in_base`, `get_exchange_rate_choices`, `get_supported_currencies` |
+| `investments/services.py` | `get_per_currency_totals`, `get_latest_rates`, `get_simulated_total_in_base`, `get_exchange_rate_choices`, `get_supported_currencies`, `get_cumulative_balance_timeseries`, `get_rate_at` |
 | `investments/forms.py` | `InvestmentForm`, `ExchangeRateForm` |
 | `investments/views.py` | `InvestmentListView`, `InvestmentCreateView`, `InvestmentUpdateView`, `InvestmentDeleteView`, `ExchangeRateListView`, `ExchangeRateCreateView`, `ExchangeRateDeleteView` |
 | `investments/urls.py` | `app_name = 'investments'`; routes for the 7 names above |
 | `investments/admin.py` | `InvestmentAdmin`, `ExchangeRateAdmin` |
 | `investments/migrations/0001_initial.py` | `Investment` |
 | `investments/migrations/0002_*.py` | `AddField currency` on `Investment`; `CreateModel ExchangeRate` |
-| `templates/investments/list.html` | the screen |
+| `dashboard/charts.py` | `build_sparkline` (the per-currency sparkline geometry) |
+| `templates/investments/list.html` | the screen — cards, simulated total, filter, list, per-currency sparklines |
 | `templates/investments/form.html` | shared create/update form |
 | `templates/investments/confirm_delete.html` | delete confirmation |
 | `templates/investments/settings/exchange_rates_list.html` | the exchange-rates screen + inline create form |
@@ -74,9 +75,23 @@ def get_exchange_rate_choices(base) -> list[(str, str)]:
 def get_supported_currencies(base) -> list[str]:
     """Every code the UI offers, base first then alphabetical. Drives the
     fixed card grid on the list page."""
+
+def get_cumulative_balance_timeseries(user, currencies, months=12) -> list[dict]:
+    """One row per month for the last `months` months, with `balances[code]`
+    = cumulative signed_amount for that currency at the close of the
+    month. Currencies with no entries stay at `ZERO` for every month, so
+    the caller can render a fixed card per code without holes. Single
+    query + a forward walk — same pattern as
+    `dashboard.services.get_account_evolution`."""
+
+def get_rate_at(user, from_currency, to_currency, on_date) -> ExchangeRate | None:
+    """The most recent `ExchangeRate` for the pair with
+    `effective_date <= on_date`, or `None` if none exists yet. Public
+    API for any future feature that needs to convert a past balance
+    at the rate that was current at the time."""
 ```
 
-The list view's `get_context_data` calls the first three with the **unfiltered** user queryset, so a filtered table below never makes the cards lie.
+The list view's `get_context_data` calls the first three with the **unfiltered** user queryset, so a filtered table below never makes the cards lie. The same view also calls the time-series helper to build the per-currency sparkline grid at the bottom of the page; see "Time-series chart" below.
 
 ## Form (`InvestmentForm`)
 
@@ -108,7 +123,7 @@ The form is shared between the list page (rendered inline) and the standalone `c
 
 ## Views
 
-Same shape as `categories` and `payments` — CBVs + `LoginRequiredMixin` + `SuccessMessageMixin`, with a `FormMixin` (for create/update) that owns the `model`, `form_class`, `template_name`, `success_url`, and the user-scoped `get_queryset()`. The investments list view is the only one that has any custom `get_context_data` beyond the list pagination machinery (it has to call the three services above).
+Same shape as `categories` and `payments` — CBVs + `LoginRequiredMixin` + `SuccessMessageMixin`, with a `FormMixin` (for create/update) that owns the `model`, `form_class`, `template_name`, `success_url`, and the user-scoped `get_queryset()`. The investments list view is the only one that has any custom `get_context_data` beyond the list pagination machinery (it has to call the services above: the three snapshot helpers that drive the per-currency cards and the simulated-total card at the top, plus the time-series helper that drives the sparkline grid at the bottom).
 
 The exchange-rates views follow the same shape, with one difference: there is **no `update` view**. Rates are append-only by design — if the rate moved, the user adds a new row with a newer `effective_date`; the old one stays put for history. When an automated feed lands, it will write one row per day per pair; the existing rows are its history, and a missing update view is what keeps the schema future-proof.
 
@@ -117,6 +132,47 @@ The exchange-rates views follow the same shape, with one difference: there is **
 ## No recurrence
 
 Unlike `Transaction`, an `Investment` has no recurrence shape. There is no `is_fixed`, no `installments`, no `fixed_until` — a single row is exactly one move on the date the user recorded. The dashboard and reports pages project recurrences forward over months; the investments log is a flat history, and the running balance per currency is a plain sum (`Σ deposits − Σ withdrawals`).
+
+## Time-series chart
+
+Below the paginated list, one chart section answers the time-dimension question the per-currency cards (current snapshot) and the simulated-total card (current snapshot in base) do not:
+
+  1. **Per-currency sparklines** — one mini chart per supported code, each on its **own** y-axis scale. Plotting every currency on a single axis would collapse the smaller balances into a flat line at the bottom (a USD balance of 100 next to a BRL balance of 50 000 would render as nothing); small multiples sidestep that. The card shows the code, the current balance in that currency, and a 12-month line. Native SVG `<title>` on the polyline surfaces the code and current balance on hover.
+
+The section is wrapped in `{% if has_investments %}` and hidden when the user has recorded nothing. Six flat-at-zero sparklines are not informative, and the empty-state CTA above already tells the user to add an entry.
+
+Static render: no HTMX, no prev/next arrows, no drill-downs. The user refreshes the page after adding a row. The window is `TIMESERIES_MONTHS = 12`, a local copy of `dashboard.services.EVOLUTION_MONTHS` (the investments app does not import from `dashboard.services` just to read the same number).
+
+The sparkline series is **seeded with the user's pre-window balances** — the sum of every investment dated strictly before the first month of the 12-month window — so a deposit from 14 months ago shows up in the very first row, not only after the month it would land in. Without the seed, the sparkline at the oldest month would silently disagree with the per-currency card at the top (which uses `get_per_currency_totals` over **all** investments, no window) by exactly the size of the pre-window balance. The seed lives in `_pre_window_balances` in `investments.services` and is applied by `get_cumulative_balance_timeseries` at the start of the walk.
+
+### Historical rate resolution (for any future feature)
+
+`get_rate_at(user, from_currency, to_currency, on_date)` returns the most recent `ExchangeRate` with `effective_date <= on_date`, or `None` if the user has not set any rate for that pair yet. The current list page does not need it (the per-currency sparklines are intentionally not converted to base — see "Why no simulated total over time" below) but the helper is a useful primitive for any future feature that needs to convert a past balance at the rate that was current at the time, and it documents the historical-rate convention the `ExchangeRate` schema supports by design.
+
+### Why no simulated total over time
+
+The "Simulated total in {base} over time" chart that was in this section briefly is gone. Two reasons it would not work as a single time-series line:
+
+  - **Multi-scale problem.** Plotting every currency on a shared axis collapses the smaller balances into a flat line at the bottom — the BRL would dominate and the USD contribution would be invisible. The stacked-area variant solved the visual problem but doubled the chart's complexity and added a second rate-resolution walk for marginal value (the user already sees the per-currency breakdown in the sparklines and the total in the card).
+  - **Historical-rate dependency.** To convert a past balance, the chart would have to pick the `ExchangeRate` effective at the time. That logic is in `get_rate_at` (above) but the investments app does not store an automated rate history, so the conversion is a manually-curated approximation at best. The card at the top of the page — which uses the latest rate — is honest about the same caveat; a line chart stretching the same approximation over 12 months would only dress it up.
+
+If a future feature needs the trend (e.g. an automated FX feed lands), the helpers to add it are the same ones this section used to call out: `get_simulated_breakdown_timeseries` for the per-month contribution and `build_stacked_area_chart` for the visual. They were removed along with the chart to keep the codebase honest about what is currently rendered.
+
+### Per-currency sparkline color palette
+
+A stable six-color palette, base currency in the primary indigo so it visually leads the row:
+
+| Code | Stroke color | Notes |
+|---|---|---|
+| `base` (BRL or whatever `settings.CURRENCY` is) | `stroke-indigo-500` (dark: `indigo-400`) | primary, "your main portfolio" |
+| `USD` | `stroke-emerald-500` | matches the Income semantic color from the Reports page |
+| `EUR` | `stroke-sky-500` | |
+| `GBP` | `stroke-violet-500` | |
+| `JPY` | `stroke-rose-500` | matches the Expense semantic color, which is a coincidence |
+| `CHF` | `stroke-amber-500` | matches the Investment semantic color |
+| anything else | `stroke-slate-500` | a future currency added to `core/currencies.py` falls back to neutral gray until a color is picked for it |
+
+The colors are spelled out directly in `templates/investments/list.html` (one per `elif` on the code) rather than mapped through a `tone` field, because each currency has a fixed color — the chart never re-tints a series based on what kind of value it is. A single fill class is also applied to the right-most "now" dot per series for emphasis.
 
 ## Routes
 

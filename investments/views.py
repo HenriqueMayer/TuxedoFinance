@@ -8,9 +8,12 @@ from django.db.models import Q
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
+from dashboard.charts import build_sparkline
 from investments.forms import ExchangeRateForm, InvestmentForm
 from investments.models import ExchangeRate, Investment
 from investments.services import (
+    TIMESERIES_MONTHS,
+    get_cumulative_balance_timeseries,
     get_latest_rates,
     get_per_currency_totals,
     get_simulated_total_in_base,
@@ -83,6 +86,28 @@ class InvestmentListView(LoginRequiredMixin, ListView):
             self.request.user, base_currency, balances, rates
         )
 
+        # Per-currency sparklines: one mini chart per code, each in its
+        # own scale. Built by walking the same monthly window used by
+        # the rest of the page and pulling each currency's running
+        # balance at the close of every month.
+        cumulative = get_cumulative_balance_timeseries(
+            self.request.user, supported, months=TIMESERIES_MONTHS
+        )
+        sparklines = []
+        for code in supported:
+            bucket = per_currency[code]
+            values = [float(row['balances'].get(code, Decimal('0.00'))) for row in cumulative]
+            labels = [row['date'] for row in cumulative]
+            sparklines.append(
+                {
+                    'code': code,
+                    'symbol': bucket['symbol'],
+                    'name': bucket['name'],
+                    'current_balance': bucket['balance'],
+                    'sparkline': build_sparkline(labels, values),
+                }
+            )
+
         context['per_currency_cards'] = [
             per_currency[code] for code in supported
         ]
@@ -92,6 +117,14 @@ class InvestmentListView(LoginRequiredMixin, ListView):
         context['kind_choices'] = Investment.Kind.choices
         context['selected_kind'] = self.request.GET.get('kind', '').strip().upper()
         context['search_query'] = self.request.GET.get('q', '').strip()
+        # The sparkline grid at the bottom of the page. Hidden when
+        # the user has no investments — six flat-at-zero sparklines
+        # are not informative, and the empty-state CTA above already
+        # tells the user to add an entry.
+        context['has_investments'] = Investment.objects.filter(
+            user=self.request.user
+        ).exists()
+        context['sparklines'] = sparklines
         return context
 
 
