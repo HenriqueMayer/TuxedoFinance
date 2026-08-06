@@ -14,15 +14,16 @@ The `Transaction.amount_for_month` and the `Investment.balance` math are complet
 | File | Contents |
 |---|---|
 | `investments/models.py` | `Investment`, `ExchangeRate` |
-| `investments/services.py` | `get_per_currency_totals`, `get_latest_rates`, `get_simulated_total_in_base`, `get_exchange_rate_choices`, `get_supported_currencies`, `get_cumulative_balance_timeseries`, `get_rate_at` |
+| `investments/services.py` | `get_per_currency_totals`, `get_latest_rates`, `get_simulated_total_in_base`, `get_exchange_rate_choices`, `get_supported_currencies`, `get_cumulative_balance_timeseries`, `get_rate_at`, `_resolve_rate`, `get_total_in_base_timeseries`, `get_monthly_flow_in_base` |
 | `investments/forms.py` | `InvestmentForm`, `ExchangeRateForm` |
 | `investments/views.py` | `InvestmentListView`, `InvestmentCreateView`, `InvestmentUpdateView`, `InvestmentDeleteView`, `ExchangeRateListView`, `ExchangeRateCreateView`, `ExchangeRateDeleteView` |
 | `investments/urls.py` | `app_name = 'investments'`; routes for the 7 names above |
 | `investments/admin.py` | `InvestmentAdmin`, `ExchangeRateAdmin` |
 | `investments/migrations/0001_initial.py` | `Investment` |
 | `investments/migrations/0002_*.py` | `AddField currency` on `Investment`; `CreateModel ExchangeRate` |
-| `dashboard/charts.py` | `build_sparkline` (the per-currency sparkline geometry) |
-| `templates/investments/list.html` | the screen — cards, simulated total, filter, list, per-currency sparklines |
+| `dashboard/charts.py` | `build_line_chart` (chart 1), `build_bar_chart` (chart 2) |
+| `templates/investments/list.html` | the screen — cards, simulated total, filter, list, charts island |
+| `templates/investments/_investments_charts.html` | HTMX-swappable partial: the two-chart island (investment evolution + monthly flow) |
 | `templates/investments/form.html` | shared create/update form |
 | `templates/investments/confirm_delete.html` | delete confirmation |
 | `templates/investments/settings/exchange_rates_list.html` | the exchange-rates screen + inline create form |
@@ -76,22 +77,31 @@ def get_supported_currencies(base) -> list[str]:
     """Every code the UI offers, base first then alphabetical. Drives the
     fixed card grid on the list page."""
 
-def get_cumulative_balance_timeseries(user, currencies, months=12) -> list[dict]:
+def get_cumulative_balance_timeseries(user, currencies, months=12, offset=0) -> list[dict]:
     """One row per month for the last `months` months, with `balances[code]`
     = cumulative signed_amount for that currency at the close of the
-    month. Currencies with no entries stay at `ZERO` for every month, so
-    the caller can render a fixed card per code without holes. Single
-    query + a forward walk — same pattern as
-    `dashboard.services.get_account_evolution`."""
+    month. `offset` slides the anchor month (0 = today). Seeded with
+    pre-window balances so old deposits show up in row 1."""
 
 def get_rate_at(user, from_currency, to_currency, on_date) -> ExchangeRate | None:
-    """The most recent `ExchangeRate` for the pair with
-    `effective_date <= on_date`, or `None` if none exists yet. Public
-    API for any future feature that needs to convert a past balance
-    at the rate that was current at the time."""
+    """The most recent ExchangeRate for the pair with
+    `effective_date <= on_date`, or None if none exists yet."""
+
+def _resolve_rate(user, code, base, on_date, latest_rates) -> tuple[Decimal|None, bool]:
+    """Rate for code→base on/before on_date. Tries historical first,
+    falls back to latest. Returns (rate, missing_flag)."""
+
+def get_total_in_base_timeseries(user, base, currencies, months=12, offset=0) -> tuple[list[dict], list[str]]:
+    """Cumulative portfolio total in base, one row per month. Folds
+    get_cumulative_balance_timeseries through _resolve_rate. Drives
+    the 'Investment evolution' line chart."""
+
+def get_monthly_flow_in_base(user, base, currencies, months=12, offset=0) -> tuple[list[dict], list[str]]:
+    """Deposits × withdrawals per month in base, per-entry rate lookup.
+    Drives the 'Monthly flow' grouped-bar chart."""
 ```
 
-The list view's `get_context_data` calls the first three with the **unfiltered** user queryset, so a filtered table below never makes the cards lie. The same view also calls the time-series helper to build the per-currency sparkline grid at the bottom of the page; see "Time-series chart" below.
+The list view's `get_context_data` calls the card helpers with the **unfiltered** user queryset, so a filtered table below never makes the cards lie. It also calls the two FX-converted time-series helpers (each with its own `offset`) to build the two charts at the bottom of the page; see "Charts" below.
 
 ## Form (`InvestmentForm`)
 
@@ -123,7 +133,9 @@ The form is shared between the list page (rendered inline) and the standalone `c
 
 ## Views
 
-Same shape as `categories` and `payments` — CBVs + `LoginRequiredMixin` + `SuccessMessageMixin`, with a `FormMixin` (for create/update) that owns the `model`, `form_class`, `template_name`, `success_url`, and the user-scoped `get_queryset()`. The investments list view is the only one that has any custom `get_context_data` beyond the list pagination machinery (it has to call the services above: the three snapshot helpers that drive the per-currency cards and the simulated-total card at the top, plus the time-series helper that drives the sparkline grid at the bottom).
+Same shape as `categories` and `payments` — CBVs + `LoginRequiredMixin` + `SuccessMessageMixin`, with a `FormMixin` (for create/update) that owns the `model`, `form_class`, `template_name`, `success_url`, and the user-scoped `get_queryset()`. The investments list view is the only one with custom `get_context_data` beyond the list pagination machinery — it calls the three snapshot helpers that drive the per-currency cards and the simulated-total card at the top, plus the two time-series services (offset-aware) and the two chart builders that drive the bottom-of-page charts island.
+
+`InvestmentListView.get_template_names()` mirrors `DashboardReportsView`: when `HX-Request: true` is set (the header HTMX sends on every swap request) it returns `investments/_investments_charts.html`, the bare `<div id="investments-charts">` island the prev/next arrows target with `hx-target`. A normal GET returns the full `list.html`, which `{% include %}`s the same partial inside the page wrapper. Each chart owns an independent slide param — `?total_offset=N` and `?flow_offset=N` for charts 1 and 2 respectively — so sliding one chart leaves the other anchored (e.g. the user can scroll chart 1 a year back while watching the current month's flow on chart 2). Both are parsed by the same `_parse_charts_offset(request, param_name)` helper with a shared bounds check (`_is_offset_window_safe`) so a query string cannot walk any window off the calendar — `999999` falls back to 0 instead of raising, and a bad value on one chart doesn't drag the other. The kind/search filters (`?kind`, `?q`) ride alongside the two offsets and survive every arrow click via `{% querystring %}` (each chart's arrows update only its own param; the other is preserved implicitly by `{% querystring %}`).
 
 The exchange-rates views follow the same shape, with one difference: there is **no `update` view**. Rates are append-only by design — if the rate moved, the user adds a new row with a newer `effective_date`; the old one stays put for history. When an automated feed lands, it will write one row per day per pair; the existing rows are its history, and a missing update view is what keeps the schema future-proof.
 
@@ -133,46 +145,29 @@ The exchange-rates views follow the same shape, with one difference: there is **
 
 Unlike `Transaction`, an `Investment` has no recurrence shape. There is no `is_fixed`, no `installments`, no `fixed_until` — a single row is exactly one move on the date the user recorded. The dashboard and reports pages project recurrences forward over months; the investments log is a flat history, and the running balance per currency is a plain sum (`Σ deposits − Σ withdrawals`).
 
-## Time-series chart
+## Charts
 
-Below the paginated list, one chart section answers the time-dimension question the per-currency cards (current snapshot) and the simulated-total card (current snapshot in base) do not:
+Below the paginated list, two server-rendered SVG charts answer the time-dimension questions the per-currency cards (current snapshot in native units) and the simulated-total card (current snapshot in base) do not. Each chart owns an independent 12-month window, slideable through time via its own offset param (`?total_offset=N` and `?flow_offset=N` for charts 1 and 2) so sliding one does not drag the other. The prev/next arrows on every chart carry `hx-target="#investments-charts"` so HTMX patches the whole two-chart island in place rather than reloading the page — `{% querystring <param>=N %}` updates only that chart's param and preserves the other, plus the kind/search filters; a non-JS click still degrades to a plain GET (the symmetric zero-JS contract the Reports page established).
 
-  1. **Per-currency sparklines** — one mini chart per supported code, each on its **own** y-axis scale. Plotting every currency on a single axis would collapse the smaller balances into a flat line at the bottom (a USD balance of 100 next to a BRL balance of 50 000 would render as nothing); small multiples sidestep that. The card shows the code, the current balance in that currency, and a 12-month line. Native SVG `<title>` on the polyline surfaces the code and current balance on hover.
+  1. **Investment evolution** — `build_line_chart`-driven area-line of the cumulative portfolio total in the base currency. Built from `get_total_in_base_timeseries` (rate-at-time FX fold). Inherits the Reports chart-1 visual contract: dashed rose zero line, indigo→fuchsia gradient stroke, violet 35%-to-0% area fill, `fill-white`/`fill-slate-950` per-month dots with `stroke-violet-400`. The prev/next arrows and the "Back to today" link anchor on this header.
 
-The section is wrapped in `{% if has_investments %}` and hidden when the user has recorded nothing. Six flat-at-zero sparklines are not informative, and the empty-state CTA above already tells the user to add an entry.
+  2. **Monthly flow** — `build_bar_chart`-driven grouped bars of Deposits × Withdrawals per month, both in base currency. Built from `get_monthly_flow_in_base` (per-entry rate-at-time FX on each entry's own `date`). Same legend swatch convention as the Reports cashflow chart: emerald for `Deposits`, rose for `Withdrawals`; native `<title>` tooltips on each `<rect>` give the month + series + value on hover.
 
-Static render: no HTMX, no prev/next arrows, no drill-downs. The user refreshes the page after adding a row. The window is `TIMESERIES_MONTHS = 12`, a local copy of `dashboard.services.EVOLUTION_MONTHS` (the investments app does not import from `dashboard.services` just to read the same number).
+The two charts replace an earlier per-currency sparkline grid (six mini charts, native units, no sliding). Sparklines worked as a small-multiples patch for the multi-scale problem but answered no question the user asked: "how is my portfolio doing" needs a consolidated number (charts 1 and 2).
 
-The sparkline series is **seeded with the user's pre-window balances** — the sum of every investment dated strictly before the first month of the 12-month window — so a deposit from 14 months ago shows up in the very first row, not only after the month it would land in. Without the seed, the sparkline at the oldest month would silently disagree with the per-currency card at the top (which uses `get_per_currency_totals` over **all** investments, no window) by exactly the size of the pre-window balance. The seed lives in `_pre_window_balances` in `investments.services` and is applied by `get_cumulative_balance_timeseries` at the start of the walk.
+The whole island is wrapped in `{% if has_investments %}` and hidden when the user has recorded nothing. Six flat-at-zero lines and bars are not informative, and the empty-state CTA above already tells the user to add an entry.
 
-### Historical rate resolution (for any future feature)
+### FX model — rate-at-time, with graceful fallback
 
-`get_rate_at(user, from_currency, to_currency, on_date)` returns the most recent `ExchangeRate` with `effective_date <= on_date`, or `None` if the user has not set any rate for that pair yet. The current list page does not need it (the per-currency sparklines are intentionally not converted to base — see "Why no simulated total over time" below) but the helper is a useful primitive for any future feature that needs to convert a past balance at the rate that was current at the time, and it documents the historical-rate convention the `ExchangeRate` schema supports by design.
+`get_total_in_base_timeseries` and `get_monthly_flow_in_base` both fold per-currency balances/flows into the base through `_resolve_rate`, which resolves a rate for `code -> base` on `on_date` as:
 
-### Why no simulated total over time
+  1. **Historical lookup first** — `get_rate_at(user, code, base, on_date)` returns the most recent `ExchangeRate` for the pair with `effective_date <= on_date`. A USD deposit from April 2025 converts at the rate that was current in April 2025, not at today's rate.
+  2. **Graceful fallback to `get_latest_rates`** — if no historical row exists for that pair on that date, fall back to the latest-available rate. A currency the user has only ever set one rate for still converts past months at that single rate.
+  3. **Missing entirely → excluded** — neither historical nor latest exists for that pair. The currency is dropped from every month's total and reported in `missing_rate_currencies` so the page surfaces one unified warning across the simulated-total card and charts 1 and 2.
 
-The "Simulated total in {base} over time" chart that was in this section briefly is gone. Two reasons it would not work as a single time-series line:
+### Pre-window seed (cumulative helpers only)
 
-  - **Multi-scale problem.** Plotting every currency on a shared axis collapses the smaller balances into a flat line at the bottom — the BRL would dominate and the USD contribution would be invisible. The stacked-area variant solved the visual problem but doubled the chart's complexity and added a second rate-resolution walk for marginal value (the user already sees the per-currency breakdown in the sparklines and the total in the card).
-  - **Historical-rate dependency.** To convert a past balance, the chart would have to pick the `ExchangeRate` effective at the time. That logic is in `get_rate_at` (above) but the investments app does not store an automated rate history, so the conversion is a manually-curated approximation at best. The card at the top of the page — which uses the latest rate — is honest about the same caveat; a line chart stretching the same approximation over 12 months would only dress it up.
-
-If a future feature needs the trend (e.g. an automated FX feed lands), the helpers to add it are the same ones this section used to call out: `get_simulated_breakdown_timeseries` for the per-month contribution and `build_stacked_area_chart` for the visual. They were removed along with the chart to keep the codebase honest about what is currently rendered.
-
-### Per-currency sparkline color palette
-
-A stable six-color palette, base currency in the primary indigo so it visually leads the row:
-
-| Code | Stroke color | Notes |
-|---|---|---|
-| `base` (BRL or whatever `settings.CURRENCY` is) | `stroke-indigo-500` (dark: `indigo-400`) | primary, "your main portfolio" |
-| `USD` | `stroke-emerald-500` | matches the Income semantic color from the Reports page |
-| `EUR` | `stroke-sky-500` | |
-| `GBP` | `stroke-violet-500` | |
-| `JPY` | `stroke-rose-500` | matches the Expense semantic color, which is a coincidence |
-| `CHF` | `stroke-amber-500` | matches the Investment semantic color |
-| anything else | `stroke-slate-500` | a future currency added to `core/currencies.py` falls back to neutral gray until a color is picked for it |
-
-The colors are spelled out directly in `templates/investments/list.html` (one per `elif` on the code) rather than mapped through a `tone` field, because each currency has a fixed color — the chart never re-tints a series based on what kind of value it is. A single fill class is also applied to the right-most "now" dot per series for emphasis.
+`get_cumulative_balance_timeseries` and the derivation chain in `get_total_in_base_timeseries` seed the running dict with the user's pre-window balances — the sum of every investment dated strictly before the first month of the 12-month window — so a deposit from 14 months ago shows up in the very first row, not only after the month it would land in. Without the seed, the line at the oldest month would silently disagree with the per-currency card at the top (which uses `get_per_currency_totals` over **all** investments, windowless) by exactly the size of the pre-window balance. The seed lives in `_pre_window_balances` and is applied by `get_cumulative_balance_timeseries` at the start of the walk. **The flow helper does not seed** — flow is absolute per month, not a running sum, so pre-window entries are irrelevant.
 
 ## Routes
 

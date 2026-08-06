@@ -1,9 +1,9 @@
 """Aggregations and conversions for the investments app.
 
-Five helpers, in two layers:
+Seven helpers, in three layers:
 
   Card layer — current snapshot, one number per currency:
-    - `get_per_currency_totals`  folds the user's entries by `currency` and
+    - `get_per_currency_totals` folds the user's entries by `currency` and
       returns a dict keyed by code, with the per-currency deposited/withdrawn/
       balance totals. The card grid on the list page renders one card per
       code in the supplied `currencies` argument, in a stable order (base
@@ -17,31 +17,40 @@ Five helpers, in two layers:
       to be excluded because no rate was set. Currencies in the base are
       added at face value (rate 1.0 implicit).
 
-  Time-series layer — one balance per currency per month, for the
-  sparklines grid at the bottom of the list page:
+  Time-series layer — native units per currency per month:
     - `get_cumulative_balance_timeseries` returns the running balance
       per currency for each of the last `months` months anchored on
-      today, in the same order the caller asked for. The balances are
-      cumulative — each row is the sum of every entry whose date is
-      in that month or earlier. Seeded with the user's pre-window
-      balances (see `_pre_window_balances`) so an old deposit shows up
-      in the very first row, not only after the month it would land in.
-    - `get_rate_at` returns the `ExchangeRate` that was effective on or
-      before a given date for a (from, to) pair. Public API for any
-      future feature that needs a historical-rate lookup; the
-      current list page only uses the per-currency sparklines, which
-      do not need FX conversion.
+      today. The balances are cumulative — each row is the sum of every
+      entry whose date is in that month or earlier. Seeded with the
+      user's pre-window balances (see `_pre_window_balances`) so an old
+      deposit shows up in the very first row, not only after the month
+      it would land in. Drives the date axis for every chart on the
+      page; the two FX-converted helpers below call it for the per-month
+      per-currency balances they then fold into base.
+
+  FX-converted time-series layer — base-currency numbers per month, so
+  the page can plot one consolidated trend instead of six native-unit
+  lines whose scales are not comparable:
+    - `get_total_in_base_timeseries` folds each month's per-currency
+      balances into a single base-currency cumulative total, via
+      `_resolve_rate` (rate-at-time, fallback to latest). Drives the
+      "Investment evolution" line chart.
+    - `get_monthly_flow_in_base` produces per-month deposit and
+      withdrawal totals in base, via the same rate resolution. Drives
+      the "Monthly flow" grouped-bar chart.
+    - `get_rate_at` is the rate-effective-on-or-before-a-date primitive
+      both helpers rely on.
 
   UI helpers (used by the list view and the settings page):
     - `get_exchange_rate_choices` and `get_supported_currencies` for
       form/picker options.
 
-All five are deliberately Python folds over small in-memory lists — the
-project's "one query, fold in Python" pattern from `dashboard.services`,
-adapted to a different domain. The single queryset the user owns is
-always small enough that a second `.aggregate()` round-trip would buy
-nothing measurable and cost a cross-currency join the database has no
-business doing.
+All seven are deliberately Python folds over small in-memory lists —
+the project's "one query, fold in Python" pattern from
+`dashboard.services`, adapted to a different domain. The single queryset
+the user owns is always small enough that a second `.aggregate()`
+round-trip would buy nothing measurable and cost a cross-currency join
+the database has no business doing.
 """
 from datetime import date
 from decimal import Decimal
@@ -282,14 +291,15 @@ def _pre_window_balances(investments, currencies, before_year, before_month):
     return balances
 
 
-def get_cumulative_balance_timeseries(user, currencies, months=TIMESERIES_MONTHS):
+def get_cumulative_balance_timeseries(user, currencies, months=TIMESERIES_MONTHS, offset=0):
     """Cumulative balance per currency, one row per month, for `months` back.
 
-    The window is anchored on today (oldest month first). For each month
-    in the window the function returns a `{'date', 'year', 'month',
-    'balances': {code: Decimal}}` row whose `balances[code]` is the sum
-    of every `signed_amount` for `code` whose date is in that month or
-    earlier — i.e. the running balance at the close of the month.
+    The window is anchored `offset` months from today (oldest month
+    first). For each month in the window the function returns a
+    `{'date', 'year', 'month', 'balances': {code: Decimal}}` row whose
+    `balances[code]` is the sum of every `signed_amount` for `code` whose
+    date is in that month or earlier — i.e. the running balance at the
+    close of the month.
 
     The running dict is **seeded with the user's pre-window balances**
     (sum of every entry dated strictly before the first month of the
@@ -313,9 +323,13 @@ def get_cumulative_balance_timeseries(user, currencies, months=TIMESERIES_MONTHS
     bucketed = _group_investments_by_month(investments)
 
     today = timezone.localdate()
-    # Oldest month first: walk back `months-1` from today, then add today.
+    # Anchor `offset` months from today, then walk back `months-1` to
+    # build the window oldest-first. `offset=0` reproduces the old
+    # "anchored on today" behaviour; the charts page slides the anchor
+    # via `?charts_offset=N`.
+    anchor_year, anchor_month = _add_months(today.year, today.month, offset)
     months_window = [
-        _add_months(today.year, today.month, -(months - 1) + step)
+        _add_months(anchor_year, anchor_month, -(months - 1) + step)
         for step in range(months)
     ]
     window_start_year, window_start_month = months_window[0]
@@ -366,9 +380,9 @@ def get_rate_at(user, from_currency, to_currency, on_date):
     rejects them) and never returned here; the caller handles them
     with an implicit 1.0 rate.
 
-    Public for now: no current caller, but the historical-rate lookup
-    is a useful primitive for any future feature that needs to
-    convert a past balance at the rate that was current at the time.
+    Used by `get_total_in_base_timeseries` and `get_monthly_flow_in_base`
+    to fold past per-currency balances/flows into a single base-currency
+    number at the rate that was current at the time.
     """
     if from_currency == to_currency:
         return None
@@ -382,3 +396,160 @@ def get_rate_at(user, from_currency, to_currency, on_date):
         .order_by('-effective_date', '-created_at')
         .first()
     )
+
+
+CENTS = Decimal('0.01')
+
+
+def _resolve_rate(user, code, base_currency, on_date, latest_rates):
+    """Rate for `code -> base_currency` effective on/before `on_date`.
+
+    Same FX contract the time-series helpers share: try the historical
+    lookup first (the rate that was *current* on `on_date`), fall back to
+    the latest-available rate so a recently-added currency that the user
+    has only ever set one rate for still converts past months. Returns
+    ``(rate_or_None, missing_flag)`` — when both the historical and the
+    latest lookups miss, the caller adds `code` to its `missing` report.
+    Helper kept local so `get_total_in_base_timeseries` and
+    `get_monthly_flow_in_base` shared one resolution path rather than
+    drifting.
+    """
+    if code == base_currency:
+        return Decimal('1.0'), False
+    rate_row = get_rate_at(user, code, base_currency, on_date)
+    if rate_row is not None:
+        return rate_row.rate, False
+    rate_value = latest_rates.get(code)
+    if rate_value is None:
+        return None, True
+    return rate_value, False
+
+
+def get_total_in_base_timeseries(
+    user, base_currency, currencies, months=TIMESERIES_MONTHS, offset=0
+):
+    """Cumulative portfolio total in the base currency, one row per month.
+
+    Builds on `get_cumulative_balance_timeseries` (per-currency running
+    balances in native units, seeded with pre-window balances), then folds
+    each month's balances into a single base-currency number through
+    `_resolve_rate` — the rate effective on/before that month's date, with
+    a graceful fallback to the latest-available rate so a currency the
+    user has only ever set one rate for still converts past months. The
+    base currency contributes at face value (rate 1.0 implicit).
+
+    A currency that has no rate at all (neither historical nor latest) is
+    excluded from the total of every row and reported in
+    `missing_rate_currencies`, so the caller can warn the user instead of
+    silently showing a too-low line — same contract as
+    `get_simulated_total_in_base` on the snapshot card.
+
+    Returns ``(rows, missing_rate_currencies)``:
+
+      - `rows` is a list of `{'date', 'year', 'month', 'total'}` dicts in
+        chronological order (oldest first). `total` is a `Decimal`
+        quantized to cents.
+      - `missing_rate_currencies` is the sorted list of codes excluded
+        because no rate was set for them.
+    """
+    cumulative = get_cumulative_balance_timeseries(
+        user, currencies, months=months, offset=offset
+    )
+    latest_rates = get_latest_rates(user, base_currency)
+
+    missing = []
+    rows = []
+    for row in cumulative:
+        row_total = ZERO
+        row_date = row['date']
+        for code in currencies:
+            balance = row['balances'].get(code, ZERO)
+            if balance == ZERO:
+                continue
+            rate_value, is_missing = _resolve_rate(
+                user, code, base_currency, row_date, latest_rates
+            )
+            if rate_value is None:
+                if code not in missing:
+                    missing.append(code)
+                continue
+            row_total += balance * rate_value
+        rows.append(
+            {
+                'date': row_date,
+                'year': row['year'],
+                'month': row['month'],
+                'total': row_total.quantize(CENTS),
+            }
+        )
+    return rows, sorted(missing)
+
+
+def get_monthly_flow_in_base(
+    user, base_currency, currencies, months=TIMESERIES_MONTHS, offset=0
+):
+    """Deposits × withdrawals per month, in the base currency, rate-at-time.
+
+    Unlike `get_total_in_base_timeseries` (cumulative), this is per-month
+    flow: each row holds a single month's DEPOSIT-total and
+    WITHDRAWAL-total in base. Per-entry rate lookup via `_resolve_rate`
+    on `entry.date` so the FX used is the rate that was current when the
+    entry was recorded, not the latest one. Pre-window balances are NOT
+    seeded here — flow is absolute per month, not a running sum.
+
+    Same `missing_rate_currencies` contract as the cumulative helper:
+    a currency with no rate at all is excluded from every month's totals
+    and reported so the caller can warn.
+
+    Returns ``(rows, missing_rate_currencies)``:
+
+      - `rows` is a list of
+        `{'date', 'year', 'month', 'deposits', 'withdrawals'}` in
+        chronological order (oldest first). Both `deposits` and
+        `withdrawals` are positive `Decimal`s (the sign is conveyed by
+        which bucket they landed in), quantized to cents.
+      - `missing_rate_currencies` is the sorted list of codes excluded.
+    """
+    investments = list(Investment.objects.filter(user=user))
+    bucketed = _group_investments_by_month(investments)
+    latest_rates = get_latest_rates(user, base_currency)
+
+    today = timezone.localdate()
+    anchor_year, anchor_month = _add_months(today.year, today.month, offset)
+    months_window = [
+        _add_months(anchor_year, anchor_month, -(months - 1) + step)
+        for step in range(months)
+    ]
+
+    currency_set = set(currencies)
+    missing = []
+    rows = []
+    for year, month in months_window:
+        deposits = ZERO
+        withdrawals = ZERO
+        for entry in bucketed.get((year, month), []):
+            if entry.currency not in currency_set:
+                continue
+            amount = entry.amount
+            rate_value, _ = _resolve_rate(
+                user, entry.currency, base_currency, entry.date, latest_rates
+            )
+            if rate_value is None:
+                if entry.currency not in missing:
+                    missing.append(entry.currency)
+                continue
+            converted = amount * rate_value if entry.currency != base_currency else amount
+            if entry.kind == Investment.Kind.DEPOSIT:
+                deposits += converted
+            else:
+                withdrawals += converted
+        rows.append(
+            {
+                'date': date(year, month, 1),
+                'year': year,
+                'month': month,
+                'deposits': deposits.quantize(CENTS),
+                'withdrawals': withdrawals.quantize(CENTS),
+            }
+        )
+    return rows, sorted(missing)
