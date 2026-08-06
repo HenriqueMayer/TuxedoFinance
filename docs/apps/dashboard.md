@@ -1,20 +1,21 @@
 # `dashboard`
 
-Three screens over the same data: the **index** (six aggregate indicators, a forward-looking outlook table, and a recent-transactions list), **reports** (four charts of how the account evolves over a year, with three independently controlled filter dimensions), and the per-method **category breakdown** that opens inline on the reports page when a bar in chart 4 is clicked. The index is `LOGIN_REDIRECT_URL` — the first screen every user sees after signing up or logging in.
+Three screens over the same data: the **index** (six aggregate indicators, a forward-looking outlook table, and a recent-transactions list), **reports** (six charts of how the account evolves over a year — the time-series line + cash-flow bars share a 12-month window, two payment-method breakdowns and a category breakdown each have their own scoped filter, and a donut chart splits the month's expenses by recurrence), and the per-method **category breakdown** that opens inline on the reports page when a bar in charts 3 or 4 is clicked. The index is `LOGIN_REDIRECT_URL` — the first screen every user sees after signing up or logging in.
 
-Both the index and reports are a **forecast**, not a report of the past: the month the index shows can be navigated forward, and fixed transactions and open installment plans recur into those future months automatically. The reports page exposes the same `?month=YYYY-MM` mechanic as before, plus `?charts_offset=N` to slide the 12-month time-series window, `?category_month=ALL|YYYY-MM` to scope the "where the money goes" chart, `?payment_month=ALL|YYYY-MM` to scope the "spending by payment method" chart, and `?payment_method=NAME` to open the inline method-categories panel.
+Both the index and reports are a **forecast**, not a report of the past: the month the index shows can be navigated forward, and fixed transactions and open installment plans recur into those future months automatically. The reports page exposes the same `?month=YYYY-MM` mechanic as before, plus `?charts_offset=N` to slide the 12-month time-series window, `?payment_month=ALL|YYYY-MM` to scope both payment-method charts at once, `?expense_method=NAME` / `?income_method=NAME` to open each inline method-categories drill-down (charts 3 and 4 respectively), `?category_month=ALL|YYYY-MM` to scope the "where the money goes" chart, and `?installment_month=ALL|YYYY-MM` to scope the recurrence donut (defaults to the current month, unlike the others which default to `ALL`).
 
 ## Files
 
 | File | Contents |
 |---|---|
-| `dashboard/services.py` | `get_dashboard_summary(user, year, month)`, `get_account_evolution(user, offset=0)`, `get_expenses_by_payment_method(user, year=None, month=None, months=1)`, `get_expenses_by_category_for_method(user, method_name, year, month, months)`, `add_months()`, `OUTLOOK_MONTHS`, `EVOLUTION_MONTHS` |
-| `dashboard/charts.py` | `build_line_chart()`, `build_bar_chart()` — SVG geometry only |
+| `dashboard/services.py` | `get_dashboard_summary(user, year, month)`, `get_account_evolution(user, offset=0)`, `get_expenses_by_payment_method(user, year=None, month=None, months=1)`, `get_expenses_by_category_for_method(user, method_name, year, month, months)`, `get_income_by_payment_method(user, year=None, month=None, months=1)`, `get_income_by_category_for_method(user, method_name, year, month, months)`, `get_expenses_by_recurrence(user, year=None, month=None, months=1)`, `add_months()`, `OUTLOOK_MONTHS`, `EVOLUTION_MONTHS`, `ALL_TIME_MONTHS` |
+| `dashboard/charts.py` | `build_line_chart()`, `build_bar_chart()`, `build_sparkline()`, `build_donut_chart()` — SVG geometry only |
 | `dashboard/views.py` | `DashboardIndexView`, `DashboardReportsView`; helpers `_selected_month`, `_is_representable`, `_is_projectable`, `_is_offset_window_safe`, `_month_choices`, `_parse_month_or_all`, `_parse_charts_offset` |
 | `dashboard/urls.py` | `app_name = 'dashboard'`; routes `index`, `reports` |
 | `dashboard/models.py` | empty — this app has no data of its own, only aggregates `Transaction` |
 | `dashboard/admin.py` | empty |
 | `templates/dashboard/{index,reports}.html` | the screens |
+| `templates/dashboard/_reports_charts.html` | the HTMX-swapped partial that owns the six report charts; the view returns the full `reports.html` on a plain GET and this partial alone when the request is an HTMX swap so the navbar and outer wrapper are not re-rendered |
 
 The projection rules themselves live on the model, not here — see [data-model.md § Recurrence](../data-model.md#recurrence-when-a-transaction-hits-a-month) and [§ Balance formulas](../data-model.md#balance-formulas).
 
@@ -118,7 +119,7 @@ Recurrences count, on the same `amount_for_month` rules as everything else: a fi
 
 ## `get_expenses_by_category_for_method(user, method_name, year, month, months)` (`dashboard/services.py`)
 
-The "you clicked a bar" follow-up: same shape as `_expenses_by_category`, but filtered to a single payment method first. Drives the inline `method-categories` panel that opens on the reports page when `?payment_method=NAME` is set.
+The "you clicked a bar" follow-up: same shape as `_expenses_by_category`, but filtered to a single payment method first. Drives the inline `method-categories` panel that opens on the reports page when `?expense_method=NAME` is set on chart 3 (spending); the income equivalent (`get_income_by_category_for_method` / `?income_method=NAME` on chart 4) reuses the same shape.
 
 Same rules as every other breakdown:
 
@@ -128,6 +129,30 @@ Same rules as every other breakdown:
 - `TOP_CATEGORIES` (6) cap, same dual-percent convention as `_expenses_by_category` (`bar_width` relative to the biggest, `share` of all spending on this method).
 
 Returns an empty list when the method had no expenses in the window, or when `method_name` is not one of the user's methods — the view treats both as "no data to show" without differentiating.
+
+## `get_expenses_by_recurrence(user, year=None, month=None, months=1)` (`dashboard/services.py`)
+
+The sixth chart on the reports page: expenses split into three buckets by how they recur, answering "how much of *this* month's outflow is from parcels I bought before".
+
+Three mutually exclusive buckets, partitioned by the same `TransactionForm.clean` flags the rest of the app uses:
+
+- **installment** — `is_installment_plan=True`: a purchase split into `installments > 1` months.
+- **fixed** — `is_fixed=True`: a transaction that repeats every month until `fixed_until`.
+- **one-off** — everything else, paid in a single shot.
+
+| Key | Meaning |
+|---|---|
+| `total` | Sum of all three buckets for the window — the figure printed at the center of the donut. |
+| `slices` | Always three entries in fixed order `installment, fixed, one_off`, so the legend doesn't reshuffle when the picked month changes. Each carries `name`, `tone`, `value`, `share` (0–100, rounded to one decimal), and a `draw` boolean — `False` for a bucket that is zero in the window, so it stays in the legend but is skipped when building the ring (`build_donut_chart` would otherwise paint a zero-width arc that the SVG renderer silently drops anyway, but the skip keeps the path list minimal). |
+
+Like every other breakdown, it folds `Transaction.amount_for_month` over each transaction in the window, so a 3× plan of R$100 contributes `33.33` to the installment bucket on each of its three months — not the full `100` once. Investment stays out (PRD §8.5 keeps that outflow distinct from Expenses). The view filters `draw=True` before passing the slices to `build_donut_chart`, so an empty month yields `recurrence_chart=None` and the template renders its `empty_state` partial instead of a blank ring.
+
+Two scopes, picked by the caller, identical to `get_expenses_by_payment_method`:
+
+- `year`/`month` set, `months=1` — the single specific month the user picked (`?installment_month=2026-08`). This is the default view: the filter defaults to the current month, **not** to `ALL`, because the chart's job is "how much of *this* month is on installments" — a fresh visit should land on the month the user is actually in, not on a 12-month aggregate.
+- `year=None, month=None, months=N` — the last `N` months anchored on today, which is what the `All time` filter option maps to (`?installment_month=ALL` resolves to `ALL_TIME_MONTHS`).
+
+The rounding remainder is absorbed into the last **drawn** slice, mirroring `Transaction.amount_for_month`'s "the missing penny goes to the last one" policy — so the printed shares always add up to 100.0 and the ring closes exactly at 360° (see `build_donut_chart` below).
 
 ## `dashboard/charts.py`
 
@@ -148,50 +173,74 @@ def _bounds(values):
 
 - **The y-axis always includes zero.** A chart scaled to its own min/max turns a 2% wobble into a cliff; anchoring to zero keeps the slope truthful.
 - **The all-zero case returns an arbitrary symmetric range** rather than dividing by zero — a brand-new account renders a flat line on the baseline instead of a `ZeroDivisionError`.
-- **Tones, not colors.** `build_bar_chart` takes semantic `tone` values (`'income'`/`'expense'`/`'investment'`) and the template maps them to Tailwind classes, so design tokens stay in the template layer with every other color decision ([frontend.md](../frontend.md)).
+- **Tones, not colors.** `build_bar_chart` and `build_donut_chart` take semantic `tone` values (`'income'`/`'expense'`/`'investment'`, and `'installment'`/`'fixed'`/`'one_off'` for the donut) and the template maps them to Tailwind classes, so design tokens stay in the template layer with every other color decision ([frontend.md](../frontend.md)).
 - **Labels pass through untouched.** `DashboardReportsView` hands the whole month row in as the label, so the template reads `point.label.date` and `point.label.is_current_month` off each point instead of zipping two lists in the template. The payment-method chart uses the same trick with its own rows, reading `group.label.name` / `group.label.share`.
 - **Each bar carries a `value_y`**, a baseline `VALUE_LABEL_OFFSET` above its top. Only the single-series chart has the room to print a caption there, but the geometry belongs here — DTL cannot subtract, and `{{ bar.y|add:"-6" }}` silently renders empty on a float.
 - **`build_bar_chart` needs at least one label.** With none it would divide the plot into zero slots; callers with nothing to draw have an empty state to render instead, which is why `DashboardReportsView` passes `payment_chart=None` for a month with no expenses.
 
+### `build_donut_chart(slices)`
+
+The geometry behind chart 6 (`get_expenses_by_recurrence`). Same "pure geometry, no money/Django knowledge" contract as the line and bar builders, but for a donut/ring instead of a Cartesian chart.
+
+- **Constants**: `DONUT_SIZE=320`, `DONUT_PADDING=28`, `DONUT_STROKE=38`. Ring radius is `(size − 2·padding − stroke) / 2`; inner radius is `radius − stroke`. The whole canvas is sized so the ring plus a one-line text block at the center fits without clipping.
+- **Ring starts at 12 o'clock (−90°).** Slices are placed clockwise in the **order the caller passes them** — `get_expenses_by_recurrence` always sends them `installment, fixed, one_off`, so the ring doesn't reshuffle when the picked month changes (the donut is read by position as much as by color, and a stable order keeps cross-month comparison honest).
+- **The last slice absorbs the rounding remainder** so the ring closes exactly at 360°: instead of computing its sweep from its own `share`, the builder assigns it `270 − start_angle` (the angle from the current cursor back to +270°, which is −90° plus one full turn). This is the same "missing penny goes to the last one" policy the model applies to the final installment. Earlier slices' `share` values sum-cumulatively may total 99.9 or 100.1 because of `round(..., 1)` rounding, and the last slice quietly swallows the slack so the printed legend always reads 100.0 total **and** the SVG path actually closes — the two goals cannot be served independently without splitting the rounding-rest logic across two places, so it lives here.
+- **The full-ring case is split into two semicircle arcs.** When the last slice is also the *only* drawn slice (a single bucket covering 100%), `sweep ≥ 359.999` and `start == end`, which the SVG `A` command cannot draw — it needs two distinct endpoints. The builder halves the sweep at the midpoint (start_angle + 180°, which lands at the bottom of the ring) and emits two `A` commands per radius, so the path renders a complete ring instead of nothing. The same branch fires when the rounding-remainder slice happens to round up to the full 360°.
+- **Empty input returns `segments: []`.** An empty month's `recurrence_chart` therefore becomes `None` at the view level (the template checks `{% if recurrence_chart %}`), so the empty state renders instead of a blank donut SVG.
+
+### `build_sparkline(labels, values)`
+
+A tiny inline line chart (constants `SPARK_WIDTH=120` / `SPARK_HEIGHT=40` / `SPARK_PADDING=4`), used where a full chart would be too heavy — same `_bounds`-anchored y-axis as the big line chart, only without axis labels, grid, or markers. Pure geometry like every other builder here.
+
 ## View (`DashboardReportsView`)
 
-A `TemplateView` that composes the four charts on the page. Everything else it does is composition — the finance math is in `services.py`, the pixel math in `charts.py`, and the view is the only place that knows both exist.
+A `TemplateView` that composes the six charts on the page. Everything else it does is composition — the finance math is in `services.py`, the pixel math in `charts.py`, and the view is the only place that knows both exist.
 
-It reads **four independent query params** off `request.GET`, all with the same forgiving contract (malformed → silently fall back to the default rather than raise a 400):
+On an HTMX-driven swap (any `hx-get` interaction from inside the charts partial) it returns `templates/dashboard/_reports_charts.html` alone so the navbar and outer wrapper are not re-rendered; on a plain GET it returns the full `reports.html`. The partial owns the six SVG charts and every interactive control on the page, and every control carries both an `hx-*` wiring and a plain `href`/`action` no-JS fallback, in line with the rest of the project.
+
+It reads **five independent query params** off `request.GET`, all with the same forgiving contract (malformed → silently fall back to the default rather than raise a 400):
 
 | Param | Default | Bounded by | Drives |
 |---|---|---|---|
 | `?charts_offset=N` | `0` | `_is_offset_window_safe` (the whole 12-month window around `today + N` must be representable) | The anchor of charts 1 and 2's time-series window. |
-| `?category_month=ALL\|YYYY-MM` | `ALL` | `_is_representable` | Which month (or all of them) the "where the money goes" chart folds. |
-| `?payment_month=ALL\|YYYY-MM` | `ALL` | `_is_representable` | Which month (or all of them) the "spending by payment method" chart folds. |
-| `?payment_method=NAME` | unset | validated against the current `payment_breakdown['methods']` (stale URLs cannot surface an empty panel) | Opens the inline "categories for this method" panel below chart 4. |
+| `?payment_month=ALL\|YYYY-MM` | `ALL` | `_is_representable` | Which month (or all of them) charts 3 and 4 fold — the two payment-method breakdowns share one window on purpose. |
+| `?expense_method=NAME` | unset | validated against `expense_breakdown['methods']` (stale URLs cannot surface an empty panel) | Opens the inline "categories for this method" panel below chart 3 (spending). |
+| `?income_method=NAME` | unset | validated against `income_breakdown['methods']` | Opens the inline "categories for this method" panel below chart 4 (income). |
+| `?category_month=ALL\|YYYY-MM` | `ALL` | `_is_representable` | Which month (or all of them) the "where the money goes" chart (5) folds. |
+| `?installment_month=ALL\|YYYY-MM` | **current month** | `_is_representable` | Which month (or all of them) the recurrence donut (chart 6) folds. Defaults to the current month, not `ALL`, because the chart answers "how much of *this* month is on installments". Parsed by the view's own `get_installment_month` method, which is the only param here that does not reuse `_parse_month_or_all` directly — it intercepts the empty param first and returns today's `YYYY-MM` before handing off to the shared parser. |
 
 `_is_offset_window_safe` is the new bounds check the prev/next arrows need: the 12-month window around `today + offset` walks from `anchor − 5` to `anchor + 6`, and both extremes have to be representable as `date(year, month, 1)` so the chart's axis labels don't crash `date()` from inside the service. It mirrors the existing `_is_projectable` pattern on the index (same reasoning, smaller window).
 
-The four params **do not interact**: a user can offset the time-series window by 2 months while keeping the breakdown chart scoped to March 2026, and clicking a bar in chart 4 preserves both. The template uses `{% querystring %}` everywhere so any one of them survives navigation to any other.
+The params **do not interact**: a user can offset the time-series window by 2 months while keeping the breakdown chart scoped to March 2026 and the recurrence donut to July 2026, and clicking a bar in chart 3 preserves every active filter. The template uses `{% querystring %}` everywhere so any one of them survives navigation to any other.
 
-When `?payment_method=NAME` is set **and** the name matches a method in the current breakdown, the view computes `method_categories` (top categories for that method in the same window the chart above is showing) and surfaces it in the inline panel. If `?payment_month=ALL`, the panel anchors on the current month — otherwise it follows the chosen month. Missing `?payment_method`, an unknown name, or a name from a stale URL is silently ignored and the panel stays hidden.
+When `?expense_method=NAME` matches a method in the current spending breakdown, the view computes `expense_method_categories` (top categories for that method in the same window chart 3 is showing) and surfaces it in the inline panel below chart 3. `?income_method=NAME` does the same on the income side against chart 4, validated against the income breakdown so a stale URL cannot open a panel for a method that isn't on the chart it was clicked from. If `?payment_month=ALL`, both panels anchor on the current month — otherwise they follow the chosen month. A missing param, an unknown name, or a name from a stale URL is silently ignored and the panel stays hidden.
 
-## Template (`templates/dashboard/reports.html`)
+Chart 6 (`get_installment_month` / `recurrence_breakdown` / `recurrence_chart`) lives in the same partial. The view always computes the recurrence breakdown for the resolved window — even when all three buckets are zero — so the legend keeps rendering all three entries with `share=0`. `recurrence_chart` is set to `None` only when `recurrence_breakdown['slices']` itself is empty (`get_expenses_by_recurrence` returns `{'slices': []}` for a window with no expenses at all), at which point the template renders the `empty_state.html` partial instead of a blank SVG.
 
-Four charts, all server-rendered, no `<script>` anywhere on the page:
+## Template (`templates/dashboard/_reports_charts.html`)
 
-1. **Balance evolution** — an SVG `<polyline>` over a gradient-filled `<polygon>`, with a dashed zero line and one `<circle>` marker per month. Future months get a dimmer stroke.
+Six charts, all server-rendered, no `<script>` anywhere on the page. The partial is swapped in by HTMX (`outerHTML` on `#reports-charts`) on every interactive click; the same controls also carry plain `href`/`action` fallbacks so the page still works without JS — the zero-JS contract is symmetric, not "HTMX-only".
+
+1. **Balance evolution** — an SVG `<polyline>` over a gradient-filled `<polygon>`, with one `<circle>` marker per month. Future months get a dimmer stroke. The **zero line is dashed rose** (`stroke-rose-400 dark:stroke-rose-500`, `stroke-width="1.5"`, `stroke-dasharray="5 4"`) rather than the muted slate of the rest of the grid, so a balance crossing zero reads at a glance instead of blending into the axis.
 2. **Monthly cash flow** — grouped `<rect>` bars, three per month (emerald/rose/amber per PRD §9.1), with a legend.
-3. **Where the money goes** — plain CSS bars (`style="width: {{ category.bar_width|unlocalize }}%"`), no SVG needed.
-4. **Spending by payment method** — one rose `<rect>` per method for the selected window, its share printed above it and its full name + amount listed underneath. **Each bar is a hyperlink** to `?payment_method={name}#method-categories` — the project is zero-JS, so the click-driven drill-down is a plain `<a>` rather than a JS popover.
+3. **Spending by payment method** — one rose `<rect>` per method for the selected window, its share printed above it and its full name + amount listed underneath. **Each bar is a hyperlink** to `?expense_method={name}#method-categories` — the project is zero-JS, so the click-driven drill-down is a plain `<a>` rather than a JS popover.
+4. **Income by payment method** — the same bar layout as chart 3, opposite direction of cash (emerald). Each bar hyperlinks to `?income_method={name}#method-categories` and opens its own inline panel below; the two drill-downs are independent so the user can have one open on each side at the same window.
+5. **Where the money goes** — plain CSS bars (`style="width: {{ category.bar_width|unlocalize }}%"`), no SVG needed.
+6. **How much is on installments** — a `<svg>` donut built by `build_donut_chart`, with the total printed at the center and a three-row legend below (`Installments` rose, `Fixed` indigo, `One-off` slate). The filter form lives in the card header and submits `?installment_month=`; the default the form preselects is the current month (`ALL` is still selectable for the wider view). When the window has no expenses at all, the entire SVG card is replaced by `partials/empty_state.html`.
 
 Tooltips are native SVG `<title>` elements: browsers show them on hover with no JavaScript. Every SVG sits in an `overflow-x-auto` wrapper with a `min-w-[44rem]` canvas — on a phone the chart scrolls inside its own card instead of shrinking its axis labels into illegibility (same convention as the outlook table).
 
-**Charts 1 and 2 — `←` / `→` time-series navigation.** A small `←` / `→` pair sits in the header of each card, anchored on the time-series window label (`"May 2026 – Apr 2027"`). A `"Back to today"` link appears whenever the window is not anchored on the current month, and a badge shows `"Anchored on today"` / `"Past window"` / `"Future window"`. The arrows use `{% querystring charts_offset=… %}` so any other active filter (category_month, payment_month, payment_method) survives the click.
+**Charts 1 and 2 — `←` / `→` time-series navigation.** A small `←` / `→` pair sits in the header of each card, anchored on the time-series window label (`"May 2026 – Apr 2027"`). A `"Back to today"` link appears whenever the window is not anchored on the current month, and a badge shows `"Anchored on today"` / `"Past window"` / `"Future window"`. The arrows use `{% querystring charts_offset=… %}` so any other active filter (category_month, payment_month, expense_method, income_method, installment_month) survives the click.
 
-**Charts 3 and 4 — `All time` + month select.** The two breakdown charts each have their own `<form method="get">` with a `<select>` for the window. The shared `month_choices` list — `[("ALL", "All time")]` plus the last 12 months from today — is the same for both so the dropdowns read identically. The default is `ALL` (a 12-month aggregate), which gives a quick "where does my money go overall" answer; picking a specific month scopes the chart to that month on the same `amount_for_month` rules as before. The form is a plain `Filter` submit — no `onchange` auto-submit, in line with the rest of the project.
+**Charts 3 and 4 — shared `All time` + month select.** The two payment-method breakdowns share **one** `<form method="get">` with a `<select>` for `?payment_month=`, because the two charts answer mirror-image questions over the same window — splitting the filter would force the user to keep two independent dropdowns in sync. `month_choices` is `[("ALL", "All time")]` plus the last 12 months from today. The default is `ALL` (a 12-month aggregate), which gives a quick "where does my money go overall" answer; picking a specific month scopes both charts at once on the same `amount_for_month` rules as before. The form is a plain `Filter` submit — no `onchange` auto-submit, in line with the rest of the project.
 
-**Chart 4 — `method-categories` panel.** When `?payment_method=NAME` is valid, an additional card renders **below** chart 4 with the same CSS-bar layout as chart 3, but filtered to the chosen method in the same window. A `"Close"` link in the panel header strips the `?payment_method=…` while preserving every other active filter. The `<title>` SVG tooltips still include the name + total + share of the window, so the drill-down is the only thing the click adds on top of the hover.
+**Charts 3 and 4 — `method-categories` panels.** When `?expense_method=NAME` (or `?income_method=NAME`) is valid, an additional card renders **below** the chart that owns that param, with the same CSS-bar layout as chart 5 but filtered to the chosen method in the same window. A `"Close"` link in the panel header strips the param while preserving every other active filter. The `<title>` SVG tooltips still include the name + total + share of the window, so the drill-down is the only thing the click adds on top of the hover.
 
-Two details in chart 4 are load-bearing:
+**Chart 6 — recurrence donut.** No arrows, no drill-down. The single `<form>` in its header submits `?installment_month=ALL|YYYY-MM`, defaulting to the current month (the only filter on the page that does *not* default to `ALL`). The donut itself is one `<path>` per drawn slice, plus a centered `<text>` block with the window's total expense — readable without the legend if the user just wants the headline number. Legend swatches use the same `tone` → Tailwind class mapping as the bars (`fill-rose-500 dark:fill-rose-400`, `fill-indigo-500 dark:fill-indigo-400`, `fill-slate-500 dark:fill-slate-400`), so the chart's color vocabulary stays consistent with the rest of the partial.
 
-- **Axis labels are truncated** (`truncatechars:payment_chart.label_chars`) — at the 8-method cap each slot is ~80px wide, and untruncated names would collide. The list under the chart always spells them out, which also makes the numbers readable on touch devices, where a `<title>` tooltip never appears.
+Two details in charts 3 and 4 are load-bearing:
+
+- **Axis labels are truncated** (`truncatechars:expense_chart.label_chars` / `income_chart.label_chars`) — at the 8-method cap each slot is ~80px wide, and untruncated names would collide. The list under the chart always spells them out, which also makes the numbers readable on touch devices, where a `<title>` tooltip never appears.
 - **Shares are printed above the bars**, not only in the tooltips, so "how is it distributed" is answerable without hovering.
 
 ## View (`DashboardIndexView`)
@@ -235,11 +284,11 @@ It is a `TemplateView`, not a `ListView` — the "list" here (recent transaction
 | Path | Name | View |
 |---|---|---|
 | `/dashboard/` | `dashboard:index` | `DashboardIndexView` (supports `?month=YYYY-MM`) |
-| `/dashboard/reports/` | `dashboard:reports` | `DashboardReportsView` (supports `?charts_offset=N`, `?category_month=ALL\|YYYY-MM`, `?payment_month=ALL\|YYYY-MM`, `?payment_method=NAME`) |
+| `/dashboard/reports/` | `dashboard:reports` | `DashboardReportsView` (supports `?charts_offset=N`, `?category_month=ALL\|YYYY-MM`, `?payment_month=ALL\|YYYY-MM`, `?expense_method=NAME`, `?income_method=NAME`, `?installment_month=ALL\|YYYY-MM`) |
 
 `settings.LOGIN_REDIRECT_URL = 'dashboard:index'` — this is where both `LoginView` and `SignupView` send the user on success.
 
-On the index, `?month=` moves the whole screen. On reports it has a different meaning per chart: the time-series charts move only via `?charts_offset` (a *shift* of the window, not a re-anchor); the two breakdowns are independent and each have their own `?category_month` / `?payment_month`; and the inline method panel opens via `?payment_method`. Mixing them is fine — `{% querystring %}` preserves whichever ones the user has set when they click any of the others.
+On the index, `?month=` moves the whole screen. On reports it has a different meaning per chart: the time-series charts move only via `?charts_offset` (a *shift* of the window, not a re-anchor); the two payment-method charts share `?payment_month` (each opens its own drill-down via `?expense_method` / `?income_method`); the category breakdown has its own `?category_month`; and the recurrence donut defaults to the current month under `?installment_month`. Mixing them is fine — `{% querystring %}` preserves whichever ones the user has set when they click any of the others.
 
 ## Template (`templates/dashboard/index.html`)
 

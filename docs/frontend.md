@@ -123,14 +123,16 @@ Every `list.html`/`form.html`/`confirm_delete.html` triplet (categories, payment
 - **`form.html`** — a centered `max-w-md` card, `<form method="post" novalidate>` + `{% csrf_token %}`, non-field errors rendered above the fields, then one `{% include 'partials/form_field.html' %}` per field, then Save (primary) / Cancel (secondary, linking back to `list`).
 - **`confirm_delete.html`** — a centered `max-w-md` card confirming the object's name/title, a `<form method="post">` with Delete (destructive) / Cancel (secondary) — deletion is **never** a plain link/`GET`, always a POST from this confirmation screen.
 
-## Charts without JavaScript (`dashboard/reports.html`)
+## Charts without JavaScript (`dashboard/_reports_charts.html`)
 
-The report charts are inline `<svg>` built from coordinates computed in `dashboard/charts.py` — the project's zero-JS rule rules out every charting library, so the geometry happens server-side and the template only interpolates attributes.
+The report charts are inline `<svg>` built from coordinates computed in `dashboard/charts.py` — the project's zero-JS rule rules out every charting library, so the geometry happens server-side and the template only interpolates attributes. The partial is the HTMX-swapped island inside `reports.html`: every interactive control carries both `hx-*` wiring and a plain `href`/`action` fallback, so the page also works with JavaScript disabled (the symmetric zero-JS contract — not "HTMX-only").
 
-- **Semantic tones, not colors, cross the Python boundary.** `charts.py` emits `tone: 'income'|'expense'|'investment'`; this template maps them to `fill-emerald-400/80`, `fill-rose-400/80`, `fill-amber-400/80`. Design tokens never leak into Python.
+- **Semantic tones, not colors, cross the Python boundary.** `charts.py` emits `tone` values (`'income'|'expense'|'investment'` for the bar chart, `'installment'|'fixed'|'one_off'` for the donut); this template maps them to Tailwind classes (`fill-emerald-400 dark:fill-emerald-300`, `fill-rose-500 dark:fill-rose-400`, `fill-amber-400 dark:fill-amber-300`, and `fill-indigo-500 dark:fill-indigo-400`, `fill-slate-500 dark:fill-slate-400` for the recurrence buckets). Design tokens never leak into Python.
 - **The balance line uses the primary gradient** via an SVG `<linearGradient>` (`stroke="url(#balance-line)"`), because Tailwind's `from-*/via-*/to-*` utilities don't apply to SVG strokes. The stop colors are the raw RGB of `indigo-500`/`violet-500`/`fuchsia-500` — the one place in the project where a design token is written as a literal color, and it's flagged in the template comment for that reason.
-- **Tooltips are native `<title>` elements** inside each `<circle>`/`<rect>`; browsers show them on hover with no script.
+- **The zero line is dashed rose** (`stroke-rose-400 dark:stroke-rose-500`, `stroke-width="1.5"`, `stroke-dasharray="5 4"`) rather than the muted slate of the rest of the grid — a balance crossing zero is the single most important event on the chart and should read at a glance, not blend into the axis.
+- **Tooltips are native `<title>` elements** inside each `<circle>`/`<rect>`/`<path>`; browsers show them on hover with no script.
 - **The category breakdown needs no SVG at all** — it's a `<div>` with `style="width: {{ category.bar_width }}%"` inside a rounded track. Reaching for SVG there would have been ceremony.
+- **The recurrence donut is one `<path>` per drawn slice** plus a centered `<text>` block for the window total — no `<circle>` stroke tricks, no conic gradients. The `build_donut_chart` geometry produces ready-to-render `d="..."` arc strings, and the special full-ring case splits into two semicircle arcs so a single slice that covers 100% still renders (an SVG `A` command needs two distinct endpoints, so a literal 360° arc would otherwise vanish).
 
 ## Responsiveness (PRD §9.6, NFR06)
 
