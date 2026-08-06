@@ -1,0 +1,211 @@
+{% load l10n %}
+<div id="investments-charts" class="space-y-8">
+
+    {# ---------------------------------------------------------------- #}
+    {# Chart 1 — investment evolution (line), cumulative total in       #}
+    {# {{ CURRENCY_SYMBOL }}, FX rate-at-time. Mirrors the Reports       #}
+    {# chart-1 visual contract (zero-line rose, indigo→fuchsia stroke). #}
+    {# ---------------------------------------------------------------- #}
+    <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Investment evolution</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                    Your cumulative portfolio total in {{ CURRENCY_SYMBOL }} at the close of each month,
+                    converted through the exchange rate that was current at the time. Currencies with no
+                    rate set are excluded &mdash; see the warning on the &ldquo;Simulated total&rdquo; card above.
+                </p>
+            </div>
+            <div class="flex shrink-0 items-center gap-3">
+                <a href="{% querystring total_offset=total_previous_offset_param %}"
+                   hx-get="{% querystring total_offset=total_previous_offset_param %}"
+                   hx-target="#investments-charts"
+                   hx-swap="outerHTML"
+                   hx-push-url="true"
+                   aria-label="Previous window"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    &larr;
+                </a>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900 dark:text-neutral-100">
+                        {{ total_window_start_date|date:'M Y' }} &ndash; {{ total_window_end_date|date:'M Y' }}
+                    </p>
+                    <p class="text-xs text-slate-500 dark:text-neutral-500">
+                        {% if is_total_anchored_today %}Anchored on today
+                        {% elif total_anchor_date < today %}Past window
+                        {% else %}Future window{% endif %}
+                    </p>
+                </div>
+                <a href="{% querystring total_offset=total_next_offset_param %}"
+                   hx-get="{% querystring total_offset=total_next_offset_param %}"
+                   hx-target="#investments-charts"
+                   hx-swap="outerHTML"
+                   hx-push-url="true"
+                   aria-label="Next window"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    &rarr;
+                </a>
+                {% if not is_total_anchored_today %}
+                    <a href="{% querystring total_offset=0 %}"
+                       hx-get="{% querystring total_offset=0 %}"
+                       hx-target="#investments-charts"
+                       hx-swap="outerHTML"
+                       hx-push-url="true"
+                       class="rounded text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Back to today
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            {% localize off %}
+            <svg viewBox="0 0 {{ chart_total.width }} {{ chart_total.height }}"
+                 class="h-auto w-full min-w-[44rem]" role="img"
+                 aria-label="Line chart of the cumulative investment total in base currency over the last 12 months">
+                <defs>
+                    <linearGradient id="investments-area" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgb(139 92 246)" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="rgb(139 92 246)" stop-opacity="0" />
+                    </linearGradient>
+                    <linearGradient id="investments-line" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="rgb(99 102 241)" />
+                        <stop offset="50%" stop-color="rgb(139 92 246)" />
+                        <stop offset="100%" stop-color="rgb(217 70 239)" />
+                    </linearGradient>
+                </defs>
+
+                {% for line in chart_total.grid %}
+                    <line x1="{{ chart_total.plot_left }}" y1="{{ line.y }}"
+                          x2="{{ chart_total.plot_right }}" y2="{{ line.y }}"
+                          class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
+                    <text x="{{ chart_total.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
+                          text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
+                        {{ line.value|floatformat:0 }}
+                    </text>
+                {% endfor %}
+
+                <line x1="{{ chart_total.plot_left }}" y1="{{ chart_total.zero_y }}"
+                      x2="{{ chart_total.plot_right }}" y2="{{ chart_total.zero_y }}"
+                      class="stroke-rose-400 dark:stroke-rose-500" stroke-width="1.5" stroke-dasharray="5 4" />
+
+                <polygon points="{{ chart_total.area }}" fill="url(#investments-area)" />
+                <polyline points="{{ chart_total.line }}" fill="none"
+                          stroke="url(#investments-line)" stroke-width="2.5"
+                          stroke-linecap="round" stroke-linejoin="round" />
+
+                {% for point in chart_total.points %}
+                    <circle cx="{{ point.x }}" cy="{{ point.y }}" r="3.5"
+                            class="fill-white dark:fill-slate-950 stroke-violet-400"
+                            stroke-width="2">
+                        <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
+                    </circle>
+                    <text x="{{ point.x }}" y="{{ chart_total.label_y }}" text-anchor="middle"
+                          class="text-[11px] fill-slate-600 dark:fill-slate-500">
+                        {{ point.label.date|date:'M' }}
+                    </text>
+                {% endfor %}
+            </svg>
+            {% endlocalize %}
+        </div>
+    </section>
+
+    {# ---------------------------------------------------------------- #}
+    {# Chart 2 — monthly flow (grouped bars): Deposits × Withdrawals   #}
+    {# per month, both in {{ CURRENCY_SYMBOL }}, per-entry FX.          #}
+    {# ---------------------------------------------------------------- #}
+    <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Monthly flow</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                    What you deposited and what you withdrew each month &mdash; both in {{ CURRENCY_SYMBOL }},
+                    converted at the rate that was current on each entry&rsquo;s date.
+                </p>
+            </div>
+            <div class="flex shrink-0 flex-wrap items-center gap-3">
+                <a href="{% querystring flow_offset=flow_previous_offset_param %}"
+                   hx-get="{% querystring flow_offset=flow_previous_offset_param %}"
+                   hx-target="#investments-charts"
+                   hx-swap="outerHTML"
+                   hx-push-url="true"
+                   aria-label="Previous window"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    &larr;
+                </a>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900 dark:text-neutral-100">
+                        {{ flow_window_start_date|date:'M Y' }} &ndash; {{ flow_window_end_date|date:'M Y' }}
+                    </p>
+                    <p class="text-xs text-slate-500 dark:text-neutral-500">
+                        {% if is_flow_anchored_today %}Anchored on today
+                        {% elif flow_anchor_date < today %}Past window
+                        {% else %}Future window{% endif %}
+                    </p>
+                </div>
+                <a href="{% querystring flow_offset=flow_next_offset_param %}"
+                   hx-get="{% querystring flow_offset=flow_next_offset_param %}"
+                   hx-target="#investments-charts"
+                   hx-swap="outerHTML"
+                   hx-push-url="true"
+                   aria-label="Next window"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    &rarr;
+                </a>
+                {% if not is_flow_anchored_today %}
+                    <a href="{% querystring flow_offset=0 %}"
+                       hx-get="{% querystring flow_offset=0 %}"
+                       hx-target="#investments-charts"
+                       hx-swap="outerHTML"
+                       hx-push-url="true"
+                       class="rounded text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Back to today
+                    </a>
+                {% endif %}
+                <ul class="flex flex-wrap items-center gap-4">
+                    {% for entry in chart_flow.legend %}
+                        <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-neutral-400">
+                            <span class="h-2.5 w-2.5 rounded-sm
+                                {% if entry.tone == 'income' %}bg-emerald-400
+                                {% else %}bg-rose-400{% endif %}"></span>
+                            {{ entry.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            {% localize off %}
+            <svg viewBox="0 0 {{ chart_flow.width }} {{ chart_flow.height }}"
+                 class="h-auto w-full min-w-[44rem]" role="img"
+                 aria-label="Grouped bar chart of deposits and withdrawals per month in base currency">
+                {% for line in chart_flow.grid %}
+                    <line x1="{{ chart_flow.plot_left }}" y1="{{ line.y }}"
+                          x2="{{ chart_flow.plot_right }}" y2="{{ line.y }}"
+                          class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
+                    <text x="{{ chart_flow.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
+                          text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
+                        {{ line.value|floatformat:0 }}
+                    </text>
+                {% endfor %}
+
+                {% for group in chart_flow.groups %}
+                    {% for bar in group.bars %}
+                        <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                              width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                              class="{% if bar.tone == 'income' %}fill-emerald-400/80
+                                     {% else %}fill-rose-400/80{% endif %}">
+                            <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
+                        </rect>
+                    {% endfor %}
+                    <text x="{{ group.center }}" y="{{ chart_flow.label_y }}" text-anchor="middle"
+                          class="text-[11px] fill-slate-600 dark:fill-slate-500">
+                        {{ group.label.date|date:'M' }}
+                    </text>
+                {% endfor %}
+            </svg>
+            {% endlocalize %}
+        </div>
+    </section>
+</div>

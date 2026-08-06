@@ -185,7 +185,7 @@ Every app namespaces its own URLs with `app_name = '<app>'`, so every reversed U
 | `/transactions/` | `transactions` | `list`, `create`, `update`, `delete` |
 | `/categories/` | `categories` | `list`, `create`, `update`, `delete` |
 | `/payments/` | `payments` | `list`, `create`, `update`, `delete` |
-| `/investments/` | `investments` | `list`, `create`, `update`, `delete`, `exchange_rates`, `create_exchange_rate`, `delete_exchange_rate` |
+| `/investments/` | `investments` | `list` (supports two independent slide params `?total_offset=N` / `?flow_offset=N` — one per chart, so each scrolls its own window without dragging the other along), `create`, `update`, `delete` (filter `?kind=DEPOSIT\|WITHDRAWAL` and `?q=` search ride alongside the offsets), `exchange_rates`, `create_exchange_rate`, `delete_exchange_rate` |
 | `/admin/` | Django admin | — |
 
 ## Request flow (a typical authenticated screen)
