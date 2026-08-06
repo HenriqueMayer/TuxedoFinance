@@ -23,7 +23,7 @@ def currency(request):
     return {'CURRENCY_SYMBOL': settings.CURRENCY_SYMBOL}
 ```
 
-Exposes `settings.CURRENCY_SYMBOL` to every template as `{{ CURRENCY_SYMBOL }}`, so no screen ever hardcodes a currency symbol (PRD §8.5). Used throughout `templates/dashboard/index.html`, `templates/dashboard/reports.html`, `templates/transactions/list.html`, and `templates/pages/landing.html`'s sample preview.
+Exposes `settings.CURRENCY_SYMBOL` to every template as `{{ CURRENCY_SYMBOL }}`, so no screen ever hardcodes a currency symbol (PRD §8.5). Used throughout `templates/dashboard/index.html`, `templates/dashboard/_reports_charts.html` (the HTMX-swapped charts partial inside `reports.html`), `templates/transactions/list.html`, and `templates/pages/landing.html`'s sample preview.
 
 `CURRENCY_SYMBOL` is **derived**, not configured directly: `settings.CURRENCY` (default `'BRL'`) selects an entry from `core/currencies.py`, and the symbol comes off that entry. See § Currency registry below.
 

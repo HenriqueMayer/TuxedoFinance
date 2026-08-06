@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from dashboard.charts import build_bar_chart, build_line_chart
+from dashboard.charts import build_bar_chart, build_donut_chart, build_line_chart
 from dashboard.services import (
     OUTLOOK_MONTHS,
     add_months,
@@ -12,6 +12,7 @@ from dashboard.services import (
     get_dashboard_summary,
     get_expenses_by_category_for_method,
     get_expenses_by_payment_method,
+    get_expenses_by_recurrence,
     get_income_by_category_for_method,
     get_income_by_payment_method,
 )
@@ -282,6 +283,28 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         """Parse `?payment_month=ALL|YYYY-MM` (default `ALL`)."""
         return _parse_month_or_all(self.request, 'payment_month', _is_representable)
 
+    def get_installment_month(self):
+        """Parse `?installment_month=ALL|YYYY-MM`.
+
+        Defaults to the current month rather than `ALL`: the chart answers
+        "how much of *this* month is on installments", so a fresh visit
+        should land on the month the user is actually in, not on a
+        12-month aggregate. `ALL` is still selectable for the wider view.
+        A malformed or out-of-range value falls back to the current
+        month under the same forgiving contract as the other filters.
+        """
+        raw = self.request.GET.get('installment_month', '').strip().upper()
+        if not raw:
+            today = timezone.localdate()
+            return (
+                f'{today.year:04d}-{today.month:02d}',
+                today.year,
+                today.month,
+            )
+        return _parse_month_or_all(
+            self.request, 'installment_month', _is_representable
+        )
+
     def _get_selected_method(self, breakdown, param_name):
         """Parse `?<param_name>=NAME`, validated against `breakdown['methods']`.
 
@@ -507,5 +530,31 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             context['category_window_label'] = (
                 date(category_year, category_month, 1).strftime('%B %Y')
             )
+
+        # Chart 6 — "How much is on installments" (filter: ALL | YYYY-MM,
+        # defaulting to the current month). A donut splitting expenses by
+        # recurrence: installment plans vs fixed recurrences vs one-off
+        # purchases, answering "how much of this month's outflow is from
+        # parcels I bought before".
+        installment_value, inst_year, inst_month = self.get_installment_month()
+        context['installment_month_param'] = installment_value
+        if installment_value == 'ALL':
+            recurrence = get_expenses_by_recurrence(
+                self.request.user, months=ALL_TIME_MONTHS
+            )
+            context['installment_window_label'] = 'All time'
+        else:
+            recurrence = get_expenses_by_recurrence(
+                self.request.user, inst_year, inst_month
+            )
+            context['installment_window_label'] = date(
+                inst_year, inst_month, 1
+            ).strftime('%B %Y')
+        context['recurrence_breakdown'] = recurrence
+        context['recurrence_chart'] = (
+            build_donut_chart([s for s in recurrence['slices'] if s['draw']])
+            if recurrence['slices']
+            else None
+        )
 
         return context

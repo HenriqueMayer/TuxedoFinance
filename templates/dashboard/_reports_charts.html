@@ -134,7 +134,7 @@ conventions this partial inherits.
 
                 <line x1="{{ balance_chart.plot_left }}" y1="{{ balance_chart.zero_y }}"
                       x2="{{ balance_chart.plot_right }}" y2="{{ balance_chart.zero_y }}"
-                      class="stroke-slate-300 dark:stroke-slate-600" stroke-width="1" stroke-dasharray="4 4" />
+                      class="stroke-rose-400 dark:stroke-rose-500" stroke-width="1.5" stroke-dasharray="5 4" />
 
                 <polygon points="{{ balance_chart.area }}" fill="url(#balance-area)" />
                 <polyline points="{{ balance_chart.line }}" fill="none"
@@ -663,6 +663,94 @@ conventions this partial inherits.
             </ul>
         {% else %}
             {% include 'partials/empty_state.html' with title='No expenses recorded yet' message='Once you record an expense, this chart shows which categories take the biggest share.' cta_url=create_url cta_label='New Transaction' %}
+        {% endif %}
+    </section>
+
+    {# -------------------------------------------------------------- #}
+    {# Chart 6 — installments vs fixed vs one-off (donut)            #}
+    {# ---------------------------------------------------------------- #}
+    <section id="installments" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">How much is on installments</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                    Of every {{ CURRENCY_SYMBOL }} you spend in
+                    <span class="font-medium text-slate-700 dark:text-neutral-300">{{ installment_window_label|lower }}</span>,
+                    this is how much comes from open installment plans, fixed recurrences, and one-off purchases.
+                </p>
+            </div>
+            <form method="get"
+                  action="{% url 'dashboard:reports' %}"
+                  hx-get="{% url 'dashboard:reports' %}"
+                  hx-target="#reports-charts"
+                  hx-swap="outerHTML"
+                  hx-push-url="true"
+                  class="flex flex-wrap items-end gap-3">
+                {% for key, value in request.GET.items %}
+                    {% if key != 'installment_month' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+                <div class="min-w-[12rem] space-y-1.5">
+                    <label for="installment-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Window</label>
+                    <select id="installment-month" name="installment_month"
+                            class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                        {% for value, label in month_choices %}
+                            <option value="{{ value }}" {% if installment_month_param == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    Filter
+                </button>
+            </form>
+        </div>
+
+        {% if recurrence_chart %}
+            {% localize off %}
+            <div class="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:gap-12">
+                <svg viewBox="0 0 {{ recurrence_chart.width }} {{ recurrence_chart.height }}"
+                     class="h-auto w-full max-w-[20rem]" role="img"
+                     aria-label="Donut chart of expenses split into installments, fixed recurrences, and one-off purchases">
+                    {% for segment in recurrence_chart.segments %}
+                        <path d="{{ segment.d }}"
+                              class="{% if segment.tone == 'installment' %}fill-rose-500 dark:fill-rose-400
+                                     {% elif segment.tone == 'fixed' %}fill-indigo-500 dark:fill-indigo-400
+                                     {% else %}fill-slate-400 dark:fill-slate-500{% endif %}">
+                            <title>{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share }}%)</title>
+                        </path>
+                    {% endfor %}
+                    <text x="{{ recurrence_chart.cx }}" y="{{ recurrence_chart.cy }}" text-anchor="middle" dy="-4"
+                          class="fill-slate-500 dark:fill-slate-400 text-[12px] uppercase tracking-wide">
+                        Total
+                    </text>
+                    <text x="{{ recurrence_chart.cx }}" y="{{ recurrence_chart.cy }}" text-anchor="middle" dy="16"
+                          class="fill-slate-800 dark:fill-neutral-200 text-lg font-semibold tabular-nums">
+                        {{ CURRENCY_SYMBOL }} {{ recurrence_chart.total|floatformat:2 }}
+                    </text>
+                </svg>
+                {% endlocalize %}
+                <ul class="w-full space-y-3 lg:w-auto lg:flex-1">
+                    {% for slice in recurrence_breakdown.slices %}
+                        <li class="flex items-center justify-between gap-4">
+                            <span class="flex items-center gap-3">
+                                <span class="h-3 w-3 rounded-sm
+                                    {% if slice.tone == 'installment' %}bg-rose-500 dark:bg-rose-400
+                                    {% elif slice.tone == 'fixed' %}bg-indigo-500 dark:bg-indigo-400
+                                    {% else %}bg-slate-400 dark:bg-slate-500{% endif %}"></span>
+                                <span class="font-medium text-slate-800 dark:text-neutral-200">{{ slice.name }}</span>
+                            </span>
+                            <span class="text-sm tabular-nums text-slate-600 dark:text-neutral-400">
+                                <span class="font-semibold text-slate-800 dark:text-neutral-200">{{ CURRENCY_SYMBOL }} {{ slice.value|floatformat:2 }}</span>
+                                &middot; {{ slice.share }}%
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            {% include 'partials/empty_state.html' with title='No expenses in this window' message='No transactions were recorded in this window, so there are no installments to break down. Try a different month or the All time option.' %}
         {% endif %}
     </section>
 </div>

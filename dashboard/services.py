@@ -576,3 +576,104 @@ def get_account_evolution(user, offset=0):
             transactions, start_year, start_month, EVOLUTION_MONTHS
         ),
     }
+
+
+def get_expenses_by_recurrence(user, year=None, month=None, months=1):
+    """Split expenses by how they recur (FR16 — installment share chart).
+
+    Three buckets, mutually exclusive by `TransactionForm.clean`:
+      - installment — a purchase split into `installments > 1` months;
+      - fixed        — a recurring transaction (`is_fixed=True`) that
+                       repeats every month until `fixed_until`;
+      - one-off      — everything else, paid in a single shot.
+
+    Like `_expenses_by_category` / `get_expenses_by_payment_method` this
+    folds `Transaction.amount_for_month` over each transaction in the
+    window, so a 3× plan of R$100 contributes `33.33` to its slice on
+    each of its three months — not the full `100` once. Investment stays
+    out (PRD §8.5 keeps that outflow distinct from Expenses).
+
+    Two scopes, picked by the caller:
+      - `year`/`month` set, `months=1` — a single specific month;
+      - `year=None, month=None, months=N` — the last N months anchored
+        on today, which is what the "All time" filter option maps to.
+    """
+    transactions = _projection_queryset(user)
+
+    if year is not None and month is not None:
+        window = [(year, month)]
+    else:
+        today = timezone.localdate()
+        window = [add_months(today.year, today.month, -step) for step in range(months)]
+
+    buckets = {
+        'installment': ZERO,
+        'fixed': ZERO,
+        'one_off': ZERO,
+    }
+    for txn in transactions:
+        if txn.transaction_type != Transaction.TransactionType.EXPENSE:
+            continue
+        contribution = sum(
+            (txn.amount_for_month(*target) for target in window), start=ZERO
+        )
+        if not contribution:
+            continue
+        if txn.is_installment_plan:
+            buckets['installment'] += contribution
+        elif txn.is_fixed:
+            buckets['fixed'] += contribution
+        else:
+            buckets['one_off'] += contribution
+
+    overall = sum(buckets.values(), start=ZERO)
+    if not overall:
+        return {'total': ZERO, 'slices': []}
+
+    # Fixed presentation order so the ring does not reshuffle when the
+    # picked month changes — the donut is read by position as much as by
+    # color, and a stable order keeps the comparison across months honest.
+    order = [
+        ('installment', 'Installments', 'installment'),
+        ('fixed', 'Fixed', 'fixed'),
+        ('one_off', 'One-off', 'one_off'),
+    ]
+    slices = []
+    cumulative = 0.0
+    for key, name, tone in order:
+        value = buckets[key]
+        if not value:
+            # Keep the bucket in the legend so the user sees the category
+            # exists at zero, but skip drawing it as a ring segment.
+            slices.append(
+                {
+                    'name': name,
+                    'tone': tone,
+                    'value': value,
+                    'share': 0.0,
+                    'draw': False,
+                }
+            )
+            continue
+        share = round(float(value / overall) * 100, 1)
+        cumulative += share
+        slices.append(
+            {
+                'name': name,
+                'tone': tone,
+                'value': value,
+                'share': share,
+                'draw': True,
+            }
+        )
+
+    # Absorb the rounding remainder into the last drawn slice so the
+    # printed shares add up to 100% and the ring closes exactly. Mirror
+    # the policy `Transaction.amount_for_month` applies to the final
+    # installment: the missing penny goes to the last one.
+    drawn = [s for s in slices if s['draw']]
+    if drawn:
+        remainder = round(100.0 - cumulative, 1)
+        drawn[-1]['share'] = round(drawn[-1]['share'] + remainder, 1)
+
+    return {'total': overall, 'slices': slices}

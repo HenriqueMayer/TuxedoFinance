@@ -181,7 +181,7 @@ Every app namespaces its own URLs with `app_name = '<app>'`, so every reversed U
 |---|---|---|
 | `/` | `pages` | `landing` |
 | `/accounts/` | `accounts` | `login`, `signup`, `logout` |
-| `/dashboard/` | `dashboard` | `index`, `reports` (both support `?charts_offset=N`, `?category_month=ALL\|YYYY-MM`, `?payment_month=ALL\|YYYY-MM`, `?payment_method=NAME`) |
+| `/dashboard/` | `dashboard` | `index`, `reports` (both support `?charts_offset=N`, `?category_month=ALL\|YYYY-MM`, `?payment_month=ALL\|YYYY-MM`, `?expense_method=NAME`, `?income_method=NAME`, `?installment_month=ALL\|YYYY-MM`) |
 | `/transactions/` | `transactions` | `list`, `create`, `update`, `delete` |
 | `/categories/` | `categories` | `list`, `create`, `update`, `delete` |
 | `/payments/` | `payments` | `list`, `create`, `update`, `delete` |
