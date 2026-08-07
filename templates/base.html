@@ -126,6 +126,40 @@ bundle — built from `tailwind/input.css` (which declares the matching
             var el = document.getElementById(id);
             if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
         }
+
+        // HTMX replaces the chart island in place, but a changed chart height
+        // can still make the browser appear to jump. Keep the viewport and
+        // the active filter stable across those swaps.
+        var preservedChartView = null;
+
+        function isChartTarget(target) {
+            return target && (
+                target.id === 'reports-charts' ||
+                target.id === 'investments-charts'
+            );
+        }
+
+        document.body.addEventListener('htmx:beforeRequest', function (event) {
+            if (!isChartTarget(event.detail.target)) return;
+            var active = document.activeElement;
+            preservedChartView = {
+                top: window.scrollY,
+                focusId: active && active.id ? active.id : null,
+            };
+        });
+
+        document.body.addEventListener('htmx:afterSwap', function (event) {
+            if (!isChartTarget(event.detail.target) || !preservedChartView) return;
+            var view = preservedChartView;
+            preservedChartView = null;
+            window.requestAnimationFrame(function () {
+                window.scrollTo(0, view.top);
+                if (view.focusId) {
+                    var field = document.getElementById(view.focusId);
+                    if (field) field.focus({preventScroll: true});
+                }
+            });
+        });
     </script>
 </body>
 </html>
