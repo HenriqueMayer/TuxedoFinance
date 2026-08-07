@@ -1,15 +1,5 @@
-"""Investments — a parallel log of money moved to/from investments.
+"""Investment institutions, products, assets, and manual operations."""
 
-Deliberately isolated from the `Transaction` universe: the `Transaction` model
-already has a `TransactionType.INVESTMENT` choice, but that only marks a cash
-outflow — it has no idea *which* investment the money went into, what
-institution holds it, or what the running balance looks like. This app is the
-manual log where the user records deposits and withdrawals against their
-investment portfolio. The two are kept in sync by the user (the `?kind=` and
-`reason` fields exist to make that explicit), and the model never references
-`Transaction` — so this app can be deleted, reseeded, or diverged from the
-transaction log without breaking either side.
-"""
 from decimal import Decimal
 
 from django.conf import settings
@@ -19,43 +9,122 @@ from django.db import models
 from core.currencies import CURRENCIES
 
 
+class Institution(models.Model):
+    """A bank, broker, exchange, or other investment institution."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='investment_institutions',
+    )
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'name'],
+                name='unique_investment_institution_per_user',
+            ),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class InvestmentProduct(models.Model):
+    """A named product or wallet held at an institution."""
+
+    class YieldMode(models.TextChoices):
+        MANUAL = 'MANUAL', 'Manual'
+        MONTHLY = 'MONTHLY', 'Monthly rate (Coming soon)'
+        ANNUAL = 'ANNUAL', 'Annual rate (Coming soon)'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='investment_products',
+    )
+    institution = models.ForeignKey(
+        Institution,
+        on_delete=models.CASCADE,
+        related_name='investment_products',
+    )
+    name = models.CharField(max_length=150)
+    yield_mode = models.CharField(
+        max_length=20,
+        choices=YieldMode.choices,
+        default=YieldMode.MANUAL,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['institution__name', 'name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['institution', 'name'],
+                name='unique_investment_product_per_institution',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.institution.name} — {self.name}'
+
+
+class Asset(models.Model):
+    """A user-defined asset held inside an investment product."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='investment_assets',
+    )
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20)
+    currency = models.CharField(max_length=3, default=settings.CURRENCY)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'code'],
+                name='unique_investment_asset_code_per_user',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.name} ({self.code})'
+
+
 class Investment(models.Model):
-    """One deposit or withdrawal against the user's investment portfolio.
-
-    `amount` is always positive (matches the `Transaction` rule of
-    `MinValueValidator(Decimal('0.01'))` + always-positive storage; the sign
-    comes from `kind`, never from the stored number). `kind` is the only
-    thing that decides whether this row adds to or subtracts from the
-    portfolio's running balance.
-
-    `currency` is the currency `amount` is denominated in. It defaults to
-    `settings.CURRENCY` so rows recorded before multi-currency support was
-    added keep their value in the base currency without a manual migration
-    step. Entries in a different currency are stored as-is; the conversion
-    to the base happens on read, using the most recent `ExchangeRate` for
-    that pair (`investments.services.get_latest_rates`).
-
-    `reason` is free-form text — it answers "why did this money move?" in a
-    way the structured fields do not. The withdrawal case in particular wants
-    a record of *why* the user took money out (an emergency, a planned
-    rebalance, a goal reaching its target) so future reads of the log can
-    answer that without the user's memory.
-
-    `date` is the only date the user edits — when the move actually happened
-    in real life. `created_at`/`updated_at` are system-managed.
-
-    No FK to `Transaction`. By design (see module docstring): this is a
-    parallel universe the user keeps in sync manually.
-    """
+    """One manual deposit, withdrawal, or yield operation."""
 
     class Kind(models.TextChoices):
         DEPOSIT = 'DEPOSIT', 'Deposit'
         WITHDRAWAL = 'WITHDRAWAL', 'Withdrawal'
+        YIELD = 'YIELD', 'Yield'
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='investments',
+    )
+    product = models.ForeignKey(
+        InvestmentProduct,
+        on_delete=models.PROTECT,
+        related_name='operations',
+        null=True,
+    )
+    asset = models.ForeignKey(
+        Asset,
+        on_delete=models.PROTECT,
+        related_name='operations',
+        null=True,
     )
     title = models.CharField(max_length=150)
     amount = models.DecimalField(
@@ -64,16 +133,6 @@ class Investment(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))],
     )
     kind = models.CharField(max_length=20, choices=Kind.choices)
-    # ISO 4217 code, validated against the project-wide `core.currencies`
-    # registry. The TextChoices below is built dynamically so adding a
-    # currency in `core/currencies.py` is the only place the list is
-    # defined — exactly how `Transaction.transaction_type` and
-    # `PaymentMethod.method_type` already work.
-    currency = models.CharField(
-        max_length=3,
-        choices=[(code, currency.name) for code, currency in CURRENCIES.items()],
-        default=settings.CURRENCY,
-    )
     date = models.DateField()
     reason = models.CharField(max_length=255, blank=True)
     notes = models.TextField(blank=True)
@@ -84,41 +143,24 @@ class Investment(models.Model):
         ordering = ['-date', '-created_at']
 
     def __str__(self):
-        return f'{self.title} ({self.get_kind_display()}, {self.currency})'
+        asset_code = self.asset.code if self.asset_id else 'legacy'
+        return f'{self.title} ({self.get_kind_display()}, {asset_code})'
+
+    @property
+    def currency(self):
+        """Expose the asset currency for existing aggregation code."""
+        return self.asset.currency if self.asset_id else settings.CURRENCY
 
     @property
     def signed_amount(self):
-        """The amount with the sign that matches its effect on the balance.
-
-        Deposits are positive (money in), withdrawals negative (money out).
-        Used by the list view's `current_balance` calculation and by anything
-        else that needs the row's contribution to the running total.
-        """
+        """Return the operation's contribution to the asset balance."""
         if self.kind == self.Kind.WITHDRAWAL:
             return -self.amount
         return self.amount
 
 
 class ExchangeRate(models.Model):
-    """A manual exchange rate the user wants to apply to investments.
-
-    Stores one rate per `(user, from_currency, to_currency)` pair, timestamped
-    by `effective_date`. The list view uses the most recent row per pair as
-    the "current" rate, and the simulated-total computation reads from the
-    same lookup. Rows are append-only by design: if the rate moved, the user
-    creates a new row with a newer `effective_date`; the old one stays put
-    for history (and is what an automated feed would later be reconciled
-    against, when one exists).
-
-    `to_currency` is always `settings.CURRENCY` in this app — the form
-    hardcodes it on the way in — but the column itself is generic so the
-    model can be repurposed for arbitrary pairs if a future feature needs
-    that without a schema change.
-
-    `rate` is stored as `Decimal(18, 8)` to cover exotic pairs (crypto) where
-    the rate might be 0.00000123. 8 decimal places is the standard precision
-    used by FX APIs; bump if a real feed ever needs more.
-    """
+    """A manual exchange rate used for supported fiat currencies."""
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -146,11 +188,6 @@ class ExchangeRate(models.Model):
     class Meta:
         ordering = ['-effective_date', '-created_at']
         constraints = [
-            # Append-only over time: a user can have many rows for the same
-            # pair, but never two with the same `effective_date` (a duplicate
-            # date would be ambiguous — which one is "the" rate on that
-            # day?). When an automated feed lands, it will write one row per
-            # day per pair; the existing rows are its history.
             models.UniqueConstraint(
                 fields=['user', 'from_currency', 'to_currency', 'effective_date'],
                 name='unique_rate_per_pair_date_per_user',

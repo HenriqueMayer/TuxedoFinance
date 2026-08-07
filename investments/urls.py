@@ -1,12 +1,15 @@
 from django.urls import path
 
 from investments.views import (
+    AssetCreateView,
     ExchangeRateCreateView,
     ExchangeRateDeleteView,
     ExchangeRateListView,
+    InstitutionCreateView,
     InvestmentCreateView,
     InvestmentDeleteView,
     InvestmentListView,
+    InvestmentProductCreateView,
     InvestmentUpdateView,
 )
 
@@ -15,6 +18,9 @@ app_name = 'investments'
 urlpatterns = [
     path('', InvestmentListView.as_view(), name='list'),
     path('create/', InvestmentCreateView.as_view(), name='create'),
+    path('institutions/create/', InstitutionCreateView.as_view(), name='create_institution'),
+    path('products/create/', InvestmentProductCreateView.as_view(), name='create_product'),
+    path('assets/create/', AssetCreateView.as_view(), name='create_asset'),
     path('<int:pk>/edit/', InvestmentUpdateView.as_view(), name='update'),
     path('<int:pk>/delete/', InvestmentDeleteView.as_view(), name='delete'),
     path(
