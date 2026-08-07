@@ -2,18 +2,9 @@
 {% load l10n %}
 
 {% comment %}
-Investments (parallel universe to `Transaction`). Shows only the logged-in
-user's own entries (`InvestmentListView.get_queryset`), paginated, each row
-color-coded by `kind` (Deposit emerald / Withdrawal rose) per the design
-system's semantic colors already used on the transactions list.
-
-The card grid at the top is per-currency, not per-type: one card per
-supported currency (base first, then alphabetical), each showing that
-currency's deposited / withdrawn / net balance, plus a "simulated total
-in {base}" card that adds everything up at the user's latest
-`ExchangeRate` for each foreign currency. Currencies without a rate are
-excluded from the simulation and the card surfaces that explicitly so a
-missing rate can never silently shrink the displayed total.
+Investments (parallel universe to `Transaction`). Shows the logged-in user's
+manual operations grouped by institution, investment, and free-form asset.
+Rows use Deposit emerald, Yield amber, and Withdrawal rose.
 
 Optional filters: `?kind=DEPOSIT|WITHDRAWAL` narrows the table, `?q=`
 searches title / reason / notes. Pagination uses `{% querystring %}` so
@@ -22,16 +13,11 @@ the active filters survive page navigation.
 At the bottom of the page (after the list / pagination), one chart
 section sits there:
 
-  - The per-currency sparklines grid: one mini chart per supported
-    currency, each on its own y-axis scale. Plotting every currency on
-    a single axis would collapse the smaller balances (a USD balance of
-    100 against a BRL balance of 50 000 would render as a flat line at
-    the bottom), so each currency gets its own chart. The card shows
-    the code, the current balance, and the trend over the last
-    `TIMESERIES_MONTHS` months.
+  - The cumulative portfolio evolution and monthly deposits/yields/withdrawals
+    charts.
 
-The section is hidden via `{% if has_investments %}` — six flat-at-
-zero sparklines are not informative, and the empty-state CTA above
+The section is hidden via `{% if has_investments %}` — empty charts
+are not informative, and the empty-state CTA above
 already tells the user to add an entry.
 
 Coordinates are wrapped in `{% localize off %}` blocks around the

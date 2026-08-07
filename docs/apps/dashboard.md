@@ -219,7 +219,7 @@ Chart 6 (`get_installment_month` / `recurrence_breakdown` / `recurrence_chart`) 
 
 ## Template (`templates/dashboard/_reports_charts.html`)
 
-Six charts, all server-rendered, no `<script>` anywhere on the page. The partial is swapped in by HTMX (`outerHTML` on `#reports-charts`) on every interactive click; the same controls also carry plain `href`/`action` fallbacks so the page still works without JS — the zero-JS contract is symmetric, not "HTMX-only".
+Six charts, all server-rendered, with no charting library or client-side SVG geometry. The partial itself contains no `<script>`; the shared `base.html` provides the narrow HTMX/theme/viewport helpers. The partial is swapped in by HTMX (`outerHTML` on `#reports-charts`) on every interactive click; the same controls also carry plain `href`/`action` fallbacks so the page still works without JavaScript. When HTMX is active, the shared lifecycle handler preserves the current scroll position and focused filter across the swap.
 
 1. **Balance evolution** — an SVG `<polyline>` over a gradient-filled `<polygon>`, with one `<circle>` marker per month. Future months get a dimmer stroke. The **zero line is dashed rose** (`stroke-rose-400 dark:stroke-rose-500`, `stroke-width="1.5"`, `stroke-dasharray="5 4"`) rather than the muted slate of the rest of the grid, so a balance crossing zero reads at a glance instead of blending into the axis.
 2. **Monthly cash flow** — grouped `<rect>` bars, three per month (emerald/rose/amber per PRD §9.1), with a legend.
