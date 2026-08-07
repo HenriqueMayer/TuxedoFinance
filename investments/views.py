@@ -14,13 +14,20 @@ from dashboard.charts import (
     build_bar_chart,
     build_line_chart,
 )
-from investments.forms import ExchangeRateForm, InvestmentForm
-from investments.models import ExchangeRate, Investment
+from investments.forms import (
+    AssetForm,
+    ExchangeRateForm,
+    InstitutionForm,
+    InvestmentForm,
+    InvestmentProductForm,
+)
+from investments.models import Asset, ExchangeRate, Institution, Investment, InvestmentProduct
 from investments.services import (
     TIMESERIES_MONTHS,
     get_latest_rates,
     get_monthly_flow_in_base,
     get_per_currency_totals,
+    get_portfolio_groups,
     get_simulated_total_in_base,
     get_supported_currencies,
     get_total_in_base_timeseries,
@@ -134,7 +141,7 @@ class InvestmentListView(LoginRequiredMixin, ListView):
     context_object_name = 'investments'
     paginate_by = 10
 
-    KIND_FILTER_OPTIONS = ('DEPOSIT', 'WITHDRAWAL')
+    KIND_FILTER_OPTIONS = ('DEPOSIT', 'WITHDRAWAL', 'YIELD')
 
     def get_template_names(self):
         """Return the charts partial when HTMX asks for one, the full page otherwise.
@@ -160,11 +167,25 @@ class InvestmentListView(LoginRequiredMixin, ListView):
         return _parse_charts_offset(self.request, 'flow_offset')
 
     def get_queryset(self):
-        queryset = Investment.objects.filter(user=self.request.user)
+        queryset = Investment.objects.filter(
+            user=self.request.user, product__isnull=False, asset__isnull=False
+        ).select_related('product__institution', 'asset')
 
         kind = self.request.GET.get('kind', '').strip().upper()
         if kind in self.KIND_FILTER_OPTIONS:
             queryset = queryset.filter(kind=kind)
+
+        institution = self.request.GET.get('institution', '').strip()
+        if institution.isdigit():
+            queryset = queryset.filter(product__institution_id=institution)
+
+        product = self.request.GET.get('product', '').strip()
+        if product.isdigit():
+            queryset = queryset.filter(product_id=product)
+
+        asset = self.request.GET.get('asset', '').strip()
+        if asset.isdigit():
+            queryset = queryset.filter(asset_id=asset)
 
         search = self.request.GET.get('q', '').strip()
         if search:
@@ -184,6 +205,11 @@ class InvestmentListView(LoginRequiredMixin, ListView):
         # the user has no entries in that currency, so the grid never has
         # a hole. The order is base first, then alphabetical.
         supported = get_supported_currencies(base_currency)
+        asset_currencies = set(
+            Asset.objects.filter(user=self.request.user)
+            .values_list('currency', flat=True)
+        )
+        supported.extend(sorted(asset_currencies - set(supported)))
         per_currency = get_per_currency_totals(self.request.user, supported)
 
         # Simulated total in the base currency, using the user's latest
@@ -243,6 +269,11 @@ class InvestmentListView(LoginRequiredMixin, ListView):
                     'tone': 'expense',
                     'values': [float(row['withdrawals']) for row in flow_rows],
                 },
+                {
+                    'name': 'Yields',
+                    'tone': 'investment',
+                    'values': [float(row['yields']) for row in flow_rows],
+                },
             ],
         )
 
@@ -258,18 +289,29 @@ class InvestmentListView(LoginRequiredMixin, ListView):
         context['per_currency_cards'] = [
             per_currency[code] for code in supported
         ]
+        context['portfolio_groups'] = get_portfolio_groups(self.request.user)
         context['simulated_total'] = simulated_total
         context['missing_rate_currencies'] = missing_rate_currencies
         context['base_currency'] = base_currency
         context['kind_choices'] = Investment.Kind.choices
         context['selected_kind'] = self.request.GET.get('kind', '').strip().upper()
+        context['institution_choices'] = Institution.objects.filter(user=self.request.user)
+        context['product_choices'] = InvestmentProduct.objects.filter(
+            user=self.request.user
+        ).select_related('institution')
+        context['asset_choices'] = Asset.objects.filter(user=self.request.user)
+        context['selected_institution'] = self.request.GET.get('institution', '').strip()
+        context['selected_product'] = self.request.GET.get('product', '').strip()
+        context['selected_asset'] = self.request.GET.get('asset', '').strip()
         context['search_query'] = self.request.GET.get('q', '').strip()
         # The two charts at the bottom of the page. Hidden when the
         # user has no investments — flat-at-zero lines and bars are not
         # informative, and the empty-state CTA above already tells the
         # user to add an entry.
         context['has_investments'] = Investment.objects.filter(
-            user=self.request.user
+            user=self.request.user,
+            product__isnull=False,
+            asset__isnull=False,
         ).exists()
         context['chart_total'] = chart_total
         context['chart_flow'] = chart_flow
@@ -314,6 +356,11 @@ class InvestmentFormMixin(LoginRequiredMixin):
     def get_queryset(self):
         return Investment.objects.filter(user=self.request.user)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
 
 # `InvestmentFormMixin` precedes `SuccessMessageMixin` in the bases below for
 # the same reason as in `payments/views.py` — keeping its `form_valid` last
@@ -332,6 +379,47 @@ class InvestmentUpdateView(InvestmentFormMixin, SuccessMessageMixin, UpdateView)
     """Update one of the logged-in user's own investment entries."""
 
     success_message = 'Investment "%(title)s" updated.'
+
+
+class InstitutionCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Institution
+    form_class = InstitutionForm
+    template_name = 'investments/setup_form.html'
+    success_url = reverse_lazy('investments:list')
+    success_message = 'Institution "%(name)s" created.'
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+class InvestmentProductCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = InvestmentProduct
+    form_class = InvestmentProductForm
+    template_name = 'investments/setup_form.html'
+    success_url = reverse_lazy('investments:list')
+    success_message = 'Investment "%(name)s" created.'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+class AssetCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Asset
+    form_class = AssetForm
+    template_name = 'investments/setup_form.html'
+    success_url = reverse_lazy('investments:list')
+    success_message = 'Asset "%(name)s" created.'
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
 
 class InvestmentDeleteView(LoginRequiredMixin, DeleteView):

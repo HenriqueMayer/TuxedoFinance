@@ -89,6 +89,8 @@ Give the user control and clarity over their personal finances through:
 
 > **Scope change (2026-08-02) — theme toggle:** FR21 adds a light/dark theme toggle. The toggle carries ~25 lines of vendored vanilla JS (`static/js/theme.js` + the matching inline `<head>` FOUC script in `base.html`). That is **not** the "JavaScript build step" the §5 exclusion above was protecting against — there is still no npm/Node pipeline, no HTMX, no SPA, no charting library, no JavaScript-driven interactivity anywhere on the charts or the dashboard. The theme-toggle JS is the narrow exception, scoped to flipping a single class on `<html>` and persisting the choice; it deliberately mirrors the weekly-planner's convention. Charts stay server-rendered SVG/CSS, every mutating action stays a normal Django POST + redirect, and the rest of the project's no-JS spirit is preserved.
 
+> **Scope change (2026-08-07) — investment portfolio structure:** the Investments area now groups manual portfolio operations by institution, investment product, and free-form asset. Operations are `Deposit`, `Withdrawal`, or manual `Yield`; automatic monthly and annual yield calculations are deferred and shown as `Coming soon`. Existing legacy investment rows without the new links are intentionally ignored rather than migrated or deleted.
+
 ---
 
 ## 6. Functional Requirements
@@ -191,6 +193,7 @@ dashboard/     # Aggregations, projection, consolidated view and reports/charts
 transactions/  # Transaction model + CRUD
 categories/    # Category model + CRUD (self-related)
 payments/      # PaymentMethod model + CRUD
+investments/   # Institutions, products, free-form assets, manual portfolio operations
 ```
 
 > Each app isolates its responsibility (models, views, urls, forms, templates). `db.sqlite3` is ignored by Git in the template repository.

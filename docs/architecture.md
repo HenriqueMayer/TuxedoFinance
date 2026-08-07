@@ -29,7 +29,7 @@ dashboard/     # Aggregation + projection services, consolidated view, SVG repor
 transactions/  # Transaction model + CRUD (the core domain entity)
 categories/    # Category model + CRUD (self-referencing) + default-data signal
 payments/      # PaymentMethod model + CRUD + default-data signal
-investments/   # Investment log (deposits / withdrawals per currency) + manual exchange rates
+investments/   # Institutions, investment products, free-form assets, operations + manual exchange rates
 templates/     # Project-level Django templates (base.html, partials/, per-app screens)
 static/        # Project-level static assets (static/css/output.css is a generated
                # Tailwind build artifact — see frontend.md)
@@ -185,7 +185,7 @@ Every app namespaces its own URLs with `app_name = '<app>'`, so every reversed U
 | `/transactions/` | `transactions` | `list`, `create`, `update`, `delete` |
 | `/categories/` | `categories` | `list`, `create`, `update`, `delete` |
 | `/payments/` | `payments` | `list`, `create`, `update`, `delete` |
-| `/investments/` | `investments` | `list` (supports two independent slide params `?total_offset=N` / `?flow_offset=N` — one per chart, so each scrolls its own window without dragging the other along), `create`, `update`, `delete` (filter `?kind=DEPOSIT\|WITHDRAWAL` and `?q=` search ride alongside the offsets), `exchange_rates`, `create_exchange_rate`, `delete_exchange_rate` |
+| `/investments/` | `investments` | `list` (supports `?institution=`, `?product=`, `?asset=`, `?kind=DEPOSIT\|WITHDRAWAL\|YIELD`, `?q=`, and two independent chart offsets), `create`, `update`, `delete`, `create_institution`, `create_product`, `create_asset`, `exchange_rates`, `create_exchange_rate`, `delete_exchange_rate` |
 | `/admin/` | Django admin | — |
 
 ## Request flow (a typical authenticated screen)

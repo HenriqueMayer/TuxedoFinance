@@ -11,7 +11,7 @@ A personal finance tracker built with Django full stack — record categorized t
 - **Reports** with six server-rendered, zero-JS SVG charts: a slideable 12-month balance-evolution line (with prev/next arrows), monthly cash-flow bars, spending-vs-income by payment method (each bar a click-driven drill-down into its top categories), a "where the money goes" category breakdown, and a donut chart splitting the month's expenses into installment plans vs fixed recurrences vs one-off purchases (defaults to the current month, with an `All time` aggregate option)
 - **Categories and subcategories** with a per-user default seed on signup
 - **Payment methods** with credit-card billing cycles (statement day and due day) and per-transaction bill overrides
-- **Investments log** — a parallel universe to `Transaction` for tracking deposits and withdrawals against your investment portfolio, with per-currency cards, a simulated total in the base currency, and manual exchange-rate management (the `Transaction` of type `INVESTMENT` and the matching `Investment` row are kept in sync by you, on purpose — see [docs/apps/investments.md](docs/apps/investments.md))
+- **Investments log** — a parallel universe to `Transaction` for tracking manual deposits, withdrawals, and yields inside each bank or broker, grouped by investment and free-form asset. Automatic monthly and annual yield calculations are marked `Coming soon` (see [docs/apps/investments.md](docs/apps/investments.md))
 - **Light/dark theme** toggle with a Darcula-inspired dark palette
 - **Configurable currency** — pick BRL, USD, EUR, GBP, JPY, or CHF; the symbol and number format always match
 
