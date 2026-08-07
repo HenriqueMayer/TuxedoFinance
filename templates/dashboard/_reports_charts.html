@@ -39,7 +39,15 @@ conventions this partial inherits.
 <div id="reports-charts" class="space-y-8">
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {% with now_fmt=evolution.current_month.closing_balance|floatformat:2 closing_fmt=evolution.closing_balance|floatformat:2 net_change_fmt=evolution.net_change|floatformat:2 %}
-            {% include 'partials/stat_card.html' with label='Balance now' value=CURRENCY_SYMBOL|add:' '|add:now_fmt %}
+            {% if evolution.is_anchored_today %}
+                {% include 'partials/stat_card.html' with label='Balance now' value=CURRENCY_SYMBOL|add:' '|add:now_fmt %}
+            {% else %}
+                {% with anchor_month=evolution.anchor_date|date:'M Y' %}
+                    {% with balance_label='Balance at '|add:anchor_month %}
+                        {% include 'partials/stat_card.html' with label=balance_label value=CURRENCY_SYMBOL|add:' '|add:now_fmt %}
+                    {% endwith %}
+                {% endwith %}
+            {% endif %}
             {% include 'partials/stat_card.html' with label='Projected (end of window)' value=CURRENCY_SYMBOL|add:' '|add:closing_fmt %}
             {% if evolution.net_change < 0 %}
                 {% include 'partials/stat_card.html' with label='Net change (12 months)' value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-rose-600 dark:text-rose-400' %}
@@ -75,7 +83,9 @@ conventions this partial inherits.
                 </a>
                 <div>
                     <p class="text-sm font-semibold text-slate-900 dark:text-neutral-100">
-                        {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ evolution.months|last|date:'M Y' }}
+                         {% with last_month=evolution.months|last %}
+                             {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ last_month.date|date:'M Y' }}
+                         {% endwith %}
                     </p>
                     <p class="text-xs text-slate-500 dark:text-neutral-500">
                         {% if evolution.is_anchored_today %}Anchored on today
