@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from dashboard.charts import build_bar_chart, build_line_chart
+from dashboard.charts import build_bar_chart, build_donut_chart, build_line_chart
 from dashboard.services import (
     OUTLOOK_MONTHS,
     add_months,
@@ -12,6 +12,9 @@ from dashboard.services import (
     get_dashboard_summary,
     get_expenses_by_category_for_method,
     get_expenses_by_payment_method,
+    get_expenses_by_recurrence,
+    get_income_by_category_for_method,
+    get_income_by_payment_method,
 )
 from transactions.models import Transaction
 
@@ -206,7 +209,7 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
 class DashboardReportsView(LoginRequiredMixin, TemplateView):
     """Charts showing how the account evolves over a year (FR16).
 
-    Four server-rendered charts, all reading the same Transaction rows on
+    Five server-rendered charts, all reading the same Transaction rows on
     exactly the same recurrence rules:
 
       1. Balance evolution          — area + line, window of `EVOLUTION_MONTHS`
@@ -215,27 +218,58 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
       2. Monthly cash flow          — grouped bars over the same window, so
                                       the two time-series charts always tell
                                       the same story.
-      3. Where the money goes       — top expense categories. Optional
+      3. Spending by payment method — one bar per method, with
+                                      `?payment_month=ALL|YYYY-MM` (default
+                                      `ALL`) choosing the window. Each bar
+                                      is a hyperlink to a method-categories
+                                      panel via `?expense_method=NAME`.
+      4. Income by payment method   — the mirror image of (3) for income
+                                      rows, with the same shared window.
+                                      Drill-down via `?income_method=NAME`.
+      5. Where the money goes       — top expense categories. Optional
                                       `?category_month=ALL|YYYY-MM` chooses
                                       the window (default: the last 12
                                       months, in line with the time-series
                                       window).
-      4. Spending by payment method — one bar per method, with
-                                      `?payment_month=ALL|YYYY-MM` (default
-                                      `ALL`) choosing the window. Each bar
-                                      is a hyperlink to a `method-categories`
-                                      panel that answers the next question
-                                      ("what did I buy on that card?").
 
-    The four filters are independent — offsetting the time-series window
+    The five filters are independent — offsetting the time-series window
     leaves the breakdown filters untouched, and the breakdown filters never
-    move the time-series window. The template uses `{% querystring %}` so
+    move the time-series window. `?payment_month` is shared between (3)
+    and (4) so the two halves of "where did the money go" never disagree
+    on the period being shown. The template uses `{% querystring %}` so
     any one of them survives clicks on the others.
+
+    Rendering is partial-swapped: the whole report body sits in
+    `<div id="reports-charts">` and the prev/next arrows, the breakdown
+    selects, and the bar drill-downs all carry `hx-get` / `hx-target` /
+    `hx-push-url` so the browser patches the DOM in place instead of
+    doing a full page load. Every HTMX request also carries the
+    `HX-Request: true` header that HTMX sets automatically — when the
+    view sees it, it returns only the chart-region partial
+    (`dashboard/_reports_charts.html`) so the response is exactly the
+    element being swapped, instead of a full HTML document whose body
+    content would otherwise end up inlined inside the target. A normal
+    page load (no `HX-Request`) returns the full page
+    (`dashboard/reports.html`) which includes the same partial.
 
     Scoped to `request.user` like every other internal screen (PRD R3).
     """
 
     template_name = 'dashboard/reports.html'
+
+    def get_template_names(self):
+        """Return the partial when HTMX asks for one, the full page otherwise.
+
+        HTMX always sends `HX-Request: true` on the requests it makes,
+        so the presence of that header is the cleanest signal that the
+        caller wants the bare chart region back, not a full HTML
+        document. The partial and the full page render through exactly
+        the same context — the only difference is which template gets
+        chosen here.
+        """
+        if self.request.headers.get('HX-Request') == 'true':
+            return ['dashboard/_reports_charts.html']
+        return [self.template_name]
 
     def get_charts_offset(self):
         """Parse `?charts_offset=N`, falling back to 0 on bad / out-of-window values."""
@@ -249,18 +283,68 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         """Parse `?payment_month=ALL|YYYY-MM` (default `ALL`)."""
         return _parse_month_or_all(self.request, 'payment_month', _is_representable)
 
-    def get_selected_payment_method(self, breakdown):
-        """Parse `?payment_method=NAME`, validated against the current breakdown.
+    def get_installment_month(self):
+        """Parse `?installment_month=ALL|YYYY-MM`.
 
-        Only a method that appears in the current breakdown's `methods` is
-        accepted — anything else silently returns `None`, so a stale URL
-        from a different month cannot surface an empty panel.
+        Defaults to the current month rather than `ALL`: the chart answers
+        "how much of *this* month is on installments", so a fresh visit
+        should land on the month the user is actually in, not on a
+        12-month aggregate. `ALL` is still selectable for the wider view.
+        A malformed or out-of-range value falls back to the current
+        month under the same forgiving contract as the other filters.
+        """
+        raw = self.request.GET.get('installment_month', '').strip().upper()
+        if not raw:
+            today = timezone.localdate()
+            return (
+                f'{today.year:04d}-{today.month:02d}',
+                today.year,
+                today.month,
+            )
+        return _parse_month_or_all(
+            self.request, 'installment_month', _is_representable
+        )
+
+    def _get_selected_method(self, breakdown, param_name):
+        """Parse `?<param_name>=NAME`, validated against `breakdown['methods']`.
+
+        Only a method that appears in the breakdown is accepted — anything
+        else silently returns `None`, so a stale URL from a different month
+        or a different chart cannot surface an empty panel. Shared between
+        the spending drill-down (`?expense_method=`) and the income
+        drill-down (`?income_method=`); the param name is the only
+        difference.
         """
         if not breakdown['methods']:
             return None
         valid_names = {row['name'] for row in breakdown['methods']}
-        raw = self.request.GET.get('payment_method', '').strip()
+        raw = self.request.GET.get(param_name, '').strip()
         return raw if raw in valid_names else None
+
+    def _method_categories_window(self, payment_value, payment_year, payment_month):
+        """Resolve the (year, month, label, window-tag) for a method drill-down.
+
+        When the chart is in `?payment_month=ALL` the panel anchors on the
+        current month so it answers "what did I buy with this card most
+        recently" rather than aggregating a fuzzy 12-month window. A
+        specific `YYYY-MM` reads that month on the same `amount_for_month`
+        rule. Returned as a dict the template interpolates into the panel
+        header.
+        """
+        if payment_value == 'ALL':
+            today = timezone.localdate()
+            return {
+                'year': today.year,
+                'month': today.month,
+                'label': today.strftime('%B %Y'),
+                'window': 'current month',
+            }
+        return {
+            'year': payment_year,
+            'month': payment_month,
+            'label': date(payment_year, payment_month, 1).strftime('%B %Y'),
+            'window': 'selected month',
+        }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -305,9 +389,125 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         # look and read the same.
         context['month_choices'] = _month_choices()
 
-        # Chart 3 — "Where the money goes". The breakdown lives inside
-        # `evolution` already, but only for the time-series window. When the
-        # user picks a different month (or explicitly `ALL`), we recompute.
+        # Shared window for charts 3 and 4 — both method breakdowns read
+        # the same `?payment_month=` so the "where did it come in / where
+        # did it go out" pair never disagrees on the period.
+        payment_value, payment_year, payment_month = self.get_payment_month()
+        context['payment_month_param'] = payment_value
+        if payment_value == 'ALL':
+            context['payment_window_label'] = 'All time'
+        else:
+            context['payment_window_label'] = (
+                date(payment_year, payment_month, 1).strftime('%B %Y')
+            )
+
+        # Chart 3 — "Spending by payment method". `ALL` aggregates the
+        # last `ALL_TIME_MONTHS` months; a specific `YYYY-MM` reads that
+        # single month on the same `amount_for_month` rule as before.
+        if payment_value == 'ALL':
+            expense_breakdown = get_expenses_by_payment_method(
+                self.request.user, months=ALL_TIME_MONTHS
+            )
+        else:
+            expense_breakdown = get_expenses_by_payment_method(
+                self.request.user, payment_year, payment_month
+            )
+        context['expense_breakdown'] = expense_breakdown
+        context['expense_chart'] = (
+            build_bar_chart(
+                expense_breakdown['methods'],
+                [
+                    {
+                        'name': 'Expenses',
+                        'tone': 'expense',
+                        'values': [
+                            float(row['total']) for row in expense_breakdown['methods']
+                        ],
+                    }
+                ],
+            )
+            if expense_breakdown['methods']
+            else None
+        )
+
+        # Chart 4 — "Income by payment method". Same window as chart 3
+        # (`?payment_month=` is shared), opposite direction of cash.
+        if payment_value == 'ALL':
+            income_breakdown = get_income_by_payment_method(
+                self.request.user, months=ALL_TIME_MONTHS
+            )
+        else:
+            income_breakdown = get_income_by_payment_method(
+                self.request.user, payment_year, payment_month
+            )
+        context['income_breakdown'] = income_breakdown
+        context['income_chart'] = (
+            build_bar_chart(
+                income_breakdown['methods'],
+                [
+                    {
+                        'name': 'Income',
+                        'tone': 'income',
+                        'values': [
+                            float(row['total']) for row in income_breakdown['methods']
+                        ],
+                    }
+                ],
+            )
+            if income_breakdown['methods']
+            else None
+        )
+
+        # Two independent drill-downs, each validated against its own
+        # breakdown so a stale URL can never open a panel for a method
+        # that isn't on the chart it was clicked from.
+        selected_expense_method = self._get_selected_method(
+            expense_breakdown, 'expense_method'
+        )
+        context['selected_expense_method'] = selected_expense_method
+        selected_income_method = self._get_selected_method(
+            income_breakdown, 'income_method'
+        )
+        context['selected_income_method'] = selected_income_method
+
+        if selected_expense_method is not None:
+            window = self._method_categories_window(
+                payment_value, payment_year, payment_month
+            )
+            context['expense_method_categories'] = get_expenses_by_category_for_method(
+                self.request.user,
+                selected_expense_method,
+                window['year'],
+                window['month'],
+            )
+            context['expense_method_categories_label'] = window['label']
+            context['expense_method_categories_window'] = window['window']
+        else:
+            context['expense_method_categories'] = []
+            context['expense_method_categories_label'] = ''
+            context['expense_method_categories_window'] = ''
+
+        if selected_income_method is not None:
+            window = self._method_categories_window(
+                payment_value, payment_year, payment_month
+            )
+            context['income_method_categories'] = get_income_by_category_for_method(
+                self.request.user,
+                selected_income_method,
+                window['year'],
+                window['month'],
+            )
+            context['income_method_categories_label'] = window['label']
+            context['income_method_categories_window'] = window['window']
+        else:
+            context['income_method_categories'] = []
+            context['income_method_categories_label'] = ''
+            context['income_method_categories_window'] = ''
+
+        # Chart 5 — "Where the money goes". The breakdown lives inside
+        # `evolution` already, but only for the time-series window. When
+        # the user picks a different month (or explicitly `ALL`), we
+        # recompute.
         category_value, category_year, category_month = self.get_category_month()
         context['category_month_param'] = category_value
         if category_value == 'ALL':
@@ -331,73 +531,30 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
                 date(category_year, category_month, 1).strftime('%B %Y')
             )
 
-        # Chart 4 — "Spending by payment method". `ALL` aggregates the
-        # last `ALL_TIME_MONTHS` months; a specific `YYYY-MM` reads that
-        # single month on the same `amount_for_month` rule as before.
-        payment_value, payment_year, payment_month = self.get_payment_month()
-        context['payment_month_param'] = payment_value
-        if payment_value == 'ALL':
-            breakdown = get_expenses_by_payment_method(
+        # Chart 6 — "How much is on installments" (filter: ALL | YYYY-MM,
+        # defaulting to the current month). A donut splitting expenses by
+        # recurrence: installment plans vs fixed recurrences vs one-off
+        # purchases, answering "how much of this month's outflow is from
+        # parcels I bought before".
+        installment_value, inst_year, inst_month = self.get_installment_month()
+        context['installment_month_param'] = installment_value
+        if installment_value == 'ALL':
+            recurrence = get_expenses_by_recurrence(
                 self.request.user, months=ALL_TIME_MONTHS
             )
-            context['payment_window_label'] = 'All time'
+            context['installment_window_label'] = 'All time'
         else:
-            breakdown = get_expenses_by_payment_method(
-                self.request.user, payment_year, payment_month
+            recurrence = get_expenses_by_recurrence(
+                self.request.user, inst_year, inst_month
             )
-            context['payment_window_label'] = (
-                date(payment_year, payment_month, 1).strftime('%B %Y')
-            )
-        context['payment_breakdown'] = breakdown
-        context['payment_chart'] = (
-            build_bar_chart(
-                breakdown['methods'],
-                [
-                    {
-                        'name': 'Expenses',
-                        'tone': 'expense',
-                        'values': [float(row['total']) for row in breakdown['methods']],
-                    }
-                ],
-            )
-            if breakdown['methods']
+            context['installment_window_label'] = date(
+                inst_year, inst_month, 1
+            ).strftime('%B %Y')
+        context['recurrence_breakdown'] = recurrence
+        context['recurrence_chart'] = (
+            build_donut_chart([s for s in recurrence['slices'] if s['draw']])
+            if recurrence['slices']
             else None
         )
-
-        # The "method categories" panel that opens when a bar is clicked.
-        # Validated against the current breakdown so a stale URL never shows
-        # a panel for a method that isn't on the chart it was clicked from.
-        selected_method = self.get_selected_payment_method(breakdown)
-        context['selected_payment_method'] = selected_method
-        if selected_method is not None:
-            if payment_value == 'ALL':
-                # No specific month was chosen — anchor the panel on today's
-                # month so it answers "what did I buy with this card most
-                # recently" rather than aggregating a fuzzy 12-month window.
-                today = timezone.localdate()
-                method_categories = get_expenses_by_category_for_method(
-                    self.request.user,
-                    selected_method,
-                    today.year,
-                    today.month,
-                )
-                context['method_categories_label'] = today.strftime('%B %Y')
-                context['method_categories_window'] = 'current month'
-            else:
-                method_categories = get_expenses_by_category_for_method(
-                    self.request.user,
-                    selected_method,
-                    payment_year,
-                    payment_month,
-                )
-                context['method_categories_label'] = (
-                    date(payment_year, payment_month, 1).strftime('%B %Y')
-                )
-                context['method_categories_window'] = 'selected month'
-            context['method_categories'] = method_categories
-        else:
-            context['method_categories'] = []
-            context['method_categories_label'] = ''
-            context['method_categories_window'] = ''
 
         return context

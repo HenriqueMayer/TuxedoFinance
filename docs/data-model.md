@@ -9,8 +9,14 @@ erDiagram
     USER ||--o{ TRANSACTION : "owns"
     USER ||--o{ CATEGORY : "owns"
     USER ||--o{ PAYMENT_METHOD : "owns"
-    USER ||--o{ INVESTMENT : "owns"
+    USER ||--o{ INSTITUTION : "owns"
+    USER ||--o{ INVESTMENT_PRODUCT : "owns"
+    USER ||--o{ ASSET : "owns"
+    USER ||--o{ INVESTMENT_OPERATION : "owns"
     USER ||--o{ EXCHANGE_RATE : "owns"
+    INSTITUTION ||--o{ INVESTMENT_PRODUCT : "contains"
+    INVESTMENT_PRODUCT ||--o{ INVESTMENT_OPERATION : "records"
+    ASSET ||--o{ INVESTMENT_OPERATION : "denominates"
     PAYMENT_METHOD ||--o{ TRANSACTION : "records"
     CATEGORY ||--o{ TRANSACTION : "classifies"
     CATEGORY |o--o{ CATEGORY : "is subcategory of"
@@ -59,13 +65,42 @@ erDiagram
         datetime updated_at
     }
 
-    INVESTMENT {
+    INSTITUTION {
         integer id PK
         integer user_id FK
+        string name
+        datetime created_at
+        datetime updated_at
+    }
+
+    INVESTMENT_PRODUCT {
+        integer id PK
+        integer user_id FK
+        integer institution_id FK
+        string name
+        string yield_mode "MANUAL | MONTHLY | ANNUAL (future)"
+        datetime created_at
+        datetime updated_at
+    }
+
+    ASSET {
+        integer id PK
+        integer user_id FK
+        string name
+        string code "free-form, e.g. BRL | USD | BTC"
+        string currency "three-letter display code"
+        datetime created_at
+        datetime updated_at
+    }
+
+    INVESTMENT_OPERATION {
+        integer id PK
+        integer user_id FK
+        integer product_id FK
+        integer asset_id FK
         string title
         decimal amount "always positive"
-        string kind "DEPOSIT | WITHDRAWAL"
-        string currency "ISO 4217, defaults to settings.CURRENCY"
+        string kind "DEPOSIT | WITHDRAWAL | YIELD"
         date date
         string reason "optional, 255 chars"
         text notes "optional"
@@ -341,15 +376,27 @@ Format modules are read once and cached by Django, so changing `CURRENCY` requir
 - **Form inputs.** Django form fields keep `localize=False` (the default), so `<input type="number">` still renders `value="12345.67"` and still parses a submitted `12345.67`. This matters more than it looks: the HTML spec only accepts a dot-decimal `value`, so a localized `value="12345,67"` would be rejected by the browser and the amount field would come up **empty on every edit**. Worse, `sanitize_separators` would read a submitted `1234.50` as `123450` — a dot means "thousands" under this format.
 - **SVG coordinates and CSS widths** on the reports page. Django localizes raw floats rendered through `{{ }}`, which would emit `x="90,83"` and `width: 33,33%` — both invalid. The chart markup is therefore wrapped in `{% localize off %}` (and the bar width uses `|unlocalize`). Axis labels inside the SVG stay formatted, because `floatformat` localizes independently of that tag.
 
-### `Investment` (`investments/models.py`)
+### `Institution`, `InvestmentProduct`, and `Asset` (`investments/models.py`)
+
+`Institution` represents a bank, broker, or exchange. `InvestmentProduct`
+represents a named product under that institution, such as `Cofrinho
+Henrique`, `CDI`, or `CDB`. `Asset` is free-form and can represent `BRL`,
+`USD`, `BTC`, an ETF ticker, or another user-defined code.
+
+The product has a yield mode for future planning. The current form permits only
+`MANUAL`; monthly and annual automatic modes are displayed as `Coming soon` and
+do not calculate anything.
+
+### `Investment` operation (`investments/models.py`)
 
 | Field | Type | Notes |
 |---|---|---|
 | `user` | FK → `AUTH_USER_MODEL` | `on_delete=CASCADE`, `related_name='investments'` |
+| `product` | FK → `InvestmentProduct` | `on_delete=PROTECT` |
+| `asset` | FK → `Asset` | `on_delete=PROTECT` |
 | `title` | `CharField(max_length=150)` | |
 | `amount` | `DecimalField(max_digits=10, decimal_places=2)` | `MinValueValidator(Decimal('0.01'))` — always positive, like `Transaction.amount` |
-| `kind` | `CharField(choices=Kind)` | `DEPOSIT` or `WITHDRAWAL` — see enum below |
-| `currency` | `CharField(max_length=3, choices=Currency)` | ISO 4217, validated against `core.currencies.CURRENCIES`, default `settings.CURRENCY` |
+| `kind` | `CharField(choices=Kind)` | `DEPOSIT`, `WITHDRAWAL`, or `YIELD` — see enum below |
 | `date` | `DateField` | when the move happened in real life (user-editable) |
 | `reason` | `CharField(max_length=255, blank=True)` | free-form, especially useful for withdrawals |
 | `notes` | `TextField(blank=True)` | optional |
@@ -357,18 +404,20 @@ Format modules are read once and cached by Django, so changing `CURRENCY` requir
 | `updated_at` | `DateTimeField(auto_now=True)` | |
 
 - `Meta.ordering = ['-date', '-created_at']`.
-- `__str__`: `"{title} ({kind display}, {currency})"`.
-- `signed_amount` (property): `+amount` for `DEPOSIT`, `-amount` for `WITHDRAWAL`. Used by the simulated-total fold and any future code that needs the row's contribution to the running balance.
+- `__str__`: `"{title} ({kind display}, {asset code})"`.
+- `currency` is exposed as a property from the selected asset.
+- `signed_amount` (property): `+amount` for `DEPOSIT` and `YIELD`, `-amount` for `WITHDRAWAL`.
 
 ```python
 # investments/models.py — Investment.Kind
 DEPOSIT = 'DEPOSIT', 'Deposit'
 WITHDRAWAL = 'WITHDRAWAL', 'Withdrawal'
+YIELD = 'YIELD', 'Yield'
 ```
 
 **No FK to `Transaction`.** Deliberately — this is a parallel universe (see [apps/investments.md](apps/investments.md)). The user keeps the two in sync manually: a `Transaction` of type `INVESTMENT` removes money from the dashboard balance, and a matching `Investment` of kind `DEPOSIT` records the move into the portfolio. The model is not coupled so a user can diverge, reseed, or delete the investments log without breaking the transaction log (and vice-versa).
 
-**The `currency` field is independent from `Transaction`.** A single `Transaction` is always denominated in `settings.CURRENCY` (the project's base) — there is no foreign-currency transaction flow. An `Investment`, by contrast, can be in any supported currency; the list view folds the totals per currency and shows a simulated total in the base using the latest `ExchangeRate` (next section).
+**The asset is independent from `Transaction`.** A single `Transaction` is always denominated in `settings.CURRENCY` (the project's base), while an investment operation uses the free-form asset selected by the user. Supported currency codes can be converted through `ExchangeRate`; arbitrary asset pricing is outside the current scope.
 
 ### `ExchangeRate` (`investments/models.py`)
 
@@ -393,9 +442,16 @@ WITHDRAWAL = 'WITHDRAWAL', 'Withdrawal'
 
 ## Investments business rules
 
-### Per-currency totals
+### Grouped portfolio totals
 
-The investments list page shows one card per supported currency (`BRL, USD, EUR, GBP, JPY, CHF`), base first then alphabetical, with the deposited / withdrawn / net balance of that currency. The fold lives in `investments.services.get_per_currency_totals` and reads the **unfiltered** user queryset, so a filtered list never makes the cards lie. Currencies with no entries show as `0,00` (the card is always present, the grid has no holes).
+The investments list page groups data by institution, investment product, and
+asset. Each asset shows deposits, manual yields, withdrawals, and its native
+balance. Mixed assets are not added together as if they shared a unit.
+`investments.services.get_portfolio_groups` reads the unfiltered user queryset,
+so a filtered operation list never changes the grouped portfolio cards.
+
+Legacy operations without the new product/asset links are ignored by the new
+screen. They are not migrated or deleted.
 
 ### Simulated total in base
 
@@ -410,4 +466,3 @@ Unlike `Transaction`, an `Investment` has no recurrence shape (`is_fixed` / `ins
 ### Deletion integrity
 
 `Investment.user` and `ExchangeRate.user` use `on_delete=CASCADE`: deleting a Django `User` deletes their investment data. There is no soft-delete or archival, matching the rest of the project.
-

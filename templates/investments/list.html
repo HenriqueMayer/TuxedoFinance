@@ -1,22 +1,29 @@
 {% extends 'base.html' %}
+{% load l10n %}
 
 {% comment %}
-Investments (parallel universe to `Transaction`). Shows only the logged-in
-user's own entries (`InvestmentListView.get_queryset`), paginated, each row
-color-coded by `kind` (Deposit emerald / Withdrawal rose) per the design
-system's semantic colors already used on the transactions list.
-
-The card grid at the top is per-currency, not per-type: one card per
-supported currency (base first, then alphabetical), each showing that
-currency's deposited / withdrawn / net balance, plus a "simulated total
-in {base}" card that adds everything up at the user's latest
-`ExchangeRate` for each foreign currency. Currencies without a rate are
-excluded from the simulation and the card surfaces that explicitly so a
-missing rate can never silently shrink the displayed total.
+Investments (parallel universe to `Transaction`). Shows the logged-in user's
+manual operations grouped by institution, investment, and free-form asset.
+Rows use Deposit emerald, Yield amber, and Withdrawal rose.
 
 Optional filters: `?kind=DEPOSIT|WITHDRAWAL` narrows the table, `?q=`
 searches title / reason / notes. Pagination uses `{% querystring %}` so
 the active filters survive page navigation.
+
+At the bottom of the page (after the list / pagination), one chart
+section sits there:
+
+  - The cumulative portfolio evolution and monthly deposits/yields/withdrawals
+    charts.
+
+The section is hidden via `{% if has_investments %}` — empty charts
+are not informative, and the empty-state CTA above
+already tells the user to add an entry.
+
+Coordinates are wrapped in `{% localize off %}` blocks around the
+`<text>` and `<polyline>` attributes inside `<svg>`, exactly like the
+Reports charts, so Brazilian-style number formatting never reaches a
+coordinate string.
 {% endcomment %}
 
 {% block title %}Investments — CashFlow{% endblock %}
@@ -45,30 +52,59 @@ the active filters survive page navigation.
         </div>
     </div>
 
-    {# Per-currency cards + simulated total. Rendered as a 2-col grid on   #}
-    {# small screens, 3-col on md, 4-col on xl. The simulated card spans   #}
-    {# the full width to keep its label and (potential) warning prominent. #}
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {% for card in per_currency_cards %}
-            <div class="space-y-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
-                <div>
-                    <p class="text-sm font-medium text-slate-600 dark:text-neutral-400">{{ card.code }} &mdash; {{ card.name }}</p>
+    <div class="space-y-4">
+        {% for institution in portfolio_groups %}
+            <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                    <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{{ institution.name }}</h2>
+                    <p class="text-xs text-slate-500 dark:text-neutral-500">Balances are shown per asset</p>
                 </div>
-                <p class="text-2xl font-bold tabular-nums {% if card.balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">
-                    {{ card.symbol }} {{ card.balance|floatformat:2 }}
-                </p>
-                <dl class="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                        <dt class="text-slate-500 dark:text-neutral-500">Deposited</dt>
-                        <dd class="mt-0.5 font-semibold tabular-nums text-slate-700 dark:text-neutral-300">{{ card.symbol }} {{ card.deposits|floatformat:2 }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-slate-500 dark:text-neutral-500">Withdrawn</dt>
-                        <dd class="mt-0.5 font-semibold tabular-nums text-slate-700 dark:text-neutral-300">{{ card.symbol }} {{ card.withdrawals|floatformat:2 }}</dd>
-                    </div>
-                </dl>
+                <div class="grid gap-3 md:grid-cols-2">
+                    {% for product in institution.products %}
+                        <div class="space-y-3 rounded-xl ring-1 ring-slate-200 dark:ring-[#3a3a3a] p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <h3 class="font-semibold text-slate-900 dark:text-neutral-100">{{ product.name }}</h3>
+                                    <p class="text-xs text-slate-500 dark:text-neutral-500">Manual yields</p>
+                                </div>
+                                <span class="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300">{{ product.yield_mode|title }}</span>
+                            </div>
+                            <div class="space-y-3">
+                                {% for asset in product.assets %}
+                                    <div class="rounded-lg bg-slate-50 p-3 dark:bg-[#2B2B2B]">
+                                        <div class="flex items-baseline justify-between gap-3">
+                                            <span class="text-sm font-medium text-slate-700 dark:text-neutral-300">{{ asset.name }} ({{ asset.code }})</span>
+                                            <span class="font-semibold tabular-nums {% if asset.balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">{{ asset.balance|floatformat:2 }} {{ asset.code }}</span>
+                                        </div>
+                                        <dl class="mt-2 grid grid-cols-3 gap-2 text-xs">
+                                            <div><dt class="text-slate-500 dark:text-neutral-500">Deposits</dt><dd class="font-semibold tabular-nums text-slate-700 dark:text-neutral-300">{{ asset.deposits|floatformat:2 }}</dd></div>
+                                            <div><dt class="text-slate-500 dark:text-neutral-500">Yields</dt><dd class="font-semibold tabular-nums text-amber-600 dark:text-amber-400">{{ asset.yields|floatformat:2 }}</dd></div>
+                                            <div><dt class="text-slate-500 dark:text-neutral-500">Withdrawals</dt><dd class="font-semibold tabular-nums text-rose-600 dark:text-rose-400">{{ asset.withdrawals|floatformat:2 }}</dd></div>
+                                        </dl>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% empty %}
+            <div class="rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5 text-sm text-slate-600 dark:text-neutral-400">
+                Create an institution, investment, and asset before recording an operation.
             </div>
         {% endfor %}
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-3">
+        <a href="{% url 'investments:create_institution' %}" class="rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 text-sm font-semibold text-indigo-600 dark:text-indigo-300">+ Add bank or broker</a>
+        <a href="{% url 'investments:create_product' %}" class="rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 text-sm font-semibold text-indigo-600 dark:text-indigo-300">+ Add investment</a>
+        <a href="{% url 'investments:create_asset' %}" class="rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 text-sm font-semibold text-indigo-600 dark:text-indigo-300">+ Add free asset</a>
+    </div>
+
+    <div class="rounded-2xl ring-1 ring-indigo-200 dark:ring-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/5 p-5">
+        <p class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Automatic yield rates</p>
+        <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">Monthly and annual automatic calculations are planned.</p>
+        <span class="mt-3 inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-neutral-300">Coming soon</span>
     </div>
 
     {# Simulated total in the base currency. Spans the full width to keep   #}
@@ -117,12 +153,33 @@ the active filters survive page navigation.
                 {% endfor %}
             </select>
         </div>
+        <div class="min-w-[12rem] flex-1 space-y-1.5">
+            <label for="filter-institution" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Bank or broker</label>
+            <select id="filter-institution" name="institution" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100">
+                <option value="">All institutions</option>
+                {% for institution in institution_choices %}<option value="{{ institution.pk }}" {% if selected_institution == institution.pk|stringformat:'s' %}selected{% endif %}>{{ institution.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="min-w-[12rem] flex-1 space-y-1.5">
+            <label for="filter-product" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Investment</label>
+            <select id="filter-product" name="product" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100">
+                <option value="">All investments</option>
+                {% for product in product_choices %}<option value="{{ product.pk }}" {% if selected_product == product.pk|stringformat:'s' %}selected{% endif %}>{{ product.institution.name }} / {{ product.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="min-w-[12rem] flex-1 space-y-1.5">
+            <label for="filter-asset" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Asset</label>
+            <select id="filter-asset" name="asset" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100">
+                <option value="">All assets</option>
+                {% for asset in asset_choices %}<option value="{{ asset.pk }}" {% if selected_asset == asset.pk|stringformat:'s' %}selected{% endif %}>{{ asset.name }} ({{ asset.code }})</option>{% endfor %}
+            </select>
+        </div>
         <div class="flex items-center gap-3">
             <button type="submit"
                     class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                 Filter
             </button>
-            {% if search_query or selected_kind %}
+            {% if search_query or selected_kind or selected_institution or selected_product or selected_asset %}
                 <a href="{{ list_url }}"
                    class="rounded text-sm font-medium text-slate-600 dark:text-neutral-400 transition hover:text-slate-900 dark:hover:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     Clear filters
@@ -141,13 +198,17 @@ the active filters survive page navigation.
                                 <p class="font-medium text-slate-900 dark:text-neutral-100">{{ investment.title }}</p>
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
                                     {% if investment.kind == 'DEPOSIT' %}bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400
-                                    {% else %}bg-rose-500/10 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400{% endif %}">
+                                    {% elif investment.kind == 'WITHDRAWAL' %}bg-rose-500/10 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400
+                                    {% else %}bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400{% endif %}">
                                     {{ investment.get_kind_display }}
                                 </span>
                                 <span class="inline-flex items-center rounded-full border border-slate-300 dark:border-[#3a3a3a] px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:text-neutral-400">
                                     {{ investment.currency }}
                                 </span>
                             </div>
+                            <p class="text-xs text-slate-500 dark:text-neutral-500">
+                                {{ investment.product.institution.name }} &middot; {{ investment.product.name }} &middot; {{ investment.asset.name }}
+                            </p>
                             <p class="text-sm text-slate-600 dark:text-neutral-400">
                                 {{ investment.date|date:'M j, Y' }}
                                 {% if investment.reason %}
@@ -158,8 +219,9 @@ the active filters survive page navigation.
                         <div class="flex items-center gap-4">
                             <p class="text-lg font-semibold tabular-nums
                                 {% if investment.kind == 'DEPOSIT' %}text-emerald-600 dark:text-emerald-400
+                                {% elif investment.kind == 'YIELD' %}text-amber-600 dark:text-amber-400
                                 {% else %}text-rose-600 dark:text-rose-400{% endif %}">
-                                {% if investment.kind == 'DEPOSIT' %}+{% else %}-{% endif %}{{ investment.currency }} {{ investment.amount|floatformat:2 }}
+                                {% if investment.kind == 'DEPOSIT' %}+{% elif investment.kind == 'YIELD' %}+{% else %}-{% endif %}{{ investment.currency }} {{ investment.amount|floatformat:2 }}
                             </p>
                             <div class="flex items-center gap-3">
                                 <a href="{% url 'investments:update' investment.pk %}"
@@ -202,10 +264,24 @@ the active filters survive page navigation.
                 {% endif %}
             </nav>
         {% endif %}
-    {% elif search_query or selected_kind %}
+    {% elif search_query or selected_kind or selected_institution or selected_product or selected_asset %}
         {% include 'partials/empty_state.html' with title='No matching investments' message='Try a different search term or type, or clear the filters to see everything.' cta_url=list_url cta_label='Clear filters' %}
     {% else %}
         {% include 'partials/empty_state.html' with title='No investments recorded yet' message='Add a deposit or withdrawal to start tracking your investment portfolio.' cta_url=create_url cta_label='New Entry' %}
     {% endif %}
-</div>
+
+{# ---------------------------------------------------------------- #}
+    {# Investment charts at the bottom of the page — three         #}
+    {# server-rendered SVGs over the same 12-month window:           #}
+    {#   1. Investment evolution (line, cumulative total in base)    #}
+    {#   2. Monthly flow (grouped bars: Deposits × Withdrawals)      #}
+    {#   3. Per-currency indexed (multi-line, normalized to 100)     #}
+    {# See `_investments_charts.html` and `InvestmentListView` for    #}
+    {# the rendering and context. Hidden when the user has no          #}
+    {# investments — same `{% if has_investments %}` gate the old    #}
+    {# sparkline grid used.                                            #}
+    {# ---------------------------------------------------------------- #}
+    {% if has_investments %}
+        {% include 'investments/_investments_charts.html' %}
+    {% endif %}
 {% endblock %}

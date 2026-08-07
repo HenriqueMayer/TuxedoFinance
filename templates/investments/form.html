@@ -7,12 +7,12 @@ Shared create/update form for Investment. Renders
 `payments/form.html` and `transactions/form.html`.
 {% endcomment %}
 
-{% block title %}{% if form.instance.pk %}Edit Investment{% else %}New Investment{% endif %} — CashFlow{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit Operation{% else %}New Operation{% endif %} — CashFlow{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">
-        {% if form.instance.pk %}Edit Investment{% else %}New Investment{% endif %}
+        {% if form.instance.pk %}Edit Operation{% else %}New Operation{% endif %}
     </h1>
 
     <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
@@ -26,10 +26,11 @@ Shared create/update form for Investment. Renders
             </div>
         {% endif %}
 
+        {% include 'partials/form_field.html' with field=form.product %}
+        {% include 'partials/form_field.html' with field=form.asset %}
         {% include 'partials/form_field.html' with field=form.title %}
         {% include 'partials/form_field.html' with field=form.kind %}
         {% include 'partials/form_field.html' with field=form.amount %}
-        {% include 'partials/form_field.html' with field=form.currency %}
         {% include 'partials/form_field.html' with field=form.date %}
         {% include 'partials/form_field.html' with field=form.reason %}
         {% include 'partials/form_field.html' with field=form.notes %}

@@ -49,6 +49,15 @@ VALUE_LABEL_OFFSET = 6
 LABEL_CHAR_WIDTH = 5.5
 LABEL_MAX_CHARS = 28
 
+import math
+
+# Donut canvas — square so the ring sits centered, large enough that the
+# share labels around it stay legible. Like the other canvases it is a
+# fixed viewBox the template scales with `class="w-full"`.
+DONUT_SIZE = 320
+DONUT_PADDING = 28
+DONUT_STROKE = 38
+
 
 def _bounds(values):
     """Value range to plot, always including zero so the axis is honest.
@@ -192,4 +201,124 @@ def build_bar_chart(labels, series):
         # the payment-method chart truncates to it, so names stay whole while
         # there are few bars and shorten as bars are added.
         'label_chars': min(LABEL_MAX_CHARS, int(_slot_width(count) / LABEL_CHAR_WIDTH)),
+    }
+
+
+def build_donut_chart(slices):
+    """Donut (ring) geometry for a proportion chart (FR16).
+
+    `slices` is a list of `{'name': ..., 'tone': ..., 'value': ...,
+    'share': ...}` ordered the way the caller wants the ring drawn —
+    slices are placed clockwise starting at 12 o'clock, and the order is
+    kept fixed so the ring does not reshuffle when the month changes.
+
+    Returns a dict with the canvas size, ring center/radii, and a
+    `segments` list where each entry carries a ready-to-render SVG arc
+    `<path d="...">`. The last slice absorbs any rounding remainder so
+    the ring closes exactly at 360° rather than leaving a hairline gap.
+    """
+    size = DONUT_SIZE
+    padding = DONUT_PADDING
+    stroke = DONUT_STROKE
+    cx = size / 2
+    cy = size / 2
+    radius = (size - 2 * padding - stroke) / 2
+
+    total = sum(slice['value'] for slice in slices)
+    if not total:
+        return {
+            'width': size,
+            'height': size,
+            'cx': cx,
+            'cy': cy,
+            'radius': radius,
+            'stroke': stroke,
+            'total': 0.0,
+            'segments': [],
+        }
+
+    segments = []
+    start_angle = -90.0  # 12 o'clock, in degrees
+    for index, slice in enumerate(slices):
+        # Let the final slice sweep whatever is left so the ring closes
+        # exactly at 360°, absorbing the rounding error from the others.
+        # Ring starts at -90° (12 o'clock) and must close at 270°, so the
+        # remaining sweep is `270 - start_angle` (NOT `360 + 90 - ...`).
+        remaining = 270.0 - start_angle
+        if index == len(slices) - 1:
+            sweep = remaining
+        else:
+            sweep = slice['share'] / 100.0 * 360.0
+
+        end_angle = start_angle + sweep
+
+        start_rad = math.radians(start_angle)
+        end_rad = math.radians(end_angle)
+
+        x1 = round(cx + radius * math.cos(start_rad), 2)
+        y1 = round(cy + radius * math.sin(start_rad), 2)
+        x2 = round(cx + radius * math.cos(end_rad), 2)
+        y2 = round(cy + radius * math.sin(end_rad), 2)
+
+        # Outer arc, then line in to the inner radius, inner arc back,
+        # then close — a donut wedge. `sweep_flag` is 1 for the outer
+        # arc (clockwise) and 0 for the inner (counter-clockwise).
+        inner_radius = radius - stroke
+        ix1 = round(cx + inner_radius * math.cos(start_rad), 2)
+        iy1 = round(cy + inner_radius * math.sin(start_rad), 2)
+        ix2 = round(cx + inner_radius * math.cos(end_rad), 2)
+        iy2 = round(cy + inner_radius * math.sin(end_rad), 2)
+
+        # A full 360° sweep (a single slice covering the whole ring)
+        # collapses to start == end, and the SVG `A` command needs two
+        # distinct points to draw anything — otherwise the path renders
+        # nothing and the slice just vanishes. Split it into two
+        # semicircle arcs, which together still cover 360° but each has
+        # distinct endpoints.
+        if sweep >= 359.999:
+            mid_angle = start_angle + sweep / 2.0
+            mid_rad = math.radians(mid_angle)
+            mx = round(cx + radius * math.cos(mid_rad), 2)
+            my = round(cy + radius * math.sin(mid_rad), 2)
+            imx = round(cx + inner_radius * math.cos(mid_rad), 2)
+            imy = round(cy + inner_radius * math.sin(mid_rad), 2)
+            path = (
+                f'M {x1},{y1} '
+                f'A {radius},{radius} 0 0 1 {mx},{my} '
+                f'A {radius},{radius} 0 0 1 {x1},{y1} '
+                f'L {ix1},{iy1} '
+                f'A {inner_radius},{inner_radius} 0 0 0 {imx},{imy} '
+                f'A {inner_radius},{inner_radius} 0 0 0 {ix1},{iy1} '
+                f'Z'
+            )
+        else:
+            large_arc = 1 if sweep > 180.0 else 0
+            path = (
+                f'M {x1},{y1} '
+                f'A {radius},{radius} 0 {large_arc} 1 {x2},{y2} '
+                f'L {ix2},{iy2} '
+                f'A {inner_radius},{inner_radius} 0 {large_arc} 0 {ix1},{iy1} '
+                f'Z'
+            )
+
+        segments.append(
+            {
+                'name': slice['name'],
+                'tone': slice['tone'],
+                'value': slice['value'],
+                'share': slice['share'],
+                'd': path,
+            }
+        )
+        start_angle = end_angle
+
+    return {
+        'width': size,
+        'height': size,
+        'cx': cx,
+        'cy': cy,
+        'radius': radius,
+        'stroke': stroke,
+        'total': total,
+        'segments': segments,
     }

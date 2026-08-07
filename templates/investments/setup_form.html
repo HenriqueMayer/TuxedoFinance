@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Set Up Investments — CashFlow{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md space-y-6">
+    <div>
+        <a href="{% url 'investments:list' %}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400">&larr; Back to Investments</a>
+        <h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-neutral-100">Set up Investments</h1>
+        <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+            Create the item needed before recording an operation.
+        </p>
+    </div>
+
+    <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}<p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+        {% endif %}
+        {% for field in form %}
+            {% include 'partials/form_field.html' with field=field %}
+        {% endfor %}
+        <div class="flex items-center gap-3">
+            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90">Save</button>
+            <a href="{% url 'investments:list' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
