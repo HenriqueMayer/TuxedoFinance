@@ -111,7 +111,7 @@
     </section>
 
     {# ---------------------------------------------------------------- #}
-    {# Chart 2 — monthly flow (grouped bars): Deposits × Withdrawals   #}
+    {# Chart 2 — monthly flow (grouped bars): deposits, yields, withdrawals #}
     {# per month, both in {{ CURRENCY_SYMBOL }}, per-entry FX.          #}
     {# ---------------------------------------------------------------- #}
     <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
@@ -119,7 +119,7 @@
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
                 <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Monthly flow</h2>
                 <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-                    What you deposited and what you withdrew each month &mdash; both in {{ CURRENCY_SYMBOL }},
+                    What you deposited, earned, and withdrew each month &mdash; both in {{ CURRENCY_SYMBOL }},
                     converted at the rate that was current on each entry&rsquo;s date.
                 </p>
             </div>
@@ -167,6 +167,7 @@
                         <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-neutral-400">
                             <span class="h-2.5 w-2.5 rounded-sm
                                 {% if entry.tone == 'income' %}bg-emerald-400
+                                {% elif entry.tone == 'investment' %}bg-amber-400
                                 {% else %}bg-rose-400{% endif %}"></span>
                             {{ entry.name }}
                         </li>
@@ -179,7 +180,7 @@
             {% localize off %}
             <svg viewBox="0 0 {{ chart_flow.width }} {{ chart_flow.height }}"
                  class="h-auto w-full min-w-[44rem]" role="img"
-                 aria-label="Grouped bar chart of deposits and withdrawals per month in base currency">
+                  aria-label="Grouped bar chart of deposits, yields, and withdrawals per month in base currency">
                 {% for line in chart_flow.grid %}
                     <line x1="{{ chart_flow.plot_left }}" y1="{{ line.y }}"
                           x2="{{ chart_flow.plot_right }}" y2="{{ line.y }}"
@@ -194,8 +195,9 @@
                     {% for bar in group.bars %}
                         <rect x="{{ bar.x }}" y="{{ bar.y }}"
                               width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                              class="{% if bar.tone == 'income' %}fill-emerald-400/80
-                                     {% else %}fill-rose-400/80{% endif %}">
+                               class="{% if bar.tone == 'income' %}fill-emerald-400/80
+                                      {% elif bar.tone == 'investment' %}fill-amber-400/80
+                                      {% else %}fill-rose-400/80{% endif %}">
                             <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
                         </rect>
                     {% endfor %}

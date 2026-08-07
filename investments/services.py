@@ -24,9 +24,9 @@ Seven helpers, in three layers:
       entry whose date is in that month or earlier. Seeded with the
       user's pre-window balances (see `_pre_window_balances`) so an old
       deposit shows up in the very first row, not only after the month
-      it would land in. Drives the date axis for every chart on the
-      page; the two FX-converted helpers below call it for the per-month
-      per-currency balances they then fold into base.
+      it would land in. Drives the per-currency indexed multi-line chart
+      (no FX) on the list page; the cumulative-chart helper below also
+      consumes its rows.
 
   FX-converted time-series layer — base-currency numbers per month, so
   the page can plot one consolidated trend instead of six native-unit
@@ -90,7 +90,11 @@ def get_per_currency_totals(user, currencies):
     reasoning as `InvestmentListView`: the cards on top of the page should
     not change shape when the user filters the list below them.
     """
-    entries = list(Investment.objects.filter(user=user))
+    entries = list(
+        Investment.objects.filter(
+            user=user, product__isnull=False, asset__isnull=False
+        ).select_related('asset')
+    )
 
     totals = {
         code: {
@@ -99,6 +103,7 @@ def get_per_currency_totals(user, currencies):
             'name': name,
             'deposits': ZERO,
             'withdrawals': ZERO,
+            'yields': ZERO,
             'balance': ZERO,
         }
         for code, (symbol, name) in ((code, _currency_meta(code)) for code in currencies)
@@ -118,16 +123,84 @@ def get_per_currency_totals(user, currencies):
                 'name': name,
                 'deposits': ZERO,
                 'withdrawals': ZERO,
+                'yields': ZERO,
                 'balance': ZERO,
             }
             totals[entry.currency] = bucket
         if entry.kind == Investment.Kind.DEPOSIT:
             bucket['deposits'] += entry.amount
-        else:
+        elif entry.kind == Investment.Kind.WITHDRAWAL:
             bucket['withdrawals'] += entry.amount
+        else:
+            bucket['yields'] += entry.amount
         bucket['balance'] += entry.signed_amount
 
     return totals
+
+
+def get_portfolio_groups(user):
+    """Return balances grouped by institution, product, and asset."""
+    entries = Investment.objects.filter(
+        user=user, product__isnull=False, asset__isnull=False
+    ).select_related('product__institution', 'asset')
+    institutions = {}
+    for entry in entries:
+        institution = entry.product.institution
+        institution_bucket = institutions.setdefault(
+            institution.id,
+            {
+                'id': institution.id,
+                'name': institution.name,
+                'balance': ZERO,
+                'deposits': ZERO,
+                'withdrawals': ZERO,
+                'yields': ZERO,
+                'products': {},
+            },
+        )
+        product_bucket = institution_bucket['products'].setdefault(
+            entry.product.id,
+            {
+                'id': entry.product.id,
+                'name': entry.product.name,
+                'yield_mode': entry.product.yield_mode,
+                'balance': ZERO,
+                'deposits': ZERO,
+                'withdrawals': ZERO,
+                'yields': ZERO,
+                'assets': {},
+            },
+        )
+        asset_bucket = product_bucket['assets'].setdefault(
+            entry.asset.id,
+            {
+                'id': entry.asset.id,
+                'name': entry.asset.name,
+                'code': entry.asset.code,
+                'currency': entry.asset.currency,
+                'balance': ZERO,
+                'deposits': ZERO,
+                'withdrawals': ZERO,
+                'yields': ZERO,
+            },
+        )
+        buckets = (institution_bucket, product_bucket, asset_bucket)
+        for bucket in buckets:
+            bucket['balance'] += entry.signed_amount
+            bucket_key = {
+                Investment.Kind.DEPOSIT: 'deposits',
+                Investment.Kind.WITHDRAWAL: 'withdrawals',
+                Investment.Kind.YIELD: 'yields',
+            }[entry.kind]
+            bucket[bucket_key] += entry.amount
+
+    result = []
+    for institution in institutions.values():
+        institution['products'] = list(institution['products'].values())
+        for product in institution['products']:
+            product['assets'] = list(product['assets'].values())
+        result.append(institution)
+    return result
 
 
 def get_latest_rates(user, to_currency):
@@ -319,7 +392,11 @@ def get_cumulative_balance_timeseries(user, currencies, months=TIMESERIES_MONTHS
     uses the same pattern; see `dashboard.services.get_account_evolution`
     for the same argument from the other domain.
     """
-    investments = list(Investment.objects.filter(user=user))
+    investments = list(
+        Investment.objects.filter(
+            user=user, product__isnull=False, asset__isnull=False
+        ).select_related('asset')
+    )
     bucketed = _group_investments_by_month(investments)
 
     today = timezone.localdate()
@@ -488,11 +565,11 @@ def get_total_in_base_timeseries(
 def get_monthly_flow_in_base(
     user, base_currency, currencies, months=TIMESERIES_MONTHS, offset=0
 ):
-    """Deposits × withdrawals per month, in the base currency, rate-at-time.
+    """Deposits, withdrawals, and yields per month in the base currency.
 
     Unlike `get_total_in_base_timeseries` (cumulative), this is per-month
-    flow: each row holds a single month's DEPOSIT-total and
-    WITHDRAWAL-total in base. Per-entry rate lookup via `_resolve_rate`
+    flow: each row holds a single month's DEPOSIT, WITHDRAWAL, and YIELD totals
+    in base. Per-entry rate lookup via `_resolve_rate`
     on `entry.date` so the FX used is the rate that was current when the
     entry was recorded, not the latest one. Pre-window balances are NOT
     seeded here — flow is absolute per month, not a running sum.
@@ -510,7 +587,11 @@ def get_monthly_flow_in_base(
         which bucket they landed in), quantized to cents.
       - `missing_rate_currencies` is the sorted list of codes excluded.
     """
-    investments = list(Investment.objects.filter(user=user))
+    investments = list(
+        Investment.objects.filter(
+            user=user, product__isnull=False, asset__isnull=False
+        ).select_related('asset')
+    )
     bucketed = _group_investments_by_month(investments)
     latest_rates = get_latest_rates(user, base_currency)
 
@@ -527,6 +608,7 @@ def get_monthly_flow_in_base(
     for year, month in months_window:
         deposits = ZERO
         withdrawals = ZERO
+        yields = ZERO
         for entry in bucketed.get((year, month), []):
             if entry.currency not in currency_set:
                 continue
@@ -541,8 +623,10 @@ def get_monthly_flow_in_base(
             converted = amount * rate_value if entry.currency != base_currency else amount
             if entry.kind == Investment.Kind.DEPOSIT:
                 deposits += converted
-            else:
+            elif entry.kind == Investment.Kind.WITHDRAWAL:
                 withdrawals += converted
+            else:
+                yields += converted
         rows.append(
             {
                 'date': date(year, month, 1),
@@ -550,6 +634,7 @@ def get_monthly_flow_in_base(
                 'month': month,
                 'deposits': deposits.quantize(CENTS),
                 'withdrawals': withdrawals.quantize(CENTS),
+                'yields': yields.quantize(CENTS),
             }
         )
     return rows, sorted(missing)
