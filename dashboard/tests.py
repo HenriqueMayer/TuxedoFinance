@@ -5,7 +5,10 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from categories.models import Category
 from dashboard.services import add_months
+from payments.models import PaymentMethod
+from transactions.models import Transaction
 
 User = get_user_model()
 
@@ -50,3 +53,33 @@ class DashboardReportsTemplateTests(TestCase):
         )
         self.assertNotContains(response, 'Balance now')
         self.assertContains(response, expected_range)
+
+    def test_payment_method_drilldown_encodes_method_name_once(self):
+        method = PaymentMethod.objects.create(
+            user=self.user,
+            name='Blue Card',
+            method_type=PaymentMethod.MethodType.CREDIT_CARD,
+        )
+        Transaction.objects.create(
+            user=self.user,
+            title='Groceries',
+            amount='25.00',
+            transaction_type=Transaction.TransactionType.EXPENSE,
+            category=Category.objects.get(user=self.user, name='Groceries'),
+            payment_method=method,
+            transaction_date=timezone.localdate(),
+        )
+
+        response = self.client.get(reverse('dashboard:reports'), {'payment_month': 'ALL'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'expense_method=Blue+Card')
+        self.assertNotContains(response, 'expense_method=Blue%2520Card')
+        self.assertContains(response, 'data-scroll-target="method-categories-expense"')
+
+        drilldown = self.client.get(
+            reverse('dashboard:reports'),
+            {'payment_month': 'ALL', 'expense_method': 'Blue Card'},
+        )
+        self.assertContains(drilldown, 'Categories in')
+        self.assertContains(drilldown, 'Groceries')
