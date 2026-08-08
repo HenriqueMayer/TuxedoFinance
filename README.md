@@ -35,7 +35,8 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. Sign up from the landing page — your account arrives with the default categories seeded. Add a payment method on the Payments page before recording your first transaction.
+Open <http://127.0.0.1:8000/>. The tracked database includes a small synthetic example account (`demo` / `demo12345`) covering May–August 2026. You can also sign up from the landing page — new accounts arrive with the default categories seeded. Add a payment method on the Payments page before recording your first transaction.
+Spending by payment method
 
 ### Docker
 
@@ -54,7 +55,14 @@ The image builds the production Tailwind bundle and runs `collectstatic` at buil
 
 This is a **GitHub template repository**. Click **Use this template** to start your own independent instance — each instance owns its own database and data, and is not meant to be deployed straight from here.
 
-Unlike the usual Django convention, `db.sqlite3` is **tracked in version control** here, shipping with the schema already migrated and no data. A fresh clone is runnable immediately, and any demo data you record is versioned alongside your code. If you would rather follow the standard convention, untrack it before an instance holds real data:
+Unlike the usual Django convention, `db.sqlite3` is **tracked in version control** here, shipping with the schema already migrated and synthetic demo data. A fresh clone is runnable immediately, and any demo data you record is versioned alongside your code. **Before using this template for real data, delete `db.sqlite3` and run `python manage.py migrate` to create a clean, empty database.** With `uv`, the equivalent is `uv run python manage.py migrate`.
+
+```bash
+rm db.sqlite3
+python manage.py migrate
+```
+
+If you would rather follow the standard convention, untrack it before an instance holds real data:
 
 ```bash
 git rm --cached db.sqlite3
