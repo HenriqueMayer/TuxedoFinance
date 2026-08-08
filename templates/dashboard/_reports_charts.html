@@ -321,12 +321,12 @@ conventions this partial inherits.
                     {% endfor %}
 
                     {% for group in expense_chart.groups %}
-                        <a href="{% querystring expense_method=group.label.name|urlencode %}#method-categories-expense"
-                           hx-get="{% querystring expense_method=group.label.name|urlencode %}"
+                        <a href="{% querystring expense_method=group.label.name %}#method-categories-expense"
+                           hx-get="{% querystring expense_method=group.label.name %}"
                            hx-target="#reports-charts"
                            hx-swap="outerHTML"
                            hx-push-url="true"
-                           hx-on::after-swap="scrollToAnchor('method-categories-expense')"
+                           data-scroll-target="method-categories-expense"
                            class="cursor-pointer">
                             {% for bar in group.bars %}
                                 <rect x="{{ bar.x }}" y="{{ bar.y }}"
@@ -403,7 +403,7 @@ conventions this partial inherits.
                        hx-target="#reports-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       hx-on::after-swap="scrollToAnchor('payment-methods')"
+                        data-scroll-target="payment-methods"
                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                         Close
                     </a>
@@ -502,12 +502,12 @@ conventions this partial inherits.
                     {% endfor %}
 
                     {% for group in income_chart.groups %}
-                        <a href="{% querystring income_method=group.label.name|urlencode %}#method-categories-income"
-                           hx-get="{% querystring income_method=group.label.name|urlencode %}"
+                        <a href="{% querystring income_method=group.label.name %}#method-categories-income"
+                           hx-get="{% querystring income_method=group.label.name %}"
                            hx-target="#reports-charts"
                            hx-swap="outerHTML"
                            hx-push-url="true"
-                           hx-on::after-swap="scrollToAnchor('method-categories-income')"
+                           data-scroll-target="method-categories-income"
                            class="cursor-pointer">
                             {% for bar in group.bars %}
                                 <rect x="{{ bar.x }}" y="{{ bar.y }}"
@@ -582,7 +582,7 @@ conventions this partial inherits.
                        hx-target="#reports-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       hx-on::after-swap="scrollToAnchor('payment-methods-income')"
+                        data-scroll-target="payment-methods-income"
                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                         Close
                     </a>
