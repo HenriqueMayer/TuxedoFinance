@@ -5,10 +5,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Q
+from django.db import IntegrityError, transaction
+from django.db.models import Count, ProtectedError, Q
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
 
 from dashboard.charts import (
     build_bar_chart,
@@ -21,7 +23,13 @@ from investments.forms import (
     InvestmentForm,
     InvestmentProductForm,
 )
-from investments.models import Asset, ExchangeRate, Institution, Investment, InvestmentProduct
+from investments.models import (
+    Asset,
+    ExchangeRate,
+    Institution,
+    Investment,
+    InvestmentProduct,
+)
 from investments.services import (
     TIMESERIES_MONTHS,
     get_latest_rates,
@@ -381,45 +389,272 @@ class InvestmentUpdateView(InvestmentFormMixin, SuccessMessageMixin, UpdateView)
     success_message = 'Investment "%(title)s" updated.'
 
 
-class InstitutionCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-    model = Institution
-    form_class = InstitutionForm
+class InvestmentSettingsView(LoginRequiredMixin, TemplateView):
+    """Manage the user's institutions, products, assets, and FX settings."""
+
+    template_name = 'investments/settings/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['institutions'] = Institution.objects.filter(
+            user=self.request.user
+        ).annotate(
+            product_count=Count(
+                'investment_products',
+                filter=Q(investment_products__user=self.request.user),
+                distinct=True,
+            ),
+            operation_count=Count(
+                'investment_products__operations',
+                filter=Q(
+                    investment_products__user=self.request.user,
+                    investment_products__operations__user=self.request.user,
+                ),
+                distinct=True,
+            ),
+        )
+        context['products'] = InvestmentProduct.objects.filter(
+            user=self.request.user,
+            institution__user=self.request.user,
+        ).select_related('institution').annotate(
+            operation_count=Count(
+                'operations',
+                filter=Q(operations__user=self.request.user),
+            ),
+        )
+        context['assets'] = Asset.objects.filter(
+            user=self.request.user
+        ).annotate(
+            operation_count=Count(
+                'operations',
+                filter=Q(operations__user=self.request.user),
+            ),
+        )
+        return context
+
+
+class InvestmentSetupFormMixin(LoginRequiredMixin):
+    """Shared user scoping and integrity handling for setup entity forms."""
+
     template_name = 'investments/setup_form.html'
-    success_url = reverse_lazy('investments:list')
-    success_message = 'Institution "%(name)s" created.'
+    success_url = reverse_lazy('investments:settings')
+    entity_label = ''
+    setup_description = ''
+    duplicate_field = 'name'
+    duplicate_message = 'This item already exists.'
 
-    def form_valid(self, form):
-        form.instance.user = self.request.user
-        return super().form_valid(form)
-
-
-class InvestmentProductCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-    model = InvestmentProduct
-    form_class = InvestmentProductForm
-    template_name = 'investments/setup_form.html'
-    success_url = reverse_lazy('investments:list')
-    success_message = 'Investment "%(name)s" created.'
+    def get_queryset(self):
+        return self.model.objects.filter(user=self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        action = 'Edit' if self.object else 'Add'
+        context['setup_title'] = f'{action} {self.entity_label}'
+        context['setup_description'] = self.setup_description
+        return context
+
     def form_valid(self, form):
         form.instance.user = self.request.user
-        return super().form_valid(form)
+        try:
+            with transaction.atomic():
+                return super().form_valid(form)
+        except IntegrityError:
+            if self.get_duplicate_queryset(form).exists():
+                form.add_error(self.duplicate_field, self.duplicate_message)
+                return self.form_invalid(form)
+            raise
+
+    def get_duplicate_queryset(self, form):
+        return self.model.objects.none()
 
 
-class AssetCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class InstitutionFormMixin(InvestmentSetupFormMixin):
+    model = Institution
+    form_class = InstitutionForm
+    entity_label = 'bank or broker'
+    setup_description = 'Create or correct an institution used to group products.'
+    duplicate_message = 'You already have an institution with this name.'
+
+    def get_duplicate_queryset(self, form):
+        queryset = Institution.objects.filter(
+            user=self.request.user,
+            name=form.cleaned_data.get('name'),
+        )
+        return queryset.exclude(pk=self.object.pk) if self.object else queryset
+
+
+class InstitutionCreateView(
+    InstitutionFormMixin,
+    SuccessMessageMixin,
+    CreateView,
+):
+    success_message = 'Institution "%(name)s" created.'
+
+
+class InstitutionUpdateView(
+    InstitutionFormMixin,
+    SuccessMessageMixin,
+    UpdateView,
+):
+    success_message = 'Institution "%(name)s" updated.'
+
+
+class InvestmentProductFormMixin(InvestmentSetupFormMixin):
+    model = InvestmentProduct
+    form_class = InvestmentProductForm
+    entity_label = 'investment product'
+    setup_description = (
+        'Correct its name or move it to another institution you own. '
+        'Moving it updates historical portfolio grouping.'
+    )
+    duplicate_message = (
+        'This institution already has an investment product with this name.'
+    )
+
+    def get_queryset(self):
+        return super().get_queryset().filter(institution__user=self.request.user)
+
+    def get_duplicate_queryset(self, form):
+        queryset = InvestmentProduct.objects.filter(
+            institution=form.cleaned_data.get('institution'),
+            name=form.cleaned_data.get('name'),
+        )
+        return queryset.exclude(pk=self.object.pk) if self.object else queryset
+
+
+class InvestmentProductCreateView(
+    InvestmentProductFormMixin,
+    SuccessMessageMixin,
+    CreateView,
+):
+    success_message = 'Investment product "%(name)s" created.'
+
+
+class InvestmentProductUpdateView(
+    InvestmentProductFormMixin,
+    SuccessMessageMixin,
+    UpdateView,
+):
+    success_message = 'Investment product "%(name)s" updated.'
+
+
+class AssetFormMixin(InvestmentSetupFormMixin):
     model = Asset
     form_class = AssetForm
-    template_name = 'investments/setup_form.html'
-    success_url = reverse_lazy('investments:list')
-    success_message = 'Asset "%(name)s" created.'
+    entity_label = 'asset'
+    setup_description = (
+        'Correct the asset name or code. Currency can only change before '
+        'the asset has operations.'
+    )
+    duplicate_field = 'code'
+    duplicate_message = 'You already have an asset with this code.'
+
+    def get_duplicate_queryset(self, form):
+        queryset = Asset.objects.filter(
+            user=self.request.user,
+            code=form.cleaned_data.get('code'),
+        )
+        return queryset.exclude(pk=self.object.pk) if self.object else queryset
 
     def form_valid(self, form):
-        form.instance.user = self.request.user
+        if not form.instance.pk:
+            return super().form_valid(form)
+
+        with transaction.atomic():
+            stored = Asset.objects.select_for_update().get(
+                pk=form.instance.pk,
+                user=self.request.user,
+            )
+            if (
+                stored.currency != form.cleaned_data['currency']
+                and stored.operations.exists()
+            ):
+                form.add_error(
+                    'currency',
+                    'Currency cannot be changed after this asset has investment '
+                    'operations. This protects the historical values and charts.',
+                )
+                return self.form_invalid(form)
+            return super().form_valid(form)
+
+
+class AssetCreateView(AssetFormMixin, SuccessMessageMixin, CreateView):
+    success_message = 'Asset "%(name)s" created.'
+
+
+class AssetUpdateView(AssetFormMixin, SuccessMessageMixin, UpdateView):
+    success_message = 'Asset "%(name)s" updated.'
+
+
+class InvestmentSetupDeleteView(LoginRequiredMixin, DeleteView):
+    """Delete unused setup entities without deleting portfolio history."""
+
+    template_name = 'investments/settings/confirm_delete_entity.html'
+    success_url = reverse_lazy('investments:settings')
+    entity_label = ''
+    delete_warning = ''
+
+    def get_queryset(self):
+        return self.model.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['entity_label'] = self.entity_label
+        context['delete_warning'] = self.delete_warning
+        return context
+
+    def form_valid(self, form):
+        label = str(self.object)
+        try:
+            response = super().form_valid(form)
+        except ProtectedError:
+            messages.error(
+                self.request,
+                f'"{label}" cannot be deleted because it is used by '
+                'existing investment operations.',
+            )
+            return redirect('investments:settings')
+        messages.success(self.request, f'{self.entity_label.title()} "{label}" deleted.')
+        return response
+
+
+class InstitutionDeleteView(InvestmentSetupDeleteView):
+    model = Institution
+    context_object_name = 'entity'
+    entity_label = 'institution'
+    delete_warning = (
+        'Unused investment products under this institution will also be deleted.'
+    )
+
+    def form_valid(self, form):
+        if self.object.investment_products.exclude(user=self.request.user).exists():
+            messages.error(
+                self.request,
+                'This institution cannot be deleted because it contains '
+                'investment products owned by another user.',
+            )
+            return redirect('investments:settings')
         return super().form_valid(form)
+
+
+class InvestmentProductDeleteView(InvestmentSetupDeleteView):
+    model = InvestmentProduct
+    context_object_name = 'entity'
+    entity_label = 'investment product'
+
+    def get_queryset(self):
+        return super().get_queryset().filter(institution__user=self.request.user)
+
+
+class AssetDeleteView(InvestmentSetupDeleteView):
+    model = Asset
+    context_object_name = 'entity'
+    entity_label = 'asset'
 
 
 class InvestmentDeleteView(LoginRequiredMixin, DeleteView):

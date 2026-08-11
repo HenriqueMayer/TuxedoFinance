@@ -138,6 +138,13 @@ The report charts are inline `<svg>` built from coordinates computed in `dashboa
 
 The investments list page carries its own two-chart island at the bottom, built from the same `dashboard/charts.py` builders as the Reports page (`build_line_chart` and `build_bar_chart`). The partial wraps everything in `<div id="investments-charts">` so `InvestmentListView.get_template_names()` can return the partial alone when `HX-Request: true` lands — the same exact swap pattern the Reports page established. `{% include %}` wires the partial inside the full `list.html` for normal GETs; in both cases the server runs the same context, so the page renders the same whether the request came from HTMX or a full page load.
 
+Investment structure management uses the standard server-rendered list/form/
+confirmation pattern: `investments/settings/index.html` lists institutions,
+products, and assets; `investments/setup_form.html` serves both create and
+update; and `investments/settings/confirm_delete_entity.html` requires a CSRF
+protected POST. The Investments navbar item uses the resolved URL namespace for
+its active state, so it stays highlighted on nested settings and edit routes.
+
 The two charts each own an independent 12-month window — they slide independently so the user can scroll chart 1 (Investment evolution) back a year while leaving chart 2 (Monthly flow) anchored on today. The arrows carry `hx-target="#investments-charts"`, `hx-swap="outerHTML"`, `hx-push-url="true"`, mirrored on a plain `href` for the no-JS degradation path: each chart's prev/next anchors are `{% querystring total_offset=N %}` / `{% querystring flow_offset=N %}` respectively, so `{% querystring %}` updates one param while preserving the other — plus any active `?kind`/`?q` filters stay alive across the slide. The two services `get_total_in_base_timeseries` and `get_monthly_flow_in_base` each take their own `offset=` argument.
 
 - **Chart 1 — Investment evolution** (`build_line_chart`): a single area-line of the cumulative portfolio total in `{{ CURRENCY_SYMBOL }}`. The view builds it from `get_total_in_base_timeseries`, which folds each month's per-currency balances through `_resolve_rate` (rate-at-time, with a graceful fall-back to the latest rate when no historical row exists for that pair on that date). Inherits the Reports chart-1 visual contract verbatim — `<linearGradient id="investments-line">` stops `indigo-500`/`violet-500`/`fuchsia-500`, a duplicate `investments-area` gradient for the violet 35%-to-0% fill, dashed rose zero line at `zero_y`, and white/dark `circle` markers with `stroke-violet-400`. The only visual delta is the gradient `id` — the partial can be HTMX-swapped standalone, so the IDs cannot collide with Reports' own.

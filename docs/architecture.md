@@ -181,11 +181,11 @@ Every app namespaces its own URLs with `app_name = '<app>'`, so every reversed U
 |---|---|---|
 | `/` | `pages` | `landing` |
 | `/accounts/` | `accounts` | `login`, `signup`, `logout` |
-| `/dashboard/` | `dashboard` | `index`, `reports` (both support `?charts_offset=N`, `?category_month=ALL\|YYYY-MM`, `?payment_month=ALL\|YYYY-MM`, `?expense_method=NAME`, `?income_method=NAME`, `?installment_month=ALL\|YYYY-MM`) |
-| `/transactions/` | `transactions` | `list`, `create`, `update`, `delete` |
+| `/dashboard/` | `dashboard` | `index` (`?month=YYYY-MM`); `reports` (`?charts_offset=N`, `?installment_month=ALL\|YYYY-MM`, `?payment_month=ALL\|YYYY-MM`, `?expense_method=NAME`, `?income_method=NAME`, `?category_month=ALL\|YYYY-MM`) |
+| `/transactions/` | `transactions` | `list` (`?q=`, `?month=YYYY-MM`, `?date=YYYY-MM-DD`, `?type=`, `?sort=`), `create`, `update`, `delete` |
 | `/categories/` | `categories` | `list`, `create`, `update`, `delete` |
 | `/payments/` | `payments` | `list`, `create`, `update`, `delete` |
-| `/investments/` | `investments` | `list` (supports `?institution=`, `?product=`, `?asset=`, `?kind=DEPOSIT\|WITHDRAWAL\|YIELD`, `?q=`, and two independent chart offsets), `create`, `update`, `delete`, `create_institution`, `create_product`, `create_asset`, `exchange_rates`, `create_exchange_rate`, `delete_exchange_rate` |
+| `/investments/` | `investments` | Portfolio `list`/operation `create`/`update`/`delete`; entity `settings`, institution/product/asset create/update/delete; append-only `exchange_rates`, `create_exchange_rate`, `delete_exchange_rate` |
 | `/admin/` | Django admin | — |
 
 ## Request flow (a typical authenticated screen)

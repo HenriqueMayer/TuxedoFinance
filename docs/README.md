@@ -21,8 +21,8 @@ One doc per Django app, each covering its models, forms, views, URLs, signals, a
 - [apps/categories.md](apps/categories.md) — categories & subcategories, default-category seeding.
 - [apps/payments.md](apps/payments.md) — payment methods, billing cycle, no default-data seeding (FR14).
 - [apps/transactions.md](apps/transactions.md) — the core `Transaction` model, form, and filtered/paginated CRUD.
-- [apps/dashboard.md](apps/dashboard.md) — the aggregation/projection services, the consolidated stat-card view, and the six zero-JS SVG report charts (slideable time-series navigation, `All time` + month filters on the payment-method and category breakdowns, click-driven per-method drill-downs, and a recurrence donut that defaults to the current month).
-- [apps/investments.md](apps/investments.md) — institutions, investment products, free-form assets, manual deposits/withdrawals/yields, charts, and manual `ExchangeRate` management.
+- [apps/dashboard.md](apps/dashboard.md) — the aggregation/projection services, the consolidated stat-card view, and the six zero-JS SVG report charts (slideable time-series navigation, a third-position recurrence donut that defaults to the current month, `All time` + month filters on the payment-method and category breakdowns, and click-driven per-method drill-downs).
+- [apps/investments.md](apps/investments.md) — settings and CRUD for institutions, investment products and free-form assets, plus manual deposits/withdrawals/yields, charts, and append-only `ExchangeRate` management.
 
 ## How this maps to the PRD
 

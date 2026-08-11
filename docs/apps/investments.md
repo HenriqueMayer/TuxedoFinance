@@ -9,9 +9,15 @@ matching portfolio operation are intentionally kept in sync by the user.
 ```text
 Institution (bank, broker, exchange)
 └── InvestmentProduct (Cofrinho Henrique, CDI, CDB)
-    └── Asset (BRL, USD, BTC, ETF, or another user-defined code)
-        └── Investment operation
+
+Asset (BRL, USD, BTC, ETF, or another user-defined code)
+
+Investment operation → InvestmentProduct + Asset
 ```
+
+Assets belong to the user, not directly to one product. The same asset can be
+used by operations in several products; the product/asset association exists
+through `Investment` operations.
 
 An operation is one of three kinds:
 
@@ -37,12 +43,15 @@ not performed and are shown in the list as `Coming soon`.
 | `investments/models.py` | `Institution`, `InvestmentProduct`, `Asset`, `Investment`, `ExchangeRate` |
 | `investments/services.py` | Grouped portfolio totals, currency totals, FX conversion, and time-series helpers |
 | `investments/forms.py` | Operation, institution, product, asset, and exchange-rate forms |
-| `investments/views.py` | List, operation CRUD, setup creates, exchange-rate CRUD, and HTMX chart partial handling |
-| `investments/urls.py` | Routes for the list, operation, setup, and exchange-rate screens |
-| `investments/tests.py` | Manual-yield balance, FX time series, filters, grouping, isolation, and partial rendering tests |
+| `investments/views.py` | Portfolio list, operation CRUD, settings/entity CRUD, exchange-rate CRUD, and HTMX chart partial handling |
+| `investments/urls.py` | Routes for the list, operations, settings entities, and exchange rates |
+| `investments/tests.py` | Services, filters, grouping, settings CRUD/integrity, isolation, and partial rendering tests |
 | `templates/investments/list.html` | Institution/product/asset grouping, filters, operation list, and future-feature placeholder |
 | `templates/investments/_investments_charts.html` | Portfolio evolution and monthly deposits/withdrawals/yields charts |
 | `templates/investments/form.html` | Shared operation create/update form |
+| `templates/investments/setup_form.html` | Shared institution/product/asset create and update form |
+| `templates/investments/settings/index.html` | Management lists for institutions, products, assets, and the Exchange Rates entry point |
+| `templates/investments/settings/confirm_delete_entity.html` | Shared confirmation for setup-entity deletion |
 
 ## User flow
 
@@ -55,6 +64,40 @@ The operation form scopes product and asset choices to the logged-in user. The
 list can be filtered by institution, product, asset, operation type, and text.
 Legacy rows without the new product/asset links are ignored by the new screen;
 they are not migrated or deleted.
+
+## Investment settings
+
+`/investments/settings/` is the canonical management screen for the portfolio
+structure. It lists only the logged-in user's institutions, products, and
+assets, with operation counts and New/Edit/Delete actions. The Settings button
+on the portfolio page opens it; Exchange Rates remains a separate append-only
+screen linked from this page. The original setup shortcuts on the portfolio
+page remain available.
+
+Create and update views share `InvestmentSetupFormMixin`: it scopes object
+querysets and form choices to `request.user`, assigns the owner on save, and
+turns uniqueness races into field errors instead of `IntegrityError` responses.
+Another user's primary key is therefore a 404 for update/delete, and a forged
+product POST cannot select that user's institution.
+
+Editing has deliberate historical effects:
+
+- Renaming an institution, product, or asset updates every place that reads the
+  related row; operation records themselves are not rewritten.
+- A product may move to another institution owned by the same user. Existing
+  operations immediately appear under the new institution grouping.
+- Asset name and code can be corrected at any time. Asset currency can change
+  only while the asset has no operations, because operations read currency
+  dynamically from the asset; changing a used asset would reinterpret all
+  historical totals and charts.
+
+Deletion follows the model relationships rather than silently erasing history:
+
+- An unused product or asset can be deleted after a confirmation POST.
+- A referenced product or asset is blocked by `PROTECT` with a friendly message.
+- Deleting an institution cascades to its unused products. If any child product
+  has operations, `PROTECT` blocks the whole deletion.
+- Investment operations are never cascade-deleted by structure management.
 
 ## Charts
 
@@ -72,3 +115,19 @@ as missing rather than silently included in a converted total.
 whose target is the project base currency. Free-form assets can be recorded and
 shown in their native code; automated pricing for arbitrary assets is outside
 the current scope.
+
+## Routes
+
+| Path | Name | Purpose |
+|---|---|---|
+| `/investments/settings/` | `investments:settings` | List and manage setup entities |
+| `/investments/institutions/create/` | `investments:create_institution` | Add institution |
+| `/investments/institutions/<pk>/edit/` | `investments:update_institution` | Rename owned institution |
+| `/investments/institutions/<pk>/delete/` | `investments:delete_institution` | Confirm/delete unused institution |
+| `/investments/products/create/` | `investments:create_product` | Add product |
+| `/investments/products/<pk>/edit/` | `investments:update_product` | Rename or move owned product |
+| `/investments/products/<pk>/delete/` | `investments:delete_product` | Confirm/delete unused product |
+| `/investments/assets/create/` | `investments:create_asset` | Add asset |
+| `/investments/assets/<pk>/edit/` | `investments:update_asset` | Correct owned asset |
+| `/investments/assets/<pk>/delete/` | `investments:delete_asset` | Confirm/delete unused asset |
+| `/investments/settings/exchange-rates/` | `investments:exchange_rates` | Append-only manual rates |

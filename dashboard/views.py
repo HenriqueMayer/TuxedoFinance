@@ -16,10 +16,6 @@ from dashboard.services import (
     get_income_by_category_for_method,
     get_income_by_payment_method,
 )
-from transactions.models import Transaction
-
-RECENT_TRANSACTIONS_LIMIT = 5
-
 # How many months the "All time" option on the breakdown charts aggregates.
 # Mirrors `EVOLUTION_MONTHS` in `dashboard.services` so the totals the user
 # sees in the breakdown match the totals of the time-series window they
@@ -54,24 +50,6 @@ def _is_representable(year, month):
     is that `date(year, month, 1)` does not raise for the label.
     """
     return date.min.year <= year <= date.max.year
-
-
-def _recent_transactions(user, year, month):
-    """The user's most recent transactions billed in (`year`, `month`).
-
-    Scoped to the selected month on the same `amount_for_month` rule as every
-    other figure on the page (§8.5), so a fixed subscription or the current
-    slice of an installment plan counts here too, not only the month it was
-    first recorded. That rule cannot be expressed as a SQL predicate (see
-    `dashboard.services`), so this folds in Python and slices the tail end —
-    still one query, over one user's rows.
-    """
-    transactions = Transaction.objects.filter(user=user).select_related(
-        'category', 'payment_method'
-    )
-    return [txn for txn in transactions if txn.amount_for_month(year, month)][
-        :RECENT_TRANSACTIONS_LIMIT
-    ]
 
 
 def _is_projectable(year, month):
@@ -174,10 +152,9 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
     """Post-login landing page (FR05, FR15, `LOGIN_REDIRECT_URL`).
 
     Renders the stat cards (Current Balance, Income/Expenses/Investments for
-    the selected month, Balance month, Projected Balance), a forward-looking
-    outlook table, and a recent-transactions list scoped to that same selected
-    month. All data is scoped to `request.user` (PRD R3) and computed by
-    `dashboard.services`.
+    the selected month, Balance month, Projected Balance) and a forward-looking
+    outlook table. All data is scoped to `request.user` (PRD R3) and computed
+    by `dashboard.services`.
 
     Month selection is a plain `?month=YYYY-MM` GET param (zero-JS, same
     convention as the transaction list filter); an absent or malformed value
@@ -200,16 +177,13 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         context['previous_month_param'] = f'{previous_year:04d}-{previous_month:02d}'
         context['next_month_param'] = f'{next_year:04d}-{next_month:02d}'
 
-        context['recent_transactions'] = _recent_transactions(
-            self.request.user, year, month
-        )
         return context
 
 
 class DashboardReportsView(LoginRequiredMixin, TemplateView):
     """Charts showing how the account evolves over a year (FR16).
 
-    Five server-rendered charts, all reading the same Transaction rows on
+    Six server-rendered charts, all reading the same Transaction rows on
     exactly the same recurrence rules:
 
       1. Balance evolution          — area + line, window of `EVOLUTION_MONTHS`
@@ -218,24 +192,28 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
       2. Monthly cash flow          — grouped bars over the same window, so
                                       the two time-series charts always tell
                                       the same story.
-      3. Spending by payment method — one bar per method, with
+      3. Installment breakdown      — donut splitting expenses into
+                                      installments, fixed recurrences, and
+                                      one-off purchases. Optional
+                                      `?installment_month=ALL|YYYY-MM`.
+      4. Spending by payment method — one bar per method, with
                                       `?payment_month=ALL|YYYY-MM` (default
                                       `ALL`) choosing the window. Each bar
                                       is a hyperlink to a method-categories
                                       panel via `?expense_method=NAME`.
-      4. Income by payment method   — the mirror image of (3) for income
+      5. Income by payment method   — the mirror image of (4) for income
                                       rows, with the same shared window.
                                       Drill-down via `?income_method=NAME`.
-      5. Where the money goes       — top expense categories. Optional
+      6. Where the money goes       — top expense categories. Optional
                                       `?category_month=ALL|YYYY-MM` chooses
                                       the window (default: the last 12
                                       months, in line with the time-series
                                       window).
 
-    The five filters are independent — offsetting the time-series window
+    The report controls are independent — offsetting the time-series window
     leaves the breakdown filters untouched, and the breakdown filters never
-    move the time-series window. `?payment_month` is shared between (3)
-    and (4) so the two halves of "where did the money go" never disagree
+    move the time-series window. `?payment_month` is shared between (4)
+    and (5) so the two halves of "where did the money go" never disagree
     on the period being shown. The template uses `{% querystring %}` so
     any one of them survives clicks on the others.
 
@@ -389,7 +367,7 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         # look and read the same.
         context['month_choices'] = _month_choices()
 
-        # Shared window for charts 3 and 4 — both method breakdowns read
+        # Shared window for charts 4 and 5 — both method breakdowns read
         # the same `?payment_month=` so the "where did it come in / where
         # did it go out" pair never disagrees on the period.
         payment_value, payment_year, payment_month = self.get_payment_month()
@@ -401,7 +379,7 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
                 date(payment_year, payment_month, 1).strftime('%B %Y')
             )
 
-        # Chart 3 — "Spending by payment method". `ALL` aggregates the
+        # Chart 4 — "Spending by payment method". `ALL` aggregates the
         # last `ALL_TIME_MONTHS` months; a specific `YYYY-MM` reads that
         # single month on the same `amount_for_month` rule as before.
         if payment_value == 'ALL':
@@ -430,7 +408,7 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             else None
         )
 
-        # Chart 4 — "Income by payment method". Same window as chart 3
+        # Chart 5 — "Income by payment method". Same window as chart 4
         # (`?payment_month=` is shared), opposite direction of cash.
         if payment_value == 'ALL':
             income_breakdown = get_income_by_payment_method(
@@ -504,7 +482,7 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             context['income_method_categories_label'] = ''
             context['income_method_categories_window'] = ''
 
-        # Chart 5 — "Where the money goes". The breakdown lives inside
+        # Chart 6 — "Where the money goes". The breakdown lives inside
         # `evolution` already, but only for the time-series window. When
         # the user picks a different month (or explicitly `ALL`), we
         # recompute.
@@ -531,7 +509,7 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
                 date(category_year, category_month, 1).strftime('%B %Y')
             )
 
-        # Chart 6 — "How much is on installments" (filter: ALL | YYYY-MM,
+        # Chart 3 — "How much is on installments" (filter: ALL | YYYY-MM,
         # defaulting to the current month). A donut splitting expenses by
         # recurrence: installment plans vs fixed recurrences vs one-off
         # purchases, answering "how much of this month's outflow is from

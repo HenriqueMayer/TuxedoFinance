@@ -75,7 +75,7 @@ class InvestmentProduct(models.Model):
 
 
 class Asset(models.Model):
-    """A user-defined asset held inside an investment product."""
+    """A user-defined asset available across the owner's investment products."""
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

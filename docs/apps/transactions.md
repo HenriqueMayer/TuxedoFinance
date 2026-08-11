@@ -27,7 +27,7 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = (
             'title', 'amount', 'transaction_type', 'category',
-            'payment_method', 'installments', 'transaction_date',
+            'payment_method', 'installments', 'billing_override', 'transaction_date',
             'is_fixed', 'fixed_until', 'notes',
         )
         widgets = {
@@ -51,7 +51,7 @@ class TransactionForm(forms.ModelForm):
             )
 ```
 
-All 10 fields in one `ModelForm` (the 8 original FR07 fields, plus `installments` and `fixed_until`). Enforcement layers worth noting:
+All 11 fields in one `ModelForm` (the original FR07 fields plus installments, bill choice, and the fixed recurrence end). Enforcement layers worth noting:
 
 - **FK scoping**: both `category` and `payment_method` querysets are restricted to `user`'s own records — this is the form-level half of per-user isolation (the view-level half is `get_queryset()`/`form_valid()`, same as every other app). A malicious/guessed `pk` for another user's category is rejected as an invalid choice, not merely hidden from the dropdown.
 - **`amount` widget** — `min="0.01"` is a client-side hint only; the real enforcement is the model's `MinValueValidator`, which `ModelForm` validation runs regardless of what the browser sends.
@@ -128,6 +128,9 @@ class TransactionListView(LoginRequiredMixin, ListView):
         transaction_type = self.request.GET.get('type')
         if transaction_type in Transaction.TransactionType.values:
             queryset = queryset.filter(transaction_type=transaction_type)
+        transaction_date = self._selected_transaction_date()
+        if transaction_date is not None:
+            queryset = queryset.filter(transaction_date=transaction_date)
         queryset = queryset.order_by(*self.SORT_OPTIONS[self._selected_sort()])
         return self._filter_by_billed_month(queryset)
 
@@ -146,8 +149,9 @@ class TransactionListView(LoginRequiredMixin, ListView):
 
 - `select_related('category', 'payment_method')` avoids an N+1 query when each row in the template renders `transaction.category.name`/`transaction.payment_method.name` (NFR10).
 - `paginate_by = 10` — Django's built-in `ListView` pagination; the template reads `page_obj`/`is_paginated`.
-- **Zero-JS GET-param filtering** (PRD 8.1.5): `?q=` searches text, `?month=YYYY-MM` filters on the **billed** month (see below), `?type=INCOME|EXPENSE|INVESTMENT` filters on `transaction_type`, and `?sort=newest|oldest` picks the `transaction_date` direction. All are read straight from query params populated by a plain `<form method="get">` in the template (see below) — there is no JavaScript anywhere in this flow, including no typeahead or live search. Malformed/unknown values (a non-numeric month, a month outside 1–12, an invalid type, an unrecognized sort) are **silently ignored** rather than raising a `400` — the queryset simply falls back to unfiltered (or to `newest`) for that parameter.
-- **`?sort=newest|oldest|updated`** (`SORT_OPTIONS`) reorders the list. `newest` (`-transaction_date, -created_at`) is both the default and identical to `Transaction.Meta.ordering`, so an unfiltered list looks the same as before this param existed; `oldest` reverses it. `updated` (`-updated_at`) is the odd one out — it ignores `transaction_date` entirely and puts whatever was most recently created or edited first, which is the only way to see a past-dated entry you just added, or a fixed transaction dated in the future, land at the top. It is applied via `order_by()` **before** `_filter_by_billed_month`, since that filter may fold the queryset into a plain Python list that only preserves whatever order it already had — it does not sort anything itself.
+- **Zero-JS GET-param filtering** (PRD 8.1.5): `?q=` searches text, `?month=YYYY-MM` filters on the **billed** month (see below), `?date=YYYY-MM-DD` matches the exact `transaction_date`, `?type=INCOME|EXPENSE|INVESTMENT` filters on `transaction_type`, and `?sort=` controls ordering. All are read from a plain `<form method="get">`; there is no typeahead, live search, or custom date-picker JavaScript. Malformed/unknown values are silently ignored rather than raising a `400`.
+- **`?sort=newest|oldest|updated|highest|lowest`** (`SORT_OPTIONS`) reorders the list. `newest` and `oldest` use `transaction_date`; `updated` ignores it and puts the most recently edited row first. `highest` and `lowest` order by the stored full positive `amount` shown as the row headline — not by transaction-type sign and not by an installment's monthly contribution. Every option ends with a primary-key tie-breaker for deterministic pagination. Ordering runs before `_filter_by_billed_month`, since that filter may return a Python list that preserves the order it receives.
+- **The exact date is separate from the billed month.** `?date=` is parsed strictly as ISO `YYYY-MM-DD` and applies `transaction_date=<date>` in SQL. It never matches `created_at`, `payment_date`, or a generated recurrence occurrence: a fixed row starting in January can match August's billed month while still not matching an exact August transaction date. A malformed or impossible date is ignored and is not restored into the input.
 - **The month filter is the *billed* month, not `transaction_date`** — the same question the dashboard answers, so the two screens can never disagree about which month a transaction belongs to. It matches any row whose `amount_for_month(year, month)` is non-zero, which has two consequences the earlier `transaction_date__year`/`__month` filter got wrong:
   - a credit card purchase made on or after the card's best purchase day is listed under the month its **bill is paid** — 26 July on a card opening on the 24th is an August row, not a July one (see [data-model.md § Billing cycle](../data-model.md#billing-cycle-when-a-card-purchase-actually-leaves-the-account));
   - a **fixed** transaction or an open **installment plan** is listed under *every* month it charges, not only the month it was recorded in. A subscription started in July appears under August, September, and every month after — which is precisely what makes it fixed.
@@ -155,9 +159,9 @@ class TransactionListView(LoginRequiredMixin, ListView):
 - **Free-text search (FR17)** spans everything a row actually displays: `title`, `notes`, and the **names of the related category and payment method**, OR'd together. Searching only `title` would have been the smaller change, but "insurance" not finding the row filed under an Insurance category is exactly the kind of miss that makes a search box feel broken.
   - The search `Q(...)` is applied to a queryset **already filtered by `user`**, so widening the match can never reach another user's rows, even for a term that matches both users' data.
   - The term is `.strip()`ed, so a stray space is not a search for `' '`; an empty result after stripping means "no search", not "search for nothing".
-  - The three filters compose with **AND**: `?q=salary&type=EXPENSE` finds salary-ish *expenses*, not "salary OR expenses".
+  - The filters compose with **AND**: `?q=salary&type=EXPENSE` finds salary-ish *expenses*, not "salary OR expenses"; adding `?date=` or `?month=` narrows that result further.
   - `icontains` is a `LIKE` scan. At the row counts a personal finance app produces that is entirely adequate; if it ever stops being so, the answer is SQLite FTS, not a hand-rolled index.
-- `get_context_data` also exposes `transaction_type_choices` (to populate the `<select>`) and the current `search_query`/`month`/`type` (to keep the filter form's state and pagination links in sync across page navigation, via Django's `{% querystring %}` template tag in `list.html`).
+- `get_context_data` also exposes `transaction_type_choices` and the canonical current `search_query`/`month`/`date`/`type`/`sort` values. Django's `{% querystring %}` template tag preserves them across pagination.
 
 ### Create / Update / Delete
 
@@ -167,7 +171,7 @@ Same `LoginRequiredMixin` + user-scoped-`get_queryset()` shape as every other ap
 
 | Path | Name | View |
 |---|---|---|
-| `/transactions/` | `transactions:list` | `TransactionListView` (supports `?q=`, `?month=`, `?type=`, `?sort=`) |
+| `/transactions/` | `transactions:list` | `TransactionListView` (supports `?q=`, `?month=`, `?date=`, `?type=`, `?sort=`) |
 | `/transactions/create/` | `transactions:create` | `TransactionCreateView` |
 | `/transactions/<pk>/edit/` | `transactions:update` | `TransactionUpdateView` |
 | `/transactions/<pk>/delete/` | `transactions:delete` | `TransactionDeleteView` |
@@ -191,6 +195,6 @@ The only admin in the project with `date_hierarchy` — convenient for browsing 
 
 ## Templates
 
-- `list.html` — the filter bar carries a `<input type="search" name="q">` alongside the month/type/sort controls, submitted by the same `Filter` button; `Clear filters` accounts for an active search term, month, type, **or a `sort` other than the `newest` default**, and the "no matching transactions" empty state accounts for the first three (a sort choice alone never empties the list, only reorders it). Each row is color-coded by `transaction_type` (emerald/rose/amber, see [frontend.md § Design tokens](../frontend.md#design-tokens-prd-91)), with a `+`/`−` sign prefix on the amount driven purely by `transaction_type == 'INCOME'` (the stored `amount` itself is always positive — the sign is presentation-only). A `Fixed` badge appears when `is_fixed` is true, and an `Nx` badge when `is_installment_plan` is true; installment rows also show a secondary `6x R$ 500.00` line beneath the total, so the headline figure is unambiguously the full amount. The row deliberately carries no "billed" badge (removed 2026-08-03): which month a credit-card purchase is subtracted on is decided by the card's billing cycle (see [data-model.md § Billing cycle](../data-model.md#billing-cycle-when-a-card-purchase-actually-leaves-the-account)) and surfaced by the dashboard and the filter bar's **`Billed month`** control, not repeated per row. That control is labelled "Billed month" rather than "Month" precisely because it no longer means `transaction_date`: a July purchase billed in August is found under August, and a fixed row under every month it charges. The month/type filter form and pagination controls live here.
-- `form.html` — renders all 10 fields via `partials/form_field.html`, except `is_fixed`, which gets custom markup (a checkbox + label/help/errors) since it isn't a standard text/select input. `installments` sits directly under `payment_method` and `fixed_until` directly under the `is_fixed` toggle — each sits next to the field it depends on.
+- `list.html` — the filter bar retains the general Search and places **Billed month** beside **Transaction date**, using concise labels without helper copy. Type and all five sort options share the same GET form. `Clear filters` appears for any active filter or non-default sort, while a sort alone does not trigger the filtered empty state because sorting removes no rows. Each row remains color-coded by `transaction_type`, with the stored full positive `amount` receiving a presentation-only sign. Pagination preserves every active query parameter through `{% querystring %}`.
+- `form.html` — renders all 11 fields via `partials/form_field.html`, except `is_fixed`, which gets custom markup (a checkbox + label/help/errors) since it isn't a standard text/select input. `installments` and `billing_override` sit under `payment_method`, and `fixed_until` sits under the `is_fixed` toggle.
 - `confirm_delete.html` — the standard confirm-delete pattern (see [frontend.md](../frontend.md)).
