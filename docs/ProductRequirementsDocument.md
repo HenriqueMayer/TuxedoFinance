@@ -108,8 +108,8 @@ Give the user control and clarity over their personal finances through:
 | FR07 | Create transaction | Form with `title`, `amount`, `transaction_type`, `category`, `payment_method`, `installments`, `billing_override`, `transaction_date`, `is_fixed`, `fixed_until`, `notes`. |
 | FR08 | Edit transaction | Update the user's own existing transaction. |
 | FR09 | Delete transaction | Removal with confirmation. |
-| FR10 | Manage categories | CRUD for categories and subcategories (self-relationship). |
-| FR11 | Manage payment methods | CRUD for payment methods (name + type). A credit card may also carry a **billing cycle**: a best purchase day (the day the statement opens), which defers a purchase made on or after it to the next month's bill, and a due day (the day the bill is paid), which is displayed only and shifts nothing. Both optional and independent; see §8.5. |
+| FR10 | Manage categories | CRUD for categories and subcategories (self-relationship). The list supports partial, case-insensitive name search and filtering by top-level category or subcategory. |
+| FR11 | Manage payment methods | CRUD for payment methods (name + type), with partial, case-insensitive name search and filtering by method type. A credit card may also carry a **billing cycle**: a best purchase day (the day the statement opens), which defers a purchase made on or after it to the next month's bill, and a due day (the day the bill is paid), which is displayed only and shifts nothing. Both optional and independent; see §8.5. |
 | FR12 | Per-user isolation | Each user accesses only their own records. |
 | FR13 | Automatic timestamps | Every model records `created_at` and `updated_at`. |
 | FR14 | Default data seed | On signup, seed the new user **only** with the default categories (domain diagram) via signals, so the first transaction can be recorded immediately — `category` is required. Payment methods are *not* seeded: `method_type` already enumerates the four enum options (Credit Card, Debit Card, PIX, Checking Account), so seeding four rows with those exact same names was redundant. A user's real methods are named ("Nubank Credit", "Itaú Debit") and created on the payments page; the transaction form shows an inline "No payment methods yet" hint linking there when the user has none. |
@@ -485,11 +485,15 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
 ### Epic E4 — Categories and Payment Methods
 - **US4.1** — As a user, I want to create categories and subcategories.
 - **US4.2** — As a user, I want to register payment methods.
+- **US4.3** — As a user, I want to search and filter categories and payment methods, so I can find records without scanning the full list.
 
 **Acceptance criteria (E4):**
 - [x] A category can have a parent category (optional).
 - [x] A payment method has a name and a type.
 - [x] Full CRUD isolated per user.
+- [x] Category names can be searched partially and case-insensitively, combined with a top-level/subcategory filter.
+- [x] Payment method names can be searched partially and case-insensitively, combined with a validated method-type filter.
+- [x] Filtered empty results offer a clear path back to the complete user-scoped list.
 
 ### Epic E5 — Dashboard
 - **US5.1** — As a user, I want to see Current Balance, Income, Expenses, and Balance for the month.
@@ -637,6 +641,7 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
   - [x] 4.2.4 `DeleteView` with confirmation
   - [x] 4.2.5 App templates + routes
   - [x] 4.2.6 Restrict the parent-category selection to the user's own
+  - [x] 4.2.7 Search by name and filter by top-level/subcategory
 - [x] **4.3** Default categories seed (FR14)
   - [x] 4.3.1 `categories/signals.py`: on `User` `post_save` (created), create the default categories from the domain diagram
   - [x] 4.3.2 Wire via `AppConfig.ready()`
@@ -650,6 +655,7 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
   - [x] 5.2.1 `ListView` isolated per user
   - [x] 5.2.2 `CreateView` / `UpdateView` / `DeleteView`
   - [x] 5.2.3 Templates + routes
+  - [x] 5.2.4 Search by name and filter by method type
 - [x] **5.3** Default payment methods seed (FR14) — *reverted 2026-08-02: `method_type` already enumerates the four options, so seeding four rows with those exact names was redundant. The categories-only seed (Sprint 4.3) stays; payment methods are created by the user on the payments page, and the transaction form shows an inline "No payment methods yet" hint linking there.*
   - [x] 5.3.1 `payments/signals.py`: on `User` `post_save` (created), create one payment method per `method_type`
   - [x] 5.3.2 Wire via `AppConfig.ready()`

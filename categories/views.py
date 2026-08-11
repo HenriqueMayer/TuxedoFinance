@@ -12,14 +12,36 @@ from categories.models import Category
 
 
 class CategoryListView(LoginRequiredMixin, ListView):
-    """List the logged-in user's categories (PRD 4.2.1, FR10, FR12)."""
+    """List and filter the logged-in user's categories (FR10, FR12)."""
 
     model = Category
     template_name = 'categories/list.html'
     context_object_name = 'categories'
 
+    def _selected_level(self):
+        level = self.request.GET.get('level')
+        return level if level in ('top', 'sub') else ''
+
     def get_queryset(self):
-        return Category.objects.filter(user=self.request.user).select_related('parent_category')
+        queryset = Category.objects.filter(user=self.request.user).select_related(
+            'parent_category'
+        )
+
+        search = self.request.GET.get('q', '').strip()
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+        level = self._selected_level()
+        if level:
+            queryset = queryset.filter(parent_category__isnull=level == 'top')
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '').strip()
+        context['selected_level'] = self._selected_level()
+        return context
 
 
 class CategoryFormMixin(LoginRequiredMixin):

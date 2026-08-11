@@ -12,14 +12,35 @@ from payments.models import PaymentMethod
 
 
 class PaymentMethodListView(LoginRequiredMixin, ListView):
-    """List the logged-in user's payment methods (PRD 5.2.1, FR11, FR12)."""
+    """List and filter the logged-in user's payment methods (FR11, FR12)."""
 
     model = PaymentMethod
     template_name = 'payments/list.html'
     context_object_name = 'payment_methods'
 
+    def _selected_type(self):
+        method_type = self.request.GET.get('type')
+        return method_type if method_type in PaymentMethod.MethodType.values else ''
+
     def get_queryset(self):
-        return PaymentMethod.objects.filter(user=self.request.user)
+        queryset = PaymentMethod.objects.filter(user=self.request.user)
+
+        search = self.request.GET.get('q', '').strip()
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+        method_type = self._selected_type()
+        if method_type:
+            queryset = queryset.filter(method_type=method_type)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '').strip()
+        context['method_type_choices'] = PaymentMethod.MethodType.choices
+        context['selected_type'] = self._selected_type()
+        return context
 
 
 class PaymentMethodFormMixin(LoginRequiredMixin):

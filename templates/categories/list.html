@@ -2,14 +2,15 @@
 
 {% comment %}
 Category list (PRD §13, Sprint 4 — 4.2.1/4.2.5). Shows only the logged-in
-user's own categories (`CategoryListView.get_queryset`), each with its
-parent (if it is a subcategory) and Edit/Delete actions.
+user's own categories (`CategoryListView.get_queryset`) and supports a plain
+GET search plus top-level/subcategory filtering.
 {% endcomment %}
 
 {% block title %}Categories — CashFlow{% endblock %}
 
 {% block content %}
 {% url 'categories:create' as create_url %}
+{% url 'categories:list' as list_url %}
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -21,6 +22,36 @@ parent (if it is a subcategory) and Edit/Delete actions.
             New Category
         </a>
     </div>
+
+    <form method="get" class="flex flex-col gap-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 sm:flex-row sm:items-end">
+        <div class="min-w-[14rem] flex-[2] space-y-1.5">
+            <label for="filter-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Search</label>
+            <input type="search" id="filter-search" name="q" value="{{ search_query }}"
+                   placeholder="Category name"
+                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+        </div>
+        <div class="min-w-[12rem] flex-1 space-y-1.5">
+            <label for="filter-level" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Level</label>
+            <select id="filter-level" name="level"
+                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                <option value="">All levels</option>
+                <option value="top" {% if selected_level == 'top' %}selected{% endif %}>Top-level</option>
+                <option value="sub" {% if selected_level == 'sub' %}selected{% endif %}>Subcategories</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                Filter
+            </button>
+            {% if search_query or selected_level %}
+                <a href="{{ list_url }}"
+                   class="rounded text-sm font-medium text-slate-600 dark:text-neutral-400 transition hover:text-slate-900 dark:hover:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    Clear filters
+                </a>
+            {% endif %}
+        </div>
+    </form>
 
     {% if categories %}
         <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335]">
@@ -49,6 +80,8 @@ parent (if it is a subcategory) and Edit/Delete actions.
                 {% endfor %}
             </ul>
         </div>
+    {% elif search_query or selected_level %}
+        {% include 'partials/empty_state.html' with title='No matching categories' message='Try a different name or level, or clear the filters to see everything.' cta_url=list_url cta_label='Clear filters' %}
     {% else %}
         {% include 'partials/empty_state.html' with title='No categories yet' message='Create your first category to start classifying transactions.' cta_url=create_url cta_label='New Category' %}
     {% endif %}

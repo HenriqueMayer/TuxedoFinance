@@ -119,7 +119,7 @@ templates/
 
 Every `list.html`/`form.html`/`confirm_delete.html` triplet (categories, payments, transactions) follows the identical structural pattern:
 
-- **`list.html`** — heading + "New X" primary button, then either a divided `<ul>` of rows (each with Edit/Delete secondary/destructive buttons) or `empty_state.html`. `transactions/list.html` additionally has the GET-param filter form (see [apps/transactions.md](apps/transactions.md#transactionlistview)) and pagination controls using Django's `{% querystring %}` tag so active filters survive page navigation.
+- **`list.html`** — heading + "New X" primary button, a server-rendered GET filter form, then either a divided `<ul>` of rows (each with Edit/Delete secondary/destructive buttons) or `empty_state.html`. Categories search by name and filter by hierarchy level; payments search by name and filter by method type; transactions expose their broader search/date/type/sort controls (see each app document). Only the transaction list is paginated, using Django's `{% querystring %}` tag so active filters survive page navigation.
 - **`form.html`** — a centered `max-w-md` card, `<form method="post" novalidate>` + `{% csrf_token %}`, non-field errors rendered above the fields, then one `{% include 'partials/form_field.html' %}` per field, then Save (primary) / Cancel (secondary, linking back to `list`).
 - **`confirm_delete.html`** — a centered `max-w-md` card confirming the object's name/title, a `<form method="post">` with Delete (destructive) / Cancel (secondary) — deletion is **never** a plain link/`GET`, always a POST from this confirmation screen.
 
