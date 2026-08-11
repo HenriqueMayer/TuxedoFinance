@@ -41,6 +41,17 @@ No FK scoping is needed in `__init__` (unlike `CategoryForm`'s `parent_category`
 
 Same shape as `categories/views.py`: `PaymentMethodListView` + a shared `PaymentMethodFormMixin` (model, form, template, success URL, user-scoped `get_queryset`) consumed by `PaymentMethodCreateView`/`PaymentMethodUpdateView`, all `LoginRequiredMixin`.
 
+### List search and filtering
+
+`PaymentMethodListView` accepts two optional GET parameters. Both are applied after the queryset has been restricted to `request.user` and combine with AND:
+
+| Parameter | Behavior |
+|---|---|
+| `q` | Trimmed, case-insensitive partial match against `name`. |
+| `type` | Exact `MethodType` value (`CREDIT_CARD`, `DEBIT_CARD`, `CHECKING_ACCOUNT`, or `PIX`). Missing or unknown values do not filter the list. |
+
+The available method options come directly from `PaymentMethod.MethodType.choices`. The template uses a plain `<form method="get">`, restores valid active values, offers a direct **Clear filters** link, and distinguishes an empty filtered result from an account with no payment methods. No JavaScript or pagination is involved.
+
 ### Deletion
 
 ```python
@@ -84,3 +95,8 @@ list_display = ('name', 'method_type', 'best_purchase_day', 'due_day', 'user', '
 list_filter = ('user', 'method_type')
 search_fields = ('name',)
 ```
+
+## Templates
+
+- `list.html` — GET name/method filters followed by one row per payment method with its type, optional billing-cycle details, and Edit/Delete actions; `partials/empty_state.html` handles no matches separately from an account with no methods.
+- `form.html` / `confirm_delete.html` — the standard shared card layout (see [frontend.md](../frontend.md)).
