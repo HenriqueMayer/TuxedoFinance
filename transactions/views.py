@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -17,20 +19,18 @@ class TransactionListView(LoginRequiredMixin, ListView):
 
     Optional filtering (PRD 8.1.5, zero-JS): `?q=` searches the text fields,
     `?month=YYYY-MM` filters by the month the money actually moves (see
-    `_filter_by_billed_month`), and `?type=INCOME|EXPENSE|INVESTMENT` filters
-    by `transaction_type`. All are plain GET params read straight from a
+    `_filter_by_billed_month`), `?date=YYYY-MM-DD` matches the exact
+    `transaction_date`, and `?type=INCOME|EXPENSE|INVESTMENT` filters by
+    `transaction_type`. All are plain GET params read straight from a
     `<form method="get">` in the template — invalid/unknown values are
-    silently ignored rather than raising a 400, and the three combine with AND
-    when more than one is set.
+    silently ignored rather than raising a 400, and the filters combine with
+    AND when more than one is set.
 
-    `?sort=newest|oldest|updated` reorders the list: `newest`/`oldest` are the
-    `transaction_date` direction (`newest` is the default and matches
-    `Transaction.Meta.ordering`), and `updated` puts the most recently
-    created-or-edited row first regardless of its `transaction_date` — the one
-    the other two can't offer, since a fixed transaction dated in the future
-    or a past-dated entry added today would otherwise sit wherever its date
-    places it. An unknown value falls back to `newest` the same way the other
-    params fall back to unfiltered.
+    `?sort=newest|oldest|updated|highest|lowest` reorders the list. The amount
+    sorts use the stored full positive `amount` shown as the row's headline,
+    not a signed cash-flow value or one installment's monthly contribution.
+    Every ordering ends with a unique primary-key tie-breaker so pagination is
+    deterministic. An unknown value falls back to `newest`.
     """
 
     model = Transaction
@@ -39,9 +39,11 @@ class TransactionListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     SORT_OPTIONS = {
-        'newest': ('-transaction_date', '-created_at'),
-        'oldest': ('transaction_date', 'created_at'),
-        'updated': ('-updated_at',),
+        'newest': ('-transaction_date', '-created_at', '-pk'),
+        'oldest': ('transaction_date', 'created_at', 'pk'),
+        'updated': ('-updated_at', '-pk'),
+        'highest': ('-amount', '-transaction_date', '-created_at', '-pk'),
+        'lowest': ('amount', '-transaction_date', '-created_at', '-pk'),
     }
 
     def _selected_sort(self):
@@ -70,6 +72,10 @@ class TransactionListView(LoginRequiredMixin, ListView):
         transaction_type = self.request.GET.get('type')
         if transaction_type in Transaction.TransactionType.values:
             queryset = queryset.filter(transaction_type=transaction_type)
+
+        transaction_date = self._selected_transaction_date()
+        if transaction_date is not None:
+            queryset = queryset.filter(transaction_date=transaction_date)
 
         queryset = queryset.order_by(*self.SORT_OPTIONS[self._selected_sort()])
 
@@ -128,11 +134,24 @@ class TransactionListView(LoginRequiredMixin, ListView):
 
         return [txn for txn in queryset if txn.amount_for_month(year, month_number)]
 
+    def _selected_transaction_date(self):
+        """Parse an exact ISO `?date=`, ignoring malformed values."""
+        raw = self.request.GET.get('date', '').strip()
+        if not raw:
+            return None
+        try:
+            parsed = date.fromisoformat(raw)
+        except ValueError:
+            return None
+        return parsed if parsed.isoformat() == raw else None
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['transaction_type_choices'] = Transaction.TransactionType.choices
         context['search_query'] = self.request.GET.get('q', '').strip()
         context['selected_month'] = self.request.GET.get('month', '')
+        selected_date = self._selected_transaction_date()
+        context['selected_date'] = selected_date.isoformat() if selected_date else ''
         context['selected_type'] = self.request.GET.get('type', '')
         context['selected_sort'] = self._selected_sort()
         return context

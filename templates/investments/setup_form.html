@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Set Up Investments — CashFlow{% endblock %}
+{% block title %}{{ setup_title }} — CashFlow{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <div>
-        <a href="{% url 'investments:list' %}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400">&larr; Back to Investments</a>
-        <h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-neutral-100">Set up Investments</h1>
+        <a href="{% url 'investments:settings' %}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400">&larr; Back to Settings</a>
+        <h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-neutral-100">{{ setup_title }}</h1>
         <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-            Create the item needed before recording an operation.
+            {{ setup_description }}
         </p>
     </div>
 
@@ -22,7 +22,7 @@
         {% endfor %}
         <div class="flex items-center gap-3">
             <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90">Save</button>
-            <a href="{% url 'investments:list' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200">Cancel</a>
+            <a href="{% url 'investments:settings' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200">Cancel</a>
         </div>
     </form>
 </div>

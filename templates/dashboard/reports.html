@@ -14,10 +14,10 @@ The page-level structure here is:
   - the `<h1>Reports</h1>` title and "Back to dashboard" button, which
     are *outside* the swap region on purpose: clicking the back button
     is a normal navigation away from the page, and the h1 doesn't change
-    with any of the five filters, so it would be wasted pixels to redraw
+    with any of the report filters, so it would be wasted pixels to redraw
     on every chart click.
   - the partial, which is everything that depends on the URL params
-    (the four stat cards, the five charts, the two drill-down panels).
+    (the four stat cards, the six charts, and the two drill-down panels).
 
 Every interactive control in the partial carries `hx-get` /
 `hx-target="#reports-charts"` / `hx-push-url="true"` (and a plain
