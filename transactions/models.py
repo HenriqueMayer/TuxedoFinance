@@ -19,7 +19,8 @@ class Transaction(models.Model):
     from the sign of the stored value. `category` and `payment_method` use
     `on_delete=PROTECT`: an in-use category/payment method cannot be deleted
     (the owning DeleteViews must catch `ProtectedError`). `created_at` is
-    immutable; `transaction_date` is the only user-editable date.
+    immutable; `transaction_date` is the user-entered purchase/start date,
+    while `fixed_until` separately bounds a recurrence.
 
     `installments` only applies to credit card payments (`TransactionForm`
     enforces that); `amount` always stores the **full total**, never the value

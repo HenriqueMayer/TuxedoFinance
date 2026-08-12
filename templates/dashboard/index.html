@@ -2,10 +2,9 @@
 
 {% comment %}
 Dashboard (PRD FR05, FR15, §8.5, Sprint 7). Stat cards, a forward-looking
-outlook table, and recent transactions for the logged-in user only
-(`DashboardIndexView.get_context_data`). Balance uses a neutral/primary tone
-(no single semantic color owns it); Income is emerald, Expenses rose,
-Investments amber, per PRD §9.1.
+outlook table, and month navigation for the logged-in user only. Balance uses
+a neutral/primary tone (no single semantic color owns it); Income is emerald,
+Expenses rose, Investments amber, per PRD §9.1.
 
 Month navigation is a plain `?month=YYYY-MM` link pair — no JS, same
 convention as the transaction list filter.
@@ -119,49 +118,5 @@ convention as the transaction list filter.
         </div>
     </div>
 
-    <div class="space-y-4">
-        <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Recent transactions</h2>
-            <a href="{% url 'transactions:list' %}" class="rounded text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                View all
-            </a>
-        </div>
-
-        {% if recent_transactions %}
-            <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335]">
-                <ul class="divide-y divide-slate-200 dark:divide-slate-700">
-                    {% for transaction in recent_transactions %}
-                        <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                            <div class="space-y-1">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <p class="font-medium text-slate-900 dark:text-neutral-100">{{ transaction.title }}</p>
-                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
-                                        {% if transaction.transaction_type == 'INCOME' %}bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400
-                                        {% elif transaction.transaction_type == 'EXPENSE' %}bg-rose-500/10 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400
-                                        {% else %}bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400
-                                        {% endif %}">
-                                        {{ transaction.get_transaction_type_display }}
-                                    </span>
-                                </div>
-                                <p class="text-sm text-slate-600 dark:text-neutral-400">
-                                    {{ transaction.category.name }} &middot; {{ transaction.payment_method.name }}
-                                    &middot; {{ transaction.transaction_date|date:'M j, Y' }}
-                                </p>
-                            </div>
-                            <p class="text-lg font-semibold tabular-nums
-                                {% if transaction.transaction_type == 'INCOME' %}text-emerald-600 dark:text-emerald-400
-                                {% elif transaction.transaction_type == 'EXPENSE' %}text-rose-600 dark:text-rose-400
-                                {% else %}text-amber-600 dark:text-amber-400
-                                {% endif %}">
-                                {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}{{ CURRENCY_SYMBOL }} {{ transaction.amount|floatformat:2 }}
-                            </p>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% else %}
-            {% include 'partials/empty_state.html' with title='No transactions yet' message='Record your first transaction to see it here and start tracking your cash flow.' cta_url=create_url cta_label='New Transaction' %}
-        {% endif %}
-    </div>
 </div>
 {% endblock %}
