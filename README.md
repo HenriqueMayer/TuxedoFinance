@@ -39,6 +39,20 @@ uv run python manage.py runserver
 
 Open <http://127.0.0.1:8000/>. Sign up from the landing page; your account arrives with the default categories seeded. Add a bank and a currency-specific account before recording your first transaction.
 
+### Synthetic demo
+
+Populate an English demo covering February through August 2026:
+
+```bash
+uv run python manage.py seed_demo
+```
+
+Login with `demo` / `DemoCashFlow2026!`. The dataset has exactly ten economic
+events per month and exercises salary, fixed and variable expenses, installments,
+PIX, debit and credit cards, invoices, own-account transfers, BRL/USD accounts,
+exchange rates, points, investment deposits and partial withdrawals. To rebuild
+only this account without affecting other users, run `seed_demo --reset`.
+
 ### Docker
 
 Requires Docker with the Compose plugin.
@@ -71,7 +85,7 @@ remain exactly as entered.
 
 This is a **GitHub template repository**. Click **Use this template** to start your own independent instance — each instance owns its own database and data, and is not meant to be deployed straight from here.
 
-Unlike the usual Django convention, `db.sqlite3` is **tracked in version control** here, shipping with the schema already migrated and no data. A fresh clone is runnable immediately, and any demo data you record is versioned alongside your code. If you would rather follow the standard convention, untrack it before an instance holds real data:
+Unlike the usual Django convention, `db.sqlite3` is **tracked in version control** here, shipping with the schema migrated and the synthetic `demo` account described above. A fresh clone is runnable immediately. If you would rather follow the standard convention, untrack it before an instance holds real data:
 
 ```bash
 git rm --cached db.sqlite3
