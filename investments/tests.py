@@ -3,559 +3,372 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from investments.models import Asset, ExchangeRate, Institution, Investment, InvestmentProduct
+from banking.models import (
+    Bank, BankAccount, BankMovement, ExchangeRate, LoyaltyEntry, LoyaltyProgram,
+)
+from investments.forms import InvestmentForm
+from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import (
-    TIMESERIES_MONTHS,
-    get_monthly_flow_in_base,
+    cleanup_investment_ledger,
     get_portfolio_groups,
     get_total_in_base_timeseries,
+    sync_investment_ledger,
 )
+
 
 User = get_user_model()
 BASE = settings.CURRENCY
 
 
-def make_product(user, name='Savings'):
-    institution = Institution.objects.create(user=user, name='Mercado Pago')
-    return InvestmentProduct.objects.create(
-        user=user,
-        institution=institution,
-        name=name,
-    )
+class InvestmentFixtureMixin:
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user('investor', password='test')
+        cls.bank = Bank.objects.create(user=cls.user, name='Portfolio Bank')
+        cls.account = BankAccount.objects.create(
+            user=cls.user, bank=cls.bank, name='Cash', currency=BASE
+        )
+        cls.program = LoyaltyProgram.objects.create(
+            user=cls.user, bank=cls.bank, name='Rewards'
+        )
+        LoyaltyEntry.objects.create(
+            user=cls.user,
+            program=cls.program,
+            direction=LoyaltyEntry.Direction.CREDIT,
+            kind=LoyaltyEntry.Kind.ADJUSTMENT,
+            amount=Decimal('10000.00'),
+            date=timezone.localdate(),
+        )
+        cls.product = InvestmentProduct.objects.create(
+            user=cls.user, bank=cls.bank, name='Brokerage'
+        )
+        cls.asset = Asset.objects.create(
+            user=cls.user,
+            name='Treasury fund',
+            code='FUND',
+            asset_class=Asset.AssetClass.FIXED_INCOME,
+            currency=BASE,
+        )
+
+    def operation(self, kind=Investment.Kind.YIELD, **overrides):
+        data = {
+            'user': self.user,
+            'product': self.product,
+            'asset': self.asset,
+            'kind': kind,
+            'quantity': Decimal('2.50000000'),
+            'unit_price': Decimal('40.00000000'),
+            'fees': Decimal('0.00'),
+            'date': timezone.localdate(),
+        }
+        data.update(overrides)
+        return Investment(**data)
 
 
-def make_asset(user, code=BASE, name=None):
-    return Asset.objects.create(
-        user=user,
-        name=name or code,
-        code=code,
-        currency=code,
-    )
+class InvestmentModelTests(InvestmentFixtureMixin, TestCase):
+    def test_quantity_price_and_signed_values(self):
+        deposit = self.operation(Investment.Kind.YIELD)
+        withdrawal = self.operation(
+            Investment.Kind.WITHDRAWAL,
+            destination_account=self.account,
+            cash_amount=Decimal('95.00'),
+        )
+        self.assertEqual(deposit.gross_value, Decimal('100.0000000000000000'))
+        self.assertEqual(deposit.signed_quantity, Decimal('2.50000000'))
+        self.assertEqual(withdrawal.signed_quantity, Decimal('-2.50000000'))
+        self.assertEqual(withdrawal.signed_value, Decimal('-100.0000000000000000'))
+
+    def test_validation_matrix_accepts_valid_operations(self):
+        cases = (
+            self.operation(
+                Investment.Kind.DEPOSIT,
+                source_account=self.account,
+                cash_amount=Decimal('101.00'),
+            ),
+            self.operation(
+                Investment.Kind.DEPOSIT,
+                source_program=self.program,
+                source_points=Decimal('1200.00'),
+                cash_amount=Decimal('100.00'),
+            ),
+            self.operation(
+                Investment.Kind.WITHDRAWAL,
+                destination_account=self.account,
+                cash_amount=Decimal('98.00'),
+            ),
+            self.operation(Investment.Kind.YIELD),
+        )
+        for operation in cases:
+            with self.subTest(kind=operation.kind, source=operation.source_account_id):
+                operation.full_clean()
+
+    def test_validation_matrix_rejects_missing_and_irrelevant_fields(self):
+        cases = (
+            self.operation(Investment.Kind.DEPOSIT),
+            self.operation(
+                Investment.Kind.DEPOSIT,
+                source_account=self.account,
+                source_program=self.program,
+                source_points=Decimal('1.00'),
+                cash_amount=Decimal('1.00'),
+            ),
+            self.operation(Investment.Kind.WITHDRAWAL, cash_amount=Decimal('1.00')),
+            self.operation(Investment.Kind.YIELD, cash_amount=Decimal('1.00')),
+        )
+        for operation in cases:
+            with self.subTest(kind=operation.kind):
+                with self.assertRaises(ValidationError):
+                    operation.full_clean()
+
+    def test_ownership_and_product_bank_are_validated(self):
+        other = User.objects.create_user('other')
+        other_bank = Bank.objects.create(user=other, name='Other Bank')
+        other_account = BankAccount.objects.create(
+            user=other, bank=other_bank, name='Other Cash', currency=BASE
+        )
+        product = InvestmentProduct(user=self.user, bank=other_bank, name='Invalid')
+        with self.assertRaises(ValidationError):
+            product.full_clean()
+        operation = self.operation(
+            Investment.Kind.DEPOSIT,
+            source_account=other_account,
+            cash_amount=Decimal('100.00'),
+        )
+        with self.assertRaises(ValidationError):
+            operation.full_clean()
 
 
-def add_operation(user, **kwargs):
-    defaults = {
-        'title': 'Manual operation',
-        'amount': Decimal('100.00'),
-        'kind': Investment.Kind.DEPOSIT,
-        'date': timezone.localdate(),
-    }
-    defaults.update(kwargs)
-    product = defaults.pop('product', None) or make_product(user)
-    asset = defaults.pop('asset', None) or make_asset(user)
-    return Investment.objects.create(
-        user=user,
-        product=product,
-        asset=asset,
-        **defaults,
-    )
+class InvestmentLedgerTests(InvestmentFixtureMixin, TestCase):
+    def save_and_sync(self, operation):
+        operation.full_clean()
+        operation.save()
+        sync_investment_ledger(operation)
+        operation.refresh_from_db()
+        return operation
+
+    def test_account_deposit_creates_investment_debit(self):
+        operation = self.save_and_sync(self.operation(
+            Investment.Kind.DEPOSIT,
+            source_account=self.account,
+            cash_amount=Decimal('103.50'),
+        ))
+        movement = operation.bank_movement
+        self.assertEqual(movement.direction, BankMovement.Direction.DEBIT)
+        self.assertEqual(movement.kind, BankMovement.Kind.INVESTMENT)
+        self.assertEqual(movement.amount, Decimal('103.50'))
+        self.assertEqual(movement.source_key, f'investment:{operation.pk}')
+
+    def test_points_deposit_creates_redemption_debit(self):
+        operation = self.save_and_sync(self.operation(
+            Investment.Kind.DEPOSIT,
+            source_program=self.program,
+            source_points=Decimal('2500.00'),
+            cash_amount=Decimal('100.00'),
+        ))
+        entry = operation.loyalty_entry
+        self.assertEqual(entry.direction, LoyaltyEntry.Direction.DEBIT)
+        self.assertEqual(entry.kind, LoyaltyEntry.Kind.REDEMPTION)
+        self.assertEqual(entry.amount, Decimal('2500.00'))
+        self.assertIn(f'[investment:{operation.pk}]', entry.notes)
+        self.assertIsNone(operation.bank_movement)
+
+    def test_withdrawal_credit_and_yield_has_no_cash_ledger(self):
+        self.save_and_sync(self.operation(
+            Investment.Kind.DEPOSIT,
+            source_account=self.account,
+            cash_amount=Decimal('100.00'),
+        ))
+        withdrawal = self.save_and_sync(self.operation(
+            Investment.Kind.WITHDRAWAL,
+            destination_account=self.account,
+            cash_amount=Decimal('97.00'),
+        ))
+        self.assertEqual(withdrawal.bank_movement.direction, BankMovement.Direction.CREDIT)
+        yield_operation = self.save_and_sync(self.operation(Investment.Kind.YIELD))
+        self.assertIsNone(yield_operation.bank_movement)
+        self.assertIsNone(yield_operation.loyalty_entry)
+
+    def test_withdrawal_view_rejects_more_than_available_quantity(self):
+        self.save_and_sync(self.operation(
+            Investment.Kind.DEPOSIT,
+            source_account=self.account,
+            cash_amount=Decimal('100.00'),
+        ))
+        self.client.force_login(self.user)
+        response = self.client.post(reverse('investments:create'), {
+            'product': self.product.pk,
+            'asset': self.asset.pk,
+            'kind': Investment.Kind.WITHDRAWAL,
+            'quantity': '3.00000000',
+            'unit_price': '40.00000000',
+            'fees': '0.00',
+            'cash_amount': '120.00',
+            'source_account': '',
+            'source_program': '',
+            'source_points': '',
+            'destination_account': self.account.pk,
+            'date': timezone.localdate(),
+            'reason': '',
+            'notes': '',
+        })
+
+        self.assertContains(response, 'exceeds the available position', status_code=200)
+
+    def test_sync_update_is_idempotent_and_replaces_only_linked_ledger(self):
+        operation = self.save_and_sync(self.operation(
+            Investment.Kind.DEPOSIT,
+            source_account=self.account,
+            cash_amount=Decimal('100.00'),
+        ))
+        movement_id = operation.bank_movement_id
+        operation.cash_amount = Decimal('125.00')
+        operation.save()
+        sync_investment_ledger(operation)
+        sync_investment_ledger(operation)
+        operation.refresh_from_db()
+        self.assertEqual(operation.bank_movement_id, movement_id)
+        self.assertEqual(BankMovement.objects.get(pk=movement_id).amount, Decimal('125.00'))
+        self.assertEqual(
+            BankMovement.objects.filter(source_key=f'investment:{operation.pk}').count(), 1
+        )
+
+    def test_cleanup_removes_linked_rows_before_operation_delete(self):
+        operation = self.save_and_sync(self.operation(
+            Investment.Kind.DEPOSIT,
+            source_program=self.program,
+            source_points=Decimal('500.00'),
+        ))
+        entry_id = operation.loyalty_entry_id
+        cleanup_investment_ledger(operation)
+        operation.delete()
+        self.assertFalse(LoyaltyEntry.objects.filter(pk=entry_id).exists())
 
 
-class InvestmentServiceTests(TestCase):
+class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
     def setUp(self):
-        self.user = User.objects.create_user('services', password='test')
-        self.product = make_product(self.user)
-        self.asset = make_asset(self.user)
+        self.client.force_login(self.user)
 
-    def test_manual_yield_is_added_to_balance_but_kept_separate(self):
-        add_operation(
-            self.user, product=self.product, asset=self.asset,
-            amount=Decimal('1000.00'), kind=Investment.Kind.DEPOSIT,
-        )
-        add_operation(
-            self.user, product=self.product, asset=self.asset,
-            amount=Decimal('25.00'), kind=Investment.Kind.YIELD,
-        )
-        add_operation(
-            self.user, product=self.product, asset=self.asset,
-            amount=Decimal('100.00'), kind=Investment.Kind.WITHDRAWAL,
-        )
+    def test_form_is_user_scoped_and_has_no_title(self):
+        other = User.objects.create_user('form-other')
+        bank = Bank.objects.create(user=other, name='Private')
+        account = BankAccount.objects.create(user=other, bank=bank, name='Hidden', currency=BASE)
+        form = InvestmentForm(user=self.user)
+        self.assertNotIn('title', form.fields)
+        self.assertNotIn(account, form.fields['source_account'].queryset)
+        self.assertEqual(list(form.fields['product'].queryset), [self.product])
 
+    def test_create_view_saves_and_synchronizes_atomically(self):
+        response = self.client.post(reverse('investments:create'), {
+            'product': self.product.pk,
+            'asset': self.asset.pk,
+            'kind': Investment.Kind.DEPOSIT,
+            'quantity': '2.5',
+            'unit_price': '40',
+            'fees': '1.00',
+            'cash_amount': '101.00',
+            'source_account': self.account.pk,
+            'source_program': '',
+            'source_points': '',
+            'destination_account': '',
+            'date': timezone.localdate(),
+            'reason': 'Allocation',
+            'notes': '',
+        })
+        self.assertRedirects(response, reverse('investments:list'))
+        operation = Investment.objects.get()
+        self.assertEqual(operation.bank_movement.amount, Decimal('101.00'))
+
+    def test_update_and_delete_views_replace_and_cleanup_ledger(self):
+        baseline = self.operation(
+            Investment.Kind.DEPOSIT,
+            source_account=self.account,
+            cash_amount=Decimal('100.00'),
+        )
+        baseline.full_clean()
+        baseline.save()
+        sync_investment_ledger(baseline)
+        operation = self.operation(
+            Investment.Kind.DEPOSIT,
+            source_account=self.account,
+            cash_amount=Decimal('100.00'),
+        )
+        operation.full_clean()
+        operation.save()
+        sync_investment_ledger(operation)
+        movement_id = operation.bank_movement_id
+
+        response = self.client.post(reverse('investments:update', args=[operation.pk]), {
+            'product': self.product.pk,
+            'asset': self.asset.pk,
+            'kind': Investment.Kind.WITHDRAWAL,
+            'quantity': '1.25',
+            'unit_price': '42',
+            'fees': '0',
+            'cash_amount': '51.00',
+            'source_account': '',
+            'source_program': '',
+            'source_points': '',
+            'destination_account': self.account.pk,
+            'date': timezone.localdate(),
+            'reason': '',
+            'notes': '',
+        })
+        self.assertRedirects(response, reverse('investments:list'))
+        movement = BankMovement.objects.get(pk=movement_id)
+        self.assertEqual(movement.direction, BankMovement.Direction.CREDIT)
+        self.assertEqual(movement.amount, Decimal('51.00'))
+
+        response = self.client.post(reverse('investments:delete', args=[operation.pk]))
+        self.assertRedirects(response, reverse('investments:list'))
+        self.assertFalse(BankMovement.objects.filter(pk=movement_id).exists())
+
+    def test_grouping_filters_and_htmx_chart_contract(self):
+        operation = self.operation(Investment.Kind.YIELD, reason='Coupon')
+        operation.full_clean()
+        operation.save()
         group = get_portfolio_groups(self.user)[0]['products'][0]['assets'][0]
-        self.assertEqual(group['deposits'], Decimal('1000.00'))
-        self.assertEqual(group['yields'], Decimal('25.00'))
-        self.assertEqual(group['withdrawals'], Decimal('100.00'))
-        self.assertEqual(group['balance'], Decimal('925.00'))
-
-    def test_monthly_flow_has_a_separate_yield_series(self):
-        add_operation(
-            self.user, product=self.product, asset=self.asset,
-            amount=Decimal('12.50'), kind=Investment.Kind.YIELD,
+        self.assertEqual(group['quantity'], Decimal('2.50000000'))
+        response = self.client.get(reverse('investments:list'), {
+            'bank': self.bank.pk, 'product': self.product.pk,
+            'asset': self.asset.pk, 'q': 'Coupon',
+        })
+        self.assertContains(response, 'Coupon')
+        htmx = self.client.get(
+            reverse('investments:list'), {'flow_offset': '-1'}, HTTP_HX_REQUEST='true'
         )
-        rows, missing = get_monthly_flow_in_base(
-            self.user, BASE, [BASE], months=TIMESERIES_MONTHS,
-        )
-        current = next(row for row in rows if row['date'] == date.today().replace(day=1))
-        self.assertEqual(current['yields'], Decimal('12.50'))
-        self.assertEqual(current['deposits'], Decimal('0.00'))
-        self.assertEqual(missing, [])
+        self.assertEqual(htmx.status_code, 200)
+        self.assertContains(htmx, 'id="investments-charts"')
+        self.assertNotContains(htmx, '<html')
 
-    def test_foreign_asset_uses_historical_rate(self):
-        asset = make_asset(self.user, code='USD')
+    def test_historical_conversion_uses_banking_exchange_rate(self):
+        foreign = Asset.objects.create(
+            user=self.user, name='Dollar', code='USD',
+            asset_class=Asset.AssetClass.CURRENCY, currency='USD'
+        )
         ExchangeRate.objects.create(
-            user=self.user,
-            from_currency='USD',
-            to_currency=BASE,
-            rate=Decimal('5.00'),
-            effective_date=date(2024, 1, 1),
+            user=self.user, from_currency='USD', to_currency=BASE,
+            rate=Decimal('5.00'), effective_date=date(2024, 1, 1)
         )
-        add_operation(
-            self.user, product=self.product, asset=asset,
-            amount=Decimal('100.00'), date=date(2024, 6, 1),
+        operation = self.operation(
+            Investment.Kind.YIELD, asset=foreign,
+            quantity=Decimal('2.00'), unit_price=Decimal('50.00'),
+            date=date(2024, 6, 1),
         )
+        operation.full_clean()
+        operation.save()
         rows, missing = get_total_in_base_timeseries(
-            self.user, BASE, [BASE, 'USD'], months=TIMESERIES_MONTHS,
+            self.user, BASE, months=36, offset=0
         )
         self.assertEqual(missing, [])
         self.assertTrue(any(row['total'] == Decimal('500.00') for row in rows))
 
-
-class InvestmentViewTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user('views', password='test')
-        cls.product = make_product(cls.user)
-        cls.asset = make_asset(cls.user)
-        add_operation(
-            cls.user,
-            product=cls.product,
-            asset=cls.asset,
-            title='Monthly yield',
-            kind=Investment.Kind.YIELD,
-            amount=Decimal('20.00'),
-        )
-
-    def setUp(self):
-        self.client.force_login(self.user)
-
-    def test_full_page_renders_grouped_investment(self):
-        response = self.client.get(reverse('investments:list'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Mercado Pago')
-        self.assertContains(response, 'Manual yields')
-        self.assertContains(response, 'Yield')
-
-    def test_htmx_request_returns_chart_partial(self):
-        response = self.client.get(
-            reverse('investments:list'),
-            {'flow_offset': '-3'},
-            HTTP_HX_REQUEST='true',
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, '<html')
-        self.assertContains(response, 'id="investments-charts"')
-        self.assertContains(response, 'Yields')
-
-    def test_operation_filter_can_select_yields(self):
-        response = self.client.get(
-            reverse('investments:list'), {'kind': Investment.Kind.YIELD}
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Monthly yield')
-
-    def test_product_creation_is_user_scoped(self):
-        other = User.objects.create_user('other', password='test')
-        Institution.objects.create(user=other, name='Private Bank')
-        response = self.client.get(reverse('investments:create'))
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'Private Bank')
-
-
-class InvestmentSettingsTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user('settings', password='test')
-        cls.institution = Institution.objects.create(
-            user=cls.user,
-            name='Original Bank',
-        )
-        cls.other_institution = Institution.objects.create(
-            user=cls.user,
-            name='Second Broker',
-        )
-        cls.product = InvestmentProduct.objects.create(
-            user=cls.user,
-            institution=cls.institution,
-            name='Wrong Product',
-        )
-        cls.asset = Asset.objects.create(
-            user=cls.user,
-            name='Wrong Asset',
-            code='WRONG',
-            currency=BASE,
-        )
-
-        cls.other_user = User.objects.create_user(
-            'settings-other',
-            password='test',
-        )
-        cls.foreign_institution = Institution.objects.create(
-            user=cls.other_user,
-            name='Private Bank',
-        )
-        cls.foreign_product = InvestmentProduct.objects.create(
-            user=cls.other_user,
-            institution=cls.foreign_institution,
-            name='Private Product',
-        )
-        cls.foreign_asset = Asset.objects.create(
-            user=cls.other_user,
-            name='Private Asset',
-            code='PRIVATE',
-            currency=BASE,
-        )
-
-    def setUp(self):
-        self.client.force_login(self.user)
-
-    def create_operation(self):
-        return Investment.objects.create(
-            user=self.user,
-            product=self.product,
-            asset=self.asset,
-            title='Historical operation',
-            amount=Decimal('100.00'),
-            kind=Investment.Kind.DEPOSIT,
-            date=date(2026, 8, 10),
-        )
-
-    def test_settings_lists_only_current_user_entities(self):
+    def test_settings_links_to_banking_without_broken_rate_route(self):
         response = self.client.get(reverse('investments:settings'))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Original Bank')
-        self.assertContains(response, 'Wrong Product')
-        self.assertContains(response, 'Wrong Asset')
-        self.assertNotContains(response, 'Private Bank')
-        self.assertNotContains(response, 'Private Product')
-        self.assertNotContains(response, 'Private Asset')
-        self.assertContains(response, reverse('investments:exchange_rates'))
-
-    def test_main_settings_button_opens_entity_settings(self):
-        response = self.client.get(reverse('investments:list'))
-
-        self.assertContains(response, reverse('investments:settings'))
-
-    def test_setup_create_views_assign_current_user(self):
-        institution_response = self.client.post(
-            reverse('investments:create_institution'),
-            {'name': 'Created Bank'},
-        )
-        self.assertRedirects(
-            institution_response,
-            reverse('investments:settings'),
-        )
-        institution = Institution.objects.get(name='Created Bank')
-        self.assertEqual(institution.user, self.user)
-
-        product_response = self.client.post(
-            reverse('investments:create_product'),
-            {'institution': institution.pk, 'name': 'Created Product'},
-        )
-        self.assertRedirects(product_response, reverse('investments:settings'))
-        self.assertTrue(
-            InvestmentProduct.objects.filter(
-                user=self.user,
-                institution=institution,
-                name='Created Product',
-            ).exists()
-        )
-
-        asset_response = self.client.post(
-            reverse('investments:create_asset'),
-            {'name': 'Created Asset', 'code': 'NEW', 'currency': BASE},
-        )
-        self.assertRedirects(asset_response, reverse('investments:settings'))
-        self.assertTrue(
-            Asset.objects.filter(user=self.user, code='NEW').exists()
-        )
-
-    def test_institution_can_be_renamed_and_duplicate_is_friendly(self):
-        rename_response = self.client.post(
-            reverse('investments:update_institution', args=[self.institution.pk]),
-            {'name': 'Correct Bank'},
-        )
-        self.assertRedirects(rename_response, reverse('investments:settings'))
-        self.institution.refresh_from_db()
-        self.assertEqual(self.institution.name, 'Correct Bank')
-
-        duplicate_response = self.client.post(
-            reverse('investments:update_institution', args=[self.institution.pk]),
-            {'name': self.other_institution.name},
-        )
-        self.assertEqual(duplicate_response.status_code, 200)
-        self.assertContains(
-            duplicate_response,
-            'You already have an institution with this name.',
-        )
-
-    def test_product_can_move_to_another_owned_institution(self):
-        self.create_operation()
-
-        response = self.client.post(
-            reverse('investments:update_product', args=[self.product.pk]),
-            {
-                'institution': self.other_institution.pk,
-                'name': 'Correct Product',
-            },
-        )
-
-        self.assertRedirects(response, reverse('investments:settings'))
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.name, 'Correct Product')
-        self.assertEqual(self.product.institution, self.other_institution)
-        self.assertEqual(
-            Investment.objects.get(title='Historical operation').product,
-            self.product,
-        )
-
-    def test_product_rejects_foreign_institution(self):
-        response = self.client.post(
-            reverse('investments:update_product', args=[self.product.pk]),
-            {
-                'institution': self.foreign_institution.pk,
-                'name': self.product.name,
-            },
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Select a valid choice')
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.institution, self.institution)
-
-    def test_product_and_asset_duplicates_are_field_errors(self):
-        duplicate_product = InvestmentProduct.objects.create(
-            user=self.user,
-            institution=self.institution,
-            name='Other Product',
-        )
-        product_response = self.client.post(
-            reverse('investments:update_product', args=[duplicate_product.pk]),
-            {
-                'institution': self.institution.pk,
-                'name': self.product.name,
-            },
-        )
-        self.assertEqual(product_response.status_code, 200)
-        self.assertContains(
-            product_response,
-            'already has an investment product with this name',
-        )
-
-        duplicate_asset = Asset.objects.create(
-            user=self.user,
-            name='Other Asset',
-            code='OTHER',
-            currency=BASE,
-        )
-        asset_response = self.client.post(
-            reverse('investments:update_asset', args=[duplicate_asset.pk]),
-            {
-                'name': duplicate_asset.name,
-                'code': self.asset.code,
-                'currency': BASE,
-            },
-        )
-        self.assertEqual(asset_response.status_code, 200)
-        self.assertContains(
-            asset_response,
-            'You already have an asset with this code.',
-        )
-
-    def test_asset_name_and_code_can_be_corrected(self):
-        response = self.client.post(
-            reverse('investments:update_asset', args=[self.asset.pk]),
-            {
-                'name': 'Correct Asset',
-                'code': 'RIGHT',
-                'currency': BASE,
-            },
-        )
-
-        self.assertRedirects(response, reverse('investments:settings'))
-        self.asset.refresh_from_db()
-        self.assertEqual(self.asset.name, 'Correct Asset')
-        self.assertEqual(self.asset.code, 'RIGHT')
-
-    def test_asset_currency_change_is_blocked_after_use(self):
-        self.create_operation()
-        other_currency = next(code for code in ('USD', 'EUR', 'GBP') if code != BASE)
-
-        response = self.client.post(
-            reverse('investments:update_asset', args=[self.asset.pk]),
-            {
-                'name': self.asset.name,
-                'code': self.asset.code,
-                'currency': other_currency,
-            },
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Currency cannot be changed')
-        self.asset.refresh_from_db()
-        self.assertEqual(self.asset.currency, BASE)
-
-    def test_unused_asset_currency_can_change(self):
-        other_currency = next(code for code in ('USD', 'EUR', 'GBP') if code != BASE)
-
-        response = self.client.post(
-            reverse('investments:update_asset', args=[self.asset.pk]),
-            {
-                'name': self.asset.name,
-                'code': self.asset.code,
-                'currency': other_currency,
-            },
-        )
-
-        self.assertRedirects(response, reverse('investments:settings'))
-        self.asset.refresh_from_db()
-        self.assertEqual(self.asset.currency, other_currency)
-
-    def test_referenced_entities_cannot_be_deleted(self):
-        self.create_operation()
-        cases = (
-            ('delete_institution', self.institution),
-            ('delete_product', self.product),
-            ('delete_asset', self.asset),
-        )
-
-        for route_name, entity in cases:
-            with self.subTest(route_name=route_name):
-                response = self.client.post(
-                    reverse(f'investments:{route_name}', args=[entity.pk]),
-                    follow=True,
-                )
-                self.assertContains(response, 'cannot be deleted')
-                self.assertTrue(type(entity).objects.filter(pk=entity.pk).exists())
-        self.assertTrue(
-            Investment.objects.filter(title='Historical operation').exists()
-        )
-
-    def test_protected_institution_delete_keeps_unused_siblings(self):
-        self.create_operation()
-        unused_product = InvestmentProduct.objects.create(
-            user=self.user,
-            institution=self.institution,
-            name='Unused sibling',
-        )
-
-        response = self.client.post(
-            reverse(
-                'investments:delete_institution',
-                args=[self.institution.pk],
-            ),
-            follow=True,
-        )
-
-        self.assertContains(response, 'cannot be deleted')
-        self.assertTrue(
-            Institution.objects.filter(pk=self.institution.pk).exists()
-        )
-        self.assertTrue(
-            InvestmentProduct.objects.filter(pk=unused_product.pk).exists()
-        )
-
-    def test_deleting_institution_cascades_only_unused_products(self):
-        unused_institution = Institution.objects.create(
-            user=self.user,
-            name='Unused Bank',
-        )
-        unused_product = InvestmentProduct.objects.create(
-            user=self.user,
-            institution=unused_institution,
-            name='Unused Product',
-        )
-
-        response = self.client.post(
-            reverse(
-                'investments:delete_institution',
-                args=[unused_institution.pk],
-            )
-        )
-
-        self.assertRedirects(response, reverse('investments:settings'))
-        self.assertFalse(
-            Institution.objects.filter(pk=unused_institution.pk).exists()
-        )
-        self.assertFalse(
-            InvestmentProduct.objects.filter(pk=unused_product.pk).exists()
-        )
-
-    def test_delete_confirmation_get_does_not_delete(self):
-        response = self.client.get(
-            reverse('investments:delete_asset', args=[self.asset.pk])
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(Asset.objects.filter(pk=self.asset.pk).exists())
-
-    def test_cross_user_update_and_delete_return_404(self):
-        cases = (
-            (
-                'update_institution',
-                self.foreign_institution,
-                {'name': 'Attacker rename'},
-            ),
-            ('delete_institution', self.foreign_institution, {}),
-            (
-                'update_product',
-                self.foreign_product,
-                {
-                    'institution': self.foreign_institution.pk,
-                    'name': 'Attacker product',
-                },
-            ),
-            ('delete_product', self.foreign_product, {}),
-            (
-                'update_asset',
-                self.foreign_asset,
-                {'name': 'Attacker asset', 'code': 'HACK', 'currency': BASE},
-            ),
-            ('delete_asset', self.foreign_asset, {}),
-        )
-
-        for route_name, entity, payload in cases:
-            with self.subTest(route_name=route_name):
-                response = self.client.post(
-                    reverse(f'investments:{route_name}', args=[entity.pk]),
-                    payload,
-                )
-                self.assertEqual(response.status_code, 404)
-
-        self.foreign_institution.refresh_from_db()
-        self.foreign_product.refresh_from_db()
-        self.foreign_asset.refresh_from_db()
-        self.assertEqual(self.foreign_institution.name, 'Private Bank')
-        self.assertEqual(self.foreign_product.name, 'Private Product')
-        self.assertEqual(self.foreign_asset.code, 'PRIVATE')
-
-    def test_inconsistent_cross_owner_product_blocks_institution_delete(self):
-        institution = Institution.objects.create(
-            user=self.user,
-            name='Inconsistent Institution',
-        )
-        foreign_product = InvestmentProduct.objects.create(
-            user=self.other_user,
-            institution=institution,
-            name='Cross-owner Product',
-        )
-
-        settings_response = self.client.get(reverse('investments:settings'))
-        self.assertNotContains(settings_response, 'Cross-owner Product')
-
-        delete_response = self.client.post(
-            reverse(
-                'investments:delete_institution',
-                args=[institution.pk],
-            ),
-            follow=True,
-        )
-        self.assertContains(delete_response, 'owned by another user')
-        self.assertTrue(Institution.objects.filter(pk=institution.pk).exists())
-        self.assertTrue(
-            InvestmentProduct.objects.filter(pk=foreign_product.pk).exists()
-        )
+        self.assertContains(response, reverse('banking:list'))
+        self.assertContains(response, reverse('banking:exchange_rates'))
+        self.assertNotContains(response, 'investments/settings/exchange-rates')

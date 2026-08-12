@@ -60,7 +60,7 @@ class SignupView(SuccessMessageMixin, CreateView):
         return response
 ```
 
-Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly calls Django's `login()` after `super().form_valid(form)` saves the user — this **auto-logs-in** the new account and sends them straight to the dashboard, rather than redirecting to the login page and making them re-enter credentials. This is what makes signup → first-transaction a seamless flow: by the time `SignupView` redirects, the `post_save` signals in `categories` and `payments` have already run (Django signals fire synchronously inside `User.objects.create_user()`/`form.save()`), so the new user's default categories and payment methods already exist.
+Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly calls Django's `login()` after `super().form_valid(form)` saves the user, so signup redirects directly to the dashboard. Signup seeds the approved default categories and creates the user's banking profile with the project default base currency. Banks, accounts and cards are never fabricated; the first-run Banking flow asks the user to create their real structure.
 
 ## Routes
 

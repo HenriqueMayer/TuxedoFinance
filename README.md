@@ -9,12 +9,13 @@ A personal finance tracker built with Django full stack — record categorized t
 - **Dashboard** with current balance, monthly income/expenses/investments, and a projected end-of-month balance
 - **Forward projection** — fixed transactions recur and installment plans spread one payment per month, so future months preview without recording anything in advance
 - **Filtered transaction history** — general search, separate billed-month and exact transaction-date filters, type filtering, and date/update/amount ordering
-- **Reports** with six server-rendered, zero-JS SVG charts: a slideable 12-month balance-evolution line (with prev/next arrows), monthly cash-flow bars, a donut splitting the month's expenses into installment plans vs fixed recurrences vs one-off purchases (defaults to the current month, with an `All time` aggregate option), spending-vs-income by payment method (each bar a click-driven drill-down into its top categories), and a "where the money goes" category breakdown
+- **Reports** with server-rendered, zero-JS SVG charts for balance evolution, monthly cash flow, installments, cards and accounts, and expense categories
 - **Categories and subcategories** with a per-user default seed on signup
 - **Payment methods** with credit-card billing cycles (statement day and due day) and per-transaction bill overrides
 - **Investments log** — a parallel universe to `Transaction` for tracking manual deposits, withdrawals, and yields, with settings to manage banks, brokers, investment products, free-form assets, and exchange rates. Automatic monthly and annual yield calculations are marked `Coming soon` (see [docs/apps/investments.md](docs/apps/investments.md))
 - **Light/dark theme** toggle with a Darcula-inspired dark palette
 - **Configurable currency** — pick BRL, USD, EUR, GBP, JPY, or CHF; the symbol and number format always match
+- **English and Brazilian Portuguese UI** — selected from the public or authenticated navbar without changing URLs
 
 ## Stack
 
@@ -36,8 +37,7 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. The tracked database includes a small synthetic example account (`demo` / `demo12345`) covering May–August 2026. You can also sign up from the landing page — new accounts arrive with the default categories seeded. Add a payment method on the Payments page before recording your first transaction.
-Spending by payment method
+Open <http://127.0.0.1:8000/>. Sign up from the landing page; your account arrives with the default categories seeded. Add a bank and a currency-specific account before recording your first transaction.
 
 ### Docker
 
@@ -50,20 +50,28 @@ docker compose up --build
 
 The container applies migrations and serves the app at <http://localhost:8000/>. Data persists in the `db-data` named volume across restarts; `docker compose down -v` resets it.
 
-The image builds the production Tailwind bundle and runs `collectstatic` at build time, so nothing is generated on the fly in production.
+The image builds the production Tailwind bundle and runs `collectstatic` at build time, so nothing is generated on the fly in production. Release builds also need GNU gettext when regenerating the compiled translation catalog with `python manage.py compilemessages`.
+
+## Choosing the interface language
+
+The interface supports English (`en`) and Brazilian Portuguese (`pt-br`). Use
+the language selector in the public navbar or, after login, in either the
+desktop navbar or mobile menu. Django posts the choice to
+`/i18n/set_language/` and stores it in its native language cookie; application
+URLs remain stable and never gain a language prefix. On a first visit without
+that cookie, `LocaleMiddleware` selects a supported language from the browser's
+`Accept-Language` header and otherwise falls back to English.
+
+Language selection also applies to HTMX responses because they pass through the
+same middleware. It translates interface copy, validation and system messages,
+not user-entered names or financial data: category names and other user data
+remain exactly as entered.
 
 ## Using this repository as a template
 
 This is a **GitHub template repository**. Click **Use this template** to start your own independent instance — each instance owns its own database and data, and is not meant to be deployed straight from here.
 
-Unlike the usual Django convention, `db.sqlite3` is **tracked in version control** here, shipping with the schema already migrated and synthetic demo data. A fresh clone is runnable immediately, and any demo data you record is versioned alongside your code. **Before using this template for real data, delete `db.sqlite3` and run `python manage.py migrate` to create a clean, empty database.** With `uv`, the equivalent is `uv run python manage.py migrate`.
-
-```bash
-rm db.sqlite3
-python manage.py migrate
-```
-
-If you would rather follow the standard convention, untrack it before an instance holds real data:
+Unlike the usual Django convention, `db.sqlite3` is **tracked in version control** here, shipping with the schema already migrated and no data. A fresh clone is runnable immediately, and any demo data you record is versioned alongside your code. If you would rather follow the standard convention, untrack it before an instance holds real data:
 
 ```bash
 git rm --cached db.sqlite3
@@ -84,7 +92,7 @@ CURRENCY=USD uv run python manage.py runserver
 | `USD` | `$ 1,000.00` | | `JPY` | `¥ 1,000.00` |
 | `EUR` | `€ 1.000,00` | | `CHF` | `CHF 1'000.00` |
 
-One setting deliberately controls **both** the symbol and the number format — `$ 1.000,00` (dollar sign, Brazilian separators) would be wrong everywhere, so the two are defined together per currency in [`core/currencies.py`](core/currencies.py). An unsupported code raises `ImproperlyConfigured` at startup rather than mislabelling every amount. The interface language stays English whatever you pick.
+One setting deliberately controls **both** the symbol and the number format — `$ 1.000,00` (dollar sign, Brazilian separators) would be wrong everywhere, so the two are defined together per currency in [`core/currencies.py`](core/currencies.py). An unsupported code raises `ImproperlyConfigured` at startup rather than mislabelling every amount. Interface language and currency are independent; matching `core/formats/en/` and `core/formats/pt_BR/` overrides preserve the selected currency's separators in either language.
 
 ## Project layout
 
@@ -95,7 +103,7 @@ accounts/      # Sign up, login, logout (native auth)
 dashboard/     # Aggregations, projections, and report charts
 transactions/  # Transaction model + CRUD
 categories/    # Category model + CRUD (self-related)
-payments/      # PaymentMethod model + CRUD
+banking/       # Banks, accounts, cards, balances, invoices, points, and FX
 investments/   # Investment log + manual ExchangeRate (multi-currency)
 templates/     # Project-level Django templates
 static/        # Project-level static assets
@@ -131,7 +139,7 @@ Set `HTTPS=True` only once the instance is actually served over TLS — it sends
 
 ## Documentation
 
-- [`ProductRequirementsDocument.md`](ProductRequirementsDocument.md) — full product specification, requirements, design system, and sprint history
+- [`docs/ProductRequirementsDocument.md`](docs/ProductRequirementsDocument.md) — full product specification and requirements
 - [`docs/`](docs/README.md) — technical reference for every app, model, view, and template
 
 ## License

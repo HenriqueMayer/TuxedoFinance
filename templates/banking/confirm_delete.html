@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% blocktranslate with item_name=item %}Delete {{ item_name }}{% endblocktranslate %} - CashFlow{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md space-y-6">
+    <h1 class="text-3xl font-bold">{% blocktranslate with item_name=item %}Delete {{ item_name }}?{% endblocktranslate %}</h1>
+    <form method="post" class="space-y-5 rounded-2xl bg-white p-6 ring-1 ring-slate-200 dark:bg-[#313335] dark:ring-[#323232]">
+        {% csrf_token %}
+        <p class="text-sm text-slate-600 dark:text-neutral-400">{% translate "This action cannot be undone. Financial records that reference this item will prevent deletion." %}</p>
+        <div class="flex gap-3">
+            <button type="submit" class="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white">{% translate "Delete" %}</button>
+            <a href="{% url 'banking:list' %}" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate "Cancel" %}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

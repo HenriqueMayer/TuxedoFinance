@@ -1,16 +1,18 @@
 # `core`
 
-The project package — no models, no views, no URLs of its own beyond the root `urls.py`. Everything here is cross-cutting configuration consumed by the six domain apps.
+The project package: cross-cutting configuration, localization, currency metadata and root routing. It owns no financial domain model.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `core/settings.py` | All Django settings — see [architecture.md § Settings](../architecture.md#settings-coresettingspy) for the full breakdown. |
-| `core/urls.py` | Root URLconf; `include()`s every domain app's `urls.py` under its own prefix — see [architecture.md § URL routing](../architecture.md#url-routing-coreurlspy). |
+| `core/settings.py` | Django settings, supported UI languages and the default base currency for new users. |
+| `core/urls.py` | Root URLconf, including Django's `i18n/` routes, `banking`, and excluding removed `payments`. |
 | `core/context_processors.py` | Two custom context processors, registered in `TEMPLATES[0]['OPTIONS']['context_processors']`. |
 | `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR20). |
 | `core/formats/en/formats.py` | Locale number-format override driven by `settings.CURRENCY` (FR19). |
+| `core/formats/pt_BR/formats.py` | Portuguese locale counterpart that preserves the same currency-driven number format. |
+| `core/tests.py` | Language cookie, navbar, HTMX and language/currency-independence tests. |
 | `core/wsgi.py` | Standard `django-admin startproject` WSGI entrypoint; used by `gunicorn` in production (`core.wsgi:application`, see the `Dockerfile` `CMD`). |
 | `core/asgi.py` | Standard ASGI entrypoint; unused in this project (no async views, no channels) but kept as Django scaffolding. |
 
@@ -23,9 +25,11 @@ def currency(request):
     return {'CURRENCY_SYMBOL': settings.CURRENCY_SYMBOL}
 ```
 
-Exposes `settings.CURRENCY_SYMBOL` to every template as `{{ CURRENCY_SYMBOL }}`, so no screen ever hardcodes a currency symbol (PRD §8.5). Used throughout `templates/dashboard/index.html`, `templates/dashboard/_reports_charts.html` (the HTMX-swapped charts partial inside `reports.html`), `templates/transactions/list.html`, and `templates/pages/landing.html`'s sample preview.
-
-`CURRENCY_SYMBOL` is **derived**, not configured directly: `settings.CURRENCY` (default `'BRL'`) selects an entry from `core/currencies.py`, and the symbol comes off that entry. See § Currency registry below.
+The single-symbol context value is retained only for legacy/public examples during
+the breaking implementation. Authenticated money rendering must resolve metadata
+from each value's native currency; the user's `BankingProfile.base_currency`
+drives consolidation. No banking template may assume `CURRENCY_SYMBOL` describes
+every amount.
 
 ### `debug_flag(request)`
 
@@ -58,12 +62,9 @@ CURRENCIES = {
 }
 ```
 
-One entry pairs a symbol with the separators that currency is written with, because those are not independent choices — `$ 1.000,00` is wrong everywhere. Two consumers read the same entry:
-
-- `core/settings.py` → `CURRENCY_SYMBOL = get_currency(CURRENCY).symbol`
-- `core/formats/en/formats.py` → `DECIMAL_SEPARATOR` / `THOUSAND_SEPARATOR`
-
-so they cannot drift apart, whatever `CURRENCY` is configured.
+One entry pairs a currency's symbol and separators. Money renderers select the
+entry by each amount's currency; `settings.CURRENCY` supplies only the default
+base currency for a new `BankingProfile` and public examples.
 
 Two deliberate constraints on this module:
 
@@ -72,6 +73,45 @@ Two deliberate constraints on this module:
 
 Adding a currency is one line in `CURRENCIES` and nothing else.
 
+## Interface localization
+
+`LANGUAGE_CODE = 'en'`, while `LANGUAGES` exposes `en` and `pt-br` and
+`LOCALE_PATHS` points to the project-level `locale/` directory.
+`LocaleMiddleware` is immediately after `SessionMiddleware`: on the first
+request it can negotiate a supported language from `Accept-Language`; after a
+selection it activates the value in Django's native language cookie. Root URLs
+use ordinary `path()` entries rather than `i18n_patterns()`, so switching
+language never changes or prefixes an application URL.
+
+`core/urls.py` mounts Django's native language view at
+`/i18n/set_language/`. The selector sends a CSRF-protected POST containing
+`language` and the current path as `next`; Django validates the redirect and
+sets the cookie. No custom language preference model or endpoint exists.
+
+The Portuguese source catalog is `locale/pt_BR/LC_MESSAGES/django.po`, with
+the runtime catalog in `django.mo`. Regenerate it with GNU gettext installed:
+
+```bash
+uv run python manage.py makemessages -l pt_BR
+uv run python manage.py compilemessages
+```
+
+For new interface strings, use `gettext_lazy` for module-level declarations
+such as model/form labels and choices, and `gettext` for messages evaluated at
+request/runtime. In templates load `i18n`, use `translate` (the modern name for
+the `trans` tag) for short literals, and `blocktranslate` for sentences or copy
+containing variables. Then update
+the catalog, translate new entries and compile it. Do not mark category names,
+notes, titles, bank names or any other user-entered/persisted values for
+automatic translation.
+
+`LocaleMiddleware` also activates the language for HTMX fragment requests; no
+special client header or translation branch is required. `core/tests.py`
+checks English defaults and selector presence, Portuguese cookie persistence,
+desktop/mobile authenticated selectors, translated HTMX reports and identical
+currency separators under both UI languages.
+
 ## Why no models/views here
 
-`core` is intentionally empty of domain logic, per the "no over-engineering" house rule — it exists purely to wire the six domain apps together (settings, root routing, the two context processors, and the currency/format configuration above). Business logic always lives in the owning domain app. `core` is not in `INSTALLED_APPS` and has no migrations.
+`core` stays empty of domain logic. Banking owns base-currency preference and
+historical conversion; core only provides registry/configuration primitives.

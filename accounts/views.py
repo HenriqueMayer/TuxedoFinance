@@ -2,6 +2,7 @@ from django.contrib.auth import login
 from django.contrib.auth.views import LoginView as AuthLoginView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView
 
 from accounts.forms import LoginForm, SignupForm
@@ -21,7 +22,7 @@ class LoginView(SuccessMessageMixin, AuthLoginView):
     template_name = 'accounts/login.html'
     authentication_form = LoginForm
     redirect_authenticated_user = True
-    success_message = 'Welcome back, %(username)s.'
+    success_message = _('Welcome back, %(username)s.')
 
 
 class SignupView(SuccessMessageMixin, CreateView):
@@ -36,7 +37,7 @@ class SignupView(SuccessMessageMixin, CreateView):
     form_class = SignupForm
     template_name = 'accounts/signup.html'
     success_url = reverse_lazy('dashboard:index')
-    success_message = 'Welcome to CashFlow, %(username)s. Your account is ready.'
+    success_message = _('Welcome to CashFlow, %(username)s. Your account is ready.')
 
     def form_valid(self, form):
         response = super().form_valid(form)

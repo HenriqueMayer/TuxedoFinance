@@ -15,7 +15,7 @@ Full CRUD for `Category`, including subcategories via a self-relationship, plus 
 | `categories/admin.py` | `CategoryAdmin` |
 | `templates/categories/{list,form,confirm_delete}.html` | screens |
 
-For the `Category` model's fields and constraints, see [data-model.md § Category](../data-model.md#category-categoriesmodelspy).
+For the `Category` model's fields and constraints, see [data-model.md § Category](../data-model.md#category).
 
 ## Form (`CategoryForm`)
 
@@ -37,7 +37,7 @@ class CategoryForm(forms.ModelForm):
 Two things happen in `__init__` that aren't visible from `Meta` alone:
 
 1. **User-scoped parent choices** — the `parent_category` dropdown only ever lists the requesting user's own categories, never another user's (the view passes `user=self.request.user` via `get_form_kwargs()`).
-2. **No self-parenting** — when editing an existing category, that category's own `pk` is excluded from its own parent choices, so a category can never be set as its own parent. (This guards against direct self-reference only; it does not walk the full ancestor chain — see the caveat in [data-model.md](../data-model.md#category-categoriesmodelspy).)
+2. **No self-parenting** — when editing an existing category, that category's own `pk` is excluded from its own parent choices, so a category can never be set as its own parent.
 
 ## Views
 
@@ -86,7 +86,7 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
         return response
 ```
 
-`Transaction.category` uses `on_delete=PROTECT` (see [data-model.md § Deletion integrity](../data-model.md#deletion-integrity)), so deleting a category still referenced by any transaction raises `ProtectedError` at the database layer. This view is the one place that exception is caught and turned into a friendly, redirect-with-message UX instead of a 500 — the exact same pattern `PaymentMethodDeleteView` uses.
+`Transaction.category` uses `on_delete=PROTECT` (see [data-model.md § Category](../data-model.md#category)), so deleting a category still referenced by any transaction raises `ProtectedError` at the database layer. The view turns that exception into a friendly redirect-with-message response instead of a 500.
 
 ## Default category seeding (FR14)
 

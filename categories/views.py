@@ -5,6 +5,8 @@ from django.db import IntegrityError
 from django.db.models import ProtectedError
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from categories.forms import CategoryForm
@@ -72,7 +74,7 @@ class CategoryFormMixin(LoginRequiredMixin):
         try:
             return super().form_valid(form)
         except IntegrityError:
-            form.add_error('name', 'You already have a category with this name.')
+            form.add_error('name', _('You already have a category with this name.'))
             return self.form_invalid(form)
 
 
@@ -85,7 +87,7 @@ class CategoryFormMixin(LoginRequiredMixin):
 class CategoryCreateView(CategoryFormMixin, SuccessMessageMixin, CreateView):
     """Create a category owned by the logged-in user (PRD 4.2.2)."""
 
-    success_message = 'Category "%(name)s" created.'
+    success_message = gettext_lazy('Category "%(name)s" created.')
 
     def form_valid(self, form):
         form.instance.user = self.request.user
@@ -95,7 +97,7 @@ class CategoryCreateView(CategoryFormMixin, SuccessMessageMixin, CreateView):
 class CategoryUpdateView(CategoryFormMixin, SuccessMessageMixin, UpdateView):
     """Update one of the logged-in user's own categories (PRD 4.2.3)."""
 
-    success_message = 'Category "%(name)s" updated.'
+    success_message = gettext_lazy('Category "%(name)s" updated.')
 
 
 class CategoryDeleteView(LoginRequiredMixin, DeleteView):
@@ -121,9 +123,12 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
         except ProtectedError:
             messages.error(
                 self.request,
-                f'"{name}" cannot be deleted because it is still '
-                'used by existing transactions.',
+                _('"%(name)s" cannot be deleted because it is still used by existing transactions.')
+                % {'name': name},
             )
             return redirect('categories:list')
-        messages.success(self.request, f'Category "{name}" deleted.')
+        messages.success(
+            self.request,
+            _('Category "%(name)s" deleted.') % {'name': name},
+        )
         return response

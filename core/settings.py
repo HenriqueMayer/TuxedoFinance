@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.translation import gettext_lazy as _
 
 from core.currencies import DEFAULT_CURRENCY, get_currency
 
@@ -111,7 +112,7 @@ INSTALLED_APPS = [
     'dashboard',
     'transactions',
     'categories',
-    'payments',
+    'banking',
     'investments',
 ]
 
@@ -122,6 +123,7 @@ MIDDLEWARE = [
     # nginx. Must sit right after SecurityMiddleware.
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -214,11 +216,16 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
-# Money is displayed Brazilian-style (R$ 1.000,00) while the UI language stays
-# English. Locale format modules take precedence over the DECIMAL_SEPARATOR /
-# THOUSAND_SEPARATOR settings, so the override lives in `core/formats/en/`.
+LANGUAGES = [
+    ('en', _('English')),
+    ('pt-br', _('Brazilian Portuguese')),
+]
+
+LOCALE_PATHS = [BASE_DIR / 'locale']
+
+# Currency formatting remains independent from the selected UI language.
 FORMAT_MODULE_PATH = 'core.formats'
 USE_THOUSAND_SEPARATOR = True
 

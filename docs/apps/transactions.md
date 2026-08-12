@@ -1,200 +1,60 @@
 # `transactions`
 
-The core domain entity — every cash-flow record the app exists to track. Full CRUD, paginated listing with optional filters, and the `TransactionForm` that ties `Category`/`PaymentMethod` together per-user.
+`transactions` records categorized economic events. It no longer owns or
+derives the account balance and no longer references `PaymentMethod`; settlement
+is expressed through owned banking accounts, cards, invoices, and movements.
 
-## Files
+## Responsibilities
 
-| File | Contents |
-|---|---|
-| `transactions/models.py` | `Transaction` |
-| `transactions/forms.py` | `TransactionForm` |
-| `transactions/views.py` | `TransactionListView`, `TransactionCreateView`, `TransactionUpdateView`, `TransactionDeleteView` |
-| `transactions/urls.py` | `app_name = 'transactions'`; routes `list`, `create`, `update`, `delete` |
-| `transactions/admin.py` | `TransactionAdmin` |
-| `templates/transactions/{list,form,confirm_delete}.html` | screens |
+- CRUD, search and filtering for `INCOME` and `EXPENSE` events.
+- Category assignment for income/expense.
+- Native currency, amount, event date, recurrence and historical base conversion.
+- Selection of PIX, debit card, credit card, or direct account as the settlement
+  path. Own transfers are recorded separately in Banking.
+- Atomic delegation to `banking` posting services.
 
-For the `Transaction` model's fields, constraints, and the `TransactionType` enum, see [data-model.md § Transaction](../data-model.md#transaction-transactionsmodelspy). `transactions` has no `signals.py` or default-data seeding of its own — it's the *consumer* of the categories/payments defaults, not a producer.
+`INVESTMENT` is removed from `TransactionType`. Investment deposits and
+withdrawals belong to the investments workflow and create banking movements
+without becoming income or expense.
 
-The model also owns the **recurrence** logic that the dashboard forecast is built on — `months_from_start()`, `amount_for_month()`, and `amount_through_month()`. Those methods, not `transaction_date` alone, decide which months a transaction affects; see [data-model.md § Recurrence](../data-model.md#recurrence-when-a-transaction-hits-a-month).
+## Settlement behavior
 
-Where that run of months *begins* is not this app's decision either. `months_from_start()` subtracts `billing_offset`, which asks the **payment method** whether the purchase landed on this month's bill or the next one — so a purchase made on or after a card's best purchase day comes out of the month after the one it was recorded in. See [data-model.md § Billing cycle](../data-model.md#billing-cycle-when-a-card-purchase-actually-leaves-the-account); the rule itself lives in [`payments`](payments.md). `transaction_date` remains the purchase date throughout, and `billed_month` / `payment_date` are the derived, display-only counterparts.
-
-## Form (`TransactionForm`)
-
-```python
-class TransactionForm(forms.ModelForm):
-    class Meta:
-        model = Transaction
-        fields = (
-            'title', 'amount', 'transaction_type', 'category',
-            'payment_method', 'installments', 'billing_override', 'transaction_date',
-            'is_fixed', 'fixed_until', 'notes',
-        )
-        widgets = {
-            'transaction_date': forms.DateInput(attrs={'type': 'date'}),
-            'fixed_until': forms.DateInput(attrs={'type': 'date'}),
-            'notes': forms.Textarea(attrs={'rows': 4}),
-            'amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
-            'installments': forms.NumberInput(
-                attrs={'step': '1', 'min': '1', 'max': str(Transaction.MAX_INSTALLMENTS)},
-            ),
-        }
-
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['category'].queryset = Category.objects.filter(user=user)
-        self.fields['payment_method'].queryset = PaymentMethod.objects.filter(user=user)
-        self.fields['installments'].required = False
-        for name, field in self.fields.items():
-            field.widget.attrs['class'] = (
-                CHECKBOX_CLASSES if name == 'is_fixed' else INPUT_CLASSES
-            )
-```
-
-All 11 fields in one `ModelForm` (the original FR07 fields plus installments, bill choice, and the fixed recurrence end). Enforcement layers worth noting:
-
-- **FK scoping**: both `category` and `payment_method` querysets are restricted to `user`'s own records — this is the form-level half of per-user isolation (the view-level half is `get_queryset()`/`form_valid()`, same as every other app). A malicious/guessed `pk` for another user's category is rejected as an invalid choice, not merely hidden from the dropdown.
-- **`amount` widget** — `min="0.01"` is a client-side hint only; the real enforcement is the model's `MinValueValidator`, which `ModelForm` validation runs regardless of what the browser sends.
-- **`is_fixed`** gets a distinct `CHECKBOX_CLASSES` string instead of the shared text-input `INPUT_CLASSES`, since it's rendered as a checkbox, not a text/select input (see [frontend.md](../frontend.md)).
-
-### Installments validation
-
-```python
-def clean_installments(self):
-    installments = self.cleaned_data.get('installments')
-    return 1 if installments is None else installments
-
-def clean(self):
-    cleaned_data = super().clean()
-    payment_method = cleaned_data.get('payment_method')
-    installments = cleaned_data.get('installments')
-
-    if payment_method is None or installments is None:
-        return cleaned_data
-
-    is_credit_card = payment_method.method_type == PaymentMethod.MethodType.CREDIT_CARD
-    if installments > 1 and not is_credit_card:
-        self.add_error(
-            'installments',
-            'Installments are only available for credit card payments. '
-            f'Keep this at 1 for "{payment_method}".',
-        )
-
-    return cleaned_data
-```
-
-`clean()` also rejects `is_fixed=True` together with `installments > 1`: one repeats forever, the other stops after N months, so allowing both would make `amount_for_month` ambiguous. They are rejected rather than resolved by a silent precedence rule.
-
-### Ending a fixed transaction (`fixed_until`)
-
-`clean()` also enforces two rules on `fixed_until`, factored into `_clean_fixed_until()`:
-
-1. It requires `is_fixed` — an end date on a one-off transaction is meaningless.
-2. It cannot fall before the month `transaction_date` starts in. **Compared by month, not by day**: recurrence is monthly, so `2026-03-01` and `2026-03-28` mean the same thing, and rejecting an end date of the 1st for a transaction dated the 15th of the same month would be a distinction the projection does not make.
-
-`_clean_fixed_until()` runs **first** in `clean()`, before the installments block, which returns early when `payment_method`/`installments` are missing. Ordering it after that early return would have silently skipped the `fixed_until` checks on exactly the submissions that already had another error, so both errors report together.
-
-The *why* behind the field is in [data-model.md § Ending a fixed transaction](../data-model.md#ending-a-fixed-transaction-without-losing-history-fr18): editing a fixed row's amount rewrites every month it covers, past included, so a change in value is two rows rather than an edit.
-
-Both cross-field rules live in `clean()` rather than on the model because they span two fields and only govern user-submitted data — `Transaction.objects.create(...)` in a data migration or fixture is intentionally not constrained by them.
-
-The field is rendered **unconditionally**, not shown/hidden as the payment-method `<select>` changes: this project is deliberately zero-JS, and a CSS-only (`:has()`) toggle is impossible here because a payment method's *type* is not knowable from its `<option value>` (which is a per-user primary key). The help text carries the rule visually; `clean()` is what actually enforces it.
-
-Two subtleties in `clean_installments`:
-
-- `required = False` + defaulting `None` → `1` keeps the box optional. Leaving it blank means "single payment", not a validation error, and every pre-existing POST payload that never sent the field still validates.
-- Only `None` is defaulted, never a falsy `0`. Writing `return installments or 1` would silently rewrite a submitted `0` into a valid `1`; letting `0` fall through means the model's `MinValueValidator(1)` rejects it in `_post_clean()`, and the error surfaces on the `installments` field.
-
-## Views
-
-### `TransactionListView`
-
-```python
-class TransactionListView(LoginRequiredMixin, ListView):
-    paginate_by = 10
-
-    def get_queryset(self):
-        queryset = Transaction.objects.filter(user=self.request.user).select_related(
-            'category', 'payment_method'
-        )
-        search = self.request.GET.get('q', '').strip()
-        if search:
-            queryset = queryset.filter(
-                Q(title__icontains=search)
-                | Q(notes__icontains=search)
-                | Q(category__name__icontains=search)
-                | Q(payment_method__name__icontains=search)
-            )
-        transaction_type = self.request.GET.get('type')
-        if transaction_type in Transaction.TransactionType.values:
-            queryset = queryset.filter(transaction_type=transaction_type)
-        transaction_date = self._selected_transaction_date()
-        if transaction_date is not None:
-            queryset = queryset.filter(transaction_date=transaction_date)
-        queryset = queryset.order_by(*self.SORT_OPTIONS[self._selected_sort()])
-        return self._filter_by_billed_month(queryset)
-
-    def _filter_by_billed_month(self, queryset):
-        month = self.request.GET.get('month')
-        if not month:
-            return queryset
-        year_part, _, month_part = month.partition('-')
-        if not (year_part.isdigit() and month_part.isdigit()):
-            return queryset
-        year, month_number = int(year_part), int(month_part)
-        if not 1 <= month_number <= 12:
-            return queryset
-        return [txn for txn in queryset if txn.amount_for_month(year, month_number)]
-```
-
-- `select_related('category', 'payment_method')` avoids an N+1 query when each row in the template renders `transaction.category.name`/`transaction.payment_method.name` (NFR10).
-- `paginate_by = 10` — Django's built-in `ListView` pagination; the template reads `page_obj`/`is_paginated`.
-- **Zero-JS GET-param filtering** (PRD 8.1.5): `?q=` searches text, `?month=YYYY-MM` filters on the **billed** month (see below), `?date=YYYY-MM-DD` matches the exact `transaction_date`, `?type=INCOME|EXPENSE|INVESTMENT` filters on `transaction_type`, and `?sort=` controls ordering. All are read from a plain `<form method="get">`; there is no typeahead, live search, or custom date-picker JavaScript. Malformed/unknown values are silently ignored rather than raising a `400`.
-- **`?sort=newest|oldest|updated|highest|lowest`** (`SORT_OPTIONS`) reorders the list. `newest` and `oldest` use `transaction_date`; `updated` ignores it and puts the most recently edited row first. `highest` and `lowest` order by the stored full positive `amount` shown as the row headline — not by transaction-type sign and not by an installment's monthly contribution. Every option ends with a primary-key tie-breaker for deterministic pagination. Ordering runs before `_filter_by_billed_month`, since that filter may return a Python list that preserves the order it receives.
-- **The exact date is separate from the billed month.** `?date=` is parsed strictly as ISO `YYYY-MM-DD` and applies `transaction_date=<date>` in SQL. It never matches `created_at`, `payment_date`, or a generated recurrence occurrence: a fixed row starting in January can match August's billed month while still not matching an exact August transaction date. A malformed or impossible date is ignored and is not restored into the input.
-- **The month filter is the *billed* month, not `transaction_date`** — the same question the dashboard answers, so the two screens can never disagree about which month a transaction belongs to. It matches any row whose `amount_for_month(year, month)` is non-zero, which has two consequences the earlier `transaction_date__year`/`__month` filter got wrong:
-  - a credit card purchase made on or after the card's best purchase day is listed under the month its **bill is paid** — 26 July on a card opening on the 24th is an August row, not a July one (see [data-model.md § Billing cycle](../data-model.md#billing-cycle-when-a-card-purchase-actually-leaves-the-account));
-  - a **fixed** transaction or an open **installment plan** is listed under *every* month it charges, not only the month it was recorded in. A subscription started in July appears under August, September, and every month after — which is precisely what makes it fixed.
-  - Neither rule survives translation to a SQL predicate: the billing shift compares the purchase day against the card's own `best_purchase_day`, and a fixed transaction recurs without bound. So this one filter folds in **Python** and returns a `list`, which `ListView` paginates exactly like a queryset. It is the same trade [`dashboard.services`](dashboard.md) makes for the same reason (NFR10) — still a single round-trip, over one user's rows already narrowed by the search and type filters, which is why it runs **last**.
-- **Free-text search (FR17)** spans everything a row actually displays: `title`, `notes`, and the **names of the related category and payment method**, OR'd together. Searching only `title` would have been the smaller change, but "insurance" not finding the row filed under an Insurance category is exactly the kind of miss that makes a search box feel broken.
-  - The search `Q(...)` is applied to a queryset **already filtered by `user`**, so widening the match can never reach another user's rows, even for a term that matches both users' data.
-  - The term is `.strip()`ed, so a stray space is not a search for `' '`; an empty result after stripping means "no search", not "search for nothing".
-  - The filters compose with **AND**: `?q=salary&type=EXPENSE` finds salary-ish *expenses*, not "salary OR expenses"; adding `?date=` or `?month=` narrows that result further.
-  - `icontains` is a `LIKE` scan. At the row counts a personal finance app produces that is entirely adequate; if it ever stops being so, the answer is SQLite FTS, not a hand-rolled index.
-- `get_context_data` also exposes `transaction_type_choices` and the canonical current `search_query`/`month`/`date`/`type`/`sort` values. Django's `{% querystring %}` template tag preserves them across pagination.
-
-### Create / Update / Delete
-
-Same `LoginRequiredMixin` + user-scoped-`get_queryset()` shape as every other app. `TransactionCreateView.form_valid()` stamps `form.instance.user = self.request.user`. `TransactionDeleteView` has **no** `ProtectedError` handling — unlike `CategoryDeleteView`/`PaymentMethodDeleteView`, nothing else references a `Transaction` via a protected FK, so a plain `DeleteView.form_valid()` is sufficient; it just adds a success message.
-
-## Routes
-
-| Path | Name | View |
+| Path | Transaction classification | Cash effect |
 |---|---|---|
-| `/transactions/` | `transactions:list` | `TransactionListView` (supports `?q=`, `?month=`, `?date=`, `?type=`, `?sort=`) |
-| `/transactions/create/` | `transactions:create` | `TransactionCreateView` |
-| `/transactions/<pk>/edit/` | `transactions:update` | `TransactionUpdateView` |
-| `/transactions/<pk>/delete/` | `transactions:delete` | `TransactionDeleteView` |
+| External PIX received | `INCOME` | Immediate account credit. |
+| External PIX sent | `EXPENSE` | Immediate account debit. |
+| Debit card/direct account | `INCOME` or `EXPENSE` | Immediate movement. |
+| Credit card | Usually `EXPENSE` | Added to `CardInvoice`; no purchase-date account movement. |
+| Own-account transfer | Banking transfer | Paired debit/credit movements; excluded from income/expense. |
 
-## Admin
+PIX is therefore a settlement capability, not a transaction type. A PIX to or
+from another person remains a normal categorized transaction.
 
-```python
-list_display = (
-    'title', 'transaction_type', 'amount', 'transaction_date',
-    'is_fixed', 'installments', 'category', 'payment_method', 'user',
-)
-list_filter = (
-    'user', 'transaction_type', 'is_fixed', 'installments',
-    'category', 'payment_method',
-)
-search_fields = ('title', 'notes')
-date_hierarchy = 'transaction_date'
-```
+## Form and validation
 
-The only admin in the project with `date_hierarchy` — convenient for browsing a single user's history by month/year directly in `/admin/`.
+The form captures description, positive native amount, currency, type, category,
+event date, settlement path/instrument, recurrence fields, and notes. Choices are
+limited to the user's banks, accounts and cards. Validation enforces:
 
-## Templates
+- category required for every transaction;
+- PIX only on an account with `pix_enabled=True`;
+- debit/credit card currency compatible with the linked account;
+- owned instruments that match the selected settlement path;
+- installments only for credit cards and assigned across invoices without
+  creating account movements for individual installments.
 
-- `list.html` — the filter bar retains the general Search and places **Billed month** beside **Transaction date**, using concise labels without helper copy. Type and all five sort options share the same GET form. `Clear filters` appears for any active filter or non-default sort, while a sort alone does not trigger the filtered empty state because sorting removes no rows. Each row remains color-coded by `transaction_type`, with the stored full positive `amount` receiving a presentation-only sign. Pagination preserves every active query parameter through `{% querystring %}`.
-- `form.html` — renders all 11 fields via `partials/form_field.html`, except `is_fixed`, which gets custom markup (a checkbox + label/help/errors) since it isn't a standard text/select input. `installments` and `billing_override` sit under `payment_method`, and `fixed_until` sits under the `is_fixed` toggle.
-- `confirm_delete.html` — the standard confirm-delete pattern (see [frontend.md](../frontend.md)).
+Future recurrences are projections until posted. When an immediate recurrence
+becomes effective it creates one transaction occurrence and one movement; a
+credit recurrence creates one invoice item. Projection rows never alter the
+ledger by themselves.
+
+## Listing and reporting semantics
+
+Search covers description, notes, category, bank, account and card labels.
+Filters distinguish event date, settlement date, transaction type, currency,
+banking instrument and invoice. Native and base amounts are shown together when
+they differ. Own transfers are visibly neutral and never receive income/expense
+colors or category totals.
+
+Deletion is allowed only for unposted drafts. Posted events are reversed through
+the banking service so ledger, invoice, and transaction history stay coherent.
