@@ -42,7 +42,7 @@
                         <div class="rounded-xl bg-slate-50 p-4 dark:bg-[#262626]">
                             <div class="flex items-baseline justify-between gap-3">
                                 <span class="font-medium">{{ account.name }}</span>
-                                <span class="tabular-nums font-semibold">{{ account.currency }} {{ account.current_balance }}</span>
+                                <span class="tabular-nums font-semibold">{{ account.currency }} {{ account.current_balance|floatformat:2 }}</span>
                             </div>
                             <p class="mt-1 text-sm text-slate-500 dark:text-neutral-400">
                                 {% blocktranslate count debit_count=account.debit_cards.all|length %}{{ debit_count }} debit card{% plural %}{{ debit_count }} debit cards{% endblocktranslate %},

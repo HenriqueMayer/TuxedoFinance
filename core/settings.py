@@ -114,6 +114,7 @@ INSTALLED_APPS = [
     'categories',
     'banking',
     'investments',
+    'demo',
 ]
 
 MIDDLEWARE = [
