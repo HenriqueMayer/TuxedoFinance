@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from transactions.models import Transaction
 
@@ -9,12 +10,13 @@ class TransactionAdmin(admin.ModelAdmin):
         'title',
         'transaction_type',
         'amount',
-        'transaction_date',
+        'date',
         'is_fixed',
         'fixed_until',
         'installments',
         'category',
-        'payment_method',
+        'payment_channel',
+        'payment_label',
         'user',
     )
     list_filter = (
@@ -23,7 +25,14 @@ class TransactionAdmin(admin.ModelAdmin):
         'is_fixed',
         'installments',
         'category',
-        'payment_method',
+        'payment_channel',
     )
-    search_fields = ('title', 'notes')
-    date_hierarchy = 'transaction_date'
+    search_fields = (
+        'title', 'notes', 'bank_account__name', 'debit_card__name',
+        'credit_card__name',
+    )
+    date_hierarchy = 'date'
+
+    @admin.display(description=_('Payment label'))
+    def payment_label(self, transaction):
+        return transaction.payment_label

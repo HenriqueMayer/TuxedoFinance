@@ -1,55 +1,47 @@
-"""Investment institutions, products, assets, and manual operations."""
+"""Investment products, assets, and portfolio operations."""
 
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from core.currencies import CURRENCIES
 
 
-class Institution(models.Model):
-    """A bank, broker, exchange, or other investment institution."""
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='investment_institutions',
-    )
-    name = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['name']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'name'],
-                name='unique_investment_institution_per_user',
-            ),
-        ]
-
-    def __str__(self):
-        return self.name
+POSITIVE_8DP = MinValueValidator(Decimal('0.00000001'))
+POSITIVE_CENTS = MinValueValidator(Decimal('0.01'))
+NON_NEGATIVE = MinValueValidator(Decimal('0.00'))
+CURRENCY_NAMES = {
+    'BRL': _('Brazilian Real'),
+    'USD': _('US Dollar'),
+    'EUR': _('Euro'),
+    'GBP': _('British Pound'),
+    'JPY': _('Japanese Yen'),
+    'CHF': _('Swiss Franc'),
+}
+CURRENCY_CHOICES = [
+    (code, CURRENCY_NAMES.get(code, currency.name))
+    for code, currency in CURRENCIES.items()
+]
 
 
 class InvestmentProduct(models.Model):
-    """A named product or wallet held at an institution."""
-
     class YieldMode(models.TextChoices):
-        MANUAL = 'MANUAL', 'Manual'
-        MONTHLY = 'MONTHLY', 'Monthly rate (Coming soon)'
-        ANNUAL = 'ANNUAL', 'Annual rate (Coming soon)'
+        MANUAL = 'MANUAL', _('Manual')
+        MONTHLY = 'MONTHLY', _('Monthly rate (Coming soon)')
+        ANNUAL = 'ANNUAL', _('Annual rate (Coming soon)')
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='investment_products',
     )
-    institution = models.ForeignKey(
-        Institution,
-        on_delete=models.CASCADE,
+    bank = models.ForeignKey(
+        'banking.Bank',
+        on_delete=models.PROTECT,
         related_name='investment_products',
     )
     name = models.CharField(max_length=150)
@@ -62,20 +54,30 @@ class InvestmentProduct(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['institution__name', 'name']
+        ordering = ['bank__name', 'name']
         constraints = [
             models.UniqueConstraint(
-                fields=['institution', 'name'],
-                name='unique_investment_product_per_institution',
+                fields=['bank', 'name'],
+                name='investments_unique_product_bank_name',
             ),
         ]
 
     def __str__(self):
-        return f'{self.institution.name} — {self.name}'
+        return f'{self.bank.name} - {self.name}'
+
+    def clean(self):
+        if self.bank_id and self.user_id and self.bank.user_id != self.user_id:
+            raise ValidationError({'bank': _('The bank must belong to the product owner.')})
 
 
 class Asset(models.Model):
-    """A user-defined asset available across the owner's investment products."""
+    class AssetClass(models.TextChoices):
+        LIQUIDITY = 'LIQUIDITY', _('Liquidity')
+        CURRENCY = 'CURRENCY', _('Currency')
+        CRYPTO = 'CRYPTO', _('Crypto')
+        FIXED_INCOME = 'FIXED_INCOME', _('Fixed income')
+        EQUITY = 'EQUITY', _('Equity')
+        OTHER = 'OTHER', _('Other')
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -84,7 +86,8 @@ class Asset(models.Model):
     )
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20)
-    currency = models.CharField(max_length=3, default=settings.CURRENCY)
+    asset_class = models.CharField(max_length=20, choices=AssetClass.choices)
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -102,12 +105,12 @@ class Asset(models.Model):
 
 
 class Investment(models.Model):
-    """One manual deposit, withdrawal, or yield operation."""
+    """A quantity-changing portfolio operation and its optional cash side."""
 
     class Kind(models.TextChoices):
-        DEPOSIT = 'DEPOSIT', 'Deposit'
-        WITHDRAWAL = 'WITHDRAWAL', 'Withdrawal'
-        YIELD = 'YIELD', 'Yield'
+        DEPOSIT = 'DEPOSIT', _('Deposit')
+        WITHDRAWAL = 'WITHDRAWAL', _('Withdrawal')
+        YIELD = 'YIELD', _('Yield')
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -118,21 +121,77 @@ class Investment(models.Model):
         InvestmentProduct,
         on_delete=models.PROTECT,
         related_name='operations',
-        null=True,
     )
     asset = models.ForeignKey(
         Asset,
         on_delete=models.PROTECT,
         related_name='operations',
-        null=True,
-    )
-    title = models.CharField(max_length=150)
-    amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))],
     )
     kind = models.CharField(max_length=20, choices=Kind.choices)
+    quantity = models.DecimalField(
+        max_digits=20, decimal_places=8, validators=[POSITIVE_8DP]
+    )
+    unit_price = models.DecimalField(
+        max_digits=20, decimal_places=8, validators=[POSITIVE_8DP]
+    )
+    fees = models.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[NON_NEGATIVE],
+    )
+    cash_amount = models.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[POSITIVE_CENTS],
+        help_text=_('Native amount debited from or credited to the selected account.'),
+    )
+    source_account = models.ForeignKey(
+        'banking.BankAccount',
+        on_delete=models.PROTECT,
+        related_name='funded_investments',
+        null=True,
+        blank=True,
+    )
+    source_program = models.ForeignKey(
+        'banking.LoyaltyProgram',
+        on_delete=models.PROTECT,
+        related_name='funded_investments',
+        null=True,
+        blank=True,
+    )
+    source_points = models.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[POSITIVE_CENTS],
+    )
+    destination_account = models.ForeignKey(
+        'banking.BankAccount',
+        on_delete=models.PROTECT,
+        related_name='investment_withdrawals',
+        null=True,
+        blank=True,
+    )
+    bank_movement = models.OneToOneField(
+        'banking.BankMovement',
+        on_delete=models.SET_NULL,
+        related_name='investment_operation',
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    loyalty_entry = models.OneToOneField(
+        'banking.LoyaltyEntry',
+        on_delete=models.SET_NULL,
+        related_name='investment_operation',
+        null=True,
+        blank=True,
+        editable=False,
+    )
     date = models.DateField()
     reason = models.CharField(max_length=255, blank=True)
     notes = models.TextField(blank=True)
@@ -141,61 +200,105 @@ class Investment(models.Model):
 
     class Meta:
         ordering = ['-date', '-created_at']
-
-    def __str__(self):
-        asset_code = self.asset.code if self.asset_id else 'legacy'
-        return f'{self.title} ({self.get_kind_display()}, {asset_code})'
-
-    @property
-    def currency(self):
-        """Expose the asset currency for existing aggregation code."""
-        return self.asset.currency if self.asset_id else settings.CURRENCY
-
-    @property
-    def signed_amount(self):
-        """Return the operation's contribution to the asset balance."""
-        if self.kind == self.Kind.WITHDRAWAL:
-            return -self.amount
-        return self.amount
-
-
-class ExchangeRate(models.Model):
-    """A manual exchange rate used for supported fiat currencies."""
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='exchange_rates',
-    )
-    from_currency = models.CharField(
-        max_length=3,
-        choices=[(code, currency.name) for code, currency in CURRENCIES.items()],
-    )
-    to_currency = models.CharField(
-        max_length=3,
-        choices=[(code, currency.name) for code, currency in CURRENCIES.items()],
-    )
-    rate = models.DecimalField(
-        max_digits=18,
-        decimal_places=8,
-        validators=[MinValueValidator(Decimal('0.00000001'))],
-    )
-    effective_date = models.DateField()
-    notes = models.CharField(max_length=255, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-effective_date', '-created_at']
         constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'from_currency', 'to_currency', 'effective_date'],
-                name='unique_rate_per_pair_date_per_user',
+            models.CheckConstraint(
+                condition=models.Q(quantity__gt=0),
+                name='investments_quantity_gt_zero',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(unit_price__gt=0),
+                name='investments_unit_price_gt_zero',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(fees__gte=0),
+                name='investments_fees_gte_zero',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(cash_amount__isnull=True) | models.Q(cash_amount__gt=0),
+                name='investments_cash_amount_null_or_gt_zero',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(source_points__isnull=True) | models.Q(source_points__gt=0),
+                name='investments_source_points_null_or_gt_zero',
             ),
         ]
 
     def __str__(self):
-        return (
-            f'1 {self.from_currency} = {self.rate} {self.to_currency} '
-            f'(as of {self.effective_date})'
-        )
+        return f'{self.get_kind_display()} {self.quantity} {self.asset.code}'
+
+    @property
+    def currency(self):
+        return self.asset.currency
+
+    @property
+    def gross_value(self):
+        return self.quantity * self.unit_price
+
+    @property
+    def signed_quantity(self):
+        return -self.quantity if self.kind == self.Kind.WITHDRAWAL else self.quantity
+
+    @property
+    def signed_value(self):
+        return -self.gross_value if self.kind == self.Kind.WITHDRAWAL else self.gross_value
+
+    def clean(self):
+        errors = {}
+        owned = {
+            'product': self.product if self.product_id else None,
+            'asset': self.asset if self.asset_id else None,
+            'source_account': self.source_account if self.source_account_id else None,
+            'source_program': self.source_program if self.source_program_id else None,
+            'destination_account': (
+                self.destination_account if self.destination_account_id else None
+            ),
+        }
+        for field, obj in owned.items():
+            if obj and self.user_id and obj.user_id != self.user_id:
+                errors[field] = _('This selection must belong to the operation owner.')
+        if self.product_id and self.user_id and self.product.bank.user_id != self.user_id:
+            errors['product'] = _('The product bank must belong to the operation owner.')
+
+        has_account = self.source_account_id is not None
+        has_program = self.source_program_id is not None
+        has_destination = self.destination_account_id is not None
+        has_cash = self.cash_amount is not None
+        has_points = self.source_points is not None
+
+        if self.kind == self.Kind.DEPOSIT:
+            if has_account == has_program:
+                errors['source_account'] = _('Deposit requires exactly one funding source.')
+                errors['source_program'] = _('Deposit requires exactly one funding source.')
+            if has_destination:
+                errors['destination_account'] = _('Deposit does not use a destination account.')
+            if has_account:
+                if not has_cash or self.cash_amount <= 0:
+                    errors['cash_amount'] = _('Account-funded deposit requires a positive cash amount.')
+                if has_points:
+                    errors['source_points'] = _('Account-funded deposit does not use points.')
+            if has_program and (not has_points or self.source_points <= 0):
+                errors['source_points'] = _('Program-funded deposit requires positive points.')
+        elif self.kind == self.Kind.WITHDRAWAL:
+            if not has_destination:
+                errors['destination_account'] = _('Withdrawal requires a destination account.')
+            if not has_cash or self.cash_amount <= 0:
+                errors['cash_amount'] = _('Withdrawal requires a positive cash amount.')
+            if has_account:
+                errors['source_account'] = _('Withdrawal does not use a funding account.')
+            if has_program:
+                errors['source_program'] = _('Withdrawal does not use a loyalty program.')
+            if has_points:
+                errors['source_points'] = _('Withdrawal does not use points.')
+        elif self.kind == self.Kind.YIELD:
+            for field, present in (
+                ('source_account', has_account),
+                ('source_program', has_program),
+                ('source_points', has_points),
+                ('destination_account', has_destination),
+                ('cash_amount', has_cash),
+            ):
+                if present:
+                    errors[field] = _('Yield is internal and does not use cash or funding fields.')
+
+        if errors:
+            raise ValidationError(errors)

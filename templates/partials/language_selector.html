@@ -1,0 +1,13 @@
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<form action="{% url 'set_language' %}" method="post" class="inline-flex" aria-label="{% translate 'Language' %}">
+    {% csrf_token %}
+    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+    <label class="sr-only" for="language-select-{{ selector_id|default:'default' }}">{% translate 'Language' %}</label>
+    <select id="language-select-{{ selector_id|default:'default' }}" name="language" onchange="this.form.submit()"
+            class="h-9 rounded-lg border border-slate-300 bg-white px-2 text-xs font-semibold uppercase text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-[#313335] dark:text-neutral-200">
+        <option value="en"{% if LANGUAGE_CODE == 'en' %} selected{% endif %}>EN</option>
+        <option value="pt-br"{% if LANGUAGE_CODE == 'pt-br' %} selected{% endif %}>PT</option>
+    </select>
+    <noscript><button type="submit" class="ml-1 text-xs underline">{% translate 'Apply' %}</button></noscript>
+</form>

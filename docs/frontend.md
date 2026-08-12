@@ -1,162 +1,192 @@
 # Frontend: Design System & Templates
 
-Every screen is server-rendered Django Template Language, styled entirely with TailwindCSS utility classes — there is no JavaScript framework, no build-time component system, and no client-side charting library. The narrow JavaScript layer is limited to theme persistence, HTMX partial swaps, and restoring the viewport/focus after a chart filter update. This page documents the visual language (PRD §9) and how the template tree is organized; for the actual HTML of any single screen, see the app doc that owns it in [`apps/`](apps/).
+The approved banking release preserves the existing server-rendered Django
+Template Language and TailwindCSS visual system. There is no SPA, JavaScript
+framework or client-side chart library. Theme persistence and HTMX chart-island
+swaps remain the deliberately narrow JavaScript layer; every mutation is a
+normal CSRF-protected POST and every filter has a plain GET fallback.
 
-## Tailwind strategy: dev/prod
+## Visual language
 
-Two completely different delivery mechanisms, switched by `{{ DEBUG }}` (from `core.context_processors.debug_flag`) in `templates/base.html`:
+The light/dark theme, Inter typography, rounded bordered surfaces, gradient
+primary actions and semantic finance colors remain consistent across the new
+screens.
 
-```django
-{% if DEBUG %}
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
-</script>
-{% else %}
-<link rel="stylesheet" href="{% static 'css/output.css' %}">
-{% endif %}
-```
-
-- **Development (`DEBUG=True`)** — the Tailwind Play CDN, zero build step. Every utility class is compiled client-side, on the fly, by the CDN script. This is what `uv run python manage.py runserver` uses.
-- **Production (`DEBUG=False`)** — a pre-compiled, minified `static/css/output.css`, built from `tailwind/input.css` by the **standalone Tailwind CLI** (a plain Linux binary — no Node.js/npm anywhere in this project) at Docker image build time, then served by WhiteNoise. See [deployment.md](deployment.md#stage-1-builder-ghcrioastral-shuvpython312-trixie-slim) for the exact build command.
-
-`tailwind/input.css` is deliberately kept **outside** `static/`:
-
-```css
-@import 'tailwindcss';
-
-@theme {
-    --font-sans: 'Inter', 'system-ui', 'sans-serif';
-}
-```
-
-Django's `collectstatic` post-processor rewrites `@import`/`url()` references in every CSS file it collects; if `input.css` lived under `STATICFILES_DIRS`, `collectstatic` would try (and fail) to resolve `@import 'tailwindcss'` as a relative static file. Keeping the *source* out of `static/` sidesteps this — only the already-compiled `output.css` (plain CSS, no imports) ever lives under `static/css/`. Tailwind v4 scans the whole project (respecting `.gitignore`) for utility classes used in `templates/**/*.html` automatically — there's no manual content-glob configuration.
-
-## Design tokens (PRD §9.1)
-
-| Role | Tailwind token | Usage |
-|---|---|---|
-| Base background | `bg-slate-950` | Main background |
-| Surface | `bg-slate-900/60` + `backdrop-blur` | Cards, panels, navbar |
-| Border | `border-slate-800` | Subtle outlines |
-| Primary (gradient) | `from-indigo-500 via-violet-500 to-fuchsia-500` | Primary buttons, brand mark, active-link underline |
-| Income | `text-emerald-400` / `bg-emerald-500/10` | Inflows |
-| Expense | `text-rose-400` / `bg-rose-500/10` | Outflows |
-| Investment | `text-amber-400` / `bg-amber-500/10` | Investments |
-| Primary text | `text-slate-100` | Headings, values |
-| Secondary text | `text-slate-400` | Labels, descriptions |
-| Focus ring | `ring-indigo-500` | All interactive elements |
-
-Typography: **Inter** (Google Fonts, `font-sans`), fallback `system-ui`. Heading `text-3xl font-bold`; section `text-xl font-semibold`; body `text-base`; helper `text-sm text-slate-400`. All monetary values use `tabular-nums font-semibold` so digits align in columns.
-
-## `templates/base.html` — the root layout
-
-Every single template in the project extends this file — there is no screen that builds its own `<html>`. It owns:
-
-- `<head>`: charset/viewport meta, `<title>` via `{% block title %}` (defaults to `"CashFlow"`), Inter font preconnect/link, the dev/prod Tailwind switch above.
-- `<body>`: conditionally includes `partials/navbar_app.html` or `partials/navbar_public.html` based on `request.user.is_authenticated`, then `<main>` wrapping `partials/messages.html` + `{% block content %}`, then `partials/footer.html`.
-
-A page template only ever needs to write:
-
-```django
-{% extends 'base.html' %}
-{% block title %}My Page — CashFlow{% endblock %}
-{% block content %}
-  ...
-{% endblock %}
-```
-
-## Partials (`templates/partials/`)
-
-| Partial | Role |
+| Role | Semantic treatment |
 |---|---|
-| `navbar_public.html` | Anonymous navbar — logo + Log in / Sign up buttons. |
-| `navbar_app.html` | Authenticated navbar — Dashboard/Transactions/Categories/Payments links (active state = white text + gradient underline), username, POST-only Log out form, and a CSS-only (`<details>`/`<summary>`, no JS) mobile menu disclosure below the `md` breakpoint. |
-| `footer.html` | Shared footer with the CashFlow mark and a `{% now 'Y' %}`-stamped copyright line linking to [github.com/HenriqueMayer](https://github.com/HenriqueMayer). |
-| `messages.html` | Renders Django's `messages` framework, mapping each message's `.tags` (`success`/`error`/`warning`/other) to the matching semantic color from the token table above. Included once, automatically, by `base.html` — no screen includes it manually. |
-| `form_field.html` | The one-and-only field renderer. Renders label + required-asterisk + the bound `{{ field }}` + help text + errors. **Does not inject Tailwind classes into the field itself** — that's the owning form's job (every form's `__init__` sets `field.widget.attrs['class']` to the shared `INPUT_CLASSES` string, duplicated identically in `accounts/forms.py`, `categories/forms.py`, `payments/forms.py`, and `transactions/forms.py`). |
-| `stat_card.html` | The dashboard/landing indicator card: a label + a value with an optional semantic `value_class`. Takes an **already-formatted** `value` string (currency symbol and decimal formatting are the caller's job) — this partial only handles layout and color, never currency logic. |
-| `empty_state.html` | The standard "nothing here yet" block: icon + title + message + an optional CTA button. Used by every list screen (`transactions/list.html`, `categories/list.html`, `payments/list.html`, `dashboard/index.html`) when its queryset is empty. |
+| Income / account credit | Emerald |
+| Expense / account debit | Rose |
+| Investment | Amber |
+| Own transfer | Indigo/neutral; never income/expense colored |
+| Credit-card payable | Violet |
+| Warning / missing FX / overdue invoice | Amber plus explicit text/icon |
+| Reversal / invalidated posting | Muted with a visible `Reversed` status |
 
-## Shared component classes (PRD §9.3/§9.4, not extracted into template tags — copied verbatim per use)
+Color is never the only carrier of status. Monetary labels always include a
+currency symbol or ISO code, especially when native and base values are shown
+together.
 
-```html
-<!-- Primary button -->
-<button class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950">
+## Root layout and navigation
 
-<!-- Secondary button -->
-<button class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800">
+`templates/base.html` continues to own the page shell, theme setup, public or
+authenticated navbar, messages, content block and footer. The authenticated
+navigation becomes:
 
-<!-- Destructive button -->
-<button class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20">
-
-<!-- Text/select/textarea input -->
-<input class="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-3.5 py-2.5 text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
-
-<!-- Card / form group -->
-<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+```text
+Dashboard | Transactions | Categories | Banking | Investments | Reports
 ```
 
-These exact strings recur across every screen in the project. There's no CSS/Tailwind `@apply` abstraction wrapping them (per the "no over-engineering" house rule) — consistency comes from every app copying the canonical markup rather than inventing new variants.
+`Payments` is removed. `Banking` remains active for nested bank, account, card,
+invoice, movement and loyalty routes. The mobile `<details>/<summary>` menu uses
+the same links and ordering as desktop.
+
+`partials/language_selector.html` is included once in the public navbar and in
+both authenticated variants: the desktop controls and CSS-only mobile menu. It
+posts the current path and `en` or `pt-br` to Django's
+`/i18n/set_language/`; JavaScript submits on change and the `noscript` Apply
+button preserves the server-rendered fallback. The choice is stored in Django's
+language cookie, not local storage or the user model, and URLs have no locale
+prefix.
 
 ## Template tree
 
-```
+```text
 templates/
 ├── base.html
 ├── partials/
 │   ├── navbar_public.html   navbar_app.html
 │   ├── footer.html          messages.html
 │   ├── form_field.html      stat_card.html
+│   ├── money.html           status_badge.html
 │   └── empty_state.html
-├── pages/landing.html
-├── accounts/login.html      signup.html
-├── dashboard/index.html     reports.html
-├── categories/list.html     form.html    confirm_delete.html
-├── payments/list.html       form.html    confirm_delete.html
-└── transactions/list.html   form.html    confirm_delete.html
+├── pages/                   accounts/        categories/
+├── banking/
+│   ├── index.html           bank_form.html
+│   ├── account_detail.html  account_form.html
+│   ├── movement_list.html   transfer_form.html
+│   ├── card_form.html       invoice_detail.html
+│   └── loyalty/             confirm_delete.html
+├── transactions/
+├── dashboard/
+└── investments/
 ```
 
-Every `list.html`/`form.html`/`confirm_delete.html` triplet (categories, payments, transactions) follows the identical structural pattern:
+The former `templates/payments/` tree is removed. Shared money rendering belongs
+in one partial/helper so native/base amount ordering and missing-FX states cannot
+drift across banking, transactions, dashboard and investments.
 
-- **`list.html`** — heading + "New X" primary button, a server-rendered GET filter form, then either a divided `<ul>` of rows (each with Edit/Delete secondary/destructive buttons) or `empty_state.html`. Categories search by name and filter by hierarchy level; payments search by name and filter by method type; transactions expose their broader search/date/type/sort controls (see each app document). Only the transaction list is paginated, using Django's `{% querystring %}` tag so active filters survive page navigation.
-- **`form.html`** — a centered `max-w-md` card, `<form method="post" novalidate>` + `{% csrf_token %}`, non-field errors rendered above the fields, then one `{% include 'partials/form_field.html' %}` per field, then Save (primary) / Cancel (secondary, linking back to `list`).
-- **`confirm_delete.html`** — a centered `max-w-md` card confirming the object's name/title, a `<form method="post">` with Delete (destructive) / Cancel (secondary) — deletion is **never** a plain link/`GET`, always a POST from this confirmation screen.
+## Banking information architecture
 
-## Server-Rendered Charts (`dashboard/_reports_charts.html`)
+`/banking/` starts with bank cards. Each bank expands into accounts showing
+account name, native currency, opening balance, posted balance, PIX status and
+linked cards. The account detail is organized in this order:
 
-The report charts are inline `<svg>` built from coordinates computed in `dashboard/charts.py` — there is no charting library or client-side chart geometry. The partial is the HTMX-swapped island inside `reports.html`: every interactive control carries both `hx-*` wiring and a plain `href`/`action` fallback, so the page also works with JavaScript disabled. When HTMX is active, `templates/base.html` captures `window.scrollY` and the focused field before a Reports or Investments chart island swap, then restores both after the swap.
+1. Available balance and native currency.
+2. Primary actions: new transaction and own transfer.
+3. PIX capability and debit/credit cards.
+4. Movement ledger with date, direction, kind, related event and running balance.
+5. Credit invoices and due/overdue status.
 
-- **Semantic tones, not colors, cross the Python boundary.** `charts.py` emits `tone` values (`'income'|'expense'|'investment'` for the bar chart, `'installment'|'fixed'|'one_off'` for the donut); this template maps them to Tailwind classes (`fill-emerald-400 dark:fill-emerald-300`, `fill-rose-500 dark:fill-rose-400`, `fill-amber-400 dark:fill-amber-300`, and `fill-indigo-500 dark:fill-indigo-400`, `fill-slate-500 dark:fill-slate-400` for the recurrence buckets). Design tokens never leak into Python.
-- **The balance line uses the primary gradient** via an SVG `<linearGradient>` (`stroke="url(#balance-line)"`), because Tailwind's `from-*/via-*/to-*` utilities don't apply to SVG strokes. The stop colors are the raw RGB of `indigo-500`/`violet-500`/`fuchsia-500` — the one place in the project where a design token is written as a literal color, and it's flagged in the template comment for that reason.
-- **The zero line is dashed rose** (`stroke-rose-400 dark:stroke-rose-500`, `stroke-width="1.5"`, `stroke-dasharray="5 4"`) rather than the muted slate of the rest of the grid — a balance crossing zero is the single most important event on the chart and should read at a glance, not blend into the axis.
-- **Tooltips are native `<title>` elements** inside each `<circle>`/`<rect>`/`<path>`; browsers show them on hover with no script.
-- **The category breakdown needs no SVG at all** — it's a `<div>` with `style="width: {{ category.bar_width }}%"` inside a rounded track. Reaching for SVG there would have been ceremony.
-- **The recurrence donut is one `<path>` per drawn slice** plus a centered `<text>` block for the window total — no `<circle>` stroke tricks, no conic gradients. The `build_donut_chart` geometry produces ready-to-render `d="..."` arc strings, and the special full-ring case splits into two semicircle arcs so a single slice that covers 100% still renders (an SVG `A` command needs two distinct endpoints, so a literal 360° arc would otherwise vanish).
+Opening balance is clearly labeled as the ledger starting point, not an income
+transaction. Posted movements are not offered destructive edit/delete controls;
+the available action is reversal with confirmation.
 
-## Investment Charts (`investments/_investments_charts.html`)
+## Forms and settlement disclosure
 
-The investments list page carries its own two-chart island at the bottom, built from the same `dashboard/charts.py` builders as the Reports page (`build_line_chart` and `build_bar_chart`). The partial wraps everything in `<div id="investments-charts">` so `InvestmentListView.get_template_names()` can return the partial alone when `HX-Request: true` lands — the same exact swap pattern the Reports page established. `{% include %}` wires the partial inside the full `list.html` for normal GETs; in both cases the server runs the same context, so the page renders the same whether the request came from HTMX or a full page load.
+Forms use the established `form_field.html`, validation summary, standard input
+classes and Save/Cancel action pattern. Server-side validation remains
+authoritative.
 
-Investment structure management uses the standard server-rendered list/form/
-confirmation pattern: `investments/settings/index.html` lists institutions,
-products, and assets; `investments/setup_form.html` serves both create and
-update; and `investments/settings/confirm_delete_entity.html` requires a CSRF
-protected POST. The Investments navbar item uses the resolved URL namespace for
-its active state, so it stays highlighted on nested settings and edit routes.
+- PIX/account/debit choices state `Affects account balance immediately`.
+- Credit card choices state `Added to the card invoice; account debited on due date`.
+- Own transfer forms identify source and destination, show both currencies, and
+  explain that the transfer is not income or expense.
+- Credit transaction forms show the target invoice/due date when known.
+- Investment deposit forms require `Source account`; withdrawals require
+  `Destination account`; yield forms state `Internal yield, no bank movement`.
+- Loyalty redemption forms show points, target monetary amount/currency, IOF and
+  IOF funding instrument as one reviewable cost block.
 
-The two charts each own an independent 12-month window — they slide independently so the user can scroll chart 1 (Investment evolution) back a year while leaving chart 2 (Monthly flow) anchored on today. The arrows carry `hx-target="#investments-charts"`, `hx-swap="outerHTML"`, `hx-push-url="true"`, mirrored on a plain `href` for the no-JS degradation path: each chart's prev/next anchors are `{% querystring total_offset=N %}` / `{% querystring flow_offset=N %}` respectively, so `{% querystring %}` updates one param while preserving the other — plus any active `?kind`/`?q` filters stay alive across the slide. The two services `get_total_in_base_timeseries` and `get_monthly_flow_in_base` each take their own `offset=` argument.
+Conditional inputs may be rendered in full with server-side validation when a
+zero-JS interaction would otherwise hide required accounting context. HTMX may
+enhance dependent choices, but the submitted form must work without it.
 
-- **Chart 1 — Investment evolution** (`build_line_chart`): a single area-line of the cumulative portfolio total in `{{ CURRENCY_SYMBOL }}`. The view builds it from `get_total_in_base_timeseries`, which folds each month's per-currency balances through `_resolve_rate` (rate-at-time, with a graceful fall-back to the latest rate when no historical row exists for that pair on that date). Inherits the Reports chart-1 visual contract verbatim — `<linearGradient id="investments-line">` stops `indigo-500`/`violet-500`/`fuchsia-500`, a duplicate `investments-area` gradient for the violet 35%-to-0% fill, dashed rose zero line at `zero_y`, and white/dark `circle` markers with `stroke-violet-400`. The only visual delta is the gradient `id` — the partial can be HTMX-swapped standalone, so the IDs cannot collide with Reports' own.
+## Multicurrency display
 
-- **Chart 2 — Monthly flow** (`build_bar_chart`): grouped bars of Deposits × Yields × Withdrawals per month, both in `{{ CURRENCY_SYMBOL }}` via per-entry FX. Deposits use emerald, yields amber, and withdrawals rose. `get_monthly_flow_in_base` walks each month's operations individually (not cumulative) and applies `_resolve_rate` on each entry's own `date`.
-| `CHF` | `stroke-amber-500` | matches the Investment semantic |
-| anything else | `stroke-slate-500` | safe fallback for a currency added to `core/currencies.py` later |
+The native value is primary. A historical base conversion appears below or
+beside it with rate and effective date when useful:
 
-The colors are spelled out directly in `investments/_investments_charts.html` (one `elif` chain on the code) rather than mapped through a `tone` field, because each currency has a fixed color — the chart never re-tints a series based on what kind of value it is. The legend swatch and the per-point circle's stroke share the same `elif` chain, so a line and its markers always match.
+```text
+USD 125.00
+BRL 681.25 at 5.45000000 on 2026-08-11
+```
 
-## Responsiveness (PRD §9.6, NFR06)
+An unavailable rate renders `Base conversion unavailable for this date`; it does
+not show zero, use a current rate silently or omit the row. Consolidated cards
+with missing rates use an `Incomplete total` badge and list excluded currencies.
 
-Mobile-first throughout: single-column layouts expand via `sm:`/`md:`/`lg:` breakpoints (e.g. the dashboard's stat-card grid is `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6`). The authenticated navbar's desktop links (`hidden md:flex`) collapse into a `<details>`-based dropdown below `md` — no JavaScript, no separate mobile markup to keep in sync (it's the same `<a>` tags, just conditionally visible).
+Inputs remain dot-decimal HTML number fields. Display localization follows each
+currency's formatting metadata; SVG coordinates and CSS percentages remain
+unlocalized.
 
-Two elements deliberately **opt out** of shrinking: the dashboard outlook table and the report SVGs sit in `overflow-x-auto` wrappers around a fixed `min-w-[40rem]`/`min-w-[44rem]` canvas. A chart scaled down to a 360px viewport has illegible axis labels; scrolling it sideways *inside its own card* keeps it readable without ever making the page body scroll horizontally.
+UI language does not choose currency formatting. `core/formats/en/` and
+`core/formats/pt_BR/` both delegate separators to the configured currency, so a
+language switch cannot turn a correctly formatted amount into a mixed
+symbol/separator representation.
+
+## Translation convention
+
+All new fixed interface copy must be marked at its source: `gettext_lazy` for
+deferred Python declarations, `gettext` for runtime Python messages,
+`{% translate %}` (the modern spelling of `{% trans %}`) for short template
+strings and `{% blocktranslate %}` for longer copy or interpolated values.
+Update and compile the `pt_BR` gettext catalog after changing marked strings.
+Dynamic values are not translation
+keys: category/subcategory names and all other user-entered titles, notes,
+institutions and financial data render verbatim.
+
+HTMX report and investment chart islands need no separate locale mechanism.
+Their requests retain the language cookie, pass through `LocaleMiddleware` and
+render translated fragments in the active request language.
+
+## Dashboard
+
+Stat cards separate concepts instead of collapsing them into one balance:
+
+- Available cash
+- Income this month
+- Expenses this month
+- Credit-card payable
+- Investments
+- Net worth
+
+Account cash cards drill into the movement ledger. Invoice payable cards drill
+into open invoices. Own transfers may appear in activity but are visually
+neutral and absent from income/expense charts. Projected figures are labeled and
+never presented as posted cash.
+
+## Reports and charts
+
+Charts remain inline server-rendered SVG/CSS with native `<title>` tooltips,
+responsive overflow containers and accessible text summaries. HTMX swaps only
+the report island while preserving focus and viewport; plain links/forms remain
+equivalent.
+
+Every chart states:
+
+- native or base currency;
+- valuation/conversion date where applicable;
+- actual versus projected period;
+- whether totals are incomplete due to missing FX.
+
+Credit purchase and invoice payment series must use distinct labels. No chart
+may aggregate both as expenses. Investment yield is shown in investment
+performance, not bank income.
+
+## Responsiveness and accessibility
+
+All pages remain mobile-first. Wide ledgers, invoice item tables and charts use
+internal horizontal scrolling rather than forcing body overflow. Bank/account
+hierarchies collapse to stacked cards on small screens. Labels, status text,
+focus rings, keyboard navigation and confirmation screens remain available
+without relying on hover, color or JavaScript.

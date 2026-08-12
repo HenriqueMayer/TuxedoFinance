@@ -1,4 +1,4 @@
-{% load static %}
+{% load i18n static %}
 <!DOCTYPE html>
 {% comment %}
 CashFlow base layout (PRD §9 — Design System).
@@ -41,7 +41,8 @@ bundle — built from `tailwind/input.css` (which declares the matching
 `@custom-variant dark`) with the standalone Tailwind CLI (see Dockerfile).
 `DEBUG` is exposed to every template by `core.context_processors.debug_flag`.
 {% endcomment %}
-<html lang="en" class="">
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}" class="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -100,7 +101,7 @@ bundle — built from `tailwind/input.css` (which declares the matching
 
     {% include 'partials/footer.html' %}
 
-    <script src="{% static 'js/theme.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}?v=2"></script>
 
     {% comment %}HTMX (PRD §5 — partial-swap navigation on the Reports
     page). The script is opt-in per-element via `hx-get` / `hx-target`

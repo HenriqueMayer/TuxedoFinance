@@ -1,6 +1,7 @@
+{% load i18n %}
 {% comment %}
-Reusable theme toggle button (PRD §9 — light/dark). A plain `<button id="theme-toggle">`;
-static/js/theme.js wires the click handler. The FOUC inline script in
+Reusable theme toggle button (PRD §9 — light/dark). A plain button marked with
+`data-theme-toggle`; static/js/theme.js wires every instance. The FOUC inline script in
 base.html already set `.dark` on <html> before this paints, so the right
 icon is shown on first render with no flash.
 
@@ -10,7 +11,7 @@ surface. The `aria-label` is the same either way — the toggle isn't labelled
 "toggle to dark"/"toggle to light" because that depends on the current
 state, and the icon itself communicates the affordance.
 {% endcomment %}
-<button type="button" id="theme-toggle" aria-label="Toggle color theme"
+<button type="button"{% if legacy_theme_id %} id="theme-toggle"{% endif %} data-theme-toggle aria-label="{% translate 'Toggle color theme' %}"
         class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-neutral-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500">
     <!-- Moon: visible in light mode only -->
     <svg class="h-5 w-5 dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">

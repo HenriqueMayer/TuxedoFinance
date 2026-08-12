@@ -8,11 +8,12 @@ CashFlow ships as a single, lean container: the Django app served by `gunicorn`,
 
 1. **Install Python dependencies** with `uv sync --locked --no-install-project`, using cache/bind mounts on `uv.lock`/`pyproject.toml` only — this layer is cached across code changes since it runs before `COPY . /app`.
 2. **Copy the project** and run `uv sync --locked` again to install the project itself into the venv.
-3. **Tailwind build stage** — download the standalone Tailwind CLI binary (pinned via `ARG TAILWIND_VERSION`, no Node.js/npm anywhere in the image) and compile:
+3. **Translations** — the runtime needs the compiled `locale/pt_BR/LC_MESSAGES/django.mo` catalog. The current image copies that committed artifact with the source tree. GNU gettext supplies `msgfmt`, which Django's `compilemessages` command invokes, so any build that regenerates the catalog must install gettext in the builder, run `uv run python manage.py compilemessages`, and keep that tooling out of the runtime stage.
+4. **Tailwind build stage** — download the standalone Tailwind CLI binary (pinned via `ARG TAILWIND_VERSION`, no Node.js/npm anywhere in the image) and compile:
    ```
    tailwindcss -i ./tailwind/input.css -o ./static/css/output.css --minify
    ```
-4. **`collectstatic`** — run with placeholder settings (`SECRET_KEY=build-time-placeholder`, `DEBUG=False`, `ALLOWED_HOSTS=localhost`). `collectstatic` never opens the database and doesn't need real secrets; the *runtime* container always gets its actual `SECRET_KEY`/`DEBUG`/`ALLOWED_HOSTS` from the environment (`.env` via `docker-compose.yml`) — nothing secret is baked into the image.
+5. **`collectstatic`** — run with placeholder settings (`SECRET_KEY=build-time-placeholder`, `DEBUG=False`, `ALLOWED_HOSTS=localhost`). `collectstatic` never opens the database and doesn't need real secrets; the *runtime* container always gets its actual `SECRET_KEY`/`DEBUG`/`ALLOWED_HOSTS` from the environment (`.env` via `docker-compose.yml`) — nothing secret is baked into the image.
 
 ### Stage 2: `runtime` (`python:3.12-slim-trixie`)
 
@@ -43,15 +44,15 @@ volumes:
   db-data:
 ```
 
-A single service. `env_file: .env` is where `SECRET_KEY`/`DEBUG`/`ALLOWED_HOSTS`/`SQLITE_PATH`/`CURRENCY`/`HTTPS` come from at runtime (see `.env.example` and [architecture.md § Environment-driven configuration](architecture.md#environment-driven-configuration-production-readiness)). The named volume `db-data` mounted at `/app/data` is what makes `docker compose down && docker compose up` preserve data — only `docker compose down -v` destroys it.
+A single service. `env_file: .env` supplies `SECRET_KEY`/`DEBUG`/`ALLOWED_HOSTS`/`SQLITE_PATH`/`CURRENCY`/`HTTPS`; `CURRENCY` is the default base currency for new users, not a restriction on account currencies. The named volume `db-data` mounted at `/app/data` normally preserves data. For the approved breaking banking release, back up any legacy volume and deliberately recreate it before applying the fresh migration graph; no in-place upgrade is supported.
 
 ### TLS is out of scope for this compose file
 
-The service publishes **plain HTTP** on `:8000`, which is why the HTTPS hardening settings sit behind their own `HTTPS` flag defaulting to `False` rather than following `DEBUG` — see [architecture.md § HTTPS hardening](architecture.md#https-hardening). Enabling them here would break the documented first run: secure-only cookies are never returned by a browser over HTTP, so login would silently fail, and `SECURE_SSL_REDIRECT` would loop to an HTTPS port nothing is bound to.
+The service publishes **plain HTTP** on `:8000`, which is why HTTPS hardening remains behind its own `HTTPS` flag defaulting to `False` rather than following `DEBUG`. Enabling it without a TLS terminator would prevent secure cookies from returning and redirect to an HTTPS endpoint that is not listening.
 
 Put this container behind something that terminates TLS (a reverse proxy, a load balancer, a PaaS router), then set `HTTPS=True` in `.env`. That switch also starts trusting `X-Forwarded-Proto`, so the terminator must set it — and must strip any client-supplied copy, or the header can be forged.
 
-The `SECRET_KEY` guard is worth knowing about when debugging a container that exits immediately on boot: with `DEBUG=False` and no real key set, `core/settings.py` raises `ImproperlyConfigured` before `gunicorn` ever starts. That is intentional (see [architecture.md § The secret key guard](architecture.md#the-secret-key-guard)) — the fix is to put a generated key in `.env`, not to unset `DEBUG`.
+The `SECRET_KEY` guard is worth knowing about when debugging a container that exits immediately on boot: with `DEBUG=False` and no real key set, `core/settings.py` raises `ImproperlyConfigured` before `gunicorn` starts. The fix is to put a generated key in `.env`, not to unset `DEBUG`.
 
 ## `.dockerignore`
 
@@ -60,6 +61,23 @@ Keeps the build context lean and prevents dev-only artifacts from leaking into t
 ## Static files in production
 
 Covered in full in [architecture.md § Static files](architecture.md#static-files) and [frontend.md § Tailwind strategy](frontend.md#tailwind-strategy-devprod); the short version: `DEBUG=False` (always true for any real deployment) selects `whitenoise.storage.CompressedManifestStaticFilesStorage` — gzip/brotli-compressed, content-hashed filenames for long-lived caching, served directly by the `WhiteNoiseMiddleware` already installed right after `SecurityMiddleware`. No nginx, no CDN, no separate static-file service.
+
+## Translation release check
+
+GNU gettext is required in the environment that compiles translations (local
+release host or the Docker builder), but not in the final runtime image. Before
+shipping changes to marked UI strings, run:
+
+```bash
+uv run python manage.py makemessages -l pt_BR
+# translate new entries in locale/pt_BR/LC_MESSAGES/django.po
+uv run python manage.py compilemessages
+uv run python manage.py test core
+```
+
+Ship both `django.po` and the generated `django.mo`. The tests cover cookie
+persistence, public and authenticated selectors, HTMX translation and currency
+format independence; they do not require a localized URL configuration.
 
 ## Operator-facing docs
 

@@ -21,9 +21,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('pages.urls')),
     path('accounts/', include('accounts.urls')),
+    path('i18n/', include('django.conf.urls.i18n')),
     path('dashboard/', include('dashboard.urls')),
     path('transactions/', include('transactions.urls')),
     path('categories/', include('categories.urls')),
-    path('payments/', include('payments.urls')),
+    path('banking/', include('banking.urls')),
     path('investments/', include('investments.urls')),
 ]

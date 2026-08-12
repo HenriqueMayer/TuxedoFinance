@@ -1,4 +1,4 @@
-{% load l10n %}
+{% load i18n l10n %}
 <div id="investments-charts" class="space-y-8">
 
     {# ---------------------------------------------------------------- #}
@@ -9,11 +9,9 @@
     <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
-                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Investment evolution</h2>
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate 'Investment evolution' %}</h2>
                 <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-                    Your cumulative portfolio total in {{ CURRENCY_SYMBOL }} at the close of each month,
-                    converted through the exchange rate that was current at the time. Currencies with no
-                    rate set are excluded &mdash; see the warning on the &ldquo;Simulated total&rdquo; card above.
+                    {% blocktranslate %}Your cumulative portfolio total in {{ CURRENCY_SYMBOL }} at the close of each month, converted through the exchange rate that was current at the time. Currencies with no rate set are excluded — see the warning on the “Simulated total” card above.{% endblocktranslate %}
                 </p>
             </div>
             <div class="flex shrink-0 items-center gap-3">
@@ -22,7 +20,7 @@
                    hx-target="#investments-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
-                   aria-label="Previous window"
+                   aria-label="{% translate 'Previous window' %}"
                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                     &larr;
                 </a>
@@ -31,9 +29,9 @@
                         {{ total_window_start_date|date:'M Y' }} &ndash; {{ total_window_end_date|date:'M Y' }}
                     </p>
                     <p class="text-xs text-slate-500 dark:text-neutral-500">
-                        {% if is_total_anchored_today %}Anchored on today
-                        {% elif total_anchor_date < today %}Past window
-                        {% else %}Future window{% endif %}
+                         {% if is_total_anchored_today %}{% translate 'Anchored on today' %}
+                         {% elif total_anchor_date < today %}{% translate 'Past window' %}
+                         {% else %}{% translate 'Future window' %}{% endif %}
                     </p>
                 </div>
                 <a href="{% querystring total_offset=total_next_offset_param %}"
@@ -41,7 +39,7 @@
                    hx-target="#investments-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
-                   aria-label="Next window"
+                   aria-label="{% translate 'Next window' %}"
                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                     &rarr;
                 </a>
@@ -52,7 +50,7 @@
                        hx-swap="outerHTML"
                        hx-push-url="true"
                        class="rounded text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        Back to today
+                         {% translate 'Back to today' %}
                     </a>
                 {% endif %}
             </div>
@@ -62,7 +60,7 @@
             {% localize off %}
             <svg viewBox="0 0 {{ chart_total.width }} {{ chart_total.height }}"
                  class="h-auto w-full min-w-[44rem]" role="img"
-                 aria-label="Line chart of the cumulative investment total in base currency over the last 12 months">
+                  aria-label="{% translate 'Line chart of the cumulative investment total in base currency over the last 12 months' %}">
                 <defs>
                     <linearGradient id="investments-area" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stop-color="rgb(139 92 246)" stop-opacity="0.35" />
@@ -117,10 +115,9 @@
     <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
-                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">Monthly flow</h2>
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate 'Monthly flow' %}</h2>
                 <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-                    What you deposited, earned, and withdrew each month &mdash; both in {{ CURRENCY_SYMBOL }},
-                    converted at the rate that was current on each entry&rsquo;s date.
+                    {% blocktranslate %}What you deposited, earned, and withdrew each month — both in {{ CURRENCY_SYMBOL }}, converted at the rate that was current on each entry’s date.{% endblocktranslate %}
                 </p>
             </div>
             <div class="flex shrink-0 flex-wrap items-center gap-3">
@@ -129,7 +126,7 @@
                    hx-target="#investments-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
-                   aria-label="Previous window"
+                   aria-label="{% translate 'Previous window' %}"
                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                     &larr;
                 </a>
@@ -138,9 +135,9 @@
                         {{ flow_window_start_date|date:'M Y' }} &ndash; {{ flow_window_end_date|date:'M Y' }}
                     </p>
                     <p class="text-xs text-slate-500 dark:text-neutral-500">
-                        {% if is_flow_anchored_today %}Anchored on today
-                        {% elif flow_anchor_date < today %}Past window
-                        {% else %}Future window{% endif %}
+                         {% if is_flow_anchored_today %}{% translate 'Anchored on today' %}
+                         {% elif flow_anchor_date < today %}{% translate 'Past window' %}
+                         {% else %}{% translate 'Future window' %}{% endif %}
                     </p>
                 </div>
                 <a href="{% querystring flow_offset=flow_next_offset_param %}"
@@ -148,7 +145,7 @@
                    hx-target="#investments-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
-                   aria-label="Next window"
+                   aria-label="{% translate 'Next window' %}"
                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                     &rarr;
                 </a>
@@ -159,7 +156,7 @@
                        hx-swap="outerHTML"
                        hx-push-url="true"
                        class="rounded text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        Back to today
+                         {% translate 'Back to today' %}
                     </a>
                 {% endif %}
                 <ul class="flex flex-wrap items-center gap-4">
@@ -180,7 +177,7 @@
             {% localize off %}
             <svg viewBox="0 0 {{ chart_flow.width }} {{ chart_flow.height }}"
                  class="h-auto w-full min-w-[44rem]" role="img"
-                  aria-label="Grouped bar chart of deposits, yields, and withdrawals per month in base currency">
+                   aria-label="{% translate 'Grouped bar chart of deposits, yields, and withdrawals per month in base currency' %}">
                 {% for line in chart_flow.grid %}
                     <line x1="{{ chart_flow.plot_left }}" y1="{{ line.y }}"
                           x2="{{ chart_flow.plot_right }}" y2="{{ line.y }}"

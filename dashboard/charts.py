@@ -198,7 +198,7 @@ def build_bar_chart(labels, series):
         'legend': [{'name': e['name'], 'tone': e['tone']} for e in series],
         # How long a label may be before it starts colliding with its
         # neighbour. Charts labelled by month ignore it ('Jul' always fits);
-        # the payment-method chart truncates to it, so names stay whole while
+        # instrument charts truncate to it, so names stay whole while
         # there are few bars and shorten as bars are added.
         'label_chars': min(LABEL_MAX_CHARS, int(_slot_width(count) / LABEL_CHAR_WIDTH)),
     }
