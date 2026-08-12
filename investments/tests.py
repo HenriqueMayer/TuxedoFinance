@@ -142,6 +142,29 @@ class InvestmentModelTests(InvestmentFixtureMixin, TestCase):
         with self.assertRaises(ValidationError):
             operation.full_clean()
 
+    def test_monetary_asset_accepts_opening_balance_without_units(self):
+        savings = Asset.objects.create(
+            user=self.user,
+            name='Savings pot',
+            code='POT',
+            asset_class=Asset.AssetClass.LIQUIDITY,
+            currency=BASE,
+            valuation_mode=Asset.ValuationMode.MONETARY,
+            opening_balance=Decimal('1653.10'),
+            opening_product=self.product,
+        )
+        operation = self.operation(
+            Investment.Kind.DEPOSIT,
+            asset=savings,
+            quantity=None,
+            unit_price=None,
+            amount=Decimal('100.00'),
+            source_account=self.account,
+            cash_amount=Decimal('100.00'),
+        )
+        operation.full_clean()
+        self.assertEqual(operation.gross_value, Decimal('100.00'))
+
 
 class InvestmentLedgerTests(InvestmentFixtureMixin, TestCase):
     def save_and_sync(self, operation):
@@ -248,6 +271,30 @@ class InvestmentLedgerTests(InvestmentFixtureMixin, TestCase):
         operation.delete()
         self.assertFalse(LoyaltyEntry.objects.filter(pk=entry_id).exists())
 
+    def test_monetary_opening_balance_is_available_for_withdrawal(self):
+        savings = Asset.objects.create(
+            user=self.user,
+            name='Savings pot',
+            code='POT',
+            asset_class=Asset.AssetClass.LIQUIDITY,
+            currency=BASE,
+            valuation_mode=Asset.ValuationMode.MONETARY,
+            opening_balance=Decimal('1653.10'),
+            opening_product=self.product,
+        )
+        withdrawal = self.save_and_sync(self.operation(
+            Investment.Kind.WITHDRAWAL,
+            asset=savings,
+            quantity=None,
+            unit_price=None,
+            amount=Decimal('500.00'),
+            destination_account=self.account,
+            cash_amount=Decimal('500.00'),
+        ))
+        group = get_portfolio_groups(self.user)[0]['products'][0]['assets'][0]
+        self.assertEqual(withdrawal.bank_movement.amount, Decimal('500.00'))
+        self.assertEqual(group['balance'], Decimal('1153.10'))
+
 
 class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
     def setUp(self):
@@ -282,6 +329,41 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertRedirects(response, reverse('investments:list'))
         operation = Investment.objects.get()
         self.assertEqual(operation.bank_movement.amount, Decimal('101.00'))
+
+    def test_monetary_create_view_uses_amount_without_units(self):
+        savings = Asset.objects.create(
+            user=self.user,
+            name='Savings pot',
+            code='POT',
+            asset_class=Asset.AssetClass.LIQUIDITY,
+            currency=BASE,
+            valuation_mode=Asset.ValuationMode.MONETARY,
+        )
+        response = self.client.post(reverse('investments:create'), {
+            'product': self.product.pk,
+            'asset': savings.pk,
+            'kind': Investment.Kind.DEPOSIT,
+            'amount': '1653.10',
+            'quantity': '',
+            'unit_price': '',
+            'fees': '0.00',
+            'cash_amount': '',
+            'source_account': self.account.pk,
+            'source_program': '',
+            'source_points': '',
+            'destination_account': '',
+            'date': timezone.localdate(),
+            'reason': 'Initial contribution',
+            'notes': '',
+        })
+        self.assertRedirects(response, reverse('investments:list'))
+        operation = Investment.objects.get(asset=savings)
+        self.assertIsNone(operation.quantity)
+        self.assertEqual(operation.amount, Decimal('1653.10'))
+        self.assertEqual(operation.bank_movement.amount, Decimal('1653.10'))
+        response = self.client.get(reverse('investments:list'))
+        self.assertContains(response, 'Balance: BRL 1.653,10')
+        self.assertNotContains(response, '1.00000000 units')
 
     def test_update_and_delete_views_replace_and_cleanup_ledger(self):
         baseline = self.operation(

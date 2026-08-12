@@ -161,6 +161,11 @@ Investments remain a separate position ledger and reuse `Bank`; they do not use
 
 ### Structure
 
+Assets are either unit-valued or monetary. Monetary assets, such as savings
+pots, record operations directly as currency amounts and may hold a non-negative
+opening balance for money that existed before tracking started. This opening
+balance contributes to the current position but has no linked bank movement.
+
 | Entity | Required fields |
 |---|---|
 | `InvestmentProduct` | owner, `bank`, name, product kind. |

@@ -9,7 +9,7 @@ from django.utils.translation import gettext as _
 
 from banking.models import BankMovement, LoyaltyEntry, LoyaltyProgram
 from banking.services import MissingExchangeRate, convert, create_movement
-from investments.models import Investment
+from investments.models import Asset, Investment
 
 
 ZERO = Decimal('0.00')
@@ -30,14 +30,13 @@ def sync_investment_ledger(operation):
     if not operation.pk:
         raise ValueError(_('The investment operation must be saved before synchronization.'))
     operation.full_clean()
-    if (
-        operation.kind == Investment.Kind.WITHDRAWAL
-        and available_quantity(operation) < operation.quantity
-    ):
+    available = available_value(operation) if operation.asset.valuation_mode == Asset.ValuationMode.MONETARY else available_quantity(operation)
+    requested = operation.gross_value if operation.asset.valuation_mode == Asset.ValuationMode.MONETARY else operation.quantity
+    if operation.kind == Investment.Kind.WITHDRAWAL and available < requested:
         from django.core.exceptions import ValidationError
 
         raise ValidationError(
-            {'quantity': _('Withdrawal exceeds the available position on this date.')}
+            {'amount': _('Withdrawal exceeds the available position on this date.')}
         )
     source_key = f'investment:{operation.pk}'
     wants_movement = (
@@ -144,8 +143,19 @@ def cleanup_investment_ledger(operation):
         entry.delete()
 
 
+def available_value(operation):
+    """Position value available immediately before this operation."""
+    queryset = Investment.objects.filter(user=operation.user, product=operation.product, asset=operation.asset, date__lte=operation.date)
+    if operation.pk:
+        queryset = queryset.exclude(pk=operation.pk)
+    total = operation.asset.opening_balance if operation.asset.valuation_mode == Asset.ValuationMode.MONETARY else ZERO
+    for item in queryset.select_for_update():
+        total += item.signed_value
+    return total
+
+
 def available_quantity(operation):
-    """Quantity available in the product/asset immediately before this operation."""
+    """Unit position available immediately before this operation."""
     queryset = Investment.objects.filter(
         user=operation.user,
         product=operation.product,
@@ -166,32 +176,24 @@ def get_portfolio_groups(user):
         'product__bank', 'asset'
     )
     banks = {}
+    opening_assets = Asset.objects.filter(user=user, valuation_mode=Asset.ValuationMode.MONETARY, opening_balance__gt=ZERO).select_related('opening_product__bank')
+
+    def asset_row(product, asset, opening_balance=ZERO):
+        bank_bucket = banks.setdefault(product.bank_id, {'id': product.bank_id, 'name': product.bank.name, 'products': {}})
+        product_bucket = bank_bucket['products'].setdefault(product.pk, {'id': product.pk, 'name': product.name, 'yield_mode': product.yield_mode, 'assets': {}})
+        return product_bucket['assets'].setdefault(asset.pk, {
+            'id': asset.pk, 'name': asset.name, 'code': asset.code, 'currency': asset.currency,
+            'valuation_mode': asset.valuation_mode, 'quantity': ZERO, 'balance': opening_balance,
+            'deposits': ZERO, 'withdrawals': ZERO, 'yields': ZERO,
+        })
+
+    for asset in opening_assets:
+        asset_row(asset.opening_product, asset, asset.opening_balance)
     for operation in operations:
-        bank = operation.product.bank
-        bank_bucket = banks.setdefault(bank.pk, {'id': bank.pk, 'name': bank.name, 'products': {}})
-        product = bank_bucket['products'].setdefault(
-            operation.product_id,
-            {
-                'id': operation.product_id,
-                'name': operation.product.name,
-                'yield_mode': operation.product.yield_mode,
-                'assets': {},
-            },
-        )
-        asset = product['assets'].setdefault(
-            operation.asset_id,
-            {
-                'id': operation.asset_id,
-                'name': operation.asset.name,
-                'code': operation.asset.code,
-                'currency': operation.asset.currency,
-                'quantity': ZERO,
-                'deposits': ZERO,
-                'withdrawals': ZERO,
-                'yields': ZERO,
-            },
-        )
+        opening_balance = operation.asset.opening_balance if operation.asset.opening_product_id == operation.product_id else ZERO
+        asset = asset_row(operation.product, operation.asset, opening_balance)
         asset['quantity'] += operation.signed_quantity
+        asset['balance'] += operation.signed_value
         key = {
             Investment.Kind.DEPOSIT: 'deposits',
             Investment.Kind.WITHDRAWAL: 'withdrawals',
@@ -208,7 +210,10 @@ def get_portfolio_groups(user):
 
 
 def get_asset_positions(user):
-    positions = {}
+    positions = {
+        asset.pk: {'asset': asset, 'quantity': ZERO, 'value_flow': asset.opening_balance}
+        for asset in Asset.objects.filter(user=user, valuation_mode=Asset.ValuationMode.MONETARY)
+    }
     for operation in Investment.objects.filter(user=user).select_related('asset'):
         row = positions.setdefault(
             operation.asset_id,
