@@ -16,7 +16,7 @@ class InvestmentForm(forms.ModelForm):
     class Meta:
         model = Investment
         fields = (
-            'product', 'asset', 'kind', 'quantity', 'unit_price', 'fees',
+            'product', 'asset', 'kind', 'amount', 'quantity', 'unit_price', 'fees',
             'cash_amount', 'source_account', 'source_program', 'source_points',
             'destination_account', 'date', 'reason', 'notes',
         )
@@ -24,6 +24,7 @@ class InvestmentForm(forms.ModelForm):
             'date': forms.DateInput(attrs={'type': 'date'}),
             'quantity': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0.00000001'}),
             'unit_price': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0.00000001'}),
+            'amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'fees': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
             'cash_amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
             'source_points': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
@@ -33,10 +34,11 @@ class InvestmentForm(forms.ModelForm):
             'product': _('Product destination'),
             'asset': _('Asset'),
             'kind': _('Type'),
-            'quantity': _('Quantity'),
-            'unit_price': _('Unit price'),
+            'amount': _('Investment amount'),
+            'quantity': _('Quantity (unit-based assets)'),
+            'unit_price': _('Unit price (unit-based assets)'),
             'fees': _('Fees'),
-            'cash_amount': _('Cash amount'),
+            'cash_amount': _('Cash amount (unit-based assets)'),
             'source_account': _('Source account'),
             'source_program': _('Source program'),
             'source_points': _('Source points'),
@@ -46,8 +48,9 @@ class InvestmentForm(forms.ModelForm):
             'notes': _('Notes'),
         }
         help_texts = {
-            'quantity': _('Asset units added or removed.'),
-            'unit_price': _('Price per asset unit, denominated in the asset currency.'),
+            'amount': _('Required for monetary assets such as savings pots; it is also used for the bank movement.'),
+            'quantity': _('Required only for assets valued by units and price.'),
+            'unit_price': _('Required only for assets valued by units and price.'),
             'fees': _('Operation fees; this does not change gross value.'),
             'cash_amount': _('Actual debit/credit in the selected account native currency.'),
             'source_account': _('For an account-funded deposit only.'),
@@ -69,6 +72,14 @@ class InvestmentForm(forms.ModelForm):
             self.fields['source_program'].queryset = LoyaltyProgram.objects.filter(user=user)
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+
+    def clean(self):
+        data = super().clean()
+        asset = data.get('asset')
+        if asset and asset.valuation_mode == Asset.ValuationMode.MONETARY and data.get('kind') != Investment.Kind.YIELD:
+            data['cash_amount'] = data.get('amount')
+            self.instance.cash_amount = data['cash_amount']
+        return data
 
 
 class InvestmentProductForm(forms.ModelForm):
@@ -100,17 +111,23 @@ class InvestmentProductForm(forms.ModelForm):
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
-        fields = ('name', 'code', 'asset_class', 'currency')
+        fields = ('name', 'code', 'asset_class', 'currency', 'valuation_mode', 'opening_balance', 'opening_product')
         labels = {
             'name': _('Name'),
             'code': _('Code'),
             'asset_class': _('Asset class'),
             'currency': _('Currency'),
+            'valuation_mode': _('How this asset is valued'),
+            'opening_balance': _('Opening balance'),
+            'opening_product': _('Opening balance product'),
         }
         help_texts = {
             'code': _('Short identifier, for example BTC, USD, PETR4, or CDB-2028.'),
             'asset_class': _('What the asset is: for example BTC is Crypto and PETR4 is Equity.'),
             'currency': _('Currency used to price it: for example PETR4 is priced in BRL.'),
+            'valuation_mode': _('Monetary value is for savings pots and cash-like investments; units and price is for traded assets.'),
+            'opening_balance': _('Existing balance before you start recording operations. Monetary assets only.'),
+            'opening_product': _('Required only when the opening balance is greater than zero.'),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -119,6 +136,10 @@ class AssetForm(forms.ModelForm):
         self.instance.user = user
         self.original_currency = self.instance.currency if self.instance.pk else None
         self.original_asset_class = self.instance.asset_class if self.instance.pk else None
+        self.original_valuation_mode = self.instance.valuation_mode if self.instance.pk else None
+        self.original_opening_balance = self.instance.opening_balance if self.instance.pk else None
+        self.original_opening_product = self.instance.opening_product_id if self.instance.pk else None
+        self.fields['opening_product'].queryset = InvestmentProduct.objects.filter(user=user)
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
 
@@ -154,3 +175,21 @@ class AssetForm(forms.ModelForm):
                 _('Asset class cannot be changed after this asset has investment operations.')
             )
         return asset_class
+
+    def clean_valuation_mode(self):
+        valuation_mode = self.cleaned_data['valuation_mode']
+        if self.instance.pk and valuation_mode != self.original_valuation_mode and self.instance.operations.exists():
+            raise forms.ValidationError(_('Valuation mode cannot be changed after this asset has investment operations.'))
+        return valuation_mode
+
+    def clean_opening_balance(self):
+        opening_balance = self.cleaned_data['opening_balance']
+        if self.instance.pk and opening_balance != self.original_opening_balance and self.instance.operations.exists():
+            raise forms.ValidationError(_('Opening balance cannot be changed after this asset has investment operations.'))
+        return opening_balance
+
+    def clean_opening_product(self):
+        opening_product = self.cleaned_data['opening_product']
+        if self.instance.pk and (opening_product.pk if opening_product else None) != self.original_opening_product and self.instance.operations.exists():
+            raise forms.ValidationError(_('Opening balance product cannot be changed after this asset has investment operations.'))
+        return opening_product

@@ -17,8 +17,8 @@
             {% include 'partials/form_field.html' with field=form.asset %}
             {% include 'partials/form_field.html' with field=form.kind %}
             {% include 'partials/form_field.html' with field=form.date %}
-            {% include 'partials/form_field.html' with field=form.quantity %}
-            {% include 'partials/form_field.html' with field=form.unit_price %}
+            <div class="space-y-2">{% include 'partials/form_field.html' with field=form.amount %}<p class="text-xs text-slate-500 dark:text-neutral-400">{% translate 'Monetary value: use this field for savings pots.' %}</p></div>
+            <div class="space-y-2 sm:col-span-2"><div class="grid gap-5 sm:grid-cols-2">{% include 'partials/form_field.html' with field=form.quantity %}{% include 'partials/form_field.html' with field=form.unit_price %}</div><p class="text-xs text-slate-500 dark:text-neutral-400">{% translate 'Units: enter quantity and unit price for traded assets.' %}</p></div>
             {% include 'partials/form_field.html' with field=form.fees %}
             {% include 'partials/form_field.html' with field=form.cash_amount %}
         </section>

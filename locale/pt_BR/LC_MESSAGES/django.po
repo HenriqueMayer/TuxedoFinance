@@ -2045,6 +2045,45 @@ msgstr "Rendimento interno"
 msgid "No matching operations."
 msgstr "Nenhuma operação encontrada."
 
+msgid "Monetary value"
+msgstr "Valor monetário"
+
+msgid "Units and price"
+msgstr "Unidades e preço"
+
+msgid "Investment amount"
+msgstr "Valor do investimento"
+
+msgid "Quantity (unit-based assets)"
+msgstr "Quantidade (ativos por unidade)"
+
+msgid "Unit price (unit-based assets)"
+msgstr "Preço unitário (ativos por unidade)"
+
+msgid "Cash amount (unit-based assets)"
+msgstr "Valor em dinheiro (ativos por unidade)"
+
+msgid "How this asset is valued"
+msgstr "Como este ativo é valorizado"
+
+msgid "Opening balance"
+msgstr "Saldo inicial"
+
+msgid "Opening balance product"
+msgstr "Produto do saldo inicial"
+
+msgid "Monetary value: use this field for savings pots."
+msgstr "Valor monetário: use este campo para cofrinhos."
+
+msgid "Units: enter quantity and unit price for traded assets."
+msgstr "Unidades: informe quantidade e preço unitário para ativos negociados."
+
+msgid "Balance: %(currency)s %(balance)s"
+msgstr "Saldo: %(currency)s %(balance)s"
+
+msgid "%(amount)s %(currency)s; fees %(fees)s"
+msgstr "%(amount)s %(currency)s; taxas %(fees)s"
+
 #: templates/investments/list.html:47 templates/transactions/list.html:162
 msgid "Previous"
 msgstr "Anterior"

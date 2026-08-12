@@ -11,7 +11,7 @@ Bank
 └── InvestmentProduct
     └── InvestmentOperation ── Asset
 
-Asset = name + code + asset class + currency
+Asset = name + code + asset class + currency + valuation mode
 ```
 
 `Institution` is removed. A product belongs to one owned `Bank`; a bank may hold
@@ -19,12 +19,22 @@ bank accounts, investment products, or both. `Asset.asset_class` and currency
 are mandatory and immutable after use because changing either would reinterpret
 historical positions.
 
+## Valuation modes
+
+Assets use one immutable valuation mode after their first operation:
+
+| Mode | Use case | Operation value |
+|---|---|---|
+| `MONETARY` | Savings pots and cash-like balances. | `amount` in the asset currency. Quantity and unit price are not used. |
+| `UNITS` | Traded assets such as shares, funds and crypto. | `quantity * unit_price`. |
+
+A monetary asset may have an `opening_balance` and its holding product: money already held before the first recorded operation. It appears in the position balance but does not create a bank movement, income, expense, deposit or withdrawal. It can only be changed before the asset has investment operations. Unit-based assets always have an opening balance of zero.
+
 ## Operations
 
-Every operation records product, asset, kind, quantity, unit price, currency,
-date and optional notes. There is no `title`. Gross native value is
-`quantity * unit_price`; quantity and execution price remain available for
-position and performance calculations.
+Every operation records product, asset, kind, currency, date and optional notes.
+Monetary assets use an investment amount; unit-based assets use quantity and unit
+price. There is no `title`.
 
 | Kind | Banking requirement | Position effect |
 |---|---|---|
