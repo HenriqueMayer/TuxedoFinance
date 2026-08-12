@@ -20,13 +20,13 @@ base, by design.
 {% block title %}Exchange Rates — CashFlow{% endblock %}
 
 {% block content %}
-{% url 'investments:list' as investments_url %}
+{% url 'investments:settings' as settings_url %}
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <a href="{{ investments_url }}"
+            <a href="{{ settings_url }}"
                class="text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                &larr; Back to Investments
+                &larr; Back to Settings
             </a>
             <h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-neutral-100">Exchange Rates</h1>
             <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">

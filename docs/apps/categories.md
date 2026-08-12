@@ -43,6 +43,17 @@ Two things happen in `__init__` that aren't visible from `Meta` alone:
 
 All four are `LoginRequiredMixin` CBVs. `CategoryListView` and the shared `CategoryFormMixin` both filter `get_queryset()` by `self.request.user` — a `404`, not another user's data, is what you get for guessing another user's category `pk`.
 
+### List search and filtering
+
+`CategoryListView` accepts two optional GET parameters. Both are applied after the queryset has been restricted to `request.user` and combine with AND:
+
+| Parameter | Behavior |
+|---|---|
+| `q` | Trimmed, case-insensitive partial match against `name`. |
+| `level` | `top` selects categories without a parent; `sub` selects categories with a parent. Missing or unknown values do not filter the list. |
+
+The template uses a plain `<form method="get">`, restores the active values, offers a direct **Clear filters** link, and distinguishes an empty filtered result from an account with no categories. No JavaScript or pagination is involved.
+
 ### Create / Update
 
 ```python
@@ -125,5 +136,5 @@ search_fields = ('name',)
 
 ## Templates
 
-- `list.html` — one row per category, showing "Subcategory of {parent}" or "Top-level category"; Edit/Delete actions; `partials/empty_state.html` when the user has none (shouldn't normally happen post-signup, but reachable if all categories are deleted — though `PROTECT` blocks deleting any still in use).
+- `list.html` — GET name/level filters followed by one row per category, showing "Subcategory of {parent}" or "Top-level category"; Edit/Delete actions; `partials/empty_state.html` for either no matches or no categories (the latter shouldn't normally happen post-signup, but is reachable if all categories are deleted — though `PROTECT` blocks deleting any still in use).
 - `form.html` / `confirm_delete.html` — the standard shared card layout (see [frontend.md](../frontend.md)).

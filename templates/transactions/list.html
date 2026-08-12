@@ -7,7 +7,7 @@ Shows only the logged-in user's own transactions
 `transaction_type` per PRD §9.1 (Income emerald / Expense rose / Investment
 amber).
 
-Optional search/month/type filter (PRD 8.1.5, FR17): a plain
+Optional search/billed-month/exact-date/type filter (PRD 8.1.5, FR17): a plain
 `<form method="get">` with a `<button type="submit">` — no
 `onchange="this.form.submit()"` auto-submit and no live/typeahead search, to
 keep the screen honestly zero-JS. Pagination links use Django's built-in
@@ -39,10 +39,15 @@ the active filters survive page navigation.
                    placeholder="Title, notes, category or payment method"
                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
-        <div class="min-w-[10rem] flex-1 space-y-1.5">
+        <div class="min-w-[12rem] flex-1 space-y-1.5">
             {% comment %}"Billed", not just "Month": the filter matches the month the money moves, so a card purchase past its best purchase day is found under the month its bill is paid, and a fixed transaction under every month it charges.{% endcomment %}
             <label for="filter-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Billed month</label>
             <input type="month" id="filter-month" name="month" value="{{ selected_month }}"
+                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+        </div>
+        <div class="min-w-[12rem] flex-1 space-y-1.5">
+            <label for="filter-date" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Transaction date</label>
+            <input type="date" id="filter-date" name="date" value="{{ selected_date }}"
                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
@@ -62,6 +67,8 @@ the active filters survive page navigation.
                 <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest first</option>
                 <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest first</option>
                 <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>Last updated</option>
+                <option value="highest" {% if selected_sort == 'highest' %}selected{% endif %}>Highest amount</option>
+                <option value="lowest" {% if selected_sort == 'lowest' %}selected{% endif %}>Lowest amount</option>
             </select>
         </div>
         <div class="flex items-center gap-3">
@@ -69,7 +76,7 @@ the active filters survive page navigation.
                     class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
                 Filter
             </button>
-            {% if search_query or selected_month or selected_type or selected_sort == 'oldest' %}
+            {% if search_query or selected_month or selected_date or selected_type or selected_sort != 'newest' %}
                 <a href="{{ list_url }}"
                    class="rounded text-sm font-medium text-slate-600 dark:text-neutral-400 transition hover:text-slate-900 dark:hover:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     Clear filters
@@ -169,8 +176,8 @@ the active filters survive page navigation.
                 {% endif %}
             </nav>
         {% endif %}
-    {% elif search_query or selected_month or selected_type %}
-        {% include 'partials/empty_state.html' with title='No matching transactions' message='Try a different search term, month or type, or clear the filters to see everything.' cta_url=list_url cta_label='Clear filters' %}
+    {% elif search_query or selected_month or selected_date or selected_type %}
+        {% include 'partials/empty_state.html' with title='No matching transactions' message='Try a different search term, billed month, transaction date or type, or clear the filters to see everything.' cta_url=list_url cta_label='Clear filters' %}
     {% else %}
         {% include 'partials/empty_state.html' with title='No transactions yet' message='Record your first transaction to start tracking your cash flow.' cta_url=create_url cta_label='New Transaction' %}
     {% endif %}

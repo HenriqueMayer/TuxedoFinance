@@ -84,10 +84,22 @@ class InstitutionForm(forms.ModelForm):
         model = Institution
         fields = ('name',)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        duplicates = Institution.objects.filter(user=self.user, name=name)
+        if self.instance.pk:
+            duplicates = duplicates.exclude(pk=self.instance.pk)
+        if duplicates.exists():
+            raise forms.ValidationError(
+                'You already have an institution with this name.'
+            )
+        return name
 
 
 class InvestmentProductForm(forms.ModelForm):
@@ -97,10 +109,30 @@ class InvestmentProductForm(forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
         if user is not None:
             self.fields['institution'].queryset = Institution.objects.filter(user=user)
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+
+    def clean(self):
+        cleaned_data = super().clean()
+        institution = cleaned_data.get('institution')
+        name = cleaned_data.get('name')
+        if institution and name:
+            duplicates = InvestmentProduct.objects.filter(
+                institution=institution,
+                name=name,
+            )
+            if self.instance.pk:
+                duplicates = duplicates.exclude(pk=self.instance.pk)
+            if duplicates.exists():
+                self.add_error(
+                    'name',
+                    'This institution already has an investment product '
+                    'with this name.',
+                )
+        return cleaned_data
 
 
 class AssetForm(forms.ModelForm):
@@ -112,10 +144,36 @@ class AssetForm(forms.ModelForm):
             'currency': 'Three-letter currency used to display this asset.',
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
+        self.original_currency = self.instance.currency if self.instance.pk else None
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+
+    def clean_code(self):
+        code = self.cleaned_data['code']
+        duplicates = Asset.objects.filter(user=self.user, code=code)
+        if self.instance.pk:
+            duplicates = duplicates.exclude(pk=self.instance.pk)
+        if duplicates.exists():
+            raise forms.ValidationError(
+                'You already have an asset with this code.'
+            )
+        return code
+
+    def clean_currency(self):
+        currency = self.cleaned_data['currency']
+        if (
+            self.instance.pk
+            and currency != self.original_currency
+            and self.instance.operations.exists()
+        ):
+            raise forms.ValidationError(
+                'Currency cannot be changed after this asset has investment '
+                'operations. This protects the historical values and charts.'
+            )
+        return currency
 
 
 class ExchangeRateForm(forms.ModelForm):

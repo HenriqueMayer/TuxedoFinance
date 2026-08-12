@@ -1,6 +1,6 @@
 # Data Model
 
-The four models, their fields, and the business rules that govern them (PRD §8.3–§8.5). Per-app CRUD/view behavior is documented in [`apps/`](apps/); this page is the single source of truth for *what the data means*.
+The domain models, their fields, and the business rules that govern them (PRD §8.3–§8.5). Per-app CRUD/view behavior is documented in [`apps/`](apps/); this page is the single source of truth for *what the data means*.
 
 ## Entity-relationship diagram
 
@@ -37,6 +37,7 @@ erDiagram
         boolean is_fixed
         date fixed_until "last month a fixed row pays; null = forever"
         integer installments "1 by default; >1 only for credit card"
+        integer billing_override "null=automatic; 0=current bill; 1=next bill"
         date transaction_date "editable"
         text notes "optional"
         integer category_id FK "on_delete=PROTECT"
@@ -175,9 +176,10 @@ Not defined in this codebase — used as-is from `django.contrib.auth`. Referenc
 | `category` | FK → `Category` | `on_delete=PROTECT`, `related_name='transactions'` |
 | `payment_method` | FK → `PaymentMethod` | `on_delete=PROTECT`, `related_name='transactions'` |
 | `installments` | `PositiveSmallIntegerField(default=1)` | `MinValueValidator(1)` + `MaxValueValidator(Transaction.MAX_INSTALLMENTS)` (48) — credit card only, see below |
+| `billing_override` | `PositiveSmallIntegerField(null=True, blank=True)` | `BillChoice`: empty = automatic card cycle, `0` = current bill, `1` = next bill; credit card only |
 | `is_fixed` | `BooleanField(default=False)` | recurring vs. variable |
 | `fixed_until` | `DateField(null=True, blank=True)` | last month a fixed transaction pays, inclusive; null = open-ended |
-| `transaction_date` | `DateField` | the only user-editable date |
+| `transaction_date` | `DateField` | user-entered purchase/start date; distinct from the optional recurrence end in `fixed_until` |
 | `notes` | `TextField(blank=True)` | optional |
 | `created_at` | `DateTimeField(auto_now_add=True)` | immutable, system-generated |
 | `updated_at` | `DateTimeField(auto_now=True)` | |
@@ -188,7 +190,7 @@ Not defined in this codebase — used as-is from `django.contrib.auth`. Referenc
 - `is_installment_plan` (property): `installments > 1`.
 - `installment_amount` (property): `amount / installments`, quantized to 2 decimal places with `ROUND_HALF_UP`. **Presentation-only** — the rounded parts may not re-sum to `amount` to the cent (e.g. `100.00 / 3` → `33.33` ×3 = `99.99`), so no balance calculation ever derives from it.
 - `calendar_months_to(year, month)` (method): raw month distance from `transaction_date`, with no billing cycle applied — the distance between two dates the user typed.
-- `billing_offset` (property): `payment_method.statement_offset(transaction_date)`, i.e. how many months later than the purchase the money leaves. `0` for everything except a credit card with a cycle.
+- `billing_offset` (property): uses `billing_override` first when present, otherwise calls `payment_method.statement_offset(transaction_date)`. It is the number of whole months between purchase and first billed month.
 - `months_from_start(year, month)` (method): `calendar_months_to(...) − billing_offset`. **The origin is the month the payment clears, not the month of the purchase** — this single subtraction is what moves every downstream figure onto the billing month.
 - `last_fixed_offset` (property): how many months after the start the fixed recurrence last pays, or `None` when open-ended. Measured on `calendar_months_to`, **not** `months_from_start`: `transaction_date` and `fixed_until` both describe the charge, so a billing cycle moves the whole run of payments later without adding or removing any. Clamped at `0`, so a `fixed_until` before the start month pays once rather than a negative number of times.
 - `billed_month` (property): first day of the month this comes off the balance — the month `months_from_start` counts from, and the **first** one for a recurrence. Display only; `None` when the arithmetic runs off the end of the calendar, which `months_from_start` (plain integers) does not care about.
@@ -224,7 +226,7 @@ Both are `models.TextChoices` — the first value is what's stored in the databa
 Computed in `dashboard/services.py::get_dashboard_summary()`, PRD §8.5. Every "Σ" below sums **monthly contributions** (see Recurrence, next section), not raw `amount` values — a fixed transaction counts once per elapsed month, an installment plan once per installment:
 
 - **Current Balance** = Σ Income − Σ Expenses − Σ Investments, for everything realized **through today's month**.
-- **Balance (month)** = the selected month's Income − Expenses − Investments, scoped via `transaction_date` (never `created_at`). The selected month defaults to the current one and may be in the future.
+- **Balance (month)** = the selected month's Income − Expenses − Investments, scoped via `amount_for_month()` (never `created_at`). `transaction_date` is the purchase/recurrence origin, but billing offsets and recurrences determine which selected months receive a contribution.
 - **Projected Balance** = Current Balance rolled forward to the end of the selected month; equal to Current Balance when the selected month *is* the current month.
 
 > **Decision (2026-07-24):** Investment is defined as a cash outflow, so it is subtracted from *both* balances above — otherwise Current Balance would overstate the money actually available. Investment is **never merged into the Expenses indicator**; the dashboard shows it as a separate stat card (`investment_month`) precisely so the user can see where that money went without it inflating "Expenses". If this rule is ever revisited (e.g. treating Balance (month) as consumption-only, Income − Expenses), `get_dashboard_summary()` is the single place that encodes it.
@@ -317,7 +319,7 @@ Rules that fall out of this:
 ### Date semantics
 
 - `created_at` — system-generated on insert, immutable, never shown as "the" transaction date.
-- `transaction_date` — the only user-editable date, and the one every monthly aggregation filters on.
+- `transaction_date` — the user-editable purchase/start date and the origin used by recurrence and billing arithmetic. Exact-date list filtering compares this field directly; monthly aggregates call `amount_for_month()` rather than filtering the column alone. `fixed_until` is separately editable but represents only the inclusive end month of a fixed recurrence.
 
 ### Deletion integrity
 
@@ -383,9 +385,50 @@ represents a named product under that institution, such as `Cofrinho
 Henrique`, `CDI`, or `CDB`. `Asset` is free-form and can represent `BRL`,
 `USD`, `BTC`, an ETF ticker, or another user-defined code.
 
+`Institution`:
+
+| Field | Type | Notes |
+|---|---|---|
+| `user` | FK → `AUTH_USER_MODEL` | `on_delete=CASCADE`, `related_name='investment_institutions'` |
+| `name` | `CharField(max_length=100)` | unique per user |
+| `created_at` | `DateTimeField(auto_now_add=True)` | |
+| `updated_at` | `DateTimeField(auto_now=True)` | |
+
+`InvestmentProduct`:
+
+| Field | Type | Notes |
+|---|---|---|
+| `user` | FK → `AUTH_USER_MODEL` | `on_delete=CASCADE`, `related_name='investment_products'` |
+| `institution` | FK → `Institution` | `on_delete=CASCADE`, `related_name='investment_products'` |
+| `name` | `CharField(max_length=150)` | unique within its institution |
+| `yield_mode` | `CharField(choices=YieldMode)` | defaults to `MANUAL`; automatic modes are future placeholders |
+| `created_at` | `DateTimeField(auto_now_add=True)` | |
+| `updated_at` | `DateTimeField(auto_now=True)` | |
+
+`Asset`:
+
+| Field | Type | Notes |
+|---|---|---|
+| `user` | FK → `AUTH_USER_MODEL` | `on_delete=CASCADE`, `related_name='investment_assets'` |
+| `name` | `CharField(max_length=100)` | user-facing label |
+| `code` | `CharField(max_length=20)` | unique per user |
+| `currency` | `CharField(max_length=3)` | defaults to `settings.CURRENCY`; inherited dynamically by operations |
+| `created_at` | `DateTimeField(auto_now_add=True)` | |
+| `updated_at` | `DateTimeField(auto_now=True)` | |
+
+An `Asset` has no direct product FK. It is global to its owner and becomes
+associated with a product only when an `Investment` operation references both.
+The same asset may therefore be reused across several products.
+
 The product has a yield mode for future planning. The current form permits only
 `MANUAL`; monthly and annual automatic modes are displayed as `Coming soon` and
 do not calculate anything.
+
+Names and codes can be corrected through Investment Settings. Moving a product
+to another owned institution changes the grouping of all existing operations
+that reference it. Asset currency is editable only before the asset has an
+operation: `Investment.currency` reads it dynamically, so changing a used
+asset's currency would retroactively reinterpret historical totals and charts.
 
 ### `Investment` operation (`investments/models.py`)
 
@@ -465,4 +508,7 @@ Unlike `Transaction`, an `Investment` has no recurrence shape (`is_fixed` / `ins
 
 ### Deletion integrity
 
-`Investment.user` and `ExchangeRate.user` use `on_delete=CASCADE`: deleting a Django `User` deletes their investment data. There is no soft-delete or archival, matching the rest of the project.
+- `Investment.product` and `Investment.asset` use `PROTECT`. Referenced products and assets cannot be deleted, and the settings delete views turn `ProtectedError` into a friendly message.
+- `InvestmentProduct.institution` uses `CASCADE`. Deleting an institution removes unused child products, but if any child is referenced by an operation, `PROTECT` blocks the entire institution deletion.
+- Setup-entity deletion never cascades to `Investment` operations.
+- Owner relations use `CASCADE`, but deleting a Django `User` that still has investment operations is currently blocked by the operation-level `PROTECT` graph; operations must be removed first. There is no user-facing account-deletion flow, soft-delete, or archival.

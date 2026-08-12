@@ -4,7 +4,7 @@
 > Project: `django-finance-template`
 > Stack: Python · Django (full stack) · Django Template Language · TailwindCSS · SQLite
 > Code and product language: **English** · Document language: **English**
-> Last updated: 2026-07-25
+> Last updated: 2026-08-10
 
 ---
 
@@ -32,7 +32,7 @@ The images below are the project's starting point (scope, domain, and UI drafts)
 
 - Macro: **Income / Cash Inflows**, **Expenses / Cash Outflows**, **Investments**.
 - `amount` always positive (decimal); the **sign** is derived from `transaction_type`.
-- Dates: `created_at` (immutable) and `transaction_date` (the only user-editable one).
+- Dates: `created_at` is immutable; `transaction_date` is the user-entered purchase/start date, while `fixed_until` is an optional recurrence end.
 
 ---
 
@@ -91,6 +91,8 @@ Give the user control and clarity over their personal finances through:
 
 > **Scope change (2026-08-07) — investment portfolio structure:** the Investments area now groups manual portfolio operations by institution, investment product, and free-form asset. Operations are `Deposit`, `Withdrawal`, or manual `Yield`; automatic monthly and annual yield calculations are deferred and shown as `Coming soon`. Existing legacy investment rows without the new links are intentionally ignored rather than migrated or deleted.
 
+> **Scope change (2026-08-10) — investment settings:** institutions, investment products, and assets now have user-facing management under `/investments/settings/`. Labels can be corrected, products can move between the user's institutions, and unused structures can be deleted. Historical operations remain protected; a used asset's currency cannot change because that would reinterpret every historical value and chart.
+
 ---
 
 ## 6. Functional Requirements
@@ -102,22 +104,23 @@ Give the user control and clarity over their personal finances through:
 | FR03 | Login/Logout | Native authentication; redirects to the dashboard after login. |
 | FR04 | Route protection | The entire internal area requires authentication (`LoginRequiredMixin`). |
 | FR05 | Dashboard | Displays **Current Balance**, **Income (month)**, **Expenses (month)**, **Investments (month)**, **Balance (month)**, and **Projected Balance (end of month)**. |
-| FR06 | List transactions | Paginated list of the logged-in user's transactions. |
+| FR06 | List transactions | Paginated list of the logged-in user's transactions, with general text search, billed-month and exact transaction-date filters, type filtering, and newest/oldest/last-updated/highest-amount/lowest-amount ordering. |
 | FR07 | Create transaction | Form with `title`, `amount`, `transaction_type`, `category`, `payment_method`, `installments`, `billing_override`, `transaction_date`, `is_fixed`, `fixed_until`, `notes`. |
 | FR08 | Edit transaction | Update the user's own existing transaction. |
 | FR09 | Delete transaction | Removal with confirmation. |
-| FR10 | Manage categories | CRUD for categories and subcategories (self-relationship). |
-| FR11 | Manage payment methods | CRUD for payment methods (name + type). A credit card may also carry a **billing cycle**: a best purchase day (the day the statement opens), which defers a purchase made on or after it to the next month's bill, and a due day (the day the bill is paid), which is displayed only and shifts nothing. Both optional and independent; see §8.5. |
+| FR10 | Manage categories | CRUD for categories and subcategories (self-relationship). The list supports partial, case-insensitive name search and filtering by top-level category or subcategory. |
+| FR11 | Manage payment methods | CRUD for payment methods (name + type), with partial, case-insensitive name search and filtering by method type. A credit card may also carry a **billing cycle**: a best purchase day (the day the statement opens), which defers a purchase made on or after it to the next month's bill, and a due day (the day the bill is paid), which is displayed only and shifts nothing. Both optional and independent; see §8.5. |
 | FR12 | Per-user isolation | Each user accesses only their own records. |
 | FR13 | Automatic timestamps | Every model records `created_at` and `updated_at`. |
 | FR14 | Default data seed | On signup, seed the new user **only** with the default categories (domain diagram) via signals, so the first transaction can be recorded immediately — `category` is required. Payment methods are *not* seeded: `method_type` already enumerates the four enum options (Credit Card, Debit Card, PIX, Checking Account), so seeding four rows with those exact same names was redundant. A user's real methods are named ("Nubank Credit", "Itaú Debit") and created on the payments page; the transaction form shows an inline "No payment methods yet" hint linking there when the user has none. |
 | FR15 | Future-month projection | The dashboard can be navigated to any month (`?month=YYYY-MM`, zero-JS) and projects forward: fixed transactions recur every month and installment plans spread one installment per month, so the user sees future performance without recording anything in advance. An outlook table shows the next `OUTLOOK_MONTHS` (6) months with a running projected balance. Editing a fixed transaction re-projects every month it covers immediately — which is why a *change in value* (e.g. a salary raise) is handled by ending the old row and starting a new one instead, see FR18. |
-| FR16 | Reports & charts | A dedicated `/dashboard/reports/` page charts the account's evolution over `EVOLUTION_MONTHS` (12) months — `EVOLUTION_PAST_MONTHS` (5) of history, the current month, and six projected. **Six charts:** 1) **balance evolution** (line/area of the closing balance per month, with a dashed rose zero line so a sign change reads at a glance); 2) **monthly cash flow** (grouped bars of Income/Expenses/Investments); 3) **spending by payment method** (rose bars per method, each clickable into its own inline top-categories drill-down); 4) **income by payment method** (the income-side mirror of chart 3); 5) **where the money goes** (top `TOP_CATEGORIES` expense categories, recurrences included); 6) **how much is on installments** — a donut chart splitting the month's expenses into installment plans, fixed recurrences, and one-off purchases, defaulting to the current month with an `All time` aggregate option. Charts 1 and 2 slide through time via `?charts_offset=N` (a window anchor shift, not a re-anchor); charts 3 and 4 share `?payment_month=ALL\|YYYY-MM` and each open a drill-down via `?expense_method=` / `?income_method=`; chart 5 has its own `?category_month=`; chart 6 has its own `?installment_month=` (the only filter that defaults to the current month rather than `ALL`, because the chart answers "how much of *this* month is on installments"). The breakdown filters default to `ALL` (a 12-month aggregate); month is picked with a plain `<select>` of `All time` plus the last 12 months. The whole charts island is an HTMX-swapped partial so filter clicks update without a full page load; the shared lifecycle helper preserves the user's scroll position and focused filter, while plain GETs remain the no-JS fallback. All chart geometry is server-rendered SVG/CSS with no charting library. |
-| FR17 | Transaction search | The transaction list accepts a free-text `?q=` term matched case-insensitively against `title`, `notes`, and the names of the related category and payment method, so a user can find a specific transaction (e.g. "salary") to edit or delete it. Combines with the existing month/type filters using AND, and is always applied on top of the user's own rows. |
+| FR16 | Reports & charts | A dedicated `/dashboard/reports/` page charts the account's evolution over `EVOLUTION_MONTHS` (12) months — `EVOLUTION_PAST_MONTHS` (5) of history, the current month, and six projected. **Six charts:** 1) **balance evolution** (line/area of the closing balance per month, with a dashed rose zero line so a sign change reads at a glance); 2) **monthly cash flow** (grouped bars of Income/Expenses/Investments); 3) **how much is on installments** — a donut chart splitting the month's expenses into installment plans, fixed recurrences, and one-off purchases, defaulting to the current month with an `All time` aggregate option; 4) **spending by payment method** (rose bars per method, each clickable into its own inline top-categories drill-down); 5) **income by payment method** (the income-side mirror of chart 4); 6) **where the money goes** (top `TOP_CATEGORIES` expense categories, recurrences included). Charts 1 and 2 slide through time via `?charts_offset=N` (a window anchor shift, not a re-anchor); chart 3 has its own `?installment_month=` (the only filter that defaults to the current month rather than `ALL`, because the chart answers "how much of *this* month is on installments"); charts 4 and 5 share `?payment_month=ALL\|YYYY-MM` and each open a drill-down via `?expense_method=` / `?income_method=`; chart 6 has its own `?category_month=`. The other breakdown filters default to `ALL` (a 12-month aggregate); month is picked with a plain `<select>` of `All time` plus the last 12 months. The whole charts island is an HTMX-swapped partial so filter clicks update without a full page load; the shared lifecycle helper preserves the user's scroll position and focused filter, while plain GETs remain the no-JS fallback. All chart geometry is server-rendered SVG/CSS with no charting library. |
+| FR17 | Transaction search and filters | The transaction list accepts a general free-text `?q=` term matched case-insensitively against `title`, `notes`, category, and payment method. `?month=YYYY-MM` filters the billed contribution month, while `?date=YYYY-MM-DD` matches the exact stored `transaction_date`; the two remain distinct and combine with Search and Type using AND. Amount ordering uses the stored full positive transaction total. Every filter is applied on top of the user's own rows. |
 | FR18 | End a fixed transaction | A fixed transaction has an optional `fixed_until` end month (inclusive; empty = indefinitely). This is how a value change preserves history: when a salary or rent changes, the user **ends the old transaction and adds a new one** starting the month after, instead of editing the single row — an edit applies to every month the row covers, past included, and would retroactively rewrite history. `fixed_until` requires `is_fixed` and cannot precede the starting month. |
 | FR19 | Localized number format | All monetary values are displayed with the configured currency's separators across every screen — dashboard, transaction list, reports and charts — while the UI language remains English. Amount **inputs** remain dot-decimal so browsers accept them and submissions parse correctly. |
 | FR20 | Configurable currency | A single setting, `CURRENCY` (env-driven, default `BRL`), selects the currency shown throughout the app from a registry of supported ones (`BRL`, `USD`, `EUR`, `GBP`, `JPY`, `CHF`). Each entry pairs the symbol with its number format, so `BRL` renders `R$ 1.000,00` and `USD` renders `$ 1,000.00` — the two can never be configured into a mismatched combination. `CURRENCY_SYMBOL` is derived from it, not set separately. An unsupported code raises `ImproperlyConfigured` at startup rather than mislabelling every amount. |
 | FR21 | Light/dark theme toggle | Every screen renders in either a light or a dark theme, toggled by a navbar button. The choice is persisted to `localStorage`, first-time visitors follow the OS `prefers-color-scheme`, and a synchronous inline `<head>` script toggles the `.dark` class on `<html>` before the stylesheet paints so there is no flash of the wrong theme (FOUC). The toggle is wired by `static/js/theme.js` (~25 lines of vendored vanilla JS). The dark palette is tuned to PyCharm Darcula (`#2B2B2B` page, `#313335` surface). |
+| FR22 | Investment structure settings | Authenticated users can list, create, edit, and delete their own institutions, investment products, and assets. Products may move between institutions owned by the same user. Referenced products/assets and institutions containing referenced products cannot be deleted; operations are never cascade-deleted. Asset currency becomes immutable after the first operation, while name/code corrections remain allowed. Exchange rates remain append-only. |
 
 ### 6.1 UX Flows (Mermaid Flowchart)
 
@@ -208,6 +211,13 @@ erDiagram
     PAYMENT_METHOD ||--o{ TRANSACTION : "records"
     CATEGORY ||--o{ TRANSACTION : "classifies"
     CATEGORY |o--o{ CATEGORY : "is subcategory of"
+    USER ||--o{ INSTITUTION : "owns"
+    USER ||--o{ INVESTMENT_PRODUCT : "owns"
+    USER ||--o{ ASSET : "owns"
+    USER ||--o{ INVESTMENT_OPERATION : "owns"
+    INSTITUTION ||--o{ INVESTMENT_PRODUCT : "contains"
+    INVESTMENT_PRODUCT ||--o{ INVESTMENT_OPERATION : "records"
+    ASSET ||--o{ INVESTMENT_OPERATION : "denominates"
 
     USER {
         integer id PK
@@ -253,6 +263,38 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
+
+    INSTITUTION {
+        integer id PK
+        integer user_id FK
+        string name
+    }
+
+    INVESTMENT_PRODUCT {
+        integer id PK
+        integer user_id FK
+        integer institution_id FK
+        string name
+        string yield_mode
+    }
+
+    ASSET {
+        integer id PK
+        integer user_id FK
+        string name
+        string code
+        string currency
+    }
+
+    INVESTMENT_OPERATION {
+        integer id PK
+        integer user_id FK
+        integer product_id FK
+        integer asset_id FK
+        decimal amount
+        string kind
+        date date
+    }
 ```
 
 ### 8.4 Enums / Choices
@@ -284,8 +326,8 @@ erDiagram
 - **Current Balance** = Σ Income − Σ Expenses − Σ Investments (full history, all dates — "cash available").
 - **Balance (month)** = month's Income − month's Expenses − month's Investments (the month's net cash flow).
   > **Decision (2026-07-24):** since Investment is defined as a cash outflow, it must be subtracted from both balances; otherwise the Current Balance would overstate available money. If you'd rather treat Balance (month) as a consumption-only metric (Income − Expenses), flip this rule and update the dashboard accordingly.
-- All monthly aggregations use `transaction_date` (the user-facing date), never `created_at`.
-- `created_at` is immutable; `transaction_date` is the only editable date field.
+- All monthly aggregations call `amount_for_month()` using `transaction_date` as the purchase/recurrence origin and applying billing offsets, installments, and fixed recurrences; they never aggregate by `created_at`.
+- `created_at` is immutable; `transaction_date` is the editable purchase/start date, while `fixed_until` separately records an optional inclusive recurrence end month.
 - **Deletion integrity:** `Transaction.category` and `Transaction.payment_method` use `on_delete=PROTECT` — a category or payment method that is in use cannot be deleted; show a friendly error message instead. `Transaction.user` uses `on_delete=CASCADE`.
 - **Uniqueness:** `Category` and `PaymentMethod` names are unique **per user** (`UniqueConstraint(user, name)`).
 - **Currency display:** a single currency symbol constant (default `R$`; switchable to `$`) provided via one context processor or template partial — never hardcoded per screen.
@@ -421,6 +463,7 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
 - **US3.4** — As a user, I want to split a credit card purchase into installments, so I can see how a 6× purchase breaks down.
 - **US3.5** — As a user, I want to search my transactions by text, so I can find the one I need (e.g. my salary) and edit or delete it without scrolling through pages.
 - **US3.6** — As a user, whose salary changes, I want past months to keep the old amount and future months to use the new one.
+- **US3.7** — As a user, I want to distinguish the date I recorded for a transaction from the month it affects my bill, and sort transactions by amount.
 
 **Acceptance criteria (E3):**
 - [x] Form contains all fields defined in FR07.
@@ -431,7 +474,10 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
 - [x] The transaction list shows the `Nx` badge and the per-installment value, with the full total as the headline figure.
 - [x] A search box filters the list by title, notes, category name, and payment method name, case-insensitively and on partial words.
 - [x] Search never returns another user's transactions, regardless of the term.
-- [x] Search combines with the month/type filters (AND), survives pagination, and an empty result offers a "Clear filters" way back.
+- [x] Search combines with billed month, exact transaction date, and type using AND, survives pagination, and an empty result offers a "Clear filters" way back.
+- [x] Billed month explains and preserves card-cycle, installment, and fixed-recurrence semantics.
+- [x] Transaction date matches the exact stored purchase/start date and combines with billed month using AND.
+- [x] Highest and lowest amount order by the stored full transaction total, with deterministic pagination tie-breakers.
 - [x] A fixed transaction accepts an optional end month (`fixed_until`); leaving it empty repeats indefinitely.
 - [x] `fixed_until` is rejected without `is_fixed`, and rejected when it falls before the starting month; the same month as the start is allowed (one payment).
 - [x] Ending a fixed transaction and starting a new one the following month leaves every month with exactly one value, none double-counted at the handover.
@@ -439,11 +485,15 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
 ### Epic E4 — Categories and Payment Methods
 - **US4.1** — As a user, I want to create categories and subcategories.
 - **US4.2** — As a user, I want to register payment methods.
+- **US4.3** — As a user, I want to search and filter categories and payment methods, so I can find records without scanning the full list.
 
 **Acceptance criteria (E4):**
 - [x] A category can have a parent category (optional).
 - [x] A payment method has a name and a type.
 - [x] Full CRUD isolated per user.
+- [x] Category names can be searched partially and case-insensitively, combined with a top-level/subcategory filter.
+- [x] Payment method names can be searched partially and case-insensitively, combined with a validated method-type filter.
+- [x] Filtered empty results offer a clear path back to the complete user-scoped list.
 
 ### Epic E5 — Dashboard
 - **US5.1** — As a user, I want to see Current Balance, Income, Expenses, and Balance for the month.
@@ -465,6 +515,19 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
 - [x] Charts are rendered server-side (SVG/CSS) with **no JavaScript** on the page, consistent with the project's zero-JS rule.
 - [x] A brand-new account with no transactions renders the reports page without errors.
 - [x] The spending breakdown counts every occurrence of a recurring expense, not just its first month.
+
+### Epic E6 — Investment Portfolio
+- **US6.1** — As a user, I want to correct institution, product, and asset names after setup mistakes.
+- **US6.2** — As a user, I want to move a product to the correct institution without recreating its operation history.
+- **US6.3** — As a user, I want structure deletion to preserve every historical investment operation.
+
+**Acceptance criteria (E6):**
+- [x] Investment Settings lists only the logged-in user's institutions, products, and assets.
+- [x] Setup entities support create/update/delete with per-user isolation and friendly duplicate errors.
+- [x] Products can move only to another institution owned by the same user.
+- [x] Used products/assets and institutions containing used products cannot be deleted.
+- [x] Asset currency cannot change after an operation exists; name and code remain correctable.
+- [x] Exchange rates remain append-only and accessible from Investment Settings.
 
 ---
 
@@ -578,6 +641,7 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
   - [x] 4.2.4 `DeleteView` with confirmation
   - [x] 4.2.5 App templates + routes
   - [x] 4.2.6 Restrict the parent-category selection to the user's own
+  - [x] 4.2.7 Search by name and filter by top-level/subcategory
 - [x] **4.3** Default categories seed (FR14)
   - [x] 4.3.1 `categories/signals.py`: on `User` `post_save` (created), create the default categories from the domain diagram
   - [x] 4.3.2 Wire via `AppConfig.ready()`
@@ -591,6 +655,7 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
   - [x] 5.2.1 `ListView` isolated per user
   - [x] 5.2.2 `CreateView` / `UpdateView` / `DeleteView`
   - [x] 5.2.3 Templates + routes
+  - [x] 5.2.4 Search by name and filter by method type
 - [x] **5.3** Default payment methods seed (FR14) — *reverted 2026-08-02: `method_type` already enumerates the four options, so seeding four rows with those exact names was redundant. The categories-only seed (Sprint 4.3) stays; payment methods are created by the user on the payments page, and the transaction form shows an inline "No payment methods yet" hint linking there.*
   - [x] 5.3.1 `payments/signals.py`: on `User` `post_save` (created), create one payment method per `method_type`
   - [x] 5.3.2 Wire via `AppConfig.ready()`
@@ -624,7 +689,7 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
 - [x] **7.2** View and template
   - [x] 7.2.1 `TemplateView` (or `ListView`) with `LoginRequiredMixin`
   - [x] 7.2.2 `templates/dashboard/index.html` with a `stat_card` grid
-  - [x] 7.2.3 List of recent transactions
+  - [x] 7.2.3 List of recent transactions — *removed 2026-08-10: transaction review now lives exclusively on the dedicated Transactions screen.*
   - [x] 7.2.4 Prominent New Transaction button
   - [x] 7.2.5 Route set as `LOGIN_REDIRECT_URL`
 
@@ -638,6 +703,12 @@ Light is Tailwind's stock palette (white surface, `slate-50` page, `slate-900`/`
 - [x] **8.2** Responsiveness
   - [x] 8.2.1 Verified on mobile, tablet, and desktop
   - [x] 8.2.2 Collapsible menu on small screens
+
+### Sprint 9 — Investment Settings
+- [x] **9.1** Add the user-scoped Investment Settings index.
+- [x] **9.2** Add institution, investment-product, and asset update/delete flows.
+- [x] **9.3** Protect referenced history and lock used-asset currency.
+- [x] **9.4** Add validation, isolation, and deletion regression tests.
 
 ### Sprint 10 — Docker and Delivery (final)
 - [x] **10.1** Application `Dockerfile`

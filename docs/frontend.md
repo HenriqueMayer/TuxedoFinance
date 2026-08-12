@@ -119,7 +119,7 @@ templates/
 
 Every `list.html`/`form.html`/`confirm_delete.html` triplet (categories, payments, transactions) follows the identical structural pattern:
 
-- **`list.html`** — heading + "New X" primary button, then either a divided `<ul>` of rows (each with Edit/Delete secondary/destructive buttons) or `empty_state.html`. `transactions/list.html` additionally has the GET-param filter form (see [apps/transactions.md](apps/transactions.md#transactionlistview)) and pagination controls using Django's `{% querystring %}` tag so active filters survive page navigation.
+- **`list.html`** — heading + "New X" primary button, a server-rendered GET filter form, then either a divided `<ul>` of rows (each with Edit/Delete secondary/destructive buttons) or `empty_state.html`. Categories search by name and filter by hierarchy level; payments search by name and filter by method type; transactions expose their broader search/date/type/sort controls (see each app document). Only the transaction list is paginated, using Django's `{% querystring %}` tag so active filters survive page navigation.
 - **`form.html`** — a centered `max-w-md` card, `<form method="post" novalidate>` + `{% csrf_token %}`, non-field errors rendered above the fields, then one `{% include 'partials/form_field.html' %}` per field, then Save (primary) / Cancel (secondary, linking back to `list`).
 - **`confirm_delete.html`** — a centered `max-w-md` card confirming the object's name/title, a `<form method="post">` with Delete (destructive) / Cancel (secondary) — deletion is **never** a plain link/`GET`, always a POST from this confirmation screen.
 
@@ -137,6 +137,13 @@ The report charts are inline `<svg>` built from coordinates computed in `dashboa
 ## Investment Charts (`investments/_investments_charts.html`)
 
 The investments list page carries its own two-chart island at the bottom, built from the same `dashboard/charts.py` builders as the Reports page (`build_line_chart` and `build_bar_chart`). The partial wraps everything in `<div id="investments-charts">` so `InvestmentListView.get_template_names()` can return the partial alone when `HX-Request: true` lands — the same exact swap pattern the Reports page established. `{% include %}` wires the partial inside the full `list.html` for normal GETs; in both cases the server runs the same context, so the page renders the same whether the request came from HTMX or a full page load.
+
+Investment structure management uses the standard server-rendered list/form/
+confirmation pattern: `investments/settings/index.html` lists institutions,
+products, and assets; `investments/setup_form.html` serves both create and
+update; and `investments/settings/confirm_delete_entity.html` requires a CSRF
+protected POST. The Investments navbar item uses the resolved URL namespace for
+its active state, so it stays highlighted on nested settings and edit routes.
 
 The two charts each own an independent 12-month window — they slide independently so the user can scroll chart 1 (Investment evolution) back a year while leaving chart 2 (Monthly flow) anchored on today. The arrows carry `hx-target="#investments-charts"`, `hx-swap="outerHTML"`, `hx-push-url="true"`, mirrored on a plain `href` for the no-JS degradation path: each chart's prev/next anchors are `{% querystring total_offset=N %}` / `{% querystring flow_offset=N %}` respectively, so `{% querystring %}` updates one param while preserving the other — plus any active `?kind`/`?q` filters stay alive across the slide. The two services `get_total_in_base_timeseries` and `get_monthly_flow_in_base` each take their own `offset=` argument.
 

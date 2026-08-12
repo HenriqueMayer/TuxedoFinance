@@ -8,10 +8,11 @@ A personal finance tracker built with Django full stack — record categorized t
 
 - **Dashboard** with current balance, monthly income/expenses/investments, and a projected end-of-month balance
 - **Forward projection** — fixed transactions recur and installment plans spread one payment per month, so future months preview without recording anything in advance
-- **Reports** with six server-rendered, zero-JS SVG charts: a slideable 12-month balance-evolution line (with prev/next arrows), monthly cash-flow bars, spending-vs-income by payment method (each bar a click-driven drill-down into its top categories), a "where the money goes" category breakdown, and a donut chart splitting the month's expenses into installment plans vs fixed recurrences vs one-off purchases (defaults to the current month, with an `All time` aggregate option)
+- **Filtered transaction history** — general search, separate billed-month and exact transaction-date filters, type filtering, and date/update/amount ordering
+- **Reports** with six server-rendered, zero-JS SVG charts: a slideable 12-month balance-evolution line (with prev/next arrows), monthly cash-flow bars, a donut splitting the month's expenses into installment plans vs fixed recurrences vs one-off purchases (defaults to the current month, with an `All time` aggregate option), spending-vs-income by payment method (each bar a click-driven drill-down into its top categories), and a "where the money goes" category breakdown
 - **Categories and subcategories** with a per-user default seed on signup
 - **Payment methods** with credit-card billing cycles (statement day and due day) and per-transaction bill overrides
-- **Investments log** — a parallel universe to `Transaction` for tracking manual deposits, withdrawals, and yields inside each bank or broker, grouped by investment and free-form asset. Automatic monthly and annual yield calculations are marked `Coming soon` (see [docs/apps/investments.md](docs/apps/investments.md))
+- **Investments log** — a parallel universe to `Transaction` for tracking manual deposits, withdrawals, and yields, with settings to manage banks, brokers, investment products, free-form assets, and exchange rates. Automatic monthly and annual yield calculations are marked `Coming soon` (see [docs/apps/investments.md](docs/apps/investments.md))
 - **Light/dark theme** toggle with a Darcula-inspired dark palette
 - **Configurable currency** — pick BRL, USD, EUR, GBP, JPY, or CHF; the symbol and number format always match
 
