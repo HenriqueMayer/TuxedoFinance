@@ -60,7 +60,7 @@ class SignupView(SuccessMessageMixin, CreateView):
         return response
 ```
 
-Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly calls Django's `login()` after `super().form_valid(form)` saves the user, so signup redirects directly to the dashboard. Signup seeds the approved default categories and creates the user's banking profile with the project default base currency. Banks, accounts and cards are never fabricated; the first-run Banking flow asks the user to create their real structure.
+Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly calls Django's `login()` after `super().form_valid(form)` saves the user, so signup redirects directly to the dashboard. Signup seeds only the approved default categories. No synthetic financial records or shared credentials are provided. Banks, accounts and cards are never fabricated; the first-run Banking flow asks the user to create their real structure. A per-user base-currency profile is planned for ROADMAP Phase 3 and is not created by the current signup flow.
 
 ## Routes
 

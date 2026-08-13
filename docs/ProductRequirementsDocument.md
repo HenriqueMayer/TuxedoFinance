@@ -85,6 +85,7 @@ HTMX progressive enhancement.
 | FR24 | Forecasts | Recurrences and future invoices may be projected but do not alter the posted ledger before settlement. |
 | FR25 | Breaking delivery | Replace `payments` with `banking` through a clean migration reset; no compatibility or automatic legacy import. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
+| FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
 
 ## 5. Domain Rules
 

@@ -36,3 +36,8 @@ breaking release.
 These documents describe the approved target release, not the legacy schema
 currently present in older databases. The release requires fresh migrations and
 a new SQLite database. Existing data is not automatically migrated.
+
+The repository does not include a synthetic dataset, shared account, fixed
+credential, or data-population management command. New accounts receive only
+the approved default categories; all financial records are created by their
+owner.
