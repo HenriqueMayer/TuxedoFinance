@@ -3,19 +3,23 @@ from datetime import date
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db import transaction as db_transaction
 from django.db.models import Q
 from django.urls import reverse_lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from transactions.forms import TransactionForm
 from transactions.models import Transaction
+from transactions.services import sync_user_ledger
 
 
 class TransactionListView(LoginRequiredMixin, ListView):
     """Paginated list of the logged-in user's transactions (FR06, FR12, FR17).
 
     `select_related` avoids N+1 queries when rendering each row's category
-    and payment method (NFR10).
+    and banking instrument (NFR10).
 
     Optional filtering (PRD 8.1.5, zero-JS): `?q=` searches the text fields,
     `?month=YYYY-MM` filters by the month the money actually moves (see
@@ -39,11 +43,11 @@ class TransactionListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     SORT_OPTIONS = {
-        'newest': ('-transaction_date', '-created_at', '-pk'),
-        'oldest': ('transaction_date', 'created_at', 'pk'),
+        'newest': ('-date', '-created_at', '-pk'),
+        'oldest': ('date', 'created_at', 'pk'),
         'updated': ('-updated_at', '-pk'),
-        'highest': ('-amount', '-transaction_date', '-created_at', '-pk'),
-        'lowest': ('amount', '-transaction_date', '-created_at', '-pk'),
+        'highest': ('-amount', '-date', '-created_at', '-pk'),
+        'lowest': ('amount', '-date', '-created_at', '-pk'),
     }
 
     def _selected_sort(self):
@@ -52,12 +56,13 @@ class TransactionListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Transaction.objects.filter(user=self.request.user).select_related(
-            'category', 'payment_method'
+            'category', 'bank_account__bank', 'debit_card__account__bank',
+            'credit_card__account__bank'
         )
 
         # FR17: free-text search across everything the row displays, so
         # "salary" finds the transaction whether the word is in its title,
-        # its notes, or the name of its category/payment method. Filtering
+        # its notes, or the name of its category/banking instrument. Filtering
         # still starts from the user's own rows, so search can never reach
         # another user's data (PRD R3).
         search = self.request.GET.get('q', '').strip()
@@ -66,7 +71,14 @@ class TransactionListView(LoginRequiredMixin, ListView):
                 Q(title__icontains=search)
                 | Q(notes__icontains=search)
                 | Q(category__name__icontains=search)
-                | Q(payment_method__name__icontains=search)
+                | Q(bank_account__name__icontains=search)
+                | Q(bank_account__bank__name__icontains=search)
+                | Q(debit_card__name__icontains=search)
+                | Q(debit_card__account__name__icontains=search)
+                | Q(debit_card__account__bank__name__icontains=search)
+                | Q(credit_card__name__icontains=search)
+                | Q(credit_card__account__name__icontains=search)
+                | Q(credit_card__account__bank__name__icontains=search)
             )
 
         transaction_type = self.request.GET.get('type')
@@ -75,7 +87,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
 
         transaction_date = self._selected_transaction_date()
         if transaction_date is not None:
-            queryset = queryset.filter(transaction_date=transaction_date)
+            queryset = queryset.filter(date=transaction_date)
 
         queryset = queryset.order_by(*self.SORT_OPTIONS[self._selected_sort()])
 
@@ -177,17 +189,26 @@ class TransactionFormMixin(LoginRequiredMixin):
 class TransactionCreateView(SuccessMessageMixin, TransactionFormMixin, CreateView):
     """Create a transaction owned by the logged-in user (FR07)."""
 
-    success_message = 'Transaction "%(title)s" created.'
+    success_message = gettext_lazy('Transaction "%(title)s" created.')
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        return super().form_valid(form)
+        with db_transaction.atomic():
+            response = super().form_valid(form)
+            sync_user_ledger(self.request.user)
+        return response
 
 
 class TransactionUpdateView(SuccessMessageMixin, TransactionFormMixin, UpdateView):
     """Update one of the logged-in user's own transactions (FR08)."""
 
-    success_message = 'Transaction "%(title)s" updated.'
+    success_message = gettext_lazy('Transaction "%(title)s" updated.')
+
+    def form_valid(self, form):
+        with db_transaction.atomic():
+            response = super().form_valid(form)
+            sync_user_ledger(self.request.user)
+        return response
 
 
 class TransactionDeleteView(LoginRequiredMixin, DeleteView):
@@ -203,6 +224,11 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
 
     def form_valid(self, form):
         title = self.object.title
-        response = super().form_valid(form)
-        messages.success(self.request, f'Transaction "{title}" deleted.')
+        with db_transaction.atomic():
+            response = super().form_valid(form)
+            sync_user_ledger(self.request.user)
+        messages.success(
+            self.request,
+            _('Transaction "%(title)s" deleted.') % {'title': title},
+        )
         return response

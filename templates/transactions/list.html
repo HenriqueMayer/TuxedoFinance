@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% comment %}
 Transaction list (PRD §13, Sprint 6 — 6.3.1/6.3.5/6.3.6; Sprint 8 — 8.1.5).
@@ -15,7 +16,7 @@ keep the screen honestly zero-JS. Pagination links use Django's built-in
 the active filters survive page navigation.
 {% endcomment %}
 
-{% block title %}Transactions — CashFlow{% endblock %}
+{% block title %}{% translate "Transactions" %} — CashFlow{% endblock %}
 
 {% block content %}
 {% url 'transactions:create' as create_url %}
@@ -23,63 +24,63 @@ the active filters survive page navigation.
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">Transactions</h1>
-            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">Every income, expense, and investment you have recorded.</p>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Transactions" %}</h1>
+            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate "Every income, expense, and investment you have recorded." %}</p>
         </div>
         <a href="{{ create_url }}"
            class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
-            New Transaction
+            {% translate "New Transaction" %}
         </a>
     </div>
 
     <form method="get" class="flex flex-col gap-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div class="min-w-[14rem] flex-[2] space-y-1.5">
-            <label for="filter-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Search</label>
+            <label for="filter-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Search" %}</label>
             <input type="search" id="filter-search" name="q" value="{{ search_query }}"
-                   placeholder="Title, notes, category or payment method"
+                   placeholder="{% translate 'Title, notes, category, bank, account or card' %}"
                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
         <div class="min-w-[12rem] flex-1 space-y-1.5">
             {% comment %}"Billed", not just "Month": the filter matches the month the money moves, so a card purchase past its best purchase day is found under the month its bill is paid, and a fixed transaction under every month it charges.{% endcomment %}
-            <label for="filter-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Billed month</label>
+            <label for="filter-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Billed month" %}</label>
             <input type="month" id="filter-month" name="month" value="{{ selected_month }}"
                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
         <div class="min-w-[12rem] flex-1 space-y-1.5">
-            <label for="filter-date" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Transaction date</label>
+            <label for="filter-date" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Transaction date" %}</label>
             <input type="date" id="filter-date" name="date" value="{{ selected_date }}"
                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-type" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Type</label>
+            <label for="filter-type" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Type" %}</label>
             <select id="filter-type" name="type"
                     class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
-                <option value="">All types</option>
+                <option value="">{% translate "All types" %}</option>
                 {% for value, label in transaction_type_choices %}
                     <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-sort" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">Sort by</label>
+            <label for="filter-sort" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Sort by" %}</label>
             <select id="filter-sort" name="sort"
                     class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
-                <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest first</option>
-                <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest first</option>
-                <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>Last updated</option>
-                <option value="highest" {% if selected_sort == 'highest' %}selected{% endif %}>Highest amount</option>
-                <option value="lowest" {% if selected_sort == 'lowest' %}selected{% endif %}>Lowest amount</option>
+                <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>{% translate "Newest first" %}</option>
+                <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>{% translate "Oldest first" %}</option>
+                <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>{% translate "Last updated" %}</option>
+                <option value="highest" {% if selected_sort == 'highest' %}selected{% endif %}>{% translate "Highest amount" %}</option>
+                <option value="lowest" {% if selected_sort == 'lowest' %}selected{% endif %}>{% translate "Lowest amount" %}</option>
             </select>
         </div>
         <div class="flex items-center gap-3">
             <button type="submit"
                     class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                Filter
+                {% translate "Filter" %}
             </button>
             {% if search_query or selected_month or selected_date or selected_type or selected_sort != 'newest' %}
                 <a href="{{ list_url }}"
                    class="rounded text-sm font-medium text-slate-600 dark:text-neutral-400 transition hover:text-slate-900 dark:hover:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    Clear filters
+                    {% translate "Clear filters" %}
                 </a>
             {% endif %}
         </div>
@@ -103,9 +104,9 @@ the active filters survive page navigation.
                                 {% if transaction.is_fixed %}
                                     <span class="inline-flex items-center rounded-full border border-slate-300 dark:border-[#3a3a3a] px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:text-neutral-400">
                                         {% if transaction.fixed_until %}
-                                            Fixed &middot; until {{ transaction.fixed_until|date:'M Y' }}
+                                            {% blocktranslate with end_date=transaction.fixed_until|date:'M Y' %}Fixed &middot; until {{ end_date }}{% endblocktranslate %}
                                         {% else %}
-                                            Fixed
+                                            {% translate "Fixed" %}
                                         {% endif %}
                                     </span>
                                 {% endif %}
@@ -116,8 +117,9 @@ the active filters survive page navigation.
                                 {% endif %}
                             </div>
                             <p class="text-sm text-slate-600 dark:text-neutral-400">
-                                {{ transaction.category.name }} &middot; {{ transaction.payment_method.name }}
-                                &middot; {{ transaction.transaction_date|date:'M j, Y' }}
+                                {{ transaction.category.name }} &middot; {{ transaction.payment_label }}
+                                &middot; {{ transaction.get_payment_channel_display }}
+                                &middot; {{ transaction.date|date:'M j, Y' }}
                             </p>
                         </div>
                         <div class="flex items-center gap-4">
@@ -131,18 +133,18 @@ the active filters survive page navigation.
                                 </p>
                                 {% if transaction.is_installment_plan %}
                                     <p class="text-sm tabular-nums text-slate-600 dark:text-neutral-400">
-                                        {{ transaction.installments }}x {{ CURRENCY_SYMBOL }} {{ transaction.installment_amount|floatformat:2 }} / month
+                                        {% blocktranslate with installments=transaction.installments currency=CURRENCY_SYMBOL installment_amount=transaction.installment_amount|floatformat:2 %}{{ installments }}x {{ currency }} {{ installment_amount }} / month{% endblocktranslate %}
                                     </p>
                                 {% endif %}
                             </div>
                             <div class="flex items-center gap-3">
                                 <a href="{% url 'transactions:update' transaction.pk %}"
                                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                                    Edit
+                                    {% translate "Edit" %}
                                 </a>
                                 <a href="{% url 'transactions:delete' transaction.pk %}"
                                    class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                                    Delete
+                                    {% translate "Delete" %}
                                 </a>
                             </div>
                         </div>
@@ -152,24 +154,24 @@ the active filters survive page navigation.
         </div>
 
         {% if is_paginated %}
-            <nav class="flex items-center justify-between gap-4" aria-label="Pagination">
+            <nav class="flex items-center justify-between gap-4" aria-label="{% translate 'Pagination' %}">
                 {% if page_obj.has_previous %}
                     <a href="{% querystring page=page_obj.previous_page_number %}"
                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                        Previous
+                        {% translate "Previous" %}
                     </a>
                 {% else %}
                     <span></span>
                 {% endif %}
 
                 <p class="text-sm text-slate-600 dark:text-neutral-400">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    {% blocktranslate with page_number=page_obj.number total_pages=page_obj.paginator.num_pages %}Page {{ page_number }} of {{ total_pages }}{% endblocktranslate %}
                 </p>
 
                 {% if page_obj.has_next %}
                     <a href="{% querystring page=page_obj.next_page_number %}"
                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                        Next
+                        {% translate "Next" %}
                     </a>
                 {% else %}
                     <span></span>
@@ -177,9 +179,15 @@ the active filters survive page navigation.
             </nav>
         {% endif %}
     {% elif search_query or selected_month or selected_date or selected_type %}
-        {% include 'partials/empty_state.html' with title='No matching transactions' message='Try a different search term, billed month, transaction date or type, or clear the filters to see everything.' cta_url=list_url cta_label='Clear filters' %}
+        {% translate "No matching transactions" as empty_title %}
+        {% translate "Try a different search term, billed month, transaction date or type, or clear the filters to see everything." as empty_message %}
+        {% translate "Clear filters" as empty_cta_label %}
+        {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=list_url cta_label=empty_cta_label %}
     {% else %}
-        {% include 'partials/empty_state.html' with title='No transactions yet' message='Record your first transaction to start tracking your cash flow.' cta_url=create_url cta_label='New Transaction' %}
+        {% translate "No transactions yet" as empty_title %}
+        {% translate "Record your first transaction to start tracking your cash flow." as empty_message %}
+        {% translate "New Transaction" as empty_cta_label %}
+        {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=create_url cta_label=empty_cta_label %}
     {% endif %}
 </div>
 {% endblock %}

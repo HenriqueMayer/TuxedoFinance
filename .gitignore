@@ -14,6 +14,8 @@ env/
 # `db.sqlite3` itself is tracked on purpose — see README, "Using this
 # repository as a template". Its transient journal never is.
 db.sqlite3-journal
+db.sqlite3-shm
+db.sqlite3-wal
 staticfiles/
 # Root-anchored so it matches Django's MEDIA_ROOT without also excluding
 # `docs/media/`.

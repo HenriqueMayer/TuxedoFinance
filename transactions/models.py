@@ -2,74 +2,38 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
+from banking.models import BankAccount, CreditCard, DebitCard
 from categories.models import Category
-from payments.models import PaymentMethod
+
 
 ZERO = Decimal('0.00')
 
 
 class Transaction(models.Model):
-    """A single cash flow record owned by a user (PRD §8.3, FR07).
-
-    `amount` is always stored positive (PRD §8.5) — whether it increases or
-    decreases the balance is derived purely from `transaction_type`, never
-    from the sign of the stored value. `category` and `payment_method` use
-    `on_delete=PROTECT`: an in-use category/payment method cannot be deleted
-    (the owning DeleteViews must catch `ProtectedError`). `created_at` is
-    immutable; `transaction_date` is the user-entered purchase/start date,
-    while `fixed_until` separately bounds a recurrence.
-
-    `installments` only applies to credit card payments (`TransactionForm`
-    enforces that); `amount` always stores the **full total**, never the value
-    of a single installment. When a transaction affects the balance is decided
-    by `amount_for_month`, not by `transaction_date` alone: a fixed transaction
-    repeats every month, an installment plan spreads over consecutive months,
-    and everything else lands once on its own month.
-
-    Where that run of months *starts* is decided by the payment method, not by
-    `transaction_date` either. A credit card with a billing cycle
-    (`PaymentMethod.statement_offset`) defers a purchase made on or after the
-    card's best purchase day to the next month's bill, so on a card opening on
-    the 24th a purchase made 25 June comes out of July rather than June. Every
-    other method — and any card whose best purchase day is left blank — takes
-    the money on the purchase date, an offset of zero.
-
-    A fixed transaction runs from `transaction_date` until `fixed_until`
-    (inclusive, by month), or forever when `fixed_until` is empty. This is how
-    history survives a change: a raise is **two rows** — the old salary ended
-    in the month it last paid, and a new row starting the month after — not an
-    edit to the single row, which would retroactively rewrite every month it
-    ever covered.
-    """
-
     MAX_INSTALLMENTS = 48
 
     class TransactionType(models.TextChoices):
-        INCOME = 'INCOME', 'Income'
-        EXPENSE = 'EXPENSE', 'Expense'
-        INVESTMENT = 'INVESTMENT', 'Investment'
+        INCOME = 'INCOME', gettext_lazy('Income')
+        EXPENSE = 'EXPENSE', gettext_lazy('Expense')
+
+    class PaymentChannel(models.TextChoices):
+        ACCOUNT = 'ACCOUNT', gettext_lazy('Bank account')
+        PIX = 'PIX', gettext_lazy('PIX')
+        DEBIT_CARD = 'DEBIT_CARD', gettext_lazy('Debit card')
+        CREDIT_CARD = 'CREDIT_CARD', gettext_lazy('Credit card')
 
     class BillChoice(models.IntegerChoices):
-        """Manual override of which bill a credit-card charge lands on.
-
-        Empty (`None`) means "let the card's billing cycle decide" — the
-        automatic `PaymentMethod.statement_offset` from `best_purchase_day`.
-        A non-null value overrides that computation: `CURRENT` forces this
-        month's bill (offset 0), `NEXT` forces the following month's (offset 1).
-        Only meaningful for credit card purchases, enforced in
-        `TransactionForm.clean`; stored on the row so the choice persists
-        across edits of `payment_method` or `transaction_date`.
-        """
-        CURRENT = 0, 'Current bill'
-        NEXT = 1, 'Next bill'
+        CURRENT = 0, gettext_lazy('Current bill')
+        NEXT = 1, gettext_lazy('Next bill')
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='transactions',
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='transactions'
     )
     title = models.CharField(max_length=150)
     amount = models.DecimalField(
@@ -79,58 +43,186 @@ class Transaction(models.Model):
     )
     transaction_type = models.CharField(max_length=20, choices=TransactionType.choices)
     category = models.ForeignKey(
-        Category,
-        on_delete=models.PROTECT,
-        related_name='transactions',
+        Category, on_delete=models.PROTECT, related_name='transactions'
     )
-    payment_method = models.ForeignKey(
-        PaymentMethod,
+    payment_channel = models.CharField(max_length=20, choices=PaymentChannel.choices)
+    bank_account = models.ForeignKey(
+        BankAccount,
         on_delete=models.PROTECT,
         related_name='transactions',
+        null=True,
+        blank=True,
+    )
+    debit_card = models.ForeignKey(
+        DebitCard,
+        on_delete=models.PROTECT,
+        related_name='transactions',
+        null=True,
+        blank=True,
+    )
+    credit_card = models.ForeignKey(
+        CreditCard,
+        on_delete=models.PROTECT,
+        related_name='transactions',
+        null=True,
+        blank=True,
     )
     installments = models.PositiveSmallIntegerField(
         default=1,
         validators=[MinValueValidator(1), MaxValueValidator(MAX_INSTALLMENTS)],
     )
-    # Manual override of the credit card's automatic bill-cycle shift. Null
-    # (the default) means "use `PaymentMethod.statement_offset`", preserving
-    # the original behaviour for every row saved before this column existed.
-    # See `BillChoice` above and PRD §8.5 (billing-cycle override).
     billing_override = models.PositiveSmallIntegerField(
-        choices=BillChoice.choices,
-        null=True,
-        blank=True,
-        default=None,
+        choices=BillChoice.choices, null=True, blank=True, default=None
     )
     is_fixed = models.BooleanField(default=False)
-    # Last month a fixed transaction pays out (inclusive). Null = open-ended,
-    # which is the right default: most fixed transactions have no known end.
     fixed_until = models.DateField(null=True, blank=True)
-    transaction_date = models.DateField()
+    date = models.DateField()
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-transaction_date', '-created_at']
+        ordering = ['-date', '-created_at']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0),
+                name='transactions_amount_gt_zero',
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        payment_channel__in=['ACCOUNT', 'PIX'],
+                        bank_account__isnull=False,
+                        debit_card__isnull=True,
+                        credit_card__isnull=True,
+                    )
+                    | models.Q(
+                        payment_channel='DEBIT_CARD',
+                        bank_account__isnull=True,
+                        debit_card__isnull=False,
+                        credit_card__isnull=True,
+                    )
+                    | models.Q(
+                        payment_channel='CREDIT_CARD',
+                        bank_account__isnull=True,
+                        debit_card__isnull=True,
+                        credit_card__isnull=False,
+                    )
+                ),
+                name='transactions_coherent_payment_instrument',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.title} ({self.get_transaction_type_display()})'
 
+    def clean(self):
+        errors = {}
+        instruments = {
+            'bank_account': self.bank_account if self.bank_account_id else None,
+            'debit_card': self.debit_card if self.debit_card_id else None,
+            'credit_card': self.credit_card if self.credit_card_id else None,
+        }
+        expected = {
+            self.PaymentChannel.ACCOUNT: 'bank_account',
+            self.PaymentChannel.PIX: 'bank_account',
+            self.PaymentChannel.DEBIT_CARD: 'debit_card',
+            self.PaymentChannel.CREDIT_CARD: 'credit_card',
+        }.get(self.payment_channel)
+        selected = [name for name, instrument in instruments.items() if instrument]
+        if expected and selected != [expected]:
+            errors['payment_channel'] = _(
+                '%(payment_channel)s requires only %(instrument)s.'
+            ) % {
+                'payment_channel': self.get_payment_channel_display(),
+                'instrument': self._meta.get_field(expected).verbose_name,
+            }
+
+        owned = {'category': self.category if self.category_id else None, **instruments}
+        for field, related in owned.items():
+            if related and self.user_id and related.user_id != self.user_id:
+                errors[field] = _('This selection must belong to the transaction owner.')
+
+        if self.transaction_type == self.TransactionType.INCOME and self.payment_channel in {
+            self.PaymentChannel.DEBIT_CARD,
+            self.PaymentChannel.CREDIT_CARD,
+        }:
+            errors['payment_channel'] = _(
+                'Income must be received in a bank account or by PIX.'
+            )
+        if (
+            self.payment_channel == self.PaymentChannel.PIX
+            and self.bank_account_id
+            and not self.bank_account.pix_enabled
+        ):
+            errors['bank_account'] = _('PIX is disabled for this account.')
+        if self.installments and self.installments > 1:
+            if not self.is_credit_card:
+                errors['installments'] = _(
+                    'Installments are only available for credit cards.'
+                )
+            if self.is_fixed:
+                errors['installments'] = _(
+                    'A fixed transaction cannot use installments.'
+                )
+        if self.billing_override is not None and not self.is_credit_card:
+            errors['billing_override'] = _(
+                'Bill choice is only available for credit cards.'
+            )
+        if self.fixed_until:
+            if not self.is_fixed:
+                errors['fixed_until'] = _(
+                    'Only fixed transactions can have an end date.'
+                )
+            elif self.date and (self.fixed_until.year, self.fixed_until.month) < (
+                self.date.year,
+                self.date.month,
+            ):
+                errors['fixed_until'] = _(
+                    'The end month cannot precede the start month.'
+                )
+        if errors:
+            raise ValidationError(errors)
+
+    @property
+    def transaction_date(self):
+        """Read-only transition alias for projection consumers."""
+        return self.date
+
+    @property
+    def is_credit_card(self):
+        return self.payment_channel == self.PaymentChannel.CREDIT_CARD
+
+    @property
+    def payment_account(self):
+        if self.bank_account_id:
+            return self.bank_account
+        if self.debit_card_id:
+            return self.debit_card.account
+        if self.credit_card_id:
+            return self.credit_card.account
+        return None
+
+    @property
+    def payment_name(self):
+        instrument = self.bank_account or self.debit_card or self.credit_card
+        return instrument.name if instrument else ''
+
+    @property
+    def payment_label(self):
+        account = self.payment_account
+        if self.bank_account_id and account:
+            return f'{account.bank.name} > {account.name}'
+        if account:
+            return f'{account.bank.name} > {account.name} / {self.payment_name}'
+        return self.payment_name
+
     @property
     def is_installment_plan(self):
-        """True when this transaction is split into more than one installment."""
         return self.installments > 1
 
     @property
     def installment_amount(self):
-        """Value of a single installment (`amount` is always the full total).
-
-        Rounded to the cent, so `installment_amount * installments` may fall a
-        cent or two short of `amount` (100.00 in 3x → 33.33). The shortfall is
-        never lost: `amount_for_month` gives it to the final installment, so
-        the occurrences always re-sum to exactly `amount`.
-        """
         if not self.is_installment_plan:
             return self.amount
         return (self.amount / self.installments).quantize(
@@ -138,161 +230,65 @@ class Transaction(models.Model):
         )
 
     def calendar_months_to(self, year, month):
-        """Whole months from `transaction_date`'s own month to (`year`, `month`).
-
-        Purchase-date arithmetic, with no billing cycle applied — the raw
-        distance between two things the user typed. `months_from_start` is the
-        one that knows about credit card statements.
-        """
-        return (year - self.transaction_date.year) * 12 + (
-            month - self.transaction_date.month
-        )
+        return (year - self.date.year) * 12 + (month - self.date.month)
 
     @property
     def billing_offset(self):
-        """Months between buying this and paying for it (`statement_offset`).
-
-        Honors a manual `billing_override` first — `CURRENT` forces this
-        month's bill (0), `NEXT` forces the following month's (1) — and falls
-        back to the card's automatic `statement_offset` from
-        `best_purchase_day` only when the override is empty. So a project
-        that never touches this field behaves exactly as it did before the
-        column existed, while a 23rd-June purchase on a 24th-closing card
-        can still be pushed onto the next bill by setting `NEXT` manually.
-        """
-        if self.billing_override is not None:
-            return self.billing_override
-        return self.payment_method.statement_offset(self.transaction_date)
+        if not self.is_credit_card or not self.credit_card_id:
+            return 0
+        statement_month = self.credit_card.statement_month(
+            self.date, override=self.billing_override
+        )
+        return self.calendar_months_to(statement_month.year, statement_month.month)
 
     def months_from_start(self, year, month):
-        """Whole months from the month this is **paid** to (`year`, `month`).
-
-        Negative when the target month precedes the payment. Note the shift:
-        the origin is the month the money leaves the account, not the month of
-        the purchase. A card that opens its cycle on the 24th turns a purchase
-        made on 25 June into a July payment, and every figure downstream —
-        balances, projections, the reports charts — follows from that one
-        subtraction.
-        """
         return self.calendar_months_to(year, month) - self.billing_offset
 
     @property
     def last_fixed_offset(self):
-        """Offset of the final month a fixed transaction pays, or `None`.
-
-        `None` means open-ended. Deliberately measured on the **calendar**
-        distance from `transaction_date` to `fixed_until`, not through
-        `months_from_start`: both dates are things the user recorded about the
-        charge, so a billing cycle moves the whole run of payments later
-        without adding or removing any. A subscription charged every month from
-        January to June is six payments on any card; the cycle only decides
-        which six months the money actually leaves in.
-
-        A `fixed_until` earlier than the start month clamps to 0 rather than
-        going negative: the form rejects that combination, but a fixture or
-        data migration could still produce it, and one payment is a saner
-        reading of it than a negative number of payments.
-        """
         if not self.is_fixed or self.fixed_until is None:
             return None
-        return max(
-            0, self.calendar_months_to(self.fixed_until.year, self.fixed_until.month)
-        )
+        return max(0, self.calendar_months_to(self.fixed_until.year, self.fixed_until.month))
 
     @property
     def billed_month(self):
-        """First day of the month this comes off the balance, for display (FR11).
-
-        The same month `months_from_start` counts from — for a recurrence, the
-        **first** one, since the rest simply follow one month apart. `None`
-        only when the arithmetic runs off the end of the calendar (a December
-        9999 purchase billed the following month). That is a display concern,
-        not a projection one: `months_from_start` stays in plain integers and
-        keeps working there.
-        """
-        index = (
-            self.transaction_date.year * 12
-            + self.transaction_date.month
-            - 1
-            + self.billing_offset
-        )
-        year, month = index // 12, index % 12 + 1
+        index = self.date.year * 12 + self.date.month - 1 + self.billing_offset
+        year, month = divmod(index, 12)
         if not date.min.year <= year <= date.max.year:
             return None
-        return date(year, month, 1)
+        return date(year, month + 1, 1)
 
     @property
     def payment_date(self):
-        """The exact day the money leaves, when the card records a due day.
-
-        The purchase date itself when there is no billing cycle. On a card with
-        one, the due day within `billed_month` — the two always agree on the
-        month, so the badge on the transaction list can never name a month the
-        dashboard disagrees with. `None` when the card has no `due_day`: the
-        month is known, the day genuinely is not, and callers fall back to
-        `billed_month`.
-        """
-        if not self.billing_offset:
-            return self.transaction_date
-
+        if not self.is_credit_card:
+            return self.date
         billed = self.billed_month
-        if billed is None:
-            return None
-        day = self.payment_method.due_date_in(billed.year, billed.month)
-        if day is None:
-            return None
-        return date(billed.year, billed.month, day)
+        return self.credit_card.due_date_for(billed) if billed else None
 
     def amount_for_month(self, year, month):
-        """How much this transaction adds to (`year`, `month`) — PRD §8.5.
-
-        Three recurrence shapes, mutually exclusive by `TransactionForm.clean`:
-          - fixed        → `amount`, every month from its own month until
-                           `fixed_until` (inclusive), or forever if unset;
-          - installments → one installment per month, for `installments` months;
-          - one-off      → `amount`, in its own month only.
-        """
         offset = self.months_from_start(year, month)
         if offset < 0:
             return ZERO
-
         if self.is_fixed:
             last_offset = self.last_fixed_offset
-            if last_offset is not None and offset > last_offset:
-                return ZERO
-            return self.amount
-
+            return ZERO if last_offset is not None and offset > last_offset else self.amount
         if self.is_installment_plan:
             if offset >= self.installments:
                 return ZERO
             if offset == self.installments - 1:
-                # Final installment absorbs the rounding remainder, so the
-                # plan's occurrences add up to exactly `amount`.
                 return self.amount - self.installment_amount * (self.installments - 1)
             return self.installment_amount
-
         return self.amount if offset == 0 else ZERO
 
     def amount_through_month(self, year, month):
-        """Cumulative contribution from the start through (`year`, `month`).
-
-        Equivalent to summing `amount_for_month` over every month up to the
-        target, but in constant time — this is what the running balances use.
-        """
         offset = self.months_from_start(year, month)
         if offset < 0:
             return ZERO
-
         if self.is_fixed:
-            last_offset = self.last_fixed_offset
-            if last_offset is not None:
-                offset = min(offset, last_offset)
+            if self.last_fixed_offset is not None:
+                offset = min(offset, self.last_fixed_offset)
             return self.amount * (offset + 1)
-
         if self.is_installment_plan:
             paid = min(offset + 1, self.installments)
-            if paid == self.installments:
-                return self.amount
-            return self.installment_amount * paid
-
+            return self.amount if paid == self.installments else self.installment_amount * paid
         return self.amount

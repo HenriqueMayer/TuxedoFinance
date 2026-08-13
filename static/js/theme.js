@@ -4,7 +4,7 @@
  * and the OS `prefers-color-scheme` *before* the stylesheet paints and
  * toggles the `dark` class on <html> so the first render is already in the
  * right theme. This file owns the only piece that needs the DOM: wiring the
- * navbar's `#theme-toggle` button so a click flips that class and persists
+ * navbar's theme buttons so a click flips that class and persists
  * the choice. ~15 lines of vanilla JS — the only JavaScript in the project
  * beside the (browser-only) Tailwind Play CDN dev script. */
 (function () {
@@ -21,10 +21,9 @@
     }
 
     function init() {
-        var btn = document.getElementById('theme-toggle');
-        if (btn) {
+        document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
             btn.addEventListener('click', toggle);
-        }
+        });
     }
 
     if (document.readyState === 'loading') {
