@@ -119,8 +119,8 @@ snapshot. Missing rates preserve native data and produce an explicit incomplete
 status. Existing transfers and investments are reconstructed only where an
 authoritative rate provides evidence; otherwise no rate is invented. Other
 financial entities continue to use live/current rates until a future roadmap
-item extends snapshot coverage. Editing amount, currency, or date refreshes the
-snapshot.
+item extends snapshot coverage. Editing amount, currency, fees, or date
+refreshes the snapshot; descriptive edits preserve it.
 
 ## Routes
 

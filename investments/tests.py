@@ -1,7 +1,6 @@
 from datetime import date
 from decimal import Decimal
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -17,12 +16,13 @@ from investments.services import (
     cleanup_investment_ledger,
     get_portfolio_groups,
     get_total_in_base_timeseries,
+    refresh_fx_snapshot,
     sync_investment_ledger,
 )
 
 
 User = get_user_model()
-BASE = settings.CURRENCY
+BASE = 'BRL'
 
 
 class InvestmentFixtureMixin:
@@ -446,6 +446,31 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         rows, missing = get_total_in_base_timeseries(
             self.user, BASE, months=36, offset=0
         )
+        self.assertEqual(missing, [])
+        self.assertTrue(any(row['total'] == Decimal('500.00') for row in rows))
+
+    def test_reconstructed_snapshot_is_immutable_after_rate_change(self):
+        foreign = Asset.objects.create(
+            user=self.user, name='Historic dollar', code='HUSD',
+            asset_class=Asset.AssetClass.CURRENCY, currency='USD',
+        )
+        rate = ExchangeRate.objects.create(
+            user=self.user, from_currency='USD', to_currency=BASE,
+            rate=Decimal('5.00'), effective_date=date(2024, 1, 1),
+        )
+        operation = self.operation(
+            Investment.Kind.YIELD, asset=foreign, quantity=Decimal('2.00'),
+            unit_price=Decimal('50.00'), date=date(2024, 6, 1),
+        )
+        operation.save()
+        refresh_fx_snapshot(operation)
+        operation.fx_snapshot_status = Investment.FxSnapshotStatus.RECONSTRUCTED
+        operation.save(update_fields=['fx_snapshot_status'])
+        rate.rate = Decimal('9.00')
+        rate.save(update_fields=['rate'])
+
+        rows, missing = get_total_in_base_timeseries(self.user, BASE, months=36)
+
         self.assertEqual(missing, [])
         self.assertTrue(any(row['total'] == Decimal('500.00') for row in rows))
 

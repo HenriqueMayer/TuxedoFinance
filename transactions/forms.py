@@ -86,6 +86,12 @@ class TransactionForm(forms.ModelForm):
         self.fields['bank_account'].queryset = BankAccount.objects.filter(user=user).select_related('bank')
         self.fields['debit_card'].queryset = DebitCard.objects.filter(user=user).select_related('account__bank')
         self.fields['credit_card'].queryset = CreditCard.objects.filter(user=user).select_related('account__bank')
+        self.fields['debit_card'].label_from_instance = lambda card: (
+            f'{card.name} - {card.account.bank.name} > {card.account.name} ({card.account.currency})'
+        )
+        self.fields['credit_card'].label_from_instance = lambda card: (
+            f'{card.name} - {card.account.bank.name} > {card.account.name} ({card.account.currency})'
+        )
         self.fields['installments'].required = False
         self.fields['billing_override'].choices = [
             ('', _('Automatic (from card cycle)')),
@@ -115,19 +121,30 @@ class TransactionForm(forms.ModelForm):
         self._set_choice_data(
             'debit_card',
             {
-                str(card.pk): {'data-account-label': f'{card.account.bank.name} > {card.account.name}'}
+                str(card.pk): {'data-account-label': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})'}
                 for card in debit_cards
             },
         )
         self._set_choice_data(
             'credit_card',
             {
-                str(card.pk): {'data-account-label': f'{card.account.bank.name} > {card.account.name}'}
+                str(card.pk): {'data-account-label': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})'}
                 for card in credit_cards
             },
         )
         for name, field in self.fields.items():
             field.widget.attrs['class'] = CHECKBOX_CLASSES if name == 'is_fixed' else INPUT_CLASSES
+            described_by = []
+            if field.help_text:
+                described_by.append(f'{field.widget.attrs.get("id", "id_" + name)}-help')
+            if self.is_bound and self.errors.get(name):
+                field.widget.attrs['aria-invalid'] = 'true'
+                described_by.extend(
+                    f'{field.widget.attrs.get("id", "id_" + name)}-error-{index}'
+                    for index in range(1, len(self.errors[name]) + 1)
+                )
+            if described_by:
+                field.widget.attrs['aria-describedby'] = ' '.join(described_by)
 
     def _set_choice_data(self, field_name, choice_data):
         field = self.fields[field_name]

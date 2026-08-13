@@ -173,10 +173,15 @@ class InvestmentFormMixin(LoginRequiredMixin):
         return kwargs
 
     def form_valid(self, form):
+        refresh_snapshot = not self.object or bool(
+            set(form.changed_data)
+            & {'asset', 'quantity', 'unit_price', 'amount', 'fees', 'date'}
+        )
         form.instance.user = self.request.user
         with transaction.atomic():
             response = super().form_valid(form)
-            refresh_fx_snapshot(self.object)
+            if refresh_snapshot:
+                refresh_fx_snapshot(self.object)
             try:
                 sync_investment_ledger(self.object)
             except Exception as error:

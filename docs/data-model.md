@@ -105,7 +105,7 @@ to account balance separately from that payment.
 |---|---|
 | `user` | Owner. |
 | `title` | User-facing economic-event title. |
-| `amount` | Positive amount in the project reporting currency. |
+| `amount` | Positive native amount in the selected settlement account/card currency. |
 | `transaction_type` | `INCOME` or `EXPENSE`. |
 | `category` | Required income/expense category; the form displays a parent as `Parent > Category`. |
 | `date` | Purchase or economic-event date. |
@@ -166,8 +166,9 @@ same immediate/deferred card rules as any other payment.
 Each user's `UserPreference.base_currency` controls reporting. Every monetary
 event retains its native amount and currency. Cross-currency `BankTransfer` and
 `Investment` rows also persist an FX snapshot containing source/target
-currencies, numeric rate, effective date, and conversion status. New and
-existing users default to BRL.
+currencies, numeric rate, effective date, optional source-rate reference, and
+conversion status. Numeric evidence remains authoritative if that reference is
+later edited or deleted. New and existing users default to BRL.
 A preference change affects consolidated presentation only; it never silently
 converts or relabels stored financial data.
 
@@ -178,8 +179,10 @@ If no rate exists, native data is preserved and conversion is marked
 incomplete. Existing rows are reconstructed only when an authoritative rate
 supplies evidence; no rate is guessed. Other entities remain on live/current
 conversion until a future roadmap item extends snapshot coverage.
-Editing an amount, currency, or date refreshes its snapshot, while descriptive
-edits leave it unchanged.
+Editing an amount, currency, fees, or date refreshes its snapshot, while
+descriptive edits leave it unchanged. If the reporting currency later differs
+from the stored snapshot target, historical consolidation is marked incomplete;
+the application does not chain a mutable second rate or replace the evidence.
 
 ### Phase 3 migration and rollback
 
@@ -276,6 +279,12 @@ native amounts or delete exchange-rate rows. Back up SQLite before upgrading.
 Rolling back removes only the new snapshot fields and restores read-time
 conversion behavior; it does not alter native financial rows or the
 `ExchangeRate` table.
+
+Migrations `banking.0004` and `investments.0005` add explicit effective-date
+and optional source-rate evidence. Existing transfers use their event date;
+investments link a rate only when its numeric value exactly matches the retained
+snapshot. A missing or changed source reference does not invalidate the retained
+numeric evidence. Rolling these migrations back removes only that metadata.
 
 ## Breaking release
 

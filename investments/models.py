@@ -192,6 +192,11 @@ class Investment(models.Model):
     fx_rate = models.DecimalField(max_digits=20, decimal_places=8, null=True, blank=True)
     fx_source_currency = models.CharField(max_length=3, blank=True)
     fx_target_currency = models.CharField(max_length=3, blank=True)
+    fx_effective_date = models.DateField(null=True, blank=True)
+    fx_source_rate = models.ForeignKey(
+        'banking.ExchangeRate', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='investment_snapshots',
+    )
     fx_snapshot_status = models.CharField(
         max_length=15, choices=FxSnapshotStatus.choices, default=FxSnapshotStatus.UNKNOWN
     )

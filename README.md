@@ -229,25 +229,11 @@ unchanged. Leave it unset (or set it to `True`) for an open community instance.
 
 Set `HTTPS=True` only once the instance is actually served over TLS — it sends session and CSRF cookies as `Secure`, redirects HTTP to HTTPS, emits HSTS, and trusts `X-Forwarded-Proto`. Over plain HTTP it would break login outright.
 
-## Optional Docker packaging
-
-The native `uv` workflow remains primary. Docker Compose is an optional
-single-instance package using locked dependencies, automatic migrations, the
-non-root `cashflow` user, and a persistent `cashflow_data` SQLite volume:
-
-```bash
-export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
-docker compose up --build
-```
-
-It includes only a local healthcheck and must not be exposed directly to the
-public internet. Back up the named volume using [`docs/operations.md`](docs/operations.md).
-The image contains no database, credentials, or demo data.
-
 ## Future deployment security
 
-Current support is local `runserver`. If you package the project for deployment
-in the future, apply Django's deployment checklist and these safeguards:
+The native `runserver` workflow is primary and Docker is optional local
+packaging. Before any non-local deployment, apply Django's deployment checklist
+and these safeguards:
 
 - Set a real `SECRET_KEY` and `DEBUG=False`.
 - List your real domains in `ALLOWED_HOSTS`.

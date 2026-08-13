@@ -55,7 +55,11 @@ exists only after an explicit withdrawal to a destination account.
 ## Valuation
 
 Portfolio totals are grouped by bank, product, asset class, asset and currency.
-Historical charts use each operation's persisted FX snapshot. Current portfolio
+Historical charts use captured and reconstructed FX snapshots. Descriptive
+edits retain the snapshot; amount, asset, fee, or date edits refresh it.
+Changing the reporting currency does not chain a mutable rate onto historical
+evidence; snapshots targeting another base are reported as incomplete.
+Current portfolio
 simulations may use a current rate but must label the valuation date and source.
 Missing rates remain explicit and never cause unlike currencies to be summed
 directly.

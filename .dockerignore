@@ -1,7 +1,9 @@
 .git
 .github
 .venv
-__pycache__
+**/__pycache__/
+**/*.py[cod]
+demo/
 *.py[cod]
 db.sqlite3*
 .coverage

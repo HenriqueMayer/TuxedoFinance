@@ -116,6 +116,11 @@ class Transaction(models.Model):
     def __str__(self):
         return f'{self.title} ({self.get_transaction_type_display()})'
 
+    @property
+    def native_currency(self):
+        account = self.payment_account
+        return account.currency if account else ''
+
     def clean(self):
         errors = {}
         instruments = {

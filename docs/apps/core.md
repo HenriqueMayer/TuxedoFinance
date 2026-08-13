@@ -27,7 +27,9 @@ ships runtime data or credentials.
 
 ## Local SQLite database
 
-`DATABASES['default']` uses the root `db.sqlite3`. The database file is
+`DATABASES['default']` uses root `db.sqlite3` in the native workflow. When
+`CASHFLOW_DATA_DIR` is set, Django stores `db.sqlite3` there; the optional
+Docker package sets it to `/data`. The database file is
 installation-owned runtime data and is ignored by Git. A clean clone creates it by running
 `manage.py migrate`; the current source tree and future commits distribute
 migrations rather than financial records. Older Git objects still contain

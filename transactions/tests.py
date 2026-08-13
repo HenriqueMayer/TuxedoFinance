@@ -281,6 +281,26 @@ class TransactionFormAndListTests(TransactionFixture):
         self.assertContains(response, 'role="combobox"', html=False)
         self.assertContains(response, 'id="category-fallback"', html=False)
         self.assertContains(response, 'id="payment-channel-status"', html=False)
+        self.assertNotContains(response, 'id="debit-card-fields" data-has-errors="false" hidden', html=False)
+        self.assertNotContains(response, 'id="credit-card-fields" data-has-errors="false" hidden', html=False)
+
+    def test_account_query_parameter_is_user_scoped_initial_state(self):
+        response = self.client.get(reverse('transactions:create'), {'account': self.account.pk})
+        self.assertEqual(response.context['form'].initial['bank_account'], self.account)
+        self.assertEqual(response.context['form'].initial['payment_channel'], 'ACCOUNT')
+
+        other_response = self.client.get(
+            reverse('transactions:create'), {'account': self.other_account.pk}
+        )
+        self.assertNotIn('bank_account', other_response.context['form'].initial)
+
+    def test_list_labels_amount_with_its_native_currency(self):
+        self.account.currency = 'USD'
+        self.account.save(update_fields=['currency'])
+        self.make_transaction(title='Dollar purchase')
+        response = self.client.get(reverse('transactions:list'))
+        self.assertContains(response, 'USD 120,00')
+        self.assertNotContains(response, 'R$ 120,00')
 
     def test_category_choices_include_hierarchy_metadata_without_other_users(self):
         parent = Category.objects.create(user=self.user, name='Alimentação')
@@ -299,7 +319,7 @@ class TransactionFormAndListTests(TransactionFixture):
         form = TransactionForm(user=self.user)
 
         self.assertIn('data-pix-enabled="false"', str(form['bank_account']))
-        self.assertIn('data-account-label="North Bank &gt; Daily"', str(form['debit_card']))
+        self.assertIn('data-account-label="North Bank &gt; Daily (BRL)"', str(form['debit_card']))
 
     def test_form_filters_typed_categories_and_server_rejects_a_mismatch(self):
         income_category = Category.objects.create(

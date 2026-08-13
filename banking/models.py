@@ -205,6 +205,10 @@ class CardInvoice(TimestampedModel):
     def account(self):
         return self.card.account
 
+    @property
+    def is_overdue(self):
+        return self.status == self.Status.SCHEDULED and self.due_date < date.today()
+
     def clean(self):
         errors = {}
         if self.card_id and self.user_id and self.card.user_id != self.user_id:
@@ -238,6 +242,11 @@ class BankTransfer(TimestampedModel):
     fx_rate = models.DecimalField(max_digits=20, decimal_places=8, null=True, blank=True)
     fx_source_currency = models.CharField(max_length=3, blank=True)
     fx_target_currency = models.CharField(max_length=3, blank=True)
+    fx_effective_date = models.DateField(null=True, blank=True)
+    fx_source_rate = models.ForeignKey(
+        'ExchangeRate', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='transfer_snapshots',
+    )
     fx_snapshot_status = models.CharField(
         max_length=15, choices=FxSnapshotStatus.choices, default=FxSnapshotStatus.UNKNOWN
     )
