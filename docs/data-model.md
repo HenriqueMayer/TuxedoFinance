@@ -262,8 +262,8 @@ migration: that working-tree file remains in place and unchanged. Existing
 clones must back up before pulling the deletion because Git may remove their
 formerly tracked copy. Rolling back the source change can restore the old Git
 entry, but should not be used to publish local financial records. Detailed
-SQLite backup/restore and rehearsal guidance remains a separate ROADMAP Phase
-6.2 deliverable.
+SQLite backup/restore, retention and rehearsal guidance is maintained in
+[`operations.md`](operations.md).
 
 ### Phase 4 FX snapshot migration and rollback
 

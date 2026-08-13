@@ -27,7 +27,8 @@ installation-owned runtime data and is ignored by Git. A clean clone creates it 
 `manage.py migrate`; the current source tree and future commits distribute
 migrations rather than financial records. Older Git objects still contain
 database versions pending the coordinated history cleanup. The installation
-owner is responsible for file access, protection and backup.
+owner is responsible for file access, protection and backup; see
+[`../operations.md`](../operations.md) for the supported procedure.
 
 ## Context processors
 
