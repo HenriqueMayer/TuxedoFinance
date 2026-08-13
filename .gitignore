@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.egg-info/
 *.egg
+.ruff_cache/
 
 # Virtual environments
 .venv/
