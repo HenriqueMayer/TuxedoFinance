@@ -2404,6 +2404,14 @@ msgstr "Tipo de transação"
 msgid "Category"
 msgstr "Categoria"
 
+#: templates/transactions/form.html:35
+msgid "Search category"
+msgstr "Pesquisar categoria"
+
+#: templates/transactions/form.html:38
+msgid "Type to filter categories"
+msgstr "Digite para filtrar as categorias"
+
 #: transactions/forms.py:41
 msgid "Payment channel"
 msgstr "Canal de pagamento"

@@ -274,6 +274,11 @@ class TransactionFormAndListTests(TransactionFixture):
         self.assertQuerySetEqual(form.fields['bank_account'].queryset, [self.account])
         self.assertNotIn(self.other_credit, form.fields['credit_card'].queryset)
 
+    def test_create_form_includes_category_search(self):
+        response = self.client.get(reverse('transactions:create'))
+        self.assertContains(response, 'id="category-search"', html=False)
+        self.assertContains(response, 'Type to filter categories')
+
     def test_form_rejects_mismatched_instrument_without_javascript(self):
         form = TransactionForm(
             user=self.user,
