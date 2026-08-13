@@ -111,12 +111,11 @@ History cleanup and credential containment are tracked in
 
 ## Choosing your currency
 
-The app ships in Brazilian Real. Switch it with the `CURRENCY` environment
-variable:
-
-```bash
-CURRENCY=USD uv run python manage.py runserver
-```
+Choose a reporting currency from the authenticated **Settings** screen. The
+selection belongs to the current user, so two users in the same database may
+use different reporting currencies. It changes consolidated presentation only;
+account, transaction, investment, and other financial records retain their
+native currencies and amounts. Missing exchange rates remain explicit.
 
 | Code | Renders as | | Code | Renders as |
 |---|---|---|---|---|
@@ -124,7 +123,11 @@ CURRENCY=USD uv run python manage.py runserver
 | `USD` | `$ 1,000.00` | | `JPY` | `¥ 1,000.00` |
 | `EUR` | `€ 1.000,00` | | `CHF` | `CHF 1'000.00` |
 
-One setting deliberately controls **both** the symbol and the number format — `$ 1.000,00` (dollar sign, Brazilian separators) would be wrong everywhere, so the two are defined together per currency in [`core/currencies.py`](core/currencies.py). An unsupported code raises `ImproperlyConfigured` at startup rather than mislabelling every amount. Interface language and currency are independent; matching `core/formats/en/` and `core/formats/pt_BR/` overrides preserve the selected currency's separators in either language.
+The supported registry pairs each code with its symbol and number format in
+[`core/currencies.py`](core/currencies.py). New users and existing users
+without a preference start with BRL. Interface language and currency are
+independent; matching `core/formats/en/` and `core/formats/pt_BR/` overrides
+preserve the selected currency's separators in either language.
 
 ## Project layout
 
@@ -150,7 +153,6 @@ Set configuration through the environment of the process that runs Django:
 | `SECRET_KEY` | Django's cryptographic signing key | **required** |
 | `DEBUG` | `True` / `False` | `True` |
 | `ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
-| `CURRENCY` | Currency shown in the UI | `BRL` |
 | `HTTPS` | Secure cookies, HTTPS redirect, HSTS | `False` |
 | `LOG_LEVEL` | Log verbosity on stdout | `INFO` |
 

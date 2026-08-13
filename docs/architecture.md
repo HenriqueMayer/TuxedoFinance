@@ -28,7 +28,7 @@ categories/    # income and expense classification
 banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
 transactions/  # categorized economic events and recurrence schedules
 dashboard/     # ledger, cash-flow, invoice and net-worth read models
-investments/   # products, assets, position operations and valuation
+    investments/   # products, assets, position operations and valuation
 ```
 
 `banking/` owns every settlement instrument and the account ledger. `Bank` is
@@ -65,7 +65,7 @@ event and its movements runs in one database transaction.
 | What is owed on credit cards? | `CardInvoice` and its items/payments. |
 | What investment quantity is held? | `InvestmentOperation`. |
 | How many loyalty points exist? | `LoyaltyEntry`. |
-| What was an amount worth in the current reporting currency? | Current `ExchangeRate` lookup; retained historical evidence is planned for Phase 4. |
+| What was an amount worth in the current reporting currency? | User's `UserPreference.base_currency` plus current `ExchangeRate` lookup; retained historical evidence is planned for Phase 4. |
 
 This separation prevents credit purchases from reducing cash before the invoice
 is paid and prevents the later invoice debit from counting the same spending a
@@ -95,11 +95,13 @@ of scope.
 
 ## Multicurrency
 
-The current project-wide `CURRENCY` setting selects the reporting currency.
-Accounts and events retain native currencies. Per-user base currency and
-historical FX evidence are planned for ROADMAP Phases 3 and 4. Services return
-native totals plus converted totals and explicit missing-rate
-metadata. They never add unlike currencies directly.
+`accounts.UserPreference.base_currency` selects the reporting currency for the
+authenticated user. The preference is initialized to BRL for new and existing
+users and is changed through the authenticated Settings route. Accounts and
+events retain native currencies and amounts; changing the preference affects
+presentation totals only. Services return native totals plus converted totals
+and explicit missing-rate metadata. They never add unlike currencies directly.
+Historical FX evidence remains a Phase 4 deliverable.
 
 ## Routes
 

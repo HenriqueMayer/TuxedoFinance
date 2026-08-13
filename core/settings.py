@@ -16,7 +16,7 @@ from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
-from core.currencies import DEFAULT_CURRENCY, get_currency
+from core.currencies import DEFAULT_CURRENCY as CODE_DEFAULT_CURRENCY, get_currency
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -181,8 +181,11 @@ LOGIN_REDIRECT_URL = 'dashboard:index'
 LOGOUT_REDIRECT_URL = 'pages:landing'
 
 
-CURRENCY = os.environ.get('CURRENCY', DEFAULT_CURRENCY)
-CURRENCY_SYMBOL = get_currency(CURRENCY).symbol
+# Formatting modules need a deterministic startup locale. Reporting currency
+# is selected per user and exposed by the context processor.
+DEFAULT_CURRENCY = CODE_DEFAULT_CURRENCY
+CURRENCY = CODE_DEFAULT_CURRENCY
+CURRENCY_SYMBOL = get_currency(CODE_DEFAULT_CURRENCY).symbol
 
 
 LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()

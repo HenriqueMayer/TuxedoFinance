@@ -9,14 +9,14 @@ account ledger.
 The main screen presents:
 
 - available balance by bank account;
-- consolidated available balance in the project reporting currency;
+- consolidated available balance in the authenticated user's base currency;
 - monthly income and expenses, excluding own transfers and investment cash legs;
 - open credit-card invoices and upcoming due dates;
 - investment value and net worth;
 - a forward outlook from recurring transactions and scheduled invoice payments.
 
-Per-user base currency and retained historical FX evidence are planned for
-ROADMAP Phases 3 and 4.
+Per-user base currency is implemented through `UserPreference`; retained
+historical FX evidence remains planned for ROADMAP Phase 4.
 
 ## Accounting rules
 

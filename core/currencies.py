@@ -2,8 +2,9 @@
 
 A currency is not just a symbol: `R$ 1.000,00` and `$ 1,000.00` differ in
 their separators too, so picking one has to set both. This registry is the
-single place that pairing is defined — `settings.CURRENCY` selects an entry,
-`settings.CURRENCY_SYMBOL` is derived from it for templates, and
+single place that pairing is defined — the code-level default selects an entry,
+while the authenticated user's preference supplies the reporting currency and
+symbol to templates.
 `core/formats/en/formats.py` reads the separators off the same entry.
 
 Adding a currency is one line here and nothing else.

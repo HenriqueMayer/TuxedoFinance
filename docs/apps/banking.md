@@ -2,7 +2,8 @@
 
 This app owns banks, currency-specific accounts, the account ledger, PIX, debit
 and credit cards, card invoices, and loyalty programs. Per-user base reporting
-currency is planned for ROADMAP Phase 3.
+currency preferences are configured per user in Settings (ROADMAP Phase 3,
+completed).
 
 ## Domain
 
@@ -76,9 +77,10 @@ the corresponding card invoice under the same no-double-counting rule.
 ## Multicurrency
 
 Bank accounts, invoices and investment assets retain their configured native
-currency. The current application uses the project-wide `CURRENCY` setting for
-reporting and resolves exchange rates at read time. Per-user base currency and
-retained historical FX evidence are planned for ROADMAP Phases 3 and 4.
+currency. Consolidated reporting uses the authenticated user's
+`UserPreference.base_currency`, which defaults to BRL and is editable in
+Settings. Exchange rates are resolved at read time until Phase 4 adds
+historical FX evidence; changing the preference never mutates native amounts.
 
 ## Integrity
 

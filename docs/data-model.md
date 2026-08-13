@@ -29,11 +29,14 @@ erDiagram
 
 ## Banking
 
-### `BankingProfile` (planned — ROADMAP Phase 3)
+### `UserPreference`
 
-`BankingProfile` does not exist in the current schema. Phase 3 will add a
-one-to-one relationship with the native Django user to store `base_currency`.
-Until then, the project-wide `CURRENCY` setting controls reporting currency.
+`UserPreference` belongs to the native Django user through a one-to-one
+relationship and stores `base_currency`, chosen from the supported currency
+registry. The row is created on signup and a data migration safely creates it
+for existing users with the BRL bootstrap default. It is a presentation
+preference: changing it never rewrites native account, transaction, investment,
+or exchange-rate data.
 
 ### `Bank`
 
@@ -153,16 +156,26 @@ A redemption additionally requires `target_amount`, `target_currency`, and
 required: bank account, debit card, or credit card. Its settlement follows the
 same immediate/deferred card rules as any other payment.
 
-## Currency and historical conversion (planned — ROADMAP Phases 3–4)
+## Currency and historical conversion (Phase 3; historical evidence planned — Phase 4)
 
-The current application uses the project-wide `CURRENCY` setting for reporting
-and looks up exchange rates at read time. The design below is planned: a user
-base currency and retained conversion evidence for historical reports. Every
-monetary event retains its native amount and currency.
+Each user's `UserPreference.base_currency` controls reporting and the
+application looks up exchange rates at read time. Every monetary event retains
+its native amount and currency. New and existing users default to BRL. A
+preference change affects consolidated presentation only; it never silently
+converts or relabels stored financial data.
 
 Phase 4 will retain the rate or resulting `base_amount` used by historical
 reports. Until then, editing a rate can affect prior converted totals. Native
 totals remain available and missing conversion is displayed explicitly.
+
+### Phase 3 migration and rollback
+
+The `accounts.0001_userpreference` migration creates the one-to-one preference
+table and bootstraps BRL for users already in the database. It does not touch
+financial rows or exchange rates. Upgrade with `manage.py migrate`; rollback to
+the previous migration removes only the preference rows/table and restores the
+previous project-level reporting behavior in code. Back up the local SQLite
+database before applying or rolling back migrations.
 
 ## Investments
 
@@ -204,8 +217,8 @@ duplicated as income/expense.
 
 - **Available balance per account:** opening balance plus its posted movements.
 - **Consolidated available balance:** current reporting uses the project
-  `CURRENCY`; per-user base currency and retained FX evidence are planned for
-  ROADMAP Phases 3 and 4.
+  the user's `UserPreference.base_currency`; retained FX evidence is planned
+  for ROADMAP Phase 4.
 - **Income/Expenses:** categorized `Transaction` economic events, excluding own
   transfers and investment cash legs.
 - **Credit-card payable:** open invoice totals, shown separately from available

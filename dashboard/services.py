@@ -4,7 +4,6 @@ from calendar import monthrange
 from datetime import date
 from decimal import Decimal
 
-from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -18,6 +17,7 @@ from banking.models import (
 from banking.services import MissingExchangeRate, convert
 from investments.models import Investment
 from transactions.models import Transaction
+from accounts.models import UserPreference
 
 
 ZERO = Decimal('0.00')
@@ -55,7 +55,7 @@ def _transactions(user):
 
 def _convert_or_missing(user, amount, currency, as_of, missing):
     try:
-        return convert(user, amount, currency, settings.CURRENCY, as_of=as_of)
+        return convert(user, amount, currency, UserPreference.for_user(user).base_currency, as_of=as_of)
     except MissingExchangeRate:
         missing.add(currency)
         return None
