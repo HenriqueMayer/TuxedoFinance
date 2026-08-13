@@ -62,6 +62,25 @@ of an installation; replacing it invalidates sessions. Open
 arrives with the default categories seeded. Add a bank and a currency-specific
 account before recording your first transaction.
 
+### Validation and CI
+
+Run the same checks used by the repository's GitHub Actions workflow from a
+local checkout:
+
+```bash
+uv sync --locked
+uv run python manage.py check
+uv run python manage.py makemigrations --check --dry-run
+uv run python manage.py compilemessages
+uv run coverage run --branch manage.py test
+uv run coverage report --show-missing
+uvx --from 'ruff>=0.9,<1' ruff check .
+```
+
+CI also audits the locked runtime requirements with `pip-audit` and publishes
+branch-coverage XML and HTML artifacts. Coverage is reported without a hard
+percentage threshold while financial-service branches continue to be expanded.
+
 ## Choosing the interface language
 
 The interface supports English (`en`) and Brazilian Portuguese (`pt-br`). Use
@@ -144,6 +163,21 @@ investments/   # Investment log + manual ExchangeRate (multi-currency)
 templates/     # Project-level Django templates
 static/        # Project-level static assets
 ```
+
+## Tests and continuous integration
+
+The supported development path is Python 3.12 with `uv`, Django's native test
+runner and SQLite. CI reproduces that setup from `uv.lock` and runs system
+checks, missing-migration checks, translation validation, the full test suite,
+Ruff, and a locked-runtime dependency audit. It reports branch coverage and
+requires at least 70% line coverage; the XML and HTML reports are retained as
+build artifacts. No alternate database or SaaS-scale matrix is maintained.
+
+Run the coverage gate locally with `uv run coverage run --branch manage.py test`
+followed by `uv run coverage report --show-missing --fail-under=70`. The full
+policy and affected-tests guidance live in
+[`docs/coverage-baseline.md`](docs/coverage-baseline.md) and
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Configuration reference
 

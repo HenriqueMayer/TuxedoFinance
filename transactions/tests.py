@@ -179,7 +179,7 @@ class TransactionCalendarTests(TransactionFixture):
 class LedgerSyncTests(TransactionFixture):
     def test_pix_and_debit_are_immediate_debits(self):
         pix = self.make_transaction(title='External PIX', payment_channel=Transaction.PaymentChannel.PIX)
-        debit = self.make_transaction(
+        self.make_transaction(
             title='Store', amount=Decimal('30.00'),
             payment_channel=Transaction.PaymentChannel.DEBIT_CARD,
             bank_account=None, debit_card=self.debit,

@@ -12,7 +12,7 @@ breaking release.
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
 | [frontend.md](frontend.md) | Server-rendered design system and updated banking UI structure. |
 | [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
-| [coverage-baseline.md](coverage-baseline.md) | Phase 6 test-count baseline; coverage enforcement is deferred to Phase 7. |
+| [coverage-baseline.md](coverage-baseline.md) | Phase 7 coverage report, 70% line floor, branch-reporting policy and local commands. |
 | [sqlite-history-response.md](sqlite-history-response.md) | Personal-data containment and coordinated cleanup plan for the formerly tracked SQLite history. |
 
 ## Per-app reference

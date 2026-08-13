@@ -30,6 +30,16 @@ Keep the previous lockfile and application version available until the new
 version has passed its database rehearsal. Widen a range only after reviewing
 the dependency's release notes and compatibility policy.
 
+## Continuous integration
+
+The supported local Python path is reproduced by `.github/workflows/ci.yml` on
+pushes and pull requests. CI installs the exact `uv.lock` set, then runs Django
+system checks, missing-migration checks, the full test suite with branch
+coverage, translation compilation, Ruff lint, and a `pip-audit` scan of the
+locked runtime requirements. Coverage XML and HTML reports are retained as
+workflow artifacts. Coverage is reported but has no percentage threshold yet;
+the policy is documented in [coverage-baseline.md](coverage-baseline.md).
+
 ## SQLite backup
 
 Before upgrades or other risky maintenance, stop `runserver` (and any other
