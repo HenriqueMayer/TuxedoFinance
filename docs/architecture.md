@@ -1,206 +1,145 @@
 # Architecture
 
-How CashFlow is put together: the stack, the settings that wire it up, URL routing, and the request/response path. For *what* each app does, see [`apps/`](apps/); for *why* the business rules are what they are, see [data-model.md](data-model.md).
+The approved target architecture for CashFlow. The Django full-stack delivery
+model remains unchanged; the domain boundary changes from generic payment
+methods to explicit banking and ledger concepts.
 
 ## Stack
 
 | Layer | Technology |
 |---|---|
 | Language | Python 3.12 |
-| Framework | Django 6.0.7 (full stack — no separate API/frontend) |
+| Framework | Django 6 full stack |
 | Frontend | Django Template Language + TailwindCSS |
-| Database | SQLite (native, single file) |
-| Authentication | `django.contrib.auth` (native — no custom user model) |
-| Dependency management | [`uv`](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`) |
-| Views | Class-Based Views (CBVs) exclusively |
-| Production server | `gunicorn` behind [WhiteNoise](https://whitenoise.readthedocs.io/) (no nginx) |
+| Database | SQLite |
+| Authentication | Native `django.contrib.auth` |
+| Dependency management | `uv` |
+| Views | Class-Based Views |
+| Production | Gunicorn + WhiteNoise |
+| Localization | Django gettext (`en`, `pt-br`) |
 
-Source: `pyproject.toml`.
+## Domain apps
 
-## Project layout
-
-```
-core/          # Project configuration: settings, root urls, wsgi/asgi, context processors
-core/currencies.py  # Supported currencies: symbol + number format, one entry each
-core/formats/  # Locale number-format override driven by CURRENCY — see FORMAT_MODULE_PATH
-pages/         # Public landing page
-accounts/      # Sign up, login, logout (native auth)
-dashboard/     # Aggregation + projection services, consolidated view, SVG report charts
-transactions/  # Transaction model + CRUD (the core domain entity)
-categories/    # Category model + CRUD (self-referencing) + default-data signal
-payments/      # PaymentMethod model + CRUD + default-data signal
-investments/   # Institutions, investment products, free-form assets, operations + manual exchange rates
-templates/     # Project-level Django templates (base.html, partials/, per-app screens)
-static/        # Project-level static assets (static/css/output.css is a generated
-               # Tailwind build artifact — see frontend.md)
-tailwind/      # Tailwind CSS source (input.css) for the production build
-docs/          # This documentation
+```text
+core/          # settings, root URLs, currency registry and shared formatting
+pages/         # public landing page
+accounts/      # authentication
+categories/    # income and expense classification
+banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
+transactions/  # categorized economic events and recurrence schedules
+dashboard/     # ledger, cash-flow, invoice and net-worth read models
+investments/   # products, assets, position operations and valuation
 ```
 
-Each domain app owns its own `models.py`, `views.py`, `urls.py`, `admin.py`, and (where needed) `forms.py`/`signals.py` — nothing is shared across apps except through explicit imports (e.g. `transactions/models.py` imports `Category` and `PaymentMethod`).
+`payments/` is removed. `banking/` owns every settlement instrument and the
+account ledger. `Bank` is shared with `investments`; the investment-specific
+`Institution` model is removed.
 
-## Settings (`core/settings.py`)
+## Dependency direction
 
-### Apps
+```text
+categories ────────┐
+                   v
+banking <──── transactions ────> dashboard
+   ^                                  ^
+   └──────── investments ─────────────┘
+```
 
-`INSTALLED_APPS` registers the six domain apps after Django's own apps, in dependency order: `pages`, `accounts`, `dashboard`, `transactions`, `categories`, `payments`.
+- `banking` owns settlement truth and can exist without categorized transactions.
+- `transactions` references banking instruments to describe how an economic
+  event settles; it does not calculate account balances.
+- `investments` reuses `Bank` and `BankAccount` for providers and cash legs, but
+  keeps its position ledger independent from `Transaction`.
+- `dashboard` is read-only composition over all three ledgers. It owns no
+  financial records.
 
-### Environment-driven configuration (production readiness)
+Imports must avoid a model cycle. Cross-domain optional links that would create
+one use string model references or a dedicated service boundary; posting an
+event and its movements runs in one database transaction.
 
-Every deployment-specific setting reads from the environment so the same code runs unmodified in dev and in Docker (see [deployment.md](deployment.md)):
+## Sources of truth
 
-| Setting | Env var | Dev fallback |
+| Question | Source |
+|---|---|
+| What cash is available? | `BankAccount.opening_balance` + `BankMovement`. |
+| What was income or expense? | Categorized `Transaction`. |
+| What is owed on credit cards? | `CardInvoice` and its items/payments. |
+| What investment quantity is held? | `InvestmentOperation`. |
+| How many loyalty points exist? | `LoyaltyEntry`. |
+| What was an amount worth in base currency? | Historical `ExchangeRate`/stored conversion for the event date. |
+
+This separation prevents credit purchases from reducing cash before the invoice
+is paid and prevents the later invoice debit from counting the same spending a
+second time.
+
+## Posting workflows
+
+Services, rather than views or templates, own atomic posting:
+
+1. **PIX/debit/account transaction:** validate ownership and currency; create
+   the categorized transaction and immediate movement atomically.
+2. **Credit transaction:** create the transaction as an invoice item; create no
+   account movement.
+3. **Invoice settlement:** create one due-date account debit and attach it to the
+   invoice. Re-running is idempotent and cannot create a second settlement.
+4. **Own transfer:** create two movements sharing a transfer identifier. The
+   event is `TRANSFER`, not income/expense; cross-currency pairs retain both
+   native amounts and their historical rate.
+5. **Investment deposit/withdrawal:** create the position operation and required
+   source/destination account movement atomically. Yield remains internal.
+6. **Loyalty redemption:** post the points entry and, when IOF applies, settle it
+   through the selected funding instrument using its normal immediate or invoice
+   path.
+
+Posted financial entries are reversed, not edited in place.
+
+## Multicurrency
+
+The base currency is a reporting preference, not a project-wide restriction.
+Accounts and events retain native currencies. Consolidation uses the rate
+effective on the event/report date; historical outputs do not use today's rate.
+Services return native totals plus converted totals and explicit missing-rate
+metadata. They never add unlike currencies directly.
+
+## Routes
+
+The route namespaces remain domain-based:
+
+| Prefix | App | Scope |
 |---|---|---|
-| `SECRET_KEY` | `SECRET_KEY` | insecure `django-insecure-...` placeholder |
-| `DEBUG` | `DEBUG` | `'True'` |
-| `ALLOWED_HOSTS` | `ALLOWED_HOSTS` (comma-separated) | `localhost,127.0.0.1` |
-| `DATABASES['default']['NAME']` | `SQLITE_PATH` | `<project root>/db.sqlite3` |
-| `CURRENCY` / `CURRENCY_SYMBOL` | `CURRENCY` | `'BRL'` — see § Currency |
-| The HTTPS block (5 settings) | `HTTPS` | `'False'` — see § HTTPS hardening |
+| `/dashboard/` | `dashboard` | overview and reports |
+| `/transactions/` | `transactions` | categorized event CRUD/search |
+| `/categories/` | `categories` | category CRUD |
+| `/banking/` | `banking` | banks, accounts, ledger, PIX, cards, invoices, loyalty |
+| `/investments/` | `investments` | portfolio, products, assets, operations, rates |
+| `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
 
-`DEBUG` is read into a **module-level variable** at process startup (not just `django.conf.settings.DEBUG`) because the static-files backend has to reflect how the process actually started, not a value overridden later — see "Static files" below for why that distinction matters.
+All authenticated CBVs constrain root querysets to `request.user`; forms also
+scope every foreign-key choice. Ownership is revalidated in posting services,
+not assumed from browser options.
 
-#### The secret key guard
+## Localization request flow
 
-The dev fallback is committed to a public template repository, so it is public knowledge: anyone holding it can forge session cookies and password-reset tokens against an instance still running on it. Settings therefore **refuse to import** when `DEBUG=False` and the key is still the fallback:
+`SessionMiddleware` runs before `LocaleMiddleware`. The locale middleware uses
+Django's native language cookie when present, otherwise negotiates the initial
+supported language from the browser and falls back to English. It activates the
+language before URL resolution and view/template rendering, including HTMX
+fragment requests. The URLconf deliberately does not use `i18n_patterns()`, so
+all domain URLs remain stable across languages.
 
-```python
-INSECURE_SECRET_KEY = 'django-insecure-...'
-SECRET_KEY = os.environ.get('SECRET_KEY', '').strip() or INSECURE_SECRET_KEY
+Translation concerns stop at fixed interface and system copy. Python uses
+`gettext_lazy` for deferred declarations and `gettext` at runtime; templates
+use `translate` and `blocktranslate`. The project-level Portuguese catalog is
+`locale/pt_BR/LC_MESSAGES/django.po`/`django.mo`. Persisted domain and user data,
+including categories, are not looked up in gettext and therefore remain
+language-neutral. Currency is a separate axis: parallel `core.formats.en` and
+`core.formats.pt_BR` modules both resolve separators from currency metadata.
 
-if not DEBUG and SECRET_KEY == INSECURE_SECRET_KEY:
-    raise ImproperlyConfigured(...)
-```
+## Delivery and reset
 
-Two details that are easy to get wrong:
-
-- **Blank counts as unset.** `SECRET_KEY=` left empty in `.env` is the likeliest way to misconfigure this, and Django boots happily on an empty string — so the value falls through to the fallback and trips the guard rather than sailing past it.
-- **It raises, rather than warning.** `check --deploy` already flags a weak key (`security.W009`), but nothing forces anyone to run it, and an instance deployed on the default key looks perfectly healthy while being trivially forgeable. Failing at import turns a silent compromise into a five-second fix.
-
-#### HTTPS hardening
-
-`SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_SSL_REDIRECT`, the `SECURE_HSTS_*` trio, and `SECURE_PROXY_SSL_HEADER` are all driven by a single `HTTPS` env flag, **not** by `DEBUG`:
-
-```python
-HTTPS = os.environ.get('HTTPS', 'False') == 'True'
-```
-
-"Not in development" and "served over TLS" are different questions, and only the operator knows the second one. The shipped `docker-compose.yml` publishes plain HTTP on `:8000`, so tying these to `DEBUG=False` would break that documented first run outright — a browser never sends a `Secure` cookie over HTTP (login would appear to succeed, then bounce straight back to the form), and `SECURE_SSL_REDIRECT` would send `http://localhost:8000` into a redirect loop to an HTTPS port nothing is listening on.
-
-With `HTTPS=True`, `manage.py check --deploy` returns clean. Without it, the four remaining warnings are accurate — the site genuinely is not over TLS. `SECURE_PROXY_SSL_HEADER` is set **only** when the flag is on, because a client can forge `X-Forwarded-Proto` when no proxy is there to strip it.
-
-### Middleware
-
-```
-SecurityMiddleware
-WhiteNoiseMiddleware        # right after SecurityMiddleware — serves static files in-process
-SessionMiddleware
-CommonMiddleware
-CsrfViewMiddleware
-AuthenticationMiddleware
-MessageMiddleware
-XFrameOptionsMiddleware
-```
-
-### Templates
-
-`TEMPLATES[0]['DIRS']` points at the project-level `templates/` directory (in addition to each app's own `templates/<app>/` via `APP_DIRS=True`, though in practice every template in this project lives under the project-level directory — see [frontend.md](frontend.md)).
-
-Custom context processors registered alongside Django's built-ins (`request`, `auth`, `messages`):
-
-- `core.context_processors.currency` — injects `CURRENCY_SYMBOL` into every template.
-- `core.context_processors.debug_flag` — injects `DEBUG` into every template (used by `base.html` to pick the Tailwind CDN vs. the compiled bundle).
-
-### Static files
-
-```python
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'   # collectstatic target, Docker build time only
-```
-
-`STORAGES['staticfiles']['BACKEND']` switches between `django.contrib.staticfiles.storage.StaticFilesStorage` (plain, when `DEBUG` is `True`) and `whitenoise.storage.CompressedManifestStaticFilesStorage` (hashed + gzip/brotli, when `DEBUG` is `False`) — selected from the **module-level** `DEBUG` computed once from the environment, not from `django.conf.settings.DEBUG`. This is what lets a local run (where `DEBUG=True` at process start) work without a real `collectstatic`-produced manifest, while a real `DEBUG=False` deployment always gets the WhiteNoise backend regardless of anything that flips that setting at request time.
-
-`WHITENOISE_MANIFEST_STRICT = False` — a missing file in the manifest falls back to the plain path instead of a 500.
-
-### Auth & redirects
-
-```python
-LOGIN_URL = 'accounts:login'
-LOGIN_REDIRECT_URL = 'dashboard:index'
-LOGOUT_REDIRECT_URL = 'pages:landing'
-```
-
-### Currency
-
-```python
-CURRENCY = os.environ.get('CURRENCY', DEFAULT_CURRENCY)   # 'BRL'
-CURRENCY_SYMBOL = get_currency(CURRENCY).symbol           # 'R$'
-```
-
-One environment-driven setting picks the currency project-wide. `CURRENCY_SYMBOL` is **derived**, not configured, and remains what every template reads via `core.context_processors.currency` — no screen hardcodes a symbol.
-
-The registry lives in `core/currencies.py`, and each entry carries its number format alongside its symbol:
-
-```python
-Currency('BRL', 'R$', 'Brazilian Real', ',', '.'),
-Currency('USD', '$',  'US Dollar',      '.', ','),
-```
-
-Both `CURRENCY_SYMBOL` and `core/formats/en/formats.py` read that same entry, so symbol and separators can never drift into a nonsense pairing like `$ 1.000,00`. An unknown code raises `ImproperlyConfigured` at startup listing the supported ones — silently defaulting would mislabel every amount in a finance app, which is a correctness bug rather than a cosmetic one.
-
-`core/currencies.py` is imported *by* `core/settings.py`, so it deliberately holds no `django.conf` import at module level (the `ImproperlyConfigured` import inside `get_currency` is lazy for the same reason).
-
-### Number formatting
-
-```python
-FORMAT_MODULE_PATH = 'core.formats'
-USE_THOUSAND_SEPARATOR = True
-```
-
-Money renders in the configured currency's format — `R$ 1.000,00` for BRL, `$ 1,000.00` for USD — while `LANGUAGE_CODE` stays `en-us`. The separators live in `core/formats/en/formats.py` (read from `core/currencies.py`), **not** in `settings.py`, because Django reads the active locale's format module before falling back to the settings — see [data-model.md § Number format](data-model.md#number-format) for the full rationale and the two places localization is deliberately switched back off.
-
-## URL routing (`core/urls.py`)
-
-```python
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('pages.urls')),
-    path('accounts/', include('accounts.urls')),
-    path('dashboard/', include('dashboard.urls')),
-    path('transactions/', include('transactions.urls')),
-    path('categories/', include('categories.urls')),
-    path('payments/', include('payments.urls')),
-    path('investments/', include('investments.urls')),
-]
-```
-
-Every app namespaces its own URLs with `app_name = '<app>'`, so every reversed URL in a template or view is fully qualified, e.g. `{% url 'transactions:update' transaction.pk %}`. Full route table:
-
-| Prefix | App | Routes (`name`) |
-|---|---|---|
-| `/` | `pages` | `landing` |
-| `/accounts/` | `accounts` | `login`, `signup`, `logout` |
-| `/dashboard/` | `dashboard` | `index` (`?month=YYYY-MM`); `reports` (`?charts_offset=N`, `?installment_month=ALL\|YYYY-MM`, `?payment_month=ALL\|YYYY-MM`, `?expense_method=NAME`, `?income_method=NAME`, `?category_month=ALL\|YYYY-MM`) |
-| `/transactions/` | `transactions` | `list` (`?q=`, `?month=YYYY-MM`, `?date=YYYY-MM-DD`, `?type=`, `?sort=`), `create`, `update`, `delete` |
-| `/categories/` | `categories` | `list`, `create`, `update`, `delete` |
-| `/payments/` | `payments` | `list`, `create`, `update`, `delete` |
-| `/investments/` | `investments` | Portfolio `list`/operation `create`/`update`/`delete`; entity `settings`, institution/product/asset create/update/delete; append-only `exchange_rates`, `create_exchange_rate`, `delete_exchange_rate` |
-| `/admin/` | Django admin | — |
-
-## Request flow (a typical authenticated screen)
-
-1. Request hits `core/urls.py`, dispatched to the matching app's `urls.py`.
-2. The view is always a CBV mixing in `LoginRequiredMixin` (redirects to `LOGIN_URL` with a `?next=` param if the session is anonymous).
-3. `get_queryset()` filters by `self.request.user` — every list/detail/update/delete view in the project does this; there is no view that returns another user's rows (see [data-model.md § Per-user isolation](data-model.md#per-user-isolation)).
-4. For create/update views, `get_form_kwargs()` passes `user=self.request.user` into the form so FK dropdowns (`category`, `payment_method`, `parent_category`) only list that user's own records; `form_valid()` stamps `form.instance.user = self.request.user` before saving.
-5. The template extends `templates/base.html`, which injects the right navbar (`navbar_app.html` vs. `navbar_public.html`) based on `request.user.is_authenticated`, renders `partials/messages.html`, then the page's `{% block content %}`.
-6. `SuccessMessageMixin` (where used) queues a Django message consumed by `partials/messages.html` on the next page.
-
-## Signals
-
-One app wires a `post_save` signal on `User` via `AppConfig.ready()` to seed default data on signup (FR14): `categories/signals.py` seeds the 9 default top-level categories — see [apps/categories.md](apps/categories.md) for the exact payload. The signal lives in `categories/signals.py`, imported (never called directly) from `categories/apps.py`. `payments` no longer wires one (reverted 2026-08-02 — `MethodType` is itself an enum, so seeding four rows named after the enum options was redundant; see [apps/payments.md](apps/payments.md#no-default-data-seeding)).
-
-## Admin
-
-Every domain model except `Transaction`'s neighbors is registered in Django admin with `list_display`/`list_filter`/`search_fields` tuned per model (see each app doc). There is no custom admin site — `/admin/` is the stock Django admin, useful for inspecting data across users during development.
+Settings, middleware, authentication, Tailwind delivery, WhiteNoise, Docker and
+the server-rendered request flow remain as documented for the current project.
+The domain release itself is breaking: remove `payments` from `INSTALLED_APPS`
+and root URLs, add `banking`, replace payment navigation/templates, and recreate
+the database from a clean migration graph. There is no dual-write or legacy
+schema support. See [data-model.md](data-model.md#breaking-release).

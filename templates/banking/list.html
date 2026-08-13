@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% translate "Banks" %} - CashFlow{% endblock %}
+
+{% block content %}
+{% url 'banking:create' as create_url %}
+{% url 'banking:list' as list_url %}
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Banks" %}</h1>
+            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate "Accounts, cards, native balances, and loyalty in one place." %}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'banking:transfer_create' %}" class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate "Transfer" %}</a>
+            <a href="{% url 'banking:entry_create' %}" class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate "Points entry" %}</a>
+            <a href="{% url 'banking:redemption_create' %}" class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate "Redeem points" %}</a>
+            <a href="{% url 'banking:exchange_rates' %}" class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate "Exchange rates" %}</a>
+            <a href="{{ create_url }}" class="inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90">{% translate "New bank" %}</a>
+        </div>
+    </div>
+
+    <form method="get" class="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 dark:bg-[#313335] dark:ring-[#323232]">
+        <div class="flex-1 space-y-1.5">
+            <label for="bank-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Search" %}</label>
+            <input id="bank-search" type="search" name="q" value="{{ search_query }}" placeholder="{% translate 'Bank, account, card, or program' %}" class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-slate-600 dark:bg-[#313335] dark:text-neutral-100">
+        </div>
+        <button type="submit" class="self-end rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate "Search" %}</button>
+        {% if search_query %}<a href="{{ list_url }}" class="self-end px-2 py-2.5 text-sm text-slate-600 dark:text-neutral-400">{% translate "Clear" %}</a>{% endif %}
+    </form>
+
+    {% if banks %}
+        <div class="grid gap-5 lg:grid-cols-2">
+            {% for bank in banks %}
+                <article class="space-y-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-[#313335] dark:ring-[#323232]">
+                    <div class="flex items-center justify-between gap-3">
+                        <a href="{% url 'banking:detail' bank.pk %}" class="text-xl font-bold text-slate-900 hover:text-indigo-600 dark:text-neutral-100">{{ bank.name }}</a>
+                        <span class="text-xs font-medium uppercase tracking-wide text-slate-500">{% blocktranslate count account_count=bank.accounts.all|length %}{{ account_count }} account{% plural %}{{ account_count }} accounts{% endblocktranslate %}</span>
+                    </div>
+                    {% for account in bank.accounts.all %}
+                        <div class="rounded-xl bg-slate-50 p-4 dark:bg-[#262626]">
+                            <div class="flex items-baseline justify-between gap-3">
+                                <span class="font-medium">{{ account.name }}</span>
+                                <span class="tabular-nums font-semibold">{{ account.currency }} {{ account.current_balance|floatformat:2 }}</span>
+                            </div>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-neutral-400">
+                                {% blocktranslate count debit_count=account.debit_cards.all|length %}{{ debit_count }} debit card{% plural %}{{ debit_count }} debit cards{% endblocktranslate %},
+                                {% blocktranslate count credit_count=account.credit_cards.all|length %}{{ credit_count }} credit card{% plural %}{{ credit_count }} credit cards{% endblocktranslate %}
+                            </p>
+                        </div>
+                    {% empty %}
+                        <p class="text-sm text-slate-500 dark:text-neutral-400">{% translate "No accounts yet." %}</p>
+                    {% endfor %}
+                    {% if bank.loyalty_programs.all %}
+                        <p class="text-sm text-slate-600 dark:text-neutral-400">{% translate "Loyalty:" %} {% for program in bank.loyalty_programs.all %}{{ program.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% elif search_query %}
+        {% translate "No matching banks" as empty_title %}
+        {% translate "Try another bank, account, card, or loyalty program name." as empty_message %}
+        {% translate "Clear search" as empty_cta %}
+        {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=list_url cta_label=empty_cta %}
+    {% else %}
+        {% translate "No banks yet" as empty_title %}
+        {% translate "Add a bank, then create its currency-specific accounts and cards." as empty_message %}
+        {% translate "New bank" as empty_cta %}
+        {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=create_url cta_label=empty_cta %}
+    {% endif %}
+
+    {% if independent_programs %}
+        <section class="rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-[#313335] dark:ring-[#323232]">
+            <h2 class="font-semibold">{% translate "Independent loyalty programs" %}</h2>
+            <div class="mt-3 flex flex-wrap gap-2">
+                {% for program in independent_programs %}
+                    <span class="inline-flex items-center gap-2 rounded-full bg-violet-500/10 px-3 py-1.5 text-sm font-medium text-violet-700 dark:text-violet-300">
+                        <a href="{% url 'banking:program_update' program.pk %}">{{ program.name }}: {{ program.balance }} {{ program.unit_name }}</a>
+                        <a href="{% url 'banking:entry_create' %}?program={{ program.pk }}" class="underline">{% translate "Entry" %}</a>
+                    </span>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

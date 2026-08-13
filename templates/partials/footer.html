@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Shared footer, included automatically by base.html on every screen.
 {% endcomment %}
@@ -9,7 +10,7 @@ Shared footer, included automatically by base.html on every screen.
             </span>
             <span class="text-sm font-semibold text-slate-800 dark:text-neutral-200">CashFlow</span>
         </div>
-        <p class="text-sm text-slate-600 dark:text-neutral-400">Personal finance tracking, simplified.</p>
-        <p class="text-sm text-slate-500 dark:text-neutral-500">&copy; {% now 'Y' %} <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer" class="hover:text-slate-900 dark:hover:text-neutral-300">HenriqueMayer</a>. All rights reserved.</p>
+        <p class="text-sm text-slate-600 dark:text-neutral-400">{% translate 'Personal finance tracking, simplified.' %}</p>
+        <p class="text-sm text-slate-500 dark:text-neutral-500">&copy; {% now 'Y' %} <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer" class="hover:text-slate-900 dark:hover:text-neutral-300">HenriqueMayer</a>. {% translate 'All rights reserved.' %}</p>
     </div>
 </footer>

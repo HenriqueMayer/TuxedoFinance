@@ -1,49 +1,41 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% comment %}
-Shared create/update form for Investment. Renders
-`investments.forms.InvestmentForm` through the shared
-`partials/form_field.html` renderer (PRD §9.4). Same structural pattern as
-`payments/form.html` and `transactions/form.html`.
-{% endcomment %}
-
-{% block title %}{% if form.instance.pk %}Edit Operation{% else %}New Operation{% endif %} — CashFlow{% endblock %}
+{% block title %}{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %} - CashFlow{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-md space-y-6">
-    <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">
-        {% if form.instance.pk %}Edit Operation{% else %}New Operation{% endif %}
-    </h1>
-
-    <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
+<div class="mx-auto max-w-2xl space-y-6">
+    <div>
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %}</h1>
+        <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate 'All funding fields remain visible. Fill only those relevant to the selected operation type.' %}</p>
+    </div>
+    <form method="post" class="space-y-6 rounded-2xl bg-white p-6 ring-1 ring-slate-200 dark:bg-[#313335] dark:ring-[#323232]" novalidate>
         {% csrf_token %}
-
-        {% if form.non_field_errors %}
-            <div class="space-y-1.5">
-                {% for error in form.non_field_errors %}
-                    <p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
-                {% endfor %}
+        {% for error in form.non_field_errors %}<p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+        <section class="grid gap-5 sm:grid-cols-2">
+            {% include 'partials/form_field.html' with field=form.product %}
+            {% include 'partials/form_field.html' with field=form.asset %}
+            {% include 'partials/form_field.html' with field=form.kind %}
+            {% include 'partials/form_field.html' with field=form.date %}
+            <div class="space-y-2">{% include 'partials/form_field.html' with field=form.amount %}<p class="text-xs text-slate-500 dark:text-neutral-400">{% translate 'Monetary value: use this field for savings pots.' %}</p></div>
+            <div class="space-y-2 sm:col-span-2"><div class="grid gap-5 sm:grid-cols-2">{% include 'partials/form_field.html' with field=form.quantity %}{% include 'partials/form_field.html' with field=form.unit_price %}</div><p class="text-xs text-slate-500 dark:text-neutral-400">{% translate 'Units: enter quantity and unit price for traded assets.' %}</p></div>
+            {% include 'partials/form_field.html' with field=form.fees %}
+            {% include 'partials/form_field.html' with field=form.cash_amount %}
+        </section>
+        <section class="space-y-4 rounded-xl bg-slate-50 p-4 dark:bg-[#2B2B2B]">
+            <div><h2 class="font-semibold text-slate-900 dark:text-neutral-100">{% translate 'Funding or destination' %}</h2><p class="text-xs text-slate-500">{% translate 'Deposit: one source. Withdrawal: destination. Yield: leave all empty.' %}</p></div>
+            <div class="grid gap-5 sm:grid-cols-2">
+                {% include 'partials/form_field.html' with field=form.source_account %}
+                {% include 'partials/form_field.html' with field=form.source_program %}
+                {% include 'partials/form_field.html' with field=form.source_points %}
+                {% include 'partials/form_field.html' with field=form.destination_account %}
             </div>
-        {% endif %}
-
-        {% include 'partials/form_field.html' with field=form.product %}
-        {% include 'partials/form_field.html' with field=form.asset %}
-        {% include 'partials/form_field.html' with field=form.title %}
-        {% include 'partials/form_field.html' with field=form.kind %}
-        {% include 'partials/form_field.html' with field=form.amount %}
-        {% include 'partials/form_field.html' with field=form.date %}
+        </section>
         {% include 'partials/form_field.html' with field=form.reason %}
         {% include 'partials/form_field.html' with field=form.notes %}
-
-        <div class="flex items-center gap-3">
-            <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
-                Save
-            </button>
-            <a href="{% url 'investments:list' %}"
-               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                Cancel
-            </a>
+        <div class="flex gap-3">
+            <button type="submit" class="rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white">{% translate 'Save' %}</button>
+            <a href="{% url 'investments:list' %}" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate 'Cancel' %}</a>
         </div>
     </form>
 </div>

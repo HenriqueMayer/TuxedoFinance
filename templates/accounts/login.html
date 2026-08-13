@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% comment %}
 Log in page (PRD §13, Sprint 3 — 3.2.1). Renders accounts.forms.LoginForm
@@ -8,13 +9,13 @@ a non-field error (PRD 3.3.2); valid credentials redirect to `next` or
 `LOGIN_REDIRECT_URL` (the dashboard) via Django's default LoginView behavior.
 {% endcomment %}
 
-{% block title %}Log in — CashFlow{% endblock %}
+{% block title %}{% translate "Log in" %} — CashFlow{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-md">
     <div class="mb-6 text-center">
-        <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">Welcome back</h1>
-        <p class="mt-2 text-sm text-slate-600 dark:text-neutral-400">Log in to see your dashboard.</p>
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Welcome back" %}</h1>
+        <p class="mt-2 text-sm text-slate-600 dark:text-neutral-400">{% translate "Log in to see your dashboard." %}</p>
     </div>
 
     <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
@@ -37,13 +38,13 @@ a non-field error (PRD 3.3.2); valid credentials redirect to `next` or
 
         <button type="submit"
                 class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
-            Log in
+            {% translate "Log in" %}
         </button>
     </form>
 
     <p class="mt-6 text-center text-sm text-slate-600 dark:text-neutral-400">
-        Don't have an account?
-        <a href="{% url 'accounts:signup' %}" class="rounded font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">Sign up</a>
+        {% translate "Don't have an account?" %}
+        <a href="{% url 'accounts:signup' %}" class="rounded font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">{% translate "Sign up" %}</a>
     </p>
 </div>
 {% endblock %}

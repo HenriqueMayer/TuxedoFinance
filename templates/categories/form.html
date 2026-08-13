@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% comment %}
 Shared create/update form for Category (PRD §13, Sprint 4 — 4.2.2/4.2.3).
@@ -7,12 +8,12 @@ user, so `parent_category` only lists that user's own categories) through
 the shared partials/form_field.html renderer (PRD §9.4).
 {% endcomment %}
 
-{% block title %}{% if form.instance.pk %}Edit Category{% else %}New Category{% endif %} — CashFlow{% endblock %}
+{% block title %}{% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %} — CashFlow{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">
-        {% if form.instance.pk %}Edit Category{% else %}New Category{% endif %}
+        {% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %}
     </h1>
 
     <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
@@ -32,11 +33,11 @@ the shared partials/form_field.html renderer (PRD §9.4).
         <div class="flex items-center gap-3">
             <button type="submit"
                     class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
-                Save
+                {% translate "Save" %}
             </button>
             <a href="{% url 'categories:list' %}"
                class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                Cancel
+                 {% translate "Cancel" %}
             </a>
         </div>
     </form>

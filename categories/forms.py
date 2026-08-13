@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from categories.models import Category
 
@@ -30,6 +31,10 @@ class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = ('name', 'parent_category')
+        labels = {
+            'name': _('Name'),
+            'parent_category': _('Parent category'),
+        }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,6 +44,7 @@ class CategoryForm(forms.ModelForm):
             queryset = queryset.exclude(pk=self.instance.pk)
         self.fields['parent_category'].queryset = queryset
         self.fields['parent_category'].required = False
+        self.fields['parent_category'].empty_label = _('No parent category')
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
 
@@ -51,5 +57,5 @@ class CategoryForm(forms.ModelForm):
         if self.instance.pk:
             duplicates = duplicates.exclude(pk=self.instance.pk)
         if duplicates.exists():
-            raise forms.ValidationError('You already have a category with this name.')
+            raise forms.ValidationError(_('You already have a category with this name.'))
         return name
