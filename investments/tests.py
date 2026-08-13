@@ -309,6 +309,29 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertNotIn(account, form.fields['source_account'].queryset)
         self.assertEqual(list(form.fields['product'].queryset), [self.product])
 
+    def test_operation_form_exposes_scoped_asset_mode_for_progressive_ui(self):
+        form = InvestmentForm(user=self.user)
+        html = str(form['asset'])
+        self.assertIn('data-valuation-mode="UNITS"', html)
+        self.assertIn(f'data-currency="{self.asset.currency}"', html)
+
+        response = self.client.get(reverse('investments:create'))
+        self.assertContains(response, 'id="money-fields"')
+        self.assertContains(response, 'id="unit-fields"')
+        self.assertContains(response, 'id="operation-kind-status"')
+        self.assertContains(response, 'Choose an asset and operation type')
+        self.assertContains(response, 'hasPreservedProgramCash')
+
+    def test_operation_form_keeps_server_fields_as_no_js_fallback(self):
+        response = self.client.get(reverse('investments:create'))
+        for field_id in (
+            'id_amount', 'id_quantity', 'id_unit_price', 'id_cash_amount',
+            'id_source_account', 'id_source_program', 'id_source_points',
+            'id_destination_account',
+        ):
+            with self.subTest(field_id=field_id):
+                self.assertContains(response, f'id="{field_id}"')
+
     def test_create_view_saves_and_synchronizes_atomically(self):
         response = self.client.post(reverse('investments:create'), {
             'product': self.product.pk,

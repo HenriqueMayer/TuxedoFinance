@@ -36,6 +36,13 @@ Every operation records product, asset, kind, currency, date and optional notes.
 Monetary assets use an investment amount; unit-based assets use quantity and unit
 price. There is no `title`.
 
+The create/update form progressively reveals the valuation fields from the
+selected asset: monetary assets show only investment amount, while unit-based
+assets show quantity and unit price. The selected operation kind similarly
+reveals the applicable funding source or withdrawal destination. JavaScript
+only enhances disclosure; without it, all fields remain available and the same
+server-side ownership and financial validation remains authoritative.
+
 | Kind | Banking requirement | Position effect |
 |---|---|---|
 | `DEPOSIT` | Source `BankAccount` required; creates linked debit movement. | Adds acquired quantity/cost basis. |
