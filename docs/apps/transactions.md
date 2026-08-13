@@ -33,11 +33,28 @@ from another person remains a normal categorized transaction.
 
 ## Form and validation
 
-The form captures title, positive amount, type, category, event date, settlement
-path/instrument, recurrence fields, and notes. Choices are limited to the user's
-banks, accounts and cards. Validation enforces:
+The default form captures title, positive amount, type, category, event date and
+payment channel. It progressively reveals only the matching settlement fields:
+
+| Channel | Available fields | Server rule |
+|---|---|---|
+| Bank account | Owned bank account | Valid for income and expense. |
+| PIX | PIX-enabled owned bank account | Valid for income and expense. |
+| Debit card | Owned debit card and its account context | Expense only. |
+| Credit card | Owned credit card, installments and bill choice | Expense only. |
+
+Changing channel clears controls that no longer apply in the enhanced browser
+experience. The no-JavaScript fallback keeps the normal selects available, and
+the server rejects incompatible direct submissions. Recurrence and notes are
+kept under optional advanced options. Category selection is enhanced as an
+accessible, accent-insensitive search over the category and parent name; it
+immediately excludes categories explicitly classified for the other transaction
+type. Its native select remains the no-JavaScript fallback. Unclassified legacy
+categories intentionally remain available for both types. Choices are limited to
+the user's banks, accounts, cards and categories. Validation enforces:
 
 - category required for every transaction;
+- an income-only or expense-only category can only classify its matching type;
 - PIX only on an account with `pix_enabled=True`;
 - owned instruments that match the selected settlement path;
 - installments only for credit cards and assigned across invoices without

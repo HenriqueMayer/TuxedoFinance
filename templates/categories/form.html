@@ -28,6 +28,7 @@ the shared partials/form_field.html renderer (PRD §9.4).
         {% endif %}
 
         {% include 'partials/form_field.html' with field=form.name %}
+        {% include 'partials/form_field.html' with field=form.transaction_type %}
         {% include 'partials/form_field.html' with field=form.parent_category %}
 
         <div class="flex items-center gap-3">

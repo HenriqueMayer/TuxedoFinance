@@ -89,6 +89,11 @@ are not part of the current product.
 
 ## Forms and settlement disclosure
 
+Transaction entry uses progressive enhancement: server-rendered selects are the
+authoritative no-JavaScript path, while JavaScript reveals the fields relevant
+to the selected payment channel and enhances category search. Hidden client-side
+controls never replace server-side ownership and compatibility validation.
+
 Forms use the established `form_field.html`, validation summary, standard input
 classes and Save/Cancel action pattern. Server-side validation remains
 authoritative.

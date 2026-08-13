@@ -16,6 +16,18 @@ CHECKBOX_CLASSES = (
 )
 
 
+class TransactionSelect(forms.Select):
+    """Expose safe, server-scoped choice metadata to the progressive UI."""
+
+    choice_data = None
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if self.choice_data and value:
+            option['attrs'].update(self.choice_data.get(str(value), {}))
+        return option
+
+
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
@@ -80,8 +92,49 @@ class TransactionForm(forms.ModelForm):
             (str(Transaction.BillChoice.CURRENT.value), _('Current bill')),
             (str(Transaction.BillChoice.NEXT.value), _('Next bill')),
         ]
+        categories = list(self.fields['category'].queryset.select_related('parent_category'))
+        accounts = list(self.fields['bank_account'].queryset)
+        debit_cards = list(self.fields['debit_card'].queryset)
+        credit_cards = list(self.fields['credit_card'].queryset)
+        self._set_choice_data(
+            'category',
+            {
+                str(category.pk): {
+                    'data-search': ' '.join(
+                        part for part in (category.parent_category.name if category.parent_category else '', category.name)
+                    ),
+                    'data-transaction-type': category.transaction_type or '',
+                }
+                for category in categories
+            },
+        )
+        self._set_choice_data(
+            'bank_account',
+            {str(account.pk): {'data-pix-enabled': str(account.pix_enabled).lower()} for account in accounts},
+        )
+        self._set_choice_data(
+            'debit_card',
+            {
+                str(card.pk): {'data-account-label': f'{card.account.bank.name} > {card.account.name}'}
+                for card in debit_cards
+            },
+        )
+        self._set_choice_data(
+            'credit_card',
+            {
+                str(card.pk): {'data-account-label': f'{card.account.bank.name} > {card.account.name}'}
+                for card in credit_cards
+            },
+        )
         for name, field in self.fields.items():
             field.widget.attrs['class'] = CHECKBOX_CLASSES if name == 'is_fixed' else INPUT_CLASSES
+
+    def _set_choice_data(self, field_name, choice_data):
+        field = self.fields[field_name]
+        widget = TransactionSelect(attrs=field.widget.attrs.copy())
+        widget.choice_data = choice_data
+        widget.choices = field.choices
+        field.widget = widget
 
     def clean_installments(self):
         installments = self.cleaned_data.get('installments')

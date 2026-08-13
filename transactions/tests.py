@@ -278,6 +278,46 @@ class TransactionFormAndListTests(TransactionFixture):
         response = self.client.get(reverse('transactions:create'))
         self.assertContains(response, 'id="category-search"', html=False)
         self.assertContains(response, 'Type to filter categories')
+        self.assertContains(response, 'role="combobox"', html=False)
+        self.assertContains(response, 'id="category-fallback"', html=False)
+        self.assertContains(response, 'id="payment-channel-status"', html=False)
+
+    def test_category_choices_include_hierarchy_metadata_without_other_users(self):
+        parent = Category.objects.create(user=self.user, name='Alimentação')
+        Category.objects.create(user=self.user, name='Café', parent_category=parent)
+        form = TransactionForm(user=self.user)
+
+        rendered = str(form['category'])
+
+        self.assertIn('Alimentação &gt; Café', rendered)
+        self.assertIn('data-search="Alimentação Café"', rendered)
+        self.assertNotIn('Private', rendered)
+
+    def test_form_exposes_pix_capability_without_trusting_the_browser(self):
+        self.account.pix_enabled = False
+        self.account.save(update_fields=['pix_enabled'])
+        form = TransactionForm(user=self.user)
+
+        self.assertIn('data-pix-enabled="false"', str(form['bank_account']))
+        self.assertIn('data-account-label="North Bank &gt; Daily"', str(form['debit_card']))
+
+    def test_form_filters_typed_categories_and_server_rejects_a_mismatch(self):
+        income_category = Category.objects.create(
+            user=self.user, name='Salary', transaction_type=Category.TransactionType.INCOME
+        )
+        form = TransactionForm(user=self.user)
+        self.assertIn('data-transaction-type="INCOME"', str(form['category']))
+
+        invalid = TransactionForm(
+            user=self.user,
+            data={
+                'title': 'Bad category', 'amount': '10.00', 'transaction_type': 'EXPENSE',
+                'category': income_category.pk, 'payment_channel': 'ACCOUNT',
+                'bank_account': self.account.pk, 'installments': '1', 'date': '2026-01-01',
+            },
+        )
+        self.assertFalse(invalid.is_valid())
+        self.assertIn('category', invalid.errors)
 
     def test_form_rejects_mismatched_instrument_without_javascript(self):
         form = TransactionForm(
