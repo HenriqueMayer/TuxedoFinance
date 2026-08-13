@@ -10,8 +10,8 @@
 CashFlow replaces generic payment methods with an explicit banking model. The
 release adds banks, currency-specific accounts, an authoritative movement
 ledger, PIX, debit and credit cards, card invoices and loyalty points.
-Multicurrency preferences and retained historical conversion are planned for
-ROADMAP Phases 3 and 4. Investments remain separate while sharing banks and
+Per-user multicurrency preferences are implemented in Phase 3; retained
+historical conversion is planned for Phase 4. Investments remain separate while sharing banks and
 bank accounts for providers and cash settlement.
 
 The product remains a lean Django full-stack application: native authentication,
@@ -25,7 +25,7 @@ HTMX progressive enhancement.
 | G1 | Make account balances auditable | Every balance derives from opening balance plus posted movements. |
 | G2 | Model settlement correctly | PIX/debit settle immediately; credit settles through invoices. |
 | G3 | Eliminate double counting | Credit spending and invoice payment affect different reporting components. |
-| G4 | Multicurrency roadmap | Preserve currency-specific account data; per-user and historical reporting are planned for Phases 3 and 4. |
+| G4 | Multicurrency roadmap | Preserve currency-specific account data; per-user reporting is implemented in Phase 3 and historical evidence is planned for Phase 4. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
 | G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
 
@@ -74,14 +74,14 @@ HTMX progressive enhancement.
 | FR13 | Loyalty programs | A program may be independent, linked to a bank, linked to cards, or linked to both. |
 | FR14 | Loyalty ledger | `LoyaltyEntry` supports invoice award, points purchase, adjustment, expiration and redemption. |
 | FR15 | Redemption details | Redemption records points, target monetary amount/currency, IOF, and IOF funding instrument. Positive IOF requires an owned account, debit card or credit card. |
-| FR16 | Multicurrency (planned — Phase 3) | Per-user reporting currency with native amounts retained. |
+| FR16 | Multicurrency | Each user selects a supported reporting currency in Settings; native amounts and currencies remain unchanged. |
 | FR17 | Historical FX (planned — Phase 4) | Retain conversion evidence so later rates do not rewrite history. |
 | FR18 | Investments structure | Investments remain separate, use `Bank` instead of `Institution`, and group products and assets by bank/product/asset. |
 | FR19 | Assets | Every asset has name, code, asset class and currency; class/currency are immutable after use. |
 | FR20 | Investment operations | Every operation records kind, quantity and unit price and has no title. Gross value is derived. |
 | FR21 | Investment cash endpoints | Deposit requires a source bank account; withdrawal requires a destination bank account. Their movements post atomically with the operation. |
 | FR22 | Internal yield | Yield changes the investment position only and creates no bank income/movement until withdrawn. |
-| FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth; native/base conversion is planned for Phases 3 and 4. |
+| FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth using the user's base currency; historical FX evidence is planned for Phase 4. |
 | FR24 | Forecasts | Recurrences and future invoices may be projected but do not alter the posted ledger before settlement. |
 | FR25 | Breaking delivery | Use a clean migration reset with no compatibility or automatic legacy import. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
@@ -92,10 +92,12 @@ HTMX progressive enhancement.
 
 ### Current implementation status
 
-CashFlow currently supports editable personal records. The per-user base
-currency and retained historical FX evidence described below are planned for
-ROADMAP Phases 3 and 4; the current application uses the project `CURRENCY`
-setting and resolves applicable rates at read time.
+CashFlow currently supports editable personal records. Each user has a
+`accounts.UserPreference` row with a base reporting currency. New and existing
+users default to BRL; changing the preference affects consolidated display only
+and does not mutate native financial records. Historical FX evidence remains a
+ROADMAP Phase 4 concern and current reports resolve applicable rates at read
+time.
 
 ### 5.1 Balance and settlement
 
@@ -127,10 +129,13 @@ setting and resolves applicable rates at read time.
 
 ### 5.4 Currency
 
-- The current project-wide `CURRENCY` setting selects reporting currency.
-- Per-user base reporting currency is planned for ROADMAP Phase 3.
-- Retained historical conversion evidence and missing-rate handling are planned
-  for ROADMAP Phase 4.
+- `UserPreference.base_currency` selects each user's reporting currency.
+- The preference is created automatically at signup and backfilled safely for
+  existing users with the code-level BRL default.
+- Switching currency recalculates presentation totals only; native amounts are
+  never converted or relabeled.
+- Retained historical conversion evidence remains planned for ROADMAP Phase 4;
+  missing rates are shown explicitly until then.
 
 ### 5.5 Investments
 

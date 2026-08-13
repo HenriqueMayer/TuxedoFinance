@@ -68,8 +68,8 @@ templates/
 └── investments/
 ```
 
-Money rendering follows the project reporting currency. Per-user base currency
-and retained historical FX states are planned for ROADMAP Phases 3 and 4.
+Money rendering follows the authenticated user's base reporting currency.
+Retained historical FX evidence remains planned for ROADMAP Phase 4.
 
 ## Banking information architecture
 
@@ -114,16 +114,17 @@ enhance dependent choices, but the submitted form must work without it.
 
 ## Multicurrency display
 
-The current UI uses the project reporting currency. Per-user base currency,
-historical conversion evidence and missing-rate presentation are planned for
-ROADMAP Phases 3 and 4.
+The UI uses the authenticated user's `UserPreference.base_currency`, selected
+from Settings. Changing it updates consolidated presentation only; native
+amounts remain unchanged. Historical conversion evidence remains planned for
+ROADMAP Phase 4, and missing rates are shown explicitly.
 
 Inputs remain dot-decimal HTML number fields. Display localization follows each
 currency's formatting metadata; SVG coordinates and CSS percentages remain
 unlocalized.
 
 UI language does not choose currency formatting. `core/formats/en/` and
-`core/formats/pt_BR/` both delegate separators to the configured currency, so a
+`core/formats/pt_BR/` both delegate separators to the selected currency, so a
 language switch cannot turn a correctly formatted amount into a mixed
 symbol/separator representation.
 
@@ -166,8 +167,8 @@ the report island while preserving focus and viewport; plain links/forms remain
 equivalent.
 
 Every chart states its reporting currency and actual versus projected period.
-Per-user base currency, valuation dates and missing-FX totals are planned for
-ROADMAP Phases 3 and 4.
+The selected per-user base currency and explicit missing-FX totals are shown;
+historical valuation snapshots remain planned for ROADMAP Phase 4.
 
 Credit purchase and invoice payment series must use distinct labels. No chart
 may aggregate both as expenses. Investment yield is shown in investment

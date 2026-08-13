@@ -10,11 +10,11 @@ private key for each installation.
 
 | File | Purpose |
 |---|---|
-| `core/settings.py` | Django settings, supported UI languages and the project reporting currency. |
+| `core/settings.py` | Django settings and supported UI languages; no user-facing currency setting. |
 | `core/urls.py` | Root URLconf, including Django's `i18n/` routes and the domain apps. |
-| `core/context_processors.py` | The currency context processor, registered in `TEMPLATES[0]['OPTIONS']['context_processors']`. |
+| `core/context_processors.py` | The authenticated user's currency context, registered in `TEMPLATES[0]['OPTIONS']['context_processors']`. |
 | `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR20). |
-| `core/formats/en/formats.py` | Locale number-format override driven by `settings.CURRENCY` (FR19). |
+| `core/formats/en/formats.py` | Locale number-format override driven by the code-level default (FR19). |
 | `core/formats/pt_BR/formats.py` | Portuguese locale counterpart that preserves the same currency-driven number format. |
 | `core/tests.py` | Language cookie, navbar, HTMX and language/currency-independence tests. |
 | `core/wsgi.py` | Standard Django WSGI entrypoint, retained for future deployment packaging. |
@@ -35,12 +35,13 @@ owner is responsible for file access, protection and backup.
 
 ```python
 def currency(request):
-    return {'CURRENCY_SYMBOL': settings.CURRENCY_SYMBOL}
+    return {'CURRENCY_CODE': code, 'CURRENCY_SYMBOL': symbol}
 ```
 
-The single-symbol context value follows the current project-wide `CURRENCY`
-setting. Per-user base currency is planned for ROADMAP Phase 3; until then,
-templates must not imply that the project default changes a stored native amount.
+For authenticated requests the context resolves the user's
+`UserPreference.base_currency`; anonymous requests use the BRL bootstrap default.
+Templates receive both `CURRENCY_CODE` and `CURRENCY_SYMBOL`. This value only
+controls presentation and never changes stored native amounts.
 
 ## Currency registry (`core/currencies.py`)
 
@@ -64,9 +65,8 @@ CURRENCIES = {
 }
 ```
 
-One entry pairs a currency's symbol and separators. `settings.CURRENCY` is the
-current project-wide reporting currency; it will become the default for the
-per-user preference planned in ROADMAP Phase 3.
+One entry pairs a currency's symbol and separators. The registry is shared by
+the user preference form, context processor, and locale number-format modules.
 
 Two deliberate constraints on this module:
 
@@ -115,6 +115,6 @@ currency separators under both UI languages.
 
 ## Why no models/views here
 
-`core` stays empty of domain logic. Banking will own the planned base-currency
-preference and historical conversion; core provides registry/configuration
-primitives.
+`core` stays empty of domain logic. `accounts` owns the base-currency
+preference; core provides registry and formatting primitives. Historical
+conversion evidence remains a Phase 4 concern.

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CashFlow\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 17:44+0000\n"
+"POT-Creation-Date: 2026-08-13 18:03+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -17,15 +17,53 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: accounts/views.py:25
+#: accounts/forms.py:54 templates/accounts/settings.html:28
+msgid "Base currency"
+msgstr "Moeda-base"
+
+#: accounts/forms.py:57
+msgid ""
+"Used only for consolidated totals and reports. Native account and event "
+"amounts stay unchanged."
+msgstr "Usada apenas para totais consolidados e relatórios. Os valores nativos das contas e eventos permanecem inalterados."
+
+#: accounts/models.py:9 banking/models.py:18 investments/models.py:19
+msgid "Brazilian Real"
+msgstr "Real brasileiro"
+
+#: accounts/models.py:9 banking/models.py:19 investments/models.py:20
+msgid "US Dollar"
+msgstr "Dólar americano"
+
+#: accounts/models.py:9 banking/models.py:20 investments/models.py:21
+msgid "Euro"
+msgstr "Euro"
+
+#: accounts/models.py:10 banking/models.py:21 investments/models.py:22
+msgid "British Pound"
+msgstr "Libra esterlina"
+
+#: accounts/models.py:10 banking/models.py:22 investments/models.py:23
+msgid "Japanese Yen"
+msgstr "Iene japonês"
+
+#: accounts/models.py:10 banking/models.py:23 investments/models.py:24
+msgid "Swiss Franc"
+msgstr "Franco suíço"
+
+#: accounts/views.py:27
 #, python-format
 msgid "Welcome back, %(username)s."
 msgstr "Bem-vindo de volta, %(username)s."
 
-#: accounts/views.py:40
+#: accounts/views.py:42
 #, python-format
 msgid "Welcome to CashFlow, %(username)s. Your account is ready."
 msgstr "Bem-vindo ao CashFlow, %(username)s. Sua conta está pronta."
+
+#: accounts/views.py:55
+msgid "Your base currency was updated."
+msgstr "Sua moeda-base foi atualizada."
 
 #: banking/forms.py:46 banking/forms.py:67 banking/forms.py:132
 #: banking/forms.py:149 banking/forms.py:165 categories/forms.py:35
@@ -252,30 +290,6 @@ msgstr "Taxa"
 #: banking/forms.py:348
 msgid "Effective date"
 msgstr "Data de vigência"
-
-#: banking/models.py:18 investments/models.py:19
-msgid "Brazilian Real"
-msgstr "Real brasileiro"
-
-#: banking/models.py:19 investments/models.py:20
-msgid "US Dollar"
-msgstr "Dólar americano"
-
-#: banking/models.py:20 investments/models.py:21
-msgid "Euro"
-msgstr "Euro"
-
-#: banking/models.py:21 investments/models.py:22
-msgid "British Pound"
-msgstr "Libra esterlina"
-
-#: banking/models.py:22 investments/models.py:23
-msgid "Japanese Yen"
-msgstr "Iene japonês"
-
-#: banking/models.py:23 investments/models.py:24
-msgid "Swiss Franc"
-msgstr "Franco suíço"
 
 #: banking/models.py:85
 msgid "The bank must belong to the account owner."
@@ -617,7 +631,9 @@ msgstr ""
 msgid ""
 "This category has transactions of another type and cannot be classified that "
 "way."
-msgstr "Esta categoria possui transações de outro tipo e não pode receber essa classificação."
+msgstr ""
+"Esta categoria possui transações de outro tipo e não pode receber essa "
+"classificação."
 
 #: categories/views.py:90
 #, python-format
@@ -675,8 +691,8 @@ msgstr "Despesas"
 
 #: dashboard/views.py:156 investments/apps.py:7
 #: templates/dashboard/index.html:148 templates/investments/list.html:3
-#: templates/investments/list.html:6 templates/partials/navbar_app.html:64
-#: templates/partials/navbar_app.html:97
+#: templates/investments/list.html:6 templates/partials/navbar_app.html:65
+#: templates/partials/navbar_app.html:102
 msgid "Investments"
 msgstr "Investimentos"
 
@@ -1139,6 +1155,36 @@ msgstr "Ainda não tem uma conta?"
 msgid "Sign up"
 msgstr "Cadastre-se"
 
+#: templates/accounts/settings.html:4 templates/accounts/settings.html:9
+#: templates/investments/list.html:6 templates/partials/navbar_app.html:69
+#: templates/partials/navbar_app.html:103
+msgid "Settings"
+msgstr "Configurações"
+
+#: templates/accounts/settings.html:11
+msgid "Choose how CashFlow presents consolidated totals for your account."
+msgstr "Escolha como o CashFlow apresenta os totais consolidados da sua conta."
+
+#: templates/accounts/settings.html:30
+msgid ""
+"This currency is used for consolidated dashboard and report totals. Native "
+"account and transaction amounts are never changed."
+msgstr "Esta moeda é usada nos totais consolidados do painel e dos relatórios. Os valores nativos de contas e transações nunca são alterados."
+
+#: templates/accounts/settings.html:39
+msgid "Save settings"
+msgstr "Salvar configurações"
+
+#: templates/accounts/settings.html:43 templates/banking/confirm_delete.html:14
+#: templates/banking/form.html:17 templates/categories/confirm_delete.html:28
+#: templates/categories/form.html:41
+#: templates/investments/confirm_delete.html:31
+#: templates/investments/form.html:38 templates/investments/setup_form.html:26
+#: templates/transactions/confirm_delete.html:28
+#: templates/transactions/form.html:84
+msgid "Cancel"
+msgstr "Cancelar"
+
 #: templates/accounts/signup.html:16
 msgid "Create your account"
 msgstr "Crie sua conta"
@@ -1181,19 +1227,9 @@ msgstr ""
 msgid "Delete"
 msgstr "Excluir"
 
-#: templates/banking/confirm_delete.html:14 templates/banking/form.html:17
-#: templates/categories/confirm_delete.html:28
-#: templates/categories/form.html:41
-#: templates/investments/confirm_delete.html:31
-#: templates/investments/form.html:38 templates/investments/setup_form.html:26
-#: templates/transactions/confirm_delete.html:28
-#: templates/transactions/form.html:84
-msgid "Cancel"
-msgstr "Cancelar"
-
 #: templates/banking/detail.html:10 templates/banking/exchange_rates.html:9
 #: templates/banking/list.html:4 templates/banking/list.html:12
-#: templates/partials/navbar_app.html:60 templates/partials/navbar_app.html:96
+#: templates/partials/navbar_app.html:61 templates/partials/navbar_app.html:101
 msgid "Banks"
 msgstr "Bancos"
 
@@ -1414,7 +1450,7 @@ msgid "New Category"
 msgstr "Nova categoria"
 
 #: templates/categories/list.html:10 templates/categories/list.html:24
-#: templates/partials/navbar_app.html:56 templates/partials/navbar_app.html:95
+#: templates/partials/navbar_app.html:57 templates/partials/navbar_app.html:100
 msgid "Categories"
 msgstr "Categorias"
 
@@ -1860,7 +1896,7 @@ msgstr ""
 "têm a maior participação."
 
 #: templates/dashboard/index.html:14 templates/dashboard/index.html:21
-#: templates/partials/navbar_app.html:44 templates/partials/navbar_app.html:92
+#: templates/partials/navbar_app.html:45 templates/partials/navbar_app.html:97
 msgid "Dashboard"
 msgstr "Dashboard"
 
@@ -1870,8 +1906,8 @@ msgid "Your cash flow at a glance, %(username)s."
 msgstr "Seu fluxo de caixa em um só olhar, %(username)s."
 
 #: templates/dashboard/index.html:27 templates/dashboard/reports.html:33
-#: templates/dashboard/reports.html:40 templates/partials/navbar_app.html:48
-#: templates/partials/navbar_app.html:93
+#: templates/dashboard/reports.html:40 templates/partials/navbar_app.html:49
+#: templates/partials/navbar_app.html:98
 msgid "Reports"
 msgstr "Relatórios"
 
@@ -2105,10 +2141,6 @@ msgstr ""
 msgid "Asset quantities and value flows, with cash authority in Banking."
 msgstr ""
 "Quantidades e fluxos de valor dos ativos, com controle do caixa em Bancos."
-
-#: templates/investments/list.html:6
-msgid "Settings"
-msgstr "Configurações"
 
 #: templates/investments/list.html:6
 msgid "New operation"
@@ -2401,17 +2433,17 @@ msgstr "Idioma"
 msgid "Apply"
 msgstr "Aplicar"
 
-#: templates/partials/navbar_app.html:52 templates/partials/navbar_app.html:94
+#: templates/partials/navbar_app.html:53 templates/partials/navbar_app.html:99
 #: templates/transactions/list.html:19 templates/transactions/list.html:27
 #: transactions/apps.py:7
 msgid "Transactions"
 msgstr "Transações"
 
-#: templates/partials/navbar_app.html:77 templates/partials/navbar_app.html:106
+#: templates/partials/navbar_app.html:82 templates/partials/navbar_app.html:112
 msgid "Log out"
 msgstr "Sair"
 
-#: templates/partials/navbar_app.html:88
+#: templates/partials/navbar_app.html:93
 msgid "Toggle menu"
 msgstr "Alternar menu"
 

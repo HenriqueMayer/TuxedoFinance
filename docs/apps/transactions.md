@@ -8,8 +8,8 @@ is expressed through owned banking accounts, cards, invoices, and movements.
 
 - CRUD, search and filtering for `INCOME` and `EXPENSE` events.
 - Category assignment for income/expense.
-- Amount, event date, recurrence and notes; reporting uses the current project
-  currency setting.
+- Amount, event date, recurrence and notes; consolidated reporting uses the
+  authenticated user's base currency while native amounts remain unchanged.
 - Selection of PIX, debit card, credit card, or direct account as the settlement
   path. Own transfers are recorded separately in Banking.
 - Atomic delegation to `banking` posting services.

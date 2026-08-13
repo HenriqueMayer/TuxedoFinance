@@ -1,11 +1,13 @@
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView as AuthLoginView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import CreateView
+from django.views.generic import CreateView, UpdateView
 
-from accounts.forms import LoginForm, SignupForm
+from accounts.forms import BaseCurrencyForm, LoginForm, SignupForm
+from accounts.models import UserPreference
 
 
 class LoginView(SuccessMessageMixin, AuthLoginView):
@@ -41,5 +43,21 @@ class SignupView(SuccessMessageMixin, CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
+        UserPreference.objects.get_or_create(user=self.object)
         login(self.request, self.object)
         return response
+
+
+class SettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    template_name = 'accounts/settings.html'
+    form_class = BaseCurrencyForm
+    success_url = reverse_lazy('accounts:settings')
+    success_message = _('Your base currency was updated.')
+
+    def get_object(self, queryset=None):
+        return UserPreference.for_user(self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs

@@ -1,7 +1,6 @@
 from datetime import date
 from decimal import Decimal
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -28,6 +27,7 @@ from investments.services import (
     get_total_in_base_timeseries,
     sync_investment_ledger,
 )
+from accounts.models import UserPreference
 
 
 def _add_months(year, month, offset):
@@ -93,7 +93,7 @@ class InvestmentListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        base = settings.CURRENCY
+        base = UserPreference.for_user(user).base_currency
         total = Decimal('0.00')
         missing = set()
         for position in get_asset_positions(user):

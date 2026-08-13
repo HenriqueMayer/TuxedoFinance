@@ -1,4 +1,5 @@
-from django.conf import settings
+from accounts.models import UserPreference
+from core.currencies import get_currency, DEFAULT_CURRENCY
 
 
 def currency(request):
@@ -9,4 +10,10 @@ def currency(request):
     plumbing. Change `settings.CURRENCY_SYMBOL` to switch currencies —
     never hardcode a symbol in a template.
     """
-    return {'CURRENCY_SYMBOL': settings.CURRENCY_SYMBOL}
+    code = DEFAULT_CURRENCY
+    if request.user.is_authenticated:
+        code = UserPreference.for_user(request.user).base_currency
+    return {
+        'CURRENCY_CODE': code,
+        'CURRENCY_SYMBOL': get_currency(code).symbol,
+    }
