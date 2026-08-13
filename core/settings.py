@@ -22,74 +22,11 @@ from core.currencies import DEFAULT_CURRENCY, get_currency
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# Sprint 10 (PRD §10.3): SECRET_KEY, DEBUG, and ALLOWED_HOSTS are
-# environment-driven so the same image can run in dev or production without
-# code changes. The fallbacks below preserve the original `startproject`
-# defaults for local, non-Docker development (`uv run python manage.py
-# runserver`) — a real deployment must always set these via the environment
-# (see `.env.example` and the README release checklist).
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# This fallback is committed to a public template repository, so it is public
-# knowledge — anyone holding it can forge session cookies and password-reset
-# tokens for an instance still using it. Fine for local development, fatal in
-# production, hence the guard below.
-INSECURE_SECRET_KEY = 'django-insecure-2ne$gqt=1%7zr5&pb%qp$4tx=7)p_9+#5x@mlscz@pcj-rbu6!'
-# A blank value counts as unset. `SECRET_KEY=` left empty in .env is the most
-# likely way to get this wrong, and Django will happily boot with an empty
-# key — so it has to fall through to the fallback and trip the guard below,
-# not sail past it.
-# The placeholder shipped in `.env.example`. Copying that file to `.env` and
-# never filling it in is the most common way to end up with a key that is
-# technically "set" and still worthless. It is not the fallback above, so the
-# guard has to know it by name or it sails straight through.
-PLACEHOLDER_SECRET_KEY = 'change-me-to-a-long-random-secret-key'
-
-# The length `get_random_secret_key()` produces. A shorter key means it was
-# either typed by hand or mangled in transit — most often by Docker Compose
-# expanding an unescaped `$...` inside the value (see `.env.example`), which
-# silently shortens the key and invalidates every existing session.
-MIN_SECRET_KEY_LENGTH = 50
-
-SECRET_KEY = os.environ.get('SECRET_KEY', '').strip() or INSECURE_SECRET_KEY
-
-GENERATE_SECRET_KEY_HINT = (
-    'Generate one with:\n'
-    '  python -c "from django.core.management.utils import '
-    'get_random_secret_key; print(get_random_secret_key())"'
-)
-
-if not DEBUG:
-    # Refuse to boot rather than serve a production site with a guessable key.
-    # `check --deploy` warns about all of this, but nothing forces anyone to
-    # run it — and an instance deployed with a bad key looks perfectly healthy
-    # while being trivially forgeable, so this has to fail loudly instead.
-    if SECRET_KEY == INSECURE_SECRET_KEY:
-        raise ImproperlyConfigured(
-            'SECRET_KEY is still the insecure development fallback, which is '
-            'published in this repository, while DEBUG is False. Set a real '
-            f'one in the environment (or .env) before deploying. {GENERATE_SECRET_KEY_HINT}'
-        )
-    if SECRET_KEY == PLACEHOLDER_SECRET_KEY:
-        raise ImproperlyConfigured(
-            'SECRET_KEY is still the placeholder copied from .env.example '
-            f'while DEBUG is False. {GENERATE_SECRET_KEY_HINT}'
-        )
-    if len(SECRET_KEY) < MIN_SECRET_KEY_LENGTH:
-        raise ImproperlyConfigured(
-            f'SECRET_KEY is only {len(SECRET_KEY)} characters long, but '
-            f'{MIN_SECRET_KEY_LENGTH} are expected, while DEBUG is False. If '
-            'the value in .env looks long enough, Docker Compose most likely '
-            'ate part of it: an unescaped `$` starts a variable reference '
-            'there, so `$foo` expands to nothing. Double every `$` in .env '
-            f'(write `$$`), or use a key without one. {GENERATE_SECRET_KEY_HINT}'
-        )
+SECRET_KEY = os.environ.get('SECRET_KEY', '').strip()
+if not SECRET_KEY:
+    raise ImproperlyConfigured('SECRET_KEY must be set in the environment.')
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -118,10 +55,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise serves compressed, cache-busted static files directly from
-    # the app process (PRD §10.6) — lean production static strategy, no
-    # nginx. Must sit right after SecurityMiddleware.
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -144,7 +77,6 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.currency',
-                'core.context_processors.debug_flag',
             ],
         },
     },
@@ -159,35 +91,13 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        # `SQLITE_PATH` lets Docker Compose point the single db.sqlite3 file
-        # at the mounted volume (see docker-compose.yml) so data survives
-        # container restarts/recreation (PRD §10.2). Defaults to the
-        # project root for local, non-Docker development.
-        'NAME': os.environ.get('SQLITE_PATH', str(BASE_DIR / 'db.sqlite3')),
-        # Concurrency hardening. The production image runs several gunicorn
-        # workers against this one file, and SQLite's defaults are tuned for a
-        # single process: on the stock `journal_mode=delete` a writer takes an
-        # exclusive lock that blocks readers outright, so two overlapping
-        # requests surface as `OperationalError: database is locked` — an
-        # intermittent 500 with no obvious trigger.
+        'NAME': BASE_DIR / 'db.sqlite3',
         'OPTIONS': {
-            # Readers no longer block the writer and vice versa, which is what
-            # makes multiple workers viable at all. WAL is a property of the
-            # database file, so this survives as soon as it is set once.
-            # `synchronous=NORMAL` is the standard companion to WAL: durable
-            # against process crashes, trading only a power-loss window.
             'init_command': (
                 'PRAGMA journal_mode=WAL;'
                 'PRAGMA synchronous=NORMAL;'
             ),
-            # How long a statement waits for a lock before giving up. Django's
-            # default is 5s; the extra headroom absorbs a slow write without
-            # turning it into an error page.
             'timeout': 20,
-            # Take the write lock when the transaction opens instead of
-            # upgrading mid-way. Upgrading is what produces the unavoidable
-            # "locked" error, because two transactions can each hold a read
-            # lock and then both need to write.
             'transaction_mode': 'IMMEDIATE',
         },
     }
@@ -245,69 +155,18 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# `collectstatic` target (Sprint 10.1 runs this at Docker build time).
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Production static strategy (PRD §10.6): WhiteNoise serves static files
-# with hashed, cache-friendly names and gzip/brotli compression — no nginx.
-# The manifest-hashing backend is only selected when DEBUG is False *at
-# process startup* (i.e. a real deployment, where the Docker image always
-# runs `collectstatic` at build time — see Dockerfile). This is checked
-# against the module-level `DEBUG` above, not `django.conf.settings.DEBUG`,
-# so anything that flips that setting after startup cannot demand a local,
-# uncollected `staticfiles/` manifest in a development run.
-STORAGES = {
-    'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
-    },
-    'staticfiles': {
-        'BACKEND': (
-            'django.contrib.staticfiles.storage.StaticFilesStorage'
-            if DEBUG
-            else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-        ),
-    },
-}
-
-# If a static file is ever missing from the manifest in production (e.g. a
-# stale deploy), fall back to the plain path instead of raising a 500.
-WHITENOISE_MANIFEST_STRICT = False
-
-
-# HTTPS hardening (PRD §10.5)
-# https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/#https
-#
-# Gated on its own flag rather than on `DEBUG`, because "not in development"
-# and "served over TLS" are different questions and only the operator knows
-# the second one. The shipped docker-compose.yml publishes plain HTTP on
-# :8000, so enabling these whenever `DEBUG=False` would break that documented
-# first run outright: browsers never send a `Secure` cookie over HTTP (login
-# would appear to succeed and immediately bounce back to the form), and
-# `SECURE_SSL_REDIRECT` would send `http://localhost:8000` into a redirect
-# loop to an HTTPS port nothing is listening on.
-#
-# Set `HTTPS=True` once the instance really is behind TLS — then
-# `manage.py check --deploy` comes back clean.
-
 HTTPS = os.environ.get('HTTPS', 'False') == 'True'
 
-# Cookies carrying the session and the CSRF token stop travelling in clear.
 SESSION_COOKIE_SECURE = HTTPS
 CSRF_COOKIE_SECURE = HTTPS
 
 SECURE_SSL_REDIRECT = HTTPS
 
-# One year, the value HSTS preload lists require. Only meaningful over TLS,
-# and deliberately 0 otherwise: a stray HSTS header pins browsers to HTTPS for
-# a year, which is painful to undo if the deployment is not actually ready.
 SECURE_HSTS_SECONDS = 31536000 if HTTPS else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = HTTPS
 SECURE_HSTS_PRELOAD = HTTPS
 
 if HTTPS:
-    # How Django learns the original request was HTTPS when TLS is terminated
-    # upstream (load balancer, reverse proxy, PaaS router). Trusted only when
-    # `HTTPS=True`, since a client can forge this header if nothing strips it.
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
@@ -317,51 +176,19 @@ if HTTPS:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# Authentication
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth
-# Route names below are provided by apps built in later sprints:
-# 'accounts:login' (Sprint 3), 'dashboard:index' (Sprint 7), 'pages:landing' (Sprint 2).
-
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'dashboard:index'
 LOGOUT_REDIRECT_URL = 'pages:landing'
 
 
-# Currency (PRD §8.5, FR20)
-# One setting picks both the symbol and the number format — `R$ 1.000,00` and
-# `$ 1,000.00` differ in their separators, so choosing a currency has to set
-# both or amounts come out mislabelled. Supported codes live in
-# `core/currencies.py`; an unknown one raises `ImproperlyConfigured` at startup.
-#
-#   CURRENCY=USD uv run python manage.py runserver
-#
-# `CURRENCY_SYMBOL` stays available as the derived value every template reads
-# via `core.context_processors.currency` — never hardcode a symbol in a screen.
-
 CURRENCY = os.environ.get('CURRENCY', DEFAULT_CURRENCY)
 CURRENCY_SYMBOL = get_currency(CURRENCY).symbol
 
-
-# Logging
-# https://docs.djangoproject.com/en/6.0/topics/logging/
-#
-# Django's built-in configuration is useless for a container deployment: its
-# `console` handler carries a `require_debug_true` filter, and the `django`
-# logger's only other handler is `mail_admins`. With DEBUG=False and no mail
-# backend — i.e. exactly how this image runs — an unhandled exception renders
-# the bare "Server Error (500)" page and the traceback is dropped on the
-# floor. `docker compose logs` then shows nothing at all, which turns any
-# production 500 into guesswork.
-#
-# Replacing it with an unfiltered stream handler puts tracebacks on stdout,
-# where Docker (and every log collector) already looks. Nothing here depends
-# on DEBUG: the traceback is wanted precisely when DEBUG is False.
 
 LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
 
 LOGGING = {
     'version': 1,
-    # Third-party loggers keep working instead of being silently switched off.
     'disable_existing_loggers': False,
     'formatters': {
         'app': {
@@ -380,9 +207,6 @@ LOGGING = {
         'level': LOG_LEVEL,
     },
     'loggers': {
-        # The logger Django's exception handler writes 500 tracebacks to.
-        # `propagate: False` keeps them from being printed a second time by
-        # the root logger above.
         'django.request': {
             'handlers': ['console'],
             'level': 'ERROR',

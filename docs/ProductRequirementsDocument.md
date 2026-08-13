@@ -9,9 +9,10 @@
 
 CashFlow replaces generic payment methods with an explicit banking model. The
 release adds banks, currency-specific accounts, an authoritative movement
-ledger, PIX, debit and credit cards, card invoices, loyalty points, native
-multicurrency and historical conversion. Investments remain separate while
-sharing banks and bank accounts for providers and cash settlement.
+ledger, PIX, debit and credit cards, card invoices and loyalty points.
+Multicurrency preferences and retained historical conversion are planned for
+ROADMAP Phases 3 and 4. Investments remain separate while sharing banks and
+bank accounts for providers and cash settlement.
 
 The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
@@ -24,15 +25,15 @@ HTMX progressive enhancement.
 | G1 | Make account balances auditable | Every balance derives from opening balance plus posted movements. |
 | G2 | Model settlement correctly | PIX/debit settle immediately; credit settles through invoices. |
 | G3 | Eliminate double counting | Credit spending and invoice payment affect different reporting components. |
-| G4 | Support native multicurrency | Preserve native values and convert historically to a base currency. |
+| G4 | Multicurrency roadmap | Preserve currency-specific account data; per-user and historical reporting are planned for Phases 3 and 4. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
-| G6 | Track loyalty value and cost | Append-only points entries and complete redemption/IOF details. |
+| G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
 
 ## 3. Scope
 
 ### In scope
 
-- Replace `payments` with `banking` and a clean schema.
+- Maintain the banking schema without automatic legacy-data conversion.
 - `Bank` with multiple `BankAccount` rows, each in one currency.
 - Account opening balance and derived `BankMovement` ledger.
 - PIX enabled as a standard account capability by default.
@@ -40,15 +41,14 @@ HTMX progressive enhancement.
 - Card invoices, invoice items and due-date account settlement.
 - Ordinary external PIX income/expense and neutral own-account transfers.
 - Independent or bank/card-linked loyalty programs and points ledger.
-- Native currencies and effective-date conversion to user base currency.
+- Currency-specific bank accounts and manual exchange rates.
 - Investment products, classified assets, quantity/unit-price operations and
   mandatory bank cash endpoints.
 - Dashboard/read models updated for cash, invoices, investments and net worth.
 
 ### Out of scope
 
-- Automatic migration of legacy `PaymentMethod`, `Institution`, transaction or
-  investment rows.
+- Automatic migration of legacy financial rows.
 - Open Finance/bank synchronization, statement imports and issuer APIs.
 - Market-price, FX or loyalty-provider feeds; rates and valuations remain manual.
 - Collaborative accounts, accounting-grade general ledger and tax reporting.
@@ -69,25 +69,33 @@ HTMX progressive enhancement.
 | FR08 | No double counting | Spending is recognized from invoice items; invoice settlement changes cash/liability and is not a second expense. |
 | FR09 | Own transfers | Transfers between owned accounts create linked debit/credit movements and are never income or expense. |
 | FR10 | External PIX | PIX involving an external party is an ordinary `INCOME` or `EXPENSE`, not an own transfer. |
-| FR11 | Transactions | CRUD/search/filter for income, expense and transfer events, with category, native amount/currency, date, recurrence and banking settlement links. |
+| FR11 | Transactions | CRUD/search/filter for income and expense events, with category, amount, date, recurrence and banking settlement links. |
 | FR12 | Categories | Existing category/subcategory management remains for income and expense. |
 | FR13 | Loyalty programs | A program may be independent, linked to a bank, linked to cards, or linked to both. |
 | FR14 | Loyalty ledger | `LoyaltyEntry` supports invoice award, points purchase, adjustment, expiration and redemption. |
 | FR15 | Redemption details | Redemption records points, target monetary amount/currency, IOF, and IOF funding instrument. Positive IOF requires an owned account, debit card or credit card. |
-| FR16 | Multicurrency | Accounts and monetary events retain native currency and amount; consolidated reports convert to the user's base currency. |
-| FR17 | Historical FX | Conversion uses the rate effective on the event date and is retained/referenced so later rates do not rewrite history. Missing rates are explicit. |
+| FR16 | Multicurrency (planned — Phase 3) | Per-user reporting currency with native amounts retained. |
+| FR17 | Historical FX (planned — Phase 4) | Retain conversion evidence so later rates do not rewrite history. |
 | FR18 | Investments structure | Investments remain separate, use `Bank` instead of `Institution`, and group products and assets by bank/product/asset. |
 | FR19 | Assets | Every asset has name, code, asset class and currency; class/currency are immutable after use. |
 | FR20 | Investment operations | Every operation records kind, quantity and unit price and has no title. Gross value is derived. |
 | FR21 | Investment cash endpoints | Deposit requires a source bank account; withdrawal requires a destination bank account. Their movements post atomically with the operation. |
 | FR22 | Internal yield | Yield changes the investment position only and creates no bank income/movement until withdrawn. |
-| FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value, net worth, native currencies and historical base conversions. |
+| FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth; native/base conversion is planned for Phases 3 and 4. |
 | FR24 | Forecasts | Recurrences and future invoices may be projected but do not alter the posted ledger before settlement. |
-| FR25 | Breaking delivery | Replace `payments` with `banking` through a clean migration reset; no compatibility or automatic legacy import. |
+| FR25 | Breaking delivery | Use a clean migration reset with no compatibility or automatic legacy import. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
+| FR28 | Local database ownership | The current tree and future commits do not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. Historical Git objects require separate coordinated cleanup. |
 
 ## 5. Domain Rules
+
+### Current implementation status
+
+CashFlow currently supports editable personal records. The per-user base
+currency and retained historical FX evidence described below are planned for
+ROADMAP Phases 3 and 4; the current application uses the project `CURRENCY`
+setting and resolves applicable rates at read time.
 
 ### 5.1 Balance and settlement
 
@@ -97,15 +105,15 @@ HTMX progressive enhancement.
 - Credit purchases affect expense reporting and card payable, not available cash.
 - Invoice payment creates one account debit on `due_date` and clears/reduces the
   payable. It does not create expense again.
-- Posted financial rows are immutable; correction uses a linked reversal.
+- Personal financial rows remain editable and deletable by their owner.
 
 ### 5.2 Transfer classification
 
 - Source and destination both owned by the user means own transfer.
 - An own transfer has two linked movements, is category-neutral and is excluded
   from income/expense and consolidated net cash flow.
-- Different currencies retain source amount, destination amount and historical
-  conversion rate.
+- Different currencies retain source and destination amounts. Retained
+  conversion evidence is planned for ROADMAP Phase 4.
 - PIX alone does not imply transfer. An external PIX is normal income/expense.
 
 ### 5.3 Loyalty
@@ -119,13 +127,10 @@ HTMX progressive enhancement.
 
 ### 5.4 Currency
 
-- The user selects one base reporting currency; this does not constrain account
-  or event currencies.
-- Native amounts are always preserved and shown.
-- Historical cash-flow conversion uses the event-date rate, not the latest rate.
-- Current net-worth simulation may use a current rate but labels its valuation
-  date and does not rewrite historical values.
-- Missing conversion cannot be treated as 1:1 or silently hidden.
+- The current project-wide `CURRENCY` setting selects reporting currency.
+- Per-user base reporting currency is planned for ROADMAP Phase 3.
+- Retained historical conversion evidence and missing-rate handling are planned
+  for ROADMAP Phase 4.
 
 ### 5.5 Investments
 
@@ -172,8 +177,7 @@ dashboard/     # read models and reports
 investments/   # products, assets, position operations and valuation
 ```
 
-`payments/` and its namespace/templates are removed. Navigation and all foreign
-keys move to `banking` concepts.
+Navigation and financial relationships use the current banking concepts.
 
 ## 8. UX Flows
 
@@ -221,14 +225,14 @@ currency/valuation date and whether it is actual or projected.
 
 - Preserve the current light/dark design language, semantic colors, typography,
   reusable partials and mobile-first behavior.
-- Replace the Payments navigation item and templates with Banking.
+- Keep banking as the navigation and settlement domain.
 - Banking screens expose hierarchy without hiding accounting consequences:
   bank, accounts/currencies/balances, capabilities/cards, ledger and invoices.
 - Credit transaction forms explain that cash moves at invoice payment; debit and
   PIX forms explain immediate settlement.
 - Own transfers use a neutral visual treatment.
 - Native and base amounts are never shown without currency codes/symbols.
-- Missing FX, overdue invoices, reversals and incomplete totals receive explicit
+- Missing FX, overdue invoices and incomplete totals receive explicit
   accessible status text, not color-only signaling.
 - The public navbar and authenticated desktop/mobile navbars expose the same
   English/Brazilian Portuguese selector. The initial visit may use the browser
@@ -243,7 +247,7 @@ currency/valuation date and whether it is actual or projected.
 |---|---|---|
 | NFR01 | Atomicity | Multi-row posting workflows run in one database transaction. |
 | NFR02 | Idempotency | Invoice settlement and scheduled posting cannot duplicate movements. |
-| NFR03 | Auditability | Posted ledger entries are reversed, never silently rewritten. |
+| NFR03 | Editability | Personal records may be corrected by their owner; audit-grade reversals are out of scope. |
 | NFR04 | Isolation | Querysets, forms and services validate user ownership. |
 | NFR05 | Precision | Decimal arithmetic only; explicit currency and rounding policy. |
 | NFR06 | Performance | Use scoped querysets, `select_related`/`prefetch_related`, and bounded read-model folds. |
@@ -267,11 +271,12 @@ currency/valuation date and whether it is actual or projected.
 - [ ] English and Brazilian Portuguese work on full pages and HTMX fragments,
       retain stable URLs, and do not alter currency separators or user data.
 - [ ] Fresh migrations install successfully on an empty SQLite database.
+- [ ] The root SQLite database is ignored by Git and a clean clone becomes usable after migrations.
 - [ ] Legacy database use is blocked/documented; no partial in-place migration is implied.
 
 ## 13. Delivery Plan
 
-1. Remove `payments`, old migration graph and legacy database from the release workspace.
+1. Remove legacy migration artifacts and databases from the release workspace.
 2. Add `banking` models and services in dependency order: bank/account/rates,
    movements/transfers, cards/invoices, loyalty.
 3. Rebuild transactions against banking settlement paths.
@@ -285,8 +290,7 @@ currency/valuation date and whether it is actual or projected.
 
 This release intentionally has no in-place schema migration. Before deployment,
 operators may export legacy data for manual reference. Deployment then uses a
-fresh SQLite database and newly generated initial migrations. Old `payments`
-tables, `PaymentMethod` references, investment `Institution` rows and legacy
-transaction/investment shapes are unsupported. Rollback requires restoring the
-entire pre-release application and its matching database backup; mixing old and
-new code/database versions is not supported.
+fresh SQLite database and newly generated initial migrations. Legacy data shapes
+are unsupported. Rollback requires restoring the entire pre-release application
+and its matching database backup; mixing old and new code/database versions is
+not supported.

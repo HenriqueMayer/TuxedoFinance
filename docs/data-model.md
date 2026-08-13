@@ -1,8 +1,7 @@
 # Data Model
 
-The approved clean schema and its business rules. The release is intentionally
-breaking: old `PaymentMethod`, payment, institution, transaction, and investment
-rows are not migrated. See [Breaking release](#breaking-release).
+The current schema and its business rules. Legacy financial rows are not
+automatically migrated. See [Breaking release](#breaking-release).
 
 ## Entity-relationship diagram
 
@@ -35,8 +34,6 @@ erDiagram
 `BankingProfile` does not exist in the current schema. Phase 3 will add a
 one-to-one relationship with the native Django user to store `base_currency`.
 Until then, the project-wide `CURRENCY` setting controls reporting currency.
-The planned change must not mutate native amounts or historical conversion
-evidence.
 
 ### `Bank`
 
@@ -70,12 +67,12 @@ USD, or other accounts under the same bank are valid.
 | `account` | Ledger being changed. |
 | `amount` | Positive amount in the account's currency. |
 | `direction` | `CREDIT` or `DEBIT`; determines the sign. |
-| `kind` | `OPENING_ADJUSTMENT`, `TRANSACTION`, `TRANSFER`, `INVOICE_PAYMENT`, `INVESTMENT`, `REVERSAL`, or `ADJUSTMENT`. |
-| `occurred_on` | Real settlement date. |
-| `transaction` | Optional economic event realized by the movement. |
-| `invoice` | Required for `INVOICE_PAYMENT`. |
-| `transfer_id` | Shared immutable identifier for the two sides of an own transfer. |
-| `exchange_rate` | Historical rate used when the paired side has another currency. |
+| `kind` | `INCOME`, `EXPENSE`, `TRANSFER`, `INVOICE`, `INVESTMENT`, `REWARD`, or `ADJUSTMENT`. |
+| `effective_date` | Settlement date used for balance calculation. |
+| `description` | Optional user-facing movement description. |
+| `invoice` | Optional one-to-one invoice settlement link. |
+| `transfer` | Optional link to the two-sided `BankTransfer`. |
+| `source_key` | Optional per-user idempotency key for a source-backed movement. |
 
 `available_balance = opening_balance + credits - debits`. This ledger is the
 only source of account balance. Source-backed rows are synchronized when their
@@ -83,15 +80,14 @@ transaction, invoice, transfer, investment, or reward source changes.
 
 ### Cards and invoices
 
-`DebitCard(account, name, last_four, active)` and
-`CreditCard(account, name, last_four, closing_day, due_day, active)` both belong
-to one account. A `CardInvoice` belongs to a credit card and records statement
-start/end, due date, native currency, status, item total, and its settlement
-movement.
+`DebitCard(user, account, name)` and
+`CreditCard(user, account, name, closing_day, due_day)` both belong to one
+account. A `CardInvoice` belongs to a credit card and records reference month,
+due date, amount, status, paid timestamp and its settlement movement.
 
 A debit purchase creates a transaction and immediate debit movement. A credit
 purchase creates a transaction assigned to one invoice and no immediate
-movement. On the invoice due date, payment creates one `INVOICE_PAYMENT` debit
+movement. On the invoice due date, payment creates one `INVOICE` debit
 for the invoice payable total. Dashboard logic must never add invoice purchases
 to account balance separately from that payment.
 
@@ -100,22 +96,21 @@ to account balance separately from that payment.
 | Field | Meaning |
 |---|---|
 | `user` | Owner. |
-| `description` | User-facing economic-event description. |
-| `amount`, `currency` | Positive native amount and ISO currency. |
-| `base_amount`, `exchange_rate` | Historical conversion to the user's base currency. |
-| `transaction_type` | `INCOME`, `EXPENSE`, or `TRANSFER`. |
-| `category` | Required for income/expense; absent for own transfers. |
-| `occurred_on` | Purchase or economic-event date. |
-| `settlement_kind` | `PIX`, `DEBIT_CARD`, `CREDIT_CARD`, `ACCOUNT`, or `TRANSFER`. |
-| settlement links | The owned account/card/invoice and optional realizing movement. |
+| `title` | User-facing economic-event title. |
+| `amount` | Positive amount in the project reporting currency. |
+| `transaction_type` | `INCOME` or `EXPENSE`. |
+| `category` | Required income/expense category. |
+| `date` | Purchase or economic-event date. |
+| `payment_channel` | `PIX`, `DEBIT_CARD`, `CREDIT_CARD`, or `ACCOUNT`. |
+| settlement links | Exactly one owned account, debit card or credit card, according to the channel. |
 | recurrence fields | Optional schedule used to project future events. |
 | timestamps | `created_at`, `updated_at`. |
 
 An external PIX is a normal `INCOME` or `EXPENSE`; it creates its immediate
-movement. A transfer between owned accounts is `TRANSFER`, creates paired
-movements, and is excluded from income and expense. Investments are no longer a
-transaction type: their cash legs use investment movements and their position
-history remains in `investments`.
+movement. A transfer between owned accounts is a separate `BankTransfer`,
+creates paired movements, and is excluded from income and expense. Investments
+are not a transaction type: their cash legs use investment movements and their
+position history remains in `investments`.
 
 ## Categories
 
@@ -146,18 +141,16 @@ A redemption additionally requires `target_amount`, `target_currency`, and
 required: bank account, debit card, or credit card. Its settlement follows the
 same immediate/deferred card rules as any other payment.
 
-## Currency and historical conversion
+## Currency and historical conversion (planned — ROADMAP Phases 3–4)
 
-The user has one base currency for consolidated reporting, but operational data
-is natively multicurrency. Every monetary event retains its native amount and
-currency. `ExchangeRate(from_currency, to_currency, rate, effective_date)` is
-unique per owner/pair/date. Existing rates are not edited or deleted in the UI.
+The current application uses the project-wide `CURRENCY` setting for reporting
+and looks up exchange rates at read time. The design below is planned: a user
+base currency and retained conversion evidence for historical reports. Every
+monetary event retains its native amount and currency.
 
-Historical reports resolve the rate effective on the event date and retain that
-rate or the resulting `base_amount`. A newer rate affects only newer events and
-current simulations; it never revalues historical cash flow. Native totals are
-always available. Missing conversion is displayed as missing and excluded from
-the consolidated base total with an explicit warning.
+Phase 4 will retain the rate or resulting `base_amount` used by historical
+reports. Until then, editing a rate can affect prior converted totals. Native
+totals remain available and missing conversion is displayed explicitly.
 
 ## Investments
 
@@ -191,14 +184,16 @@ Operation kinds are `DEPOSIT`, `WITHDRAWAL`, and `YIELD`:
   does not create bank income or an account movement.
 
 The source/destination account currency may differ from the asset currency; the
-operation retains native values and its historical conversion. Deposit and
-withdrawal cash legs are never manually duplicated as income/expense.
+operation retains native values. Retained historical conversion evidence is
+planned for ROADMAP Phase 4. Deposit and withdrawal cash legs are never manually
+duplicated as income/expense.
 
 ## Dashboard formulas
 
 - **Available balance per account:** opening balance plus its posted movements.
-- **Consolidated available balance:** each account balance converted to base at
-  the report's applicable historical/current rate, with missing rates disclosed.
+- **Consolidated available balance:** current reporting uses the project
+  `CURRENCY`; per-user base currency and retained FX evidence are planned for
+  ROADMAP Phases 3 and 4.
 - **Income/Expenses:** categorized `Transaction` economic events, excluding own
   transfers and investment cash legs.
 - **Credit-card payable:** open invoice totals, shown separately from available
@@ -216,12 +211,25 @@ withdrawal cash legs are never manually duplicated as income/expense.
 - Derived ledger rows are idempotently synchronized from their source records.
 - Monetary amounts are positive; direction/kind carries their accounting sign.
 
+## Local database lifecycle
+
+The schema is distributed through Django migrations, not through a committed
+SQLite file. On a clean clone, `manage.py migrate` creates the installation's
+local `db.sqlite3`. Git ignores that root file and its journal/WAL companions.
+The installation owner controls the resulting financial data and is responsible
+for access protection and backups.
+
+The repository-owner `git rm --cached` operation has no schema or persisted-data
+migration: that working-tree file remains in place and unchanged. Existing
+clones must back up before pulling the deletion because Git may remove their
+formerly tracked copy. Rolling back the source change can restore the old Git
+entry, but should not be used to publish local financial records. Detailed
+SQLite backup/restore and rehearsal guidance remains a separate ROADMAP Phase
+6.2 deliverable.
+
 ## Breaking release
 
-This schema ships through a clean migration reset. The release removes
-`payments.PaymentMethod`, replaces `payments` with `banking`, removes investment
-`Institution`, and changes transaction and investment identities and foreign
-keys. Existing databases are not upgraded in place: back up/export if needed,
-delete the SQLite database and historical migration files as specified by the
-release procedure, create fresh migrations, migrate, and recreate/import data
-against the new schema. No automatic legacy-data conversion is approved.
+This schema has no in-place upgrade from earlier releases. Back up/export data
+if needed, create a fresh database through migrations, and recreate or import
+records against the current schema. No automatic legacy-data conversion is
+approved.

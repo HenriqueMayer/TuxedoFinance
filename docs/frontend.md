@@ -19,8 +19,7 @@ screens.
 | Investment | Amber |
 | Own transfer | Indigo/neutral; never income/expense colored |
 | Credit-card payable | Violet |
-| Warning / missing FX / overdue invoice | Amber plus explicit text/icon |
-| Reversal / invalidated posting | Muted with a visible `Reversed` status |
+| Warning / overdue invoice | Amber plus explicit text/icon |
 
 Color is never the only carrier of status. Monetary labels always include a
 currency symbol or ISO code, especially when native and base values are shown
@@ -36,9 +35,9 @@ navigation becomes:
 Dashboard | Transactions | Categories | Banking | Investments | Reports
 ```
 
-`Payments` is removed. `Banking` remains active for nested bank, account, card,
-invoice, movement and loyalty routes. The mobile `<details>/<summary>` menu uses
-the same links and ordering as desktop.
+`Banking` remains active for nested bank, account, card, invoice, movement and
+loyalty routes. The mobile `<details>/<summary>` menu uses the same links and
+ordering as desktop.
 
 `partials/language_selector.html` is included once in the public navbar and in
 both authenticated variants: the desktop controls and CSS-only mobile menu. It
@@ -57,23 +56,20 @@ templates/
 │   ├── navbar_public.html   navbar_app.html
 │   ├── footer.html          messages.html
 │   ├── form_field.html      stat_card.html
-│   ├── money.html           status_badge.html
+│   ├── language_selector.html theme_toggle.html
 │   └── empty_state.html
 ├── pages/                   accounts/        categories/
 ├── banking/
-│   ├── index.html           bank_form.html
-│   ├── account_detail.html  account_form.html
-│   ├── movement_list.html   transfer_form.html
-│   ├── card_form.html       invoice_detail.html
-│   └── loyalty/             confirm_delete.html
+│   ├── list.html            detail.html
+│   ├── form.html            confirm_delete.html
+│   └── exchange_rates.html
 ├── transactions/
 ├── dashboard/
 └── investments/
 ```
 
-The former `templates/payments/` tree is removed. Shared money rendering belongs
-in one partial/helper so native/base amount ordering and missing-FX states cannot
-drift across banking, transactions, dashboard and investments.
+Money rendering follows the project reporting currency. Per-user base currency
+and retained historical FX states are planned for ROADMAP Phases 3 and 4.
 
 ## Banking information architecture
 
@@ -88,8 +84,8 @@ linked cards. The account detail is organized in this order:
 5. Credit invoices and due/overdue status.
 
 Opening balance is clearly labeled as the ledger starting point, not an income
-transaction. Posted movements are not offered destructive edit/delete controls;
-the available action is reversal with confirmation.
+transaction. Personal records remain editable; audit-grade reversal controls
+are not part of the current product.
 
 ## Forms and settlement disclosure
 
@@ -113,17 +109,9 @@ enhance dependent choices, but the submitted form must work without it.
 
 ## Multicurrency display
 
-The native value is primary. A historical base conversion appears below or
-beside it with rate and effective date when useful:
-
-```text
-USD 125.00
-BRL 681.25 at 5.45000000 on 2026-08-11
-```
-
-An unavailable rate renders `Base conversion unavailable for this date`; it does
-not show zero, use a current rate silently or omit the row. Consolidated cards
-with missing rates use an `Incomplete total` badge and list excluded currencies.
+The current UI uses the project reporting currency. Per-user base currency,
+historical conversion evidence and missing-rate presentation are planned for
+ROADMAP Phases 3 and 4.
 
 Inputs remain dot-decimal HTML number fields. Display localization follows each
 currency's formatting metadata; SVG coordinates and CSS percentages remain
@@ -172,12 +160,9 @@ responsive overflow containers and accessible text summaries. HTMX swaps only
 the report island while preserving focus and viewport; plain links/forms remain
 equivalent.
 
-Every chart states:
-
-- native or base currency;
-- valuation/conversion date where applicable;
-- actual versus projected period;
-- whether totals are incomplete due to missing FX.
+Every chart states its reporting currency and actual versus projected period.
+Per-user base currency, valuation dates and missing-FX totals are planned for
+ROADMAP Phases 3 and 4.
 
 Credit purchase and invoice payment series must use distinct labels. No chart
 may aggregate both as expenses. Investment yield is shown in investment

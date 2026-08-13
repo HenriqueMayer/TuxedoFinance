@@ -23,7 +23,7 @@ class SignupForm(UserCreationForm):
         fields = ('username', 'email')
 ```
 
-Adds `email` as a required field on top of Django's native `UserCreationForm` (which normally only asks for `username` + two password fields). `__init__` forces `email` to `required = True` and applies the shared `INPUT_CLASSES` design-system string (see [frontend.md § Shared component classes](../frontend.md#shared-component-classes-prd-9394-not-extracted-into-template-tags--copied-verbatim-per-use)) to every field's widget — `partials/form_field.html` renders labels/errors/help text but never injects classes itself, so every form is responsible for styling its own widgets this way.
+Adds `email` as a required field on top of Django's native `UserCreationForm` (which normally only asks for `username` + two password fields). `__init__` forces `email` to `required = True` and applies the shared input styling to every field's widget — `partials/form_field.html` renders labels/errors/help text but never injects classes itself, so every form is responsible for styling its own widgets.
 
 ### `LoginForm(AuthenticationForm)`
 
