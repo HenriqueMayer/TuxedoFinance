@@ -44,9 +44,9 @@ price. There is no `title`.
 
 A deposit source and withdrawal destination are mandatory even when the account
 belongs to the same bank as the product. Cross-currency operations retain their
-native cash and asset amounts. Retained historical conversion evidence is
-planned for ROADMAP Phase 4. The operation and its required movement are posted
-atomically.
+native cash and asset amounts and the applied FX snapshot when conversion is
+available. Missing rates preserve native data and mark conversion incomplete.
+The operation and its required movement are posted atomically.
 
 Yield is internal: it changes the portfolio position/value and appears in
 investment performance, but does not create bank income or available cash. Cash
@@ -55,10 +55,10 @@ exists only after an explicit withdrawal to a destination account.
 ## Valuation
 
 Portfolio totals are grouped by bank, product, asset class, asset and currency.
-Historical charts value each operation with the rate effective on its date;
-current portfolio simulations may use a current rate but must label the
-valuation date. Missing rates remain explicit and never cause unlike currencies
-to be summed directly.
+Historical charts use each operation's persisted FX snapshot. Current portfolio
+simulations may use a current rate but must label the valuation date and source.
+Missing rates remain explicit and never cause unlike currencies to be summed
+directly.
 
 ## Settings and integrity
 

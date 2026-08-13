@@ -8,13 +8,43 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from banking.models import BankMovement, LoyaltyEntry, LoyaltyProgram
-from banking.services import MissingExchangeRate, convert, create_movement
+from banking.services import MissingExchangeRate, convert, create_movement, latest_exchange_rate
+from accounts.models import UserPreference
 from investments.models import Asset, Investment
 
 
 ZERO = Decimal('0.00')
 CENTS = Decimal('0.01')
 TIMESERIES_MONTHS = 12
+
+
+def refresh_fx_snapshot(operation):
+    """Persist the rate used for an investment's base-currency presentation.
+
+    Native amounts remain untouched. Missing rates are recorded explicitly.
+    """
+    source = operation.currency
+    target = UserPreference.for_user(operation.user).base_currency
+    operation.fx_source_currency = source
+    operation.fx_target_currency = target
+    if source == target:
+        operation.fx_rate = Decimal('1')
+        operation.fx_snapshot_status = Investment.FxSnapshotStatus.CAPTURED
+    else:
+        rate = latest_exchange_rate(operation.user, source, target, operation.date)
+        if rate is None:
+            inverse = latest_exchange_rate(operation.user, target, source, operation.date)
+            if inverse is None:
+                operation.fx_rate = None
+                operation.fx_snapshot_status = Investment.FxSnapshotStatus.UNKNOWN
+            else:
+                operation.fx_rate = (Decimal('1') / inverse.rate).quantize(Decimal('0.00000001'))
+                operation.fx_snapshot_status = Investment.FxSnapshotStatus.CAPTURED
+        else:
+            operation.fx_rate = rate.rate
+            operation.fx_snapshot_status = Investment.FxSnapshotStatus.CAPTURED
+    operation.save(update_fields=['fx_source_currency', 'fx_target_currency', 'fx_rate', 'fx_snapshot_status'])
+    return operation
 
 
 def _description(operation):
@@ -240,6 +270,13 @@ def _months_window(months, offset):
 
 
 def _converted(user, operation, base_currency, on_date=None):
+    if operation.fx_snapshot_status == Investment.FxSnapshotStatus.CAPTURED:
+        if operation.fx_source_currency != operation.currency or operation.fx_target_currency != base_currency:
+            return None
+        return operation.gross_value * operation.fx_rate
+    if (operation.fx_snapshot_status == Investment.FxSnapshotStatus.UNKNOWN
+            and operation.fx_source_currency and operation.fx_target_currency):
+        return None
     try:
         return convert(
             user,

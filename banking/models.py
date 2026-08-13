@@ -216,6 +216,10 @@ class CardInvoice(TimestampedModel):
 
 
 class BankTransfer(TimestampedModel):
+    class FxSnapshotStatus(models.TextChoices):
+        UNKNOWN = 'UNKNOWN', _('Unknown')
+        RECONSTRUCTED = 'RECONSTRUCTED', _('Reconstructed')
+        CAPTURED = 'CAPTURED', _('Captured')
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bank_transfers'
     )
@@ -230,6 +234,12 @@ class BankTransfer(TimestampedModel):
     )
     destination_amount = models.DecimalField(
         max_digits=16, decimal_places=2, validators=[POSITIVE]
+    )
+    fx_rate = models.DecimalField(max_digits=20, decimal_places=8, null=True, blank=True)
+    fx_source_currency = models.CharField(max_length=3, blank=True)
+    fx_target_currency = models.CharField(max_length=3, blank=True)
+    fx_snapshot_status = models.CharField(
+        max_length=15, choices=FxSnapshotStatus.choices, default=FxSnapshotStatus.UNKNOWN
     )
     date = models.DateField()
     notes = models.TextField(blank=True)
