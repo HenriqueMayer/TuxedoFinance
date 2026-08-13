@@ -16,6 +16,7 @@ from banking.models import (
 )
 from banking.services import MissingExchangeRate, convert
 from investments.models import Investment
+from investments.services import historical_value_in_base
 from transactions.models import Transaction
 from accounts.models import UserPreference
 
@@ -70,7 +71,7 @@ def get_ledger_snapshot(user, as_of):
     for account in accounts:
         native = account.opening_balance
         movements = BankMovement.objects.filter(
-            account=account, effective_date__lte=as_of
+            user=user, account=account, effective_date__lte=as_of
         ).only('direction', 'amount', 'source_key')
         for movement in movements:
             native += movement.signed_amount
@@ -96,27 +97,28 @@ def get_ledger_snapshot(user, as_of):
     }
 
 
-def _investment_value(user, operation, missing):
-    if operation.cash_amount is not None and operation.source_account_id:
-        amount = operation.cash_amount
-        currency = operation.source_account.currency
-    else:
-        amount = operation.gross_value
-        currency = operation.asset.currency
-    return _convert_or_missing(user, amount, currency, operation.date, missing)
+def _investment_value(user, operation, base_currency, missing):
+    value = historical_value_in_base(
+        user, operation, base_currency,
+        on_date=operation.date,
+    )
+    if value is None:
+        missing.add(operation.asset.currency)
+    return value
 
 
 def _investment_totals(user, window):
     wanted = set(window)
     total = ZERO
     missing = set()
+    base_currency = UserPreference.for_user(user).base_currency
     operations = Investment.objects.filter(
         user=user, kind=Investment.Kind.DEPOSIT
     ).select_related('asset', 'source_account')
     for operation in operations:
         if (operation.date.year, operation.date.month) not in wanted:
             continue
-        value = _investment_value(user, operation, missing)
+        value = _investment_value(user, operation, base_currency, missing)
         if value is not None:
             total += value
     return total, sorted(missing)

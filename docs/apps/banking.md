@@ -80,7 +80,8 @@ Bank accounts, invoices and investment assets retain their configured native
 currency. Consolidated reporting uses the authenticated user's
 `UserPreference.base_currency`, which defaults to BRL and is editable in
 Settings. Historical transfer reports use each transfer's persisted FX
-snapshot; current rates are reserved for explicitly labeled current valuations.
+snapshot and effective evidence date; current rates are reserved for explicitly
+labeled current valuations.
 Missing rates preserve native amounts and mark the conversion incomplete.
 Changing the preference never mutates native amounts. Other banking entities
 remain on live/current conversion until a future roadmap item extends coverage.

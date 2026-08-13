@@ -15,8 +15,9 @@ The main screen presents:
 - investment value and net worth;
 - a forward outlook from recurring transactions and scheduled invoice payments.
 
-Per-user base currency is implemented through `UserPreference`; retained
-historical FX evidence remains planned for ROADMAP Phase 4.
+Per-user base currency is implemented through `UserPreference`. Historical
+investment operations consume their persisted FX evidence; account balances,
+transactions and movements still use explicitly current/read-time conversion.
 
 ## Accounting rules
 
@@ -42,8 +43,8 @@ fallbacks. The approved report set is organized by source of truth:
 2. Monthly income and expense from categorized transactions.
 3. Spending by category and settlement instrument.
 4. Credit-card invoice evolution, due dates and paid/open status.
-5. Currency-aware balances using persisted historical FX snapshots and clearly
-   labeled current valuations.
+5. Currency-aware balances with persisted investment-operation snapshots and
+   clearly labeled current/read-time valuations for entities not yet covered.
 6. Net-worth evolution combining bank cash, investments and open invoices.
 
 Charts must label actual versus projected values. Forecasts may include future

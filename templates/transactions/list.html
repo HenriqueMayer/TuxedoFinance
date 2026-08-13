@@ -129,11 +129,11 @@ the active filters survive page navigation.
                                     {% elif transaction.transaction_type == 'EXPENSE' %}text-rose-600 dark:text-rose-400
                                     {% else %}text-amber-600 dark:text-amber-400
                                     {% endif %}">
-                                    {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}{{ CURRENCY_SYMBOL }} {{ transaction.amount|floatformat:2 }}
+                                    {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}{{ transaction.native_currency }} {{ transaction.amount|floatformat:2 }}
                                 </p>
                                 {% if transaction.is_installment_plan %}
                                     <p class="text-sm tabular-nums text-slate-600 dark:text-neutral-400">
-                                        {% blocktranslate with installments=transaction.installments currency=CURRENCY_SYMBOL installment_amount=transaction.installment_amount|floatformat:2 %}{{ installments }}x {{ currency }} {{ installment_amount }} / month{% endblocktranslate %}
+                                        {% blocktranslate with installments=transaction.installments currency=transaction.native_currency installment_amount=transaction.installment_amount|floatformat:2 %}{{ installments }}x {{ currency }} {{ installment_amount }} / month{% endblocktranslate %}
                                     </p>
                                 {% endif %}
                             </div>

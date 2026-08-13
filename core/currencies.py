@@ -53,10 +53,8 @@ NUMBER_GROUPING = 3
 def get_currency(code):
     """Return the `Currency` for `code`, raising on an unknown one.
 
-    Raises rather than falling back to the default on purpose: a typo in
-    `CURRENCY` would otherwise silently label every amount in the app with
-    the wrong symbol, which is a correctness bug in a finance tool, not a
-    cosmetic one. Failing at startup makes it a five-second fix instead.
+    Raises rather than falling back to the default: an invalid stored or
+    code-level currency must never silently label an amount with another code.
     """
     try:
         return CURRENCIES[code]
@@ -70,6 +68,6 @@ def get_currency(code):
             for currency in CURRENCIES.values()
         )
         raise ImproperlyConfigured(
-            f'CURRENCY={code!r} is not a supported currency. '
+            f'{code!r} is not a supported currency. '
             f'Supported: {supported}.'
         ) from None

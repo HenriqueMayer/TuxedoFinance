@@ -154,10 +154,10 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
         card = cards[card_id]
         due_date = card.due_date_for(reference_month)
         invoice, created = CardInvoice.objects.update_or_create(
+            user=user,
             card_id=card_id,
             reference_month=reference_month,
             defaults={
-                'user': user,
                 'due_date': due_date,
                 'amount': amount,
                 'status': (
@@ -190,7 +190,7 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
     if stale_invoices:
         stale_ids = [invoice.pk for invoice in stale_invoices]
         BankMovement.objects.filter(user=user, invoice_id__in=stale_ids).delete()
-        CardInvoice.objects.filter(pk__in=stale_ids).delete()
+        CardInvoice.objects.filter(user=user, pk__in=stale_ids).delete()
 
     valid_invoice_keys = {f'invoice:{invoice.pk}' for invoice in CardInvoice.objects.filter(user=user)}
     BankMovement.objects.filter(user=user, source_key__startswith='invoice:').exclude(

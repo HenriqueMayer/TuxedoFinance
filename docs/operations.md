@@ -64,6 +64,32 @@ permissions, encrypt sensitive records, and validate them with
 `PRAGMA integrity_check;` before relying on them. The restore, WAL, retention
 and rehearsal rules below apply unchanged to Docker volumes.
 
+With the application stopped, copy the database out of the named volume:
+
+```bash
+docker compose down
+mkdir -p "$HOME/cashflow-backups"
+chmod 700 "$HOME/cashflow-backups"
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v cashflow_data:/data:ro -v "$HOME/cashflow-backups:/backup" \
+  python:3.12-slim-bookworm sh -c \
+  'cp /data/db.sqlite3 /backup/cashflow-docker.sqlite3 && chmod 600 /backup/cashflow-docker.sqlite3'
+sqlite3 "$HOME/cashflow-backups/cashflow-docker.sqlite3" 'PRAGMA integrity_check;'
+```
+
+Restore only from a verified backup while the application remains stopped:
+
+```bash
+docker run --rm -v cashflow_data:/data -v "$HOME/cashflow-backups:/backup:ro" \
+  python:3.12-slim-bookworm sh -c \
+  'cp /backup/cashflow-docker.sqlite3 /data/db.sqlite3 && rm -f /data/db.sqlite3-wal /data/db.sqlite3-shm && chown 10001:10001 /data/db.sqlite3 && chmod 600 /data/db.sqlite3'
+docker compose up
+```
+
+Review and obtain the helper image before relying on this procedure. After
+startup, inspect migration output and repeat the integrity and application
+smoke checks below.
+
 ## Continuous integration
 
 The supported local Python path is reproduced by `.github/workflows/ci.yml` on

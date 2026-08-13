@@ -1,9 +1,7 @@
-"""Number formats for the `en` locale, driven by `settings.CURRENCY` (FR20).
+"""Deterministic number formats for the English locale (FR20).
 
-The UI language stays English, but amounts are written the way the configured
-currency writes them: `R$ 1.000,00` for BRL, `$ 1,000.00` for USD. Both the
-symbol and these separators come from the same entry in `core/currencies.py`,
-so the two can never disagree.
+Currency codes and symbols are rendered explicitly per value. Django's format
+module remains process-global, so separators use the code-level default.
 
 Why this file exists at all: Django resolves formats from the locale's format
 module *before* falling back to the `DECIMAL_SEPARATOR`/`THOUSAND_SEPARATOR`
@@ -16,8 +14,7 @@ strings out of English.
 Only number formats are overridden; date/time formats are inherited from
 Django's `en` locale unchanged.
 
-Read once at import, because Django caches format modules — changing
-`CURRENCY` needs a restart, like every other setting in this project.
+The module is read once because Django caches locale formats.
 """
 from django.conf import settings
 

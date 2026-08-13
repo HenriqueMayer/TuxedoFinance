@@ -44,12 +44,12 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         {% include 'partials/form_field.html' with field=form.payment_channel %}
         <p id="payment-channel-status" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
         <div id="bank-account-fields" data-has-errors="{{ form.bank_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.bank_account %}</div>
-        <div id="debit-card-fields" data-has-errors="{{ form.debit_card.errors|yesno:'true,false' }}" hidden>
+        <div id="debit-card-fields" data-has-errors="{{ form.debit_card.errors|yesno:'true,false' }}">
             {% include 'partials/form_field.html' with field=form.debit_card %}
             <p class="text-sm text-slate-500 dark:text-neutral-500">{% translate "The selected debit card determines the bank account." %}</p>
             <p id="debit-card-account" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
         </div>
-        <div id="credit-card-fields" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}" hidden>
+        <div id="credit-card-fields" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
             {% include 'partials/form_field.html' with field=form.credit_card %}
             {% include 'partials/form_field.html' with field=form.installments %}
             {% include 'partials/form_field.html' with field=form.billing_override %}
@@ -65,8 +65,8 @@ through the shared partials/form_field.html renderer (PRD §9.4).
                     {{ form.is_fixed }}
                     <div>
                         <label for="{{ form.is_fixed.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{{ form.is_fixed.label }}</label>
-                        {% if form.is_fixed.help_text %}<p class="text-sm text-slate-500 dark:text-neutral-500">{{ form.is_fixed.help_text }}</p>{% endif %}
-                        {% for error in form.is_fixed.errors %}<p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+                        {% if form.is_fixed.help_text %}<p id="{{ form.is_fixed.id_for_label }}-help" class="text-sm text-slate-500 dark:text-neutral-500">{{ form.is_fixed.help_text }}</p>{% endif %}
+                        {% for error in form.is_fixed.errors %}<p id="{{ form.is_fixed.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
                     </div>
                 </div>
                 <div id="fixed-until-fields" data-has-errors="{{ form.fixed_until.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fixed_until %}</div>

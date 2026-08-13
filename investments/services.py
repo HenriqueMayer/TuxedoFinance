@@ -29,6 +29,8 @@ def refresh_fx_snapshot(operation):
     operation.fx_target_currency = target
     if source == target:
         operation.fx_rate = Decimal('1')
+        operation.fx_effective_date = operation.date
+        operation.fx_source_rate = None
         operation.fx_snapshot_status = Investment.FxSnapshotStatus.CAPTURED
     else:
         rate = latest_exchange_rate(operation.user, source, target, operation.date)
@@ -36,14 +38,23 @@ def refresh_fx_snapshot(operation):
             inverse = latest_exchange_rate(operation.user, target, source, operation.date)
             if inverse is None:
                 operation.fx_rate = None
+                operation.fx_effective_date = None
+                operation.fx_source_rate = None
                 operation.fx_snapshot_status = Investment.FxSnapshotStatus.UNKNOWN
             else:
                 operation.fx_rate = (Decimal('1') / inverse.rate).quantize(Decimal('0.00000001'))
+                operation.fx_effective_date = inverse.effective_date
+                operation.fx_source_rate = inverse
                 operation.fx_snapshot_status = Investment.FxSnapshotStatus.CAPTURED
         else:
             operation.fx_rate = rate.rate
+            operation.fx_effective_date = rate.effective_date
+            operation.fx_source_rate = rate
             operation.fx_snapshot_status = Investment.FxSnapshotStatus.CAPTURED
-    operation.save(update_fields=['fx_source_currency', 'fx_target_currency', 'fx_rate', 'fx_snapshot_status'])
+    operation.save(update_fields=[
+        'fx_source_currency', 'fx_target_currency', 'fx_rate',
+        'fx_effective_date', 'fx_source_rate', 'fx_snapshot_status',
+    ])
     return operation
 
 
@@ -269,11 +280,17 @@ def _months_window(months, offset):
     return [_add_months(*anchor, -(months - 1) + step) for step in range(months)]
 
 
-def _converted(user, operation, base_currency, on_date=None):
-    if operation.fx_snapshot_status == Investment.FxSnapshotStatus.CAPTURED:
-        if operation.fx_source_currency != operation.currency or operation.fx_target_currency != base_currency:
+def historical_value_in_base(user, operation, base_currency, on_date=None):
+    if operation.fx_snapshot_status in {
+        Investment.FxSnapshotStatus.CAPTURED,
+        Investment.FxSnapshotStatus.RECONSTRUCTED,
+    }:
+        if operation.fx_source_currency != operation.currency or not operation.fx_rate:
             return None
-        return operation.gross_value * operation.fx_rate
+        historical = operation.gross_value * operation.fx_rate
+        if operation.fx_target_currency == base_currency:
+            return historical
+        return None
     if (operation.fx_snapshot_status == Investment.FxSnapshotStatus.UNKNOWN
             and operation.fx_source_currency and operation.fx_target_currency):
         return None
@@ -298,7 +315,7 @@ def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12
     start = date(*window[0], 1)
     for operation in operations:
         if operation.date < start:
-            value = _converted(user, operation, base_currency)
+            value = historical_value_in_base(user, operation, base_currency)
             if value is None:
                 missing.add(operation.asset.currency)
             else:
@@ -307,7 +324,7 @@ def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12
         for operation in operations:
             if (operation.date.year, operation.date.month) != (year, month):
                 continue
-            value = _converted(user, operation, base_currency)
+            value = historical_value_in_base(user, operation, base_currency)
             if value is None:
                 missing.add(operation.asset.currency)
             else:
@@ -325,7 +342,7 @@ def get_monthly_flow_in_base(user, base_currency, currencies=None, months=12, of
         for operation in operations:
             if (operation.date.year, operation.date.month) != (year, month):
                 continue
-            value = _converted(user, operation, base_currency)
+            value = historical_value_in_base(user, operation, base_currency)
             if value is None:
                 missing.add(operation.asset.currency)
                 continue
