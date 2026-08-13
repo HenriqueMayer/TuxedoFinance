@@ -69,7 +69,7 @@ HTMX progressive enhancement.
 | FR08 | No double counting | Spending is recognized from invoice items; invoice settlement changes cash/liability and is not a second expense. |
 | FR09 | Own transfers | Transfers between owned accounts create linked debit/credit movements and are never income or expense. |
 | FR10 | External PIX | PIX involving an external party is an ordinary `INCOME` or `EXPENSE`, not an own transfer. |
-| FR11 | Transactions | CRUD/search/filter for income and expense events, with category, amount, date, recurrence and banking settlement links. |
+| FR11 | Transactions | CRUD/search/filter for income and expense events, with category, amount, date, recurrence and banking settlement links. The entry form progressively reveals the selected payment channel while retaining server-rendered no-JavaScript controls and validation. |
 | FR12 | Categories | Existing category/subcategory management remains for income and expense. |
 | FR13 | Loyalty programs | A program may be independent, linked to a bank, linked to cards, or linked to both. |
 | FR14 | Loyalty ledger | `LoyaltyEntry` supports invoice award, points purchase, adjustment, expiration and redemption. |

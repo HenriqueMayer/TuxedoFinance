@@ -99,7 +99,7 @@ to account balance separately from that payment.
 | `title` | User-facing economic-event title. |
 | `amount` | Positive amount in the project reporting currency. |
 | `transaction_type` | `INCOME` or `EXPENSE`. |
-| `category` | Required income/expense category. |
+| `category` | Required income/expense category; the form displays a parent as `Parent > Category`. |
 | `date` | Purchase or economic-event date. |
 | `payment_channel` | `PIX`, `DEBIT_CARD`, `CREDIT_CARD`, or `ACCOUNT`. |
 | settlement links | Exactly one owned account, debit card or credit card, according to the channel. |
@@ -116,11 +116,23 @@ position history remains in `investments`.
 
 ### `Category`
 
-`Category(user, name, parent_category, created_at, updated_at)` retains the
-existing income/expense classification. Names are unique per user, parent
+`Category(user, name, transaction_type, parent_category, created_at, updated_at)` retains the
+existing income/expense classification. `transaction_type` is optional: an
+unclassified category remains valid for both types, while a typed category is
+validated against its matching transaction type. Migration `categories.0002`
+leaves existing categories unclassified; it does not relabel categories or
+financial records. A used category cannot be classified incompatibly with its
+existing transactions. Names are unique per user, parent
 choices are user-scoped, and `Transaction.category` uses `PROTECT`. Deleting a
 parent sets its children to top level; deleting a category referenced by
 transaction history is blocked.
+
+### Category classification migration
+
+`categories.0002_category_transaction_type` adds a nullable category type with
+no data migration. Upgrade normally with `manage.py migrate`; rollback with
+`manage.py migrate categories 0001` removes only this optional classification.
+Neither direction changes transactions or financial amounts.
 
 Creating an account seeds only the nine approved top-level category names
 defined in `categories.signals`; it does not create synthetic transactions,

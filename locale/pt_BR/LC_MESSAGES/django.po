@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CashFlow\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 16:52+0000\n"
+"POT-Creation-Date: 2026-08-13 17:44+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -148,7 +148,7 @@ msgid "Date"
 msgstr "Data"
 
 #: banking/forms.py:220 banking/forms.py:263 banking/forms.py:320
-#: banking/forms.py:349 investments/forms.py:48 transactions/forms.py:50
+#: banking/forms.py:349 investments/forms.py:48 transactions/forms.py:62
 msgid "Notes"
 msgstr "Observações"
 
@@ -326,12 +326,13 @@ msgstr "Crédito"
 msgid "Debit"
 msgstr "Débito"
 
-#: banking/models.py:281 dashboard/views.py:154 dashboard/views.py:202
-#: templates/dashboard/index.html:146 transactions/models.py:22
+#: banking/models.py:281 categories/models.py:22 dashboard/views.py:154
+#: dashboard/views.py:202 templates/dashboard/index.html:146
+#: transactions/models.py:22
 msgid "Income"
 msgstr "Receita"
 
-#: banking/models.py:282 transactions/models.py:23
+#: banking/models.py:282 categories/models.py:23 transactions/models.py:23
 msgid "Expense"
 msgstr "Despesa"
 
@@ -587,16 +588,36 @@ msgid "New exchange rate"
 msgstr "Nova taxa de câmbio"
 
 #: categories/forms.py:36
+msgid "Category type"
+msgstr "Tipo de categoria"
+
+#: categories/forms.py:37
 msgid "Parent category"
 msgstr "Categoria principal"
 
-#: categories/forms.py:47
+#: categories/forms.py:48
 msgid "No parent category"
 msgstr "Sem categoria principal"
 
-#: categories/forms.py:60 categories/views.py:77
+#: categories/forms.py:51
+msgid "Unclassified (income and expense)"
+msgstr "Sem classificação (receita e despesa)"
+
+#: categories/forms.py:66 categories/views.py:77
 msgid "You already have a category with this name."
 msgstr "Você já tem uma categoria com este nome."
+
+#: categories/models.py:31
+msgid "Optional. Unclassified categories can be used for income and expenses."
+msgstr ""
+"Opcional. Categorias sem classificação podem ser usadas para receitas e "
+"despesas."
+
+#: categories/models.py:62
+msgid ""
+"This category has transactions of another type and cannot be classified that "
+"way."
+msgstr "Esta categoria possui transações de outro tipo e não pode receber essa classificação."
 
 #: categories/views.py:90
 #, python-format
@@ -630,7 +651,7 @@ msgstr "Inglês"
 msgid "Brazilian Portuguese"
 msgstr "Português brasileiro"
 
-#: dashboard/services.py:517 transactions/forms.py:45
+#: dashboard/services.py:517 transactions/forms.py:57
 msgid "Installments"
 msgstr "Parcelas"
 
@@ -808,23 +829,23 @@ msgstr ""
 msgid ""
 "Valuation mode cannot be changed after this asset has investment operations."
 msgstr ""
-"O modo de avaliação não pode ser alterado depois que este ativo tiver operações de "
-"investimento."
+"O modo de avaliação não pode ser alterado depois que este ativo tiver "
+"operações de investimento."
 
 #: investments/forms.py:188
 msgid ""
 "Opening balance cannot be changed after this asset has investment operations."
 msgstr ""
-"O saldo inicial não pode ser alterado depois que este ativo tiver operações de "
-"investimento."
+"O saldo inicial não pode ser alterado depois que este ativo tiver operações "
+"de investimento."
 
 #: investments/forms.py:194
 msgid ""
 "Opening balance product cannot be changed after this asset has investment "
 "operations."
 msgstr ""
-"O produto do saldo inicial não pode ser alterado depois que este ativo tiver operações de "
-"investimento."
+"O produto do saldo inicial não pode ser alterado depois que este ativo tiver "
+"operações de investimento."
 
 #: investments/models.py:34
 msgid "Manual"
@@ -944,7 +965,8 @@ msgstr "Ativos baseados em unidades exigem um preço unitário positivo."
 
 #: investments/models.py:319
 msgid "Unit-based assets derive value from quantity and unit price."
-msgstr "Ativos baseados em unidades derivam valor da quantidade e do preço unitário."
+msgstr ""
+"Ativos baseados em unidades derivam valor da quantidade e do preço unitário."
 
 #: investments/models.py:329 investments/models.py:330
 msgid "Deposit requires exactly one funding source."
@@ -1161,11 +1183,11 @@ msgstr "Excluir"
 
 #: templates/banking/confirm_delete.html:14 templates/banking/form.html:17
 #: templates/categories/confirm_delete.html:28
-#: templates/categories/form.html:40
+#: templates/categories/form.html:41
 #: templates/investments/confirm_delete.html:31
 #: templates/investments/form.html:38 templates/investments/setup_form.html:26
 #: templates/transactions/confirm_delete.html:28
-#: templates/transactions/form.html:76
+#: templates/transactions/form.html:84
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -1278,9 +1300,9 @@ msgid ""
 msgstr ""
 "Adicione taxas históricas antes de consolidar contas em moedas diferentes."
 
-#: templates/banking/form.html:16 templates/categories/form.html:36
+#: templates/banking/form.html:16 templates/categories/form.html:37
 #: templates/investments/form.html:37 templates/investments/setup_form.html:25
-#: templates/transactions/form.html:72
+#: templates/transactions/form.html:80
 msgid "Save"
 msgstr "Salvar"
 
@@ -1396,7 +1418,7 @@ msgstr "Nova categoria"
 msgid "Categories"
 msgstr "Categorias"
 
-#: templates/categories/list.html:15
+#: templates/categories/list.html:15 templates/transactions/form.html:148
 msgid "No matching categories"
 msgstr "Nenhuma categoria encontrada"
 
@@ -2243,8 +2265,7 @@ msgid ""
 "Built from the everyday frustration of adapting spreadsheets to real "
 "personal finances."
 msgstr ""
-"Nascido da frustração diária de adaptar planilhas às finanças pessoais "
-"reais."
+"Nascido da frustração diária de adaptar planilhas às finanças pessoais reais."
 
 #: templates/pages/landing.html:64
 msgid "Sample dashboard preview"
@@ -2416,13 +2437,69 @@ msgstr ""
 msgid "Edit Transaction"
 msgstr "Editar transação"
 
-#: templates/transactions/form.html:35
+#: templates/transactions/form.html:34
 msgid "Search category"
 msgstr "Pesquisar categoria"
 
-#: templates/transactions/form.html:38
+#: templates/transactions/form.html:36
 msgid "Type to filter categories"
 msgstr "Digite para filtrar as categorias"
+
+#: templates/transactions/form.html:41
+msgid "Clear category selection"
+msgstr "Limpar seleção de categoria"
+
+#: templates/transactions/form.html:49
+msgid "The selected debit card determines the bank account."
+msgstr "O cartão de débito selecionado determina a conta bancária."
+
+#: templates/transactions/form.html:56
+msgid "The selected credit card determines the bank account."
+msgstr "O cartão de crédito selecionado determina a conta bancária."
+
+#: templates/transactions/form.html:62
+msgid "Advanced options"
+msgstr "Opções avançadas"
+
+#: templates/transactions/form.html:158
+msgid "Selected category:"
+msgstr "Categoria selecionada:"
+
+#: templates/transactions/form.html:158
+msgid "No category selected."
+msgstr "Nenhuma categoria selecionada."
+
+#: templates/transactions/form.html:169
+msgid "Bank account:"
+msgstr "Conta bancária:"
+
+#: templates/transactions/form.html:188
+msgid "Debit and credit cards are available only for expenses."
+msgstr "Cartões de débito e crédito estão disponíveis apenas para despesas."
+
+#: templates/transactions/form.html:190
+msgid "This transaction updates the selected bank account immediately."
+msgstr "Esta transação atualiza imediatamente a conta bancária selecionada."
+
+#: templates/transactions/form.html:192
+msgid ""
+"Choose a bank account with PIX enabled. This transaction updates that "
+"account immediately."
+msgstr ""
+"Escolha uma conta bancária com PIX ativado. Esta transação atualiza essa "
+"conta imediatamente."
+
+#: templates/transactions/form.html:194
+msgid "This transaction updates the debit card account immediately."
+msgstr "Esta transação atualiza imediatamente a conta do cartão de débito."
+
+#: templates/transactions/form.html:196
+msgid ""
+"This purchase is added to the selected credit card invoice and debited when "
+"that invoice is due."
+msgstr ""
+"Esta compra é adicionada à fatura do cartão de crédito selecionado e "
+"debitada no vencimento dessa fatura."
 
 #: templates/transactions/list.html:28
 msgid "Every income, expense, and investment you have recorded."
@@ -2436,7 +2513,7 @@ msgstr "Título, observações, categoria, banco, conta ou cartão"
 msgid "Billed month"
 msgstr "Mês da fatura"
 
-#: templates/transactions/list.html:51 transactions/forms.py:47
+#: templates/transactions/list.html:51 transactions/forms.py:59
 msgid "Transaction date"
 msgstr "Data da transação"
 
@@ -2508,93 +2585,93 @@ msgstr ""
 msgid "Payment label"
 msgstr "Identificação do pagamento"
 
-#: transactions/forms.py:37
+#: transactions/forms.py:49
 msgid "Title"
 msgstr "Título"
 
-#: transactions/forms.py:38
+#: transactions/forms.py:50
 msgid "Amount"
 msgstr "Valor"
 
-#: transactions/forms.py:39
+#: transactions/forms.py:51
 msgid "Transaction type"
 msgstr "Tipo de transação"
 
-#: transactions/forms.py:40
+#: transactions/forms.py:52
 msgid "Category"
 msgstr "Categoria"
 
-#: transactions/forms.py:41
+#: transactions/forms.py:53
 msgid "Payment channel"
 msgstr "Canal de pagamento"
 
-#: transactions/forms.py:42
+#: transactions/forms.py:54
 msgid "Bank account (Account or PIX)"
 msgstr "Conta bancária (Conta ou PIX)"
 
-#: transactions/forms.py:43 transactions/models.py:28
+#: transactions/forms.py:55 transactions/models.py:28
 msgid "Debit card"
 msgstr "Cartão de débito"
 
-#: transactions/forms.py:44 transactions/models.py:29
+#: transactions/forms.py:56 transactions/models.py:29
 msgid "Credit card"
 msgstr "Cartão de crédito"
 
-#: transactions/forms.py:46
+#: transactions/forms.py:58
 msgid "Bill choice"
 msgstr "Escolha da fatura"
 
-#: transactions/forms.py:48
+#: transactions/forms.py:60
 msgid "Fixed / recurring transaction"
 msgstr "Transação fixa / recorrente"
 
-#: transactions/forms.py:49
+#: transactions/forms.py:61
 msgid "Repeat until"
 msgstr "Repetir até"
 
-#: transactions/forms.py:54
+#: transactions/forms.py:66
 msgid "Select one channel, then select only its matching instrument below."
 msgstr "Selecione um canal e depois somente o meio correspondente abaixo."
 
-#: transactions/forms.py:56
+#: transactions/forms.py:68
 msgid "Required for Bank account and PIX channels."
 msgstr "Obrigatório para os canais Conta bancária e PIX."
 
-#: transactions/forms.py:57
+#: transactions/forms.py:69
 msgid "Required only for the Debit card channel."
 msgstr "Obrigatório somente para o canal Cartão de débito."
 
-#: transactions/forms.py:58
+#: transactions/forms.py:70
 msgid "Required only for the Credit card channel."
 msgstr "Obrigatório somente para o canal Cartão de crédito."
 
-#: transactions/forms.py:60
+#: transactions/forms.py:72
 msgid "Credit card only. Enter the full purchase total above."
 msgstr "Somente cartão de crédito. Informe acima o valor total da compra."
 
-#: transactions/forms.py:63
+#: transactions/forms.py:75
 msgid "Credit card only. Automatic follows the card closing day."
 msgstr ""
 "Somente cartão de crédito. A opção Automática segue o dia de fechamento do "
 "cartão."
 
-#: transactions/forms.py:66
+#: transactions/forms.py:78
 msgid "Repeats monthly; it cannot also be an installment plan."
 msgstr "Repete mensalmente; não pode ser também um parcelamento."
 
-#: transactions/forms.py:68
+#: transactions/forms.py:80
 msgid "Optional last recurrence month, inclusive."
 msgstr "Último mês opcional da recorrência, inclusive."
 
-#: transactions/forms.py:79
+#: transactions/forms.py:91
 msgid "Automatic (from card cycle)"
 msgstr "Automática (pelo ciclo do cartão)"
 
-#: transactions/forms.py:80 transactions/models.py:32
+#: transactions/forms.py:92 transactions/models.py:32
 msgid "Current bill"
 msgstr "Fatura atual"
 
-#: transactions/forms.py:81 transactions/models.py:33
+#: transactions/forms.py:93 transactions/models.py:33
 msgid "Next bill"
 msgstr "Próxima fatura"
 
@@ -2615,31 +2692,38 @@ msgstr "%(payment_channel)s exige somente %(instrument)s."
 msgid "This selection must belong to the transaction owner."
 msgstr "Esta seleção deve pertencer ao titular da transação."
 
-#: transactions/models.py:151
+#: transactions/models.py:152
+#, python-format
+msgid "This category is available only for %(transaction_type)s transactions."
+msgstr ""
+"Esta categoria está disponível somente para transações de "
+"%(transaction_type)s."
+
+#: transactions/models.py:160
 msgid "Income must be received in a bank account or by PIX."
 msgstr "A receita deve ser recebida em uma conta bancária ou por PIX."
 
-#: transactions/models.py:158
+#: transactions/models.py:167
 msgid "PIX is disabled for this account."
 msgstr "O PIX está desabilitado para esta conta."
 
-#: transactions/models.py:162
+#: transactions/models.py:171
 msgid "Installments are only available for credit cards."
 msgstr "Parcelas estão disponíveis somente para cartões de crédito."
 
-#: transactions/models.py:166
+#: transactions/models.py:175
 msgid "A fixed transaction cannot use installments."
 msgstr "Uma transação fixa não pode usar parcelas."
 
-#: transactions/models.py:170
+#: transactions/models.py:179
 msgid "Bill choice is only available for credit cards."
 msgstr "A escolha da fatura está disponível somente para cartões de crédito."
 
-#: transactions/models.py:175
+#: transactions/models.py:184
 msgid "Only fixed transactions can have an end date."
 msgstr "Somente transações fixas podem ter uma data final."
 
-#: transactions/models.py:182
+#: transactions/models.py:191
 msgid "The end month cannot precede the start month."
 msgstr "O mês final não pode ser anterior ao mês inicial."
 

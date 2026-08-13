@@ -117,6 +117,17 @@ class CategoriesConfig(AppConfig):
 
 **Why this exists:** `Transaction.category` is a required FK. Without this signal, a brand-new user would hit a dead end — an empty dropdown — the first time they tried to record a transaction. All 9 default categories are top-level (no `parent_category`); the user is free to add subcategories or additional top-level categories afterward. No synthetic financial records are created. `dispatch_uid='categories_seed_defaults'` prevents the receiver from double-registering if `categories.signals` is ever imported more than once (e.g. Django's autoreloader).
 
+## Optional transaction type
+
+A category can be classified as income or expense. This makes the transaction
+form immediately narrow its search results to the selected type. Leaving it
+unclassified intentionally keeps it available for either type, which preserves
+the meaning of existing categories. A category already used by transactions of
+another type cannot be classified incompatibly, so existing records remain
+editable. The `categories.0002_category_transaction_type`
+migration adds the nullable field without changing any category or transaction;
+rolling back removes only that optional classification.
+
 ## Routes
 
 | Path | Name | View |
