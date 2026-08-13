@@ -10,15 +10,3 @@ def currency(request):
     never hardcode a symbol in a template.
     """
     return {'CURRENCY_SYMBOL': settings.CURRENCY_SYMBOL}
-
-
-def debug_flag(request):
-    """Expose `settings.DEBUG` to every template as `DEBUG` (PRD §10.6).
-
-    Used by `base.html` to pick the Tailwind Play CDN in development or the
-    compiled `css/output.css` bundle (served by WhiteNoise) in production.
-    Deliberately independent from Django's built-in `debug` context
-    processor, which only injects its variables for requests coming from
-    `INTERNAL_IPS` — unsuitable for this always-on template switch.
-    """
-    return {'DEBUG': settings.DEBUG}

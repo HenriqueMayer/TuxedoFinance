@@ -15,7 +15,7 @@ methods to explicit banking and ledger concepts.
 | Authentication | Native `django.contrib.auth` |
 | Dependency management | `uv` |
 | Views | Class-Based Views |
-| Production | Gunicorn + WhiteNoise |
+| Supported runtime | Django development server (`runserver`) |
 | Localization | Django gettext (`en`, `pt-br`) |
 
 ## Domain apps
@@ -31,9 +31,8 @@ dashboard/     # ledger, cash-flow, invoice and net-worth read models
 investments/   # products, assets, position operations and valuation
 ```
 
-`payments/` is removed. `banking/` owns every settlement instrument and the
-account ledger. `Bank` is shared with `investments`; the investment-specific
-`Institution` model is removed.
+`banking/` owns every settlement instrument and the account ledger. `Bank` is
+shared with `investments`.
 
 ## Dependency direction
 
@@ -66,7 +65,7 @@ event and its movements runs in one database transaction.
 | What is owed on credit cards? | `CardInvoice` and its items/payments. |
 | What investment quantity is held? | `InvestmentOperation`. |
 | How many loyalty points exist? | `LoyaltyEntry`. |
-| What was an amount worth in base currency? | Historical `ExchangeRate`/stored conversion for the event date. |
+| What was an amount worth in the current reporting currency? | Current `ExchangeRate` lookup; retained historical evidence is planned for Phase 4. |
 
 This separation prevents credit purchases from reducing cash before the invoice
 is paid and prevents the later invoice debit from counting the same spending a
@@ -91,14 +90,15 @@ Services, rather than views or templates, own atomic posting:
    through the selected funding instrument using its normal immediate or invoice
    path.
 
-Posted financial entries are reversed, not edited in place.
+Personal financial entries are editable; audit-grade reversal workflows are out
+of scope.
 
 ## Multicurrency
 
-The base currency is a reporting preference, not a project-wide restriction.
-Accounts and events retain native currencies. Consolidation uses the rate
-effective on the event/report date; historical outputs do not use today's rate.
-Services return native totals plus converted totals and explicit missing-rate
+The current project-wide `CURRENCY` setting selects the reporting currency.
+Accounts and events retain native currencies. Per-user base currency and
+historical FX evidence are planned for ROADMAP Phases 3 and 4. Services return
+native totals plus converted totals and explicit missing-rate
 metadata. They never add unlike currencies directly.
 
 ## Routes
@@ -137,9 +137,8 @@ language-neutral. Currency is a separate axis: parallel `core.formats.en` and
 
 ## Delivery and reset
 
-Settings, middleware, authentication, Tailwind delivery, WhiteNoise, Docker and
-the server-rendered request flow remain as documented for the current project.
-The domain release itself is breaking: remove `payments` from `INSTALLED_APPS`
-and root URLs, add `banking`, replace payment navigation/templates, and recreate
-the database from a clean migration graph. There is no dual-write or legacy
-schema support. See [data-model.md](data-model.md#breaking-release).
+Settings, middleware, authentication, Tailwind CDN delivery and the
+server-rendered request flow remain deliberately small and local-first.
+The current schema is intentionally incompatible with legacy financial data;
+there is no dual-write or automatic conversion. See
+[data-model.md](data-model.md#breaking-release).

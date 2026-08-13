@@ -1,9 +1,8 @@
 # `banking`
 
-The approved replacement for `payments`. This app owns banks, currency-specific
-accounts, the account ledger, PIX, debit and credit cards, card invoices, and
-loyalty programs. It starts from a clean schema; `PaymentMethod` is not retained.
-It also owns the user's banking profile and base reporting currency.
+This app owns banks, currency-specific accounts, the account ledger, PIX, debit
+and credit cards, card invoices, and loyalty programs. Per-user base reporting
+currency is planned for ROADMAP Phase 3.
 
 ## Domain
 
@@ -76,26 +75,23 @@ the corresponding card invoice under the same no-double-counting rule.
 
 ## Multicurrency
 
-Accounts, transactions, invoices, loyalty monetary targets, and investment
-assets retain native currency and amount. Reports also show historical values in
-the user's base currency. Conversion uses the rate effective on the event date
-and stores/references that rate; later exchange-rate updates never rewrite a
-closed period. Missing rates are surfaced explicitly instead of treating unlike
-currencies as equal or silently omitting them.
+Bank accounts, invoices and investment assets retain their configured native
+currency. The current application uses the project-wide `CURRENCY` setting for
+reporting and resolves exchange rates at read time. Per-user base currency and
+retained historical FX evidence are planned for ROADMAP Phases 3 and 4.
 
 ## Integrity
 
 - Every queryset and relationship is scoped to the authenticated user.
 - Referenced banks, accounts, cards, invoices, movements, rates, and loyalty
   ledgers are protected from destructive cascade.
-- Posted ledger and loyalty entries are corrected by reversing entries, not by
-  rewriting history.
+- Personal ledger and loyalty entries remain editable; audit-grade reversal
+  workflows are out of scope.
 - Exactly one settlement path applies to an event: immediate account movement or
   deferred invoice settlement, never both.
 
 ## Breaking replacement
 
-The `banking` app replaces `payments`, its routes, templates, navigation item,
-and `PaymentMethod` foreign keys. This is a clean migration reset: development
-and deployed SQLite databases must be recreated for the release. No compatibility
-adapter, data conversion, or dual-write period is part of the approved scope.
+This schema has no compatibility adapter, automatic conversion, or dual-write
+period for legacy financial data. Refer to the data model's breaking-release
+section before attempting an upgrade.

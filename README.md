@@ -1,5 +1,7 @@
 # CashFlow
 
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blueviolet)](LICENSE)
+
 A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered, with no JavaScript build step.
 
 ## Why CashFlow exists
@@ -39,32 +41,25 @@ permitted by the project's license; see [License](#license).
 | Frontend | Django Template Language · TailwindCSS |
 | Database | SQLite (native, no separate service) |
 | Tooling | [`uv`](https://docs.astral.sh/uv/) |
-| Deployment | Docker / Docker Compose · gunicorn · WhiteNoise |
+| Runtime | Django development server (`runserver`) |
 
 ## Quick start
 
 Requires Python 3.12 and [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```bash
+export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
 uv sync
 uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. Sign up from the landing page; your account arrives with the default categories seeded. Add a bank and a currency-specific account before recording your first transaction.
-
-### Docker
-
-Requires Docker with the Compose plugin.
-
-```bash
-cp .env.example .env        # then set a real SECRET_KEY
-docker compose up --build
-```
-
-The container applies migrations and serves the app at <http://localhost:8000/>. Data persists in the `db-data` named volume across restarts; `docker compose down -v` resets it.
-
-The image builds the production Tailwind bundle and runs `collectstatic` at build time, so nothing is generated on the fly in production. Release builds also need GNU gettext when regenerating the compiled translation catalog with `python manage.py compilemessages`.
+The migration command creates a new local `db.sqlite3` and applies the complete
+schema on a clean clone. Keep `SECRET_KEY` private and stable for the lifetime
+of an installation; replacing it invalidates sessions. Open
+<http://127.0.0.1:8000/> and sign up from the landing page; your account
+arrives with the default categories seeded. Add a bank and a currency-specific
+account before recording your first transaction.
 
 ## Choosing the interface language
 
@@ -81,20 +76,43 @@ same middleware. It translates interface copy, validation and system messages,
 not user-entered names or financial data: category names and other user data
 remain exactly as entered.
 
-## Using this repository as a template
+## Local database ownership
 
-This is a **GitHub template repository**. Click **Use this template** to start your own independent instance — each instance owns its own database and data, and is not meant to be deployed straight from here.
+This is a **GitHub template repository**. Click **Use this template** to start
+your own independent instance. The current tree and future commits do not
+include a database: `db.sqlite3` is created by `manage.py migrate` and ignored
+by Git. Older Git objects still contain database versions until the coordinated
+history cleanup described below is completed.
 
-Unlike the usual Django convention, `db.sqlite3` is **tracked in version control** here and ships with the schema migrated. A fresh clone is runnable immediately. If you would rather follow the standard convention, untrack it before an instance holds real data:
+Each installation owner controls the contents of that local database and is
+responsible for its access permissions, protection and backups. Never add the
+database to version control or publish it with application source. Before an
+upgrade or other risky operation, stop application writes and make a protected
+copy of the database; the complete backup, restore, retention and rehearsal
+procedure is scheduled for ROADMAP Phase 6.2.
 
-```bash
-git rm --cached db.sqlite3
-echo 'db.sqlite3' >> .gitignore
-```
+The repository-owner operation `git rm --cached db.sqlite3` changes only the
+index and preserves that working-tree file; it does not alter its schema or
+financial records. The resulting commit is different for existing clones: Git
+may remove their formerly tracked working-tree copy when they pull it. Rollback
+may restore the previous Git entry, but publishing database contents in source
+history is not recommended.
+
+If you cloned the repository before this change, back up your local database
+outside the checkout before pulling the commit that removes the tracked file.
+Git may remove a previously tracked working-tree copy while applying that
+change. After updating, restore the protected copy to the project root if
+needed; it will remain ignored.
+
+An audit found personal data and authentication material in older Git versions
+of `db.sqlite3`. Removing the current index entry does not erase those blobs.
+History cleanup and credential containment are tracked in
+[`docs/sqlite-history-response.md`](docs/sqlite-history-response.md).
 
 ## Choosing your currency
 
-The app ships in Brazilian Real. Switch it with one setting — `CURRENCY` in `.env`, or an environment variable:
+The app ships in Brazilian Real. Switch it with the `CURRENCY` environment
+variable:
 
 ```bash
 CURRENCY=USD uv run python manage.py runserver
@@ -121,35 +139,37 @@ banking/       # Banks, accounts, cards, balances, invoices, points, and FX
 investments/   # Investment log + manual ExchangeRate (multi-currency)
 templates/     # Project-level Django templates
 static/        # Project-level static assets
-tailwind/      # Tailwind CSS source for the production build
 ```
 
 ## Configuration reference
 
-Every variable in `.env.example` maps directly to `core/settings.py`:
+Set configuration through the environment of the process that runs Django:
 
 | Variable | Purpose | Default if unset |
 |---|---|---|
-| `SECRET_KEY` | Django's cryptographic signing key | insecure development fallback — **required in production** |
+| `SECRET_KEY` | Django's cryptographic signing key | **required** |
 | `DEBUG` | `True` / `False` | `True` |
 | `ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
-| `SQLITE_PATH` | Absolute path to the SQLite file | `<project root>/db.sqlite3` |
 | `CURRENCY` | Currency shown in the UI | `BRL` |
 | `HTTPS` | Secure cookies, HTTPS redirect, HSTS | `False` |
 | `LOG_LEVEL` | Log verbosity on stdout | `INFO` |
 
-The app **refuses to start** when `DEBUG=False` and `SECRET_KEY` is unset, blank, still the placeholder from `.env.example`, or still the development fallback committed in `core/settings.py` — anyone holding a published key can forge session cookies. A fresh clone runs with no `.env` at all; the guard only applies once you turn `DEBUG` off.
+The app refuses to start without `SECRET_KEY`. Generate one with Django's
+`get_random_secret_key()` command shown in Quick start; never commit or share
+it. Replacing the key invalidates existing sessions and password-reset tokens.
 
 Set `HTTPS=True` only once the instance is actually served over TLS — it sends session and CSRF cookies as `Secure`, redirects HTTP to HTTPS, emits HSTS, and trusts `X-Forwarded-Proto`. Over plain HTTP it would break login outright.
 
-## Before you deploy
+## Future deployment security
+
+Current support is local `runserver`. If you package the project for deployment
+in the future, apply Django's deployment checklist and these safeguards:
 
 - Set a real `SECRET_KEY` and `DEBUG=False`.
 - List your real domains in `ALLOWED_HOSTS`.
 - Set `HTTPS=True` if served over TLS; confirm with `manage.py check --deploy`.
-- Build the Tailwind bundle and run `python manage.py collectstatic --noinput` (the Docker image does both at build time).
-- Keep `.env` out of version control, or use your platform's secret store.
-- Start from an empty database if you are keeping `db.sqlite3` tracked.
+- Use a private environment or secret store for `SECRET_KEY`.
+- Protect and back up the local SQLite database; it is not stored in Git.
 
 ## Documentation
 
@@ -166,3 +186,8 @@ Licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformprojec
 Copies and modified distributions must preserve the license terms and the
 required copyright notice. Public source code cannot be made technically
 impossible to copy; the copyright and license define which uses are permitted.
+
+## Contributing
+
+Contributions are welcome under the same PolyForm Noncommercial License. Read
+[CONTRIBUTING.md](CONTRIBUTING.md) before opening a change.

@@ -43,9 +43,10 @@ price. There is no `title`.
 | `YIELD` | No source or destination account. | Internal growth only. |
 
 A deposit source and withdrawal destination are mandatory even when the account
-belongs to the same bank as the product. Cross-currency operations retain the
-cash amount, asset amount and historical conversion used. The operation and its
-required movement are posted atomically.
+belongs to the same bank as the product. Cross-currency operations retain their
+native cash and asset amounts. Retained historical conversion evidence is
+planned for ROADMAP Phase 4. The operation and its required movement are posted
+atomically.
 
 Yield is internal: it changes the portfolio position/value and appears in
 investment performance, but does not create bank income or available cash. Cash
@@ -63,8 +64,8 @@ to be summed directly.
 
 Investment Settings manages products and assets; bank management links to the
 canonical banking screen instead of duplicating it. Referenced banks, products
-and assets cannot be deleted. Posted operations are reversed, not overwritten,
-and source/destination movements cannot be removed independently.
+and assets cannot be deleted. Personal operations remain editable; audit-grade
+reversal workflows are out of scope.
 
 All forms and services enforce per-user ownership for bank, account, product and
 asset choices. Filters cover bank, product, asset, asset class, currency, kind

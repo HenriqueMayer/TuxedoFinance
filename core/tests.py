@@ -1,10 +1,32 @@
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 
 User = get_user_model()
+
+
+class SettingsSecurityTests(SimpleTestCase):
+    def test_secret_key_is_required_at_startup(self):
+        environment = os.environ.copy()
+        environment.pop('SECRET_KEY', None)
+        result = subprocess.run(
+            [sys.executable, 'manage.py', 'check'],
+            cwd=Path(__file__).resolve().parent.parent,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('SECRET_KEY must be set in the environment.', result.stderr)
 
 
 class LanguageSelectionTests(TestCase):
@@ -28,6 +50,17 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(translated, '<html lang="pt-br"', html=False)
         self.assertContains(translated, 'Entrar')
         self.assertContains(translated, 'Cadastre-se')
+        self.assertContains(
+            translated,
+            'Nascido da frustração diária de adaptar planilhas às finanças pessoais reais.',
+        )
+
+    @override_settings(DEBUG=False)
+    def test_tailwind_cdn_is_used_without_a_production_static_build(self):
+        response = self.client.get(reverse('pages:landing'))
+
+        self.assertContains(response, 'https://cdn.tailwindcss.com')
+        self.assertNotContains(response, 'css/output.css')
 
     def test_authenticated_nav_has_desktop_and_mobile_selectors(self):
         user = User.objects.create_user('language', password='test')

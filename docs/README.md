@@ -11,7 +11,7 @@ breaking release.
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
 | [frontend.md](frontend.md) | Server-rendered design system and updated banking UI structure. |
-| [deployment.md](deployment.md) | Existing Docker/static delivery; domain reset details remain in the PRD/data model. |
+| [sqlite-history-response.md](sqlite-history-response.md) | Personal-data containment and coordinated cleanup plan for the formerly tracked SQLite history. |
 
 ## Per-app reference
 
@@ -28,9 +28,6 @@ breaking release.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
   banks/accounts for provider and cash endpoints.
 
-`apps/payments.md` was removed because the `payments` app is replaced by
-`banking`; there is no compatibility layer.
-
 ## Documentation status
 
 These documents describe the approved target release, not the legacy schema
@@ -41,3 +38,8 @@ The repository does not include a synthetic dataset, shared account, fixed
 credential, or data-population management command. New accounts receive only
 the approved default categories; all financial records are created by their
 owner.
+
+The root `db.sqlite3` is local runtime data and is absent from the current Git
+index. A clean clone creates its database with `manage.py migrate`; each
+installation owner is responsible for protecting and backing up that file.
+Historical Git objects still require the coordinated cleanup documented above.
