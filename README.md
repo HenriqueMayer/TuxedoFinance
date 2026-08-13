@@ -42,7 +42,7 @@ permitted by the project's license; see [License](#license).
 | Frontend | Django Template Language · TailwindCSS |
 | Database | SQLite (native, no separate service) |
 | Tooling | [`uv`](https://docs.astral.sh/uv/) |
-| Runtime | Django development server (`runserver`) |
+| Runtime | Django development server (`runserver`), optionally packaged with Docker |
 
 ## Quick start
 
@@ -62,6 +62,32 @@ of an installation; replacing it invalidates sessions. Open
 arrives with the default categories seeded. Add a bank and a currency-specific
 account before recording your first transaction.
 
+### Optional Docker packaging
+
+Docker is an optional local packaging path; the native `uv` workflow above is
+the primary development and support path. The image runs one CashFlow process
+as the unprivileged `cashflow` user, executes migrations on startup, and stores
+SQLite runtime data in the named `cashflow_data` volume. It does not contain a
+database, demo account, or personal data.
+
+```bash
+export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
+docker compose up --build
+```
+
+Open <http://127.0.0.1:8000/> after the container reports healthy. The compose
+healthcheck is only a local operational signal; it is not production
+orchestration or a readiness contract for replicas. The supplied image targets
+Linux `amd64` and `arm64` hosts through the upstream Python base image; other
+architectures must be validated locally. Keep the named volume and back it up
+with the same SQLite procedure used by native installs; see
+[`docs/operations.md`](docs/operations.md#optional-docker-packaging).
+
+Do not expose this single-instance SQLite container directly to the public
+internet. Set `DEBUG=False`, configure real `ALLOWED_HOSTS`, and terminate TLS
+outside the container before any non-local use. Docker support does not add
+horizontal scaling, a separate database, or automated backup.
+
 ### Validation and CI
 
 Run the same checks used by the repository's GitHub Actions workflow from a
@@ -78,8 +104,8 @@ uvx --from 'ruff>=0.9,<1' ruff check .
 ```
 
 CI also audits the locked runtime requirements with `pip-audit` and publishes
-branch-coverage XML and HTML artifacts. Coverage is reported without a hard
-percentage threshold while financial-service branches continue to be expanded.
+branch-coverage XML and HTML artifacts. CI enforces the documented 70% line
+coverage floor while financial-service branches continue to be expanded.
 
 ## Choosing the interface language
 
@@ -202,6 +228,21 @@ explanation and never creates a user while disabled; login for existing users is
 unchanged. Leave it unset (or set it to `True`) for an open community instance.
 
 Set `HTTPS=True` only once the instance is actually served over TLS — it sends session and CSRF cookies as `Secure`, redirects HTTP to HTTPS, emits HSTS, and trusts `X-Forwarded-Proto`. Over plain HTTP it would break login outright.
+
+## Optional Docker packaging
+
+The native `uv` workflow remains primary. Docker Compose is an optional
+single-instance package using locked dependencies, automatic migrations, the
+non-root `cashflow` user, and a persistent `cashflow_data` SQLite volume:
+
+```bash
+export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
+docker compose up --build
+```
+
+It includes only a local healthcheck and must not be exposed directly to the
+public internet. Back up the named volume using [`docs/operations.md`](docs/operations.md).
+The image contains no database, credentials, or demo data.
 
 ## Future deployment security
 

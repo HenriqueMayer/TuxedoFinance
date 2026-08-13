@@ -6,6 +6,11 @@ The project package: cross-cutting configuration, localization, currency metadat
 committed secret, placeholder or automatic fallback; generate and keep a
 private key for each installation.
 
+When the optional Docker image is used, `CASHFLOW_DATA_DIR=/data` moves the
+SQLite file into the persistent container volume. The same settings and
+automatic migrations are used as in the native workflow; the image never
+ships runtime data or credentials.
+
 ## Files
 
 | File | Purpose |

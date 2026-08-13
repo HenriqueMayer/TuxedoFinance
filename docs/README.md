@@ -12,6 +12,7 @@ breaking release.
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
 | [frontend.md](frontend.md) | Server-rendered design system and updated banking UI structure. |
 | [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
+| [Docker packaging](../docker-compose.yml) | Optional single-instance local package; `runserver` remains primary. |
 | [coverage-baseline.md](coverage-baseline.md) | Phase 7 coverage report, 70% line floor, branch-reporting policy and local commands. |
 | [sqlite-history-response.md](sqlite-history-response.md) | Personal-data containment and coordinated cleanup plan for the formerly tracked SQLite history. |
 
@@ -45,6 +46,10 @@ Dependency maintenance and local database operations are documented in
 [operations.md](operations.md). The database owner is responsible for choosing
 backup storage, permissions, encryption and retention, and for rehearsing a
 restore before relying on a backup.
+
+Optional Docker packaging and its single-instance limitations are documented
+in [operations.md](operations.md#optional-docker-packaging); the native `uv`
+workflow remains the supported primary path.
 
 The root `db.sqlite3` is local runtime data and is absent from the current Git
 index. A clean clone creates its database with `manage.py migrate`; each

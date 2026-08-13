@@ -30,6 +30,40 @@ Keep the previous lockfile and application version available until the new
 version has passed its database rehearsal. Widen a range only after reviewing
 the dependency's release notes and compatibility policy.
 
+## Optional Docker packaging
+
+The native `uv` + `manage.py runserver` workflow remains the primary supported
+path. Docker is a convenience for a local single-instance installation and
+uses the same SQLite schema and automatic startup migrations:
+
+```bash
+export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
+docker compose up --build
+docker compose ps
+```
+
+The image runs as the unprivileged `cashflow` user. Its `/data` directory is
+mounted to the named `cashflow_data` volume, and `CASHFLOW_DATA_DIR` points
+there so the database survives container replacement. The compose healthcheck
+performs a local HTTP request to `/`; it is operational visibility only and
+is not a production readiness or replica-orchestration contract.
+
+The image is intended for Linux `amd64` and `arm64` hosts supported by the
+upstream Python base image. Other CPU architectures require an explicit local
+build and smoke test. No database, demo credentials, personal data, or backup
+is included in the image. Docker does not add TLS termination, horizontal
+scaling, a separate database, or automated backups; do not expose this
+single-instance SQLite service directly to the public internet.
+
+To stop the service while retaining data, run `docker compose down` (without
+`-v`). Removing the named volume is destructive and should only happen after
+an independently verified backup. Back up the SQLite file while the
+application is stopped, using the host path of the named volume or a temporary
+helper container. Keep backup files outside the checkout, restrict their
+permissions, encrypt sensitive records, and validate them with
+`PRAGMA integrity_check;` before relying on them. The restore, WAL, retention
+and rehearsal rules below apply unchanged to Docker volumes.
+
 ## Continuous integration
 
 The supported local Python path is reproduced by `.github/workflows/ci.yml` on
@@ -37,7 +71,7 @@ pushes and pull requests. CI installs the exact `uv.lock` set, then runs Django
 system checks, missing-migration checks, the full test suite with branch
 coverage, translation compilation, Ruff lint, and a `pip-audit` scan of the
 locked runtime requirements. Coverage XML and HTML reports are retained as
-workflow artifacts. Coverage is reported but has no percentage threshold yet;
+workflow artifacts. CI enforces the documented 70% line-coverage floor;
 the policy is documented in [coverage-baseline.md](coverage-baseline.md).
 
 ## SQLite backup
