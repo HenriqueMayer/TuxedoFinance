@@ -32,6 +32,7 @@ permitted by the project's license; see [License](#license).
 - **Light/dark theme** toggle with a Darcula-inspired dark palette
 - **Configurable currency** — pick BRL, USD, EUR, GBP, JPY, or CHF; the symbol and number format always match
 - **English and Brazilian Portuguese UI** — selected from the public or authenticated navbar without changing URLs
+- **Optional public signup control** — keep registration open for a community instance or close it while existing accounts continue to log in
 
 ## Stack
 
@@ -57,7 +58,7 @@ uv run python manage.py runserver
 The migration command creates a new local `db.sqlite3` and applies the complete
 schema on a clean clone. Keep `SECRET_KEY` private and stable for the lifetime
 of an installation; replacing it invalidates sessions. Open
-<http://127.0.0.1:8000/> and sign up from the landing page; your account
+<http://127.0.0.1:8000/> and, when public signup is enabled, sign up from the landing page; your account
 arrives with the default categories seeded. Add a bank and a currency-specific
 account before recording your first transaction.
 
@@ -155,10 +156,16 @@ Set configuration through the environment of the process that runs Django:
 | `ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
 | `HTTPS` | Secure cookies, HTTPS redirect, HSTS | `False` |
 | `LOG_LEVEL` | Log verbosity on stdout | `INFO` |
+| `ALLOW_SIGNUPS` | Allow creation of new accounts from the public signup route | `True` |
 
 The app refuses to start without `SECRET_KEY`. Generate one with Django's
 `get_random_secret_key()` command shown in Quick start; never commit or share
 it. Replacing the key invalidates existing sessions and password-reset tokens.
+
+Set `ALLOW_SIGNUPS=False` to close public registration after creating an account
+or when running a private instance. The signup route returns a localized
+explanation and never creates a user while disabled; login for existing users is
+unchanged. Leave it unset (or set it to `True`) for an open community instance.
 
 Set `HTTPS=True` only once the instance is actually served over TLS — it sends session and CSRF cookies as `Secure`, redirects HTTP to HTTPS, emits HSTS, and trusts `X-Forwarded-Proto`. Over plain HTTP it would break login outright.
 
