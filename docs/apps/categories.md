@@ -1,6 +1,6 @@
 # `categories`
 
-Full CRUD for `Category`, including subcategories via a self-relationship, plus the default-category seeding signal (FR14).
+Full CRUD for `Category`, including subcategories via a self-relationship, plus the default-category seeding signal (FR27).
 
 ## Files
 
@@ -88,7 +88,7 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
 
 `Transaction.category` uses `on_delete=PROTECT` (see [data-model.md § Category](../data-model.md#category)), so deleting a category still referenced by any transaction raises `ProtectedError` at the database layer. The view turns that exception into a friendly redirect-with-message response instead of a 500.
 
-## Default category seeding (FR14)
+## Default category seeding (FR27)
 
 ```python
 DEFAULT_CATEGORY_NAMES = (
@@ -115,7 +115,7 @@ class CategoriesConfig(AppConfig):
         import categories.signals  # noqa: F401
 ```
 
-**Why this exists:** `Transaction.category` is a required FK. Without this signal, a brand-new user would hit a dead end — an empty dropdown — the first time they tried to record a transaction. All 9 default categories are top-level (no `parent_category`); the user is free to add subcategories or additional top-level categories afterward. `dispatch_uid='categories_seed_defaults'` prevents the receiver from double-registering if `categories.signals` is ever imported more than once (e.g. Django's autoreloader).
+**Why this exists:** `Transaction.category` is a required FK. Without this signal, a brand-new user would hit a dead end — an empty dropdown — the first time they tried to record a transaction. All 9 default categories are top-level (no `parent_category`); the user is free to add subcategories or additional top-level categories afterward. No synthetic financial records are created. `dispatch_uid='categories_seed_defaults'` prevents the receiver from double-registering if `categories.signals` is ever imported more than once (e.g. Django's autoreloader).
 
 ## Routes
 

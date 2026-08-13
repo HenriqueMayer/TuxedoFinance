@@ -30,12 +30,13 @@ erDiagram
 
 ## Banking
 
-### `BankingProfile`
+### `BankingProfile` (planned — ROADMAP Phase 3)
 
-`BankingProfile` is one-to-one with the native Django user and stores
-`base_currency`. The project `CURRENCY` setting remains only the signup/default
-value. Changing a user's base currency changes future consolidation preferences;
-it does not mutate native amounts or historical conversion snapshots.
+`BankingProfile` does not exist in the current schema. Phase 3 will add a
+one-to-one relationship with the native Django user to store `base_currency`.
+Until then, the project-wide `CURRENCY` setting controls reporting currency.
+The planned change must not mutate native amounts or historical conversion
+evidence.
 
 ### `Bank`
 
@@ -125,6 +126,10 @@ existing income/expense classification. Names are unique per user, parent
 choices are user-scoped, and `Transaction.category` uses `PROTECT`. Deleting a
 parent sets its children to top level; deleting a category referenced by
 transaction history is blocked.
+
+Creating an account seeds only the nine approved top-level category names
+defined in `categories.signals`; it does not create synthetic transactions,
+banks, accounts, cards, investments, or shared credentials.
 
 ## Loyalty
 
