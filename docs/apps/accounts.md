@@ -52,7 +52,7 @@ class SignupView(SuccessMessageMixin, CreateView):
     form_class = SignupForm
     template_name = 'accounts/signup.html'
     success_url = reverse_lazy('dashboard:index')
-    success_message = 'Welcome to CashFlow, %(username)s. Your account is ready.'
+    success_message = 'Welcome to Tuxedo Finance, %(username)s. Your account is ready.'
 
     def form_valid(self, form):
         response = super().form_valid(form)

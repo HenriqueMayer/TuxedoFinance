@@ -1,6 +1,6 @@
 # Architecture
 
-The approved target architecture for CashFlow. The Django full-stack delivery
+The approved target architecture for Tuxedo Finance. The Django full-stack delivery
 model remains unchanged; the domain boundary changes from generic payment
 methods to explicit banking and ledger concepts.
 

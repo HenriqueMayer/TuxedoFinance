@@ -25,6 +25,12 @@ Color is never the only carrier of status. Monetary labels always include a
 currency symbol or ISO code, especially when native and base values are shown
 together.
 
+The Tuxedo Finance wordmark uses two explicit tones: slate/white for `Tuxedo`
+and amber for `Finance`. The cat mark is a decorative image beside that text,
+with an empty `alt` because the adjacent wordmark names the product. Existing
+indigo-violet-fuchsia action gradients and semantic financial colors remain
+unchanged in both themes.
+
 ## Root layout and navigation
 
 `templates/base.html` continues to own the page shell, theme setup, public or

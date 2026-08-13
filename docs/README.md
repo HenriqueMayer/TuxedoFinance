@@ -1,4 +1,4 @@
-# CashFlow Documentation
+# Tuxedo Finance Documentation
 
 Technical and product documentation for the approved banking/multicurrency
 breaking release.

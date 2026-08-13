@@ -1,12 +1,14 @@
-# CashFlow
+# Tuxedo Finance
+
+Formerly CashFlow.
 
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blueviolet)](LICENSE)
 
 A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered, with no JavaScript build step.
 
-## Why CashFlow exists
+## Why Tuxedo Finance exists
 
-CashFlow was created by Henrique Mayer after struggling to manage personal
+Tuxedo Finance was created by Henrique Mayer after struggling to manage personal
 finances in generic spreadsheets. Those tools required too much adaptation and
 still made it difficult to understand day-to-day cash flow, recurring expenses,
 bank accounts, cards, and investments in one place.
@@ -65,10 +67,10 @@ account before recording your first transaction.
 ### Optional Docker packaging
 
 Docker is an optional local packaging path; the native `uv` workflow above is
-the primary development and support path. The image runs one CashFlow process
+the primary development and support path. The image runs one Tuxedo Finance process
 as the unprivileged `cashflow` user, executes migrations on startup, and stores
 SQLite runtime data in the named `cashflow_data` volume. It does not contain a
-database, demo account, or personal data.
+database, account, or personal data.
 
 ```bash
 export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"

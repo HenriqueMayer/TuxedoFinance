@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: CashFlow\n"
+"Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 19:36+0000\n"
+"POT-Creation-Date: 2026-08-13 21:27+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -56,8 +56,8 @@ msgstr "Bem-vindo de volta, %(username)s."
 
 #: accounts/views.py:44
 #, python-format
-msgid "Welcome to CashFlow, %(username)s. Your account is ready."
-msgstr "Bem-vindo ao CashFlow, %(username)s. Sua conta está pronta."
+msgid "Welcome to Tuxedo Finance, %(username)s. Your account is ready."
+msgstr "Bem-vindo ao Tuxedo Finance, %(username)s. Sua conta está pronta."
 
 #: accounts/views.py:67
 msgid "Your base currency was updated."
@@ -677,8 +677,8 @@ msgstr "Despesas"
 
 #: dashboard/views.py:156 investments/apps.py:7
 #: templates/dashboard/index.html:148 templates/investments/list.html:3
-#: templates/investments/list.html:6 templates/partials/navbar_app.html:65
-#: templates/partials/navbar_app.html:102
+#: templates/investments/list.html:6 templates/partials/navbar_app.html:62
+#: templates/partials/navbar_app.html:99
 msgid "Investments"
 msgstr "Investimentos"
 
@@ -1088,8 +1088,8 @@ msgstr "Operação de investimento excluída."
 
 #: templates/accounts/login.html:12 templates/accounts/login.html:41
 #: templates/accounts/signup.html:19 templates/accounts/signup.html:51
-#: templates/pages/landing.html:58 templates/pages/landing.html:204
-#: templates/partials/navbar_public.html:23
+#: templates/pages/landing.html:58 templates/pages/landing.html:218
+#: templates/partials/navbar_public.html:20
 msgid "Log in"
 msgstr "Entrar"
 
@@ -1107,19 +1107,19 @@ msgstr "Ainda não tem uma conta?"
 
 #: templates/accounts/login.html:48 templates/accounts/signup.html:11
 #: templates/accounts/signup.html:45 templates/pages/landing.html:53
-#: templates/partials/navbar_public.html:28
+#: templates/partials/navbar_public.html:25
 msgid "Sign up"
 msgstr "Cadastre-se"
 
 #: templates/accounts/settings.html:4 templates/accounts/settings.html:9
-#: templates/investments/list.html:6 templates/partials/navbar_app.html:69
-#: templates/partials/navbar_app.html:103
+#: templates/investments/list.html:6 templates/partials/navbar_app.html:66
+#: templates/partials/navbar_app.html:100
 msgid "Settings"
 msgstr "Configurações"
 
 #: templates/accounts/settings.html:11
-msgid "Choose how CashFlow presents consolidated totals for your account."
-msgstr "Escolha como o CashFlow apresenta os totais consolidados da sua conta."
+msgid "Choose how Tuxedo Finance presents consolidated totals for your account."
+msgstr "Escolha como o Tuxedo Finance apresenta os totais consolidados da sua conta."
 
 #: templates/accounts/settings.html:30
 msgid "This currency is used for consolidated dashboard and report totals. Native account and transaction amounts are never changed."
@@ -1196,7 +1196,7 @@ msgstr "Excluir"
 
 #: templates/banking/detail.html:10 templates/banking/exchange_rates.html:9
 #: templates/banking/list.html:4 templates/banking/list.html:12
-#: templates/partials/navbar_app.html:61 templates/partials/navbar_app.html:101
+#: templates/partials/navbar_app.html:58 templates/partials/navbar_app.html:98
 msgid "Banks"
 msgstr "Bancos"
 
@@ -1417,7 +1417,7 @@ msgid "New Category"
 msgstr "Nova categoria"
 
 #: templates/categories/list.html:10 templates/categories/list.html:24
-#: templates/partials/navbar_app.html:57 templates/partials/navbar_app.html:100
+#: templates/partials/navbar_app.html:54 templates/partials/navbar_app.html:97
 msgid "Categories"
 msgstr "Categorias"
 
@@ -1808,7 +1808,7 @@ msgid "Once you record an expense, this chart shows which categories take the bi
 msgstr "Quando você registrar uma despesa, este gráfico mostrará quais categorias têm a maior participação."
 
 #: templates/dashboard/index.html:14 templates/dashboard/index.html:21
-#: templates/partials/navbar_app.html:45 templates/partials/navbar_app.html:97
+#: templates/partials/navbar_app.html:42 templates/partials/navbar_app.html:94
 msgid "Dashboard"
 msgstr "Dashboard"
 
@@ -1818,8 +1818,8 @@ msgid "Your cash flow at a glance, %(username)s."
 msgstr "Seu fluxo de caixa em um só olhar, %(username)s."
 
 #: templates/dashboard/index.html:27 templates/dashboard/reports.html:33
-#: templates/dashboard/reports.html:40 templates/partials/navbar_app.html:49
-#: templates/partials/navbar_app.html:98
+#: templates/dashboard/reports.html:40 templates/partials/navbar_app.html:46
+#: templates/partials/navbar_app.html:95
 msgid "Reports"
 msgstr "Relatórios"
 
@@ -2221,8 +2221,8 @@ msgid "Back to Settings"
 msgstr "Voltar às configurações"
 
 #: templates/pages/landing.html:19
-msgid "CashFlow — Take control of your personal finances"
-msgstr "CashFlow — Assuma o controle das suas finanças pessoais"
+msgid "Tuxedo Finance — Take control of your personal finances"
+msgstr "Tuxedo Finance — Assuma o controle das suas finanças pessoais"
 
 #: templates/pages/landing.html:26
 msgid "Personal finance, simplified"
@@ -2237,8 +2237,8 @@ msgid "spreadsheet"
 msgstr "planilha"
 
 #: templates/pages/landing.html:37
-msgid "CashFlow replaces the single column of plus and minus signs with a normalized, categorized record of every transaction — so you always know your <span class=\"font-semibold text-slate-800 dark:text-neutral-200\">Current Balance</span>, your <span class=\"font-semibold text-emerald-600 dark:text-emerald-400\">Income</span>, your <span class=\"font-semibold text-rose-600 dark:text-rose-400\">Expenses</span>, and where your money goes each month."
-msgstr "O CashFlow substitui a coluna única de sinais de mais e menos por um registro normalizado e categorizado de cada transação — para que você sempre saiba seu <span class=\"font-semibold text-slate-800 dark:text-neutral-200\">Saldo atual</span>, suas <span class=\"font-semibold text-emerald-600 dark:text-emerald-400\">Receitas</span>, suas <span class=\"font-semibold text-rose-600 dark:text-rose-400\">Despesas</span> e para onde vai seu dinheiro a cada mês."
+msgid "Tuxedo Finance replaces the single column of plus and minus signs with a normalized, categorized record of every transaction — so you always know your <span class=\"font-semibold text-slate-800 dark:text-neutral-200\">Current Balance</span>, your <span class=\"font-semibold text-emerald-600 dark:text-emerald-400\">Income</span>, your <span class=\"font-semibold text-rose-600 dark:text-rose-400\">Expenses</span>, and where your money goes each month."
+msgstr "O Tuxedo Finance substitui a coluna única de sinais de mais e menos por um registro normalizado e categorizado de cada transação — para que você sempre saiba seu <span class=\"font-semibold text-slate-800 dark:text-neutral-200\">Saldo atual</span>, suas <span class=\"font-semibold text-emerald-600 dark:text-emerald-400\">Receitas</span>, suas <span class=\"font-semibold text-rose-600 dark:text-rose-400\">Despesas</span> e para onde vai seu dinheiro a cada mês."
 
 #: templates/pages/landing.html:46
 msgid "Built from the everyday frustration of adapting spreadsheets to real personal finances."
@@ -2248,95 +2248,107 @@ msgstr "Nascido da frustração diária de adaptar planilhas às finanças pesso
 msgid "Sample dashboard preview"
 msgstr "Prévia de exemplo do Dashboard"
 
-#: templates/pages/landing.html:87
-msgid "How CashFlow works"
-msgstr "Como o CashFlow funciona"
+#: templates/pages/landing.html:90
+msgid "A tuxedo cat in a home office beside charts and the Tuxedo Finance wordmark."
+msgstr "Um gato tuxedo em um escritório doméstico, ao lado de gráficos e do nome Tuxedo Finance."
 
-#: templates/pages/landing.html:88
+#: templates/pages/landing.html:92
+msgid "Clear money, elegantly presented."
+msgstr "Dinheiro claro, apresentado com elegância."
+
+#: templates/pages/landing.html:93
+msgid "A focused home for understanding your finances in black and white."
+msgstr "Um espaço focado para entender suas finanças preto no branco."
+
+#: templates/pages/landing.html:101
+msgid "How Tuxedo Finance works"
+msgstr "Como o Tuxedo Finance funciona"
+
+#: templates/pages/landing.html:102
 msgid "Three steps between you and a clear picture of your money."
 msgstr "Três passos entre você e uma visão clara do seu dinheiro."
 
-#: templates/pages/landing.html:96
+#: templates/pages/landing.html:110
 msgid "Record"
 msgstr "Registre"
 
-#: templates/pages/landing.html:98
+#: templates/pages/landing.html:112
 msgid "Log each transaction with a title, amount, type, category, and bank instrument in under 30 seconds — no more hunting for the right cell."
 msgstr "Registre cada transação com título, valor, tipo, categoria e meio bancário em menos de 30 segundos — sem precisar procurar a célula certa."
 
-#: templates/pages/landing.html:106
+#: templates/pages/landing.html:120
 msgid "Classify"
 msgstr "Classifique"
 
-#: templates/pages/landing.html:108
+#: templates/pages/landing.html:122
 msgid "Consistent categories, subcategories, accounts, and cards keep every entry comparable, month after month."
 msgstr "Categorias, subcategorias, contas e cartões consistentes mantêm todos os lançamentos comparáveis, mês após mês."
 
-#: templates/pages/landing.html:116
+#: templates/pages/landing.html:130
 msgid "Review"
 msgstr "Analise"
 
-#: templates/pages/landing.html:118
+#: templates/pages/landing.html:132
 msgid "Open your dashboard for a consolidated view of your Current Balance and how the month is performing."
 msgstr "Abra seu Dashboard para ter uma visão consolidada do seu saldo atual e do desempenho do mês."
 
-#: templates/pages/landing.html:128
+#: templates/pages/landing.html:142
 msgid "Everything you need to track your money"
 msgstr "Tudo o que você precisa para acompanhar seu dinheiro"
 
-#: templates/pages/landing.html:129
+#: templates/pages/landing.html:143
 msgid "Built for people who currently keep a spreadsheet — and want something better."
 msgstr "Feito para quem hoje usa uma planilha — e quer algo melhor."
 
-#: templates/pages/landing.html:140
+#: templates/pages/landing.html:154
 msgid "Types & categories"
 msgstr "Tipos e categorias"
 
-#: templates/pages/landing.html:142
+#: templates/pages/landing.html:156
 msgid "Classify every entry as Income, Expense, or Investment, with categories and subcategories like Groceries or Transportation."
 msgstr "Classifique cada lançamento como Receita, Despesa ou Investimento, com categorias e subcategorias como Mercado ou Transporte."
 
-#: templates/pages/landing.html:153
+#: templates/pages/landing.html:167
 msgid "Payment methods"
 msgstr "Formas de pagamento"
 
-#: templates/pages/landing.html:155
+#: templates/pages/landing.html:169
 msgid "Track how you paid — Credit Card, Debit Card, PIX, or Checking Account — for every transaction."
 msgstr "Acompanhe como você pagou — Cartão de crédito, Cartão de débito, PIX ou Conta corrente — em cada transação."
 
-#: templates/pages/landing.html:166
+#: templates/pages/landing.html:180
 msgid "Fixed vs. variable"
 msgstr "Fixo ou variável"
 
-#: templates/pages/landing.html:168
+#: templates/pages/landing.html:182
 msgid "Mark recurring bills as fixed and keep them separate from one-off, variable spending."
 msgstr "Marque contas recorrentes como fixas e mantenha-as separadas dos gastos avulsos e variáveis."
 
-#: templates/pages/landing.html:179
+#: templates/pages/landing.html:193
 msgid "Consolidated dashboard"
 msgstr "Dashboard consolidado"
 
-#: templates/pages/landing.html:181
+#: templates/pages/landing.html:195
 msgid "See Current Balance, Income, Expenses, and monthly Balance in a single, clear view."
 msgstr "Veja saldo atual, receitas, despesas e saldo mensal em uma única visão clara."
 
-#: templates/pages/landing.html:191
+#: templates/pages/landing.html:205
 msgid "Ready to see your cash flow clearly?"
 msgstr "Pronto para enxergar seu fluxo de caixa com clareza?"
 
-#: templates/pages/landing.html:193
+#: templates/pages/landing.html:207
 msgid "Create your account and start recording transactions in minutes."
 msgstr "Crie sua conta e comece a registrar transações em poucos minutos."
 
-#: templates/pages/landing.html:199
+#: templates/pages/landing.html:213
 msgid "Sign up for free"
 msgstr "Cadastre-se gratuitamente"
 
-#: templates/partials/footer.html:13
-msgid "Personal finance tracking, simplified."
-msgstr "Acompanhamento simplificado das finanças pessoais."
+#: templates/partials/footer.html:12
+msgid "Your money, in black and white."
+msgstr "Seu dinheiro, preto no branco."
 
-#: templates/partials/footer.html:14
+#: templates/partials/footer.html:13
 msgid "All rights reserved."
 msgstr "Todos os direitos reservados."
 
@@ -2349,17 +2361,17 @@ msgstr "Idioma"
 msgid "Apply"
 msgstr "Aplicar"
 
-#: templates/partials/navbar_app.html:53 templates/partials/navbar_app.html:99
+#: templates/partials/navbar_app.html:50 templates/partials/navbar_app.html:96
 #: templates/transactions/list.html:19 templates/transactions/list.html:27
 #: transactions/apps.py:7
 msgid "Transactions"
 msgstr "Transações"
 
-#: templates/partials/navbar_app.html:82 templates/partials/navbar_app.html:112
+#: templates/partials/navbar_app.html:79 templates/partials/navbar_app.html:109
 msgid "Log out"
 msgstr "Sair"
 
-#: templates/partials/navbar_app.html:93
+#: templates/partials/navbar_app.html:90
 msgid "Toggle menu"
 msgstr "Alternar menu"
 
@@ -2673,6 +2685,10 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+
+#~ msgid "Personal finance tracking, simplified."
+#~ msgstr "Acompanhamento simplificado das finanças pessoais."
 
 #, python-format
 #~ msgid "%(amount)s %(currency)s; fees %(fees)s %(currency)s"

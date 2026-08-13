@@ -1,13 +1,13 @@
 {% load i18n static %}
 <!DOCTYPE html>
 {% comment %}
-CashFlow base layout (PRD §9 — Design System).
+Tuxedo Finance base layout (PRD §9 — Design System).
 
 Every page in the project MUST extend this template and reuse the partials
 below instead of hand-rolling one-off markup (PRD risk R2).
 
 Blocks:
-  {% block title %}   — <title> content, defaults to "CashFlow".
+  {% block title %}   — <title> content, defaults to "Tuxedo Finance".
   {% block content %}  — page body, rendered inside <main>.
 
 Partials included here:
@@ -42,7 +42,10 @@ build step.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CashFlow{% endblock %}</title>
+    <title>{% block title %}Tuxedo Finance{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'brand/favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'brand/favicon-32.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'brand/apple-touch-icon.png' %}">
 
     {% comment %}Theme bootstrap (PRD §9): runs synchronously before the
     stylesheet paints so <html> already carries the correct `dark` class (or

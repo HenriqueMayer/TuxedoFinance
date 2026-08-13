@@ -1,7 +1,7 @@
 [project]
-name = "django-finance-template"
+name = "tuxedo-finance"
 version = "0.1.0"
-description = "CashFlow — a self-hosted personal finance tracker built with Django, server-rendered and zero-JS."
+description = "Tuxedo Finance — a self-hosted personal finance tracker built with Django, server-rendered and zero-JS."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
