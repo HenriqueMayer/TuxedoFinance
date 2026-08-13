@@ -1,0 +1,12 @@
+.git
+.github
+.venv
+__pycache__
+*.py[cod]
+db.sqlite3*
+.coverage
+coverage.xml
+htmlcov
+docs/media
+project_review.md
+roadmap_brand.md
