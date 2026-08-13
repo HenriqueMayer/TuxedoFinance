@@ -4,6 +4,22 @@ A personal finance tracker built with Django full stack — record categorized t
 
 ![CashFlow demo — recording transactions, then the dashboard and reports updating](docs/media/demo.gif)
 
+## Why CashFlow exists
+
+CashFlow was created by Henrique Mayer after struggling to manage personal
+finances in generic spreadsheets. Those tools required too much adaptation and
+still made it difficult to understand day-to-day cash flow, recurring expenses,
+bank accounts, cards, and investments in one place.
+
+The project turns that experience into a practical tool for other people facing
+the same problem. Its focus is personal use, simple self-hosting, clear financial
+information, and community collaboration — not becoming a SaaS platform or
+optimizing prematurely for large-scale operation.
+
+The source is publicly available so people can study it, adapt it, contribute to
+it, and run their own noncommercial instance. Commercial use and resale are not
+permitted by the project's license; see [License](#license).
+
 ## Features
 
 - **Dashboard** with current balance, monthly income/expenses/investments, and a projected end-of-month balance
@@ -155,9 +171,14 @@ Set `HTTPS=True` only once the instance is actually served over TLS — it sends
 
 - [`docs/ProductRequirementsDocument.md`](docs/ProductRequirementsDocument.md) — full product specification and requirements
 - [`docs/`](docs/README.md) — technical reference for every app, model, view, and template
+- [`ROADMAP.md`](ROADMAP.md) — prioritized implementation and UX improvement plan
 
 ## License
 
 Copyright (c) 2026 Henrique Mayer
 
 Licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). Personal, noncommercial use is permitted — including using this repository as a template for your own personal, local instance; selling this software, or using it for any commercial purpose, is not. See [LICENSE](LICENSE) for the full terms.
+
+Copies and modified distributions must preserve the license terms and the
+required copyright notice. Public source code cannot be made technically
+impossible to copy; the copyright and license define which uses are permitted.
