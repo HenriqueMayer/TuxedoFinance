@@ -142,6 +142,16 @@ reserved for explicitly labeled current-value simulations elsewhere.
   event's amount, currency, or date refreshes its snapshot; descriptive edits do
   not. Other entities remain on live/current conversion for now.
 
+### 5.6 Public registration
+
+- A single `ALLOW_SIGNUPS` environment setting controls whether the public
+  signup route may create new native Django users; it defaults to `True` for an
+  open local/community instance.
+- When disabled, direct requests return a localized explanation and persist no
+  user. Login and all existing accounts remain unchanged.
+- Public navigation reflects the same setting, but authorization is enforced in
+  the server-side signup view rather than by link visibility alone.
+
 ### 5.5 Investments
 
 - The investment position ledger and categorized transaction ledger stay

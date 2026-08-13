@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CashFlow\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 18:28+0000\n"
+"POT-Creation-Date: 2026-08-13 18:39+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -49,17 +49,17 @@ msgstr "Iene japonês"
 msgid "Swiss Franc"
 msgstr "Franco suíço"
 
-#: accounts/views.py:27
+#: accounts/views.py:29
 #, python-format
 msgid "Welcome back, %(username)s."
 msgstr "Bem-vindo de volta, %(username)s."
 
-#: accounts/views.py:42
+#: accounts/views.py:44
 #, python-format
 msgid "Welcome to CashFlow, %(username)s. Your account is ready."
 msgstr "Bem-vindo ao CashFlow, %(username)s. Sua conta está pronta."
 
-#: accounts/views.py:55
+#: accounts/views.py:67
 msgid "Your base currency was updated."
 msgstr "Sua moeda-base foi atualizada."
 
@@ -644,11 +644,11 @@ msgstr "\"%(name)s\" não pode ser excluída porque ainda é usada por transaç�
 msgid "Category \"%(name)s\" deleted."
 msgstr "Categoria \"%(name)s\" excluída."
 
-#: core/settings.py:132
+#: core/settings.py:135
 msgid "English"
 msgstr "Inglês"
 
-#: core/settings.py:133
+#: core/settings.py:136
 msgid "Brazilian Portuguese"
 msgstr "Português brasileiro"
 
@@ -1083,8 +1083,9 @@ msgid "Investment operation deleted."
 msgstr "Operação de investimento excluída."
 
 #: templates/accounts/login.html:12 templates/accounts/login.html:41
-#: templates/accounts/signup.html:44 templates/pages/landing.html:56
-#: templates/pages/landing.html:200 templates/partials/navbar_public.html:23
+#: templates/accounts/signup.html:19 templates/accounts/signup.html:51
+#: templates/pages/landing.html:58 templates/pages/landing.html:204
+#: templates/partials/navbar_public.html:23
 msgid "Log in"
 msgstr "Entrar"
 
@@ -1096,13 +1097,13 @@ msgstr "Bem-vindo de volta"
 msgid "Log in to see your dashboard."
 msgstr "Entre para acessar seu Dashboard."
 
-#: templates/accounts/login.html:46
+#: templates/accounts/login.html:47
 msgid "Don't have an account?"
 msgstr "Ainda não tem uma conta?"
 
-#: templates/accounts/login.html:47 templates/accounts/signup.html:11
-#: templates/accounts/signup.html:38 templates/pages/landing.html:52
-#: templates/partials/navbar_public.html:27
+#: templates/accounts/login.html:48 templates/accounts/signup.html:11
+#: templates/accounts/signup.html:45 templates/pages/landing.html:53
+#: templates/partials/navbar_public.html:28
 msgid "Sign up"
 msgstr "Cadastre-se"
 
@@ -1134,15 +1135,27 @@ msgstr "Salvar configurações"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: templates/accounts/signup.html:16
+#: templates/accounts/signup.html:11
+msgid "Registration closed"
+msgstr "Cadastros encerrados"
+
+#: templates/accounts/signup.html:17
+msgid "Registration is currently closed"
+msgstr "Os cadastros estão encerrados no momento"
+
+#: templates/accounts/signup.html:18
+msgid "New accounts are not being accepted right now. Please contact the instance owner if you need access."
+msgstr "Novas contas não estão sendo aceitas no momento. Entre em contato com o responsável pela instância se precisar de acesso."
+
+#: templates/accounts/signup.html:23
 msgid "Create your account"
 msgstr "Crie sua conta"
 
-#: templates/accounts/signup.html:17
+#: templates/accounts/signup.html:24
 msgid "Start tracking your cash flow in minutes."
 msgstr "Comece a acompanhar seu fluxo de caixa em poucos minutos."
 
-#: templates/accounts/signup.html:43
+#: templates/accounts/signup.html:50
 msgid "Already have an account?"
 msgstr "Já tem uma conta?"
 
@@ -1813,15 +1826,15 @@ msgstr "Próximo mês"
 msgid "Back to this month"
 msgstr "Voltar para este mês"
 
-#: templates/dashboard/index.html:65 templates/pages/landing.html:68
+#: templates/dashboard/index.html:65 templates/pages/landing.html:70
 msgid "Current Balance"
 msgstr "Saldo atual"
 
-#: templates/dashboard/index.html:66 templates/pages/landing.html:69
+#: templates/dashboard/index.html:66 templates/pages/landing.html:71
 msgid "Income (month)"
 msgstr "Receitas (mês)"
 
-#: templates/dashboard/index.html:67 templates/pages/landing.html:70
+#: templates/dashboard/index.html:67 templates/pages/landing.html:72
 msgid "Expenses (month)"
 msgstr "Despesas (mês)"
 
@@ -1829,7 +1842,7 @@ msgstr "Despesas (mês)"
 msgid "Investments (month)"
 msgstr "Investimentos (mês)"
 
-#: templates/dashboard/index.html:69 templates/pages/landing.html:71
+#: templates/dashboard/index.html:69 templates/pages/landing.html:73
 msgid "Balance (month)"
 msgstr "Saldo (mês)"
 
@@ -2114,91 +2127,91 @@ msgstr "O CashFlow substitui a coluna única de sinais de mais e menos por um re
 msgid "Built from the everyday frustration of adapting spreadsheets to real personal finances."
 msgstr "Nascido da frustração diária de adaptar planilhas às finanças pessoais reais."
 
-#: templates/pages/landing.html:64
+#: templates/pages/landing.html:66
 msgid "Sample dashboard preview"
 msgstr "Prévia de exemplo do Dashboard"
 
-#: templates/pages/landing.html:85
+#: templates/pages/landing.html:87
 msgid "How CashFlow works"
 msgstr "Como o CashFlow funciona"
 
-#: templates/pages/landing.html:86
+#: templates/pages/landing.html:88
 msgid "Three steps between you and a clear picture of your money."
 msgstr "Três passos entre você e uma visão clara do seu dinheiro."
 
-#: templates/pages/landing.html:94
+#: templates/pages/landing.html:96
 msgid "Record"
 msgstr "Registre"
 
-#: templates/pages/landing.html:96
+#: templates/pages/landing.html:98
 msgid "Log each transaction with a title, amount, type, category, and bank instrument in under 30 seconds — no more hunting for the right cell."
 msgstr "Registre cada transação com título, valor, tipo, categoria e meio bancário em menos de 30 segundos — sem precisar procurar a célula certa."
 
-#: templates/pages/landing.html:104
+#: templates/pages/landing.html:106
 msgid "Classify"
 msgstr "Classifique"
 
-#: templates/pages/landing.html:106
+#: templates/pages/landing.html:108
 msgid "Consistent categories, subcategories, accounts, and cards keep every entry comparable, month after month."
 msgstr "Categorias, subcategorias, contas e cartões consistentes mantêm todos os lançamentos comparáveis, mês após mês."
 
-#: templates/pages/landing.html:114
+#: templates/pages/landing.html:116
 msgid "Review"
 msgstr "Analise"
 
-#: templates/pages/landing.html:116
+#: templates/pages/landing.html:118
 msgid "Open your dashboard for a consolidated view of your Current Balance and how the month is performing."
 msgstr "Abra seu Dashboard para ter uma visão consolidada do seu saldo atual e do desempenho do mês."
 
-#: templates/pages/landing.html:126
+#: templates/pages/landing.html:128
 msgid "Everything you need to track your money"
 msgstr "Tudo o que você precisa para acompanhar seu dinheiro"
 
-#: templates/pages/landing.html:127
+#: templates/pages/landing.html:129
 msgid "Built for people who currently keep a spreadsheet — and want something better."
 msgstr "Feito para quem hoje usa uma planilha — e quer algo melhor."
 
-#: templates/pages/landing.html:138
+#: templates/pages/landing.html:140
 msgid "Types & categories"
 msgstr "Tipos e categorias"
 
-#: templates/pages/landing.html:140
+#: templates/pages/landing.html:142
 msgid "Classify every entry as Income, Expense, or Investment, with categories and subcategories like Groceries or Transportation."
 msgstr "Classifique cada lançamento como Receita, Despesa ou Investimento, com categorias e subcategorias como Mercado ou Transporte."
 
-#: templates/pages/landing.html:151
+#: templates/pages/landing.html:153
 msgid "Payment methods"
 msgstr "Formas de pagamento"
 
-#: templates/pages/landing.html:153
+#: templates/pages/landing.html:155
 msgid "Track how you paid — Credit Card, Debit Card, PIX, or Checking Account — for every transaction."
 msgstr "Acompanhe como você pagou — Cartão de crédito, Cartão de débito, PIX ou Conta corrente — em cada transação."
 
-#: templates/pages/landing.html:164
+#: templates/pages/landing.html:166
 msgid "Fixed vs. variable"
 msgstr "Fixo ou variável"
 
-#: templates/pages/landing.html:166
+#: templates/pages/landing.html:168
 msgid "Mark recurring bills as fixed and keep them separate from one-off, variable spending."
 msgstr "Marque contas recorrentes como fixas e mantenha-as separadas dos gastos avulsos e variáveis."
 
-#: templates/pages/landing.html:177
+#: templates/pages/landing.html:179
 msgid "Consolidated dashboard"
 msgstr "Dashboard consolidado"
 
-#: templates/pages/landing.html:179
+#: templates/pages/landing.html:181
 msgid "See Current Balance, Income, Expenses, and monthly Balance in a single, clear view."
 msgstr "Veja saldo atual, receitas, despesas e saldo mensal em uma única visão clara."
 
-#: templates/pages/landing.html:189
+#: templates/pages/landing.html:191
 msgid "Ready to see your cash flow clearly?"
 msgstr "Pronto para enxergar seu fluxo de caixa com clareza?"
 
-#: templates/pages/landing.html:191
+#: templates/pages/landing.html:193
 msgid "Create your account and start recording transactions in minutes."
 msgstr "Crie sua conta e comece a registrar transações em poucos minutos."
 
-#: templates/pages/landing.html:196
+#: templates/pages/landing.html:199
 msgid "Sign up for free"
 msgstr "Cadastre-se gratuitamente"
 

@@ -1,10 +1,12 @@
 from django.contrib.auth import login
+from django.conf import settings
 from django.contrib.auth.views import LoginView as AuthLoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, UpdateView
+from django.shortcuts import render
 
 from accounts.forms import BaseCurrencyForm, LoginForm, SignupForm
 from accounts.models import UserPreference
@@ -40,6 +42,16 @@ class SignupView(SuccessMessageMixin, CreateView):
     template_name = 'accounts/signup.html'
     success_url = reverse_lazy('dashboard:index')
     success_message = _('Welcome to CashFlow, %(username)s. Your account is ready.')
+
+    def dispatch(self, request, *args, **kwargs):
+        if not settings.ALLOW_SIGNUPS:
+            return render(
+                request,
+                self.template_name,
+                {'signup_disabled': True},
+                status=403,
+            )
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         response = super().form_valid(form)

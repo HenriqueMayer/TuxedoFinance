@@ -18,6 +18,12 @@ methods to explicit banking and ledger concepts.
 | Supported runtime | Django development server (`runserver`) |
 | Localization | Django gettext (`en`, `pt-br`) |
 
+Public registration is a deployment-level policy, not a separate account model:
+`ALLOW_SIGNUPS` is read from the process environment (default `True`). The
+accounts signup view enforces it on every request, while public templates merely
+mirror the state by showing or hiding signup calls to action. Existing login
+flows are independent of this switch.
+
 ## Domain apps
 
 ```text

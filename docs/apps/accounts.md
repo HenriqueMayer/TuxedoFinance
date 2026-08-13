@@ -1,6 +1,6 @@
 # `accounts`
 
-Sign up, log in, log out — entirely built on Django's native `django.contrib.auth`. No custom `User` model.
+Sign up, log in, log out — entirely built on Django's native `django.contrib.auth`. No custom `User` model. Public signup is controlled by the `ALLOW_SIGNUPS` environment setting (enabled by default).
 
 ## Files
 
@@ -62,6 +62,11 @@ class SignupView(SuccessMessageMixin, CreateView):
 
 Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly calls Django's `login()` after `super().form_valid(form)` saves the user, so signup redirects directly to the dashboard. Signup seeds only the approved default categories and creates the user's `UserPreference` with BRL as the bootstrap reporting currency. No synthetic financial records or shared credentials are provided. Banks, accounts and cards are never fabricated; the first-run Banking flow asks the user to create their real structure.
 
+When `ALLOW_SIGNUPS=False`, the view does not validate or save a user. It returns
+the localized registration-closed response instead. This server-side guard is
+the source of truth; hiding links in the landing page and navbar is only a
+matching navigation affordance. Existing users can still log in normally.
+
 ## User preferences
 
 `UserPreference` is a one-to-one, user-owned model containing `base_currency`.
@@ -76,7 +81,7 @@ unchanged. The settings route and form are localized in English and pt-BR.
 | Path | Name | View | Notes |
 |---|---|---|---|
 | `/accounts/login/` | `accounts:login` | `LoginView` | |
-| `/accounts/signup/` | `accounts:signup` | `SignupView` | |
+| `/accounts/signup/` | `accounts:signup` | `SignupView` | Creates an account only when `ALLOW_SIGNUPS=True`; otherwise returns a localized closed-registration response |
 | `/accounts/logout/` | `accounts:logout` | Django's native `LogoutView` | **POST-only** |
 
 `LogoutView` is used directly from `django.contrib.auth.views` with zero customization — modern Django's `LogoutView` rejects `GET` requests (returns `405`), so every logout control in the UI is a `<form method="post">` with a submit button, never a plain `<a href>` link (see `partials/navbar_app.html`).
@@ -84,6 +89,6 @@ unchanged. The settings route and form are localized in English and pt-BR.
 ## Templates
 
 - `templates/accounts/login.html` — renders `LoginForm` via `partials/form_field.html`; preserves `?next=` as a hidden input so post-login redirect targets survive a failed first attempt; links to signup.
-- `templates/accounts/signup.html` — renders `SignupForm`'s four fields (`username`, `email`, `password1`, `password2`); links to login.
+- `templates/accounts/signup.html` — renders `SignupForm`'s four fields (`username`, `email`, `password1`, `password2`); links to login when registration is open. The public landing page and nav omit signup calls to action when it is closed.
 
 Both follow the identical "centered `max-w-md` card" layout used by every auth-adjacent screen in the project.

@@ -37,6 +37,7 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, 'id="language-select-public"')
         self.assertContains(response, 'Log in')
 
+
     def test_set_language_persists_portuguese_in_cookie(self):
         response = self.client.post(
             reverse('set_language'),
@@ -98,3 +99,25 @@ class LanguageSelectionTests(TestCase):
             portuguese = number_format(1234.5, decimal_pos=2, use_l10n=True, force_grouping=True)
 
         self.assertEqual(portuguese, english)
+
+
+class SignupControlTests(TestCase):
+    @override_settings(ALLOW_SIGNUPS=False)
+    def test_signup_route_blocks_get_and_post_without_creating_user(self):
+        response = self.client.get(reverse('accounts:signup'))
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Registration is currently closed', status_code=403)
+
+        response = self.client.post(
+            reverse('accounts:signup'),
+            {'username': 'blocked', 'email': 'blocked@example.com', 'password1': 'A-strong-password-123', 'password2': 'A-strong-password-123'},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(User.objects.filter(username='blocked').exists())
+
+    @override_settings(ALLOW_SIGNUPS=False)
+    def test_public_ctas_are_hidden_when_signup_is_disabled(self):
+        landing = self.client.get(reverse('pages:landing'))
+        login = self.client.get(reverse('accounts:login'))
+        self.assertNotContains(landing, reverse('accounts:signup'))
+        self.assertNotContains(login, reverse('accounts:signup'))

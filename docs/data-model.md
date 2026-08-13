@@ -38,6 +38,11 @@ for existing users with the BRL bootstrap default. It is a presentation
 preference: changing it never rewrites native account, transaction, investment,
 or exchange-rate data.
 
+Public registration does not add a profile or registration model. The
+`ALLOW_SIGNUPS` environment setting controls whether the native Django `User`
+creation route is open; disabling it leaves existing user rows and login
+behavior untouched.
+
 ### `Bank`
 
 | Field | Meaning |

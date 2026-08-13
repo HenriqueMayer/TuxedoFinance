@@ -42,9 +42,11 @@ a non-field error (PRD 3.3.2); valid credentials redirect to `next` or
         </button>
     </form>
 
+    {% if ALLOW_SIGNUPS %}
     <p class="mt-6 text-center text-sm text-slate-600 dark:text-neutral-400">
-        {% translate "Don't have an account?" %}
-        <a href="{% url 'accounts:signup' %}" class="rounded font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">{% translate "Sign up" %}</a>
+            {% translate "Don't have an account?" %}
+            <a href="{% url 'accounts:signup' %}" class="rounded font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">{% translate "Sign up" %}</a>
     </p>
+    {% endif %}
 </div>
 {% endblock %}
