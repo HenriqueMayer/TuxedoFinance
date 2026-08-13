@@ -89,8 +89,8 @@ Each installation owner controls the contents of that local database and is
 responsible for its access permissions, protection and backups. Never add the
 database to version control or publish it with application source. Before an
 upgrade or other risky operation, stop application writes and make a protected
-copy of the database; the complete backup, restore, retention and rehearsal
-procedure is scheduled for ROADMAP Phase 6.2.
+copy of the database. See the complete backup, restore, retention and rehearsal
+procedure in [`docs/operations.md`](docs/operations.md).
 
 The repository-owner operation `git rm --cached db.sqlite3` changes only the
 index and preserves that working-tree file; it does not alter its schema or
@@ -184,6 +184,7 @@ in the future, apply Django's deployment checklist and these safeguards:
 
 - [`docs/ProductRequirementsDocument.md`](docs/ProductRequirementsDocument.md) — full product specification and requirements
 - [`docs/`](docs/README.md) — technical reference for every app, model, view, and template
+- [`docs/operations.md`](docs/operations.md) — dependency updates and local SQLite backup/restore operations
 - [`ROADMAP.md`](ROADMAP.md) — prioritized implementation and UX improvement plan
 
 ## License
