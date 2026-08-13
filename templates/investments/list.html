@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% block title %}{% translate 'Investments' %} - CashFlow{% endblock %}
+{% block title %}{% translate 'Investments' %} - Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="space-y-6">
     <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate 'Investments' %}</h1><p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate 'Asset quantities and value flows, with cash authority in Banking.' %}</p></div><div class="flex gap-3"><a href="{% url 'investments:settings' %}" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate 'Settings' %}</a><a href="{% url 'investments:create' %}" class="rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white">{% translate 'New operation' %}</a></div></header>

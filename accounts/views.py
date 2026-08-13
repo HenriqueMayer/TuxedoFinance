@@ -41,7 +41,7 @@ class SignupView(SuccessMessageMixin, CreateView):
     form_class = SignupForm
     template_name = 'accounts/signup.html'
     success_url = reverse_lazy('dashboard:index')
-    success_message = _('Welcome to CashFlow, %(username)s. Your account is ready.')
+    success_message = _('Welcome to Tuxedo Finance, %(username)s. Your account is ready.')
 
     def dispatch(self, request, *args, **kwargs):
         if not settings.ALLOW_SIGNUPS:

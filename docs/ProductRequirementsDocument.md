@@ -1,4 +1,4 @@
-# PRD — CashFlow Banking and Multicurrency Update
+# PRD — Tuxedo Finance Banking and Multicurrency Update
 
 **Status:** Approved
 
@@ -7,7 +7,7 @@
 
 ## 1. Overview
 
-CashFlow replaces generic payment methods with an explicit banking model. The
+Tuxedo Finance replaces generic payment methods with an explicit banking model. The
 release adds banks, currency-specific accounts, an authoritative movement
 ledger, PIX, debit and credit cards, card invoices and loyalty points.
 Per-user multicurrency preferences and retained historical conversion evidence
@@ -92,7 +92,7 @@ HTMX progressive enhancement.
 
 ### Current implementation status
 
-CashFlow currently supports editable personal records. Each user has a
+Tuxedo Finance currently supports editable personal records. Each user has a
 `accounts.UserPreference` row with a base reporting currency. New and existing
 users default to BRL; changing the preference affects consolidated display only
 and does not mutate native financial records. Cross-currency transfers and

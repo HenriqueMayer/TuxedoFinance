@@ -1,6 +1,6 @@
 # Local operations
 
-CashFlow is a single-instance Django application backed by an owner-managed
+Tuxedo Finance is a single-instance Django application backed by an owner-managed
 SQLite database. The database is runtime data, is ignored by Git, and must not
 be copied into source control or a public issue. Each installation owner chooses
 the location, retention period, and encryption policy for backups.
@@ -122,7 +122,7 @@ Do not use a half-copied live file as a backup.
 
 For sensitive records, encrypt the backup with an owner-controlled tool such as
 `age` or `gpg`, and remove the unencrypted copy after verifying the encrypted
-artifact. Keep at least one backup separate from the machine running CashFlow.
+artifact. Keep at least one backup separate from the machine running Tuxedo Finance.
 Choose a retention policy that matches the value and update frequency of the
 records (for example, daily backups retained for 30 days plus a monthly copy).
 
