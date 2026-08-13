@@ -30,6 +30,14 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         {% include 'partials/form_field.html' with field=form.title %}
         {% include 'partials/form_field.html' with field=form.amount %}
         {% include 'partials/form_field.html' with field=form.transaction_type %}
+        <div class="space-y-1.5">
+            <label for="category-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">
+                {% translate "Search category" %}
+            </label>
+            <input id="category-search" type="search" autocomplete="off" aria-controls="{{ form.category.id_for_label }}"
+                   placeholder="{% translate 'Type to filter categories' %}"
+                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:placeholder:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+        </div>
         {% include 'partials/form_field.html' with field=form.category %}
         {% include 'partials/form_field.html' with field=form.payment_channel %}
         {% include 'partials/form_field.html' with field=form.bank_account %}
@@ -70,4 +78,29 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const search = document.getElementById('category-search');
+        const category = document.getElementById('{{ form.category.id_for_label }}');
+        if (!search || !category) return;
+
+        search.addEventListener('input', function () {
+            const query = search.value.trim().toLocaleLowerCase();
+            let firstMatch = null;
+
+            Array.from(category.options).forEach(function (option) {
+                const matches = !query || option.text.toLocaleLowerCase().includes(query);
+                option.hidden = !matches;
+                if (matches && option.value && !firstMatch) firstMatch = option;
+            });
+
+            if (category.selectedOptions[0] && category.selectedOptions[0].hidden && firstMatch) {
+                category.value = firstMatch.value;
+            }
+        });
+    })();
+</script>
 {% endblock %}
