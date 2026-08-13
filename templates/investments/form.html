@@ -4,39 +4,160 @@
 {% block title %}{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %} - Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-2xl space-y-6">
+<div class="mx-auto max-w-md space-y-6">
     <div>
         <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %}</h1>
-        <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate 'All funding fields remain visible. Fill only those relevant to the selected operation type.' %}</p>
+        <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate 'Choose an asset and operation type to see only the fields you need.' %}</p>
     </div>
     <form method="post" class="space-y-6 rounded-2xl bg-white p-6 ring-1 ring-slate-200 dark:bg-[#313335] dark:ring-[#323232]" novalidate>
         {% csrf_token %}
         {% for error in form.non_field_errors %}<p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
-        <section class="grid gap-5 sm:grid-cols-2">
+        <section class="space-y-5">
             {% include 'partials/form_field.html' with field=form.product %}
             {% include 'partials/form_field.html' with field=form.asset %}
             {% include 'partials/form_field.html' with field=form.kind %}
             {% include 'partials/form_field.html' with field=form.date %}
-            <div class="space-y-2">{% include 'partials/form_field.html' with field=form.amount %}<p class="text-xs text-slate-500 dark:text-neutral-400">{% translate 'Monetary value: use this field for savings pots.' %}</p></div>
-            <div class="space-y-2 sm:col-span-2"><div class="grid gap-5 sm:grid-cols-2">{% include 'partials/form_field.html' with field=form.quantity %}{% include 'partials/form_field.html' with field=form.unit_price %}</div><p class="text-xs text-slate-500 dark:text-neutral-400">{% translate 'Units: enter quantity and unit price for traded assets.' %}</p></div>
+            <p id="asset-mode-status" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
+            <div id="money-fields" data-has-errors="{{ form.amount.errors|yesno:'true,false' }}">
+                {% include 'partials/form_field.html' with field=form.amount %}
+            </div>
+            <div id="unit-fields" data-has-errors="{% if form.quantity.errors or form.unit_price.errors %}true{% else %}false{% endif %}" class="space-y-5">
+                {% include 'partials/form_field.html' with field=form.quantity %}
+                {% include 'partials/form_field.html' with field=form.unit_price %}
+            </div>
             {% include 'partials/form_field.html' with field=form.fees %}
-            {% include 'partials/form_field.html' with field=form.cash_amount %}
         </section>
-        <section class="space-y-4 rounded-xl bg-slate-50 p-4 dark:bg-[#2B2B2B]">
-            <div><h2 class="font-semibold text-slate-900 dark:text-neutral-100">{% translate 'Funding or destination' %}</h2><p class="text-xs text-slate-500">{% translate 'Deposit: one source. Withdrawal: destination. Yield: leave all empty.' %}</p></div>
-            <div class="grid gap-5 sm:grid-cols-2">
+        <section id="funding-section" class="space-y-4 rounded-xl bg-slate-50 p-4 dark:bg-[#2B2B2B]">
+            <div>
+                <h2 class="font-semibold text-slate-900 dark:text-neutral-100">{% translate 'Funding or destination' %}</h2>
+                <p id="operation-kind-status" class="text-sm text-slate-500 dark:text-neutral-400" aria-live="polite"></p>
+            </div>
+            <div id="deposit-fields" data-has-errors="{% if form.source_account.errors or form.source_program.errors %}true{% else %}false{% endif %}" class="space-y-5">
                 {% include 'partials/form_field.html' with field=form.source_account %}
                 {% include 'partials/form_field.html' with field=form.source_program %}
-                {% include 'partials/form_field.html' with field=form.source_points %}
-                {% include 'partials/form_field.html' with field=form.destination_account %}
             </div>
+            <div id="source-points-fields" data-has-errors="{{ form.source_points.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.source_points %}</div>
+            <div id="cash-fields" data-has-errors="{{ form.cash_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.cash_amount %}</div>
+            <div id="withdrawal-fields" data-has-errors="{{ form.destination_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.destination_account %}</div>
         </section>
-        {% include 'partials/form_field.html' with field=form.reason %}
-        {% include 'partials/form_field.html' with field=form.notes %}
+        <details class="rounded-xl ring-1 ring-slate-200 dark:ring-[#323232]"{% if form.reason.errors or form.notes.errors or form.reason.value or form.notes.value %} open{% endif %}>
+            <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate 'Advanced options' %}</summary>
+            <div class="space-y-5 p-4 pt-1">
+                {% include 'partials/form_field.html' with field=form.reason %}
+                {% include 'partials/form_field.html' with field=form.notes %}
+            </div>
+        </details>
         <div class="flex gap-3">
             <button type="submit" class="rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white">{% translate 'Save' %}</button>
             <a href="{% url 'investments:list' %}" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium dark:border-slate-600">{% translate 'Cancel' %}</a>
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const asset = document.getElementById('{{ form.asset.id_for_label }}');
+        const kind = document.getElementById('{{ form.kind.id_for_label }}');
+        const amount = document.getElementById('{{ form.amount.id_for_label }}');
+        const quantity = document.getElementById('{{ form.quantity.id_for_label }}');
+        const unitPrice = document.getElementById('{{ form.unit_price.id_for_label }}');
+        const cashAmount = document.getElementById('{{ form.cash_amount.id_for_label }}');
+        const sourceAccount = document.getElementById('{{ form.source_account.id_for_label }}');
+        const sourceProgram = document.getElementById('{{ form.source_program.id_for_label }}');
+        const sourcePoints = document.getElementById('{{ form.source_points.id_for_label }}');
+        const destinationAccount = document.getElementById('{{ form.destination_account.id_for_label }}');
+        const assetStatus = document.getElementById('asset-mode-status');
+        const kindStatus = document.getElementById('operation-kind-status');
+        const fundingSection = document.getElementById('funding-section');
+        const groups = {
+            money: document.getElementById('money-fields'),
+            units: document.getElementById('unit-fields'),
+            deposit: document.getElementById('deposit-fields'),
+            points: document.getElementById('source-points-fields'),
+            cash: document.getElementById('cash-fields'),
+            withdrawal: document.getElementById('withdrawal-fields'),
+        };
+        if (!asset || !kind) return;
+
+        function setHidden(group, hidden, preserveErrors) {
+            group.hidden = hidden && !(preserveErrors && group.dataset.hasErrors === 'true');
+        }
+
+        function updateAssetFields(clearStale) {
+            const option = asset.selectedOptions[0];
+            const mode = option ? option.dataset.valuationMode : '';
+            const currency = option ? option.dataset.currency : '';
+            setHidden(groups.money, mode !== 'MONETARY', !clearStale);
+            setHidden(groups.units, mode !== 'UNITS', !clearStale);
+            if (clearStale) {
+                if (mode === 'MONETARY') {
+                    quantity.value = '';
+                    unitPrice.value = '';
+                } else if (mode === 'UNITS') {
+                    amount.value = '';
+                }
+            }
+            if (mode === 'MONETARY') {
+                assetStatus.textContent = '{% translate "Money asset: enter the investment amount in" %} ' + currency + '.';
+            } else if (mode === 'UNITS') {
+                assetStatus.textContent = '{% translate "Unit-based asset: enter quantity and unit price in" %} ' + currency + '.';
+            } else {
+                assetStatus.textContent = '{% translate "Choose an asset to continue." %}';
+            }
+        }
+
+        function updateFundingFields(clearStale, preferredSource) {
+            const value = kind.value;
+            const isDeposit = value === 'DEPOSIT';
+            const isWithdrawal = value === 'WITHDRAWAL';
+            const isYield = value === 'YIELD';
+            if (clearStale) {
+                if (!isDeposit) {
+                    sourceAccount.value = '';
+                    sourceProgram.value = '';
+                    sourcePoints.value = '';
+                }
+                if (!isWithdrawal) destinationAccount.value = '';
+                if (isYield) cashAmount.value = '';
+                if (isDeposit && preferredSource === 'account') {
+                    sourceProgram.value = '';
+                    sourcePoints.value = '';
+                } else if (isDeposit && preferredSource === 'program') {
+                    sourceAccount.value = '';
+                    cashAmount.value = '';
+                }
+            }
+            const option = asset.selectedOptions[0];
+            const usesUnits = option && option.dataset.valuationMode === 'UNITS';
+            const hasFundingErrors = [groups.deposit, groups.points, groups.cash, groups.withdrawal]
+                .some(group => group.dataset.hasErrors === 'true');
+            const needsCash = usesUnits && (isWithdrawal || (isDeposit && sourceAccount.value));
+            const hasPreservedProgramCash = usesUnits && isDeposit && sourceProgram.value && cashAmount.value;
+            setHidden(groups.deposit, !isDeposit, !clearStale);
+            setHidden(groups.withdrawal, !isWithdrawal, !clearStale);
+            setHidden(groups.cash, !(needsCash || hasPreservedProgramCash), !clearStale);
+            setHidden(groups.points, !(isDeposit && sourceProgram.value), !clearStale);
+            fundingSection.hidden = !value || (isYield && !hasFundingErrors);
+            if (isDeposit) {
+                kindStatus.textContent = '{% translate "Choose one source: a bank account or a loyalty program." %}';
+            } else if (isWithdrawal) {
+                kindStatus.textContent = '{% translate "Choose the account that will receive the withdrawal." %}';
+            } else {
+                kindStatus.textContent = '';
+            }
+        }
+
+        updateAssetFields(false);
+        updateFundingFields(false);
+        asset.addEventListener('change', () => {
+            updateAssetFields(true);
+            updateFundingFields(false);
+        });
+        kind.addEventListener('change', () => updateFundingFields(true));
+        sourceAccount.addEventListener('change', () => updateFundingFields(true, 'account'));
+        sourceProgram.addEventListener('change', () => updateFundingFields(true, 'program'));
+    })();
+</script>
 {% endblock %}
