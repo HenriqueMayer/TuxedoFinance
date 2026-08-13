@@ -79,8 +79,11 @@ the corresponding card invoice under the same no-double-counting rule.
 Bank accounts, invoices and investment assets retain their configured native
 currency. Consolidated reporting uses the authenticated user's
 `UserPreference.base_currency`, which defaults to BRL and is editable in
-Settings. Exchange rates are resolved at read time until Phase 4 adds
-historical FX evidence; changing the preference never mutates native amounts.
+Settings. Historical transfer reports use each transfer's persisted FX
+snapshot; current rates are reserved for explicitly labeled current valuations.
+Missing rates preserve native amounts and mark the conversion incomplete.
+Changing the preference never mutates native amounts. Other banking entities
+remain on live/current conversion until a future roadmap item extends coverage.
 
 ## Integrity
 

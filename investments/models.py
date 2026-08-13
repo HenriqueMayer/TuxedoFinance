@@ -144,6 +144,11 @@ class Investment(models.Model):
         WITHDRAWAL = 'WITHDRAWAL', _('Withdrawal')
         YIELD = 'YIELD', _('Yield')
 
+    class FxSnapshotStatus(models.TextChoices):
+        UNKNOWN = 'UNKNOWN', _('Unknown')
+        RECONSTRUCTED = 'RECONSTRUCTED', _('Reconstructed')
+        CAPTURED = 'CAPTURED', _('Captured')
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -183,6 +188,12 @@ class Investment(models.Model):
         blank=True,
         validators=[POSITIVE_CENTS],
         help_text=_('Native amount debited from or credited to the selected account.'),
+    )
+    fx_rate = models.DecimalField(max_digits=20, decimal_places=8, null=True, blank=True)
+    fx_source_currency = models.CharField(max_length=3, blank=True)
+    fx_target_currency = models.CharField(max_length=3, blank=True)
+    fx_snapshot_status = models.CharField(
+        max_length=15, choices=FxSnapshotStatus.choices, default=FxSnapshotStatus.UNKNOWN
     )
     source_account = models.ForeignKey(
         'banking.BankAccount',

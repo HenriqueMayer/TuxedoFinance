@@ -132,6 +132,11 @@ def create_transfer(
         notes=notes,
     )
     transfer.full_clean()
+    if transfer.source_account.currency != transfer.destination_account.currency:
+        transfer.fx_source_currency = transfer.source_account.currency
+        transfer.fx_target_currency = transfer.destination_account.currency
+        transfer.fx_rate = (destination_amount / source_amount).quantize(Decimal('0.00000001'))
+        transfer.fx_snapshot_status = BankTransfer.FxSnapshotStatus.CAPTURED
     transfer.save()
     create_movement(
         user=user,

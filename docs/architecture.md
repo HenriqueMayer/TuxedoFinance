@@ -65,7 +65,8 @@ event and its movements runs in one database transaction.
 | What is owed on credit cards? | `CardInvoice` and its items/payments. |
 | What investment quantity is held? | `InvestmentOperation`. |
 | How many loyalty points exist? | `LoyaltyEntry`. |
-| What was an amount worth in the current reporting currency? | User's `UserPreference.base_currency` plus current `ExchangeRate` lookup; retained historical evidence is planned for Phase 4. |
+| What was a transfer or investment worth historically? | Its persisted FX snapshot, including source/target currencies, rate, effective date, and status. |
+| What is another amount worth now? | User's `UserPreference.base_currency` plus a current `ExchangeRate`, shown as a labeled current valuation. |
 
 This separation prevents credit purchases from reducing cash before the invoice
 is paid and prevents the later invoice debit from counting the same spending a
@@ -83,7 +84,7 @@ Services, rather than views or templates, own atomic posting:
    invoice. Re-running is idempotent and cannot create a second settlement.
 4. **Own transfer:** create two movements sharing a transfer identifier. The
    event is `TRANSFER`, not income/expense; cross-currency pairs retain both
-   native amounts and their historical rate.
+   native amounts and their persisted FX snapshot when conversion is available.
 5. **Investment deposit/withdrawal:** create the position operation and required
    source/destination account movement atomically. Yield remains internal.
 6. **Loyalty redemption:** post the points entry and, when IOF applies, settle it
@@ -101,7 +102,13 @@ users and is changed through the authenticated Settings route. Accounts and
 events retain native currencies and amounts; changing the preference affects
 presentation totals only. Services return native totals plus converted totals
 and explicit missing-rate metadata. They never add unlike currencies directly.
-Historical FX evidence remains a Phase 4 deliverable.
+Bank transfers and investment operations that require conversion persist an FX
+snapshot. Missing rates preserve native data and produce an explicit incomplete
+status. Existing transfers and investments are reconstructed only where an
+authoritative rate provides evidence; otherwise no rate is invented. Other
+financial entities continue to use live/current rates until a future roadmap
+item extends snapshot coverage. Editing amount, currency, or date refreshes the
+snapshot.
 
 ## Routes
 

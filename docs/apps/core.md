@@ -117,4 +117,6 @@ currency separators under both UI languages.
 
 `core` stays empty of domain logic. `accounts` owns the base-currency
 preference; core provides registry and formatting primitives. Historical
-conversion evidence remains a Phase 4 concern.
+Historical conversion evidence belongs to transfers and investments in the
+current implementation; `core` only provides currency metadata and formatting
+primitives.

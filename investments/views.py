@@ -26,6 +26,7 @@ from investments.services import (
     get_portfolio_groups,
     get_total_in_base_timeseries,
     sync_investment_ledger,
+    refresh_fx_snapshot,
 )
 from accounts.models import UserPreference
 
@@ -175,6 +176,7 @@ class InvestmentFormMixin(LoginRequiredMixin):
         form.instance.user = self.request.user
         with transaction.atomic():
             response = super().form_valid(form)
+            refresh_fx_snapshot(self.object)
             try:
                 sync_investment_ledger(self.object)
             except Exception as error:

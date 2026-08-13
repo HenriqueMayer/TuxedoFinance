@@ -156,17 +156,25 @@ A redemption additionally requires `target_amount`, `target_currency`, and
 required: bank account, debit card, or credit card. Its settlement follows the
 same immediate/deferred card rules as any other payment.
 
-## Currency and historical conversion (Phase 3; historical evidence planned — Phase 4)
+## Currency and historical conversion (Phases 3–4)
 
-Each user's `UserPreference.base_currency` controls reporting and the
-application looks up exchange rates at read time. Every monetary event retains
-its native amount and currency. New and existing users default to BRL. A
-preference change affects consolidated presentation only; it never silently
+Each user's `UserPreference.base_currency` controls reporting. Every monetary
+event retains its native amount and currency. Cross-currency `BankTransfer` and
+`Investment` rows also persist an FX snapshot containing source/target
+currencies, numeric rate, effective date, and conversion status. New and
+existing users default to BRL.
+A preference change affects consolidated presentation only; it never silently
 converts or relabels stored financial data.
 
-Phase 4 will retain the rate or resulting `base_amount` used by historical
-reports. Until then, editing a rate can affect prior converted totals. Native
-totals remain available and missing conversion is displayed explicitly.
+Historical transfer and investment reports use the persisted snapshot, so
+changing or deleting an `ExchangeRate` cannot rewrite those prior totals.
+Current/manual rates are used only for explicitly labeled current valuations.
+If no rate exists, native data is preserved and conversion is marked
+incomplete. Existing rows are reconstructed only when an authoritative rate
+supplies evidence; no rate is guessed. Other entities remain on live/current
+conversion until a future roadmap item extends snapshot coverage.
+Editing an amount, currency, or date refreshes its snapshot, while descriptive
+edits leave it unchanged.
 
 ### Phase 3 migration and rollback
 
@@ -251,6 +259,18 @@ formerly tracked copy. Rolling back the source change can restore the old Git
 entry, but should not be used to publish local financial records. Detailed
 SQLite backup/restore and rehearsal guidance remains a separate ROADMAP Phase
 6.2 deliverable.
+
+### Phase 4 FX snapshot migration and rollback
+
+The Phase 4 migrations add persisted FX evidence to cross-currency
+`BankTransfer` and `Investment` rows. Existing rows are backfilled only when a
+matching authoritative `ExchangeRate` provides evidence; those rows are marked
+reconstructed. Rows without evidence keep their native amounts and receive an
+incomplete conversion status—no rate is inferred. The migrations do not change
+native amounts or delete exchange-rate rows. Back up SQLite before upgrading.
+Rolling back removes only the new snapshot fields and restores read-time
+conversion behavior; it does not alter native financial rows or the
+`ExchangeRate` table.
 
 ## Breaking release
 

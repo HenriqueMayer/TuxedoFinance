@@ -42,7 +42,8 @@ fallbacks. The approved report set is organized by source of truth:
 2. Monthly income and expense from categorized transactions.
 3. Spending by category and settlement instrument.
 4. Credit-card invoice evolution, due dates and paid/open status.
-5. Currency-aware balances; historical base conversion is planned for Phase 4.
+5. Currency-aware balances using persisted historical FX snapshots and clearly
+   labeled current valuations.
 6. Net-worth evolution combining bank cash, investments and open invoices.
 
 Charts must label actual versus projected values. Forecasts may include future
@@ -54,5 +55,6 @@ recurrences and invoices but must not post them or alter today's ledger.
 - Never count an invoice payment as a second expense.
 - Never count both sides of an own transfer as income/expense.
 - Never classify investment deposit/withdrawal as consumer cash flow.
-- Do not silently treat unlike currencies as equal. Retained historical FX
-  evidence is planned for Phase 4.
+- Do not silently treat unlike currencies as equal. Historical transfer and
+  investment totals use persisted FX snapshots; missing conversion is explicitly
+  incomplete elsewhere.
