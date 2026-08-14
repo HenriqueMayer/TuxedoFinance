@@ -1,6 +1,6 @@
 # Architecture
 
-The approved target architecture for CashFlow. The Django full-stack delivery
+The approved target architecture for Tuxedo Finance. The Django full-stack delivery
 model remains unchanged; the domain boundary changes from generic payment
 methods to explicit banking and ledger concepts.
 
@@ -15,8 +15,20 @@ methods to explicit banking and ledger concepts.
 | Authentication | Native `django.contrib.auth` |
 | Dependency management | `uv` |
 | Views | Class-Based Views |
-| Production | Gunicorn + WhiteNoise |
+| Supported runtime | Django development server (`runserver`); optional single-instance Docker packaging |
 | Localization | Django gettext (`en`, `pt-br`) |
+
+Public registration is a deployment-level policy, not a separate account model:
+`ALLOW_SIGNUPS` is read from the process environment (default `True`). The
+accounts signup view enforces it on every request, while public templates merely
+mirror the state by showing or hiding signup calls to action. Existing login
+flows are independent of this switch.
+
+Docker is packaging only, not a second architecture: it runs the same Django
+application and SQLite database in one container, with `/data` as the persistent
+data mount and automatic startup migrations. The image runs as a non-root user;
+its HTTP healthcheck is intended only for local visibility. It does not provide
+replicas, a separate database, production orchestration, or automated backups.
 
 ## Domain apps
 
@@ -28,12 +40,11 @@ categories/    # income and expense classification
 banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
 transactions/  # categorized economic events and recurrence schedules
 dashboard/     # ledger, cash-flow, invoice and net-worth read models
-investments/   # products, assets, position operations and valuation
+    investments/   # products, assets, position operations and valuation
 ```
 
-`payments/` is removed. `banking/` owns every settlement instrument and the
-account ledger. `Bank` is shared with `investments`; the investment-specific
-`Institution` model is removed.
+`banking/` owns every settlement instrument and the account ledger. `Bank` is
+shared with `investments`.
 
 ## Dependency direction
 
@@ -66,7 +77,8 @@ event and its movements runs in one database transaction.
 | What is owed on credit cards? | `CardInvoice` and its items/payments. |
 | What investment quantity is held? | `InvestmentOperation`. |
 | How many loyalty points exist? | `LoyaltyEntry`. |
-| What was an amount worth in base currency? | Historical `ExchangeRate`/stored conversion for the event date. |
+| What was a transfer or investment worth historically? | Its persisted FX snapshot, including source/target currencies, rate, effective date, and status. |
+| What is another amount worth now? | User's `UserPreference.base_currency` plus a current `ExchangeRate`, shown as a labeled current valuation. |
 
 This separation prevents credit purchases from reducing cash before the invoice
 is paid and prevents the later invoice debit from counting the same spending a
@@ -84,22 +96,31 @@ Services, rather than views or templates, own atomic posting:
    invoice. Re-running is idempotent and cannot create a second settlement.
 4. **Own transfer:** create two movements sharing a transfer identifier. The
    event is `TRANSFER`, not income/expense; cross-currency pairs retain both
-   native amounts and their historical rate.
+   native amounts and their persisted FX snapshot when conversion is available.
 5. **Investment deposit/withdrawal:** create the position operation and required
    source/destination account movement atomically. Yield remains internal.
 6. **Loyalty redemption:** post the points entry and, when IOF applies, settle it
    through the selected funding instrument using its normal immediate or invoice
    path.
 
-Posted financial entries are reversed, not edited in place.
+Personal financial entries are editable; audit-grade reversal workflows are out
+of scope.
 
 ## Multicurrency
 
-The base currency is a reporting preference, not a project-wide restriction.
-Accounts and events retain native currencies. Consolidation uses the rate
-effective on the event/report date; historical outputs do not use today's rate.
-Services return native totals plus converted totals and explicit missing-rate
-metadata. They never add unlike currencies directly.
+`accounts.UserPreference.base_currency` selects the reporting currency for the
+authenticated user. The preference is initialized to BRL for new and existing
+users and is changed through the authenticated Settings route. Accounts and
+events retain native currencies and amounts; changing the preference affects
+presentation totals only. Services return native totals plus converted totals
+and explicit missing-rate metadata. They never add unlike currencies directly.
+Bank transfers and investment operations that require conversion persist an FX
+snapshot. Missing rates preserve native data and produce an explicit incomplete
+status. Existing transfers and investments are reconstructed only where an
+authoritative rate provides evidence; otherwise no rate is invented. Other
+financial entities continue to use live/current rates until a future roadmap
+item extends snapshot coverage. Editing amount, currency, fees, or date
+refreshes the snapshot; descriptive edits preserve it.
 
 ## Routes
 
@@ -137,9 +158,8 @@ language-neutral. Currency is a separate axis: parallel `core.formats.en` and
 
 ## Delivery and reset
 
-Settings, middleware, authentication, Tailwind delivery, WhiteNoise, Docker and
-the server-rendered request flow remain as documented for the current project.
-The domain release itself is breaking: remove `payments` from `INSTALLED_APPS`
-and root URLs, add `banking`, replace payment navigation/templates, and recreate
-the database from a clean migration graph. There is no dual-write or legacy
-schema support. See [data-model.md](data-model.md#breaking-release).
+Settings, middleware, authentication, Tailwind CDN delivery and the
+server-rendered request flow remain deliberately small and local-first.
+The current schema is intentionally incompatible with legacy financial data;
+there is no dual-write or automatic conversion. See
+[data-model.md](data-model.md#breaking-release).

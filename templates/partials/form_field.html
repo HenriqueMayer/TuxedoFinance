@@ -32,11 +32,11 @@ group of fields in a form card:
         {{ field }}
 
         {% if field.help_text %}
-            <p class="text-sm text-slate-500 dark:text-neutral-500">{{ field.help_text }}</p>
+            <p id="{{ field.id_for_label }}-help" class="text-sm text-slate-500 dark:text-neutral-500">{{ field.help_text }}</p>
         {% endif %}
 
         {% for error in field.errors %}
-            <p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
+            <p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
         {% endfor %}
     </div>
 {% endif %}

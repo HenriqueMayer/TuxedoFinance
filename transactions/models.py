@@ -116,6 +116,11 @@ class Transaction(models.Model):
     def __str__(self):
         return f'{self.title} ({self.get_transaction_type_display()})'
 
+    @property
+    def native_currency(self):
+        account = self.payment_account
+        return account.currency if account else ''
+
     def clean(self):
         errors = {}
         instruments = {
@@ -142,6 +147,15 @@ class Transaction(models.Model):
         for field, related in owned.items():
             if related and self.user_id and related.user_id != self.user_id:
                 errors[field] = _('This selection must belong to the transaction owner.')
+
+        if (
+            self.category_id
+            and self.category.transaction_type
+            and self.category.transaction_type != self.transaction_type
+        ):
+            errors['category'] = _(
+                'This category is available only for %(transaction_type)s transactions.'
+            ) % {'transaction_type': self.category.get_transaction_type_display().lower()}
 
         if self.transaction_type == self.TransactionType.INCOME and self.payment_channel in {
             self.PaymentChannel.DEBIT_CARD,

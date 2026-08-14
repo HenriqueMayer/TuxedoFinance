@@ -418,8 +418,9 @@ class RewardRedemptionCreateView(OperationFormMixin):
 
     def form_valid(self, form):
         try:
-            create_reward_redemption(user=self.request.user, **form.cleaned_data)
-            sync_user_ledger(self.request.user)
+            with transaction.atomic():
+                create_reward_redemption(user=self.request.user, **form.cleaned_data)
+                sync_user_ledger(self.request.user)
         except Exception as error:
             if hasattr(error, 'message_dict'):
                 for field, values in error.message_dict.items():

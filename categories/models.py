@@ -1,5 +1,8 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy
 
 
 class Category(models.Model):
@@ -15,7 +18,18 @@ class Category(models.Model):
         on_delete=models.CASCADE,
         related_name='categories',
     )
+    class TransactionType(models.TextChoices):
+        INCOME = 'INCOME', gettext_lazy('Income')
+        EXPENSE = 'EXPENSE', gettext_lazy('Expense')
+
     name = models.CharField(max_length=100)
+    transaction_type = models.CharField(
+        max_length=10,
+        choices=TransactionType.choices,
+        null=True,
+        blank=True,
+        help_text=_('Optional. Unclassified categories can be used for income and expenses.'),
+    )
     parent_category = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -36,3 +50,15 @@ class Category(models.Model):
         if self.parent_category:
             return f'{self.parent_category.name} > {self.name}'
         return self.name
+
+    def clean(self):
+        if (
+            self.pk
+            and self.transaction_type
+            and self.transactions.exclude(transaction_type=self.transaction_type).exists()
+        ):
+            raise ValidationError({
+                'transaction_type': _(
+                    'This category has transactions of another type and cannot be classified that way.'
+                )
+            })

@@ -1,7 +1,6 @@
 from datetime import date
 from decimal import Decimal
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -27,7 +26,9 @@ from investments.services import (
     get_portfolio_groups,
     get_total_in_base_timeseries,
     sync_investment_ledger,
+    refresh_fx_snapshot,
 )
+from accounts.models import UserPreference
 
 
 def _add_months(year, month, offset):
@@ -93,7 +94,7 @@ class InvestmentListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        base = settings.CURRENCY
+        base = UserPreference.for_user(user).base_currency
         total = Decimal('0.00')
         missing = set()
         for position in get_asset_positions(user):
@@ -172,9 +173,15 @@ class InvestmentFormMixin(LoginRequiredMixin):
         return kwargs
 
     def form_valid(self, form):
+        refresh_snapshot = not self.object or bool(
+            set(form.changed_data)
+            & {'asset', 'quantity', 'unit_price', 'amount', 'fees', 'date'}
+        )
         form.instance.user = self.request.user
         with transaction.atomic():
             response = super().form_valid(form)
+            if refresh_snapshot:
+                refresh_fx_snapshot(self.object)
             try:
                 sync_investment_ledger(self.object)
             except Exception as error:

@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, refactoring]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python application checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install gettext
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y gettext
+
+      - name: Sync locked dependencies
+        run: uv sync --locked
+
+      - name: Django system checks
+        env:
+          SECRET_KEY: ci-test-secret-key
+        run: uv run python manage.py check
+
+      - name: Check for missing migrations
+        env:
+          SECRET_KEY: ci-test-secret-key
+        run: uv run python manage.py makemigrations --check --dry-run
+
+      - name: Validate translations
+        env:
+          SECRET_KEY: ci-test-secret-key
+        run: |
+          uv run python manage.py compilemessages
+          git diff --exit-code -- locale/pt_BR/LC_MESSAGES/django.mo
+
+      - name: Run tests with branch coverage
+        env:
+          SECRET_KEY: ci-test-secret-key
+        run: uv run coverage run --branch manage.py test
+
+      - name: Publish coverage report
+        run: |
+          uv run coverage report --show-missing --fail-under=70
+          uv run coverage xml
+          uv run coverage html
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+
+      - name: Lint Python
+        # The repository predates a formatter configuration; keep CI focused
+        # on executable correctness until a style migration is scheduled.
+        run: uvx --from 'ruff>=0.9,<1' ruff check . --select F --ignore F401
+
+      - name: Audit locked runtime dependencies
+        run: |
+          uv export --locked --no-dev --format requirements-txt > "$RUNNER_TEMP/requirements.txt"
+          uvx --from 'pip-audit>=2.7,<3' pip-audit --strict -r "$RUNNER_TEMP/requirements.txt"

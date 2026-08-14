@@ -2,8 +2,9 @@
 
 A currency is not just a symbol: `R$ 1.000,00` and `$ 1,000.00` differ in
 their separators too, so picking one has to set both. This registry is the
-single place that pairing is defined — `settings.CURRENCY` selects an entry,
-`settings.CURRENCY_SYMBOL` is derived from it for templates, and
+single place that pairing is defined — the code-level default selects an entry,
+while the authenticated user's preference supplies the reporting currency and
+symbol to templates.
 `core/formats/en/formats.py` reads the separators off the same entry.
 
 Adding a currency is one line here and nothing else.
@@ -52,10 +53,8 @@ NUMBER_GROUPING = 3
 def get_currency(code):
     """Return the `Currency` for `code`, raising on an unknown one.
 
-    Raises rather than falling back to the default on purpose: a typo in
-    `CURRENCY` would otherwise silently label every amount in the app with
-    the wrong symbol, which is a correctness bug in a finance tool, not a
-    cosmetic one. Failing at startup makes it a five-second fix instead.
+    Raises rather than falling back to the default: an invalid stored or
+    code-level currency must never silently label an amount with another code.
     """
     try:
         return CURRENCIES[code]
@@ -69,6 +68,6 @@ def get_currency(code):
             for currency in CURRENCIES.values()
         )
         raise ImproperlyConfigured(
-            f'CURRENCY={code!r} is not a supported currency. '
+            f'{code!r} is not a supported currency. '
             f'Supported: {supported}.'
         ) from None
