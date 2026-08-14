@@ -1,5 +1,5 @@
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_DOWN, Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -240,8 +240,14 @@ class Transaction(models.Model):
         if not self.is_installment_plan:
             return self.amount
         return (self.amount / self.installments).quantize(
-            Decimal('0.01'), rounding=ROUND_HALF_UP
+            Decimal('0.01'), rounding=ROUND_DOWN
         )
+
+    @property
+    def first_installment_amount(self):
+        if not self.is_installment_plan:
+            return self.amount
+        return self.amount - self.installment_amount * (self.installments - 1)
 
     def calendar_months_to(self, year, month):
         return (year - self.date.year) * 12 + (month - self.date.month)
@@ -289,8 +295,8 @@ class Transaction(models.Model):
         if self.is_installment_plan:
             if offset >= self.installments:
                 return ZERO
-            if offset == self.installments - 1:
-                return self.amount - self.installment_amount * (self.installments - 1)
+            if offset == 0:
+                return self.first_installment_amount
             return self.installment_amount
         return self.amount if offset == 0 else ZERO
 
@@ -304,5 +310,9 @@ class Transaction(models.Model):
             return self.amount * (offset + 1)
         if self.is_installment_plan:
             paid = min(offset + 1, self.installments)
-            return self.amount if paid == self.installments else self.installment_amount * paid
+            return (
+                self.amount
+                if paid == self.installments
+                else self.first_installment_amount + self.installment_amount * (paid - 1)
+            )
         return self.amount
