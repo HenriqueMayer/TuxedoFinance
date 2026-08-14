@@ -74,3 +74,21 @@ are visibly neutral and never receive income/expense colors or category totals.
 Transactions are editable and deletable by their owner. The related banking
 service keeps ledger and invoice data coherent; audit-grade reversals are out
 of scope.
+
+## Invoice extraction for review
+
+The first stage of invoice import is a management command that extracts
+positive expenses from Nubank CSV/PDF files and Banco Inter PDFs. It does not
+write transactions to the database:
+
+```bash
+python manage.py extract_invoices /path/to/statements \
+  --output /path/to/statements/faturas_extraidas.csv
+```
+
+The command uses the category dictionary and the conservative rules in
+`docs/CategoriesCollection/`. Payments, refunds and credits are excluded. A
+category is assigned only when exactly one rule matches; every ambiguous or
+unknown title is written as `indefinido` for human review. Each output row also
+retains its source file, PDF page, masked source card, statement month, due
+date, installment notation and deterministic import key.
