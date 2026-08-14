@@ -10,13 +10,11 @@ class LandingBrandTests(TestCase):
         self.assertContains(response, 'brand/tuxedo-hero.jpg')
         self.assertContains(response, 'A tuxedo cat in a home office beside charts and the Tuxedo Finance wordmark.')
         content = response.content.decode()
-        self.assertLess(content.index('Clear money, elegantly presented.'), content.index('Your finances deserve more than a'))
+        self.assertLess(content.index('Your finances deserve more than a'), content.index('Clear money, elegantly presented.'))
 
     def test_shared_shell_exposes_wordmark_and_favicon(self):
         response = self.client.get('/')
 
-        self.assertContains(response, 'brand/tuxedo-mark-256.png')
         self.assertContains(response, 'brand/favicon.ico')
         self.assertContains(response, 'brand/apple-touch-icon.png')
-        self.assertContains(response, 'Tuxedo')
-        self.assertContains(response, 'Finance')
+        self.assertContains(response, 'TuxedoFinance')

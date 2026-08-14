@@ -1,4 +1,4 @@
-{% load i18n static %}
+{% load i18n %}
 {% comment %}
 Authenticated navbar (PRD §9.6): links (Dashboard, Reports, Transactions,
 Categories, Banks), a theme toggle (PRD §9 — light/dark), and a user menu
@@ -30,9 +30,7 @@ below the md breakpoint per PRD §9.6 (`hidden md:flex` on desktop nav).
     <nav class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between gap-4">
             <a href="{{ dashboard_url }}" class="flex shrink-0 items-center gap-2 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B] rounded-lg">
-                <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="" class="h-8 w-8 rounded-lg">
-                <span class="hidden text-slate-900 dark:text-white sm:inline">Tuxedo</span>
-                <span class="hidden text-amber-600 dark:text-amber-400 sm:inline">Finance</span>
+                <span class="hidden text-slate-900 dark:text-white sm:inline">TuxedoFinance</span>
             </a>
 
             <!-- Desktop links -->
