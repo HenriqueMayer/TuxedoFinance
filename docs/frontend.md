@@ -25,11 +25,11 @@ Color is never the only carrier of status. Monetary labels always include a
 currency symbol or ISO code, especially when native and base values are shown
 together.
 
-The `TuxedoFinance` wordmark is rendered as text in the top navigation and uses
-slate/white across both themes. The cat mark remains a decorative image in the
-footer and brand story, with an empty `alt` where the adjacent wordmark already
-names the product. Existing indigo-violet-fuchsia action gradients and semantic
-financial colors remain unchanged in both themes.
+The `TuxedoFinance` wordmark is rendered as adjacent text spans in the top
+navigation, with slate/white for `Tuxedo` and amber for `Finance`. The cat mark remains a
+decorative image in the footer and brand story, with an empty `alt` where the
+adjacent wordmark already names the product. Existing indigo-violet-fuchsia
+action gradients and semantic financial colors remain unchanged in both themes.
 
 ## Root layout and navigation
 
