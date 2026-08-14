@@ -1,10 +1,10 @@
-# Tuxedo Finance
-
-Formerly CashFlow.
+# TuxedoFinance
 
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blueviolet)](LICENSE)
 
 A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered, with no JavaScript build step.
+
+![TuxedoFinance brand image](static/brand/tuxedo-hero.jpg)
 
 ## Why Tuxedo Finance exists
 

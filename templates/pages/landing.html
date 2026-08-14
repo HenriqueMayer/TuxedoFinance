@@ -19,20 +19,6 @@ no one-off components are introduced.
 {% block title %}{% translate "Tuxedo Finance — Take control of your personal finances" %}{% endblock %}
 
 {% block content %}
-<!-- Brand story -->
-<section class="py-10 sm:py-16" aria-labelledby="brand-story-heading">
-    <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] shadow-xl">
-        <img src="{% static 'brand/tuxedo-hero.jpg' %}"
-             width="1600" height="873" loading="lazy"
-             class="h-auto w-full object-cover"
-             alt="{% translate 'A tuxedo cat in a home office beside charts and the Tuxedo Finance wordmark.' %}">
-        <div class="p-6 text-center sm:p-8">
-            <h2 id="brand-story-heading" class="text-2xl font-bold text-slate-900 dark:text-neutral-100 sm:text-3xl">{% translate "Clear money, elegantly presented." %}</h2>
-            <p class="mx-auto mt-3 max-w-2xl text-slate-600 dark:text-neutral-400">{% translate "A focused home for understanding your finances in black and white." %}</p>
-        </div>
-    </div>
-</section>
-
 <!-- Hero -->
 <section class="grid grid-cols-1 items-center gap-10 py-10 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:py-24">
     <div class="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
@@ -91,6 +77,20 @@ no one-off components are introduced.
                     {% include 'partials/stat_card.html' with label=net_label value=CURRENCY_SYMBOL|add:' '|add:net value_class='text-emerald-600 dark:text-emerald-400' %}
                 {% endwith %}
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Brand story -->
+<section class="py-10 sm:py-16" aria-labelledby="brand-story-heading">
+    <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] shadow-xl">
+        <img src="{% static 'brand/tuxedo-hero.jpg' %}"
+             width="1600" height="873" loading="lazy"
+             class="h-auto w-full object-cover"
+             alt="{% translate 'A tuxedo cat in a home office beside charts and the Tuxedo Finance wordmark.' %}">
+        <div class="p-6 text-center sm:p-8">
+            <h2 id="brand-story-heading" class="text-2xl font-bold text-slate-900 dark:text-neutral-100 sm:text-3xl">{% translate "Clear money, elegantly presented." %}</h2>
+            <p class="mx-auto mt-3 max-w-2xl text-slate-600 dark:text-neutral-400">{% translate "A focused home for understanding your finances in black and white." %}</p>
         </div>
     </div>
 </section>
