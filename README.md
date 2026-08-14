@@ -4,7 +4,7 @@
 
 A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered, with no JavaScript build step.
 
-![TuxedoFinance brand image](static/brand/tuxedo-hero.jpg)
+![TuxedoFinance brand image](assets/icon/tuxedo_finance.jpeg)
 
 ## Homepage preview
 
