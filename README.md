@@ -6,6 +6,12 @@ A personal finance tracker built with Django full stack — record categorized t
 
 ![TuxedoFinance brand image](static/brand/tuxedo-hero.jpg)
 
+## Homepage preview
+
+![TuxedoFinance homepage preview 1](assets/app/Homepage1.png)
+
+![TuxedoFinance homepage preview 2](assets/app/Homepage2.png)
+
 ## Why Tuxedo Finance exists
 
 Tuxedo Finance was created by Henrique Mayer after struggling to manage personal
