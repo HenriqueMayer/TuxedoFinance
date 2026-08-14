@@ -89,7 +89,7 @@ transaction, invoice, transfer, investment, or reward source changes.
 ### Cards and invoices
 
 `DebitCard(user, account, name)` and
-`CreditCard(user, account, name, closing_day, due_day)` both belong to one
+`CreditCard(user, account, name, card_type, closing_day, due_day)` both belong to one
 account. A `CardInvoice` belongs to a credit card and records reference month,
 due date, amount, status, paid timestamp and its settlement movement.
 

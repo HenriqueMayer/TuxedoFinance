@@ -537,11 +537,22 @@ class BankingViewTests(TestCase):
         self.assertEqual(debit.status_code, 302)
         credit = self.client.post(
             reverse('banking:credit_card_create'),
-            {'account': savings.pk, 'name': 'Credit', 'closing_day': 12, 'due_day': 22},
+            {
+                'account': savings.pk,
+                'name': 'Credit',
+                'card_type': CreditCard.CardType.VIRTUAL,
+                'closing_day': 12,
+                'due_day': 22,
+            },
         )
         self.assertEqual(credit.status_code, 302)
         self.assertTrue(DebitCard.objects.filter(account=savings, name='Debit').exists())
-        self.assertTrue(CreditCard.objects.filter(account=savings, name='Credit').exists())
+        card = CreditCard.objects.get(account=savings, name='Credit')
+        self.assertEqual(card.card_type, CreditCard.CardType.VIRTUAL)
+        self.assertContains(
+            self.client.get(reverse('banking:detail', args=[self.account.bank_id])),
+            'Virtual',
+        )
 
     def test_program_crud_supports_independent_program(self):
         create = self.client.post(

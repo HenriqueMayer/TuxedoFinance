@@ -116,6 +116,11 @@ class DebitCard(TimestampedModel):
 
 
 class CreditCard(TimestampedModel):
+    class CardType(models.TextChoices):
+        PHYSICAL = 'PHYSICAL', _('Physical')
+        VIRTUAL = 'VIRTUAL', _('Virtual')
+        ADDITIONAL = 'ADDITIONAL', _('Additional')
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='credit_cards'
     )
@@ -123,6 +128,9 @@ class CreditCard(TimestampedModel):
         BankAccount, on_delete=models.PROTECT, related_name='credit_cards'
     )
     name = models.CharField(max_length=100)
+    card_type = models.CharField(
+        max_length=10, choices=CardType.choices, default=CardType.PHYSICAL
+    )
     closing_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(31)]
     )

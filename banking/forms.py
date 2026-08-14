@@ -135,7 +135,7 @@ class DebitCardForm(CardForm):
 class CreditCardForm(CardForm):
     class Meta:
         model = CreditCard
-        fields = ('account', 'name', 'closing_day', 'due_day')
+        fields = ('account', 'name', 'card_type', 'closing_day', 'due_day')
         widgets = {
             'closing_day': forms.NumberInput(attrs={'min': '1', 'max': '31'}),
             'due_day': forms.NumberInput(attrs={'min': '1', 'max': '31'}),
@@ -147,6 +147,7 @@ class CreditCardForm(CardForm):
         labels = {
             'account': _('Account'),
             'name': _('Name'),
+            'card_type': _('Card type'),
             'closing_day': _('Closing day'),
             'due_day': _('Due day'),
         }
