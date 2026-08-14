@@ -173,7 +173,17 @@ class TransactionCalendarTests(TransactionFixture):
     def test_installments_round_to_exact_total(self):
         item = self.credit_transaction(amount=Decimal('100.00'), installments=3)
         amounts = [item.amount_for_month(2026, month) for month in (1, 2, 3)]
-        self.assertEqual(amounts, [Decimal('33.33'), Decimal('33.33'), Decimal('33.34')])
+        self.assertEqual(amounts, [Decimal('33.34'), Decimal('33.33'), Decimal('33.33')])
+        self.assertEqual(sum(amounts), item.amount)
+
+    def test_installment_rounding_remainder_is_added_to_first_installment(self):
+        item = self.credit_transaction(amount=Decimal('339.80'), installments=3)
+
+        amounts = [item.amount_for_month(2026, month) for month in (1, 2, 3)]
+
+        self.assertEqual(amounts, [Decimal('113.28'), Decimal('113.26'), Decimal('113.26')])
+        self.assertEqual(item.amount_through_month(2026, 1), Decimal('113.28'))
+        self.assertEqual(item.amount_through_month(2026, 2), Decimal('226.54'))
         self.assertEqual(sum(amounts), item.amount)
 
 
