@@ -65,3 +65,20 @@ class CategoryForm(forms.ModelForm):
         if duplicates.exists():
             raise forms.ValidationError(_('You already have a category with this name.'))
         return name
+
+
+class CategoryImportForm(forms.Form):
+    file = forms.FileField(
+        label=_('CSV file'),
+        help_text=_('Use a CSV file with the columns name, transaction_type and parent_category.'),
+        widget=forms.ClearableFileInput(attrs={
+            'accept': '.csv,text/csv',
+            'class': INPUT_CLASSES,
+        }),
+    )
+
+    def clean_file(self):
+        uploaded_file = self.cleaned_data['file']
+        if not uploaded_file.name.lower().endswith('.csv'):
+            raise forms.ValidationError(_('Select a CSV file.'))
+        return uploaded_file
