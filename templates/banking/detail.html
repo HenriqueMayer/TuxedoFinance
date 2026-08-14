@@ -49,7 +49,7 @@
                         <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">{% translate "Credit cards" %}</h3>
                         <ul class="mt-2 space-y-2">
                             {% for card in account.credit_cards.all %}
-                                <li class="flex justify-between gap-2"><span>{{ card.name }} <small class="text-slate-500">{% blocktranslate with closing_day=card.closing_day due_day=card.due_day %}closes {{ closing_day }}, due {{ due_day }}{% endblocktranslate %}</small></span><span><a href="{% url 'banking:credit_card_update' card.pk %}" class="text-indigo-600 dark:text-indigo-400">{% translate "Edit" %}</a> <a href="{% url 'banking:credit_card_delete' card.pk %}" class="ml-2 text-rose-600 dark:text-rose-400">{% translate "Delete" %}</a></span></li>
+                                <li class="flex justify-between gap-2"><span>{{ card.name }} <small class="text-slate-500">{{ card.get_card_type_display }} · {% blocktranslate with closing_day=card.closing_day due_day=card.due_day %}closes {{ closing_day }}, due {{ due_day }}{% endblocktranslate %}</small></span><span><a href="{% url 'banking:credit_card_update' card.pk %}" class="text-indigo-600 dark:text-indigo-400">{% translate "Edit" %}</a> <a href="{% url 'banking:credit_card_delete' card.pk %}" class="ml-2 text-rose-600 dark:text-rose-400">{% translate "Delete" %}</a></span></li>
                             {% empty %}<li class="text-sm text-slate-500">{% translate "No credit cards." %}</li>{% endfor %}
                         </ul>
                     </div>

@@ -95,6 +95,22 @@ msgstr "Saldo inicial"
 msgid "Pix enabled"
 msgstr "PIX habilitado"
 
+#: banking/models.py
+msgid "Physical"
+msgstr "Físico"
+
+#: banking/models.py
+msgid "Virtual"
+msgstr "Virtual"
+
+#: banking/models.py
+msgid "Additional"
+msgstr "Adicional"
+
+#: banking/forms.py
+msgid "Card type"
+msgstr "Tipo do cartão"
+
 #: banking/forms.py:86
 msgid "This bank already has an account with this name and currency."
 msgstr "Este banco já tem uma conta com este nome e moeda."
