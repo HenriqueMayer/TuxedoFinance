@@ -56,7 +56,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             <p class="text-sm text-slate-500 dark:text-neutral-500">{% translate "The selected credit card determines the bank account." %}</p>
             <p id="credit-card-account" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
         </div>
-        {% include 'partials/form_field.html' with field=form.date %}
+        {% include 'partials/preferred_date_field.html' with field=form.date %}
 
         <details class="rounded-xl ring-1 ring-slate-200 dark:ring-[#323232]"{% if form.is_fixed.value or form.fixed_until.errors or form.notes.errors or form.is_fixed.errors %} open{% endif %}>
             <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Advanced options" %}</summary>
@@ -69,7 +69,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
                         {% for error in form.is_fixed.errors %}<p id="{{ form.is_fixed.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
                     </div>
                 </div>
-                <div id="fixed-until-fields" data-has-errors="{{ form.fixed_until.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fixed_until %}</div>
+                <div id="fixed-until-fields" data-has-errors="{{ form.fixed_until.errors|yesno:'true,false' }}">{% include 'partials/preferred_date_field.html' with field=form.fixed_until %}</div>
                 {% include 'partials/form_field.html' with field=form.notes %}
             </div>
         </details>
@@ -90,6 +90,45 @@ through the shared partials/form_field.html renderer (PRD §9.4).
 
 {% block extra_js %}
 <script>
+    document.querySelectorAll('[data-preferred-date-field]').forEach(group => {
+        const visible = group.querySelector('input:not([data-native-date-picker])');
+        const picker = group.querySelector('[data-native-date-picker]');
+        const openPicker = group.querySelector('[data-open-date-picker]');
+        const order = group.dataset.dateOrder;
+        if (!visible || !picker || !openPicker) return;
+
+        const toIso = value => {
+            const parts = value.split('/');
+            if (parts.length !== 3) return '';
+            const [first, second, year] = parts;
+            const month = order === 'MDY' ? first : second;
+            const day = order === 'MDY' ? second : first;
+            return /^\d{2}$/.test(day) && /^\d{2}$/.test(month) && /^\d{4}$/.test(year)
+                ? `${year}-${month}-${day}` : '';
+        };
+        const fromIso = value => {
+            const [year, month, day] = value.split('-');
+            return order === 'MDY' ? `${month}/${day}/${year}` : `${day}/${month}/${year}`;
+        };
+
+        picker.value = toIso(visible.value);
+        openPicker.addEventListener('click', () => {
+            if (typeof picker.showPicker === 'function') picker.showPicker();
+            else picker.click();
+        });
+        picker.addEventListener('change', () => {
+            if (!picker.value) return;
+            visible.value = fromIso(picker.value);
+            visible.dispatchEvent(new Event('change', {bubbles: true}));
+        });
+        visible.addEventListener('input', () => {
+            const digits = visible.value.replace(/\D/g, '').slice(0, 8);
+            visible.value = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)]
+                .filter(Boolean).join('/');
+            picker.value = toIso(visible.value);
+        });
+    });
+
     (function () {
         const search = document.getElementById('category-search');
         const category = document.getElementById('{{ form.category.id_for_label }}');

@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
+from accounts.models import UserPreference
 from banking.models import (
     Bank, BankAccount, BankMovement, CardInvoice, CreditCard, DebitCard,
     LoyaltyProgram, RewardRedemption,
@@ -283,6 +284,32 @@ class TransactionFormAndListTests(TransactionFixture):
         self.assertContains(response, 'id="payment-channel-status"', html=False)
         self.assertNotContains(response, 'id="debit-card-fields" data-has-errors="false" hidden', html=False)
         self.assertNotContains(response, 'id="credit-card-fields" data-has-errors="false" hidden', html=False)
+
+    def test_transaction_dates_follow_user_date_format(self):
+        preference = UserPreference.for_user(self.user)
+        preference.date_format = 'MDY'
+        preference.save(update_fields=['date_format'])
+
+        form = TransactionForm(
+            user=self.user,
+            instance=Transaction(date=date(2026, 8, 14)),
+        )
+        rendered = str(form['date'])
+        self.assertIn('value="08/14/2026"', rendered)
+        self.assertIn('placeholder="MM/DD/YYYY"', rendered)
+        self.assertNotIn('type="date"', rendered)
+
+        bound = TransactionForm(
+            user=self.user,
+            data={
+                'title': 'Formatted date', 'amount': '10.00',
+                'transaction_type': 'EXPENSE', 'category': self.category.pk,
+                'payment_channel': 'ACCOUNT', 'bank_account': self.account.pk,
+                'installments': '1', 'date': '08/14/2026',
+            },
+        )
+        self.assertTrue(bound.is_valid(), bound.errors)
+        self.assertEqual(bound.cleaned_data['date'], date(2026, 8, 14))
 
     def test_account_query_parameter_is_user_scoped_initial_state(self):
         response = self.client.get(reverse('transactions:create'), {'account': self.account.pk})

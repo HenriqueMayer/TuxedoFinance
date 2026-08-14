@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
-from accounts.models import CURRENCY_CHOICES, UserPreference
+from accounts.models import CURRENCY_CHOICES, DATE_FORMAT_CHOICES, UserPreference
 
 # PRD §9.4 — the exact input classes shared by every form in the project.
 # `partials/form_field.html` renders the label/help/errors but never injects
@@ -50,8 +50,8 @@ class LoginForm(AuthenticationForm):
 class BaseCurrencyForm(forms.ModelForm):
     class Meta:
         model = UserPreference
-        fields = ('base_currency',)
-        labels = {'base_currency': _('Base currency')}
+        fields = ('base_currency', 'date_format')
+        labels = {'base_currency': _('Base currency'), 'date_format': _('Date format')}
         help_texts = {
             'base_currency': _(
                 'Used only for consolidated totals and reports. Native account and event amounts stay unchanged.'
@@ -62,4 +62,6 @@ class BaseCurrencyForm(forms.ModelForm):
         self.user = user
         super().__init__(*args, **kwargs)
         self.fields['base_currency'].choices = CURRENCY_CHOICES
-        self.fields['base_currency'].widget.attrs['class'] = INPUT_CLASSES
+        self.fields['date_format'].choices = DATE_FORMAT_CHOICES
+        for field in self.fields.values():
+            field.widget.attrs['class'] = INPUT_CLASSES

@@ -11,7 +11,7 @@
     </div>
     {% if rates %}
         <ul class="divide-y divide-slate-200 rounded-2xl bg-white px-5 ring-1 ring-slate-200 dark:divide-slate-700 dark:bg-[#313335] dark:ring-[#323232]">
-            {% for rate in rates %}<li class="py-4"><span class="font-semibold">1 {{ rate.from_currency }} = {{ rate.rate }} {{ rate.to_currency }}</span><p class="text-sm text-slate-500">{{ rate.effective_date }}{% if rate.notes %} - {{ rate.notes }}{% endif %}</p></li>{% endfor %}
+            {% for rate in rates %}<li class="py-4"><span class="font-semibold">1 {{ rate.from_currency }} = {{ rate.rate }} {{ rate.to_currency }}</span><p class="text-sm text-slate-500">{{ rate.effective_date|date:USER_DATE_FORMAT }}{% if rate.notes %} - {{ rate.notes }}{% endif %}</p></li>{% endfor %}
         </ul>
     {% else %}
         {% url 'banking:exchange_rate_create' as rate_create_url %}

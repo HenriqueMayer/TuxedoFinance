@@ -33,7 +33,8 @@ erDiagram
 
 `UserPreference` belongs to the native Django user through a one-to-one
 relationship and stores `base_currency`, chosen from the supported currency
-registry. The row is created on signup and a data migration safely creates it
+registry, plus the user's `date_format` presentation preference. The row is
+created on signup and a data migration safely creates it
 for existing users with the BRL bootstrap default. It is a presentation
 preference: changing it never rewrites native account, transaction, investment,
 or exchange-rate data.
