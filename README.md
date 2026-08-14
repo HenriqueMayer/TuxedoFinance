@@ -2,7 +2,7 @@
 
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blueviolet)](LICENSE)
 
-A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered, with no JavaScript build step.
+A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered.
 
 ![TuxedoFinance brand image](assets/icon/tuxedo_finance.jpeg)
 
