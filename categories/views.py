@@ -67,7 +67,7 @@ class CategoryFormMixin(LoginRequiredMixin):
 
         The form already rejects duplicates, but that check and the INSERT are
         not atomic: two submits of the same name — a double-clicked button is
-        enough, since gunicorn runs several threads per worker — can both pass
+        enough, since two overlapping submissions can both pass
         validation before either writes. The loser hits the constraint in the
         database, and without this it surfaces as a 500.
         """

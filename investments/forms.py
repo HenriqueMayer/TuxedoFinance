@@ -12,6 +12,18 @@ INPUT_CLASSES = (
 )
 
 
+class InvestmentSelect(forms.Select):
+    """Expose scoped asset metadata to the progressive operation form."""
+
+    choice_data = None
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if self.choice_data and value:
+            option['attrs'].update(self.choice_data.get(str(value), {}))
+        return option
+
+
 class InvestmentForm(forms.ModelForm):
     class Meta:
         model = Investment
@@ -70,8 +82,30 @@ class InvestmentForm(forms.ModelForm):
             self.fields['source_account'].queryset = accounts
             self.fields['destination_account'].queryset = accounts
             self.fields['source_program'].queryset = LoyaltyProgram.objects.filter(user=user)
-        for field in self.fields.values():
+        assets = list(self.fields['asset'].queryset)
+        asset_widget = InvestmentSelect(attrs=self.fields['asset'].widget.attrs.copy())
+        asset_widget.choice_data = {
+            str(asset.pk): {
+                'data-valuation-mode': asset.valuation_mode,
+                'data-currency': asset.currency,
+            }
+            for asset in assets
+        }
+        asset_widget.choices = self.fields['asset'].choices
+        self.fields['asset'].widget = asset_widget
+        for name, field in self.fields.items():
             field.widget.attrs['class'] = INPUT_CLASSES
+            described_by = []
+            if field.help_text:
+                described_by.append(f'{field.widget.attrs.get("id", "id_" + name)}-help')
+            if self.is_bound and self.errors.get(name):
+                field.widget.attrs['aria-invalid'] = 'true'
+                described_by.extend(
+                    f'{field.widget.attrs.get("id", "id_" + name)}-error-{index}'
+                    for index in range(1, len(self.errors[name]) + 1)
+                )
+            if described_by:
+                field.widget.attrs['aria-describedby'] = ' '.join(described_by)
 
     def clean(self):
         data = super().clean()

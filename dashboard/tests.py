@@ -134,7 +134,6 @@ class LedgerBalanceTests(DashboardFixture):
         self.assertEqual(summary['expense_month'], Decimal('80.00'))
         self.assertEqual(report['total'], Decimal('80.00'))
 
-    @override_settings(CURRENCY='BRL')
     def test_multicurrency_conversion_and_missing_rate_are_explicit(self):
         usd = BankAccount.objects.create(
             user=self.user,

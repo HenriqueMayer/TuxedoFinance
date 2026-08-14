@@ -205,6 +205,10 @@ class CardInvoice(TimestampedModel):
     def account(self):
         return self.card.account
 
+    @property
+    def is_overdue(self):
+        return self.status == self.Status.SCHEDULED and self.due_date < date.today()
+
     def clean(self):
         errors = {}
         if self.card_id and self.user_id and self.card.user_id != self.user_id:
@@ -216,6 +220,10 @@ class CardInvoice(TimestampedModel):
 
 
 class BankTransfer(TimestampedModel):
+    class FxSnapshotStatus(models.TextChoices):
+        UNKNOWN = 'UNKNOWN', _('Unknown')
+        RECONSTRUCTED = 'RECONSTRUCTED', _('Reconstructed')
+        CAPTURED = 'CAPTURED', _('Captured')
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bank_transfers'
     )
@@ -230,6 +238,17 @@ class BankTransfer(TimestampedModel):
     )
     destination_amount = models.DecimalField(
         max_digits=16, decimal_places=2, validators=[POSITIVE]
+    )
+    fx_rate = models.DecimalField(max_digits=20, decimal_places=8, null=True, blank=True)
+    fx_source_currency = models.CharField(max_length=3, blank=True)
+    fx_target_currency = models.CharField(max_length=3, blank=True)
+    fx_effective_date = models.DateField(null=True, blank=True)
+    fx_source_rate = models.ForeignKey(
+        'ExchangeRate', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='transfer_snapshots',
+    )
+    fx_snapshot_status = models.CharField(
+        max_length=15, choices=FxSnapshotStatus.choices, default=FxSnapshotStatus.UNKNOWN
     )
     date = models.DateField()
     notes = models.TextField(blank=True)

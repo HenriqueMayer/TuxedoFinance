@@ -8,7 +8,7 @@ user, so `parent_category` only lists that user's own categories) through
 the shared partials/form_field.html renderer (PRD §9.4).
 {% endcomment %}
 
-{% block title %}{% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %} — CashFlow{% endblock %}
+{% block title %}{% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %} — Tuxedo Finance{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
@@ -28,6 +28,7 @@ the shared partials/form_field.html renderer (PRD §9.4).
         {% endif %}
 
         {% include 'partials/form_field.html' with field=form.name %}
+        {% include 'partials/form_field.html' with field=form.transaction_type %}
         {% include 'partials/form_field.html' with field=form.parent_category %}
 
         <div class="flex items-center gap-3">

@@ -118,7 +118,9 @@ def create_transfer(
     account_ids = sorted([source_account.pk, destination_account.pk])
     locked = {
         account.pk: account
-        for account in BankAccount.objects.select_for_update().filter(pk__in=account_ids)
+        for account in BankAccount.objects.select_for_update().filter(
+            user=user, pk__in=account_ids,
+        )
     }
     if len(locked) != len(set(account_ids)):
         raise ValidationError(gettext('One or more transfer accounts no longer exist.'))
@@ -132,6 +134,12 @@ def create_transfer(
         notes=notes,
     )
     transfer.full_clean()
+    if transfer.source_account.currency != transfer.destination_account.currency:
+        transfer.fx_source_currency = transfer.source_account.currency
+        transfer.fx_target_currency = transfer.destination_account.currency
+        transfer.fx_rate = (destination_amount / source_amount).quantize(Decimal('0.00000001'))
+        transfer.fx_effective_date = date
+        transfer.fx_snapshot_status = BankTransfer.FxSnapshotStatus.CAPTURED
     transfer.save()
     create_movement(
         user=user,

@@ -36,6 +36,13 @@ Every operation records product, asset, kind, currency, date and optional notes.
 Monetary assets use an investment amount; unit-based assets use quantity and unit
 price. There is no `title`.
 
+The create/update form progressively reveals the valuation fields from the
+selected asset: monetary assets show only investment amount, while unit-based
+assets show quantity and unit price. The selected operation kind similarly
+reveals the applicable funding source or withdrawal destination. JavaScript
+only enhances disclosure; without it, all fields remain available and the same
+server-side ownership and financial validation remains authoritative.
+
 | Kind | Banking requirement | Position effect |
 |---|---|---|
 | `DEPOSIT` | Source `BankAccount` required; creates linked debit movement. | Adds acquired quantity/cost basis. |
@@ -43,9 +50,10 @@ price. There is no `title`.
 | `YIELD` | No source or destination account. | Internal growth only. |
 
 A deposit source and withdrawal destination are mandatory even when the account
-belongs to the same bank as the product. Cross-currency operations retain the
-cash amount, asset amount and historical conversion used. The operation and its
-required movement are posted atomically.
+belongs to the same bank as the product. Cross-currency operations retain their
+native cash and asset amounts and the applied FX snapshot when conversion is
+available. Missing rates preserve native data and mark conversion incomplete.
+The operation and its required movement are posted atomically.
 
 Yield is internal: it changes the portfolio position/value and appears in
 investment performance, but does not create bank income or available cash. Cash
@@ -54,17 +62,21 @@ exists only after an explicit withdrawal to a destination account.
 ## Valuation
 
 Portfolio totals are grouped by bank, product, asset class, asset and currency.
-Historical charts value each operation with the rate effective on its date;
-current portfolio simulations may use a current rate but must label the
-valuation date. Missing rates remain explicit and never cause unlike currencies
-to be summed directly.
+Historical charts use captured and reconstructed FX snapshots. Descriptive
+edits retain the snapshot; amount, asset, fee, or date edits refresh it.
+Changing the reporting currency does not chain a mutable rate onto historical
+evidence; snapshots targeting another base are reported as incomplete.
+Current portfolio
+simulations may use a current rate but must label the valuation date and source.
+Missing rates remain explicit and never cause unlike currencies to be summed
+directly.
 
 ## Settings and integrity
 
 Investment Settings manages products and assets; bank management links to the
 canonical banking screen instead of duplicating it. Referenced banks, products
-and assets cannot be deleted. Posted operations are reversed, not overwritten,
-and source/destination movements cannot be removed independently.
+and assets cannot be deleted. Personal operations remain editable; audit-grade
+reversal workflows are out of scope.
 
 All forms and services enforce per-user ownership for bank, account, product and
 asset choices. Filters cover bank, product, asset, asset class, currency, kind

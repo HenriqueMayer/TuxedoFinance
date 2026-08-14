@@ -30,9 +30,10 @@ class CategoryForm(forms.ModelForm):
 
     class Meta:
         model = Category
-        fields = ('name', 'parent_category')
+        fields = ('name', 'transaction_type', 'parent_category')
         labels = {
             'name': _('Name'),
+            'transaction_type': _('Category type'),
             'parent_category': _('Parent category'),
         }
 
@@ -45,6 +46,11 @@ class CategoryForm(forms.ModelForm):
         self.fields['parent_category'].queryset = queryset
         self.fields['parent_category'].required = False
         self.fields['parent_category'].empty_label = _('No parent category')
+        self.fields['transaction_type'].required = False
+        self.fields['transaction_type'].choices = [
+            ('', _('Unclassified (income and expense)')),
+            *Category.TransactionType.choices,
+        ]
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
 

@@ -2,19 +2,40 @@
 
 The project package: cross-cutting configuration, localization, currency metadata and root routing. It owns no financial domain model.
 
+`SECRET_KEY` is required from the process environment. Settings contains no
+committed secret, placeholder or automatic fallback; generate and keep a
+private key for each installation.
+
+When the optional Docker image is used, `CASHFLOW_DATA_DIR=/data` moves the
+SQLite file into the persistent container volume. The same settings and
+automatic migrations are used as in the native workflow; the image never
+ships runtime data or credentials.
+
 ## Files
 
 | File | Purpose |
 |---|---|
-| `core/settings.py` | Django settings, supported UI languages and the default base currency for new users. |
-| `core/urls.py` | Root URLconf, including Django's `i18n/` routes, `banking`, and excluding removed `payments`. |
-| `core/context_processors.py` | Two custom context processors, registered in `TEMPLATES[0]['OPTIONS']['context_processors']`. |
+| `core/settings.py` | Django settings and supported UI languages; no user-facing currency setting. |
+| `core/urls.py` | Root URLconf, including Django's `i18n/` routes and the domain apps. |
+| `core/context_processors.py` | The authenticated user's currency context, registered in `TEMPLATES[0]['OPTIONS']['context_processors']`. |
 | `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR20). |
-| `core/formats/en/formats.py` | Locale number-format override driven by `settings.CURRENCY` (FR19). |
+| `core/formats/en/formats.py` | Locale number-format override driven by the code-level default (FR19). |
 | `core/formats/pt_BR/formats.py` | Portuguese locale counterpart that preserves the same currency-driven number format. |
 | `core/tests.py` | Language cookie, navbar, HTMX and language/currency-independence tests. |
-| `core/wsgi.py` | Standard `django-admin startproject` WSGI entrypoint; used by `gunicorn` in production (`core.wsgi:application`, see the `Dockerfile` `CMD`). |
+| `core/wsgi.py` | Standard Django WSGI entrypoint, retained for future deployment packaging. |
 | `core/asgi.py` | Standard ASGI entrypoint; unused in this project (no async views, no channels) but kept as Django scaffolding. |
+
+## Local SQLite database
+
+`DATABASES['default']` uses root `db.sqlite3` in the native workflow. When
+`CASHFLOW_DATA_DIR` is set, Django stores `db.sqlite3` there; the optional
+Docker package sets it to `/data`. The database file is
+installation-owned runtime data and is ignored by Git. A clean clone creates it by running
+`manage.py migrate`; the current source tree and future commits distribute
+migrations rather than financial records. Older Git objects still contain
+database versions pending the coordinated history cleanup. The installation
+owner is responsible for file access, protection and backup; see
+[`../operations.md`](../operations.md) for the supported procedure.
 
 ## Context processors
 
@@ -22,23 +43,13 @@ The project package: cross-cutting configuration, localization, currency metadat
 
 ```python
 def currency(request):
-    return {'CURRENCY_SYMBOL': settings.CURRENCY_SYMBOL}
+    return {'CURRENCY_CODE': code, 'CURRENCY_SYMBOL': symbol}
 ```
 
-The single-symbol context value is retained only for legacy/public examples during
-the breaking implementation. Authenticated money rendering must resolve metadata
-from each value's native currency; the user's `BankingProfile.base_currency`
-drives consolidation. No banking template may assume `CURRENCY_SYMBOL` describes
-every amount.
-
-### `debug_flag(request)`
-
-```python
-def debug_flag(request):
-    return {'DEBUG': settings.DEBUG}
-```
-
-Exposes `settings.DEBUG` to every template as `{{ DEBUG }}`. `templates/base.html` uses it to choose between the Tailwind Play CDN (`DEBUG=True`) and the compiled, WhiteNoise-served `css/output.css` bundle (`DEBUG=False`) — see [frontend.md § Tailwind strategy](../frontend.md#tailwind-strategy-devprod). Deliberately separate from Django's built-in `django.template.context_processors.debug` processor, which only activates for requests from `INTERNAL_IPS` — unsuitable for an always-on template switch that must work identically for every visitor in production.
+For authenticated requests the context resolves the user's
+`UserPreference.base_currency`; anonymous requests use the BRL bootstrap default.
+Templates receive both `CURRENCY_CODE` and `CURRENCY_SYMBOL`. This value only
+controls presentation and never changes stored native amounts.
 
 ## Currency registry (`core/currencies.py`)
 
@@ -62,9 +73,8 @@ CURRENCIES = {
 }
 ```
 
-One entry pairs a currency's symbol and separators. Money renderers select the
-entry by each amount's currency; `settings.CURRENCY` supplies only the default
-base currency for a new `BankingProfile` and public examples.
+One entry pairs a currency's symbol and separators. The registry is shared by
+the user preference form, context processor, and locale number-format modules.
 
 Two deliberate constraints on this module:
 
@@ -113,5 +123,8 @@ currency separators under both UI languages.
 
 ## Why no models/views here
 
-`core` stays empty of domain logic. Banking owns base-currency preference and
-historical conversion; core only provides registry/configuration primitives.
+`core` stays empty of domain logic. `accounts` owns the base-currency
+preference; core provides registry and formatting primitives. Historical
+Historical conversion evidence belongs to transfers and investments in the
+current implementation; `core` only provides currency metadata and formatting
+primitives.

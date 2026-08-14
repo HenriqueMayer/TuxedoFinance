@@ -10,6 +10,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
+from banking.models import BankAccount
 from transactions.forms import TransactionForm
 from transactions.models import Transaction
 from transactions.services import sync_user_ledger
@@ -190,6 +191,20 @@ class TransactionCreateView(SuccessMessageMixin, TransactionFormMixin, CreateVie
     """Create a transaction owned by the logged-in user (FR07)."""
 
     success_message = gettext_lazy('Transaction "%(title)s" created.')
+
+    def get_initial(self):
+        initial = super().get_initial()
+        account_id = self.request.GET.get('account', '')
+        if account_id.isdigit():
+            account = BankAccount.objects.filter(
+                user=self.request.user, pk=account_id,
+            ).first()
+            if account:
+                initial.update({
+                    'payment_channel': Transaction.PaymentChannel.ACCOUNT,
+                    'bank_account': account,
+                })
+        return initial
 
     def form_valid(self, form):
         form.instance.user = self.request.user

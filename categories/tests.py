@@ -1,10 +1,35 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
 from categories.models import Category
 
 User = get_user_model()
+
+
+class DefaultCategorySeedingTests(TestCase):
+    def test_new_user_receives_only_the_approved_default_categories(self):
+        expected_names = [
+            'Groceries',
+            'Food & Dining',
+            'Subscriptions',
+            'Education',
+            'Fitness',
+            'Transportation',
+            'Pets',
+            'Hobbies & Entertainment',
+            'Services',
+        ]
+        user = User.objects.create_user('new-account', password='test')
+
+        categories = Category.objects.filter(user=user).order_by('pk')
+
+        self.assertEqual(
+            list(categories.values_list('name', flat=True)),
+            expected_names,
+        )
+        self.assertFalse(categories.exclude(parent_category=None).exists())
 
 
 class CategoryListFilterTests(TestCase):
@@ -71,3 +96,32 @@ class CategoryListFilterTests(TestCase):
         self.assertContains(response, 'Clear filters')
         self.assertContains(response, 'value="missing"')
         self.assertContains(response, 'value="top" selected')
+
+
+class CategoryClassificationTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('classification', password='test')
+        Category.objects.filter(user=self.user).delete()
+
+    def test_used_category_cannot_be_classified_against_existing_transactions(self):
+        from banking.models import Bank, BankAccount
+        from transactions.models import Transaction
+
+        category = Category.objects.create(user=self.user, name='Shared')
+        bank = Bank.objects.create(user=self.user, name='Bank')
+        account = BankAccount.objects.create(user=self.user, bank=bank, name='Account', currency='BRL')
+        Transaction.objects.create(
+            user=self.user, title='Expense', amount='10.00', transaction_type='EXPENSE',
+            category=category, payment_channel='ACCOUNT', bank_account=account, date='2026-01-01',
+        )
+        category.transaction_type = Category.TransactionType.INCOME
+
+        with self.assertRaises(ValidationError):
+            category.full_clean()
+
+    def test_category_form_labels_the_unclassified_option(self):
+        from categories.forms import CategoryForm
+
+        form = CategoryForm(user=self.user)
+
+        self.assertIn('Unclassified (income and expense)', str(form['transaction_type']))

@@ -8,7 +8,7 @@ user, so categories and banking instruments only list that user's own records)
 through the shared partials/form_field.html renderer (PRD §9.4).
 {% endcomment %}
 
-{% block title %}{% if form.instance.pk %}{% translate "Edit Transaction" %}{% else %}{% translate "New Transaction" %}{% endif %} — CashFlow{% endblock %}
+{% block title %}{% if form.instance.pk %}{% translate "Edit Transaction" %}{% else %}{% translate "New Transaction" %}{% endif %} — Tuxedo Finance{% endblock %}
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
@@ -30,41 +30,49 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         {% include 'partials/form_field.html' with field=form.title %}
         {% include 'partials/form_field.html' with field=form.amount %}
         {% include 'partials/form_field.html' with field=form.transaction_type %}
-        <div class="space-y-1.5">
-            <label for="category-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">
-                {% translate "Search category" %}
-            </label>
-            <input id="category-search" type="search" autocomplete="off" aria-controls="{{ form.category.id_for_label }}"
+        <div id="category-picker" class="space-y-1.5" hidden>
+            <label for="category-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Search category" %}</label>
+            <input id="category-search" type="search" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="category-results" aria-autocomplete="list" aria-required="true" aria-describedby="category-selection{% if form.category.errors %} category-error{% endif %}"{% if form.category.errors %} aria-invalid="true"{% endif %}
                    placeholder="{% translate 'Type to filter categories' %}"
                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:placeholder:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+            <p id="category-selection" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
+            {% for error in form.category.errors %}<p id="category-error" class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+            <ul id="category-results" role="listbox" class="max-h-48 overflow-y-auto rounded-xl border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-[#313335]"></ul>
+            <button id="clear-category" type="button" class="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">{% translate "Clear category selection" %}</button>
         </div>
-        {% include 'partials/form_field.html' with field=form.category %}
+        <div id="category-fallback">{% include 'partials/form_field.html' with field=form.category %}</div>
         {% include 'partials/form_field.html' with field=form.payment_channel %}
-        {% include 'partials/form_field.html' with field=form.bank_account %}
-        {% include 'partials/form_field.html' with field=form.debit_card %}
-        {% include 'partials/form_field.html' with field=form.credit_card %}
-        {% include 'partials/form_field.html' with field=form.installments %}
-        {% include 'partials/form_field.html' with field=form.billing_override %}
+        <p id="payment-channel-status" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
+        <div id="bank-account-fields" data-has-errors="{{ form.bank_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.bank_account %}</div>
+        <div id="debit-card-fields" data-has-errors="{{ form.debit_card.errors|yesno:'true,false' }}">
+            {% include 'partials/form_field.html' with field=form.debit_card %}
+            <p class="text-sm text-slate-500 dark:text-neutral-500">{% translate "The selected debit card determines the bank account." %}</p>
+            <p id="debit-card-account" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
+        </div>
+        <div id="credit-card-fields" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
+            {% include 'partials/form_field.html' with field=form.credit_card %}
+            {% include 'partials/form_field.html' with field=form.installments %}
+            {% include 'partials/form_field.html' with field=form.billing_override %}
+            <p class="text-sm text-slate-500 dark:text-neutral-500">{% translate "The selected credit card determines the bank account." %}</p>
+            <p id="credit-card-account" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
+        </div>
         {% include 'partials/form_field.html' with field=form.date %}
 
-        <div class="flex items-center gap-3 rounded-xl ring-1 ring-slate-200 dark:ring-[#323232] bg-slate-100 dark:bg-[#292929] p-4">
-            {{ form.is_fixed }}
-            <div>
-                <label for="{{ form.is_fixed.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">
-                    {{ form.is_fixed.label }}
-                </label>
-                {% if form.is_fixed.help_text %}
-                    <p class="text-sm text-slate-500 dark:text-neutral-500">{{ form.is_fixed.help_text }}</p>
-                {% endif %}
-                {% for error in form.is_fixed.errors %}
-                    <p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
-                {% endfor %}
+        <details class="rounded-xl ring-1 ring-slate-200 dark:ring-[#323232]"{% if form.is_fixed.value or form.fixed_until.errors or form.notes.errors or form.is_fixed.errors %} open{% endif %}>
+            <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Advanced options" %}</summary>
+            <div class="space-y-5 p-4 pt-1">
+                <div class="flex items-center gap-3 rounded-xl bg-slate-100 p-4 dark:bg-[#292929]">
+                    {{ form.is_fixed }}
+                    <div>
+                        <label for="{{ form.is_fixed.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{{ form.is_fixed.label }}</label>
+                        {% if form.is_fixed.help_text %}<p id="{{ form.is_fixed.id_for_label }}-help" class="text-sm text-slate-500 dark:text-neutral-500">{{ form.is_fixed.help_text }}</p>{% endif %}
+                        {% for error in form.is_fixed.errors %}<p id="{{ form.is_fixed.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+                <div id="fixed-until-fields" data-has-errors="{{ form.fixed_until.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fixed_until %}</div>
+                {% include 'partials/form_field.html' with field=form.notes %}
             </div>
-        </div>
-
-        {% include 'partials/form_field.html' with field=form.fixed_until %}
-
-        {% include 'partials/form_field.html' with field=form.notes %}
+        </details>
 
         <div class="flex items-center gap-3">
             <button type="submit"
@@ -85,22 +93,161 @@ through the shared partials/form_field.html renderer (PRD §9.4).
     (function () {
         const search = document.getElementById('category-search');
         const category = document.getElementById('{{ form.category.id_for_label }}');
-        if (!search || !category) return;
+        const picker = document.getElementById('category-picker');
+        const fallback = document.getElementById('category-fallback');
+        const results = document.getElementById('category-results');
+        const selection = document.getElementById('category-selection');
+        const clearCategory = document.getElementById('clear-category');
+        const channel = document.getElementById('{{ form.payment_channel.id_for_label }}');
+        const transactionType = document.getElementById('{{ form.transaction_type.id_for_label }}');
+        const bankAccount = document.getElementById('{{ form.bank_account.id_for_label }}');
+        const debitCard = document.getElementById('{{ form.debit_card.id_for_label }}');
+        const creditCard = document.getElementById('{{ form.credit_card.id_for_label }}');
+        const installments = document.getElementById('{{ form.installments.id_for_label }}');
+        const billingOverride = document.getElementById('{{ form.billing_override.id_for_label }}');
+        const fixed = document.getElementById('{{ form.is_fixed.id_for_label }}');
+        const fixedUntil = document.getElementById('{{ form.fixed_until.id_for_label }}');
+        const status = document.getElementById('payment-channel-status');
+        const debitAccountContext = document.getElementById('debit-card-account');
+        const creditAccountContext = document.getElementById('credit-card-account');
+        const groups = {
+            bank: document.getElementById('bank-account-fields'),
+            debit: document.getElementById('debit-card-fields'),
+            credit: document.getElementById('credit-card-fields'),
+            fixedUntil: document.getElementById('fixed-until-fields'),
+        };
+        if (!search || !category || !channel) return;
 
-        search.addEventListener('input', function () {
-            const query = search.value.trim().toLocaleLowerCase();
-            let firstMatch = null;
+        const normalize = value => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase();
+        const categoryOptions = () => Array.from(category.options).filter(option => option.value);
+        let activeIndex = -1;
 
-            Array.from(category.options).forEach(function (option) {
-                const matches = !query || option.text.toLocaleLowerCase().includes(query);
-                option.hidden = !matches;
-                if (matches && option.value && !firstMatch) firstMatch = option;
+        function renderCategories() {
+            const query = normalize(search.value.trim());
+            const matches = categoryOptions().filter(option => {
+                const typeMatches = !option.dataset.transactionType || option.dataset.transactionType === transactionType.value;
+                return typeMatches && (!query || normalize(option.dataset.search || option.text).includes(query));
             });
-
-            if (category.selectedOptions[0] && category.selectedOptions[0].hidden && firstMatch) {
-                category.value = firstMatch.value;
+            results.replaceChildren();
+            results.hidden = false;
+            activeIndex = -1;
+            matches.forEach((option, index) => {
+                const item = document.createElement('li');
+                item.id = `category-option-${option.value}`;
+                item.role = 'option';
+                item.tabIndex = -1;
+                item.dataset.value = option.value;
+                item.textContent = option.text;
+                item.className = 'cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-neutral-100 dark:hover:bg-[#3a3a3a]';
+                item.addEventListener('mousedown', event => { event.preventDefault(); selectCategory(option.value); });
+                results.append(item);
+            });
+            if (!matches.length) {
+                const item = document.createElement('li');
+                item.className = 'px-3 py-2 text-sm text-slate-500 dark:text-neutral-500';
+                item.textContent = '{% translate "No matching categories" %}';
+                results.append(item);
             }
+            search.setAttribute('aria-expanded', 'true');
+        }
+
+        function selectCategory(value) {
+            category.value = value;
+            category.dispatchEvent(new Event('change', {bubbles: true}));
+            const option = category.selectedOptions[0];
+            selection.textContent = option && option.value ? '{% translate "Selected category:" %} ' + option.text : '{% translate "No category selected." %}';
+            search.value = '';
+            search.setAttribute('aria-activedescendant', '');
+            renderCategories();
+        }
+
+        function setHidden(group, hidden, preserveErrors) {
+            group.hidden = hidden && !(preserveErrors && group.dataset.hasErrors === 'true');
+        }
+        function updateCardAccountContext(card, output) {
+            const option = card.selectedOptions[0];
+            output.textContent = option && option.value ? '{% translate "Bank account:" %} ' + option.dataset.accountLabel : '';
+        }
+        function updatePaymentFields(clearStale) {
+            const value = channel.value;
+            const isCard = value === 'DEBIT_CARD' || value === 'CREDIT_CARD';
+            const cardsUnavailable = transactionType.value === 'INCOME' && !(isCard && !clearStale);
+            setHidden(groups.bank, !value || isCard, !clearStale);
+            setHidden(groups.debit, value !== 'DEBIT_CARD' || cardsUnavailable, !clearStale);
+            setHidden(groups.credit, value !== 'CREDIT_CARD' || cardsUnavailable, !clearStale);
+            Array.from(bankAccount.options).forEach(option => { option.hidden = value === 'PIX' && option.value && option.dataset.pixEnabled !== 'true'; });
+            if (clearStale) {
+                if (value !== 'ACCOUNT' && value !== 'PIX') bankAccount.value = '';
+                if (value === 'PIX' && bankAccount.selectedOptions[0] && bankAccount.selectedOptions[0].dataset.pixEnabled !== 'true') bankAccount.value = '';
+                if (value !== 'DEBIT_CARD') debitCard.value = '';
+                if (value !== 'CREDIT_CARD') { creditCard.value = ''; installments.value = '1'; billingOverride.value = ''; }
+            }
+            updateCardAccountContext(debitCard, debitAccountContext);
+            updateCardAccountContext(creditCard, creditAccountContext);
+            if (transactionType.value === 'INCOME' && isCard) {
+                status.textContent = '{% translate "Debit and credit cards are available only for expenses." %}';
+            } else if (value === 'ACCOUNT') {
+                status.textContent = '{% translate "This transaction updates the selected bank account immediately." %}';
+            } else if (value === 'PIX') {
+                status.textContent = '{% translate "Choose a bank account with PIX enabled. This transaction updates that account immediately." %}';
+            } else if (value === 'DEBIT_CARD') {
+                status.textContent = '{% translate "This transaction updates the debit card account immediately." %}';
+            } else if (value === 'CREDIT_CARD') {
+                status.textContent = '{% translate "This purchase is added to the selected credit card invoice and debited when that invoice is due." %}';
+            } else {
+                status.textContent = '';
+            }
+        }
+        function updateAvailableChannels(clearStale) {
+            Array.from(channel.options).forEach(option => {
+                option.hidden = transactionType.value === 'INCOME' && !option.selected && (
+                    option.value === 'DEBIT_CARD' || option.value === 'CREDIT_CARD'
+                );
+            });
+            if (transactionType.value === 'INCOME' && (
+                channel.value === 'DEBIT_CARD' || channel.value === 'CREDIT_CARD'
+            ) && clearStale) channel.value = '';
+            updatePaymentFields(clearStale);
+            const selectedCategory = category.selectedOptions[0];
+            if (
+                clearStale && selectedCategory && selectedCategory.dataset.transactionType
+                && selectedCategory.dataset.transactionType !== transactionType.value
+            ) selectCategory('');
+            else renderCategories();
+        }
+        function updateFixedFields(clearStale) {
+            setHidden(groups.fixedUntil, !fixed.checked, !clearStale);
+            if (!fixed.checked && clearStale) fixedUntil.value = '';
+        }
+
+        picker.hidden = false;
+        fallback.hidden = true;
+        renderCategories();
+        selectCategory(category.value);
+        updateAvailableChannels(false);
+        updateFixedFields();
+        search.addEventListener('input', renderCategories);
+        search.addEventListener('focus', renderCategories);
+        search.addEventListener('keydown', function (event) {
+            const options = Array.from(results.querySelectorAll('[role="option"]'));
+            if (event.key === 'Escape') { search.setAttribute('aria-expanded', 'false'); results.hidden = true; return; }
+            if (!options.length || !['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter'].includes(event.key)) return;
+            event.preventDefault();
+            if (event.key === 'Enter' && activeIndex >= 0) return selectCategory(options[activeIndex].dataset.value);
+            if (event.key === 'Home') activeIndex = 0;
+            else if (event.key === 'End') activeIndex = options.length - 1;
+            else activeIndex = event.key === 'ArrowDown' ? Math.min(activeIndex + 1, options.length - 1) : Math.max(activeIndex - 1, 0);
+            options.forEach((option, index) => option.setAttribute('aria-selected', String(index === activeIndex)));
+            search.setAttribute('aria-activedescendant', options[activeIndex].id);
+            options[activeIndex].scrollIntoView({block: 'nearest'});
         });
+        clearCategory.addEventListener('click', () => selectCategory(''));
+        search.addEventListener('blur', () => window.setTimeout(() => { results.hidden = true; search.setAttribute('aria-expanded', 'false'); }, 150));
+        channel.addEventListener('change', () => updatePaymentFields(true));
+        transactionType.addEventListener('change', () => updateAvailableChannels(true));
+        debitCard.addEventListener('change', () => updateCardAccountContext(debitCard, debitAccountContext));
+        creditCard.addEventListener('change', () => updateCardAccountContext(creditCard, creditAccountContext));
+        fixed.addEventListener('change', () => updateFixedFields(true));
     })();
 </script>
 {% endblock %}

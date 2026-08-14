@@ -1,13 +1,13 @@
 {% load i18n static %}
 <!DOCTYPE html>
 {% comment %}
-CashFlow base layout (PRD §9 — Design System).
+Tuxedo Finance base layout (PRD §9 — Design System).
 
 Every page in the project MUST extend this template and reuse the partials
 below instead of hand-rolling one-off markup (PRD risk R2).
 
 Blocks:
-  {% block title %}   — <title> content, defaults to "CashFlow".
+  {% block title %}   — <title> content, defaults to "Tuxedo Finance".
   {% block content %}  — page body, rendered inside <main>.
 
 Partials included here:
@@ -33,26 +33,24 @@ The toggle itself is `partials/theme_toggle.html`, wired by
 `static/js/theme.js`. ~25 lines of vendored vanilla JS, no CDN, no JS build —
 still within the project's no-JS-for-charts rule (PRD §5 scope change).
 
-Production static strategy (PRD §10.6): in development (DEBUG=True) Tailwind
-loads from the Play CDN with `darkMode: 'class'` so its `dark:` variants
-match the inline FOUC class. In production (DEBUG=False) the same utility
-classes are served from the compiled, WhiteNoise-served `css/output.css`
-bundle — built from `tailwind/input.css` (which declares the matching
-`@custom-variant dark`) with the standalone Tailwind CLI (see Dockerfile).
-`DEBUG` is exposed to every template by `core.context_processors.debug_flag`.
+Tailwind loads from the Play CDN with `darkMode: 'class'` so its `dark:`
+variants match the inline FOUC class. The supported local runtime has no CSS
+build step.
 {% endcomment %}
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}" class="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CashFlow{% endblock %}</title>
+    <title>{% block title %}Tuxedo Finance{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'brand/favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'brand/favicon-32.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'brand/apple-touch-icon.png' %}">
 
     {% comment %}Theme bootstrap (PRD §9): runs synchronously before the
     stylesheet paints so <html> already carries the correct `dark` class (or
     not) at first render — no flash of the wrong theme. The .dark class is
-    the hook the `dark:` variants in tailwind/input.css (production) and
-    `darkMode: 'class'` in the Play CDN config below (dev) react to. The
+    the hook the `darkMode: 'class'` configuration below reacts to. The
     click handler that flips and persists the choice lives in
     static/js/theme.js; this snippet only reads. (DTL's single-line `{# #}`
     comment form cannot span the lines below, so the block-form
@@ -69,7 +67,6 @@ bundle — built from `tailwind/input.css` (which declares the matching
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    {% if DEBUG %}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -83,9 +80,6 @@ bundle — built from `tailwind/input.css` (which declares the matching
             },
         };
     </script>
-    {% else %}
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    {% endif %}
 </head>
 <body class="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900 antialiased dark:bg-[#2B2B2B] dark:text-neutral-100">
     {% if request.user.is_authenticated %}

@@ -1,4 +1,4 @@
-/* CashFlow — light/dark theme toggle (PRD §9 — Design System).
+/* Tuxedo Finance — light/dark theme toggle (PRD §9 — Design System).
  *
  * The matching FOUC snippet in `templates/base.html` reads `localStorage`
  * and the OS `prefers-color-scheme` *before* the stylesheet paints and
@@ -6,7 +6,7 @@
  * right theme. This file owns the only piece that needs the DOM: wiring the
  * navbar's theme buttons so a click flips that class and persists
  * the choice. ~15 lines of vanilla JS — the only JavaScript in the project
- * beside the (browser-only) Tailwind Play CDN dev script. */
+ * beside the browser-loaded Tailwind Play CDN. */
 (function () {
     'use strict';
 
