@@ -64,7 +64,7 @@ class SettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     template_name = 'accounts/settings.html'
     form_class = BaseCurrencyForm
     success_url = reverse_lazy('accounts:settings')
-    success_message = _('Your base currency was updated.')
+    success_message = _('Your settings were updated.')
 
     def get_object(self, queryset=None):
         return UserPreference.for_user(self.request.user)

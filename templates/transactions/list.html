@@ -119,7 +119,7 @@ the active filters survive page navigation.
                             <p class="text-sm text-slate-600 dark:text-neutral-400">
                                 {{ transaction.category.name }} &middot; {{ transaction.payment_label }}
                                 &middot; {{ transaction.get_payment_channel_display }}
-                                &middot; {{ transaction.date|date:'M j, Y' }}
+                                &middot; {{ transaction.date|date:USER_DATE_FORMAT }}
                             </p>
                         </div>
                         <div class="flex items-center gap-4">

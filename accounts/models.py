@@ -10,6 +10,7 @@ CURRENCY_NAMES = {
     'GBP': _('British Pound'), 'JPY': _('Japanese Yen'), 'CHF': _('Swiss Franc'),
 }
 CURRENCY_CHOICES = [(code, CURRENCY_NAMES[code]) for code in CURRENCIES]
+DATE_FORMAT_CHOICES = [('DMY', _('DD/MM/YYYY')), ('MDY', _('MM/DD/YYYY'))]
 
 
 class UserPreference(models.Model):
@@ -21,6 +22,9 @@ class UserPreference(models.Model):
     )
     base_currency = models.CharField(
         max_length=3, choices=CURRENCY_CHOICES, default=DEFAULT_CURRENCY,
+    )
+    date_format = models.CharField(
+        max_length=3, choices=DATE_FORMAT_CHOICES, default='DMY',
     )
 
     def __str__(self):

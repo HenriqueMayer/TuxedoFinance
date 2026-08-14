@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from accounts.models import UserPreference
 from banking.models import BankAccount, CreditCard, DebitCard
 from categories.models import Category
 from transactions.models import Transaction
@@ -82,6 +83,16 @@ class TransactionForm(forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        date_order = UserPreference.for_user(user).date_format if user is not None else 'DMY'
+        display_format = '%m/%d/%Y' if date_order == 'MDY' else '%d/%m/%Y'
+        placeholder = 'MM/DD/YYYY' if date_order == 'MDY' else 'DD/MM/YYYY'
+        for name in ('date', 'fixed_until'):
+            field = self.fields[name]
+            field.input_formats = [display_format, '%Y-%m-%d']
+            field.widget = forms.DateInput(
+                format=display_format,
+                attrs={'placeholder': placeholder, 'inputmode': 'numeric'},
+            )
         self.fields['category'].queryset = Category.objects.filter(user=user)
         self.fields['bank_account'].queryset = BankAccount.objects.filter(user=user).select_related('bank')
         self.fields['debit_card'].queryset = DebitCard.objects.filter(user=user).select_related('account__bank')

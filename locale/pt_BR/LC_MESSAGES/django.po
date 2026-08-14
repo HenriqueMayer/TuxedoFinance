@@ -60,8 +60,23 @@ msgid "Welcome to Tuxedo Finance, %(username)s. Your account is ready."
 msgstr "Bem-vindo ao Tuxedo Finance, %(username)s. Sua conta está pronta."
 
 #: accounts/views.py:67
-msgid "Your base currency was updated."
-msgstr "Sua moeda-base foi atualizada."
+msgid "Your settings were updated."
+msgstr "Suas configurações foram atualizadas."
+
+msgid "Date format"
+msgstr "Formato de data"
+
+msgid "DD/MM/YYYY"
+msgstr "DD/MM/AAAA"
+
+msgid "MM/DD/YYYY"
+msgstr "MM/DD/AAAA"
+
+msgid "Choose how complete dates are displayed throughout the application."
+msgstr "Escolha como as datas completas são exibidas em todo o aplicativo."
+
+msgid "Select date"
+msgstr "Selecionar data"
 
 #: banking/forms.py:46 banking/forms.py:67 banking/forms.py:132
 #: banking/forms.py:149 banking/forms.py:165 categories/forms.py:35

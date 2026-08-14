@@ -1,0 +1,17 @@
+{% load i18n %}
+<div class="space-y-1.5" data-preferred-date-field data-date-order="{% if USER_DATE_FORMAT == 'm/d/Y' %}MDY{% else %}DMY{% endif %}">
+    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">
+        {{ field.label }}{% if field.field.required %} <span class="text-rose-600 dark:text-rose-400">*</span>{% endif %}
+    </label>
+    <div class="flex gap-2">
+        <div class="min-w-0 flex-1">{{ field }}</div>
+        <div class="shrink-0">
+            <button type="button" class="h-[46px] rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-[#313335] dark:text-neutral-200 dark:hover:bg-[#3a3a3a]" data-open-date-picker>
+                {% translate "Select date" %}
+            </button>
+            <input type="date" class="sr-only" tabindex="-1" aria-hidden="true" data-native-date-picker>
+        </div>
+    </div>
+    {% if field.help_text %}<p id="{{ field.id_for_label }}-help" class="text-sm text-slate-500 dark:text-neutral-500">{{ field.help_text }}</p>{% endif %}
+    {% for error in field.errors %}<p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+</div>

@@ -69,12 +69,14 @@ matching navigation affordance. Existing users can still log in normally.
 
 ## User preferences
 
-`UserPreference` is a one-to-one, user-owned model containing `base_currency`.
+`UserPreference` is a one-to-one, user-owned model containing `base_currency`
+and the preferred complete-date order (`DD/MM/YYYY` or `MM/DD/YYYY`).
 The authenticated `/accounts/settings/` screen uses `BaseCurrencyForm` to
 validate supported codes and save the preference. Existing users are covered
 by the `accounts.0001_userpreference` migration. Changing the value changes
-consolidated display only; native financial amounts and currencies remain
-unchanged. The settings route and form are localized in English and pt-BR.
+consolidated display only; changing the date format changes presentation only.
+Native financial data remains unchanged. The settings route and form are
+localized in English and pt-BR.
 
 ## Routes
 
