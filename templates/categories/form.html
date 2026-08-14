@@ -29,6 +29,17 @@ the shared partials/form_field.html renderer (PRD §9.4).
 
         {% include 'partials/form_field.html' with field=form.name %}
         {% include 'partials/form_field.html' with field=form.transaction_type %}
+        <div class="space-y-1.5">
+            <label for="parent-category-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">
+                {% translate "Search parent categories" %}
+            </label>
+            <input type="search"
+                   id="parent-category-search"
+                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                   placeholder="{% translate 'Type a category name' %}"
+                   autocomplete="off"
+                   aria-controls="{{ form.parent_category.id_for_label }}">
+        </div>
         {% include 'partials/form_field.html' with field=form.parent_category %}
 
         <div class="flex items-center gap-3">
@@ -43,4 +54,33 @@ the shared partials/form_field.html renderer (PRD §9.4).
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (() => {
+        const search = document.getElementById('parent-category-search');
+        const select = document.getElementById('{{ form.parent_category.id_for_label }}');
+        if (!search || !select) return;
+
+        const options = Array.from(select.options, option => option.cloneNode(true));
+        const normalize = value => value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLocaleLowerCase();
+
+        search.addEventListener('input', () => {
+            const query = normalize(search.value.trim());
+            const selectedValue = select.value;
+            const matches = options.filter(option =>
+                option.value === '' || normalize(option.textContent).includes(query)
+            );
+
+            select.replaceChildren(...matches.map(option => option.cloneNode(true)));
+            if (matches.some(option => option.value === selectedValue)) {
+                select.value = selectedValue;
+            }
+        });
+    })();
+</script>
 {% endblock %}

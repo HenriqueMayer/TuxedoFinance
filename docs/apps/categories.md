@@ -7,9 +7,9 @@ Full CRUD for `Category`, including subcategories via a self-relationship, plus 
 | File | Contents |
 |---|---|
 | `categories/models.py` | `Category` |
-| `categories/forms.py` | `CategoryForm` |
-| `categories/views.py` | `CategoryListView`, `CategoryCreateView`, `CategoryUpdateView`, `CategoryDeleteView` |
-| `categories/urls.py` | `app_name = 'categories'`; routes `list`, `create`, `update`, `delete` |
+| `categories/forms.py` | `CategoryForm`, `CategoryImportForm` |
+| `categories/views.py` | Category CRUD plus CSV import/export views |
+| `categories/urls.py` | `app_name = 'categories'`; CRUD and CSV routes |
 | `categories/signals.py` | `seed_default_categories` |
 | `categories/apps.py` | `CategoriesConfig.ready()` wires the signal |
 | `categories/admin.py` | `CategoryAdmin` |
@@ -128,12 +128,32 @@ editable. The `categories.0002_category_transaction_type`
 migration adds the nullable field without changing any category or transaction;
 rolling back removes only that optional classification.
 
+## CSV import and export
+
+The category list offers **Export CSV** and **Import CSV** actions. Exported
+files use UTF-8 and contain this exact header:
+
+```csv
+name,transaction_type,parent_category
+Food,EXPENSE,
+Restaurants,EXPENSE,Food
+Salary,INCOME,
+```
+
+`transaction_type` accepts `INCOME`, `EXPENSE`, or an empty value. The parent
+is identified by its category name, which keeps files readable and makes them
+portable between users and installations. Import validates the complete file
+before writing, creates parents and subcategories regardless of row order, and
+skips names that already exist without changing their saved data.
+
 ## Routes
 
 | Path | Name | View |
 |---|---|---|
 | `/categories/` | `categories:list` | `CategoryListView` |
 | `/categories/create/` | `categories:create` | `CategoryCreateView` |
+| `/categories/export/` | `categories:export` | `export_categories` |
+| `/categories/import/` | `categories:import` | `import_categories` |
 | `/categories/<pk>/edit/` | `categories:update` | `CategoryUpdateView` |
 | `/categories/<pk>/delete/` | `categories:delete` | `CategoryDeleteView` |
 
