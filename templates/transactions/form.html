@@ -43,17 +43,16 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         <div id="category-fallback">{% include 'partials/form_field.html' with field=form.category %}</div>
         {% include 'partials/form_field.html' with field=form.payment_channel %}
         <p id="payment-channel-status" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
-        <div id="bank-account-fields" data-has-errors="{{ form.bank_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.bank_account %}</div>
-        <div id="debit-card-fields" data-has-errors="{{ form.debit_card.errors|yesno:'true,false' }}">
+        <div id="bank-account-fields" class="space-y-5" data-has-errors="{{ form.bank_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.bank_account %}</div>
+        <div id="debit-card-fields" class="space-y-5" data-has-errors="{{ form.debit_card.errors|yesno:'true,false' }}">
             {% include 'partials/form_field.html' with field=form.debit_card %}
-            <p class="text-sm text-slate-500 dark:text-neutral-500">{% translate "The selected debit card determines the bank account." %}</p>
             <p id="debit-card-account" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
         </div>
-        <div id="credit-card-fields" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
+        <div id="credit-card-fields" class="space-y-5" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
             {% include 'partials/form_field.html' with field=form.credit_card %}
             {% include 'partials/form_field.html' with field=form.installments %}
             {% include 'partials/form_field.html' with field=form.billing_override %}
-            <p class="text-sm text-slate-500 dark:text-neutral-500">{% translate "The selected credit card determines the bank account." %}</p>
+            <p id="credit-card-best-purchase" class="text-sm font-medium text-indigo-600 dark:text-indigo-400" aria-live="polite"></p>
             <p id="credit-card-account" class="text-sm text-slate-600 dark:text-neutral-400" aria-live="polite"></p>
         </div>
         {% include 'partials/preferred_date_field.html' with field=form.date %}
@@ -149,6 +148,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         const status = document.getElementById('payment-channel-status');
         const debitAccountContext = document.getElementById('debit-card-account');
         const creditAccountContext = document.getElementById('credit-card-account');
+        const creditBestPurchase = document.getElementById('credit-card-best-purchase');
         const groups = {
             bank: document.getElementById('bank-account-fields'),
             debit: document.getElementById('debit-card-fields'),
@@ -161,6 +161,12 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         const categoryOptions = () => Array.from(category.options).filter(option => option.value);
         let activeIndex = -1;
 
+        function hideCategoryResults() {
+            results.hidden = true;
+            search.setAttribute('aria-expanded', 'false');
+            search.setAttribute('aria-activedescendant', '');
+        }
+
         function renderCategories() {
             const query = normalize(search.value.trim());
             const matches = categoryOptions().filter(option => {
@@ -169,13 +175,14 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             });
             results.replaceChildren();
             results.hidden = false;
-            activeIndex = -1;
+            activeIndex = matches.length === 1 ? 0 : -1;
             matches.forEach((option, index) => {
                 const item = document.createElement('li');
                 item.id = `category-option-${option.value}`;
                 item.role = 'option';
                 item.tabIndex = -1;
                 item.dataset.value = option.value;
+                item.setAttribute('aria-selected', String(index === activeIndex));
                 item.textContent = option.text;
                 item.className = 'cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-800 hover:bg-slate-100 dark:text-neutral-100 dark:hover:bg-[#3a3a3a]';
                 item.addEventListener('mousedown', event => { event.preventDefault(); selectCategory(option.value); });
@@ -195,9 +202,8 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             category.dispatchEvent(new Event('change', {bubbles: true}));
             const option = category.selectedOptions[0];
             selection.textContent = option && option.value ? '{% translate "Selected category:" %} ' + option.text : '{% translate "No category selected." %}';
-            search.value = '';
-            search.setAttribute('aria-activedescendant', '');
-            renderCategories();
+            search.value = option && option.value ? option.text : '';
+            hideCategoryResults();
         }
 
         function setHidden(group, hidden, preserveErrors) {
@@ -206,6 +212,12 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         function updateCardAccountContext(card, output) {
             const option = card.selectedOptions[0];
             output.textContent = option && option.value ? '{% translate "Bank account:" %} ' + option.dataset.accountLabel : '';
+        }
+        function updateBestPurchaseDay() {
+            const option = creditCard.selectedOptions[0];
+            creditBestPurchase.textContent = option && option.value && option.dataset.bestPurchaseDay
+                ? '{% translate "Best purchase day:" %} ' + option.dataset.bestPurchaseDay
+                : '';
         }
         function updatePaymentFields(clearStale) {
             const value = channel.value;
@@ -223,6 +235,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             }
             updateCardAccountContext(debitCard, debitAccountContext);
             updateCardAccountContext(creditCard, creditAccountContext);
+            updateBestPurchaseDay();
             if (transactionType.value === 'INCOME' && isCard) {
                 status.textContent = '{% translate "Debit and credit cards are available only for expenses." %}';
             } else if (value === 'ACCOUNT') {
@@ -252,7 +265,8 @@ through the shared partials/form_field.html renderer (PRD §9.4).
                 clearStale && selectedCategory && selectedCategory.dataset.transactionType
                 && selectedCategory.dataset.transactionType !== transactionType.value
             ) selectCategory('');
-            else renderCategories();
+            else if (document.activeElement === search) renderCategories();
+            else hideCategoryResults();
         }
         function updateFixedFields(clearStale) {
             setHidden(groups.fixedUntil, !fixed.checked, !clearStale);
@@ -261,15 +275,17 @@ through the shared partials/form_field.html renderer (PRD §9.4).
 
         picker.hidden = false;
         fallback.hidden = true;
-        renderCategories();
         selectCategory(category.value);
         updateAvailableChannels(false);
         updateFixedFields();
         search.addEventListener('input', renderCategories);
-        search.addEventListener('focus', renderCategories);
+        search.addEventListener('focus', () => {
+            if (category.value) search.select();
+            renderCategories();
+        });
         search.addEventListener('keydown', function (event) {
             const options = Array.from(results.querySelectorAll('[role="option"]'));
-            if (event.key === 'Escape') { search.setAttribute('aria-expanded', 'false'); results.hidden = true; return; }
+            if (event.key === 'Escape') { hideCategoryResults(); return; }
             if (!options.length || !['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter'].includes(event.key)) return;
             event.preventDefault();
             if (event.key === 'Enter' && activeIndex >= 0) return selectCategory(options[activeIndex].dataset.value);
@@ -281,11 +297,14 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             options[activeIndex].scrollIntoView({block: 'nearest'});
         });
         clearCategory.addEventListener('click', () => selectCategory(''));
-        search.addEventListener('blur', () => window.setTimeout(() => { results.hidden = true; search.setAttribute('aria-expanded', 'false'); }, 150));
+        search.addEventListener('blur', () => window.setTimeout(hideCategoryResults, 150));
         channel.addEventListener('change', () => updatePaymentFields(true));
         transactionType.addEventListener('change', () => updateAvailableChannels(true));
         debitCard.addEventListener('change', () => updateCardAccountContext(debitCard, debitAccountContext));
-        creditCard.addEventListener('change', () => updateCardAccountContext(creditCard, creditAccountContext));
+        creditCard.addEventListener('change', () => {
+            updateCardAccountContext(creditCard, creditAccountContext);
+            updateBestPurchaseDay();
+        });
         fixed.addEventListener('change', () => updateFixedFields(true));
     })();
 </script>

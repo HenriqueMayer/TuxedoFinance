@@ -284,6 +284,7 @@ class TransactionFormAndListTests(TransactionFixture):
         form = TransactionForm(user=self.user)
         self.assertQuerySetEqual(form.fields['bank_account'].queryset, [self.account])
         self.assertNotIn(self.other_credit, form.fields['credit_card'].queryset)
+        self.assertIn('data-best-purchase-day="24"', str(form['credit_card']))
 
     def test_create_form_includes_category_search(self):
         response = self.client.get(reverse('transactions:create'))
@@ -294,6 +295,7 @@ class TransactionFormAndListTests(TransactionFixture):
         self.assertContains(response, 'id="payment-channel-status"', html=False)
         self.assertNotContains(response, 'id="debit-card-fields" data-has-errors="false" hidden', html=False)
         self.assertNotContains(response, 'id="credit-card-fields" data-has-errors="false" hidden', html=False)
+        self.assertContains(response, 'id="credit-card-best-purchase"', html=False)
 
     def test_transaction_dates_follow_user_date_format(self):
         preference = UserPreference.for_user(self.user)

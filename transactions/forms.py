@@ -63,18 +63,6 @@ class TransactionForm(forms.ModelForm):
             'notes': _('Notes'),
         }
         help_texts = {
-            'payment_channel': _(
-                'Select one channel, then select only its matching instrument below.'
-            ),
-            'bank_account': _('Required for Bank account and PIX channels.'),
-            'debit_card': _('Required only for the Debit card channel.'),
-            'credit_card': _('Required only for the Credit card channel.'),
-            'installments': _(
-                'Credit card only. Enter the full purchase total above.'
-            ),
-            'billing_override': _(
-                'Credit card only. Automatic follows the card closing day.'
-            ),
             'is_fixed': _(
                 'Repeats monthly; it cannot also be an installment plan.'
             ),
@@ -139,7 +127,10 @@ class TransactionForm(forms.ModelForm):
         self._set_choice_data(
             'credit_card',
             {
-                str(card.pk): {'data-account-label': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})'}
+                str(card.pk): {
+                    'data-account-label': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})',
+                    'data-best-purchase-day': str(card.best_purchase_day),
+                }
                 for card in credit_cards
             },
         )

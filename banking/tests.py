@@ -205,6 +205,11 @@ class CardAndInvoiceTests(TestCase):
         self.assertEqual(self.card.statement_month(date(2025, 2, 27)), date(2025, 2, 1))
         self.assertEqual(self.card.statement_month(date(2025, 2, 28)), date(2025, 3, 1))
 
+    def test_best_purchase_day_matches_the_configured_closing_day(self):
+        self.assertEqual(self.card.best_purchase_day, 31)
+        self.card.closing_day = 24
+        self.assertEqual(self.card.best_purchase_day, 24)
+
     def test_statement_override_preserves_explicit_current_or_next(self):
         purchase = date(2026, 1, 31)
         self.assertEqual(self.card.statement_month(purchase, override=0), date(2026, 1, 1))

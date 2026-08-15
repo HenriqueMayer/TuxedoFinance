@@ -167,6 +167,11 @@ class CreditCard(TimestampedModel):
         year, month = divmod(index, 12)
         return date(year, month + 1, 1)
 
+    @property
+    def best_purchase_day(self):
+        """The card's configured best day for purchases."""
+        return self.closing_day
+
     def due_date_for(self, reference_month):
         reference_month = reference_month.replace(day=1)
         day = min(self.due_day, monthrange(reference_month.year, reference_month.month)[1])

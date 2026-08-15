@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-15 15:11+0000\n"
+"POT-Creation-Date: 2026-08-15 16:04+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -2164,12 +2164,6 @@ msgstr "Digite para filtrar as categorias"
 msgid "Clear category selection"
 msgstr "Limpar seleção de categoria"
 
-msgid "The selected debit card determines the bank account."
-msgstr "O cartão de débito selecionado determina a conta bancária."
-
-msgid "The selected credit card determines the bank account."
-msgstr "O cartão de crédito selecionado determina a conta bancária."
-
 msgid "Selected category:"
 msgstr "Categoria selecionada:"
 
@@ -2178,6 +2172,9 @@ msgstr "Nenhuma categoria selecionada."
 
 msgid "Bank account:"
 msgstr "Conta bancária:"
+
+msgid "Best purchase day:"
+msgstr "Melhor dia para compra:"
 
 msgid "Debit and credit cards are available only for expenses."
 msgstr "Cartões de débito e crédito estão disponíveis apenas para despesas."
@@ -2300,26 +2297,6 @@ msgstr "Transação fixa / recorrente"
 msgid "Repeat until"
 msgstr "Repetir até"
 
-msgid "Select one channel, then select only its matching instrument below."
-msgstr "Selecione um canal e depois somente o meio correspondente abaixo."
-
-msgid "Required for Bank account and PIX channels."
-msgstr "Obrigatório para os canais Conta bancária e PIX."
-
-msgid "Required only for the Debit card channel."
-msgstr "Obrigatório somente para o canal Cartão de débito."
-
-msgid "Required only for the Credit card channel."
-msgstr "Obrigatório somente para o canal Cartão de crédito."
-
-msgid "Credit card only. Enter the full purchase total above."
-msgstr "Somente cartão de crédito. Informe acima o valor total da compra."
-
-msgid "Credit card only. Automatic follows the card closing day."
-msgstr ""
-"Somente cartão de crédito. A opção Automática segue o dia de fechamento do "
-"cartão."
-
 msgid "Repeats monthly; it cannot also be an installment plan."
 msgstr "Repete mensalmente; não pode ser também um parcelamento."
 
@@ -2390,6 +2367,32 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+#~ msgid "The selected debit card determines the bank account."
+#~ msgstr "O cartão de débito selecionado determina a conta bancária."
+
+#~ msgid "The selected credit card determines the bank account."
+#~ msgstr "O cartão de crédito selecionado determina a conta bancária."
+
+#~ msgid "Select one channel, then select only its matching instrument below."
+#~ msgstr "Selecione um canal e depois somente o meio correspondente abaixo."
+
+#~ msgid "Required for Bank account and PIX channels."
+#~ msgstr "Obrigatório para os canais Conta bancária e PIX."
+
+#~ msgid "Required only for the Debit card channel."
+#~ msgstr "Obrigatório somente para o canal Cartão de débito."
+
+#~ msgid "Required only for the Credit card channel."
+#~ msgstr "Obrigatório somente para o canal Cartão de crédito."
+
+#~ msgid "Credit card only. Enter the full purchase total above."
+#~ msgstr "Somente cartão de crédito. Informe acima o valor total da compra."
+
+#~ msgid "Credit card only. Automatic follows the card closing day."
+#~ msgstr ""
+#~ "Somente cartão de crédito. A opção Automática segue o dia de fechamento "
+#~ "do cartão."
 
 #~ msgid ""
 #~ "All funding fields remain visible. Fill only those relevant to the "
