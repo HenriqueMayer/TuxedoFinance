@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-14 19:54+0000\n"
+"POT-Creation-Date: 2026-08-15 00:56+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -507,7 +507,8 @@ msgstr "Arquivo CSV"
 
 msgid ""
 "Use a CSV file with the columns name, transaction_type and parent_category."
-msgstr "Use um arquivo CSV com as colunas name, transaction_type e parent_category."
+msgstr ""
+"Use um arquivo CSV com as colunas name, transaction_type e parent_category."
 
 msgid "Select a CSV file."
 msgstr "Selecione um arquivo CSV."
@@ -543,6 +544,19 @@ msgstr ""
 #, python-format
 msgid "Category \"%(name)s\" deleted."
 msgstr "Categoria \"%(name)s\" excluída."
+
+msgid ""
+"Categories cannot be deleted because one or more are still used by existing "
+"transactions."
+msgstr ""
+"As categorias não podem ser excluídas porque uma ou mais ainda são usadas "
+"por transações existentes."
+
+#, python-format
+msgid "%(count)s category deleted."
+msgid_plural "%(count)s categories deleted."
+msgstr[0] "%(count)s categoria excluída."
+msgstr[1] "%(count)s categorias excluídas."
 
 msgid "The CSV file must use UTF-8 encoding."
 msgstr "O arquivo CSV deve usar a codificação UTF-8."
@@ -580,7 +594,9 @@ msgstr "O CSV contém uma hierarquia circular de categorias."
 #, python-format
 msgid ""
 "%(created)s categories imported; %(skipped)s existing categories skipped."
-msgstr "%(created)s categorias importadas; %(skipped)s categorias existentes ignoradas."
+msgstr ""
+"%(created)s categorias importadas; %(skipped)s categorias existentes "
+"ignoradas."
 
 msgid "English"
 msgstr "Inglês"
@@ -1188,6 +1204,27 @@ msgstr ""
 "dark:text-neutral-100\">%(category_name)s</span>? Esta ação não pode ser "
 "desfeita."
 
+msgid "Delete All Categories"
+msgstr "Excluir todas as categorias"
+
+msgid "This action cannot be undone."
+msgstr "Esta ação não pode ser desfeita."
+
+#, python-format
+msgid "You are about to permanently delete your category."
+msgid_plural ""
+"You are about to permanently delete all %(counter)s of your categories."
+msgstr[0] "Você está prestes a excluir permanentemente sua categoria."
+msgstr[1] ""
+"Você está prestes a excluir permanentemente todas as suas %(counter)s "
+"categorias."
+
+msgid "If any category is used by a transaction, nothing will be deleted."
+msgstr "Se alguma categoria for usada por uma transação, nada será excluído."
+
+msgid "Yes, delete all"
+msgstr "Sim, excluir todas"
+
 msgid "Edit Category"
 msgstr "Editar categoria"
 
@@ -1206,7 +1243,9 @@ msgstr "Importar categorias"
 msgid ""
 "Import categories from a CSV exported by Tuxedo Finance. Existing category "
 "names will be skipped."
-msgstr "Importe categorias de um CSV exportado pelo Tuxedo Finance. Nomes de categorias existentes serão ignorados."
+msgstr ""
+"Importe categorias de um CSV exportado pelo Tuxedo Finance. Nomes de "
+"categorias existentes serão ignorados."
 
 msgid "Import"
 msgstr "Importar"
@@ -1237,6 +1276,9 @@ msgstr "Exportar CSV"
 
 msgid "Import CSV"
 msgstr "Importar CSV"
+
+msgid "Delete all"
+msgstr "Excluir todas"
 
 msgid "Category name"
 msgstr "Nome da categoria"
@@ -1698,9 +1740,6 @@ msgstr "Tem certeza de que deseja excluir"
 #, python-format
 msgid "%(quantity)s units, gross %(gross)s %(currency)s"
 msgstr "%(quantity)s unidades, bruto de %(gross)s %(currency)s"
-
-msgid "This action cannot be undone."
-msgstr "Esta ação não pode ser desfeita."
 
 msgid "Edit Operation"
 msgstr "Editar operação"

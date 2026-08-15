@@ -140,6 +140,76 @@ class CategoryClassificationTests(TestCase):
         self.assertContains(response, 'Search parent categories')
 
 
+class CategoryDeleteAllTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('delete-all-categories', password='test')
+        self.other_user = User.objects.create_user('keep-other-categories', password='test')
+        Category.objects.filter(user__in=(self.user, self.other_user)).delete()
+        self.first = Category.objects.create(user=self.user, name='First')
+        self.second = Category.objects.create(
+            user=self.user,
+            name='Second',
+            parent_category=self.first,
+        )
+        self.other_category = Category.objects.create(user=self.other_user, name='Private')
+        self.client.force_login(self.user)
+
+    def test_list_shows_delete_all_button(self):
+        response = self.client.get(reverse('categories:list'))
+
+        self.assertContains(response, reverse('categories:delete_all'))
+        self.assertContains(response, 'Delete all')
+
+    def test_confirmation_get_does_not_delete_categories(self):
+        response = self.client.get(reverse('categories:delete_all'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Yes, delete all')
+        self.assertEqual(Category.objects.filter(user=self.user).count(), 2)
+
+    def test_post_deletes_only_current_users_categories(self):
+        response = self.client.post(reverse('categories:delete_all'))
+
+        self.assertRedirects(response, reverse('categories:list'))
+        self.assertFalse(Category.objects.filter(user=self.user).exists())
+        self.assertTrue(Category.objects.filter(pk=self.other_category.pk).exists())
+
+    def test_used_category_blocks_the_entire_deletion(self):
+        from banking.models import Bank, BankAccount
+        from transactions.models import Transaction
+
+        bank = Bank.objects.create(user=self.user, name='Bank')
+        account = BankAccount.objects.create(
+            user=self.user,
+            bank=bank,
+            name='Account',
+            currency='BRL',
+        )
+        Transaction.objects.create(
+            user=self.user,
+            title='Expense',
+            amount='10.00',
+            transaction_type='EXPENSE',
+            category=self.first,
+            payment_channel='ACCOUNT',
+            bank_account=account,
+            date='2026-01-01',
+        )
+
+        response = self.client.post(reverse('categories:delete_all'), follow=True)
+
+        self.assertContains(response, 'still used by existing transactions')
+        self.assertEqual(Category.objects.filter(user=self.user).count(), 2)
+
+    def test_delete_all_requires_login(self):
+        self.client.logout()
+
+        response = self.client.post(reverse('categories:delete_all'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Category.objects.filter(user=self.user).count(), 2)
+
+
 class CategoryImportExportTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('category-files', password='test')

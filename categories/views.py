@@ -11,7 +11,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext
 from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
@@ -138,6 +138,47 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
             _('Category "%(name)s" deleted.') % {'name': name},
         )
         return response
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def delete_all_categories(request):
+    """Delete every category owned by the user after a confirmation page."""
+
+    categories = Category.objects.filter(user=request.user)
+    if request.method == 'POST':
+        if categories.filter(transactions__isnull=False).exists():
+            messages.error(
+                request,
+                _('Categories cannot be deleted because one or more are still used by existing transactions.'),
+            )
+            return redirect('categories:list')
+
+        category_count = categories.count()
+        try:
+            with transaction.atomic():
+                categories.delete()
+        except ProtectedError:
+            messages.error(
+                request,
+                _('Categories cannot be deleted because one or more are still used by existing transactions.'),
+            )
+        else:
+            messages.success(
+                request,
+                ngettext(
+                    '%(count)s category deleted.',
+                    '%(count)s categories deleted.',
+                    category_count,
+                ) % {'count': category_count},
+            )
+        return redirect('categories:list')
+
+    return render(
+        request,
+        'categories/confirm_delete_all.html',
+        {'category_count': categories.count()},
+    )
 
 
 @login_required
