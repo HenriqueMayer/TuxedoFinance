@@ -165,6 +165,38 @@ class InvestmentModelTests(InvestmentFixtureMixin, TestCase):
         operation.full_clean()
         self.assertEqual(operation.gross_value, Decimal('100.00'))
 
+    def test_unit_asset_accepts_opening_quantity_and_unit_price(self):
+        bitcoin = Asset.objects.create(
+            user=self.user,
+            name='Bitcoin',
+            code='BTC',
+            asset_class=Asset.AssetClass.CRYPTO,
+            currency=BASE,
+            valuation_mode=Asset.ValuationMode.UNITS,
+            opening_quantity=Decimal('0.25000000'),
+            opening_unit_price=Decimal('60000.00000000'),
+            opening_product=self.product,
+        )
+
+        self.assertEqual(bitcoin.opening_quantity, Decimal('0.25000000'))
+        self.assertEqual(bitcoin.opening_unit_price, Decimal('60000.00000000'))
+
+    def test_unit_asset_requires_opening_quantity_and_price_together(self):
+        bitcoin = Asset(
+            user=self.user,
+            name='Bitcoin',
+            code='BTC',
+            asset_class=Asset.AssetClass.CRYPTO,
+            currency=BASE,
+            valuation_mode=Asset.ValuationMode.UNITS,
+            opening_quantity=Decimal('0.25000000'),
+            opening_unit_price=Decimal('0.00'),
+            opening_product=self.product,
+        )
+
+        with self.assertRaises(ValidationError):
+            bitcoin.full_clean()
+
 
 class InvestmentLedgerTests(InvestmentFixtureMixin, TestCase):
     def save_and_sync(self, operation):
@@ -295,6 +327,32 @@ class InvestmentLedgerTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(withdrawal.bank_movement.amount, Decimal('500.00'))
         self.assertEqual(group['balance'], Decimal('1153.10'))
 
+    def test_unit_opening_position_is_available_for_withdrawal(self):
+        bitcoin = Asset.objects.create(
+            user=self.user,
+            name='Bitcoin',
+            code='BTC',
+            asset_class=Asset.AssetClass.CRYPTO,
+            currency=BASE,
+            valuation_mode=Asset.ValuationMode.UNITS,
+            opening_quantity=Decimal('0.25000000'),
+            opening_unit_price=Decimal('60000.00000000'),
+            opening_product=self.product,
+        )
+        withdrawal = self.save_and_sync(self.operation(
+            Investment.Kind.WITHDRAWAL,
+            asset=bitcoin,
+            quantity=Decimal('0.10000000'),
+            unit_price=Decimal('62000.00000000'),
+            destination_account=self.account,
+            cash_amount=Decimal('6200.00'),
+        ))
+
+        self.assertIsNotNone(withdrawal.bank_movement)
+        group = get_portfolio_groups(self.user)[0]['products'][0]['assets'][0]
+        self.assertEqual(group['quantity'], Decimal('0.15000000'))
+        self.assertEqual(group['balance'], Decimal('8800.0000000000000000'))
+
 
 class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
     def setUp(self):
@@ -331,6 +389,49 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         ):
             with self.subTest(field_id=field_id):
                 self.assertContains(response, f'id="{field_id}"')
+
+    def test_asset_form_exposes_unit_opening_position_fields(self):
+        response = self.client.get(reverse('investments:create_asset'))
+
+        self.assertContains(response, 'id="id_opening_quantity"')
+        self.assertContains(response, 'id="id_opening_unit_price"')
+
+        response = self.client.post(reverse('investments:create_asset'), {
+            'name': 'Bitcoin',
+            'code': 'BTC',
+            'asset_class': Asset.AssetClass.CRYPTO,
+            'currency': BASE,
+            'valuation_mode': Asset.ValuationMode.UNITS,
+            'opening_balance': '0',
+            'opening_quantity': '0.25',
+            'opening_unit_price': '60000',
+            'opening_product': self.product.pk,
+        })
+
+        self.assertRedirects(response, reverse('investments:settings'))
+        bitcoin = Asset.objects.get(user=self.user, code='BTC')
+        self.assertEqual(bitcoin.opening_quantity, Decimal('0.25000000'))
+
+    def test_unit_positions_show_quantity_and_base_currency_value(self):
+        Asset.objects.create(
+            user=self.user,
+            name='Bitcoin',
+            code='BTC',
+            asset_class=Asset.AssetClass.CRYPTO,
+            currency=BASE,
+            valuation_mode=Asset.ValuationMode.UNITS,
+            opening_quantity=Decimal('0.25000000'),
+            opening_unit_price=Decimal('60000.00000000'),
+            opening_product=self.product,
+        )
+
+        response = self.client.get(reverse('investments:list'))
+
+        asset = response.context['portfolio_groups'][0]['products'][0]['assets'][0]
+        self.assertEqual(asset['quantity'], Decimal('0.25000000'))
+        self.assertEqual(asset['base_balance'], Decimal('15000.0000000000000000'))
+        self.assertContains(response, '0,25000000 units')
+        self.assertContains(response, 'BRL 15.000,00')
 
     def test_create_view_saves_and_synchronizes_atomically(self):
         response = self.client.post(reverse('investments:create'), {

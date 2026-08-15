@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-14 19:54+0000\n"
+"POT-Creation-Date: 2026-08-15 15:11+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -136,6 +136,16 @@ msgstr "Você já tem um programa de fidelidade com este nome."
 
 msgid "Every card must belong to you."
 msgstr "Todos os cartões devem pertencer a você."
+
+#, fuzzy
+#| msgid "Every card must belong to the program owner."
+msgid "Every selected card must belong to the selected bank."
+msgstr "Todos os cartões devem pertencer ao titular do programa."
+
+#, fuzzy
+#| msgid "The program must belong to the entry owner."
+msgid "The program must belong to the selected bank."
+msgstr "O programa deve pertencer ao titular do lançamento."
 
 msgid "For another currency, enter the amount actually received."
 msgstr "Para outra moeda, informe o valor efetivamente recebido."
@@ -507,7 +517,8 @@ msgstr "Arquivo CSV"
 
 msgid ""
 "Use a CSV file with the columns name, transaction_type and parent_category."
-msgstr "Use um arquivo CSV com as colunas name, transaction_type e parent_category."
+msgstr ""
+"Use um arquivo CSV com as colunas name, transaction_type e parent_category."
 
 msgid "Select a CSV file."
 msgstr "Selecione um arquivo CSV."
@@ -580,7 +591,9 @@ msgstr "O CSV contém uma hierarquia circular de categorias."
 #, python-format
 msgid ""
 "%(created)s categories imported; %(skipped)s existing categories skipped."
-msgstr "%(created)s categorias importadas; %(skipped)s categorias existentes ignoradas."
+msgstr ""
+"%(created)s categorias importadas; %(skipped)s categorias existentes "
+"ignoradas."
 
 msgid "English"
 msgstr "Inglês"
@@ -676,6 +689,12 @@ msgstr "Classe do ativo"
 msgid "How this asset is valued"
 msgstr "Como este ativo é valorizado"
 
+msgid "Opening quantity"
+msgstr "Quantidade inicial"
+
+msgid "Opening unit price"
+msgstr "Preço unitário inicial"
+
 msgid "Opening balance product"
 msgstr "Produto do saldo inicial"
 
@@ -702,8 +721,17 @@ msgstr ""
 "Saldo existente antes de começar a registrar operações. Somente para ativos "
 "monetários."
 
-msgid "Required only when the opening balance is greater than zero."
-msgstr "Obrigatório somente quando o saldo inicial for maior que zero."
+msgid ""
+"Existing units before you start recording operations. Unit-based assets only."
+msgstr ""
+"Unidades existentes antes de começar a registrar operações. Somente para "
+"ativos baseados em unidades."
+
+msgid "Price per existing unit. Unit-based assets only."
+msgstr "Preço por unidade existente. Somente para ativos baseados em unidades."
+
+msgid "Required when an opening balance or opening position is provided."
+msgstr "Obrigatório quando um saldo ou uma posição inicial for informada."
 
 msgid "You already have an asset with this code."
 msgstr "Você já tem um ativo com este código."
@@ -736,6 +764,14 @@ msgid ""
 "operations."
 msgstr ""
 "O produto do saldo inicial não pode ser alterado depois que este ativo tiver "
+"operações de investimento."
+
+#, fuzzy, python-format
+#| msgid ""
+#| "Asset class cannot be changed after this asset has investment operations."
+msgid "%(label)s cannot be changed after this asset has investment operations."
+msgstr ""
+"A classe do ativo não pode ser alterada depois que este ativo tiver "
 "operações de investimento."
 
 msgid "Manual"
@@ -774,17 +810,39 @@ msgstr "Outro"
 msgid "Existing balance before the first recorded operation."
 msgstr "Saldo existente antes da primeira operação registrada."
 
+msgid "Existing units before the first recorded operation."
+msgstr "Unidades existentes antes da primeira operação registrada."
+
+msgid "Unit price of the existing units."
+msgstr "Preço unitário das unidades existentes."
+
 msgid "Product that holds the opening balance."
 msgstr "Produto que mantém o saldo inicial."
 
 msgid "Only monetary assets can have an opening balance."
 msgstr "Somente ativos monetários podem ter saldo inicial."
 
+msgid "Opening quantity and unit price must be provided together."
+msgstr "A quantidade e o preço unitário iniciais devem ser informados juntos."
+
+msgid "Select the product that holds the opening units."
+msgstr "Selecione o produto que mantém as unidades iniciais."
+
+msgid "Select an opening product only when there is an opening position."
+msgstr ""
+"Selecione um produto inicial somente quando houver uma posição inicial."
+
 msgid "Select the product that holds the opening balance."
 msgstr "Selecione o produto que mantém o saldo inicial."
 
 msgid "Select an opening product only when there is an opening balance."
 msgstr "Selecione um produto inicial somente quando houver saldo inicial."
+
+msgid "Only unit-based assets can have opening units."
+msgstr "Somente ativos baseados em unidades podem ter unidades iniciais."
+
+msgid "Only unit-based assets can have an opening unit price."
+msgstr "Somente ativos baseados em unidades podem ter preço unitário inicial."
 
 msgid "The opening product must belong to the asset owner."
 msgstr "O produto inicial deve pertencer ao titular do ativo."
@@ -1206,7 +1264,9 @@ msgstr "Importar categorias"
 msgid ""
 "Import categories from a CSV exported by Tuxedo Finance. Existing category "
 "names will be skipped."
-msgstr "Importe categorias de um CSV exportado pelo Tuxedo Finance. Nomes de categorias existentes serão ignorados."
+msgstr ""
+"Importe categorias de um CSV exportado pelo Tuxedo Finance. Nomes de "
+"categorias existentes serão ignorados."
 
 msgid "Import"
 msgstr "Importar"
@@ -1759,6 +1819,10 @@ msgstr "Saldo: %(currency)s %(balance)s"
 #, python-format
 msgid "%(quantity)s units"
 msgstr "%(quantity)s unidades"
+
+#, python-format
+msgid "%(currency)s %(value)s"
+msgstr "%(currency)s %(value)s"
 
 #, python-format
 msgid ""
@@ -2337,10 +2401,6 @@ msgstr "Transação \"%(title)s\" excluída."
 #~ msgid "Monetary value: use this field for savings pots."
 #~ msgstr "Valor monetário: use este campo para cofrinhos."
 
-#~ msgid "Units: enter quantity and unit price for traded assets."
-#~ msgstr ""
-#~ "Unidades: informe quantidade e preço unitário para ativos negociados."
-
 #~ msgid ""
 #~ "Deposit: one source. Withdrawal: destination. Yield: leave all empty."
 #~ msgstr ""
@@ -2376,9 +2436,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "Asset units added or removed."
 #~ msgstr "Unidades do ativo adicionadas ou removidas."
-
-#~ msgid "Price per asset unit, denominated in the asset currency."
-#~ msgstr "Preço por unidade do ativo, denominado na moeda do ativo."
 
 #~ msgid "Add asset"
 #~ msgstr "Adicionar ativo"

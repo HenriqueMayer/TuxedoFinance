@@ -205,6 +205,9 @@ Assets are either unit-valued or monetary. Monetary assets, such as savings
 pots, record operations directly as currency amounts and may hold a non-negative
 opening balance for money that existed before tracking started. This opening
 balance contributes to the current position but has no linked bank movement.
+Unit-valued assets may likewise record an opening quantity and unit price,
+linked to the product that already holds the position. This initial position is
+available for later withdrawals and also has no linked bank movement.
 
 | Entity | Required fields |
 |---|---|

@@ -145,7 +145,10 @@ class InvestmentProductForm(forms.ModelForm):
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
-        fields = ('name', 'code', 'asset_class', 'currency', 'valuation_mode', 'opening_balance', 'opening_product')
+        fields = (
+            'name', 'code', 'asset_class', 'currency', 'valuation_mode',
+            'opening_balance', 'opening_quantity', 'opening_unit_price', 'opening_product',
+        )
         labels = {
             'name': _('Name'),
             'code': _('Code'),
@@ -153,6 +156,8 @@ class AssetForm(forms.ModelForm):
             'currency': _('Currency'),
             'valuation_mode': _('How this asset is valued'),
             'opening_balance': _('Opening balance'),
+            'opening_quantity': _('Opening quantity'),
+            'opening_unit_price': _('Opening unit price'),
             'opening_product': _('Opening balance product'),
         }
         help_texts = {
@@ -161,7 +166,9 @@ class AssetForm(forms.ModelForm):
             'currency': _('Currency used to price it: for example PETR4 is priced in BRL.'),
             'valuation_mode': _('Monetary value is for savings pots and cash-like investments; units and price is for traded assets.'),
             'opening_balance': _('Existing balance before you start recording operations. Monetary assets only.'),
-            'opening_product': _('Required only when the opening balance is greater than zero.'),
+            'opening_quantity': _('Existing units before you start recording operations. Unit-based assets only.'),
+            'opening_unit_price': _('Price per existing unit. Unit-based assets only.'),
+            'opening_product': _('Required when an opening balance or opening position is provided.'),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -172,8 +179,19 @@ class AssetForm(forms.ModelForm):
         self.original_asset_class = self.instance.asset_class if self.instance.pk else None
         self.original_valuation_mode = self.instance.valuation_mode if self.instance.pk else None
         self.original_opening_balance = self.instance.opening_balance if self.instance.pk else None
+        self.original_opening_quantity = self.instance.opening_quantity if self.instance.pk else None
+        self.original_opening_unit_price = self.instance.opening_unit_price if self.instance.pk else None
         self.original_opening_product = self.instance.opening_product_id if self.instance.pk else None
         self.fields['opening_product'].queryset = InvestmentProduct.objects.filter(user=user)
+        self.fields['opening_quantity'].widget = forms.NumberInput(
+            attrs={'step': '0.00000001', 'min': '0'}
+        )
+        self.fields['opening_unit_price'].widget = forms.NumberInput(
+            attrs={'step': '0.00000001', 'min': '0'}
+        )
+        self.fields['opening_balance'].widget = forms.NumberInput(
+            attrs={'step': '0.01', 'min': '0'}
+        )
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
 
@@ -227,3 +245,25 @@ class AssetForm(forms.ModelForm):
         if self.instance.pk and (opening_product.pk if opening_product else None) != self.original_opening_product and self.instance.operations.exists():
             raise forms.ValidationError(_('Opening balance product cannot be changed after this asset has investment operations.'))
         return opening_product
+
+    def _clean_opening_units_after_operations(self, value, original, label):
+        if self.instance.pk and value != original and self.instance.operations.exists():
+            raise forms.ValidationError(
+                _('%(label)s cannot be changed after this asset has investment operations.')
+                % {'label': label}
+            )
+        return value
+
+    def clean_opening_quantity(self):
+        return self._clean_opening_units_after_operations(
+            self.cleaned_data['opening_quantity'],
+            self.original_opening_quantity,
+            _('Opening quantity'),
+        )
+
+    def clean_opening_unit_price(self):
+        return self._clean_opening_units_after_operations(
+            self.cleaned_data['opening_unit_price'],
+            self.original_opening_unit_price,
+            _('Opening unit price'),
+        )

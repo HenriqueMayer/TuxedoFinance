@@ -116,11 +116,25 @@ class InvestmentListView(LoginRequiredMixin, ListView):
         flow_rows, flow_missing = get_monthly_flow_in_base(
             user, base, months=TIMESERIES_MONTHS, offset=flow_offset
         )
+        portfolio_groups = get_portfolio_groups(user)
+        portfolio_missing = set()
+        for bank in portfolio_groups:
+            for product in bank['products']:
+                for asset in product['assets']:
+                    try:
+                        asset['base_balance'] = convert(
+                            user, asset['balance'], asset['currency'], base
+                        )
+                    except MissingExchangeRate:
+                        asset['base_balance'] = None
+                        portfolio_missing.add(asset['currency'])
         today = timezone.localdate()
         context.update({
-            'portfolio_groups': get_portfolio_groups(user),
+            'portfolio_groups': portfolio_groups,
             'simulated_total': total.quantize(Decimal('0.01')),
-            'missing_rate_currencies': sorted(missing | set(total_missing) | set(flow_missing)),
+            'missing_rate_currencies': sorted(
+                missing | set(total_missing) | set(flow_missing) | portfolio_missing
+            ),
             'base_currency': base,
             'kind_choices': Investment.Kind.choices,
             'selected_kind': self.request.GET.get('kind', '').upper(),

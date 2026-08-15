@@ -100,6 +100,14 @@ class Asset(models.Model):
         max_digits=16, decimal_places=2, default=ZERO, validators=[NON_NEGATIVE],
         help_text=_('Existing balance before the first recorded operation.'),
     )
+    opening_quantity = models.DecimalField(
+        max_digits=20, decimal_places=8, default=ZERO, validators=[NON_NEGATIVE],
+        help_text=_('Existing units before the first recorded operation.'),
+    )
+    opening_unit_price = models.DecimalField(
+        max_digits=20, decimal_places=8, default=ZERO, validators=[NON_NEGATIVE],
+        help_text=_('Unit price of the existing units.'),
+    )
     opening_product = models.ForeignKey(
         InvestmentProduct, on_delete=models.PROTECT, related_name='opening_balance_assets',
         null=True, blank=True, help_text=_('Product that holds the opening balance.'),
@@ -124,12 +132,24 @@ class Asset(models.Model):
         if self.valuation_mode == self.ValuationMode.UNITS:
             if self.opening_balance != ZERO:
                 errors['opening_balance'] = _('Only monetary assets can have an opening balance.')
-            if self.opening_product_id:
-                errors['opening_product'] = _('Only monetary assets can have an opening balance.')
+            has_quantity = self.opening_quantity > ZERO
+            has_unit_price = self.opening_unit_price > ZERO
+            if has_quantity != has_unit_price:
+                errors['opening_quantity'] = _('Opening quantity and unit price must be provided together.')
+                errors['opening_unit_price'] = _('Opening quantity and unit price must be provided together.')
+            if has_quantity and not self.opening_product_id:
+                errors['opening_product'] = _('Select the product that holds the opening units.')
+            if not has_quantity and self.opening_product_id:
+                errors['opening_product'] = _('Select an opening product only when there is an opening position.')
         elif self.opening_balance > ZERO and not self.opening_product_id:
             errors['opening_product'] = _('Select the product that holds the opening balance.')
         elif self.opening_balance == ZERO and self.opening_product_id:
             errors['opening_product'] = _('Select an opening product only when there is an opening balance.')
+        if self.valuation_mode == self.ValuationMode.MONETARY and (
+            self.opening_quantity != ZERO or self.opening_unit_price != ZERO
+        ):
+            errors['opening_quantity'] = _('Only unit-based assets can have opening units.')
+            errors['opening_unit_price'] = _('Only unit-based assets can have an opening unit price.')
         if self.opening_product_id and self.user_id and self.opening_product.user_id != self.user_id:
             errors['opening_product'] = _('The opening product must belong to the asset owner.')
         if errors:

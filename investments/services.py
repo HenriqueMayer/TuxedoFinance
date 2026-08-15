@@ -3,7 +3,7 @@
 from datetime import date
 from decimal import Decimal
 
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -16,6 +16,10 @@ from investments.models import Asset, Investment
 ZERO = Decimal('0.00')
 CENTS = Decimal('0.01')
 TIMESERIES_MONTHS = 12
+
+
+def opening_unit_value(asset):
+    return asset.opening_quantity * asset.opening_unit_price
 
 
 def refresh_fx_snapshot(operation):
@@ -205,7 +209,11 @@ def available_quantity(operation):
     )
     if operation.pk:
         queryset = queryset.exclude(pk=operation.pk)
-    total = ZERO
+    total = (
+        operation.asset.opening_quantity
+        if operation.asset.opening_product_id == operation.product_id
+        else ZERO
+    )
     for item in queryset.select_for_update():
         total += item.signed_quantity
     return total
@@ -217,22 +225,37 @@ def get_portfolio_groups(user):
         'product__bank', 'asset'
     )
     banks = {}
-    opening_assets = Asset.objects.filter(user=user, valuation_mode=Asset.ValuationMode.MONETARY, opening_balance__gt=ZERO).select_related('opening_product__bank')
+    opening_assets = Asset.objects.filter(user=user).filter(
+        models.Q(
+            valuation_mode=Asset.ValuationMode.MONETARY,
+            opening_balance__gt=ZERO,
+        )
+        | models.Q(
+            valuation_mode=Asset.ValuationMode.UNITS,
+            opening_quantity__gt=ZERO,
+        )
+    ).select_related('opening_product__bank')
 
-    def asset_row(product, asset, opening_balance=ZERO):
+    def asset_row(product, asset, opening_balance=ZERO, opening_quantity=ZERO):
         bank_bucket = banks.setdefault(product.bank_id, {'id': product.bank_id, 'name': product.bank.name, 'products': {}})
         product_bucket = bank_bucket['products'].setdefault(product.pk, {'id': product.pk, 'name': product.name, 'yield_mode': product.yield_mode, 'assets': {}})
         return product_bucket['assets'].setdefault(asset.pk, {
             'id': asset.pk, 'name': asset.name, 'code': asset.code, 'currency': asset.currency,
-            'valuation_mode': asset.valuation_mode, 'quantity': ZERO, 'balance': opening_balance,
+            'valuation_mode': asset.valuation_mode, 'quantity': opening_quantity, 'balance': opening_balance,
             'deposits': ZERO, 'withdrawals': ZERO, 'yields': ZERO,
         })
 
     for asset in opening_assets:
-        asset_row(asset.opening_product, asset, asset.opening_balance)
+        asset_row(
+            asset.opening_product,
+            asset,
+            asset.opening_balance or opening_unit_value(asset),
+            asset.opening_quantity,
+        )
     for operation in operations:
         opening_balance = operation.asset.opening_balance if operation.asset.opening_product_id == operation.product_id else ZERO
-        asset = asset_row(operation.product, operation.asset, opening_balance)
+        opening_quantity = operation.asset.opening_quantity if operation.asset.opening_product_id == operation.product_id else ZERO
+        asset = asset_row(operation.product, operation.asset, opening_balance, opening_quantity)
         asset['quantity'] += operation.signed_quantity
         asset['balance'] += operation.signed_value
         key = {
@@ -252,8 +275,12 @@ def get_portfolio_groups(user):
 
 def get_asset_positions(user):
     positions = {
-        asset.pk: {'asset': asset, 'quantity': ZERO, 'value_flow': asset.opening_balance}
-        for asset in Asset.objects.filter(user=user, valuation_mode=Asset.ValuationMode.MONETARY)
+        asset.pk: {
+            'asset': asset,
+            'quantity': asset.opening_quantity,
+            'value_flow': asset.opening_balance + opening_unit_value(asset),
+        }
+        for asset in Asset.objects.filter(user=user)
     }
     for operation in Investment.objects.filter(user=user).select_related('asset'):
         row = positions.setdefault(
