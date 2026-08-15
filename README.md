@@ -35,6 +35,7 @@ permitted by the project's license; see [License](#license).
 - **Filtered transaction history** — general search, separate billed-month and exact transaction-date filters, type filtering, and date/update/amount ordering
 - **Reports** with server-rendered, zero-JS SVG charts for balance evolution, monthly cash flow, installments, cards and accounts, and expense categories
 - **Categories and subcategories** with a per-user default seed on signup
+- **Category collections** — example CSV files in [English and Brazilian Portuguese](docs/categories-collection/) that can be imported to start or share a category structure
 - **Payment methods** with credit-card billing cycles (statement day and due day) and per-transaction bill overrides
 - **Investments log** — a parallel universe to `Transaction` for tracking manual deposits, withdrawals, and yields, with settings to manage banks, brokers, investment products, free-form assets, and exchange rates. Automatic monthly and annual yield calculations are marked `Coming soon` (see [docs/apps/investments.md](docs/apps/investments.md))
 - **Light/dark theme** toggle with a Darcula-inspired dark palette
@@ -253,8 +254,8 @@ and these safeguards:
 
 - [`docs/ProductRequirementsDocument.md`](docs/ProductRequirementsDocument.md) — full product specification and requirements
 - [`docs/`](docs/README.md) — technical reference for every app, model, view, and template
+- [`docs/categories-collection/`](docs/categories-collection/) — import-ready category collections: [English](docs/categories-collection/en-categories.csv) and [Brazilian Portuguese](docs/categories-collection/ptbr-categories.csv)
 - [`docs/operations.md`](docs/operations.md) — dependency updates and local SQLite backup/restore operations
-- [`ROADMAP.md`](ROADMAP.md) — prioritized implementation and UX improvement plan
 
 ## License
 

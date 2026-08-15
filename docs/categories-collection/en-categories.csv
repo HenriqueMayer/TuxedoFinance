@@ -1,0 +1,52 @@
+name,transaction_type,parent_category
+Gym,,Health
+Food,,
+Birthday,,Gifts
+Food Delivery,,Food
+Ride Apps,,Transportation
+Subscriptions,,
+Audio,,Personal
+Bars,,Going Out
+Drinks,,Food
+Benefits,,Work
+Cafes,,Going Out
+Cards,,Hobby
+Phone & Accessories,,Personal
+Movies,,Entertainment
+Shopping,,
+Computer & Peripherals,,Personal
+Courses,,Education
+Donation,,Personal
+Sweets,,Food
+Education,,
+Entertainment,,Personal
+Office & Stationery,,Personal
+Parking,,Transportation
+Pharmacy,,Health
+In-store,,Shopping
+Hobby,,Personal
+Games,,Entertainment
+LLM,,Subscriptions
+Books,,Entertainment
+Christmas,,Gifts
+Items,,Health
+Online,,Shopping
+Financial Operations,,
+Other Things,,Personal
+Other Items,,Pharmacy
+Personal,,
+Gifts,,
+Medication,,Pharmacy
+Restaurants,,Going Out
+Clothing & Accessories,,Personal
+Snacks,,Food
+Salary,,Work
+Going Out,,Personal
+Health,,
+Services,,Subscriptions
+Streaming,,Subscriptions
+Groceries,,
+Work,,
+Transportation,,
+Footwear,,Clothing & Accessories
+Alcohol,,Food
