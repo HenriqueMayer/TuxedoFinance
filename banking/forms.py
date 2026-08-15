@@ -170,12 +170,32 @@ class LoyaltyProgramForm(OwnedModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.locked_bank = kwargs.pop('locked_bank', None)
         super().__init__(*args, **kwargs)
         if self.user is not None:
             self.fields['bank'].queryset = Bank.objects.filter(user=self.user)
-            self.fields['cards'].queryset = CreditCard.objects.filter(
-                user=self.user
-            ).select_related('account__bank')
+            cards = CreditCard.objects.filter(user=self.user).select_related('account__bank')
+            if self.locked_bank is not None:
+                self.fields['bank'].queryset = self.fields['bank'].queryset.filter(
+                    pk=self.locked_bank.pk
+                )
+                self.fields['bank'].initial = self.locked_bank.pk
+                self.fields['bank'].disabled = True
+                cards = cards.filter(account__bank=self.locked_bank)
+            bank_value = self.data.get('bank') if self.is_bound else None
+            if not bank_value:
+                bank_value = (
+                    self.locked_bank
+                    or self.initial.get('bank')
+                    or self.instance.bank_id
+                )
+            if hasattr(bank_value, 'pk'):
+                bank_value = bank_value.pk
+            if bank_value:
+                bank = Bank.objects.filter(pk=bank_value, user=self.user).first()
+                if bank is not None:
+                    cards = cards.filter(account__bank=bank)
+            self.fields['cards'].queryset = cards
 
     def clean_name(self):
         name = self.cleaned_data['name'].strip()
@@ -189,7 +209,16 @@ class LoyaltyProgramForm(OwnedModelForm):
         cards = self.cleaned_data['cards']
         if self.user is not None and cards.exclude(user=self.user).exists():
             raise forms.ValidationError(_('Every card must belong to you.'))
+        bank = self.cleaned_data.get('bank')
+        if bank and cards.exclude(account__bank=bank).exists():
+            raise forms.ValidationError(_('Every selected card must belong to the selected bank.'))
         return cards
+
+    def clean_bank(self):
+        bank = self.cleaned_data.get('bank')
+        if self.locked_bank is not None and bank != self.locked_bank:
+            raise forms.ValidationError(_('The program must belong to the selected bank.'))
+        return bank
 
 
 class BankTransferForm(OwnedModelForm):

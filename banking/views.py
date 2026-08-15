@@ -257,6 +257,15 @@ class LoyaltyProgramCreateView(RelatedFormMixin, CreateView):
     form_class = LoyaltyProgramForm
     form_title = _('New loyalty program')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        bank_id = self.request.GET.get('bank')
+        if bank_id:
+            bank = Bank.objects.filter(pk=bank_id, user=self.request.user).first()
+            if bank is not None:
+                kwargs['locked_bank'] = bank
+        return kwargs
+
 
 class LoyaltyProgramUpdateView(RelatedFormMixin, UpdateView):
     model = LoyaltyProgram

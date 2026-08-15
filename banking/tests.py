@@ -257,6 +257,7 @@ class LoyaltyTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('loyalty')
         self.other = User.objects.create_user('loyalty-other')
+        self.client.force_login(self.user)
         self.account = make_account(self.user)
         self.card = CreditCard.objects.create(
             user=self.user, account=self.account, name='Gold', closing_day=10, due_day=20
@@ -305,6 +306,66 @@ class LoyaltyTests(TestCase):
         forged = LoyaltyProgram(user=self.user, name='Forged', bank=foreign_account.bank)
         with self.assertRaises(ValidationError):
             forged.full_clean()
+
+    def test_program_form_filters_cards_to_the_selected_bank(self):
+        inter_account = make_account(self.user, bank_name='Banco Inter', name='Inter account')
+        inter_card = CreditCard.objects.create(
+            user=self.user,
+            account=inter_account,
+            name='InterBlack',
+            closing_day=10,
+            due_day=20,
+        )
+        program = LoyaltyProgram.objects.create(
+            user=self.user,
+            name='Pontos Loop',
+            bank=inter_account.bank,
+        )
+        program.cards.add(inter_card)
+
+        form = LoyaltyProgramForm(user=self.user, instance=program)
+
+        self.assertEqual(list(form.fields['cards'].queryset), [inter_card])
+        self.assertNotIn(self.card, form.fields['cards'].queryset)
+
+    def test_program_form_rejects_a_card_from_another_bank(self):
+        inter_account = make_account(self.user, bank_name='Banco Inter', name='Inter account')
+        form = LoyaltyProgramForm(
+            user=self.user,
+            data={
+                'name': 'Pontos Loop',
+                'bank': inter_account.bank_id,
+                'cards': [self.card.pk],
+                'unit_name': 'Points',
+            },
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('cards', form.errors)
+
+    def test_new_program_from_bank_context_locks_bank_and_filters_cards(self):
+        inter_account = make_account(self.user, bank_name='Banco Inter', name='Inter account')
+        inter_card = CreditCard.objects.create(
+            user=self.user,
+            account=inter_account,
+            name='InterBlack',
+            closing_day=10,
+            due_day=20,
+        )
+
+        response = self.client.get(
+            reverse('banking:program_create') + f'?bank={inter_account.bank_id}'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertTrue(form.fields['bank'].disabled)
+        self.assertEqual(list(form.fields['cards'].queryset), [inter_card])
+        self.assertNotIn(self.card, form.fields['cards'].queryset)
+        self.assertContains(response, 'InterBlack')
+        self.assertContains(response, 'id="id_bank"')
+        self.assertContains(response, 'disabled')
+        self.assertNotContains(response, '>Gold<')
 
 
 class ExchangeRateTests(TestCase):
