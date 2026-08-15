@@ -1,3 +1,4 @@
+import csv
 from datetime import date
 
 from django.contrib import messages
@@ -5,15 +6,34 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction as db_transaction
 from django.db.models import Q
+from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from banking.models import BankAccount
 from transactions.forms import TransactionForm
 from transactions.models import Transaction
 from transactions.services import sync_user_ledger
+
+
+def _requested_billed_month(raw_month):
+    """Return a valid ``(year, month)`` pair or ``None`` for no filter."""
+    year_part, _, month_part = raw_month.partition('-')
+    if not (year_part.isdigit() and month_part.isdigit()):
+        return None
+    year, month_number = int(year_part), int(month_part)
+    return (year, month_number) if 1 <= month_number <= 12 else None
+
+
+def _filter_transactions_by_billed_month(queryset, raw_month):
+    requested_month = _requested_billed_month(raw_month)
+    if requested_month is None:
+        return queryset
+    year, month_number = requested_month
+    return [txn for txn in queryset if txn.amount_for_month(year, month_number)]
 
 
 class TransactionListView(LoginRequiredMixin, ListView):
@@ -132,20 +152,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
         if not month:
             return queryset
 
-        year_part, _, month_part = month.partition('-')
-        if not (year_part.isdigit() and month_part.isdigit()):
-            return queryset
-
-        year, month_number = int(year_part), int(month_part)
-        # `amount_for_month` is plain integer arithmetic on (year * 12 + month)
-        # and would take month 13 without complaint, quietly answering for
-        # January of the following year. An out-of-range month is a malformed
-        # filter, not a different month, so it falls back to unfiltered like
-        # every other bad value here.
-        if not 1 <= month_number <= 12:
-            return queryset
-
-        return [txn for txn in queryset if txn.amount_for_month(year, month_number)]
+        return _filter_transactions_by_billed_month(queryset, month)
 
     def _selected_transaction_date(self):
         """Parse an exact ISO `?date=`, ignoring malformed values."""
@@ -168,6 +175,63 @@ class TransactionListView(LoginRequiredMixin, ListView):
         context['selected_type'] = self.request.GET.get('type', '')
         context['selected_sort'] = self._selected_sort()
         return context
+
+
+class TransactionExportView(LoginRequiredMixin, View):
+    """Download the user's transactions, optionally for one billed month."""
+
+    def get(self, request):
+        raw_month = request.GET.get('month', '')
+        selected_month = _requested_billed_month(raw_month)
+        transactions = Transaction.objects.filter(user=request.user).select_related(
+            'category', 'bank_account__bank', 'debit_card__account__bank',
+            'credit_card__account__bank',
+        ).order_by('-date', '-created_at', '-pk')
+        transactions = _filter_transactions_by_billed_month(transactions, raw_month)
+
+        filename = 'transactions.csv'
+        if selected_month:
+            filename = f'transactions-{selected_month[0]}-{selected_month[1]:02d}.csv'
+
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response.write('\ufeff')
+        writer = csv.writer(response)
+        writer.writerow((
+            'transaction_date', 'billed_month', 'title', 'transaction_type',
+            'category', 'payment_channel', 'bank', 'account', 'credit_card',
+            'currency', 'amount', 'total_amount', 'installments', 'is_fixed',
+            'fixed_until', 'notes',
+        ))
+
+        for item in transactions:
+            account = item.payment_account
+            if selected_month:
+                year, month_number = selected_month
+                billed_month = date(year, month_number, 1)
+                amount = item.amount_for_month(year, month_number)
+            else:
+                billed_month = item.billed_month
+                amount = item.amount
+            writer.writerow((
+                item.date.isoformat(),
+                billed_month.isoformat() if billed_month else '',
+                item.title,
+                item.transaction_type,
+                item.category.name,
+                item.payment_channel,
+                account.bank.name if account else '',
+                account.name if account else '',
+                item.credit_card.name if item.credit_card_id else '',
+                item.native_currency,
+                amount,
+                item.amount,
+                item.installments,
+                str(item.is_fixed).lower(),
+                item.fixed_until.isoformat() if item.fixed_until else '',
+                item.notes,
+            ))
+        return response
 
 
 class TransactionFormMixin(LoginRequiredMixin):

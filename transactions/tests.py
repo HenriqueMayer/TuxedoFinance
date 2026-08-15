@@ -1,3 +1,5 @@
+import csv
+import io
 from datetime import date
 from decimal import Decimal
 
@@ -419,6 +421,46 @@ class TransactionFormAndListTests(TransactionFixture):
         self.assertContains(response, 'Page 1 of 2')
         self.assertContains(response, 'page=2')
         self.assertContains(response, 'month=2026-01')
+
+    def test_export_csv_includes_only_user_transactions(self):
+        self.make_transaction(title='Own transaction')
+        Transaction.objects.create(
+            user=self.other, title='Private transaction', amount=Decimal('1.00'),
+            transaction_type=Transaction.TransactionType.EXPENSE,
+            category=self.other_category,
+            payment_channel=Transaction.PaymentChannel.ACCOUNT,
+            bank_account=self.other_account, date=date(2026, 1, 15),
+        )
+
+        response = self.client.get(reverse('transactions:export'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="transactions.csv"')
+        rows = list(csv.DictReader(io.StringIO(response.content.decode('utf-8-sig'))))
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['title'], 'Own transaction')
+        self.assertEqual(rows[0]['amount'], '120.00')
+        self.assertEqual(rows[0]['total_amount'], '120.00')
+
+    def test_export_csv_for_month_uses_the_amount_charged_in_that_month(self):
+        self.make_transaction(
+            title='Installment purchase', amount=Decimal('100.00'),
+            payment_channel=Transaction.PaymentChannel.CREDIT_CARD,
+            bank_account=None, credit_card=self.credit, installments=2,
+            date=date(2026, 1, 24),
+        )
+
+        response = self.client.get(reverse('transactions:export'), {'month': '2026-02'})
+
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="transactions-2026-02.csv"',
+        )
+        rows = list(csv.DictReader(io.StringIO(response.content.decode('utf-8-sig'))))
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['billed_month'], '2026-02-01')
+        self.assertEqual(rows[0]['amount'], '50.00')
+        self.assertEqual(rows[0]['total_amount'], '100.00')
 
     def test_create_update_delete_views_resync(self):
         create = self.client.post(

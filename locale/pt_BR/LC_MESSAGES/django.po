@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-15 16:04+0000\n"
+"POT-Creation-Date: 2026-08-15 17:06+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -2202,11 +2202,17 @@ msgstr ""
 msgid "Every income, expense, and investment you have recorded."
 msgstr "Todas as receitas, despesas e investimentos que você registrou."
 
-msgid "Title, notes, category, bank, account or card"
-msgstr "Título, observações, categoria, banco, conta ou cartão"
+msgid "Export all transactions"
+msgstr "Exportar todas as transações"
 
 msgid "Billed month"
 msgstr "Mês da fatura"
+
+msgid "Export selected month"
+msgstr "Exportar mês selecionado"
+
+msgid "Title, notes, category, bank, account or card"
+msgstr "Título, observações, categoria, banco, conta ou cartão"
 
 msgid "Transaction date"
 msgstr "Data da transação"

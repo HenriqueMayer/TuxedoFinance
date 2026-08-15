@@ -21,16 +21,33 @@ the active filters survive page navigation.
 {% block content %}
 {% url 'transactions:create' as create_url %}
 {% url 'transactions:list' as list_url %}
+{% url 'transactions:export' as export_url %}
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Transactions" %}</h1>
             <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate "Every income, expense, and investment you have recorded." %}</p>
         </div>
-        <a href="{{ create_url }}"
-           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
-            {% translate "New Transaction" %}
-        </a>
+        <div class="flex flex-wrap items-center gap-3">
+            <details class="relative" data-export-menu>
+                <summary class="cursor-pointer list-none rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    {% translate "Export CSV" %}
+                </summary>
+                <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-slate-200 dark:bg-[#313335] dark:ring-[#323232]">
+                    <a href="{{ export_url }}" class="block text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">{% translate "Export all transactions" %}</a>
+                    <form action="{{ export_url }}" method="get" class="space-y-2">
+                        <label for="export-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Billed month" %}</label>
+                        <input id="export-month" type="month" name="month" required
+                               class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3 py-2 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                        <button type="submit" class="w-full rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">{% translate "Export selected month" %}</button>
+                    </form>
+                </div>
+            </details>
+            <a href="{{ create_url }}"
+               class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
+                {% translate "New Transaction" %}
+            </a>
+        </div>
     </div>
 
     <form method="get" class="flex flex-col gap-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 sm:flex-row sm:flex-wrap sm:items-end">
@@ -190,4 +207,17 @@ the active filters survive page navigation.
         {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=create_url cta_label=empty_cta_label %}
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('details[data-export-menu]').forEach(menu => {
+        document.addEventListener('click', event => {
+            if (menu.open && !menu.contains(event.target)) menu.open = false;
+        });
+        menu.addEventListener('keydown', event => {
+            if (event.key === 'Escape') menu.open = false;
+        });
+    });
+</script>
 {% endblock %}
