@@ -11,8 +11,8 @@ Tuxedo Finance replaces generic payment methods with an explicit banking model. 
 release adds banks, currency-specific accounts, an authoritative movement
 ledger, PIX, debit and credit cards, card invoices and loyalty points.
 Per-user multicurrency preferences and retained historical conversion evidence
-are implemented in Phases 3–4. Investments remain separate while sharing banks and
-bank accounts for providers and cash settlement.
+are implemented. Investments remain separate while sharing banks and bank
+accounts for providers and cash settlement.
 
 The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
@@ -25,7 +25,7 @@ HTMX progressive enhancement.
 | G1 | Make account balances auditable | Every balance derives from opening balance plus posted movements. |
 | G2 | Model settlement correctly | PIX/debit settle immediately; credit settles through invoices. |
 | G3 | Eliminate double counting | Credit spending and invoice payment affect different reporting components. |
-| G4 | Multicurrency roadmap | Preserve currency-specific account data; per-user reporting and historical FX evidence are implemented in Phases 3–4. |
+| G4 | Multicurrency reporting | Preserve currency-specific account data with per-user reporting and historical FX evidence. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
 | G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
 
@@ -86,7 +86,7 @@ HTMX progressive enhancement.
 | FR25 | Breaking delivery | Use a clean migration reset with no compatibility or automatic legacy import. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
-| FR28 | Local database ownership | The current tree and future commits do not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. Historical Git objects require separate coordinated cleanup. |
+| FR28 | Local database ownership | The repository does not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. |
 
 ## 5. Domain Rules
 
@@ -142,16 +142,6 @@ reserved for explicitly labeled current-value simulations elsewhere.
   event's amount, currency, or date refreshes its snapshot; descriptive edits do
   not. Other entities remain on live/current conversion for now.
 
-### 5.6 Public registration
-
-- A single `ALLOW_SIGNUPS` environment setting controls whether the public
-  signup route may create new native Django users; it defaults to `True` for an
-  open local/community instance.
-- When disabled, direct requests return a localized explanation and persist no
-  user. Login and all existing accounts remain unchanged.
-- Public navigation reflects the same setting, but authorization is enforced in
-  the server-side signup view rather than by link visibility alone.
-
 ### 5.5 Investments
 
 - The investment position ledger and categorized transaction ledger stay
@@ -161,6 +151,16 @@ reserved for explicitly labeled current-value simulations elsewhere.
 - Deposit/withdrawal cash movements are not income/expense.
 - Deposit source and withdrawal destination are mandatory.
 - Yield is internal and creates no account movement.
+
+### 5.6 Public registration
+
+- A single `ALLOW_SIGNUPS` environment setting controls whether the public
+  signup route may create new native Django users; it defaults to `True` for an
+  open local/community instance.
+- When disabled, direct requests return a localized explanation and persist no
+  user. Login and all existing accounts remain unchanged.
+- Public navigation reflects the same setting, but authorization is enforced in
+  the server-side signup view rather than by link visibility alone.
 
 ## 6. Data Structure
 
@@ -276,23 +276,23 @@ currency/valuation date and whether it is actual or projected.
 
 ## 12. Acceptance Criteria
 
-- [ ] One bank can hold multiple accounts with independent currencies/opening balances.
-- [ ] Account balance exactly reconciles to opening balance plus movements.
-- [ ] PIX capability defaults on; an external PIX posts normal income/expense immediately.
-- [ ] Debit posts immediately; credit purchase enters an invoice without cash debit.
-- [ ] Invoice due-date settlement debits the account once and does not duplicate expense.
-- [ ] Own transfers create paired movements and never affect income/expense.
-- [ ] Historical base totals remain unchanged after a newer FX rate is added.
-- [ ] Loyalty supports all five entry kinds and complete redemption/IOF funding data.
-- [ ] Investments use `Bank`, classified/currency assets and quantity/unit price, with no title.
-- [ ] Investment deposit source and withdrawal destination are required; yield is internal.
-- [ ] Dashboard reconciles cash, card payable, investments and net worth without double count.
-- [ ] Mobile and desktop banking/investment flows preserve no-JS fallbacks.
-- [ ] English and Brazilian Portuguese work on full pages and HTMX fragments,
+- [x] One bank can hold multiple accounts with independent currencies/opening balances.
+- [x] Account balance exactly reconciles to opening balance plus movements.
+- [x] PIX capability defaults on; an external PIX posts normal income/expense immediately.
+- [x] Debit posts immediately; credit purchase enters an invoice without cash debit.
+- [x] Invoice due-date settlement debits the account once and does not duplicate expense.
+- [x] Own transfers create paired movements and never affect income/expense.
+- [x] Historical base totals remain unchanged after a newer FX rate is added.
+- [x] Loyalty supports all five entry kinds and complete redemption/IOF funding data.
+- [x] Investments use `Bank`, classified/currency assets and quantity/unit price, with no title.
+- [x] Investment deposit source and withdrawal destination are required; yield is internal.
+- [x] Dashboard reconciles cash, card payable, investments and net worth without double count.
+- [x] Mobile and desktop banking/investment flows preserve no-JS fallbacks.
+- [x] English and Brazilian Portuguese work on full pages and HTMX fragments,
       retain stable URLs, and do not alter currency separators or user data.
-- [ ] Fresh migrations install successfully on an empty SQLite database.
-- [ ] The root SQLite database is ignored by Git and a clean clone becomes usable after migrations.
-- [ ] Legacy database use is blocked/documented; no partial in-place migration is implied.
+- [x] Fresh migrations install successfully on an empty SQLite database.
+- [x] The root SQLite database is ignored by Git and a clean clone becomes usable after migrations.
+- [x] Legacy database use is blocked/documented; no partial in-place migration is implied.
 
 ## 13. Delivery Plan
 

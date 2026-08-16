@@ -15,11 +15,18 @@ from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
+from dotenv import load_dotenv
 
-from core.currencies import DEFAULT_CURRENCY as CODE_DEFAULT_CURRENCY, get_currency
+from core.currencies import DEFAULT_CURRENCY as CODE_DEFAULT_CURRENCY
+from core.currencies import get_currency
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Local installs keep their private settings in the ignored root `.env` file.
+# Real process variables (including CI and Docker values) always take priority.
+ENV_FILE = Path(os.environ.get('TUXEDO_ENV_FILE', BASE_DIR / '.env'))
+load_dotenv(dotenv_path=ENV_FILE, override=False)
 
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'

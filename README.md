@@ -5,12 +5,13 @@
 A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered.
 
 ![TuxedoFinance brand image](assets/icon/tuxedo_finance.jpeg)
-
-## Homepage preview
-
+---
 ![TuxedoFinance homepage preview 1](assets/app/Homepage1.png)
 
-![TuxedoFinance homepage preview 2](assets/app/Homepage2.png)
+## Video tutorials
+
+- **English tutorial:** YouTube link coming soon.
+- **Tutorial em português:** link do YouTube em breve.
 
 ## Why Tuxedo Finance exists
 
@@ -32,12 +33,12 @@ permitted by the project's license; see [License](#license).
 
 - **Dashboard** with current balance, monthly income/expenses/investments, and a projected end-of-month balance
 - **Forward projection** — fixed transactions recur and installment plans spread one payment per month, so future months preview without recording anything in advance
-- **Filtered transaction history** — general search, separate billed-month and exact transaction-date filters, type filtering, and date/update/amount ordering
+- **Filtered transaction history and CSV export** — general search, separate billed-month and exact transaction-date filters, type filtering, date/update/amount ordering, and full or billed-month CSV downloads
 - **Reports** with server-rendered, zero-JS SVG charts for balance evolution, monthly cash flow, installments, cards and accounts, and expense categories
-- **Categories and subcategories** with a per-user default seed on signup
+- **Categories and subcategories** with a per-user default seed on signup and CSV import/export
 - **Category collections** — example CSV files in [English and Brazilian Portuguese](docs/categories-collection/) that can be imported to start or share a category structure
 - **Payment methods** with credit-card billing cycles (statement day and due day) and per-transaction bill overrides
-- **Investments log** — a parallel universe to `Transaction` for tracking manual deposits, withdrawals, and yields, with settings to manage banks, brokers, investment products, free-form assets, and exchange rates. Automatic monthly and annual yield calculations are marked `Coming soon` (see [docs/apps/investments.md](docs/apps/investments.md))
+- **Investments log** — a parallel universe to `Transaction` for tracking manual deposits, withdrawals, and yields, with settings to manage banks, brokers, investment products, free-form assets, and exchange rates. Automatic monthly and annual yield calculations are `Coming soon`
 - **Light/dark theme** toggle with a Darcula-inspired dark palette
 - **Configurable currency** — pick BRL, USD, EUR, GBP, JPY, or CHF; the symbol and number format always match
 - **English and Brazilian Portuguese UI** — selected from the public or authenticated navbar without changing URLs
@@ -58,18 +59,23 @@ permitted by the project's license; see [License](#license).
 Requires Python 3.12 and [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```bash
-export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
+git clone https://github.com/HenriqueMayer/TuxedoFinance.git
+cd TuxedoFinance
 uv sync
+printf 'SECRET_KEY=%s\n' "$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" > .env
 uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-The migration command creates a new local `db.sqlite3` and applies the complete
-schema on a clean clone. Keep `SECRET_KEY` private and stable for the lifetime
-of an installation; replacing it invalidates sessions. Open
-<http://127.0.0.1:8000/> and, when public signup is enabled, sign up from the landing page; your account
-arrives with the default categories seeded. Add a bank and a currency-specific
-account before recording your first transaction.
+Run the `printf` command only once. It saves a private, stable key in the local
+`.env` file, so restarting the computer does not require exporting it again.
+Both `.env` and the database created by `migrate` (`db.sqlite3`) are ignored by
+Git. Keep both files private and include them in your local backup routine.
+
+Open <http://127.0.0.1:8000/>, create your account from the landing page, then
+add a bank and a currency-specific account before recording your first
+transaction. To start the app again later, enter the project directory and run
+only `uv run python manage.py runserver`.
 
 ### Optional Docker packaging
 
@@ -80,9 +86,12 @@ SQLite runtime data in the named `cashflow_data` volume. It does not contain a
 database, account, or personal data.
 
 ```bash
-export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
 docker compose up --build
 ```
+
+Docker Compose reads the same local `.env` file created in Quick start. If you
+choose Docker first, run the `uv sync` and one-time `printf` commands above,
+then start the container.
 
 Open <http://127.0.0.1:8000/> after the container reports healthy. The compose
 healthcheck is only a local operational signal; it is not production
@@ -131,13 +140,12 @@ same middleware. It translates interface copy, validation and system messages,
 not user-entered names or financial data: category names and other user data
 remain exactly as entered.
 
-## Local database ownership
+## Local files and database ownership
 
-This is a **GitHub template repository**. Click **Use this template** to start
-your own independent instance. The current tree and future commits do not
-include a database: `db.sqlite3` is created by `manage.py migrate` and ignored
-by Git. Older Git objects still contain database versions until the coordinated
-history cleanup described below is completed.
+Each clone is an independent local installation. The repository does not
+include a database or a secret key: the Quick start creates `db.sqlite3` with
+`manage.py migrate` and stores the installation key in `.env`. Both files are
+ignored by Git.
 
 Each installation owner controls the contents of that local database and is
 responsible for its access permissions, protection and backups. Never add the
@@ -145,24 +153,6 @@ database to version control or publish it with application source. Before an
 upgrade or other risky operation, stop application writes and make a protected
 copy of the database. See the complete backup, restore, retention and rehearsal
 procedure in [`docs/operations.md`](docs/operations.md).
-
-The repository-owner operation `git rm --cached db.sqlite3` changes only the
-index and preserves that working-tree file; it does not alter its schema or
-financial records. The resulting commit is different for existing clones: Git
-may remove their formerly tracked working-tree copy when they pull it. Rollback
-may restore the previous Git entry, but publishing database contents in source
-history is not recommended.
-
-If you cloned the repository before this change, back up your local database
-outside the checkout before pulling the commit that removes the tracked file.
-Git may remove a previously tracked working-tree copy while applying that
-change. After updating, restore the protected copy to the project root if
-needed; it will remain ignored.
-
-An audit found personal data and authentication material in older Git versions
-of `db.sqlite3`. Removing the current index entry does not erase those blobs.
-History cleanup and credential containment are tracked in
-[`docs/sqlite-history-response.md`](docs/sqlite-history-response.md).
 
 ## Choosing your currency
 
@@ -216,7 +206,8 @@ policy and affected-tests guidance live in
 
 ## Configuration reference
 
-Set configuration through the environment of the process that runs Django:
+Set configuration in the local `.env` file or through the environment of the
+process that runs Django. Process variables take priority:
 
 | Variable | Purpose | Default if unset |
 |---|---|---|
@@ -226,10 +217,13 @@ Set configuration through the environment of the process that runs Django:
 | `HTTPS` | Secure cookies, HTTPS redirect, HSTS | `False` |
 | `LOG_LEVEL` | Log verbosity on stdout | `INFO` |
 | `ALLOW_SIGNUPS` | Allow creation of new accounts from the public signup route | `True` |
+| `TUXEDO_ENV_FILE` | Optional alternate `.env` path for automation/testing | project-root `.env` |
 
 The app refuses to start without `SECRET_KEY`. Generate one with Django's
-`get_random_secret_key()` command shown in Quick start; never commit or share
-it. Replacing the key invalidates existing sessions and password-reset tokens.
+`get_random_secret_key()` command shown in Quick start; it is loaded
+automatically from the ignored `.env` file. Never commit or share it. An
+explicit process variable takes priority over `.env`. Replacing the key
+invalidates existing sessions and password-reset tokens.
 
 Set `ALLOW_SIGNUPS=False` to close public registration after creating an account
 or when running a private instance. The signup route returns a localized
@@ -256,12 +250,13 @@ and these safeguards:
 - [`docs/`](docs/README.md) — technical reference for every app, model, view, and template
 - [`docs/categories-collection/`](docs/categories-collection/) — import-ready category collections: [English](docs/categories-collection/en-categories.csv) and [Brazilian Portuguese](docs/categories-collection/ptbr-categories.csv)
 - [`docs/operations.md`](docs/operations.md) — dependency updates and local SQLite backup/restore operations
+- [`docs/svg/`](docs/svg/) — initial project sketches that guided the application structure
 
 ## License
 
 Copyright (c) 2026 Henrique Mayer
 
-Licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). Personal, noncommercial use is permitted — including using this repository as a template for your own personal, local instance; selling this software, or using it for any commercial purpose, is not. See [LICENSE](LICENSE) for the full terms.
+Licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). Personal, noncommercial use is permitted — including cloning, adapting, and running your own local instance; selling this software, or using it for any commercial purpose, is not. See [LICENSE](LICENSE) for the full terms.
 
 Copies and modified distributions must preserve the license terms and the
 required copyright notice. Public source code cannot be made technically

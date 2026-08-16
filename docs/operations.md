@@ -37,10 +37,16 @@ path. Docker is a convenience for a local single-instance installation and
 uses the same SQLite schema and automatic startup migrations:
 
 ```bash
-export SECRET_KEY="$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')"
+uv sync
+printf 'SECRET_KEY=%s\n' "$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" > .env
 docker compose up --build
 docker compose ps
 ```
+
+Create `.env` only once. Django loads it automatically for native commands and
+Docker Compose reads the same ignored file. Process-level variables take
+priority when an operator or CI needs an explicit override. Protect and back up
+`.env`; changing its key invalidates existing sessions and reset tokens.
 
 The image runs as the unprivileged `cashflow` user. Its `/data` directory is
 mounted to the named `cashflow_data` volume, and `CASHFLOW_DATA_DIR` points
@@ -149,8 +155,7 @@ needed.
 
 ## Restore rehearsal record
 
-The following isolated rehearsal was completed before declaring Phase 6.2
-complete:
+The following isolated restore rehearsal was completed before release:
 
 - Date: 2026-08-13
 - Source: a clean temporary SQLite database migrated through all 29 migration

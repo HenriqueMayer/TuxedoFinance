@@ -40,7 +40,7 @@ categories/    # income and expense classification
 banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
 transactions/  # categorized economic events and recurrence schedules
 dashboard/     # ledger, cash-flow, invoice and net-worth read models
-    investments/   # products, assets, position operations and valuation
+investments/   # products, assets, position operations and valuation
 ```
 
 `banking/` owns every settlement instrument and the account ledger. `Bank` is

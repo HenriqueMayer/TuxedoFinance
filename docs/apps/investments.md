@@ -59,6 +59,9 @@ Yield is internal: it changes the portfolio position/value and appears in
 investment performance, but does not create bank income or available cash. Cash
 exists only after an explicit withdrawal to a destination account.
 
+> **Coming soon:** automatic monthly and annual yield calculations. Current
+> yield operations are entered manually.
+
 ## Valuation
 
 Portfolio totals are grouped by bank, product, asset class, asset and currency.

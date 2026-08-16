@@ -68,8 +68,20 @@ ledger by themselves.
 ## Listing and reporting semantics
 
 Search covers title, notes, category, bank, account and card labels. Filters
-distinguish event date, transaction type and banking instrument. Own transfers
-are visibly neutral and never receive income/expense colors or category totals.
+distinguish exact event date, billed month, transaction type and banking
+instrument. The billed-month filter follows the month in which money is charged:
+it shifts credit-card purchases according to the card cycle and includes each
+applicable occurrence of fixed and installment transactions.
+
+Authenticated users may export all their transactions or the active billed
+month as UTF-8 CSV. Full exports download as `transactions.csv`; a monthly
+export uses `transactions-YYYY-MM.csv`. The header is
+`transaction_date,billed_month,title,transaction_type,category,payment_channel,bank,account,credit_card,currency,amount,total_amount,installments,is_fixed,fixed_until,notes`.
+For monthly exports, `amount` is the amount charged in that month while
+`total_amount` retains the original transaction amount.
+
+Own transfers are visibly neutral and never receive income/expense colors or
+category totals.
 
 Transactions are editable and deletable by their owner. The related banking
 service keeps ledger and invoice data coherent; audit-grade reversals are out

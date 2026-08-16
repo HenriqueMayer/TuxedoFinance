@@ -2,9 +2,10 @@
 
 The project package: cross-cutting configuration, localization, currency metadata and root routing. It owns no financial domain model.
 
-`SECRET_KEY` is required from the process environment. Settings contains no
-committed secret, placeholder or automatic fallback; generate and keep a
-private key for each installation.
+`SECRET_KEY` is required from the process environment or the ignored root
+`.env` file. Settings contains no committed secret or automatic fallback;
+generate and keep a private key for each installation. Process variables take
+priority over `.env`, including in CI and Docker.
 
 When the optional Docker image is used, `CASHFLOW_DATA_DIR=/data` moves the
 SQLite file into the persistent container volume. The same settings and
@@ -18,8 +19,8 @@ ships runtime data or credentials.
 | `core/settings.py` | Django settings and supported UI languages; no user-facing currency setting. |
 | `core/urls.py` | Root URLconf, including Django's `i18n/` routes and the domain apps. |
 | `core/context_processors.py` | The authenticated user's currency context, registered in `TEMPLATES[0]['OPTIONS']['context_processors']`. |
-| `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR20). |
-| `core/formats/en/formats.py` | Locale number-format override driven by the code-level default (FR19). |
+| `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR02A/FR16). |
+| `core/formats/en/formats.py` | Locale number-format override driven by the selected reporting currency (FR16). |
 | `core/formats/pt_BR/formats.py` | Portuguese locale counterpart that preserves the same currency-driven number format. |
 | `core/tests.py` | Language cookie, navbar, HTMX and language/currency-independence tests. |
 | `core/wsgi.py` | Standard Django WSGI entrypoint, retained for future deployment packaging. |
@@ -31,8 +32,8 @@ ships runtime data or credentials.
 `CASHFLOW_DATA_DIR` is set, Django stores `db.sqlite3` there; the optional
 Docker package sets it to `/data`. The database file is
 installation-owned runtime data and is ignored by Git. A clean clone creates it by running
-`manage.py migrate`; the current source tree and future commits distribute
-migrations rather than financial records. Older Git objects still contain
+`manage.py migrate`; the source tree distributes migrations rather than
+financial records.
 database versions pending the coordinated history cleanup. The installation
 owner is responsible for file access, protection and backup; see
 [`../operations.md`](../operations.md) for the supported procedure.

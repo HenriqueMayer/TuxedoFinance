@@ -162,7 +162,7 @@ A redemption additionally requires `target_amount`, `target_currency`, and
 required: bank account, debit card, or credit card. Its settlement follows the
 same immediate/deferred card rules as any other payment.
 
-## Currency and historical conversion (Phases 3–4)
+## Currency and historical conversion
 
 Each user's `UserPreference.base_currency` controls reporting. Every monetary
 event retains its native amount and currency. Cross-currency `BankTransfer` and
@@ -185,7 +185,7 @@ descriptive edits leave it unchanged. If the reporting currency later differs
 from the stored snapshot target, historical consolidation is marked incomplete;
 the application does not chain a mutable second rate or replace the evidence.
 
-### Phase 3 migration and rollback
+### User preference migration and rollback
 
 The `accounts.0001_userpreference` migration creates the one-to-one preference
 table and bootstraps BRL for users already in the database. It does not touch
@@ -229,16 +229,16 @@ Operation kinds are `DEPOSIT`, `WITHDRAWAL`, and `YIELD`:
   does not create bank income or an account movement.
 
 The source/destination account currency may differ from the asset currency; the
-operation retains native values. Retained historical conversion evidence is
-planned for ROADMAP Phase 4. Deposit and withdrawal cash legs are never manually
-duplicated as income/expense.
+operation retains native values and a historical FX snapshot when conversion is
+required. Deposit and withdrawal cash legs are never manually duplicated as
+income/expense.
 
 ## Dashboard formulas
 
 - **Available balance per account:** opening balance plus its posted movements.
-- **Consolidated available balance:** current reporting uses the project
-  the user's `UserPreference.base_currency`; retained FX evidence is planned
-  for ROADMAP Phase 4.
+- **Consolidated available balance:** current reporting uses the user's
+  `UserPreference.base_currency`; persisted FX evidence protects supported
+  historical conversions from later rate changes.
 - **Income/Expenses:** categorized `Transaction` economic events, excluding own
   transfers and investment cash legs.
 - **Credit-card payable:** open invoice totals, shown separately from available
@@ -264,17 +264,12 @@ local `db.sqlite3`. Git ignores that root file and its journal/WAL companions.
 The installation owner controls the resulting financial data and is responsible
 for access protection and backups.
 
-The repository-owner `git rm --cached` operation has no schema or persisted-data
-migration: that working-tree file remains in place and unchanged. Existing
-clones must back up before pulling the deletion because Git may remove their
-formerly tracked copy. Rolling back the source change can restore the old Git
-entry, but should not be used to publish local financial records. Detailed
-SQLite backup/restore, retention and rehearsal guidance is maintained in
-[`operations.md`](operations.md).
+Detailed SQLite backup/restore, retention and rehearsal guidance is maintained
+in [`operations.md`](operations.md).
 
-### Phase 4 FX snapshot migration and rollback
+### FX snapshot migration and rollback
 
-The Phase 4 migrations add persisted FX evidence to cross-currency
+The FX snapshot migrations add persisted evidence to cross-currency
 `BankTransfer` and `Investment` rows. Existing rows are backfilled only when a
 matching authoritative `ExchangeRate` provides evidence; those rows are marked
 reconstructed. Rows without evidence keep their native amounts and receive an

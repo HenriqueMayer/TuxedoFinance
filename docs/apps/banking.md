@@ -2,8 +2,7 @@
 
 This app owns banks, currency-specific accounts, the account ledger, PIX, debit
 and credit cards, card invoices, and loyalty programs. Per-user base reporting
-currency preferences are configured per user in Settings (ROADMAP Phase 3,
-completed).
+currency preferences are configured per user in Settings.
 
 ## Domain
 
@@ -41,10 +40,12 @@ are never added to that formula independently.
 
 A transfer between the user's own accounts produces two linked movements: an
 outflow in the source account and an inflow in the destination account. The pair
-may carry different native amounts for a cross-currency transfer. Those amounts
-preserve the effective conversion; no separate quoted-rate field is stored. It
-is classified as `TRANSFER`, never as income or
-expense, and is excluded from cash-flow KPIs.
+may carry different native amounts for a cross-currency transfer. The transfer
+persists its source and target currencies, applied rate, effective date,
+optional source-rate reference, and conversion status. That snapshot preserves
+the historical conversion even if the current rate later changes. The transfer
+is classified as `TRANSFER`, never as income or expense, and is excluded from
+cash-flow KPIs.
 
 ## Cards and invoices
 
