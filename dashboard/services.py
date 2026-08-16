@@ -325,6 +325,19 @@ def _instrument(item, income=False):
     )
 
 
+def _instrument_display(item, income=False):
+    """Return compact labels for chart axes while keeping the stable full label."""
+    if income:
+        account = item.bank_account
+        return account.name, account.bank.name
+    if item.credit_card_id:
+        return item.credit_card.name, item.credit_card.account.bank.name
+    if item.debit_card_id:
+        return item.debit_card.name, item.debit_card.account.bank.name
+    account = item.bank_account
+    return account.name, account.bank.name
+
+
 def _instrument_breakdown(user, transaction_type, year=None, month=None, months=1):
     transactions = _transactions(user)
     if year is None or month is None:
@@ -372,6 +385,83 @@ def get_income_by_account(user, year=None, month=None, months=1):
     return _instrument_breakdown(
         user, Transaction.TransactionType.INCOME, year, month, months
     )
+
+
+def get_instrument_activity(user, year=None, month=None, months=1):
+    """Return the largest accounts/cards ranked by all money moved."""
+    transactions = _transactions(user)
+    if year is None or month is None:
+        today = timezone.localdate()
+        targets = [add_months(today.year, today.month, -step) for step in range(months)]
+    else:
+        targets = [(year, month)]
+
+    rows = {}
+    missing = set()
+    expense_total = ZERO
+    income_total = ZERO
+    for item in transactions:
+        if item.transaction_type not in (
+            Transaction.TransactionType.EXPENSE,
+            Transaction.TransactionType.INCOME,
+        ):
+            continue
+        value = sum(
+            (_transaction_value(user, item, y, m, missing) or ZERO for y, m in targets),
+            ZERO,
+        )
+        if not value:
+            continue
+        is_income = item.transaction_type == Transaction.TransactionType.INCOME
+        key, label = _instrument(item, income=is_income)
+        short_label, bank_label = _instrument_display(item, income=is_income)
+        row = rows.setdefault(
+            key,
+            {
+                'key': key,
+                'label': label,
+                'short_label': short_label,
+                'bank_label': bank_label,
+                'expense_total': ZERO,
+                'income_total': ZERO,
+            },
+        )
+        if is_income:
+            row['income_total'] += value
+            income_total += value
+        else:
+            row['expense_total'] += value
+            expense_total += value
+
+    ranked = sorted(
+        rows.values(),
+        key=lambda row: row['expense_total'] + row['income_total'],
+        reverse=True,
+    )
+    shown = ranked[:TOP_INSTRUMENTS]
+    for row in shown:
+        row['total_moved'] = row['expense_total'] + row['income_total']
+    bank_totals = {}
+    for row in shown:
+        bank_totals[row['bank_label']] = (
+            bank_totals.get(row['bank_label'], ZERO) + row['total_moved']
+        )
+    shown.sort(
+        key=lambda row: (
+            -bank_totals[row['bank_label']],
+            row['bank_label'].casefold(),
+            -row['total_moved'],
+            row['short_label'].casefold(),
+        )
+    )
+    return {
+        'instruments': shown,
+        'expense_total': expense_total,
+        'income_total': income_total,
+        'shown': len(shown),
+        'used': len(ranked),
+        'missing_currencies': sorted(missing),
+    }
 
 
 def _categories_for_instrument(
@@ -464,34 +554,6 @@ def get_account_evolution(user, offset=0):
     }
 
 
-def get_card_comparison(user, months):
-    transactions = _transactions(user)
-    missing = set()
-    totals = {}
-    values = {}
-    for item in transactions:
-        if (
-            item.transaction_type != Transaction.TransactionType.EXPENSE
-            or not item.credit_card_id
-        ):
-            continue
-        label = (
-            f'{item.credit_card.account.bank.name} > '
-            f'{item.credit_card.account.name} / {item.credit_card.name}'
-        )
-        key = item.credit_card_id
-        row = values.setdefault(key, {'name': label, 'values': [ZERO] * len(months)})
-        for index, target in enumerate(months):
-            value = _transaction_value(
-                user, item, target['year'], target['month'], missing
-            )
-            if value:
-                row['values'][index] += value
-                totals[key] = totals.get(key, ZERO) + value
-    selected = sorted(totals, key=totals.get, reverse=True)[:TOP_INSTRUMENTS]
-    return [values[key] for key in selected], sorted(missing)
-
-
 def get_expenses_by_recurrence(user, year=None, month=None, months=1):
     transactions = _transactions(user)
     if year is None or month is None:
@@ -534,7 +596,8 @@ def get_expenses_by_recurrence(user, year=None, month=None, months=1):
         )
     drawn = [row for row in slices if row['draw']]
     if drawn:
-        drawn[-1]['share'] += round(100 - sum(row['share'] for row in drawn), 1)
+        correction = round(100 - sum(row['share'] for row in drawn), 1)
+        drawn[-1]['share'] = round(drawn[-1]['share'] + correction, 1)
     return {
         'total': overall,
         'slices': slices,

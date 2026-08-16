@@ -40,11 +40,12 @@ docs/media/*.mp4
 # Environment variables
 .env
 
-# Other
+# Other (development-only documents, intentionally kept out of the public repo)
 .codex
 .opencode
 AGENTS.md
 project_review.md
+RELEASE_PLAN.md
 roadmap_brand.md
 ROADMAP.md
 SPRINT_BRAND.md

@@ -40,6 +40,9 @@ GROUP_WIDTH_RATIO = 0.68
 # `PADDING_RATIO` of headroom over the tallest bar, so the caption always has
 # room inside the canvas even when a bar nearly fills the plot.
 VALUE_LABEL_OFFSET = 6
+TOOLTIP_WIDTH = 176
+TOOLTIP_HEIGHT = 38
+TOOLTIP_GAP = 8
 
 # Rough width of one character at the 11px axis font, used to say how many
 # fit under a slot. Approximate on purpose — an exact answer needs font
@@ -57,6 +60,9 @@ import math
 DONUT_SIZE = 320
 DONUT_PADDING = 28
 DONUT_STROKE = 38
+DONUT_TOOLTIP_WIDTH = 216
+DONUT_TOOLTIP_HEIGHT = 48
+DONUT_TOOLTIP_GAP = 10
 
 
 def _bounds(values):
@@ -135,6 +141,20 @@ def build_line_chart(labels, values):
             'value': value,
             'x': _slot_center(index, count),
             'y': _y(value, bounds),
+            'tooltip_x': round(
+                max(
+                    4,
+                    min(
+                        _slot_center(index, count) - TOOLTIP_WIDTH / 2,
+                        WIDTH - TOOLTIP_WIDTH - 4,
+                    ),
+                ),
+                2,
+            ),
+            'tooltip_y': round(
+                max(4, _y(value, bounds) - TOOLTIP_HEIGHT - TOOLTIP_GAP),
+                2,
+            ),
         }
         for index, (label, value) in enumerate(zip(labels, values))
     ]
@@ -175,19 +195,27 @@ def build_bar_chart(labels, series):
         for position, entry in enumerate(series):
             value = entry['values'][index]
             y = _y(value, bounds)
+            rendered_width = bar_width * 0.86
+            rendered_x = center - group_width / 2 + bar_width * position
+            tooltip_x = rendered_x + rendered_width / 2 - TOOLTIP_WIDTH / 2
+            tooltip_x = max(4, min(tooltip_x, WIDTH - TOOLTIP_WIDTH - 4))
             bars.append(
                 {
                     'name': entry['name'],
                     'tone': entry['tone'],
                     'value': value,
-                    'x': round(center - group_width / 2 + bar_width * position, 2),
+                    'x': round(rendered_x, 2),
                     'y': y,
                     # Baseline for a caption sitting just above the bar; only
                     # single-series charts have the room to use it.
                     'value_y': round(y - VALUE_LABEL_OFFSET, 2),
                     # Leave a hairline gutter between bars in a group.
-                    'width': round(bar_width * 0.86, 2),
+                    'width': round(rendered_width, 2),
                     'height': round(PLOT_BOTTOM - y, 2),
+                    'tooltip_x': round(tooltip_x, 2),
+                    'tooltip_y': round(
+                        max(4, y - TOOLTIP_HEIGHT - TOOLTIP_GAP), 2
+                    ),
                 }
             )
         groups.append({'label': label, 'center': center, 'bars': bars})
@@ -204,6 +232,62 @@ def build_bar_chart(labels, series):
     }
 
 
+def build_instrument_chart(labels, series):
+    """Build bars clustered by bank, with extra space between bank groups."""
+    chart = build_bar_chart(labels, series)
+    bank_gap_units = 0.8
+    bank_breaks = sum(
+        labels[index - 1]['bank_label'] != label['bank_label']
+        for index, label in enumerate(labels)
+        if index
+    )
+    unit_width = (PLOT_RIGHT - PLOT_LEFT) / (
+        len(labels) + bank_breaks * bank_gap_units
+    )
+    group_width = unit_width * GROUP_WIDTH_RATIO
+    bar_width = group_width / len(series)
+    cursor = PLOT_LEFT
+    previous_bank = None
+    bank_groups = []
+
+    for group in chart['groups']:
+        bank = group['label']['bank_label']
+        if previous_bank is not None and bank != previous_bank:
+            cursor += unit_width * bank_gap_units
+        center = cursor + unit_width / 2
+        group['center'] = round(center, 2)
+        for position, bar in enumerate(group['bars']):
+            bar['x'] = round(
+                center - group_width / 2 + bar_width * position,
+                2,
+            )
+            bar['width'] = round(bar_width * 0.86, 2)
+            tooltip_x = bar['x'] + bar['width'] / 2 - TOOLTIP_WIDTH / 2
+            bar['tooltip_x'] = round(
+                max(4, min(tooltip_x, WIDTH - TOOLTIP_WIDTH - 4)),
+                2,
+            )
+        if bank != previous_bank:
+            bank_groups.append(
+                {'label': bank, 'first_center': center, 'last_center': center}
+            )
+        else:
+            bank_groups[-1]['last_center'] = center
+        cursor += unit_width
+        previous_bank = bank
+
+    for bank_group in bank_groups:
+        bank_group['center'] = round(
+            (bank_group.pop('first_center') + bank_group.pop('last_center')) / 2,
+            2,
+        )
+    chart['bank_groups'] = bank_groups
+    chart['label_chars'] = min(
+        LABEL_MAX_CHARS, int(unit_width / LABEL_CHAR_WIDTH)
+    )
+    return chart
+
+
 def build_donut_chart(slices):
     """Donut (ring) geometry for a proportion chart (FR16).
 
@@ -218,6 +302,7 @@ def build_donut_chart(slices):
     the ring closes exactly at 360° rather than leaving a hairline gap.
     """
     size = DONUT_SIZE
+    canvas_height = size + DONUT_TOOLTIP_GAP + DONUT_TOOLTIP_HEIGHT
     padding = DONUT_PADDING
     stroke = DONUT_STROKE
     cx = size / 2
@@ -228,7 +313,7 @@ def build_donut_chart(slices):
     if not total:
         return {
             'width': size,
-            'height': size,
+            'height': canvas_height,
             'cx': cx,
             'cy': cy,
             'radius': radius,
@@ -314,11 +399,15 @@ def build_donut_chart(slices):
 
     return {
         'width': size,
-        'height': size,
+        'height': canvas_height,
         'cx': cx,
         'cy': cy,
         'radius': radius,
         'stroke': stroke,
         'total': total,
         'segments': segments,
+        'tooltip_x': (size - DONUT_TOOLTIP_WIDTH) / 2,
+        'tooltip_y': size + DONUT_TOOLTIP_GAP,
+        'tooltip_width': DONUT_TOOLTIP_WIDTH,
+        'tooltip_height': DONUT_TOOLTIP_HEIGHT,
     }

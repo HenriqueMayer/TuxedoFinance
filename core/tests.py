@@ -88,7 +88,7 @@ class LanguageSelectionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Gastos por cartão ou conta')
+        self.assertContains(response, 'Receitas e despesas por conta ou cartão')
         self.assertNotContains(response, '<html')
 
     def test_currency_separators_do_not_change_with_ui_language(self):

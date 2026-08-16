@@ -7,6 +7,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from dashboard.charts import build_donut_chart, build_instrument_chart
 from banking.models import (
     Bank,
     BankAccount,
@@ -24,6 +25,8 @@ from dashboard.services import (
     get_account_evolution,
     get_dashboard_summary,
     get_expenses_by_instrument,
+    get_expenses_by_recurrence,
+    get_instrument_activity,
 )
 from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import sync_investment_ledger
@@ -250,6 +253,118 @@ class InvestmentAggregationTests(DashboardFixture):
 
 
 class InstrumentReportTests(DashboardFixture):
+    def test_donut_tooltip_has_reserved_space_below_the_ring(self):
+        chart = build_donut_chart(
+            [
+                {
+                    'name': 'Installments',
+                    'tone': 'installment',
+                    'value': 100,
+                    'share': 100,
+                }
+            ]
+        )
+
+        self.assertGreaterEqual(chart['tooltip_y'], chart['width'])
+        self.assertGreaterEqual(
+            chart['height'], chart['tooltip_y'] + chart['tooltip_height']
+        )
+
+    def test_instrument_chart_adds_visual_gaps_between_banks(self):
+        labels = [
+            {'short_label': 'One', 'bank_label': 'Bank A'},
+            {'short_label': 'Two', 'bank_label': 'Bank A'},
+            {'short_label': 'Three', 'bank_label': 'Bank B'},
+        ]
+        chart = build_instrument_chart(
+            labels,
+            [
+                {'name': 'Expenses', 'tone': 'expense', 'values': [3, 2, 1]},
+                {'name': 'Income', 'tone': 'income', 'values': [0, 0, 0]},
+            ],
+        )
+
+        same_bank_gap = chart['groups'][1]['center'] - chart['groups'][0]['center']
+        next_bank_gap = chart['groups'][2]['center'] - chart['groups'][1]['center']
+        self.assertGreater(next_bank_gap, same_bank_gap)
+        self.assertEqual(
+            [group['label'] for group in chart['bank_groups']],
+            ['Bank A', 'Bank B'],
+        )
+
+    def test_combined_activity_ranks_accounts_and_cards_by_total_moved(self):
+        card = CreditCard.objects.create(
+            user=self.user,
+            account=self.account,
+            name='Combined Card',
+            closing_day=31,
+            due_day=28,
+        )
+        self.transaction(amount='20.00')
+        self.transaction(
+            amount='80.00',
+            transaction_type=Transaction.TransactionType.INCOME,
+        )
+        self.transaction(
+            amount='50.00',
+            payment_channel=Transaction.PaymentChannel.CREDIT_CARD,
+            bank_account=None,
+            credit_card=card,
+        )
+
+        activity = get_instrument_activity(
+            self.user, timezone.localdate().year, timezone.localdate().month
+        )
+
+        self.assertEqual(
+            [row['key'] for row in activity['instruments']],
+            [f'account:{self.account.pk}', f'cc:{card.pk}'],
+        )
+        account = activity['instruments'][0]
+        self.assertEqual(account['short_label'], 'Main Account')
+        self.assertEqual(account['bank_label'], 'Bank With Spaces')
+        self.assertEqual(account['expense_total'], Decimal('20.00'))
+        self.assertEqual(account['income_total'], Decimal('80.00'))
+        self.assertEqual(activity['expense_total'], Decimal('70.00'))
+        self.assertEqual(activity['income_total'], Decimal('80.00'))
+
+    def test_combined_activity_keeps_instruments_from_the_same_bank_together(self):
+        other_bank = Bank.objects.create(user=self.user, name='Other Bank')
+        other_account = BankAccount.objects.create(
+            user=self.user,
+            bank=other_bank,
+            name='Other Account',
+            currency='BRL',
+        )
+        card = CreditCard.objects.create(
+            user=self.user,
+            account=self.account,
+            name='Same Bank Card',
+            closing_day=31,
+            due_day=28,
+        )
+        self.transaction(amount='100.00')
+        self.transaction(
+            amount='90.00',
+            payment_channel=Transaction.PaymentChannel.PIX,
+            bank_account=other_account,
+        )
+        self.transaction(
+            amount='80.00',
+            payment_channel=Transaction.PaymentChannel.CREDIT_CARD,
+            bank_account=None,
+            credit_card=card,
+        )
+
+        activity = get_instrument_activity(
+            self.user, timezone.localdate().year, timezone.localdate().month
+        )
+
+        self.assertEqual(
+            [row['bank_label'] for row in activity['instruments']],
+            ['Bank With Spaces', 'Bank With Spaces', 'Other Bank'],
+        )
+
     def test_account_card_grouping_uses_stable_ids_and_isolated_users(self):
         card = CreditCard.objects.create(
             user=self.user,
@@ -313,6 +428,8 @@ class InstrumentReportTests(DashboardFixture):
 
         self.assertContains(response, f'expense_instrument=cc%3A{card.pk}')
         self.assertContains(response, 'Bank With Spaces &gt; Main Account / Blue Card With Spaces')
+        self.assertContains(response, 'Blue Card With Spaces')
+        self.assertContains(response, 'Bank With Spaces')
         self.assertContains(response, 'data-scroll-target="instrument-categories-expense"')
 
         drilldown = self.client.get(
@@ -324,6 +441,37 @@ class InstrumentReportTests(DashboardFixture):
         self.assertContains(drilldown, 'id="reports-charts"')
         self.assertContains(drilldown, 'Categories in')
         self.assertContains(drilldown, 'Groceries')
+
+    def test_income_bar_opens_income_categories(self):
+        self.transaction(
+            amount='125.00',
+            transaction_type=Transaction.TransactionType.INCOME,
+        )
+        response = self.client.get(reverse('dashboard:reports'))
+
+        self.assertContains(response, f'income_account=account%3A{self.account.pk}')
+        self.assertContains(response, 'data-scroll-target="account-categories-income"')
+
+        drilldown = self.client.get(
+            reverse('dashboard:reports'),
+            {'income_account': f'account:{self.account.pk}'},
+            HTTP_HX_REQUEST='true',
+        )
+        self.assertContains(drilldown, 'received on')
+        self.assertContains(drilldown, 'Groceries')
+
+    def test_installment_shares_are_rounded_to_one_decimal(self):
+        self.transaction(amount='542.00')
+        self.transaction(amount='458.00', is_fixed=True)
+
+        breakdown = get_expenses_by_recurrence(
+            self.user, timezone.localdate().year, timezone.localdate().month
+        )
+
+        self.assertEqual(sum(row['share'] for row in breakdown['slices']), 100.0)
+        self.assertTrue(
+            all(row['share'] == round(row['share'], 1) for row in breakdown['slices'])
+        )
 
 
 class DashboardPageContractTests(DashboardFixture):
@@ -340,9 +488,8 @@ class DashboardPageContractTests(DashboardFixture):
         self.assertContains(response, 'Balance evolution')
         self.assertContains(response, 'Monthly cash flow')
         self.assertContains(response, 'How much is on installments')
-        self.assertContains(response, 'Spending by card or account')
-        self.assertContains(response, 'Income by bank account')
-        self.assertContains(response, 'Monthly spending by credit card')
+        self.assertContains(response, 'Income and expenses by account or card')
+        self.assertNotContains(response, 'Monthly spending by credit card')
 
     def test_htmx_partial_and_window_range_remain_intact(self):
         response = self.client.get(
@@ -357,6 +504,17 @@ class DashboardPageContractTests(DashboardFixture):
         last = add_months(today.year, today.month, 6)
         expected = f'{date(*first, 1):%b %Y} &ndash; {date(*last, 1):%b %Y}'
         self.assertContains(response, expected)
+
+    def test_cashflow_bars_have_mouse_and_keyboard_tooltips(self):
+        self.transaction(amount='123.45')
+
+        response = self.client.get(reverse('dashboard:reports'))
+
+        self.assertContains(response, 'group-hover:opacity-100')
+        self.assertContains(response, 'group-focus-visible:opacity-100')
+        self.assertNotContains(response, 'group-focus:opacity-100')
+        self.assertContains(response, 'tabindex="0"')
+        self.assertContains(response, 'R$ 123,45')
 
     def test_evolution_uses_ledger_projection(self):
         future = timezone.localdate() + timedelta(days=35)

@@ -158,11 +158,25 @@ conventions this partial inherits.
                           stroke-linecap="round" stroke-linejoin="round" />
 
                 {% for point in balance_chart.points %}
-                    <circle cx="{{ point.x }}" cy="{{ point.y }}" r="3.5"
-                            class="fill-white dark:fill-slate-950 {% if point.label.is_future %}stroke-violet-400/60{% else %}stroke-violet-400{% endif %}"
-                            stroke-width="2">
-                        <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate "projected" %}){% endif %}</title>
-                    </circle>
+                    <g class="group outline-none" tabindex="0"
+                       aria-label="{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate 'projected' %}){% endif %}">
+                        <circle cx="{{ point.x }}" cy="{{ point.y }}" r="4.5"
+                                class="fill-white dark:fill-slate-950 {% if point.label.is_future %}stroke-violet-400/60{% else %}stroke-violet-400{% endif %} group-hover:stroke-violet-600 dark:group-hover:stroke-violet-300 transition-colors"
+                                stroke-width="2">
+                            <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate "projected" %}){% endif %}</title>
+                        </circle>
+                        <g transform="translate({{ point.tooltip_x }} {{ point.tooltip_y }})"
+                           class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                            <rect width="176" height="38" rx="6"
+                                  class="fill-slate-900 stroke-slate-700 dark:fill-neutral-100 dark:stroke-neutral-300" stroke-width="1" />
+                            <text x="10" y="15" class="fill-slate-300 dark:fill-neutral-600 text-[10px]">
+                                {{ point.label.date|date:'M Y' }}{% if point.label.is_future %} &middot; {% translate "projected" %}{% endif %}
+                            </text>
+                            <text x="10" y="30" class="fill-white dark:fill-neutral-900 text-[12px] font-semibold tabular-nums">
+                                {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}
+                            </text>
+                        </g>
+                    </g>
                     <text x="{{ point.x }}" y="{{ balance_chart.label_y }}" text-anchor="middle"
                           class="text-[11px] {% if point.label.is_current_month %}fill-slate-800 dark:fill-slate-200 font-semibold{% else %}fill-slate-600 dark:fill-slate-500{% endif %}">
                         {{ point.label.date|date:'M' }}
@@ -242,13 +256,29 @@ conventions this partial inherits.
 
                 {% for group in cashflow_chart.groups %}
                     {% for bar in group.bars %}
-                        <rect x="{{ bar.x }}" y="{{ bar.y }}"
-                              width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                              class="{% if bar.tone == 'income' %}fill-emerald-400/80
-                                     {% elif bar.tone == 'expense' %}fill-rose-400/80
-                                     {% else %}fill-amber-400/80{% endif %}">
-                            <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
-                        </rect>
+                        {% if bar.value %}
+                            <g class="group outline-none" tabindex="0"
+                               aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
+                                <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                                      width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                      class="{% if bar.tone == 'income' %}fill-emerald-400/80 group-hover:fill-emerald-400
+                                             {% elif bar.tone == 'expense' %}fill-rose-400/80 group-hover:fill-rose-400
+                                             {% else %}fill-amber-400/80 group-hover:fill-amber-400{% endif %} transition-colors">
+                                    <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
+                                </rect>
+                                <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
+                                   class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                    <rect width="176" height="38" rx="6"
+                                          class="fill-slate-900 stroke-slate-700 dark:fill-neutral-100 dark:stroke-neutral-300" stroke-width="1" />
+                                    <text x="10" y="15" class="fill-slate-300 dark:fill-neutral-600 text-[10px]">
+                                        {{ group.label.date|date:'M Y' }} &middot; {{ bar.name }}
+                                    </text>
+                                    <text x="10" y="30" class="fill-white dark:fill-neutral-900 text-[12px] font-semibold tabular-nums">
+                                        {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}
+                                    </text>
+                                </g>
+                            </g>
+                        {% endif %}
                     {% endfor %}
                     <text x="{{ group.center }}" y="{{ cashflow_chart.label_y }}" text-anchor="middle"
                           class="text-[11px] {% if group.label.is_current_month %}fill-slate-800 dark:fill-slate-200 font-semibold{% else %}fill-slate-600 dark:fill-slate-500{% endif %}">
@@ -258,42 +288,6 @@ conventions this partial inherits.
             </svg>
             {% endlocalize %}
         </div>
-    </section>
-
-    {# -------------------------------------------------------------- #}
-    {# Monthly credit-card comparison                                #}
-    {# -------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
-        <div>
-            <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate "Monthly spending by credit card" %}</h2>
-            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate "Invoice-competence spending for up to eight cards in the period shown above." %}</p>
-        </div>
-        {% if card_comparison_chart %}
-            <div class="overflow-x-auto">
-                {% localize off %}
-                <svg viewBox="0 0 {{ card_comparison_chart.width }} {{ card_comparison_chart.height }}" class="h-auto w-full min-w-[44rem]" role="img" aria-label="{% translate 'Grouped monthly spending by credit card' %}">
-                    {% for line in card_comparison_chart.grid %}
-                        <line x1="{{ card_comparison_chart.plot_left }}" y1="{{ line.y }}" x2="{{ card_comparison_chart.plot_right }}" y2="{{ line.y }}" class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
-                    {% endfor %}
-                    {% for group in card_comparison_chart.groups %}
-                        {% for bar in group.bars %}
-                            <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2" class="fill-violet-400/75">
-                                <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
-                            </rect>
-                        {% endfor %}
-                        <text x="{{ group.center }}" y="{{ card_comparison_chart.label_y }}" text-anchor="middle" class="fill-slate-600 dark:fill-slate-500 text-[11px]">{{ group.label.date|date:'M' }}</text>
-                    {% endfor %}
-                </svg>
-                {% endlocalize %}
-            </div>
-            <ul class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-700 dark:text-neutral-300">
-                {% for entry in card_comparison_chart.legend %}<li>{{ entry.name }}</li>{% endfor %}
-            </ul>
-        {% else %}
-            {% translate "No credit-card spending" as empty_title %}
-            {% translate "There are no credit-card expenses in this period." as empty_message %}
-            {% include 'partials/empty_state.html' with title=empty_title message=empty_message %}
-        {% endif %}
     </section>
 
     {# -------------------------------------------------------------- #}
@@ -343,14 +337,6 @@ conventions this partial inherits.
                 <svg viewBox="0 0 {{ recurrence_chart.width }} {{ recurrence_chart.height }}"
                      class="h-auto w-full max-w-[20rem]" role="img"
                      aria-label="{% translate 'Donut chart of expenses split into installments, fixed recurrences, and one-off purchases' %}">
-                    {% for segment in recurrence_chart.segments %}
-                        <path d="{{ segment.d }}"
-                              class="{% if segment.tone == 'installment' %}fill-rose-500 dark:fill-rose-400
-                                     {% elif segment.tone == 'fixed' %}fill-indigo-500 dark:fill-indigo-400
-                                     {% else %}fill-slate-400 dark:fill-slate-500{% endif %}">
-                            <title>{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share }}%)</title>
-                        </path>
-                    {% endfor %}
                     <text x="{{ recurrence_chart.cx }}" y="{{ recurrence_chart.cy }}" text-anchor="middle" dy="-4"
                           class="fill-slate-500 dark:fill-slate-400 text-[12px] uppercase tracking-wide">
                         {% translate "Total" %}
@@ -359,6 +345,26 @@ conventions this partial inherits.
                           class="fill-slate-800 dark:fill-neutral-200 text-lg font-semibold tabular-nums">
                         {{ CURRENCY_SYMBOL }} {{ recurrence_chart.total|floatformat:2 }}
                     </text>
+                    {% for segment in recurrence_chart.segments %}
+                        <g class="group outline-none" tabindex="0"
+                           aria-label="{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:'-1' }}%)">
+                            <path d="{{ segment.d }}"
+                                  class="{% if segment.tone == 'installment' %}fill-rose-500 dark:fill-rose-400
+                                         {% elif segment.tone == 'fixed' %}fill-indigo-500 dark:fill-indigo-400
+                                         {% else %}fill-slate-400 dark:fill-slate-500{% endif %} transition-opacity group-hover:opacity-80">
+                                <title>{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:"-1" }}%)</title>
+                            </path>
+                            <g transform="translate({{ recurrence_chart.tooltip_x }} {{ recurrence_chart.tooltip_y }})"
+                               class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                <rect width="{{ recurrence_chart.tooltip_width }}" height="{{ recurrence_chart.tooltip_height }}" rx="6"
+                                      class="fill-slate-900 stroke-slate-700 dark:fill-neutral-100 dark:stroke-neutral-300" stroke-width="1" />
+                                <text x="12" y="19" class="fill-slate-300 dark:fill-neutral-600 text-[12px]">{{ segment.name }} &middot; {{ segment.share|floatformat:"-1" }}%</text>
+                                <text x="12" y="39" class="fill-white dark:fill-neutral-900 text-[15px] font-semibold tabular-nums">
+                                    {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }}
+                                </text>
+                            </g>
+                        </g>
+                    {% endfor %}
                 </svg>
                 {% endlocalize %}
                 <ul class="w-full space-y-3 lg:w-auto lg:flex-1">
@@ -387,25 +393,20 @@ conventions this partial inherits.
     </section>
 
     {# -------------------------------------------------------------- #}
-    {# Spending by banking instrument (filter: ALL | YYYY-MM)         #}
-    {#                                                                #}
-    {# Stacked vertically under chart 2 (one card wide). The shared  #}
-    {# `?instrument_month=ALL|YYYY-MM` keeps both charts aligned.     #}
-    {# "what went out" on the same period. Click a bar to open the    #}
-    {# Drill-down uses a typed, stable instrument ID.                 #}
     {# -------------------------------------------------------------- #}
-    <section id="spending-instruments" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+    {# Combined income and spending by banking instrument             #}
+    {# -------------------------------------------------------------- #}
+    <section id="instrument-activity" class="scroll-mt-6 space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate "Spending by card or account" %}</h2>
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate "Income and expenses by account or card" %}</h2>
                 <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-                    {% translate "How" %}
                     {% if instrument_month_param == 'ALL' %}
-                        {% translate "your expenses across all months" %}
+                        {% translate "Money moved across your accounts and cards over all months." %}
                     {% else %}
-                        {% blocktranslate with window=instrument_window_label %}<span class="font-medium text-slate-700 dark:text-neutral-300">{{ window }}</span>'s expenses{% endblocktranslate %}
+                        {% blocktranslate with window=instrument_window_label %}Money moved across your accounts and cards in <span class="font-medium text-slate-700 dark:text-neutral-300">{{ window }}</span>.{% endblocktranslate %}
                     {% endif %}
-                    {% translate "split across your cards and accounts - fixed transactions and open installments included." %}
+                    {% translate "Click a bar to see its categories." %}
                 </p>
             </div>
             <form method="get"
@@ -421,8 +422,8 @@ conventions this partial inherits.
                     {% endif %}
                 {% endfor %}
                 <div class="min-w-[12rem] space-y-1.5">
-                    <label for="instrument-month-expense" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Window" %}</label>
-                    <select id="instrument-month-expense" name="instrument_month"
+                    <label for="instrument-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Window" %}</label>
+                    <select id="instrument-month" name="instrument_month"
                             class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
                         {% for value, label in month_choices %}
                             <option value="{{ value }}" {% if instrument_month_param == value %}selected{% endif %}>{{ label }}</option>
@@ -436,90 +437,129 @@ conventions this partial inherits.
             </form>
         </div>
 
-        {% if expense_chart %}
-            <div class="overflow-x-auto">
-                {% localize off %}
-                <svg viewBox="0 0 {{ expense_chart.width }} {{ expense_chart.height }}"
-                     class="h-auto w-full min-w-[44rem]" role="img"
-                     aria-label="{% translate 'Bar chart of expenses per card or account for the selected window' %}">
-                    {% for line in expense_chart.grid %}
-                        <line x1="{{ expense_chart.plot_left }}" y1="{{ line.y }}"
-                              x2="{{ expense_chart.plot_right }}" y2="{{ line.y }}"
-                              class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
-                        <text x="{{ expense_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                              text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
-                            {{ line.value|floatformat:0 }}
-                        </text>
-                    {% endfor %}
-
-                    {% for group in expense_chart.groups %}
-                        <a href="{% querystring expense_instrument=group.label.key %}#instrument-categories-expense"
-                           hx-get="{% querystring expense_instrument=group.label.key %}"
-                           hx-target="#reports-charts"
-                           hx-swap="outerHTML"
-                           hx-push-url="true"
-                           data-scroll-target="instrument-categories-expense"
-                           class="cursor-pointer">
-                            {% for bar in group.bars %}
-                                <rect x="{{ bar.x }}" y="{{ bar.y }}"
-                                      width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                      class="fill-rose-400/80 hover:fill-rose-500 transition-colors">
-                                    <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=group.label.total|floatformat:2 share=group.label.share|floatformat:"-1" %}{{ label }}: {{ currency }} {{ total }} · {{ share }}% of the window. Click to see categories.{% endblocktranslate %}</title>
-                                </rect>
-                            {% endfor %}
-                            {# The share rides above its own bar, so "how is it distributed" is answerable without a hover. #}
-                            <text x="{{ group.center }}" y="{{ group.bars.0.value_y }}" text-anchor="middle"
-                                  class="fill-slate-700 dark:fill-slate-300 text-[11px] font-semibold tabular-nums pointer-events-none">
-                                {{ group.label.share|floatformat:"-1" }}%
+        {% if instrument_chart %}
+            <div class="space-y-6">
+                <div class="overflow-x-auto">
+                    {% localize off %}
+                    <svg viewBox="0 0 {{ instrument_chart.width }} {{ instrument_chart.height }}"
+                         class="h-auto w-full min-w-[44rem]" role="img"
+                         aria-label="{% translate 'Grouped bar chart of income and expenses per account or card' %}">
+                        {% for line in instrument_chart.grid %}
+                            <line x1="{{ instrument_chart.plot_left }}" y1="{{ line.y }}"
+                                  x2="{{ instrument_chart.plot_right }}" y2="{{ line.y }}"
+                                  class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
+                            <text x="{{ instrument_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
+                                  text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
+                                {{ line.value|floatformat:0 }}
                             </text>
-                        </a>
-                        {# Truncated to what fits one slot; the list below always spells the name out in full. #}
-                        <text x="{{ group.center }}" y="{{ expense_chart.label_y }}" text-anchor="middle"
-                              class="fill-slate-600 dark:fill-slate-500 text-[11px] pointer-events-none">
-                            {{ group.label.label|truncatechars:expense_chart.label_chars }}
-                        </text>
+                        {% endfor %}
+
+                        {% for group in instrument_chart.groups %}
+                            {% for bar in group.bars %}
+                                {% if bar.value %}
+                                    {% if bar.tone == 'expense' %}
+                                        <a href="{% querystring expense_instrument=group.label.key income_account=None %}#instrument-categories-expense"
+                                           hx-get="{% querystring expense_instrument=group.label.key income_account=None %}"
+                                           hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
+                                           data-scroll-target="instrument-categories-expense" class="group cursor-pointer outline-none">
+                                            <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                                  class="fill-rose-400/80 hover:fill-rose-500 transition-colors">
+                                                <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Expenses for {{ label }}: {{ currency }} {{ total }}. Click to see categories.{% endblocktranslate %}</title>
+                                            </rect>
+                                            <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
+                                               class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                                <rect width="176" height="38" rx="6"
+                                                      class="fill-slate-900 stroke-slate-700 dark:fill-neutral-100 dark:stroke-neutral-300" stroke-width="1" />
+                                                <text x="10" y="15" class="fill-slate-300 dark:fill-neutral-600 text-[10px]">{{ group.label.short_label }} &middot; {% translate "Expenses" %}</text>
+                                                <text x="10" y="30" class="fill-white dark:fill-neutral-900 text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
+                                            </g>
+                                        </a>
+                                    {% else %}
+                                        <a href="{% querystring income_account=group.label.key expense_instrument=None %}#account-categories-income"
+                                           hx-get="{% querystring income_account=group.label.key expense_instrument=None %}"
+                                           hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
+                                           data-scroll-target="account-categories-income" class="group cursor-pointer outline-none">
+                                            <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                                  class="fill-emerald-400/80 hover:fill-emerald-500 transition-colors">
+                                                <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Income for {{ label }}: {{ currency }} {{ total }}. Click to see categories.{% endblocktranslate %}</title>
+                                            </rect>
+                                            <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
+                                               class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                                <rect width="176" height="38" rx="6"
+                                                      class="fill-slate-900 stroke-slate-700 dark:fill-neutral-100 dark:stroke-neutral-300" stroke-width="1" />
+                                                <text x="10" y="15" class="fill-slate-300 dark:fill-neutral-600 text-[10px]">{{ group.label.short_label }} &middot; {% translate "Income" %}</text>
+                                                <text x="10" y="30" class="fill-white dark:fill-neutral-900 text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
+                                            </g>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            <text x="{{ group.center }}" y="{{ instrument_chart.label_y|add:'-4' }}" text-anchor="middle"
+                                  class="fill-slate-700 dark:fill-slate-400 text-[11px] font-medium pointer-events-none">
+                                {{ group.label.short_label|truncatechars:instrument_chart.label_chars }}
+                            </text>
+                        {% endfor %}
+                        {% for bank in instrument_chart.bank_groups %}
+                            <text x="{{ bank.center }}" y="{{ instrument_chart.label_y|add:'10' }}" text-anchor="middle"
+                                  class="fill-slate-500 dark:fill-slate-500 text-[10px] pointer-events-none">
+                                {{ bank.label }}
+                            </text>
+                        {% endfor %}
+                    </svg>
+                    {% endlocalize %}
+                </div>
+
+                <div class="grid gap-x-6 gap-y-5 border-t border-slate-200 pt-5 dark:border-slate-700 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {% regroup instrument_activity.instruments by bank_label as bank_list %}
+                    {% for bank in bank_list %}
+                        <section>
+                            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-500">{{ bank.grouper }}</h3>
+                            <ul class="mt-1 divide-y divide-slate-200 dark:divide-slate-700">
+                                {% for instrument in bank.list %}
+                                    <li class="py-2.5">
+                                        <p class="font-medium text-slate-800 dark:text-neutral-200">{{ instrument.short_label }}</p>
+                                        <div class="mt-1 space-y-1 text-sm tabular-nums">
+                                            {% if instrument.expense_total %}
+                                                <p class="flex items-center justify-between gap-4 text-slate-600 dark:text-neutral-400">
+                                                    <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-rose-400"></span>{% translate "Expenses" %}</span>
+                                                    <span class="font-semibold text-rose-600 dark:text-rose-400">{{ CURRENCY_SYMBOL }} {{ instrument.expense_total|floatformat:2 }}</span>
+                                                </p>
+                                            {% endif %}
+                                            {% if instrument.income_total %}
+                                                <p class="flex items-center justify-between gap-4 text-slate-600 dark:text-neutral-400">
+                                                    <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-400"></span>{% translate "Income" %}</span>
+                                                    <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ CURRENCY_SYMBOL }} {{ instrument.income_total|floatformat:2 }}</span>
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </section>
                     {% endfor %}
-                </svg>
-                {% endlocalize %}
+                </div>
             </div>
 
-            <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                {% for instrument in expense_breakdown.instruments %}
-                    <li class="flex items-center gap-2">
-                        <span class="h-2.5 w-2.5 shrink-0 rounded-sm bg-rose-400"></span>
-                        <span class="text-slate-700 dark:text-neutral-300">{{ instrument.label }}</span>
-                        <span class="font-semibold tabular-nums text-rose-600 dark:text-rose-400">
-                            {{ CURRENCY_SYMBOL }} {{ instrument.total|floatformat:2 }}
-                        </span>
-                    </li>
-                {% endfor %}
-            </ul>
-
-            <p class="text-sm text-slate-600 dark:text-neutral-400">
-                {% translate "Total spent" %} {% if instrument_month_param == 'ALL' %}{% translate "across all months" %}{% else %}{% blocktranslate with window=instrument_window_label %}in {{ window }}{% endblocktranslate %}{% endif %}:
-                <span class="font-semibold tabular-nums text-slate-800 dark:text-neutral-200">{{ CURRENCY_SYMBOL }} {{ expense_breakdown.total|floatformat:2 }}</span>
-                {% if expense_breakdown.shown < expense_breakdown.used %}
-                    {% blocktranslate with shown=expense_breakdown.shown used=expense_breakdown.used %}- charted across the {{ shown }} biggest of {{ used }} instruments used, so the shares above stop short of 100%.{% endblocktranslate %}
+            <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-600 dark:text-neutral-400">
+                <p>{% translate "Total spent" %}: <span class="font-semibold tabular-nums text-rose-600 dark:text-rose-400">{{ CURRENCY_SYMBOL }} {{ instrument_activity.expense_total|floatformat:2 }}</span></p>
+                <p>{% translate "Total received" %}: <span class="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{{ CURRENCY_SYMBOL }} {{ instrument_activity.income_total|floatformat:2 }}</span></p>
+                {% if instrument_activity.shown < instrument_activity.used %}
+                    <p>{% blocktranslate with shown=instrument_activity.shown used=instrument_activity.used %}Showing the {{ shown }} largest of {{ used }} instruments used.{% endblocktranslate %}</p>
                 {% endif %}
-            </p>
+            </div>
         {% else %}
-            {% translate "No expenses recorded" as empty_title %}
-            {% translate "Record an expense to see which card or account it came from." as empty_message %}
+            {% translate "No income or expenses recorded" as empty_title %}
+            {% translate "Record a transaction to compare income and expenses by account or card." as empty_message %}
             {% translate "New Transaction" as new_transaction_label %}
             {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=create_url cta_label=new_transaction_label %}
         {% endif %}
 
-        {# -------------------------------------------------------------- #}
-        {# Expense categories for the selected banking instrument.       #}
-        {# -------------------------------------------------------------- #}
         {% if selected_expense_instrument %}
             <div id="instrument-categories-expense" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-rose-200 dark:ring-rose-500/30 bg-rose-50/40 dark:bg-rose-500/5 p-5">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-neutral-100">
-                            {% translate "Categories in" %}
-                            {{ instrument_categories_label }}
-                            {% translate "paid with" %}
+                            {% translate "Categories in" %} {{ instrument_categories_label }} {% translate "paid with" %}
                             <span class="text-rose-600 dark:text-rose-400">{{ selected_expense_instrument.label }}</span>
                         </h3>
                         <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
@@ -530,17 +570,13 @@ conventions this partial inherits.
                             {% endif %}
                         </p>
                     </div>
-                    <a href="{% querystring expense_instrument=None %}#spending-instruments"
-                       hx-get="{% querystring expense_instrument=None %}"
-                       hx-target="#reports-charts"
-                       hx-swap="outerHTML"
-                       hx-push-url="true"
-                       data-scroll-target="spending-instruments"
-                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                         {% translate "Close" %}
+                    <a href="{% querystring expense_instrument=None %}#instrument-activity"
+                       hx-get="{% querystring expense_instrument=None %}" hx-target="#reports-charts"
+                       hx-swap="outerHTML" hx-push-url="true" data-scroll-target="instrument-activity"
+                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        {% translate "Close" %}
                     </a>
                 </div>
-
                 {% if expense_instrument_categories %}
                     <ul class="space-y-4">
                         {% for category in expense_instrument_categories %}
@@ -549,12 +585,11 @@ conventions this partial inherits.
                                     <p class="truncate font-medium text-slate-800 dark:text-neutral-200">{{ category.name }}</p>
                                     <p class="shrink-0 text-sm tabular-nums text-slate-600 dark:text-neutral-400">
                                         <span class="font-semibold text-rose-600 dark:text-rose-400">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
-                                        &middot; {{ category.share }}%
+                                        &middot; {{ category.share|floatformat:"-1" }}%
                                     </p>
                                 </div>
                                 <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                                    <div class="h-full rounded-full bg-gradient-to-r from-rose-500 to-fuchsia-500"
-                                         style="width: {{ category.bar_width|unlocalize }}%"></div>
+                                    <div class="h-full rounded-full bg-gradient-to-r from-rose-500 to-fuchsia-500" style="width: {{ category.bar_width|unlocalize }}%"></div>
                                 </div>
                             </li>
                         {% endfor %}
@@ -566,141 +601,13 @@ conventions this partial inherits.
                 {% endif %}
             </div>
         {% endif %}
-    </section>
 
-    {# -------------------------------------------------------------- #}
-    {# Income by destination account (filter: ALL | YYYY-MM)          #}
-    {#                                                                #}
-    {# Stacked vertically below chart 4. Same shared window as chart  #}
-    {# 4 (`?instrument_month=`) so both charts use the same period.   #}
-    {# go" never disagree on the period. Drill-down via                #}
-    {# Drill-down uses a stable account ID.                           #}
-    {# below.                                                         #}
-    {# -------------------------------------------------------------- #}
-    <section id="income-accounts" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate "Income by bank account" %}</h2>
-                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
-                    {% translate "Where" %}
-                    {% if instrument_month_param == 'ALL' %}
-                        {% translate "your income across all months" %}
-                    {% else %}
-                        {% blocktranslate with window=instrument_window_label %}<span class="font-medium text-slate-700 dark:text-neutral-300">{{ window }}</span>'s income{% endblocktranslate %}
-                    {% endif %}
-                    {% translate "landed - the same window as the spending chart above, with recurrences counted the same way." %}
-                </p>
-            </div>
-            <form method="get"
-                  action="{% url 'dashboard:reports' %}"
-                  hx-get="{% url 'dashboard:reports' %}"
-                  hx-target="#reports-charts"
-                  hx-swap="outerHTML"
-                  hx-push-url="true"
-                  class="flex flex-wrap items-end gap-3">
-                {% for key, value in request.GET.items %}
-                    {% if key != 'instrument_month' and key != 'expense_instrument' and key != 'income_account' %}
-                        <input type="hidden" name="{{ key }}" value="{{ value }}">
-                    {% endif %}
-                {% endfor %}
-                <div class="min-w-[12rem] space-y-1.5">
-                    <label for="instrument-month-income" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Window" %}</label>
-                    <select id="instrument-month-income" name="instrument_month"
-                            class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
-                        {% for value, label in month_choices %}
-                            <option value="{{ value }}" {% if instrument_month_param == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                    {% translate "Filter" %}
-                </button>
-            </form>
-        </div>
-
-        {% if income_chart %}
-            <div class="overflow-x-auto">
-                {% localize off %}
-                <svg viewBox="0 0 {{ income_chart.width }} {{ income_chart.height }}"
-                     class="h-auto w-full min-w-[44rem]" role="img"
-                     aria-label="{% translate 'Bar chart of income per bank account for the selected window' %}">
-                    {% for line in income_chart.grid %}
-                        <line x1="{{ income_chart.plot_left }}" y1="{{ line.y }}"
-                              x2="{{ income_chart.plot_right }}" y2="{{ line.y }}"
-                              class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
-                        <text x="{{ income_chart.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                              text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
-                            {{ line.value|floatformat:0 }}
-                        </text>
-                    {% endfor %}
-
-                    {% for group in income_chart.groups %}
-                        <a href="{% querystring income_account=group.label.key %}#account-categories-income"
-                           hx-get="{% querystring income_account=group.label.key %}"
-                           hx-target="#reports-charts"
-                           hx-swap="outerHTML"
-                           hx-push-url="true"
-                           data-scroll-target="account-categories-income"
-                           class="cursor-pointer">
-                            {% for bar in group.bars %}
-                                <rect x="{{ bar.x }}" y="{{ bar.y }}"
-                                      width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                      class="fill-emerald-400/80 hover:fill-emerald-500 transition-colors">
-                                    <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=group.label.total|floatformat:2 share=group.label.share|floatformat:"-1" %}{{ label }}: {{ currency }} {{ total }} · {{ share }}% of the window. Click to see categories.{% endblocktranslate %}</title>
-                                </rect>
-                            {% endfor %}
-                            <text x="{{ group.center }}" y="{{ group.bars.0.value_y }}" text-anchor="middle"
-                                  class="fill-slate-700 dark:fill-slate-300 text-[11px] font-semibold tabular-nums pointer-events-none">
-                                {{ group.label.share|floatformat:"-1" }}%
-                            </text>
-                        </a>
-                        <text x="{{ group.center }}" y="{{ income_chart.label_y }}" text-anchor="middle"
-                              class="fill-slate-600 dark:fill-slate-500 text-[11px] pointer-events-none">
-                            {{ group.label.label|truncatechars:income_chart.label_chars }}
-                        </text>
-                    {% endfor %}
-                </svg>
-                {% endlocalize %}
-            </div>
-
-            <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                {% for instrument in income_breakdown.instruments %}
-                    <li class="flex items-center gap-2">
-                        <span class="h-2.5 w-2.5 shrink-0 rounded-sm bg-emerald-400"></span>
-                        <span class="text-slate-700 dark:text-neutral-300">{{ instrument.label }}</span>
-                        <span class="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                            {{ CURRENCY_SYMBOL }} {{ instrument.total|floatformat:2 }}
-                        </span>
-                    </li>
-                {% endfor %}
-            </ul>
-
-            <p class="text-sm text-slate-600 dark:text-neutral-400">
-                {% translate "Total received" %} {% if instrument_month_param == 'ALL' %}{% translate "across all months" %}{% else %}{% blocktranslate with window=instrument_window_label %}in {{ window }}{% endblocktranslate %}{% endif %}:
-                <span class="font-semibold tabular-nums text-slate-800 dark:text-neutral-200">{{ CURRENCY_SYMBOL }} {{ income_breakdown.total|floatformat:2 }}</span>
-                {% if income_breakdown.shown < income_breakdown.used %}
-                    {% blocktranslate with shown=income_breakdown.shown used=income_breakdown.used %}- charted across the {{ shown }} biggest of {{ used }} accounts used, so the shares above stop short of 100%.{% endblocktranslate %}
-                {% endif %}
-            </p>
-        {% else %}
-            {% translate "No income recorded" as empty_title %}
-            {% translate "Record income to see its destination bank account." as empty_message %}
-            {% translate "New Transaction" as new_transaction_label %}
-            {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=create_url cta_label=new_transaction_label %}
-        {% endif %}
-
-        {# -------------------------------------------------------------- #}
-        {# Income categories for the selected destination account.       #}
-        {# -------------------------------------------------------------- #}
         {% if selected_income_account %}
             <div id="account-categories-income" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-emerald-200 dark:ring-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/5 p-5">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-neutral-100">
-                            {% translate "Categories in" %}
-                            {{ instrument_categories_label }}
-                            {% translate "received on" %}
+                            {% translate "Categories in" %} {{ instrument_categories_label }} {% translate "received on" %}
                             <span class="text-emerald-600 dark:text-emerald-400">{{ selected_income_account.label }}</span>
                         </h3>
                         <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
@@ -711,17 +618,13 @@ conventions this partial inherits.
                             {% endif %}
                         </p>
                     </div>
-                    <a href="{% querystring income_account=None %}#income-accounts"
-                       hx-get="{% querystring income_account=None %}"
-                       hx-target="#reports-charts"
-                       hx-swap="outerHTML"
-                       hx-push-url="true"
-                       data-scroll-target="income-accounts"
-                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
-                         {% translate "Close" %}
+                    <a href="{% querystring income_account=None %}#instrument-activity"
+                       hx-get="{% querystring income_account=None %}" hx-target="#reports-charts"
+                       hx-swap="outerHTML" hx-push-url="true" data-scroll-target="instrument-activity"
+                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        {% translate "Close" %}
                     </a>
                 </div>
-
                 {% if income_account_categories %}
                     <ul class="space-y-4">
                         {% for category in income_account_categories %}
@@ -730,12 +633,11 @@ conventions this partial inherits.
                                     <p class="truncate font-medium text-slate-800 dark:text-neutral-200">{{ category.name }}</p>
                                     <p class="shrink-0 text-sm tabular-nums text-slate-600 dark:text-neutral-400">
                                         <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
-                                        &middot; {{ category.share }}%
+                                        &middot; {{ category.share|floatformat:"-1" }}%
                                     </p>
                                 </div>
                                 <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                                    <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"
-                                         style="width: {{ category.bar_width|unlocalize }}%"></div>
+                                    <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" style="width: {{ category.bar_width|unlocalize }}%"></div>
                                 </div>
                             </li>
                         {% endfor %}
@@ -749,7 +651,6 @@ conventions this partial inherits.
         {% endif %}
     </section>
 
-    {# -------------------------------------------------------------- #}
     {# Chart 6 — where the money goes (filter: ALL | YYYY-MM)          #}
     {# ---------------------------------------------------------------- #}
     <section id="where" class="scroll-mt-6 space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">

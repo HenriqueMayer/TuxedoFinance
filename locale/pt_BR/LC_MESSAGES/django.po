@@ -1529,6 +1529,40 @@ msgstr "Nenhuma transação usou este cartão ou conta no período selecionado."
 msgid "Income by bank account"
 msgstr "Receitas por conta bancária"
 
+msgid "Income and expenses by account or card"
+msgstr "Receitas e despesas por conta ou cartão"
+
+msgid "Money moved across your accounts and cards over all months."
+msgstr "Movimentação em suas contas e cartões durante todo o período."
+
+#, python-format
+msgid "Money moved across your accounts and cards in <span class=\"font-medium text-slate-700 dark:text-neutral-300\">%(window)s</span>."
+msgstr "Movimentação em suas contas e cartões em <span class=\"font-medium text-slate-700 dark:text-neutral-300\">%(window)s</span>."
+
+msgid "Click a bar to see its categories."
+msgstr "Clique em uma barra para ver suas categorias."
+
+msgid "Grouped bar chart of income and expenses per account or card"
+msgstr "Gráfico de barras agrupadas de receitas e despesas por conta ou cartão"
+
+#, python-format
+msgid "Expenses for %(label)s: %(currency)s %(total)s. Click to see categories."
+msgstr "Despesas de %(label)s: %(currency)s %(total)s. Clique para ver as categorias."
+
+#, python-format
+msgid "Income for %(label)s: %(currency)s %(total)s. Click to see categories."
+msgstr "Receitas de %(label)s: %(currency)s %(total)s. Clique para ver as categorias."
+
+#, python-format
+msgid "Showing the %(shown)s largest of %(used)s instruments used."
+msgstr "Exibindo os %(shown)s maiores entre %(used)s instrumentos utilizados."
+
+msgid "No income or expenses recorded"
+msgstr "Nenhuma receita ou despesa registrada"
+
+msgid "Record a transaction to compare income and expenses by account or card."
+msgstr "Registre uma transação para comparar receitas e despesas por conta ou cartão."
+
 msgid "Where"
 msgstr "Onde"
 

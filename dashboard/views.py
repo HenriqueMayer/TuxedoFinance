@@ -6,7 +6,12 @@ from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 
-from dashboard.charts import build_bar_chart, build_donut_chart, build_line_chart
+from dashboard.charts import (
+    build_bar_chart,
+    build_donut_chart,
+    build_instrument_chart,
+    build_line_chart,
+)
 from dashboard.services import (
     EVOLUTION_PAST_MONTHS,
     OUTLOOK_MONTHS,
@@ -14,13 +19,11 @@ from dashboard.services import (
     _transactions,
     add_months,
     get_account_evolution,
-    get_card_comparison,
     get_dashboard_summary,
     get_expenses_by_category_for_instrument,
-    get_expenses_by_instrument,
     get_expenses_by_recurrence,
-    get_income_by_account,
     get_income_by_category_for_account,
+    get_instrument_activity,
 )
 from transactions.services import sync_user_ledger
 
@@ -160,19 +163,6 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             }
         )
 
-        card_series, card_missing = get_card_comparison(self.request.user, months)
-        context['card_comparison_chart'] = (
-            build_bar_chart(
-                months,
-                [
-                    {'name': row['name'], 'tone': 'expense', 'values': [float(value) for value in row['values']]}
-                    for row in card_series
-                ],
-            )
-            if card_series
-            else None
-        )
-
         period_value, period_year, period_month = _parse_month_or_all(
             self.request, 'instrument_month', _is_representable
         )
@@ -183,30 +173,24 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             else date_format(date(period_year, period_month, 1), 'F Y')
         )
         if period_value == 'ALL':
-            expense_breakdown = get_expenses_by_instrument(
-                self.request.user, months=ALL_TIME_MONTHS
-            )
-            income_breakdown = get_income_by_account(
-                self.request.user, months=ALL_TIME_MONTHS
-            )
+            activity = get_instrument_activity(self.request.user, months=ALL_TIME_MONTHS)
         else:
-            expense_breakdown = get_expenses_by_instrument(
+            activity = get_instrument_activity(
                 self.request.user, period_year, period_month
             )
-            income_breakdown = get_income_by_account(
-                self.request.user, period_year, period_month
-            )
-        context['expense_breakdown'] = expense_breakdown
-        context['income_breakdown'] = income_breakdown
-        context['expense_chart'] = self._breakdown_chart(expense_breakdown, _('Expenses'), 'expense')
-        context['income_chart'] = self._breakdown_chart(income_breakdown, _('Income'), 'income')
+        context['instrument_activity'] = activity
+        context['instrument_chart'] = self._instrument_chart(activity)
 
         selected_expense = self._selected_instrument(
-            expense_breakdown, 'expense_instrument'
+            activity, 'expense_instrument'
         )
         selected_income = self._selected_instrument(
-            income_breakdown, 'income_account'
+            activity, 'income_account'
         )
+        if selected_expense and not selected_expense['expense_total']:
+            selected_expense = None
+        if selected_income and not selected_income['income_total']:
+            selected_income = None
         context['selected_expense_instrument'] = selected_expense
         context['selected_income_account'] = selected_income
         year, month, label, window = self._drilldown_window(
@@ -270,19 +254,28 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         )
         context['missing_currencies'] = sorted(
             set(evolution['missing_currencies'])
-            | set(expense_breakdown['missing_currencies'])
-            | set(income_breakdown['missing_currencies'])
+            | set(activity['missing_currencies'])
             | set(recurrence['missing_currencies'])
-            | set(card_missing)
         )
         return context
 
     @staticmethod
-    def _breakdown_chart(breakdown, name, tone):
-        rows = breakdown['instruments']
+    def _instrument_chart(activity):
+        rows = activity['instruments']
         if not rows:
             return None
-        return build_bar_chart(
+        return build_instrument_chart(
             rows,
-            [{'name': name, 'tone': tone, 'values': [float(row['total']) for row in rows]}],
+            [
+                {
+                    'name': _('Expenses'),
+                    'tone': 'expense',
+                    'values': [float(row['expense_total']) for row in rows],
+                },
+                {
+                    'name': _('Income'),
+                    'tone': 'income',
+                    'values': [float(row['income_total']) for row in rows],
+                },
+            ],
         )
