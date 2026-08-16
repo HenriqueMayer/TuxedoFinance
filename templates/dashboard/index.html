@@ -68,12 +68,12 @@ convention as the transaction list filter.
             {% translate "Investments (month)" as investments_month_label %}
             {% translate "Balance (month)" as balance_month_label %}
             {% translate "Projected (end of month)" as projected_month_label %}
-            {% include 'partials/stat_card.html' with label=current_balance_label value=CURRENCY_SYMBOL|add:' '|add:current_balance_fmt %}
-            {% include 'partials/stat_card.html' with label=income_month_label value=CURRENCY_SYMBOL|add:' '|add:income_month_fmt value_class='text-emerald-600 dark:text-emerald-400' %}
-            {% include 'partials/stat_card.html' with label=expenses_month_label value=CURRENCY_SYMBOL|add:' '|add:expense_month_fmt value_class='text-rose-600 dark:text-rose-400' %}
-            {% include 'partials/stat_card.html' with label=investments_month_label value=CURRENCY_SYMBOL|add:' '|add:investment_month_fmt value_class='text-amber-600 dark:text-amber-400' %}
-            {% include 'partials/stat_card.html' with label=balance_month_label value=CURRENCY_SYMBOL|add:' '|add:balance_month_fmt %}
-            {% include 'partials/stat_card.html' with label=projected_month_label value=CURRENCY_SYMBOL|add:' '|add:projected_balance_fmt %}
+            {% include 'partials/stat_card.html' with label=current_balance_label value=CURRENCY_SYMBOL|add:' '|add:current_balance_fmt compact_value=True %}
+            {% include 'partials/stat_card.html' with label=income_month_label value=CURRENCY_SYMBOL|add:' '|add:income_month_fmt value_class='text-emerald-600 dark:text-emerald-400' compact_value=True %}
+            {% include 'partials/stat_card.html' with label=expenses_month_label value=CURRENCY_SYMBOL|add:' '|add:expense_month_fmt value_class='text-rose-600 dark:text-rose-400' compact_value=True %}
+            {% include 'partials/stat_card.html' with label=investments_month_label value=CURRENCY_SYMBOL|add:' '|add:investment_month_fmt value_class='text-amber-600 dark:text-amber-400' compact_value=True %}
+            {% include 'partials/stat_card.html' with label=balance_month_label value=CURRENCY_SYMBOL|add:' '|add:balance_month_fmt compact_value=True %}
+            {% include 'partials/stat_card.html' with label=projected_month_label value=CURRENCY_SYMBOL|add:' '|add:projected_balance_fmt compact_value=True %}
         {% endwith %}
     </div>
 
