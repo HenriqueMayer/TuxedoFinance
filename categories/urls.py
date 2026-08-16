@@ -5,6 +5,7 @@ from categories.views import (
     CategoryDeleteView,
     CategoryListView,
     CategoryUpdateView,
+    delete_all_categories,
     export_categories,
     import_categories,
 )
@@ -16,6 +17,7 @@ urlpatterns = [
     path('create/', CategoryCreateView.as_view(), name='create'),
     path('export/', export_categories, name='export'),
     path('import/', import_categories, name='import'),
+    path('delete-all/', delete_all_categories, name='delete_all'),
     path('<int:pk>/edit/', CategoryUpdateView.as_view(), name='update'),
     path('<int:pk>/delete/', CategoryDeleteView.as_view(), name='delete'),
 ]

@@ -49,6 +49,7 @@ class CategoryListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '').strip()
         context['selected_level'] = self._selected_level()
+        context['has_categories'] = Category.objects.filter(user=self.request.user).exists()
         return context
 
 
@@ -138,6 +139,33 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
             _('Category "%(name)s" deleted.') % {'name': name},
         )
         return response
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def delete_all_categories(request):
+    """Confirm and atomically delete every unused category owned by the user."""
+    categories = Category.objects.filter(user=request.user)
+    category_count = categories.count()
+
+    if request.method == 'POST':
+        if categories.filter(transactions__isnull=False).exists():
+            messages.error(
+                request,
+                _('Categories cannot be deleted while they are used by existing transactions.'),
+            )
+            return redirect('categories:list')
+
+        with transaction.atomic():
+            categories.delete()
+        messages.success(request, _('All categories deleted.'))
+        return redirect('categories:list')
+
+    return render(
+        request,
+        'categories/confirm_delete_all.html',
+        {'category_count': category_count},
+    )
 
 
 @login_required

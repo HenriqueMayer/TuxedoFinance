@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-15 17:06+0000\n"
+"POT-Creation-Date: 2026-08-16 22:50+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -554,6 +554,13 @@ msgstr ""
 #, python-format
 msgid "Category \"%(name)s\" deleted."
 msgstr "Categoria \"%(name)s\" excluída."
+
+msgid ""
+"Categories cannot be deleted while they are used by existing transactions."
+msgstr "As categorias não podem ser excluídas enquanto estiverem sendo usadas por transações existentes."
+
+msgid "All categories deleted."
+msgstr "Todas as categorias foram excluídas."
 
 msgid "The CSV file must use UTF-8 encoding."
 msgstr "O arquivo CSV deve usar a codificação UTF-8."
@@ -1246,6 +1253,24 @@ msgstr ""
 "dark:text-neutral-100\">%(category_name)s</span>? Esta ação não pode ser "
 "desfeita."
 
+msgid "Delete all categories"
+msgstr "Excluir todas as categorias"
+
+msgid "This action cannot be undone."
+msgstr "Esta ação não pode ser desfeita."
+
+#, python-format
+msgid "You are about to delete your only category."
+msgid_plural "You are about to delete all %(count)s categories."
+msgstr[0] "Você está prestes a excluir sua única categoria."
+msgstr[1] "Você está prestes a excluir todas as %(count)s categorias."
+
+msgid "If any category is used by a transaction, nothing will be deleted."
+msgstr "Se alguma categoria estiver sendo usada por uma transação, nada será excluído."
+
+msgid "Yes, delete all"
+msgstr "Sim, excluir tudo"
+
 msgid "Edit Category"
 msgstr "Editar categoria"
 
@@ -1291,6 +1316,9 @@ msgstr "Crie sua primeira categoria para começar a classificar transações."
 
 msgid "Organize your transactions with categories and subcategories."
 msgstr "Organize suas transações com categorias e subcategorias."
+
+msgid "Delete all"
+msgstr "Excluir tudo"
 
 msgid "Export CSV"
 msgstr "Exportar CSV"
@@ -1386,24 +1414,6 @@ msgid "Grouped bar chart of income, expenses and investments per month"
 msgstr ""
 "Gráfico de barras agrupadas de receitas, despesas e investimentos por mês"
 
-msgid "Monthly spending by credit card"
-msgstr "Gastos mensais por cartão de crédito"
-
-msgid ""
-"Invoice-competence spending for up to eight cards in the period shown above."
-msgstr ""
-"Gastos por competência da fatura para até oito cartões no período exibido "
-"acima."
-
-msgid "Grouped monthly spending by credit card"
-msgstr "Gastos mensais agrupados por cartão de crédito"
-
-msgid "No credit-card spending"
-msgstr "Nenhum gasto com cartão de crédito"
-
-msgid "There are no credit-card expenses in this period."
-msgstr "Não há despesas de cartão de crédito neste período."
-
 msgid "How much is on installments"
 msgstr "Quanto está parcelado"
 
@@ -1441,65 +1451,53 @@ msgstr ""
 "Nenhuma transação foi registrada neste período, portanto não há parcelas "
 "para detalhar. Tente outro mês ou a opção Todo o período."
 
-msgid "Spending by card or account"
-msgstr "Gastos por cartão ou conta"
+msgid "Income and expenses by account or card"
+msgstr "Receitas e despesas por conta ou cartão"
 
-msgid "How"
-msgstr "Como"
-
-msgid "your expenses across all months"
-msgstr "suas despesas em todos os meses"
+msgid "Money moved across your accounts and cards over all months."
+msgstr "Movimentação em suas contas e cartões durante todo o período."
 
 #, python-format
 msgid ""
-"<span class=\"font-medium text-slate-700 dark:text-neutral-300\">%(window)s</"
-"span>'s expenses"
+"Money moved across your accounts and cards in <span class=\"font-medium text-"
+"slate-700 dark:text-neutral-300\">%(window)s</span>."
 msgstr ""
-"despesas de <span class=\"font-medium text-slate-700 dark:text-"
-"neutral-300\">%(window)s</span>"
+"Movimentação em suas contas e cartões em <span class=\"font-medium text-"
+"slate-700 dark:text-neutral-300\">%(window)s</span>."
 
-msgid ""
-"split across your cards and accounts - fixed transactions and open "
-"installments included."
-msgstr ""
-"divididas entre seus cartões e contas - incluindo transações fixas e "
-"parcelas em aberto."
+msgid "Click a bar to see its categories."
+msgstr "Clique em uma barra para ver suas categorias."
 
-msgid "Bar chart of expenses per card or account for the selected window"
-msgstr ""
-"Gráfico de barras das despesas por cartão ou conta no período selecionado"
+msgid "Grouped bar chart of income and expenses per account or card"
+msgstr "Gráfico de barras agrupadas de receitas e despesas por conta ou cartão"
 
 #, python-format
 msgid ""
-"%(label)s: %(currency)s %(total)s · %(share)s%% of the window. Click to see "
-"categories."
+"Expenses for %(label)s: %(currency)s %(total)s. Click to see categories."
 msgstr ""
-"%(label)s: %(currency)s %(total)s · %(share)s%% do período. Clique para ver "
-"as categorias."
+"Despesas de %(label)s: %(currency)s %(total)s. Clique para ver as categorias."
+
+#, python-format
+msgid "Income for %(label)s: %(currency)s %(total)s. Click to see categories."
+msgstr ""
+"Receitas de %(label)s: %(currency)s %(total)s. Clique para ver as categorias."
 
 msgid "Total spent"
 msgstr "Total gasto"
 
-msgid "across all months"
-msgstr "em todos os meses"
+msgid "Total received"
+msgstr "Total recebido"
 
 #, python-format
-msgid "in %(window)s"
-msgstr "em %(window)s"
+msgid "Showing the %(shown)s largest of %(used)s instruments used."
+msgstr "Exibindo os %(shown)s maiores entre %(used)s instrumentos utilizados."
 
-#, python-format
-msgid ""
-"- charted across the %(shown)s biggest of %(used)s instruments used, so the "
-"shares above stop short of 100%%."
+msgid "No income or expenses recorded"
+msgstr "Nenhuma receita ou despesa registrada"
+
+msgid "Record a transaction to compare income and expenses by account or card."
 msgstr ""
-"- exibido considerando os %(shown)s maiores entre %(used)s meios utilizados, "
-"por isso as proporções acima não chegam a 100%%."
-
-msgid "No expenses recorded"
-msgstr "Nenhuma despesa registrada"
-
-msgid "Record an expense to see which card or account it came from."
-msgstr "Registre uma despesa para ver de qual cartão ou conta ela veio."
+"Registre uma transação para comparar receitas e despesas por conta ou cartão."
 
 msgid "New Transaction"
 msgstr "Nova transação"
@@ -1525,85 +1523,6 @@ msgstr "Fechar"
 
 msgid "No transactions used this card or account in the selected window."
 msgstr "Nenhuma transação usou este cartão ou conta no período selecionado."
-
-msgid "Income by bank account"
-msgstr "Receitas por conta bancária"
-
-msgid "Income and expenses by account or card"
-msgstr "Receitas e despesas por conta ou cartão"
-
-msgid "Money moved across your accounts and cards over all months."
-msgstr "Movimentação em suas contas e cartões durante todo o período."
-
-#, python-format
-msgid "Money moved across your accounts and cards in <span class=\"font-medium text-slate-700 dark:text-neutral-300\">%(window)s</span>."
-msgstr "Movimentação em suas contas e cartões em <span class=\"font-medium text-slate-700 dark:text-neutral-300\">%(window)s</span>."
-
-msgid "Click a bar to see its categories."
-msgstr "Clique em uma barra para ver suas categorias."
-
-msgid "Grouped bar chart of income and expenses per account or card"
-msgstr "Gráfico de barras agrupadas de receitas e despesas por conta ou cartão"
-
-#, python-format
-msgid "Expenses for %(label)s: %(currency)s %(total)s. Click to see categories."
-msgstr "Despesas de %(label)s: %(currency)s %(total)s. Clique para ver as categorias."
-
-#, python-format
-msgid "Income for %(label)s: %(currency)s %(total)s. Click to see categories."
-msgstr "Receitas de %(label)s: %(currency)s %(total)s. Clique para ver as categorias."
-
-#, python-format
-msgid "Showing the %(shown)s largest of %(used)s instruments used."
-msgstr "Exibindo os %(shown)s maiores entre %(used)s instrumentos utilizados."
-
-msgid "No income or expenses recorded"
-msgstr "Nenhuma receita ou despesa registrada"
-
-msgid "Record a transaction to compare income and expenses by account or card."
-msgstr "Registre uma transação para comparar receitas e despesas por conta ou cartão."
-
-msgid "Where"
-msgstr "Onde"
-
-msgid "your income across all months"
-msgstr "suas receitas em todos os meses"
-
-#, python-format
-msgid ""
-"<span class=\"font-medium text-slate-700 dark:text-neutral-300\">%(window)s</"
-"span>'s income"
-msgstr ""
-"receitas de <span class=\"font-medium text-slate-700 dark:text-"
-"neutral-300\">%(window)s</span>"
-
-msgid ""
-"landed - the same window as the spending chart above, with recurrences "
-"counted the same way."
-msgstr ""
-"foram recebidas - o mesmo período do gráfico de gastos acima, com as "
-"recorrências contabilizadas da mesma forma."
-
-msgid "Bar chart of income per bank account for the selected window"
-msgstr ""
-"Gráfico de barras das receitas por conta bancária no período selecionado"
-
-msgid "Total received"
-msgstr "Total recebido"
-
-#, python-format
-msgid ""
-"- charted across the %(shown)s biggest of %(used)s accounts used, so the "
-"shares above stop short of 100%%."
-msgstr ""
-"- exibido considerando as %(shown)s maiores entre %(used)s contas "
-"utilizadas, por isso as proporções acima não chegam a 100%%."
-
-msgid "No income recorded"
-msgstr "Nenhuma receita registrada"
-
-msgid "Record income to see its destination bank account."
-msgstr "Registre uma receita para ver sua conta bancária de destino."
 
 msgid "received on"
 msgstr "recebidas em"
@@ -1792,9 +1711,6 @@ msgstr "Tem certeza de que deseja excluir"
 #, python-format
 msgid "%(quantity)s units, gross %(gross)s %(currency)s"
 msgstr "%(quantity)s unidades, bruto de %(gross)s %(currency)s"
-
-msgid "This action cannot be undone."
-msgstr "Esta ação não pode ser desfeita."
 
 msgid "Edit Operation"
 msgstr "Editar operação"
@@ -2407,6 +2323,124 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+#~ msgid "Monthly spending by credit card"
+#~ msgstr "Gastos mensais por cartão de crédito"
+
+#~ msgid ""
+#~ "Invoice-competence spending for up to eight cards in the period shown "
+#~ "above."
+#~ msgstr ""
+#~ "Gastos por competência da fatura para até oito cartões no período exibido "
+#~ "acima."
+
+#~ msgid "Grouped monthly spending by credit card"
+#~ msgstr "Gastos mensais agrupados por cartão de crédito"
+
+#~ msgid "No credit-card spending"
+#~ msgstr "Nenhum gasto com cartão de crédito"
+
+#~ msgid "There are no credit-card expenses in this period."
+#~ msgstr "Não há despesas de cartão de crédito neste período."
+
+#~ msgid "Spending by card or account"
+#~ msgstr "Gastos por cartão ou conta"
+
+#~ msgid "How"
+#~ msgstr "Como"
+
+#~ msgid "your expenses across all months"
+#~ msgstr "suas despesas em todos os meses"
+
+#, python-format
+#~ msgid ""
+#~ "<span class=\"font-medium text-slate-700 dark:text-"
+#~ "neutral-300\">%(window)s</span>'s expenses"
+#~ msgstr ""
+#~ "despesas de <span class=\"font-medium text-slate-700 dark:text-"
+#~ "neutral-300\">%(window)s</span>"
+
+#~ msgid ""
+#~ "split across your cards and accounts - fixed transactions and open "
+#~ "installments included."
+#~ msgstr ""
+#~ "divididas entre seus cartões e contas - incluindo transações fixas e "
+#~ "parcelas em aberto."
+
+#~ msgid "Bar chart of expenses per card or account for the selected window"
+#~ msgstr ""
+#~ "Gráfico de barras das despesas por cartão ou conta no período selecionado"
+
+#, python-format
+#~ msgid ""
+#~ "%(label)s: %(currency)s %(total)s · %(share)s%% of the window. Click to "
+#~ "see categories."
+#~ msgstr ""
+#~ "%(label)s: %(currency)s %(total)s · %(share)s%% do período. Clique para "
+#~ "ver as categorias."
+
+#~ msgid "across all months"
+#~ msgstr "em todos os meses"
+
+#, python-format
+#~ msgid "in %(window)s"
+#~ msgstr "em %(window)s"
+
+#, python-format
+#~ msgid ""
+#~ "- charted across the %(shown)s biggest of %(used)s instruments used, so "
+#~ "the shares above stop short of 100%%."
+#~ msgstr ""
+#~ "- exibido considerando os %(shown)s maiores entre %(used)s meios "
+#~ "utilizados, por isso as proporções acima não chegam a 100%%."
+
+#~ msgid "No expenses recorded"
+#~ msgstr "Nenhuma despesa registrada"
+
+#~ msgid "Record an expense to see which card or account it came from."
+#~ msgstr "Registre uma despesa para ver de qual cartão ou conta ela veio."
+
+#~ msgid "Income by bank account"
+#~ msgstr "Receitas por conta bancária"
+
+#~ msgid "Where"
+#~ msgstr "Onde"
+
+#~ msgid "your income across all months"
+#~ msgstr "suas receitas em todos os meses"
+
+#, python-format
+#~ msgid ""
+#~ "<span class=\"font-medium text-slate-700 dark:text-"
+#~ "neutral-300\">%(window)s</span>'s income"
+#~ msgstr ""
+#~ "receitas de <span class=\"font-medium text-slate-700 dark:text-"
+#~ "neutral-300\">%(window)s</span>"
+
+#~ msgid ""
+#~ "landed - the same window as the spending chart above, with recurrences "
+#~ "counted the same way."
+#~ msgstr ""
+#~ "foram recebidas - o mesmo período do gráfico de gastos acima, com as "
+#~ "recorrências contabilizadas da mesma forma."
+
+#~ msgid "Bar chart of income per bank account for the selected window"
+#~ msgstr ""
+#~ "Gráfico de barras das receitas por conta bancária no período selecionado"
+
+#, python-format
+#~ msgid ""
+#~ "- charted across the %(shown)s biggest of %(used)s accounts used, so the "
+#~ "shares above stop short of 100%%."
+#~ msgstr ""
+#~ "- exibido considerando as %(shown)s maiores entre %(used)s contas "
+#~ "utilizadas, por isso as proporções acima não chegam a 100%%."
+
+#~ msgid "No income recorded"
+#~ msgstr "Nenhuma receita registrada"
+
+#~ msgid "Record income to see its destination bank account."
+#~ msgstr "Registre uma receita para ver sua conta bancária de destino."
 
 #~ msgid "The selected debit card determines the bank account."
 #~ msgstr "O cartão de débito selecionado determina a conta bancária."
