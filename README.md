@@ -10,8 +10,7 @@ A personal finance tracker built with Django full stack — record categorized t
 
 ## Video tutorials
 
-- **English tutorial:** YouTube link coming soon.
-- **Tutorial em português:** link do YouTube em breve.
+- [Tuxedo Finance - Tutorial](https://youtu.be/I9oGKTAVM3c)
 
 ## Why Tuxedo Finance exists
 
