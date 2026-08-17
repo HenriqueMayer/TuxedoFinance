@@ -18,13 +18,71 @@
         {% if form.non_field_errors %}
             {% for error in form.non_field_errors %}<p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
         {% endif %}
-        {% for field in form %}
-            {% include 'partials/form_field.html' with field=field %}
-        {% endfor %}
+        {% if form.valuation_mode %}
+            {% include 'partials/form_field.html' with field=form.name %}
+            {% include 'partials/form_field.html' with field=form.code %}
+            {% include 'partials/form_field.html' with field=form.asset_class %}
+            {% include 'partials/form_field.html' with field=form.currency %}
+            {% include 'partials/form_field.html' with field=form.valuation_mode %}
+            <div id="monetary-opening-fields"
+                 data-has-errors="{{ form.opening_balance.errors|yesno:'true,false' }}">
+                {% include 'partials/form_field.html' with field=form.opening_balance %}
+            </div>
+            <div id="unit-opening-fields"
+                 class="space-y-5"
+                 data-has-errors="{% if form.opening_quantity.errors or form.opening_unit_price.errors %}true{% else %}false{% endif %}">
+                {% include 'partials/form_field.html' with field=form.opening_quantity %}
+                {% include 'partials/form_field.html' with field=form.opening_unit_price %}
+            </div>
+            {% include 'partials/form_field.html' with field=form.opening_product %}
+        {% else %}
+            {% for field in form %}
+                {% include 'partials/form_field.html' with field=field %}
+            {% endfor %}
+        {% endif %}
         <div class="flex items-center gap-3">
             <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90">{% translate 'Save' %}</button>
             <a href="{% url 'investments:settings' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200">{% translate 'Cancel' %}</a>
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if form.valuation_mode %}
+<script>
+    (function () {
+        const valuationMode = document.getElementById('{{ form.valuation_mode.id_for_label }}');
+        const openingBalance = document.getElementById('{{ form.opening_balance.id_for_label }}');
+        const openingQuantity = document.getElementById('{{ form.opening_quantity.id_for_label }}');
+        const openingUnitPrice = document.getElementById('{{ form.opening_unit_price.id_for_label }}');
+        const monetaryFields = document.getElementById('monetary-opening-fields');
+        const unitFields = document.getElementById('unit-opening-fields');
+        if (!valuationMode || !openingBalance || !openingQuantity || !openingUnitPrice) return;
+
+        function setHidden(group, hidden, preserveErrors) {
+            group.hidden = hidden && !(preserveErrors && group.dataset.hasErrors === 'true');
+        }
+
+        function updateOpeningFields(clearStale) {
+            const isMonetary = valuationMode.value === 'MONETARY';
+            setHidden(monetaryFields, !isMonetary, !clearStale);
+            setHidden(unitFields, isMonetary, !clearStale);
+
+            if (!clearStale) return;
+            if (isMonetary) {
+                openingQuantity.value = '0';
+                openingUnitPrice.value = '0';
+            } else {
+                openingBalance.value = '0';
+            }
+        }
+
+        valuationMode.addEventListener('change', function () {
+            updateOpeningFields(true);
+        });
+        updateOpeningFields(false);
+    })();
+</script>
+{% endif %}
 {% endblock %}

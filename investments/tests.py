@@ -395,6 +395,11 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
 
         self.assertContains(response, 'id="id_opening_quantity"')
         self.assertContains(response, 'id="id_opening_unit_price"')
+        self.assertContains(response, 'id="monetary-opening-fields"')
+        self.assertContains(response, 'id="unit-opening-fields"')
+        self.assertContains(response, "valuationMode.addEventListener('change'")
+        self.assertContains(response, "openingQuantity.value = '0'")
+        self.assertContains(response, "openingBalance.value = '0'")
 
         response = self.client.post(reverse('investments:create_asset'), {
             'name': 'Bitcoin',
