@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-16 22:50+0000\n"
+"POT-Creation-Date: 2026-08-17 01:26+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -557,7 +557,9 @@ msgstr "Categoria \"%(name)s\" excluída."
 
 msgid ""
 "Categories cannot be deleted while they are used by existing transactions."
-msgstr "As categorias não podem ser excluídas enquanto estiverem sendo usadas por transações existentes."
+msgstr ""
+"As categorias não podem ser excluídas enquanto estiverem sendo usadas por "
+"transações existentes."
 
 msgid "All categories deleted."
 msgstr "Todas as categorias foram excluídas."
@@ -1266,7 +1268,9 @@ msgstr[0] "Você está prestes a excluir sua única categoria."
 msgstr[1] "Você está prestes a excluir todas as %(count)s categorias."
 
 msgid "If any category is used by a transaction, nothing will be deleted."
-msgstr "Se alguma categoria estiver sendo usada por uma transação, nada será excluído."
+msgstr ""
+"Se alguma categoria estiver sendo usada por uma transação, nada será "
+"excluído."
 
 msgid "Yes, delete all"
 msgstr "Sim, excluir tudo"
@@ -2087,6 +2091,36 @@ msgstr "Alternar menu"
 
 msgid "Select date"
 msgstr "Selecionar data"
+
+msgid "Project links"
+msgstr "Links do projeto"
+
+msgid "Open project links"
+msgstr "Abrir links do projeto"
+
+msgid "Problems / Suggestions"
+msgstr "Problemas / Sugestões"
+
+msgid "(opens GitHub in a new tab)"
+msgstr "(abre o GitHub em uma nova aba)"
+
+msgid "Roadmap"
+msgstr "Roadmap"
+
+msgid "Coming next"
+msgstr "Próximas implementações"
+
+msgid ""
+"A personal Tuxedo assistant to ask questions, review your finances, and plan."
+msgstr ""
+"Um assistente pessoal Tuxedo para tirar dúvidas, revisar suas finanças e "
+"planejar."
+
+msgid "Improvements to investment tracking and analysis."
+msgstr "Melhorias no acompanhamento e na análise de investimentos."
+
+msgid "Automatic monthly and annual investment yield calculations."
+msgstr "Cálculos automáticos de rendimento mensal e anual dos investimentos."
 
 msgid "Toggle color theme"
 msgstr "Alternar tema de cores"

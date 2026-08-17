@@ -80,6 +80,22 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, '<html lang="en"', html=False)
         self.assertContains(response, 'id="language-select-public"')
         self.assertContains(response, 'Log in')
+        self.assertContains(
+            response,
+            'https://github.com/HenriqueMayer/TuxedoFinance/issues/new',
+        )
+        self.assertContains(response, 'Problems / Suggestions')
+        self.assertContains(response, 'Roadmap')
+        self.assertContains(response, '/static/js/project-menu.js?v=1')
+        self.assertContains(
+            response,
+            'A personal Tuxedo assistant to ask questions, review your finances, and plan.',
+        )
+        self.assertContains(response, 'Improvements to investment tracking and analysis.')
+        self.assertContains(
+            response,
+            'Automatic monthly and annual investment yield calculations.',
+        )
 
 
     def test_set_language_persists_portuguese_in_cookie(self):
@@ -98,6 +114,20 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(
             translated,
             'Nascido da frustração diária de adaptar planilhas às finanças pessoais reais.',
+        )
+        self.assertContains(translated, 'Problemas / Sugestões')
+        self.assertContains(translated, 'Próximas implementações')
+        self.assertContains(
+            translated,
+            'Um assistente pessoal Tuxedo para tirar dúvidas, revisar suas finanças e planejar.',
+        )
+        self.assertContains(
+            translated,
+            'Melhorias no acompanhamento e na análise de investimentos.',
+        )
+        self.assertContains(
+            translated,
+            'Cálculos automáticos de rendimento mensal e anual dos investimentos.',
         )
 
     @override_settings(DEBUG=False)
@@ -118,6 +148,8 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.content.count(b'data-theme-toggle'), 2)
         self.assertEqual(response.content.count(b'id="theme-toggle"'), 1)
         self.assertContains(response, '/static/js/theme.js?v=2')
+        self.assertContains(response, 'aria-label="Settings"')
+        self.assertContains(response, reverse('accounts:settings'))
 
     def test_htmx_reports_respect_selected_language(self):
         user = User.objects.create_user('reports-language', password='test')

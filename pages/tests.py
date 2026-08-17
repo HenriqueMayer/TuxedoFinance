@@ -19,6 +19,6 @@ class LandingBrandTests(TestCase):
         self.assertContains(response, 'brand/apple-touch-icon.png')
         self.assertContains(
             response,
-            '<span class="text-slate-900 dark:text-white">Tuxedo</span><span class="text-amber-600 dark:text-amber-400">Finance</span>',
+            '<span class="text-slate-900 dark:text-white">Tuxedo</span><span class="hidden text-amber-600 dark:text-amber-400 sm:inline">Finance</span>',
             html=True,
         )
