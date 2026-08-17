@@ -174,6 +174,14 @@ class CreditCard(TimestampedModel):
 
     def due_date_for(self, reference_month):
         reference_month = reference_month.replace(day=1)
+        # When the due day is before the closing day, the invoice is paid in
+        # the following calendar month. For example, a card that closes on
+        # the 24th and is due on the 1st has its August invoice due on
+        # September 1st, not August 1st.
+        if self.due_day < self.closing_day:
+            index = reference_month.year * 12 + reference_month.month
+            year, month = divmod(index, 12)
+            reference_month = date(year, month + 1, 1)
         day = min(self.due_day, monthrange(reference_month.year, reference_month.month)[1])
         return reference_month.replace(day=day)
 

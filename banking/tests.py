@@ -220,6 +220,11 @@ class CardAndInvoiceTests(TestCase):
     def test_due_date_clamps_short_month(self):
         self.assertEqual(self.card.due_date_for(date(2024, 2, 18)), date(2024, 2, 29))
 
+    def test_due_date_moves_to_next_month_when_due_day_precedes_closing_day(self):
+        self.card.closing_day = 24
+        self.card.due_day = 1
+        self.assertEqual(self.card.due_date_for(date(2026, 8, 1)), date(2026, 9, 1))
+
     def test_invoice_requires_first_day_and_is_unique_per_card_month(self):
         invalid = CardInvoice(
             user=self.user,

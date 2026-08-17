@@ -114,6 +114,69 @@ class LedgerBalanceTests(DashboardFixture):
         )
         self.assertEqual(due_summary['projected_balance'], Decimal('880.00'))
 
+    def test_card_due_day_before_closing_day_does_not_reduce_current_balance_early(self):
+        today = timezone.localdate()
+        card = CreditCard.objects.create(
+            user=self.user,
+            account=self.account,
+            name='First Day Card',
+            closing_day=24,
+            due_day=1,
+        )
+        purchase = self.transaction(
+            amount='120.00',
+            payment_channel=Transaction.PaymentChannel.CREDIT_CARD,
+            bank_account=None,
+            credit_card=card,
+        )
+        sync_user_ledger(self.user)
+        invoice = card.invoices.get(reference_month=purchase.billed_month)
+
+        self.assertGreater(invoice.due_date, today)
+        self.assertEqual(get_dashboard_summary(self.user)['current_balance'], Decimal('1000.00'))
+
+    def test_projected_balance_includes_card_expense_in_statement_month(self):
+        today = timezone.localdate()
+        card = CreditCard.objects.create(
+            user=self.user,
+            account=self.account,
+            name='First Day Card',
+            closing_day=24,
+            due_day=1,
+        )
+        self.transaction(
+            amount='120.00',
+            payment_channel=Transaction.PaymentChannel.CREDIT_CARD,
+            bank_account=None,
+            credit_card=card,
+            date=today,
+        )
+        sync_user_ledger(self.user)
+
+        summary = get_dashboard_summary(self.user)
+
+        self.assertEqual(summary['current_balance'], Decimal('1000.00'))
+        self.assertEqual(summary['projected_balance'], Decimal('880.00'))
+        self.assertEqual(summary['balance_month'], Decimal('-120.00'))
+
+    def test_future_month_current_balance_starts_from_previous_projected_close(self):
+        today = timezone.localdate()
+        next_year, next_month = add_months(today.year, today.month, 1)
+        self.transaction(
+            title='Future salary',
+            amount='500.00',
+            transaction_type=Transaction.TransactionType.INCOME,
+            date=date(next_year, next_month, 15),
+            is_fixed=False,
+        )
+        sync_user_ledger(self.user)
+
+        summary = get_dashboard_summary(self.user, next_year, next_month)
+
+        self.assertEqual(summary['current_balance'], Decimal('1000.00'))
+        self.assertEqual(summary['projected_balance'], Decimal('1500.00'))
+        self.assertEqual(summary['balance_month'], Decimal('500.00'))
+
     def test_invoice_settlement_is_not_a_second_expense(self):
         today = timezone.localdate()
         card = CreditCard.objects.create(

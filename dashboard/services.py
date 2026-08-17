@@ -217,16 +217,61 @@ def get_dashboard_summary(user, year=None, month=None):
     transactions = _transactions(user)
     selected = _monthly_totals(user, transactions, year, month)
     current = get_ledger_snapshot(user, today)
-    projected = get_ledger_snapshot(user, _month_end(year, month))
+    current_previous_year, current_previous_month = add_months(
+        today.year, today.month, -1
+    )
+    current_period_start = get_ledger_snapshot(
+        user, _month_end(current_previous_year, current_previous_month)
+    )
+    is_current_month = (year, month) == (today.year, today.month)
+
+    selected_offset = (year - today.year) * 12 + month - today.month
+    path_months = max(0, selected_offset) + OUTLOOK_MONTHS
+    projected_path = {}
+    rolling_projected = current_period_start['total']
+    for offset in range(path_months + 1):
+        path_year, path_month = add_months(today.year, today.month, offset)
+        path_totals = _monthly_totals(user, transactions, path_year, path_month)
+        rolling_projected += path_totals['balance']
+        projected_path[(path_year, path_month)] = rolling_projected
+
+    if selected_offset >= 0:
+        previous_year, previous_month = add_months(year, month, -1)
+        period_start_total = (
+            current_period_start['total']
+            if selected_offset == 0
+            else projected_path[(previous_year, previous_month)]
+        )
+        projected_total = projected_path[(year, month)]
+    else:
+        previous_year, previous_month = add_months(year, month, -1)
+        period_start = get_ledger_snapshot(
+            user, _month_end(previous_year, previous_month)
+        )
+        period_start_total = period_start['total']
+        projected_total = get_ledger_snapshot(
+            user, _month_end(year, month)
+        )['total']
+
+    displayed_current = current if is_current_month else current_period_start
 
     outlook = []
-    missing = set(current['missing_currencies']) | set(projected['missing_currencies'])
+    missing = (
+        set(current['missing_currencies'])
+    )
+    if not is_current_month:
+        missing.update(current_period_start['missing_currencies'])
     for offset in range(OUTLOOK_MONTHS):
         row_year, row_month = add_months(year, month, offset)
         totals = _monthly_totals(user, transactions, row_year, row_month)
-        snapshot = get_ledger_snapshot(user, _month_end(row_year, row_month))
         missing.update(totals['missing_currencies'])
-        missing.update(snapshot['missing_currencies'])
+        row_offset = (row_year - today.year) * 12 + row_month - today.month
+        if row_offset >= 0:
+            row_projected = projected_path[(row_year, row_month)]
+        else:
+            snapshot = get_ledger_snapshot(user, _month_end(row_year, row_month))
+            missing.update(snapshot['missing_currencies'])
+            row_projected = snapshot['total']
         outlook.append(
             {
                 'year': row_year,
@@ -235,7 +280,7 @@ def get_dashboard_summary(user, year=None, month=None):
                 'is_current_month': (row_year, row_month) == (today.year, today.month),
                 'is_selected_month': offset == 0,
                 **totals,
-                'projected_balance': snapshot['total'],
+                'projected_balance': row_projected,
             }
         )
 
@@ -248,17 +293,23 @@ def get_dashboard_summary(user, year=None, month=None):
         'selected_year': year,
         'selected_month': month,
         'selected_month_date': date(year, month, 1),
-        'is_current_month': (year, month) == (today.year, today.month),
+        'is_current_month': is_current_month,
         'is_future_month': (year, month) > (today.year, today.month),
-        'current_balance': current['total'],
-        'projected_balance': projected['total'],
-        'account_balances': current['accounts'],
+        # For the current month this is the realized cash balance today. For
+        # another selected month it is that month's opening cash balance,
+        # i.e. the projected closing balance of the previous month.
+        'current_balance': displayed_current['total'],
+        'projected_balance': projected_total,
+        'account_balances': displayed_current['accounts'],
         'open_invoices': invoices,
         'next_invoice': invoices[0] if invoices else None,
         'income_month': selected['income'],
         'expense_month': selected['expenses'],
         'investment_month': selected['investments'],
-        'balance_month': selected['balance'],
+        # This card must reconcile with the two balance cards. `selected`
+        # remains the transaction/reporting flow, where card purchases belong
+        # to their statement month; cash closing follows invoice due dates.
+        'balance_month': projected_total - period_start_total,
         'missing_currencies': sorted(missing | set(selected['missing_currencies'])),
         'outlook': outlook,
     }

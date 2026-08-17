@@ -76,6 +76,10 @@ convention as the transaction list filter.
             {% include 'partials/stat_card.html' with label=projected_month_label value=CURRENCY_SYMBOL|add:' '|add:projected_balance_fmt compact_value=True %}
         {% endwith %}
     </div>
+    <p class="mt-2 text-xs text-slate-500 dark:text-neutral-500">
+        <span class="font-semibold">?</span>
+        {% translate "Projected closing includes this month's income and expenses. Credit-card purchases belong to the statement month, while cash is settled on the invoice due date." %}
+    </p>
 
     {% if missing_currencies %}
         <div class="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
