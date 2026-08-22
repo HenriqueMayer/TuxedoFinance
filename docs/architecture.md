@@ -15,7 +15,7 @@ methods to explicit banking and ledger concepts.
 | Authentication | Native `django.contrib.auth` |
 | Dependency management | `uv` |
 | Views | Class-Based Views |
-| Supported runtime | Django development server (`runserver`); optional single-instance Docker packaging |
+| Supported runtime | Django development server (`runserver`) |
 | Localization | Django gettext (`en`, `pt-br`) |
 
 Public registration is a deployment-level policy, not a separate account model:
@@ -23,12 +23,6 @@ Public registration is a deployment-level policy, not a separate account model:
 accounts signup view enforces it on every request, while public templates merely
 mirror the state by showing or hiding signup calls to action. Existing login
 flows are independent of this switch.
-
-Docker is packaging only, not a second architecture: it runs the same Django
-application and SQLite database in one container, with `/data` as the persistent
-data mount and automatic startup migrations. The image runs as a non-root user;
-its HTTP healthcheck is intended only for local visibility. It does not provide
-replicas, a separate database, production orchestration, or automated backups.
 
 ## Domain apps
 

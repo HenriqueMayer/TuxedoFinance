@@ -49,7 +49,7 @@ permitted by the project's license; see [License](#license).
 | Frontend | Django Template Language · TailwindCSS |
 | Database | SQLite (native, no separate service) |
 | Tooling | [`uv`](https://docs.astral.sh/uv/) |
-| Runtime | Django development server (`runserver`), optionally packaged with Docker |
+| Runtime | Django development server (`runserver`) |
 
 ## Quick start
 
@@ -73,35 +73,6 @@ Open <http://127.0.0.1:8000/>, create your account from the landing page, then
 add a bank and a currency-specific account before recording your first
 transaction. To start the app again later, enter the project directory and run
 only `uv run python manage.py runserver`.
-
-### Optional Docker packaging
-
-Docker is an optional local packaging path; the native `uv` workflow above is
-the primary development and support path. The image runs one Tuxedo Finance process
-as the unprivileged `cashflow` user, executes migrations on startup, and stores
-SQLite runtime data in the named `cashflow_data` volume. It does not contain a
-database, account, or personal data.
-
-```bash
-docker compose up --build
-```
-
-Docker Compose reads the same local `.env` file created in Quick start. If you
-choose Docker first, run the `uv sync` and one-time `printf` commands above,
-then start the container.
-
-Open <http://127.0.0.1:8000/> after the container reports healthy. The compose
-healthcheck is only a local operational signal; it is not production
-orchestration or a readiness contract for replicas. The supplied image targets
-Linux `amd64` and `arm64` hosts through the upstream Python base image; other
-architectures must be validated locally. Keep the named volume and back it up
-with the same SQLite procedure used by native installs; see
-[`docs/operations.md`](docs/operations.md#optional-docker-packaging).
-
-Do not expose this single-instance SQLite container directly to the public
-internet. Set `DEBUG=False`, configure real `ALLOWED_HOSTS`, and terminate TLS
-outside the container before any non-local use. Docker support does not add
-horizontal scaling, a separate database, or automated backup.
 
 ### Validation and CI
 
@@ -231,9 +202,8 @@ Set `HTTPS=True` only once the instance is actually served over TLS — it sends
 
 ## Future deployment security
 
-The native `runserver` workflow is primary and Docker is optional local
-packaging. Before any non-local deployment, apply Django's deployment checklist
-and these safeguards:
+The native `runserver` workflow is the supported path. Before any non-local
+deployment, apply Django's deployment checklist and these safeguards:
 
 - Set a real `SECRET_KEY` and `DEBUG=False`.
 - List your real domains in `ALLOWED_HOSTS`.

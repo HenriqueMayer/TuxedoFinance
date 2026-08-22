@@ -24,7 +24,7 @@ from core.currencies import get_currency
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Local installs keep their private settings in the ignored root `.env` file.
-# Real process variables (including CI and Docker values) always take priority.
+# Real process variables (including CI values) always take priority.
 ENV_FILE = Path(os.environ.get('TUXEDO_ENV_FILE', BASE_DIR / '.env'))
 load_dotenv(dotenv_path=ENV_FILE, override=False)
 

@@ -20,7 +20,7 @@ license notices.
 
 The supported path is Python 3.12, `uv`, Django's test runner and SQLite. The
 single CI job reproduces that local workflow from `uv.lock`; it does not test
-other databases, SaaS deployment matrices or Docker packaging. It runs Django
+other databases or SaaS deployment matrices. It runs Django
 checks, missing-migration checks, translation compilation, the full suite with
 branch coverage, Ruff, and a locked-runtime `pip-audit` scan.
 
