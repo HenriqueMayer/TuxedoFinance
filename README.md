@@ -24,6 +24,22 @@ record of financial activity. It is designed for personal use and simple local
 operation—not as a SaaS platform—and keeps the database under the installation
 owner's control.
 
+## 👀 Interface preview
+
+<p align="center">
+  <a href="https://henriquemayer.github.io/TuxedoFinance/">
+    <img src="preview/images/en/dashboard-light.png" alt="Tuxedo Finance dashboard preview with synthetic financial data">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://henriquemayer.github.io/TuxedoFinance/"><strong>Open the bilingual interface tour →</strong></a>
+</p>
+
+<p align="center">
+  <sub>Static preview with synthetic data. There is no login or backend, and nothing is saved.</sub>
+</p>
+
 ## 🚀 Quick start
 
 Requires Python 3.12 and [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
@@ -164,6 +180,7 @@ Terminal 2:
 ```bash
 npx playwright install chromium
 npm run test:e2e
+npm run test:preview
 ```
 
 The browser suite expects the application at `http://127.0.0.1:8765` by default;
@@ -172,6 +189,10 @@ the compiled CSS and vendored HTMX against their pinned sources, checks migratio
 and translations, enforces the documented coverage floor, runs Ruff, and audits
 the locked runtime dependencies. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for the complete development workflow.
+
+To regenerate the committed interface-tour images from disposable synthetic
+data, run `npm run preview:capture`. The command uses a guarded temporary
+database and never writes to the installation owner's `db.sqlite3`.
 
 ## 📚 Documentation
 

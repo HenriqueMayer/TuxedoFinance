@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "build:css": "tailwindcss -c tailwind.config.js -i assets/css/tailwind.css -o static/css/app.css --minify",
-    "test:e2e": "playwright test"
+    "preview:capture": "bash scripts/capture_preview.sh",
+    "test:e2e": "playwright test",
+    "test:preview": "playwright test --config=playwright.preview.config.js"
   },
   "devDependencies": {
     "@playwright/test": "1.62.0",

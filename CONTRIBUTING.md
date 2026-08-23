@@ -31,6 +31,13 @@ branch coverage, Ruff, a locked-runtime `pip-audit` scan, generated-asset
 consistency and focused Chromium smoke tests. Browser failures upload screenshots,
 video and trace artifacts for diagnosis.
 
+The separate static-preview suite checks both languages, theme persistence,
+image loading, the screenshot dialog and mobile overflow. Run it with
+`npm run test:preview`. When the public interface tour needs new screenshots,
+run `npm run preview:capture`; it creates localized synthetic profiles in a
+guarded temporary SQLite database and removes all temporary data. Never replace
+that isolation with the repository-root `db.sqlite3` or real financial records.
+
 Coverage is reported as XML and HTML artifacts. CI enforces a repository-wide
 70% line-coverage floor; branch coverage is reported but not independently
 gated. Keep tests for all affected user flows and record additions, obsolete
