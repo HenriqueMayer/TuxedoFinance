@@ -22,10 +22,9 @@ tokens for dark theme and financial semantics, driven by a `.dark` class on
 <html>. Light page `bg-cream` (#FAF8F3), text `text-forest` (#1A2E26); dark
 page `bg-forest-deep` (#101E18), text `dark:text-cream`. Cards are white
 rounded-3xl in light and flat forest (#1A2E26) surfaces in dark. Semantic
-mapping: Income forest (sage #7FA08F on dark), Expense terracotta
-(#A85D3C, light variant #C4825E), Investment caramel (#B88A59). Primary
-actions are caramel pills; headings use Playfair Display (`font-serif`),
-body/labels/numerals use Inter (`font-sans`, tabular-nums for money).
+mapping is defined through explicit financial tokens. Primary actions are
+caramel pills. Headings, body text, labels and tabular monetary figures all
+use Inter at readable weights and sizes.
 
 Theme: a synchronous inline `<head>` script reads `localStorage`/OS
 preference and toggles `.dark` before paint (no flash of the wrong theme).
@@ -66,7 +65,7 @@ build step.
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -82,7 +81,6 @@ build step.
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        serif: ['Playfair Display', 'serif'],
                     }
                 }
             }

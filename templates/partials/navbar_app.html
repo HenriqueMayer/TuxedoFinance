@@ -47,27 +47,27 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
             <!-- Desktop links -->
             <div class="hidden items-center gap-7 md:flex">
                 <a href="{{ dashboard_url }}"
-                   class="relative pb-1 text-[11px] uppercase tracking-widest font-medium transition-colors {% if request.path == dashboard_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == dashboard_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
                      {% translate 'Dashboard' %}
                 </a>
                 <a href="{{ reports_url }}"
-                   class="relative pb-1 text-[11px] uppercase tracking-widest font-medium transition-colors {% if request.path == reports_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == reports_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
                      {% translate 'Reports' %}
                 </a>
                 <a href="{{ transactions_url }}"
-                   class="relative pb-1 text-[11px] uppercase tracking-widest font-medium transition-colors {% if request.path == transactions_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == transactions_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
                      {% translate 'Transactions' %}
                 </a>
                 <a href="{{ categories_url }}"
-                   class="relative pb-1 text-[11px] uppercase tracking-widest font-medium transition-colors {% if request.path == categories_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == categories_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
                      {% translate 'Categories' %}
                 </a>
                 <a href="{{ banking_url }}"
-                   class="relative pb-1 text-[11px] uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'banking' %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'banking' %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
                      {% translate 'Banks' %}
                 </a>
                 <a href="{{ investments_url }}"
-                   class="relative pb-1 text-[11px] uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'investments' %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'investments' %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
                      {% translate 'Investments' %}
                 </a>
                 <a href="{{ settings_url }}"
@@ -87,11 +87,11 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
                 {% include 'partials/project_menu.html' %}
                 {% include 'partials/language_selector.html' with selector_id='desktop' %}
                 {% include 'partials/theme_toggle.html' with legacy_theme_id=True %}
-                <span class="hidden lg:inline text-sm text-forest/60 dark:text-cream/60 font-light">{{ request.user.username }}</span>
+                <span class="hidden lg:inline text-sm text-forest/70 dark:text-cream/70 font-normal">{{ request.user.username }}</span>
                 <form method="post" action="{% url 'accounts:logout' %}">
                     {% csrf_token %}
                     <button type="submit"
-                            class="rounded-full border border-forest/30 px-5 py-2 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
+                            class="rounded-full border border-forest/30 px-5 py-2 text-xs uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
                          {% translate 'Log out' %}
                     </button>
                 </form>
@@ -122,13 +122,13 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
         <span class="sr-only">{% translate 'Close menu' %}</span>
     </button>
     <div class="flex flex-col items-center gap-7 text-cream">
-        <a href="{{ dashboard_url }}" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Dashboard' %}</a>
-        <a href="{{ reports_url }}" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Reports' %}</a>
-        <a href="{{ transactions_url }}" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Transactions' %}</a>
-        <a href="{{ categories_url }}" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Categories' %}</a>
-        <a href="{{ banking_url }}" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Banks' %}</a>
-        <a href="{{ investments_url }}" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Investments' %}</a>
-        <a href="{{ settings_url }}" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Settings' %}</a>
+        <a href="{{ dashboard_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Dashboard' %}</a>
+        <a href="{{ reports_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Reports' %}</a>
+        <a href="{{ transactions_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Transactions' %}</a>
+        <a href="{{ categories_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Categories' %}</a>
+        <a href="{{ banking_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Banks' %}</a>
+        <a href="{{ investments_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Investments' %}</a>
+        <a href="{{ settings_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Settings' %}</a>
         <div class="mt-4 flex items-center gap-4">
             {% include 'partials/language_selector.html' with selector_id='mobile' %}
             {% include 'partials/theme_toggle.html' %}

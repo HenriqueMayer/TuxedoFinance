@@ -3,12 +3,12 @@
 {% block title %}{% blocktranslate with label=entity_label|title %}Delete {{ label }}{% endblocktranslate %} - Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">{% blocktranslate with label=entity_label|title %}Delete {{ label }}{% endblocktranslate %}</h1>
+    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% blocktranslate with label=entity_label|title %}Delete {{ label }}{% endblocktranslate %}</h1>
     <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
         <p class="text-sm text-forest/80 dark:text-cream/80">{% blocktranslate %}Are you sure you want to delete <strong>{{ entity }}</strong>? This action cannot be undone.{% endblocktranslate %}</p>
         {% if delete_warning %}<p class="text-sm text-caramel dark:text-caramel-light">{{ delete_warning }}</p>{% endif %}
-        <p class="text-sm text-forest/60 dark:text-cream/60">{% translate "Items used by investment operations are protected and will not be deleted." %}</p>
-        <form method="post" class="flex items-center gap-3">{% csrf_token %}<button type="submit" class="inline-flex items-center rounded-full bg-terracotta/10 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light ring-1 ring-inset ring-terracotta/30">{% translate "Delete" %}</button><a href="{% url 'investments:settings' %}" class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90">{% translate "Cancel" %}</a></form>
+        <p class="text-sm text-forest/70 dark:text-cream/70">{% translate "Items used by investment operations are protected and will not be deleted." %}</p>
+        <form method="post" class="flex items-center gap-3">{% csrf_token %}<button type="submit" class="inline-flex items-center rounded-full bg-terracotta/10 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light ring-1 ring-inset ring-terracotta/30">{% translate "Delete" %}</button><a href="{% url 'investments:settings' %}" class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90">{% translate "Cancel" %}</a></form>
     </div>
 </div>
 {% endblock %}

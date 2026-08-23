@@ -6,8 +6,8 @@
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <div>
-        <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %}</h1>
-        <p class="mt-1 text-sm text-forest/60 dark:text-cream/60">{% translate 'Choose an asset and operation type to see only the fields you need.' %}</p>
+        <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %}</h1>
+        <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate 'Choose an asset and operation type to see only the fields you need.' %}</p>
     </div>
     <form method="post" class="space-y-6 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
@@ -17,7 +17,7 @@
             {% include 'partials/form_field.html' with field=form.asset %}
             {% include 'partials/form_field.html' with field=form.kind %}
             {% include 'partials/form_field.html' with field=form.date %}
-            <p id="asset-mode-status" class="text-sm text-forest/60 dark:text-cream/60" aria-live="polite"></p>
+            <p id="asset-mode-status" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
             <div id="money-fields" data-has-errors="{{ form.amount.errors|yesno:'true,false' }}">
                 {% include 'partials/form_field.html' with field=form.amount %}
             </div>
@@ -30,7 +30,7 @@
         <section id="funding-section" class="space-y-4 rounded-xl bg-cream p-4 dark:bg-forest-deep">
             <div>
                 <h2 class="font-semibold text-forest dark:text-cream">{% translate 'Funding or destination' %}</h2>
-                <p id="operation-kind-status" class="text-sm text-forest/50 dark:text-cream/60" aria-live="polite"></p>
+                <p id="operation-kind-status" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
             </div>
             <div id="deposit-fields" data-has-errors="{% if form.source_account.errors or form.source_program.errors %}true{% else %}false{% endif %}" class="space-y-5">
                 {% include 'partials/form_field.html' with field=form.source_account %}
@@ -41,15 +41,15 @@
             <div id="withdrawal-fields" data-has-errors="{{ form.destination_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.destination_account %}</div>
         </section>
         <details class="rounded-xl ring-1 ring-forest/10 dark:ring-cream/10"{% if form.reason.errors or form.notes.errors or form.reason.value or form.notes.value %} open{% endif %}>
-            <summary class="cursor-pointer px-4 py-3 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/80">{% translate 'Advanced options' %}</summary>
+            <summary class="cursor-pointer px-4 py-3 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/80">{% translate 'Advanced options' %}</summary>
             <div class="space-y-5 p-4 pt-1">
                 {% include 'partials/form_field.html' with field=form.reason %}
                 {% include 'partials/form_field.html' with field=form.notes %}
             </div>
         </details>
         <div class="flex gap-3">
-            <button type="submit" class="rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white">{% translate 'Save' %}</button>
-            <a href="{% url 'investments:list' %}" class="rounded-full border border-forest/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate 'Cancel' %}</a>
+            <button type="submit" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white">{% translate 'Save' %}</button>
+            <a href="{% url 'investments:list' %}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate 'Cancel' %}</a>
         </div>
     </form>
 </div>

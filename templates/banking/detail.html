@@ -7,14 +7,14 @@
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <a href="{% url 'banking:list' %}" class="text-[11px] font-medium uppercase tracking-widest text-caramel dark:text-caramel-light">{% translate "Banks" %}</a>
-            <h1 class="mt-1 font-serif text-4xl font-normal tracking-tight">{{ bank.name }}</h1>
+            <a href="{% url 'banking:list' %}" class="text-xs font-medium uppercase tracking-widest text-caramel dark:text-caramel-light">{% translate "Banks" %}</a>
+            <h1 class="mt-1 font-sans text-4xl font-semibold tracking-tight">{{ bank.name }}</h1>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{% url 'banking:account_create' %}?bank={{ bank.pk }}" class="rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white">{% translate "Add account" %}</a>
-            <a href="{% url 'banking:program_create' %}?bank={{ bank.pk }}" class="rounded-full border border-forest/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Add loyalty program" %}</a>
-            <a href="{% url 'banking:update' bank.pk %}" class="rounded-full border border-forest/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Edit bank" %}</a>
-            <a href="{% url 'banking:delete' bank.pk %}" class="rounded-full bg-terracotta/10 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light">{% translate "Delete" %}</a>
+            <a href="{% url 'banking:account_create' %}?bank={{ bank.pk }}" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white">{% translate "Add account" %}</a>
+            <a href="{% url 'banking:program_create' %}?bank={{ bank.pk }}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Add loyalty program" %}</a>
+            <a href="{% url 'banking:update' bank.pk %}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Edit bank" %}</a>
+            <a href="{% url 'banking:delete' bank.pk %}" class="rounded-full bg-terracotta/10 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light">{% translate "Delete" %}</a>
         </div>
     </div>
 
@@ -23,34 +23,34 @@
             <article class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h2 class="font-serif text-2xl tracking-tight">{{ account.name }}</h2>
+                        <h2 class="font-sans text-2xl tracking-tight font-semibold">{{ account.name }}</h2>
                         <p class="mt-1 tabular-nums text-2xl font-bold">{{ account.currency }} {{ account.current_balance|floatformat:2 }}</p>
-                        <p class="text-sm text-forest/50 dark:text-cream/60">{% blocktranslate with currency=account.currency balance=account.opening_balance|floatformat:2 %}Opening balance: {{ currency }} {{ balance }}{% endblocktranslate %}</p>
+                        <p class="text-sm text-forest/70 dark:text-cream/70">{% blocktranslate with currency=account.currency balance=account.opening_balance|floatformat:2 %}Opening balance: {{ currency }} {{ balance }}{% endblocktranslate %}</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <a href="{% url 'transactions:create' %}?account={{ account.pk }}" class="rounded-full bg-caramel px-4 py-2 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light">{% translate "New transaction" %}</a>
-                        <a href="{% url 'banking:transfer_create' %}?source_account={{ account.pk }}" class="rounded-full border border-caramel/40 px-4 py-2 text-[11px] font-medium uppercase tracking-widest text-caramel dark:text-caramel-light">{% translate "Own transfer" %}</a>
-                        <a href="{% url 'banking:debit_card_create' %}?account={{ account.pk }}" class="rounded-full border border-forest/30 px-4 py-2 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Add debit card" %}</a>
-                        <a href="{% url 'banking:credit_card_create' %}?account={{ account.pk }}" class="rounded-full border border-forest/30 px-4 py-2 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Add credit card" %}</a>
-                        <a href="{% url 'banking:account_update' account.pk %}" class="rounded-full border border-forest/30 px-4 py-2 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Edit" %}</a>
-                        <a href="{% url 'banking:account_delete' account.pk %}" class="rounded-full bg-terracotta/10 px-4 py-2 text-[11px] font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light">{% translate "Delete" %}</a>
+                        <a href="{% url 'transactions:create' %}?account={{ account.pk }}" class="rounded-full bg-caramel px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light">{% translate "New transaction" %}</a>
+                        <a href="{% url 'banking:transfer_create' %}?source_account={{ account.pk }}" class="rounded-full border border-caramel/40 px-4 py-2 text-xs font-medium uppercase tracking-widest text-caramel dark:text-caramel-light">{% translate "Own transfer" %}</a>
+                        <a href="{% url 'banking:debit_card_create' %}?account={{ account.pk }}" class="rounded-full border border-forest/30 px-4 py-2 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Add debit card" %}</a>
+                        <a href="{% url 'banking:credit_card_create' %}?account={{ account.pk }}" class="rounded-full border border-forest/30 px-4 py-2 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Add credit card" %}</a>
+                        <a href="{% url 'banking:account_update' account.pk %}" class="rounded-full border border-forest/30 px-4 py-2 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Edit" %}</a>
+                        <a href="{% url 'banking:account_delete' account.pk %}" class="rounded-full bg-terracotta/10 px-4 py-2 text-xs font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light">{% translate "Delete" %}</a>
                     </div>
                 </div>
                 <div class="mt-5 grid gap-4 md:grid-cols-2">
                     <div class="rounded-xl bg-cream p-4 dark:bg-forest-deep">
-                        <h3 class="text-sm font-semibold uppercase tracking-wide text-forest/50">{% translate "Debit cards" %}</h3>
+                        <h3 class="text-sm font-semibold uppercase tracking-wide text-forest/70">{% translate "Debit cards" %}</h3>
                         <ul class="mt-2 space-y-2">
                             {% for card in account.debit_cards.all %}
                                 <li class="flex justify-between gap-2"><span>{{ card.name }}</span><span><a href="{% url 'banking:debit_card_update' card.pk %}" class="text-caramel dark:text-caramel-light">{% translate "Edit" %}</a> <a href="{% url 'banking:debit_card_delete' card.pk %}" class="ml-2 text-terracotta dark:text-terracotta-light">{% translate "Delete" %}</a></span></li>
-                            {% empty %}<li class="text-sm text-forest/50">{% translate "No debit cards." %}</li>{% endfor %}
+                            {% empty %}<li class="text-sm text-forest/70">{% translate "No debit cards." %}</li>{% endfor %}
                         </ul>
                     </div>
                     <div class="rounded-xl bg-cream p-4 dark:bg-forest-deep">
-                        <h3 class="text-sm font-semibold uppercase tracking-wide text-forest/50">{% translate "Credit cards" %}</h3>
+                        <h3 class="text-sm font-semibold uppercase tracking-wide text-forest/70">{% translate "Credit cards" %}</h3>
                         <ul class="mt-2 space-y-2">
                             {% for card in account.credit_cards.all %}
-                                <li class="flex justify-between gap-2"><span>{{ card.name }} <small class="text-forest/50">{{ card.get_card_type_display }} · {% blocktranslate with closing_day=card.closing_day due_day=card.due_day %}closes {{ closing_day }}, due {{ due_day }}{% endblocktranslate %}</small></span><span><a href="{% url 'banking:credit_card_update' card.pk %}" class="text-caramel dark:text-caramel-light">{% translate "Edit" %}</a> <a href="{% url 'banking:credit_card_delete' card.pk %}" class="ml-2 text-terracotta dark:text-terracotta-light">{% translate "Delete" %}</a></span></li>
-                            {% empty %}<li class="text-sm text-forest/50">{% translate "No credit cards." %}</li>{% endfor %}
+                                <li class="flex justify-between gap-2"><span>{{ card.name }} <small class="text-forest/70">{{ card.get_card_type_display }} · {% blocktranslate with closing_day=card.closing_day due_day=card.due_day %}closes {{ closing_day }}, due {{ due_day }}{% endblocktranslate %}</small></span><span><a href="{% url 'banking:credit_card_update' card.pk %}" class="text-caramel dark:text-caramel-light">{% translate "Edit" %}</a> <a href="{% url 'banking:credit_card_delete' card.pk %}" class="ml-2 text-terracotta dark:text-terracotta-light">{% translate "Delete" %}</a></span></li>
+                            {% empty %}<li class="text-sm text-forest/70">{% translate "No credit cards." %}</li>{% endfor %}
                         </ul>
                     </div>
                 </div>
@@ -58,19 +58,19 @@
         {% empty %}
             <div class="rounded-3xl border border-dashed border-forest/10 bg-white p-10 text-center dark:border-cream/10 dark:bg-forest">
                 <p class="font-semibold">{% translate "No accounts at this bank" %}</p>
-                <p class="mt-1 text-sm text-forest/60 dark:text-cream/60">{% translate "Create an account to start tracking its native balance." %}</p>
-                <a href="{% url 'banking:account_create' %}?bank={{ bank.pk }}" class="mt-4 inline-flex rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white">{% translate "Add account" %}</a>
+                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate "Create an account to start tracking its native balance." %}</p>
+                <a href="{% url 'banking:account_create' %}?bank={{ bank.pk }}" class="mt-4 inline-flex rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white">{% translate "Add account" %}</a>
             </div>
         {% endfor %}
     </section>
 
     {% if bank.loyalty_programs.all %}
         <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
-            <h2 class="font-serif text-2xl tracking-tight">{% translate "Loyalty programs" %}</h2>
+            <h2 class="font-sans text-2xl tracking-tight font-semibold">{% translate "Loyalty programs" %}</h2>
             <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
                 {% for program in bank.loyalty_programs.all %}
                     <li class="flex items-center justify-between gap-3 py-3">
-                        <div><span class="font-medium">{{ program.name }}</span><p class="text-sm text-forest/50">{{ program.balance }} {{ program.unit_name }}</p></div>
+                        <div><span class="font-medium">{{ program.name }}</span><p class="text-sm text-forest/70">{{ program.balance }} {{ program.unit_name }}</p></div>
                         <div><a href="{% url 'banking:entry_create' %}?program={{ program.pk }}" class="text-caramel dark:text-caramel-light">{% translate "Add entry" %}</a><a href="{% url 'banking:program_update' program.pk %}" class="ml-3 text-caramel dark:text-caramel-light">{% translate "Edit" %}</a><a href="{% url 'banking:program_delete' program.pk %}" class="ml-3 text-terracotta dark:text-terracotta-light">{% translate "Delete" %}</a></div>
                     </li>
                 {% endfor %}
@@ -80,11 +80,11 @@
 
     {% if invoices %}
         <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
-            <h2 class="font-serif text-2xl tracking-tight">{% translate "Credit card invoices" %}</h2>
+            <h2 class="font-sans text-2xl tracking-tight font-semibold">{% translate "Credit card invoices" %}</h2>
             <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
                 {% for invoice in invoices %}
                     <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div><span class="font-medium">{{ invoice.card.name }} - {{ invoice.reference_month|date:'M Y' }}</span><p class="text-sm text-forest/50">{% blocktranslate with due_date=invoice.due_date|date:USER_DATE_FORMAT status=invoice.get_status_display %}Due {{ due_date }} - {{ status }}{% endblocktranslate %}{% if invoice.is_overdue %} <strong class="text-caramel dark:text-caramel-light">{% translate "Overdue" %}</strong>{% endif %}</p></div>
+                        <div><span class="font-medium">{{ invoice.card.name }} - {{ invoice.reference_month|date:'M Y' }}</span><p class="text-sm text-forest/70">{% blocktranslate with due_date=invoice.due_date|date:USER_DATE_FORMAT status=invoice.get_status_display %}Due {{ due_date }} - {{ status }}{% endblocktranslate %}{% if invoice.is_overdue %} <strong class="text-caramel dark:text-caramel-light">{% translate "Overdue" %}</strong>{% endif %}</p></div>
                         <div class="flex items-center gap-3"><span class="tabular-nums font-semibold">{{ invoice.account.currency }} {{ invoice.amount }}</span><a href="{% url 'banking:entry_create' %}?invoice={{ invoice.pk }}" class="text-sm text-caramel dark:text-caramel-light">{% translate "Add points" %}</a></div>
                     </li>
                 {% endfor %}
@@ -94,10 +94,10 @@
 
     {% if movements %}
         <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
-            <h2 class="font-serif text-2xl tracking-tight">{% translate "Recent balance movements" %}</h2>
+            <h2 class="font-sans text-2xl tracking-tight font-semibold">{% translate "Recent balance movements" %}</h2>
             <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
                 {% for movement in movements %}
-                    <li class="flex items-center justify-between gap-3 py-3"><div><span class="font-medium">{{ movement.description|default:movement.get_kind_display }}</span><p class="text-sm text-forest/50">{{ movement.account.name }} - {{ movement.effective_date|date:USER_DATE_FORMAT }}</p></div><span class="tabular-nums font-semibold {% if movement.kind == 'TRANSFER' %}text-caramel dark:text-caramel-light{% elif movement.direction == 'DEBIT' %}text-terracotta{% else %}text-forest{% endif %}">{% if movement.direction == 'DEBIT' %}-{% else %}+{% endif %}{{ movement.account.currency }} {{ movement.amount|floatformat:2 }}</span></li>
+                    <li class="flex items-center justify-between gap-3 py-3"><div><span class="font-medium">{{ movement.description|default:movement.get_kind_display }}</span><p class="text-sm text-forest/70">{{ movement.account.name }} - {{ movement.effective_date|date:USER_DATE_FORMAT }}</p></div><span class="tabular-nums font-semibold {% if movement.kind == 'TRANSFER' %}text-caramel dark:text-caramel-light{% elif movement.direction == 'DEBIT' %}text-terracotta{% else %}text-forest{% endif %}">{% if movement.direction == 'DEBIT' %}-{% else %}+{% endif %}{{ movement.account.currency }} {{ movement.amount|floatformat:2 }}</span></li>
                 {% endfor %}
             </ul>
         </section>

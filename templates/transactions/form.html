@@ -12,7 +12,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">
+    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">
         {% if form.instance.pk %}{% translate "Edit Transaction" %}{% else %}{% translate "New Transaction" %}{% endif %}
     </h1>
 
@@ -34,37 +34,37 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             <label for="category-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Search category" %}</label>
             <input id="category-search" type="search" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="category-results" aria-autocomplete="list" aria-required="true" aria-describedby="category-selection{% if form.category.errors %} category-error{% endif %}"{% if form.category.errors %} aria-invalid="true"{% endif %}
                    placeholder="{% translate 'Type to filter categories' %}"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/50 dark:placeholder:text-cream/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
-            <p id="category-selection" class="text-sm text-forest/60 dark:text-cream/60" aria-live="polite"></p>
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-cream/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+            <p id="category-selection" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
             {% for error in form.category.errors %}<p id="category-error" class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>{% endfor %}
             <ul id="category-results" role="listbox" class="max-h-48 overflow-y-auto rounded-xl border border-forest/30 bg-white p-1 dark:border-cream/30 dark:bg-forest"></ul>
-            <button id="clear-category" type="button" class="text-[11px] font-medium uppercase tracking-widest text-caramel hover:underline dark:text-caramel-light">{% translate "Clear category selection" %}</button>
+            <button id="clear-category" type="button" class="text-xs font-medium uppercase tracking-widest text-caramel hover:underline dark:text-caramel-light">{% translate "Clear category selection" %}</button>
         </div>
         <div id="category-fallback">{% include 'partials/form_field.html' with field=form.category %}</div>
         {% include 'partials/form_field.html' with field=form.payment_channel %}
-        <p id="payment-channel-status" class="text-sm text-forest/60 dark:text-cream/60" aria-live="polite"></p>
+        <p id="payment-channel-status" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
         <div id="bank-account-fields" class="space-y-5" data-has-errors="{{ form.bank_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.bank_account %}</div>
         <div id="debit-card-fields" class="space-y-5" data-has-errors="{{ form.debit_card.errors|yesno:'true,false' }}">
             {% include 'partials/form_field.html' with field=form.debit_card %}
-            <p id="debit-card-account" class="text-sm text-forest/60 dark:text-cream/60" aria-live="polite"></p>
+            <p id="debit-card-account" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
         </div>
         <div id="credit-card-fields" class="space-y-5" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
             {% include 'partials/form_field.html' with field=form.credit_card %}
             {% include 'partials/form_field.html' with field=form.installments %}
             {% include 'partials/form_field.html' with field=form.billing_override %}
             <p id="credit-card-best-purchase" class="text-sm font-medium text-caramel dark:text-caramel-light" aria-live="polite"></p>
-            <p id="credit-card-account" class="text-sm text-forest/60 dark:text-cream/60" aria-live="polite"></p>
+            <p id="credit-card-account" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
         </div>
         {% include 'partials/preferred_date_field.html' with field=form.date %}
 
         <details class="rounded-xl ring-1 ring-forest/10 dark:ring-cream/10"{% if form.is_fixed.value or form.fixed_until.errors or form.notes.errors or form.is_fixed.errors %} open{% endif %}>
-            <summary class="cursor-pointer px-4 py-3 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/80">{% translate "Advanced options" %}</summary>
+            <summary class="cursor-pointer px-4 py-3 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/80">{% translate "Advanced options" %}</summary>
             <div class="space-y-5 p-4 pt-1">
                 <div class="flex items-center gap-3 rounded-xl bg-cream-dark p-4 dark:bg-forest-deep">
                     {{ form.is_fixed }}
                     <div>
                         <label for="{{ form.is_fixed.id_for_label }}" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{{ form.is_fixed.label }}</label>
-                        {% if form.is_fixed.help_text %}<p id="{{ form.is_fixed.id_for_label }}-help" class="text-sm text-forest/50 dark:text-cream/50">{{ form.is_fixed.help_text }}</p>{% endif %}
+                        {% if form.is_fixed.help_text %}<p id="{{ form.is_fixed.id_for_label }}-help" class="text-sm text-forest/70 dark:text-cream/70">{{ form.is_fixed.help_text }}</p>{% endif %}
                         {% for error in form.is_fixed.errors %}<p id="{{ form.is_fixed.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>{% endfor %}
                     </div>
                 </div>
@@ -75,11 +75,11 @@ through the shared partials/form_field.html renderer (PRD §9.4).
 
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Save" %}
             </button>
             <a href="{% url 'transactions:list' %}"
-               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Cancel" %}
             </a>
         </div>
@@ -190,7 +190,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             });
             if (!matches.length) {
                 const item = document.createElement('li');
-                item.className = 'px-3 py-2 text-sm text-forest/50 dark:text-cream/50';
+                item.className = 'px-3 py-2 text-sm text-forest/70 dark:text-cream/70';
                 item.textContent = '{% translate "No matching categories" %}';
                 results.append(item);
             }

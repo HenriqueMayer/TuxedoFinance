@@ -10,6 +10,6 @@
         </button>
         <input type="date" class="sr-only" tabindex="-1" aria-hidden="true" data-native-date-picker>
     </div>
-    {% if field.help_text %}<p id="{{ field.id_for_label }}-help" class="text-sm font-light text-forest/60 dark:text-cream/60">{{ field.help_text }}</p>{% endif %}
+    {% if field.help_text %}<p id="{{ field.id_for_label }}-help" class="text-sm font-normal text-forest/70 dark:text-cream/70">{{ field.help_text }}</p>{% endif %}
     {% for error in field.errors %}<p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>{% endfor %}
 </div>

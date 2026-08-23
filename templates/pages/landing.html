@@ -13,19 +13,10 @@ All copy and destinations remain part of the existing translated contract.
 <section class="grid grid-cols-1 items-center gap-12 py-12 sm:py-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:py-24">
     <div class="flex flex-col items-center text-center lg:items-start lg:text-left">
         <p class="mb-5 text-xs font-medium uppercase tracking-widest text-caramel">{% translate "Personal finance, simplified" %}</p>
-        <h1 class="max-w-3xl font-serif text-5xl font-normal leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
-            {% translate "Your finances deserve more than a" %}
-            <span class="block italic text-caramel">{% translate "spreadsheet" %}.</span>
+        <h1 class="max-w-xl text-xl font-medium leading-8 text-forest dark:text-cream sm:text-2xl sm:leading-9">
+            {% translate "Tuxedo Finance replaces the single column of plus and minus signs with a normalized, categorized record of every transaction — so you always know your Current Balance, your Income, your Expenses, and where your money goes each month." %}
         </h1>
-        <p class="mt-6 max-w-xl text-base font-light leading-relaxed text-forest/70 dark:text-cream/70 sm:text-lg">
-            {% blocktranslate trimmed %}Tuxedo Finance replaces the single column of plus and minus signs with a normalized,
-            categorized record of every transaction — so you always know your
-            <span class="font-medium text-forest dark:text-cream">Current Balance</span>,
-            your <span class="font-medium text-forest dark:text-sage">Income</span>,
-            your <span class="font-medium text-terracotta dark:text-terracotta-light">Expenses</span>,
-            and where your money goes each month.{% endblocktranslate %}
-        </p>
-        <p class="mt-4 max-w-xl text-sm font-light text-forest/50 dark:text-cream/50">{% translate "Built from the everyday frustration of adapting spreadsheets to real personal finances." %}</p>
+        <p class="mt-4 max-w-xl text-sm font-normal text-forest/70 dark:text-cream/70">{% translate "Built from the everyday frustration of adapting spreadsheets to real personal finances." %}</p>
         <div class="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
             {% if ALLOW_SIGNUPS %}
                 <a href="{% url 'accounts:signup' %}" class="group inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-3 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel/40">
@@ -40,7 +31,7 @@ All copy and destinations remain part of the existing translated contract.
     <div class="relative w-full">
         <div class="absolute -inset-6 -z-10 rounded-full bg-caramel/10 blur-3xl"></div>
         <div class="rounded-3xl bg-white p-6 shadow-xl dark:bg-forest sm:p-8">
-            <p class="mb-5 text-[11px] font-medium uppercase tracking-widest text-forest/50 dark:text-cream/50">{% translate "Sample dashboard preview" %}</p>
+            <p class="mb-5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Sample dashboard preview" %}</p>
             <div class="grid grid-cols-2 gap-3 sm:gap-4">
                 {% with balance=4250|floatformat:2 income=3200|floatformat:2 expenses=1180|floatformat:2 net=1850|floatformat:2 %}
                     {% translate "Current Balance" as balance_label %}
@@ -63,61 +54,61 @@ All copy and destinations remain part of the existing translated contract.
             <img src="{% static 'brand/tuxedo-hero.jpg' %}" width="1600" height="873" loading="lazy" class="h-auto w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" alt="{% translate 'A tuxedo cat in a home office beside charts and the Tuxedo Finance wordmark.' %}">
         </div>
         <div class="p-8 text-center sm:p-10">
-            <h2 id="brand-story-heading" class="font-serif text-3xl font-normal tracking-tight sm:text-4xl">{% translate "Clear money, elegantly presented." %}</h2>
-            <p class="mx-auto mt-3 max-w-2xl font-light text-forest/60 dark:text-cream/60">{% translate "A focused home for understanding your finances in black and white." %}</p>
+            <h2 id="brand-story-heading" class="font-sans text-3xl font-semibold tracking-tight sm:text-4xl">{% translate "Clear money, elegantly presented." %}</h2>
+            <p class="mx-auto mt-3 max-w-2xl font-normal text-forest/70 dark:text-cream/70">{% translate "A focused home for understanding your finances in black and white." %}</p>
         </div>
     </div>
 </section>
 
 <section class="py-10 sm:py-16">
     <div class="mx-auto max-w-2xl text-center">
-        <h2 class="font-serif text-4xl font-normal tracking-tight">{% translate "How Tuxedo Finance works" %}.</h2>
-        <p class="mt-3 font-light text-forest/60 dark:text-cream/60">{% translate "Three steps between you and a clear picture of your money." %}</p>
+        <h2 class="font-sans text-4xl font-semibold tracking-tight">{% translate "How Tuxedo Finance works" %}.</h2>
+        <p class="mt-3 font-normal text-forest/70 dark:text-cream/70">{% translate "Three steps between you and a clear picture of your money." %}</p>
     </div>
     <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
         <article class="rounded-3xl bg-white p-7 shadow-sm transition-shadow duration-300 hover:shadow-xl dark:bg-forest">
             <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-caramel text-sm font-semibold text-white">1</span>
-            <h3 class="mt-5 font-serif text-2xl tracking-tight">{% translate "Record" %}.</h3>
-            <p class="mt-2 text-sm font-light leading-relaxed text-forest/60 dark:text-cream/60">{% blocktranslate trimmed %}Log each transaction with a title, amount, type, category, and bank instrument in under 30 seconds — no more hunting for the right cell.{% endblocktranslate %}</p>
+            <h3 class="mt-5 font-sans text-2xl tracking-tight font-semibold">{% translate "Record" %}.</h3>
+            <p class="mt-2 text-sm font-normal leading-relaxed text-forest/70 dark:text-cream/70">{% blocktranslate trimmed %}Log each transaction with a title, amount, type, category, and bank instrument in under 30 seconds — no more hunting for the right cell.{% endblocktranslate %}</p>
         </article>
         <article class="rounded-3xl bg-white p-7 shadow-sm transition-shadow duration-300 hover:shadow-xl dark:bg-forest">
             <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-caramel text-sm font-semibold text-white">2</span>
-            <h3 class="mt-5 font-serif text-2xl tracking-tight">{% translate "Classify" %}.</h3>
-            <p class="mt-2 text-sm font-light leading-relaxed text-forest/60 dark:text-cream/60">{% blocktranslate trimmed %}Consistent categories, subcategories, accounts, and cards keep every entry comparable, month after month.{% endblocktranslate %}</p>
+            <h3 class="mt-5 font-sans text-2xl tracking-tight font-semibold">{% translate "Classify" %}.</h3>
+            <p class="mt-2 text-sm font-normal leading-relaxed text-forest/70 dark:text-cream/70">{% blocktranslate trimmed %}Consistent categories, subcategories, accounts, and cards keep every entry comparable, month after month.{% endblocktranslate %}</p>
         </article>
         <article class="rounded-3xl bg-white p-7 shadow-sm transition-shadow duration-300 hover:shadow-xl dark:bg-forest">
             <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-caramel text-sm font-semibold text-white">3</span>
-            <h3 class="mt-5 font-serif text-2xl tracking-tight">{% translate "Review" %}.</h3>
-            <p class="mt-2 text-sm font-light leading-relaxed text-forest/60 dark:text-cream/60">{% blocktranslate trimmed %}Open your dashboard for a consolidated view of your Current Balance and how the month is performing.{% endblocktranslate %}</p>
+            <h3 class="mt-5 font-sans text-2xl tracking-tight font-semibold">{% translate "Review" %}.</h3>
+            <p class="mt-2 text-sm font-normal leading-relaxed text-forest/70 dark:text-cream/70">{% blocktranslate trimmed %}Open your dashboard for a consolidated view of your Current Balance and how the month is performing.{% endblocktranslate %}</p>
         </article>
     </div>
 </section>
 
 <section class="py-10 sm:py-16">
     <div class="mx-auto max-w-2xl text-center">
-        <h2 class="font-serif text-4xl font-normal tracking-tight">{% translate "Everything you need to track your money" %}.</h2>
-        <p class="mt-3 font-light text-forest/60 dark:text-cream/60">{% translate "Built for people who currently keep a spreadsheet — and want something better." %}</p>
+        <h2 class="font-sans text-4xl font-semibold tracking-tight">{% translate "Everything you need to track your money" %}.</h2>
+        <p class="mt-3 font-normal text-forest/70 dark:text-cream/70">{% translate "Built for people who currently keep a spreadsheet — and want something better." %}</p>
     </div>
     <div class="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <article class="rounded-3xl bg-white p-6 shadow-sm transition-shadow duration-300 hover:shadow-xl dark:bg-forest">
             <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-forest/10 text-forest dark:bg-sage/15 dark:text-sage"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.169.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg></span>
-            <h3 class="mt-5 font-serif text-xl tracking-tight">{% translate "Types & categories" %}</h3>
-            <p class="mt-2 text-sm font-light leading-relaxed text-forest/60 dark:text-cream/60">{% blocktranslate trimmed %}Classify every entry as Income, Expense, or Investment, with categories and subcategories like Groceries or Transportation.{% endblocktranslate %}</p>
+            <h3 class="mt-5 font-sans text-xl tracking-tight font-semibold">{% translate "Types & categories" %}</h3>
+            <p class="mt-2 text-sm font-normal leading-relaxed text-forest/70 dark:text-cream/70">{% blocktranslate trimmed %}Classify every entry as Income, Expense, or Investment, with categories and subcategories like Groceries or Transportation.{% endblocktranslate %}</p>
         </article>
         <article class="rounded-3xl bg-white p-6 shadow-sm transition-shadow duration-300 hover:shadow-xl dark:bg-forest">
             <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-forest/10 text-forest dark:bg-sage/15 dark:text-sage"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg></span>
-            <h3 class="mt-5 font-serif text-xl tracking-tight">{% translate "Payment methods" %}</h3>
-            <p class="mt-2 text-sm font-light leading-relaxed text-forest/60 dark:text-cream/60">{% blocktranslate trimmed %}Track how you paid — Credit Card, Debit Card, PIX, or Checking Account — for every transaction.{% endblocktranslate %}</p>
+            <h3 class="mt-5 font-sans text-xl tracking-tight font-semibold">{% translate "Payment methods" %}</h3>
+            <p class="mt-2 text-sm font-normal leading-relaxed text-forest/70 dark:text-cream/70">{% blocktranslate trimmed %}Track how you paid — Credit Card, Debit Card, PIX, or Checking Account — for every transaction.{% endblocktranslate %}</p>
         </article>
         <article class="rounded-3xl bg-white p-6 shadow-sm transition-shadow duration-300 hover:shadow-xl dark:bg-forest">
             <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-caramel/10 text-caramel"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></span>
-            <h3 class="mt-5 font-serif text-xl tracking-tight">{% translate "Fixed vs. variable" %}</h3>
-            <p class="mt-2 text-sm font-light leading-relaxed text-forest/60 dark:text-cream/60">{% blocktranslate trimmed %}Mark recurring bills as fixed and keep them separate from one-off, variable spending.{% endblocktranslate %}</p>
+            <h3 class="mt-5 font-sans text-xl tracking-tight font-semibold">{% translate "Fixed vs. variable" %}</h3>
+            <p class="mt-2 text-sm font-normal leading-relaxed text-forest/70 dark:text-cream/70">{% blocktranslate trimmed %}Mark recurring bills as fixed and keep them separate from one-off, variable spending.{% endblocktranslate %}</p>
         </article>
         <article class="rounded-3xl bg-white p-6 shadow-sm transition-shadow duration-300 hover:shadow-xl dark:bg-forest">
             <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-terracotta/10 text-terracotta dark:text-terracotta-light"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg></span>
-            <h3 class="mt-5 font-serif text-xl tracking-tight">{% translate "Consolidated dashboard" %}</h3>
-            <p class="mt-2 text-sm font-light leading-relaxed text-forest/60 dark:text-cream/60">{% blocktranslate trimmed %}See Current Balance, Income, Expenses, and monthly Balance in a single, clear view.{% endblocktranslate %}</p>
+            <h3 class="mt-5 font-sans text-xl tracking-tight font-semibold">{% translate "Consolidated dashboard" %}</h3>
+            <p class="mt-2 text-sm font-normal leading-relaxed text-forest/70 dark:text-cream/70">{% blocktranslate trimmed %}See Current Balance, Income, Expenses, and monthly Balance in a single, clear view.{% endblocktranslate %}</p>
         </article>
     </div>
 </section>
@@ -127,8 +118,8 @@ All copy and destinations remain part of the existing translated contract.
         <div class="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-forest-light/40 blur-3xl"></div>
         <div class="relative">
             <p class="mb-3 text-xs font-medium uppercase tracking-widest text-caramel">{% translate "Your money, in black and white." %}</p>
-            <h2 class="font-serif text-4xl font-normal tracking-tight sm:text-5xl">{% translate "Ready to see your cash flow clearly?" %}</h2>
-            <p class="mx-auto mt-4 max-w-lg font-light text-cream/70">{% translate "Create your account and start recording transactions in minutes." %}</p>
+            <h2 class="font-sans text-4xl font-semibold tracking-tight sm:text-5xl">{% translate "Ready to see your cash flow clearly?" %}</h2>
+            <p class="mx-auto mt-4 max-w-lg font-normal text-cream/70">{% translate "Create your account and start recording transactions in minutes." %}</p>
             <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
                 {% if ALLOW_SIGNUPS %}<a href="{% url 'accounts:signup' %}" class="rounded-full bg-caramel px-6 py-3 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel-light/50">{% translate "Sign up for free" %}</a>{% endif %}
                 <a href="{% url 'accounts:login' %}" class="rounded-full border border-cream/50 px-6 py-3 text-xs font-medium uppercase tracking-widest transition-colors hover:bg-cream hover:text-forest focus:outline-none focus:ring-2 focus:ring-cream/40">{% translate "Log in" %}</a>

@@ -15,8 +15,8 @@ a non-field error (PRD 3.3.2); valid credentials redirect to `next` or
 <div class="mx-auto max-w-md">
     <div class="mb-8 text-center">
         <p class="mb-2 text-xs font-medium uppercase tracking-widest text-caramel">{% translate "Welcome back" %}</p>
-        <h1 class="font-serif text-4xl font-normal tracking-tight">{% translate "Log in" %}.</h1>
-        <p class="mt-2 text-sm font-light text-forest/60 dark:text-cream/60">{% translate "Log in to see your dashboard." %}</p>
+        <h1 class="font-sans text-4xl font-semibold tracking-tight">{% translate "Log in" %}.</h1>
+        <p class="mt-2 text-sm font-normal text-forest/70 dark:text-cream/70">{% translate "Log in to see your dashboard." %}</p>
     </div>
 
     <form method="post" class="space-y-5 rounded-3xl bg-white p-8 shadow-lg dark:bg-forest" novalidate>
@@ -45,7 +45,7 @@ a non-field error (PRD 3.3.2); valid credentials redirect to `next` or
     </form>
 
     {% if ALLOW_SIGNUPS %}
-    <p class="mt-6 text-center text-sm font-light text-forest/70 dark:text-cream/70">
+    <p class="mt-6 text-center text-sm font-normal text-forest/70 dark:text-cream/70">
             {% translate "Don't have an account?" %}
             <a href="{% url 'accounts:signup' %}" class="rounded font-medium text-caramel underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-caramel/40">{% translate "Sign up" %}</a>
     </p>

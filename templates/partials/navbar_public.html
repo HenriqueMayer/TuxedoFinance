@@ -20,12 +20,12 @@ language selector, theme toggle and Log in / Sign up pills on the right.
             {% include 'partials/language_selector.html' with selector_id='public' %}
             {% include 'partials/theme_toggle.html' with legacy_theme_id=True %}
             <a href="{% url 'accounts:login' %}"
-               class="inline-flex items-center rounded-full border border-forest px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/50 dark:text-cream dark:hover:bg-cream dark:hover:text-forest">
+               class="inline-flex items-center rounded-full border border-forest px-5 py-2.5 text-xs uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/50 dark:text-cream dark:hover:bg-cream dark:hover:text-forest">
                  {% translate 'Log in' %}
             </a>
             {% if ALLOW_SIGNUPS %}
                 <a href="{% url 'accounts:signup' %}"
-                   class="group hidden items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-white transition-colors hover:bg-caramel-light sm:inline-flex">
+                   class="group hidden items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-xs uppercase tracking-widest font-medium text-white transition-colors hover:bg-caramel-light sm:inline-flex">
                      {% translate 'Sign up' %}
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
                 </a>

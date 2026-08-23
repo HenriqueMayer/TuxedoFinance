@@ -9,15 +9,15 @@
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">{% translate "Banks" %}</h1>
-            <p class="mt-1 text-sm text-forest/60 dark:text-cream/60">{% translate "Accounts, cards, native balances, and loyalty in one place." %}</p>
+            <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Banks" %}</h1>
+            <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate "Accounts, cards, native balances, and loyalty in one place." %}</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{% url 'banking:transfer_create' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Transfer" %}</a>
-            <a href="{% url 'banking:entry_create' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Points entry" %}</a>
-            <a href="{% url 'banking:redemption_create' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Redeem points" %}</a>
-            <a href="{% url 'banking:exchange_rates' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Exchange rates" %}</a>
-            <a href="{{ create_url }}" class="inline-flex items-center rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light">{% translate "New bank" %}</a>
+            <a href="{% url 'banking:transfer_create' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Transfer" %}</a>
+            <a href="{% url 'banking:entry_create' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Points entry" %}</a>
+            <a href="{% url 'banking:redemption_create' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Redeem points" %}</a>
+            <a href="{% url 'banking:exchange_rates' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Exchange rates" %}</a>
+            <a href="{{ create_url }}" class="inline-flex items-center rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light">{% translate "New bank" %}</a>
         </div>
     </div>
 
@@ -26,8 +26,8 @@
             <label for="bank-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Search" %}</label>
             <input id="bank-search" type="search" name="q" value="{{ search_query }}" placeholder="{% translate 'Bank, account, card, or program' %}" class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
         </div>
-        <button type="submit" class="self-end rounded-full border border-forest/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Search" %}</button>
-        {% if search_query %}<a href="{{ list_url }}" class="self-end px-2 py-2.5 text-sm text-forest/60 dark:text-cream/60">{% translate "Clear" %}</a>{% endif %}
+        <button type="submit" class="self-end rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Search" %}</button>
+        {% if search_query %}<a href="{{ list_url }}" class="self-end px-2 py-2.5 text-sm text-forest/70 dark:text-cream/70">{% translate "Clear" %}</a>{% endif %}
     </form>
 
     {% if banks %}
@@ -35,8 +35,8 @@
             {% for bank in banks %}
                 <article class="space-y-4 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
                     <div class="flex items-center justify-between gap-3">
-                        <a href="{% url 'banking:detail' bank.pk %}" class="font-serif text-2xl text-forest transition-colors hover:text-caramel dark:text-cream">{{ bank.name }}</a>
-                        <span class="text-xs font-medium uppercase tracking-wide text-forest/50">{% blocktranslate count account_count=bank.accounts.all|length %}{{ account_count }} account{% plural %}{{ account_count }} accounts{% endblocktranslate %}</span>
+                        <a href="{% url 'banking:detail' bank.pk %}" class="font-sans text-2xl text-forest transition-colors hover:text-caramel dark:text-cream">{{ bank.name }}</a>
+                        <span class="text-xs font-medium uppercase tracking-wide text-forest/70">{% blocktranslate count account_count=bank.accounts.all|length %}{{ account_count }} account{% plural %}{{ account_count }} accounts{% endblocktranslate %}</span>
                     </div>
                     {% for account in bank.accounts.all %}
                         <div class="rounded-xl bg-cream p-4 dark:bg-forest-deep">
@@ -44,16 +44,16 @@
                                 <span class="font-medium">{{ account.name }}</span>
                                 <span class="tabular-nums font-semibold">{{ account.currency }} {{ account.current_balance|floatformat:2 }}</span>
                             </div>
-                            <p class="mt-1 text-sm text-forest/50 dark:text-cream/60">
+                            <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
                                 {% blocktranslate count debit_count=account.debit_cards.all|length %}{{ debit_count }} debit card{% plural %}{{ debit_count }} debit cards{% endblocktranslate %},
                                 {% blocktranslate count credit_count=account.credit_cards.all|length %}{{ credit_count }} credit card{% plural %}{{ credit_count }} credit cards{% endblocktranslate %}
                             </p>
                         </div>
                     {% empty %}
-                        <p class="text-sm text-forest/50 dark:text-cream/60">{% translate "No accounts yet." %}</p>
+                        <p class="text-sm text-forest/70 dark:text-cream/70">{% translate "No accounts yet." %}</p>
                     {% endfor %}
                     {% if bank.loyalty_programs.all %}
-                        <p class="text-sm text-forest/60 dark:text-cream/60">{% translate "Loyalty:" %} {% for program in bank.loyalty_programs.all %}{{ program.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                        <p class="text-sm text-forest/70 dark:text-cream/70">{% translate "Loyalty:" %} {% for program in bank.loyalty_programs.all %}{{ program.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
                     {% endif %}
                 </article>
             {% endfor %}

@@ -9,8 +9,8 @@
     <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
-                <h2 class="font-serif text-2xl font-normal tracking-tight text-forest dark:text-cream">{% translate 'Investment evolution' %}</h2>
-                <p class="mt-1 text-sm text-forest/60 dark:text-cream/60">
+                <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate 'Investment evolution' %}</h2>
+                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
                     {% blocktranslate %}Your cumulative portfolio total in {{ CURRENCY_SYMBOL }} at the close of each month, converted through the exchange rate that was current at the time. Currencies with no rate set are excluded — see the warning on the “Simulated total” card above.{% endblocktranslate %}
                 </p>
             </div>
@@ -28,7 +28,7 @@
                     <p class="text-sm font-semibold text-forest dark:text-cream">
                         {{ total_window_start_date|date:'M Y' }} &ndash; {{ total_window_end_date|date:'M Y' }}
                     </p>
-                    <p class="text-xs text-forest/50 dark:text-cream/50">
+                    <p class="text-xs text-forest/70 dark:text-cream/70">
                          {% if is_total_anchored_today %}{% translate 'Anchored on today' %}
                          {% elif total_anchor_date < today %}{% translate 'Past window' %}
                          {% else %}{% translate 'Future window' %}{% endif %}
@@ -49,7 +49,7 @@
                        hx-target="#investments-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-[11px] font-medium uppercase tracking-widest text-caramel dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
@@ -78,7 +78,7 @@
                           x2="{{ chart_total.plot_right }}" y2="{{ line.y }}"
                           class="stroke-forest/10 dark:stroke-cream/10" stroke-width="1" />
                     <text x="{{ chart_total.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                          text-anchor="end" class="fill-forest/60 dark:fill-cream/50 text-[11px] tabular-nums">
+                          text-anchor="end" class="fill-forest/70 dark:fill-cream/70 text-xs tabular-nums">
                         {{ line.value|floatformat:0 }}
                     </text>
                 {% endfor %}
@@ -99,7 +99,7 @@
                         <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
                     </circle>
                     <text x="{{ point.x }}" y="{{ chart_total.label_y }}" text-anchor="middle"
-                          class="text-[11px] fill-forest/60 dark:fill-cream/50">
+                          class="text-xs fill-forest/70 dark:fill-cream/70">
                         {{ point.label.date|date:'M' }}
                     </text>
                 {% endfor %}
@@ -115,8 +115,8 @@
     <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
-                <h2 class="font-serif text-2xl font-normal tracking-tight text-forest dark:text-cream">{% translate 'Monthly flow' %}</h2>
-                <p class="mt-1 text-sm text-forest/60 dark:text-cream/60">
+                <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate 'Monthly flow' %}</h2>
+                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
                     {% blocktranslate %}What you deposited, earned, and withdrew each month — both in {{ CURRENCY_SYMBOL }}, converted at the rate that was current on each entry’s date.{% endblocktranslate %}
                 </p>
             </div>
@@ -134,7 +134,7 @@
                     <p class="text-sm font-semibold text-forest dark:text-cream">
                         {{ flow_window_start_date|date:'M Y' }} &ndash; {{ flow_window_end_date|date:'M Y' }}
                     </p>
-                    <p class="text-xs text-forest/50 dark:text-cream/50">
+                    <p class="text-xs text-forest/70 dark:text-cream/70">
                          {% if is_flow_anchored_today %}{% translate 'Anchored on today' %}
                          {% elif flow_anchor_date < today %}{% translate 'Past window' %}
                          {% else %}{% translate 'Future window' %}{% endif %}
@@ -155,13 +155,13 @@
                        hx-target="#investments-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-[11px] font-medium uppercase tracking-widest text-caramel dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
                 <ul class="flex flex-wrap items-center gap-4">
                     {% for entry in chart_flow.legend %}
-                        <li class="flex items-center gap-2 text-sm text-forest/60 dark:text-cream/60">
+                        <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-cream/70">
                             <span class="h-2.5 w-2.5 rounded-sm
                                 {% if entry.tone == 'income' %}bg-forest dark:bg-sage
                                 {% elif entry.tone == 'investment' %}bg-caramel
@@ -183,7 +183,7 @@
                           x2="{{ chart_flow.plot_right }}" y2="{{ line.y }}"
                           class="stroke-forest/10 dark:stroke-cream/10" stroke-width="1" />
                     <text x="{{ chart_flow.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                          text-anchor="end" class="fill-forest/60 dark:fill-cream/50 text-[11px] tabular-nums">
+                          text-anchor="end" class="fill-forest/70 dark:fill-cream/70 text-xs tabular-nums">
                         {{ line.value|floatformat:0 }}
                     </text>
                 {% endfor %}
@@ -199,7 +199,7 @@
                         </rect>
                     {% endfor %}
                     <text x="{{ group.center }}" y="{{ chart_flow.label_y }}" text-anchor="middle"
-                          class="text-[11px] fill-forest/60 dark:fill-cream/50">
+                          class="text-xs fill-forest/70 dark:fill-cream/70">
                         {{ group.label.date|date:'M' }}
                     </text>
                 {% endfor %}

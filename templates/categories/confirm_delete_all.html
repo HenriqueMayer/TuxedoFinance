@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">{% translate "Delete all categories" %}</h1>
+    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Delete all categories" %}</h1>
 
     <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
         <div class="space-y-2">
@@ -13,7 +13,7 @@
             <p class="text-sm text-forest/80 dark:text-cream/80">
                 {% blocktranslate count count=category_count %}You are about to delete your only category.{% plural %}You are about to delete all {{ count }} categories.{% endblocktranslate %}
             </p>
-            <p class="text-sm text-forest/60 dark:text-cream/60">
+            <p class="text-sm text-forest/70 dark:text-cream/70">
                 {% translate "If any category is used by a transaction, nothing will be deleted." %}
             </p>
         </div>
@@ -21,11 +21,11 @@
         <form method="post" class="flex items-center gap-3">
             {% csrf_token %}
             <button type="submit"
-                    class="inline-flex items-center rounded-full bg-terracotta px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white transition hover:bg-terracotta-light focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:ring-offset-2 dark:focus:ring-offset-forest">
+                    class="inline-flex items-center rounded-full bg-terracotta px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-terracotta-light focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:ring-offset-2 dark:focus:ring-offset-forest">
                 {% translate "Yes, delete all" %}
             </button>
             <a href="{% url 'categories:list' %}"
-               class="inline-flex items-center rounded-full border border-forest/30 bg-white px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-forest dark:text-cream/90 dark:hover:bg-cream dark:hover:text-forest">
+               class="inline-flex items-center rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-forest dark:text-cream/90 dark:hover:bg-cream dark:hover:text-forest">
                 {% translate "Cancel" %}
             </a>
         </form>

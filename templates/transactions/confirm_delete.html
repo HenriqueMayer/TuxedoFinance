@@ -10,7 +10,7 @@ never a plain link/GET — it requires a POST from this confirmation page.
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">{% translate "Delete Transaction" %}</h1>
+    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Delete Transaction" %}</h1>
 
     <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
         <p class="text-sm text-forest/80 dark:text-cream/80">
@@ -20,11 +20,11 @@ never a plain link/GET — it requires a POST from this confirmation page.
         <form method="post" class="flex items-center gap-3">
             {% csrf_token %}
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-terracotta/10 dark:bg-terracotta/15 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light ring-1 ring-inset ring-terracotta/30 transition hover:bg-terracotta/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                    class="inline-flex items-center gap-2 rounded-full bg-terracotta/10 dark:bg-terracotta/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light ring-1 ring-inset ring-terracotta/30 transition hover:bg-terracotta/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Delete" %}
             </button>
             <a href="{% url 'transactions:list' %}"
-               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Cancel" %}
             </a>
         </form>

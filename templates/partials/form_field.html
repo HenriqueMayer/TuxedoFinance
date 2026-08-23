@@ -11,9 +11,9 @@ form's __init__) using the exact design-system input classes below so every
 input/select/textarea in the project looks identical:
 
   "w-full rounded-xl border border-forest/20 bg-white px-4 py-3
-   text-sm text-forest placeholder:text-forest/40 focus:border-caramel
+   text-sm text-forest placeholder:text-forest/70 focus:border-caramel
    focus:outline-none focus:ring-2 focus:ring-caramel/30
-   dark:bg-forest-deep dark:border-cream/20 dark:text-cream dark:placeholder:text-cream/40"
+   dark:bg-forest-deep dark:border-cream/20 dark:text-cream dark:placeholder:text-cream/70"
 
 `select` and `textarea` widgets reuse the exact same class string. Wrap a
 group of fields in a form card:
@@ -33,7 +33,7 @@ group of fields in a form card:
         {{ field }}
 
         {% if field.help_text %}
-            <p id="{{ field.id_for_label }}-help" class="text-sm font-light text-forest/60 dark:text-cream/60">{{ field.help_text }}</p>
+            <p id="{{ field.id_for_label }}-help" class="text-sm font-normal text-forest/70 dark:text-cream/70">{{ field.help_text }}</p>
         {% endif %}
 
         {% for error in field.errors %}

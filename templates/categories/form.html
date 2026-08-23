@@ -12,7 +12,7 @@ the shared partials/form_field.html renderer (PRD §9.4).
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">
+    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">
         {% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %}
     </h1>
 
@@ -35,7 +35,7 @@ the shared partials/form_field.html renderer (PRD §9.4).
             </label>
             <input type="search"
                    id="parent-category-search"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/40 dark:placeholder:text-cream/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40"
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-cream/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40"
                    placeholder="{% translate 'Type a category name' %}"
                    autocomplete="off"
                    aria-controls="{{ form.parent_category.id_for_label }}">
@@ -44,11 +44,11 @@ the shared partials/form_field.html renderer (PRD §9.4).
 
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Save" %}
             </button>
             <a href="{% url 'categories:list' %}"
-               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                  {% translate "Cancel" %}
             </a>
         </div>
