@@ -8,28 +8,30 @@ normal CSRF-protected POST and every filter has a plain GET fallback.
 
 ## Visual language
 
-The light/dark theme, Inter typography, rounded bordered surfaces, gradient
-primary actions and semantic finance colors remain consistent across the new
-screens.
+The interface follows the final Haven & Hound design language documented in
+`design-system/tuxedo-final-design-system.html`: cream and forest foundations,
+caramel actions, restrained semantic colors, rounded surfaces, Inter body text
+and Playfair Display headings. Light cards use white surfaces and soft shadows;
+dark cards use flat forest surfaces over the forest-deep page background.
 
 | Role | Semantic treatment |
 |---|---|
-| Income / account credit | Emerald |
-| Expense / account debit | Rose |
-| Investment | Amber |
-| Own transfer | Indigo/neutral; never income/expense colored |
-| Credit-card payable | Violet |
-| Warning / overdue invoice | Amber plus explicit text/icon |
+| Income / account credit | Forest in light, sage in dark |
+| Expense / account debit | Terracotta |
+| Investment | Caramel |
+| Own transfer | Neutral forest/cream; never income/expense colored |
+| Credit-card payable | Caramel |
+| Warning / overdue invoice | Caramel plus explicit text/icon |
 
 Color is never the only carrier of status. Monetary labels always include a
 currency symbol or ISO code, especially when native and base values are shown
 together.
 
-The `TuxedoFinance` wordmark is rendered as adjacent text spans in the top
-navigation, with slate/white for `Tuxedo` and amber for `Finance`. The cat mark remains a
-decorative image in the footer and brand story, with an empty `alt` where the
-adjacent wordmark already names the product. Existing indigo-violet-fuchsia
-action gradients and semantic financial colors remain unchanged in both themes.
+The navigation brand combines `tuxedo-mark-256.png` with a two-line uppercase
+wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. Primary
+actions are solid caramel pills; outline actions invert to forest/cream on
+hover. Titles use Playfair Display, while labels, controls and tabular monetary
+figures use Inter.
 
 ## Root layout and navigation
 
@@ -42,11 +44,11 @@ Dashboard | Transactions | Categories | Banking | Investments | Reports
 ```
 
 `Banking` remains active for nested bank, account, card, invoice, movement and
-loyalty routes. The mobile `<details>/<summary>` menu uses the same links and
-ordering as desktop.
+loyalty routes. The mobile navigation is a full-screen forest-deep overlay with
+the same links and ordering as desktop. It slides in and locks page scrolling
+while open.
 
-`partials/language_selector.html` is included once in the public navbar and in
-both authenticated variants: the desktop controls and CSS-only mobile menu. It
+`partials/language_selector.html` is included once in each active navbar. It
 posts the current path and `en` or `pt-br` to Django's
 `/i18n/set_language/`; JavaScript submits on change and the `noscript` Apply
 button preserves the server-rendered fallback. The choice is stored in Django's
@@ -101,9 +103,9 @@ authoritative no-JavaScript path, while JavaScript reveals the fields relevant
 to the selected payment channel and enhances category search. Hidden client-side
 controls never replace server-side ownership and compatibility validation.
 
-Forms use the established `form_field.html`, validation summary, standard input
-classes and Save/Cancel action pattern. Server-side validation remains
-authoritative.
+Forms use the established `form_field.html`, validation summary, forest/cream
+inputs with caramel focus, and the Save/Cancel pill action pattern. Checkboxes
+use `accent-caramel`. Server-side validation remains authoritative.
 
 - PIX/account/debit choices state `Affects account balance immediately`.
 - Credit card choices state `Added to the card invoice; account debited on due date`.
@@ -155,24 +157,27 @@ render translated fragments in the active request language.
 
 Stat cards separate concepts instead of collapsing them into one balance:
 
-- Available cash
+- Current Balance (realized cash)
 - Income this month
 - Expenses this month
-- Credit-card payable
-- Investments
-- Net worth
+- Investments this month
+- Balance this month
+- Projected balance at the end of the month
 
-Account cash cards drill into the movement ledger. Invoice payable cards drill
-into open invoices. Own transfers may appear in activity but are visually
-neutral and absent from income/expense charts. Projected figures are labeled and
-never presented as posted cash.
+Current Balance remains distinct from the projected month-end close. Credit-card
+purchases belong to the statement month but affect cash only when the invoice is
+settled. Own transfers may appear in activity but are visually neutral and
+absent from income/expense charts. Projected figures are labeled and never
+presented as posted cash.
 
 ## Reports and charts
 
 Charts remain inline server-rendered SVG/CSS with native `<title>` tooltips,
-responsive overflow containers and accessible text summaries. HTMX swaps only
-the report island while preserving focus and viewport; plain links/forms remain
-equivalent.
+forest/cream tooltip pills, responsive overflow containers and accessible text
+summaries. Caramel is the primary series, forest/sage represents positive cash
+flow, terracotta represents expenses and caramel represents investments. HTMX
+swaps only the report island while preserving focus and viewport; plain
+links/forms remain equivalent.
 
 Every chart states its reporting currency and actual versus projected period.
 The selected per-user base currency, snapshot status where supported, and
