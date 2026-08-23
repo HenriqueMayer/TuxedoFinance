@@ -6,19 +6,19 @@
 {% block content %}
 <div class="mx-auto max-w-lg space-y-6">
     <div>
-        <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Import Categories" %}</h1>
-        <p class="mt-2 text-sm text-slate-600 dark:text-neutral-400">
+        <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">{% translate "Import Categories" %}</h1>
+        <p class="mt-2 text-sm text-forest/60 dark:text-cream/60">
             {% translate "Import categories from a CSV exported by Tuxedo Finance. Existing category names will be skipped." %}
         </p>
     </div>
-    <form method="post" enctype="multipart/form-data" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
+    <form method="post" enctype="multipart/form-data" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
         {% include 'partials/form_field.html' with field=form.file %}
         <div class="flex items-center gap-3">
-            <button type="submit" class="inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90">
+            <button type="submit" class="inline-flex items-center rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light">
                 {% translate "Import" %}
             </button>
-            <a href="{% url 'categories:list' %}" class="inline-flex items-center rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200">
+            <a href="{% url 'categories:list' %}" class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90">
                 {% translate "Cancel" %}
             </a>
         </div>

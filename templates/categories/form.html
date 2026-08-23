@@ -12,17 +12,17 @@ the shared partials/form_field.html renderer (PRD §9.4).
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
-    <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">
+    <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">
         {% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %}
     </h1>
 
-    <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
+    <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
             <div class="space-y-1.5">
                 {% for error in form.non_field_errors %}
-                    <p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
+                    <p class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>
                 {% endfor %}
             </div>
         {% endif %}
@@ -30,12 +30,12 @@ the shared partials/form_field.html renderer (PRD §9.4).
         {% include 'partials/form_field.html' with field=form.name %}
         {% include 'partials/form_field.html' with field=form.transaction_type %}
         <div class="space-y-1.5">
-            <label for="parent-category-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">
+            <label for="parent-category-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
                 {% translate "Search parent categories" %}
             </label>
             <input type="search"
                    id="parent-category-search"
-                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/40 dark:placeholder:text-cream/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40"
                    placeholder="{% translate 'Type a category name' %}"
                    autocomplete="off"
                    aria-controls="{{ form.parent_category.id_for_label }}">
@@ -44,11 +44,11 @@ the shared partials/form_field.html renderer (PRD §9.4).
 
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
+                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Save" %}
             </button>
             <a href="{% url 'categories:list' %}"
-               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                  {% translate "Cancel" %}
             </a>
         </div>

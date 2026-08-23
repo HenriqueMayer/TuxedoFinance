@@ -21,42 +21,42 @@ GET search plus top-level/subcategory filtering.
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Categories" %}</h1>
-            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate "Organize your transactions with categories and subcategories." %}</p>
+            <h1 class="font-serif text-4xl font-normal tracking-tight text-forest dark:text-cream">{% translate "Categories" %}</h1>
+            <p class="mt-1 text-sm text-forest/60 dark:text-cream/60">{% translate "Organize your transactions with categories and subcategories." %}</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
             {% if has_categories %}
                 <a href="{% url 'categories:delete_all' %}"
-                   class="inline-flex items-center rounded-xl bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-600 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 dark:bg-rose-500/15 dark:text-rose-400">
+                   class="inline-flex items-center rounded-full bg-terracotta/10 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-terracotta ring-1 ring-inset ring-terracotta/30 transition hover:bg-terracotta/20 dark:bg-terracotta/15 dark:text-terracotta-light">
                     {% translate "Delete all" %}
                 </a>
             {% endif %}
             <a href="{% url 'categories:export' %}"
-               class="inline-flex items-center rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">
+               class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest">
                 {% translate "Export CSV" %}
             </a>
             <a href="{% url 'categories:import' %}"
-               class="inline-flex items-center rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">
+               class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest">
                 {% translate "Import CSV" %}
             </a>
             <a href="{{ create_url }}"
-               class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
+               class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                  {{ new_category_label }}
             </a>
         </div>
     </div>
 
-    <form method="get" class="flex flex-col gap-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 sm:flex-row sm:items-end">
+    <form method="get" class="flex flex-col gap-3 rounded-3xl ring-1 ring-forest/10 dark:ring-cream/10 bg-white dark:bg-forest p-4 sm:flex-row sm:items-end">
         <div class="min-w-[14rem] flex-[2] space-y-1.5">
-            <label for="filter-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Search" %}</label>
+            <label for="filter-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Search" %}</label>
             <input type="search" id="filter-search" name="q" value="{{ search_query }}"
                    placeholder="{% translate 'Category name' %}"
-                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/40 dark:placeholder:text-cream/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-[12rem] flex-1 space-y-1.5">
-            <label for="filter-level" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Level" %}</label>
+            <label for="filter-level" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Level" %}</label>
             <select id="filter-level" name="level"
-                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                 <option value="">{% translate "All levels" %}</option>
                 <option value="top" {% if selected_level == 'top' %}selected{% endif %}>{% translate "Top-level" %}</option>
                 <option value="sub" {% if selected_level == 'sub' %}selected{% endif %}>{% translate "Subcategories" %}</option>
@@ -64,12 +64,12 @@ GET search plus top-level/subcategory filtering.
         </div>
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                  {% translate "Filter" %}
             </button>
             {% if search_query or selected_level %}
                 <a href="{{ list_url }}"
-                   class="rounded text-sm font-medium text-slate-600 dark:text-neutral-400 transition hover:text-slate-900 dark:hover:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                   class="rounded text-[11px] font-medium uppercase tracking-widest text-forest/60 dark:text-cream/60 transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                      {{ clear_filters_label }}
                 </a>
             {% endif %}
@@ -77,25 +77,25 @@ GET search plus top-level/subcategory filtering.
     </form>
 
     {% if categories %}
-        <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335]">
-            <ul class="divide-y divide-slate-200 dark:divide-slate-700">
+        <div class="rounded-3xl bg-cream p-2 dark:bg-forest">
+            <ul class="divide-y divide-forest/10 dark:divide-cream/10">
                 {% for category in categories %}
                     <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <p class="font-medium text-slate-900 dark:text-neutral-100">{{ category.name }}</p>
+                            <p class="font-serif text-lg">{{ category.name }}</p>
                             {% if category.parent_category %}
-                                <p class="text-sm text-slate-600 dark:text-neutral-400">{% blocktranslate with parent_name=category.parent_category.name %}Subcategory of {{ parent_name }}{% endblocktranslate %}</p>
+                                <p class="text-sm text-forest/60 dark:text-cream/60">{% blocktranslate with parent_name=category.parent_category.name %}Subcategory of {{ parent_name }}{% endblocktranslate %}</p>
                             {% else %}
-                                <p class="text-sm text-slate-500 dark:text-neutral-500">{% translate "Top-level category" %}</p>
+                                <p class="text-sm text-forest/50 dark:text-cream/50">{% translate "Top-level category" %}</p>
                             {% endif %}
                         </div>
                         <div class="flex items-center gap-3">
                             <a href="{% url 'categories:update' category.pk %}"
-                               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                                  {% translate "Edit" %}
                             </a>
                             <a href="{% url 'categories:delete' category.pk %}"
-                               class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                               class="inline-flex items-center gap-2 rounded-full bg-terracotta/10 dark:bg-terracotta/15 px-4 py-2.5 text-[11px] font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light ring-1 ring-inset ring-terracotta/30 transition hover:bg-terracotta/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                                  {% translate "Delete" %}
                             </a>
                         </div>
