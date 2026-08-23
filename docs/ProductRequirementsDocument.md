@@ -52,7 +52,9 @@ HTMX progressive enhancement.
 - Open Finance/bank synchronization, statement imports and issuer APIs.
 - Market-price, FX or loyalty-provider feeds; rates and valuations remain manual.
 - Collaborative accounts, accounting-grade general ledger and tax reporting.
-- A SPA, JavaScript charting library or Node/npm frontend pipeline.
+- A SPA, JavaScript charting library or Node/npm runtime dependency. Pinned
+  Node-based tooling may compile and verify static assets during development
+  and CI; it is not required to run the application.
 
 ## 4. Functional Requirements
 
@@ -237,14 +239,17 @@ The dashboard separates cash, economic activity, liabilities and positions:
 | Investment value | Investment quantities and historical/current valuation. |
 | Net worth | Converted cash + investments - card payable. |
 
-Reports remain responsive, server-rendered SVG/CSS. HTMX may swap chart islands,
-but all filters and navigation retain plain GET fallbacks. Every total states its
+Reports remain responsive, server-rendered SVG/CSS. HTMX may swap chart islands
+and progressively enhance same-origin links, but all filters and navigation
+retain plain GET fallbacks. Every total states its
 currency/valuation date and whether it is actual or projected.
 
 ## 10. Frontend Requirements
 
-- Preserve the current light/dark design language, semantic colors, typography,
-  reusable partials and mobile-first behavior.
+- Preserve the current light/dark design language, accessible semantic colors,
+  Inter-only typography, reusable partials and mobile-first behavior. Normal
+  text maintains WCAG AA contrast and user-facing labels never render below
+  12px.
 - Keep banking as the navigation and settlement domain.
 - Banking screens expose hierarchy without hiding accounting consequences:
   bank, accounts/currencies/balances, capabilities/cards, ledger and invoices.
@@ -257,8 +262,10 @@ currency/valuation date and whether it is actual or projected.
 - The public navbar and authenticated desktop/mobile navbars expose the same
   English/Brazilian Portuguese selector. The initial visit may use the browser
   language; subsequent requests use the native Django language cookie.
-- Interface labels and system messages are translated. Categories and all other
-  user-entered or persisted domain data are displayed verbatim, not translated
+- Interface labels and system messages are translated. The nine system-provided
+  categories are materialized in the interface language active when the account
+  is created. From that point onward, categories and all other user-entered or
+  persisted domain data are displayed verbatim and are not translated
   automatically.
 
 ## 11. Non-Functional Requirements

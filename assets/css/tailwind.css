@@ -1,0 +1,38 @@
+/*
+ * Source for static/css/app.css.
+ * Rebuild with Tailwind CSS standalone CLI 3.4.17; see docs/frontend.md.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: #FAF8F3;
+  }
+
+  html.dark {
+    background-color: #101E18;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #FAF8F3;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: #1A2E26;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: #101E18;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #B88A59;
+  }
+}

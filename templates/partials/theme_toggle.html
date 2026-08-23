@@ -1,9 +1,9 @@
 {% load i18n %}
 {% comment %}
-Reusable theme toggle button (PRD §9 — light/dark). A plain button marked with
-`data-theme-toggle`; static/js/theme.js wires every instance. The FOUC inline script in
-base.html already set `.dark` on <html> before this paints, so the right
-icon is shown on first render with no flash.
+Reusable theme toggle button (Final Design System §0/§3). A circular icon
+button marked with `data-theme-toggle`; static/js/theme.js wires every
+instance. The FOUC inline script in base.html already set `.dark` on <html>
+before this paints, so the right icon is shown on first render with no flash.
 
 The two SVG icons take turns via Tailwind's `dark:` variant: the moon shows
 on the light surface (offering "switch to dark"), the sun shows on the dark
@@ -12,7 +12,7 @@ surface. The `aria-label` is the same either way — the toggle isn't labelled
 state, and the icon itself communicates the affordance.
 {% endcomment %}
 <button type="button"{% if legacy_theme_id %} id="theme-toggle"{% endif %} data-theme-toggle aria-label="{% translate 'Toggle color theme' %}"
-        class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:text-slate-900 hover:bg-slate-100 dark:text-neutral-400 dark:hover:text-neutral-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        class="flex h-10 w-10 items-center justify-center rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-caramel/40 {% if overlay %}border-cream/20 text-cream hover:bg-cream/10{% else %}border-forest/20 hover:bg-forest/5 dark:border-cream/20 dark:hover:bg-cream/10{% endif %}">
     <!-- Moon: visible in light mode only -->
     <svg class="h-5 w-5 dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />

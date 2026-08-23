@@ -1,57 +1,30 @@
-# TuxedoFinance
+<p align="center">
+  <img src="static/brand/tuxedo-mark-256.png" width="144" alt="Tuxedo Finance logo">
+</p>
 
-[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blueviolet)](LICENSE)
+<h1 align="center">Tuxedo Finance</h1>
 
-A personal finance tracker built with Django full stack — record categorized transactions, project your balance forward from recurring and installment payments, and read it all back in a clean light/dark dashboard. Server-rendered.
+<p align="center">
+  <strong>Personal finance, simplified.</strong><br>
+  A local-first Django application for understanding cash flow, recurring expenses,
+  card bills, investments, and where your money goes each month.
+</p>
 
-![TuxedoFinance brand image](assets/icon/tuxedo_finance.jpeg)
+<p align="center">
+  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="CI status"></a>
+  <img src="https://img.shields.io/badge/version-0.1.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.1.0">
+  <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
+  <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="English and Brazilian Portuguese interface">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-7C5C13?style=for-the-badge&amp;labelColor=101E18" alt="PolyForm Noncommercial license"></a>
+</p>
 
-## Video tutorials
+Tuxedo Finance replaces an improvised spreadsheet with a normalized, categorized
+record of financial activity. It is designed for personal use and simple local
+operation—not as a SaaS platform—and keeps the database under the installation
+owner's control.
 
-- [Tuxedo Finance - Tutorial (PT-BR)](https://youtu.be/I9oGKTAVM3c)
-
-## Why Tuxedo Finance exists
-
-Tuxedo Finance was created by Henrique Mayer after struggling to manage personal
-finances in generic spreadsheets. Those tools required too much adaptation and
-still made it difficult to understand day-to-day cash flow, recurring expenses,
-bank accounts, cards, and investments in one place.
-
-The project turns that experience into a practical tool for other people facing
-the same problem. Its focus is personal use, simple self-hosting, clear financial
-information, and community collaboration — not becoming a SaaS platform or
-optimizing prematurely for large-scale operation.
-
-The source is publicly available so people can study it, adapt it, contribute to
-it, and run their own noncommercial instance. Commercial use and resale are not
-permitted by the project's license; see [License](#license).
-
-## Features
-
-- **Dashboard** with current balance, monthly income/expenses/investments, and a projected end-of-month balance
-- **Forward projection** — fixed transactions recur and installment plans spread one payment per month, so future months preview without recording anything in advance
-- **Filtered transaction history and CSV export** — general search, separate billed-month and exact transaction-date filters, type filtering, date/update/amount ordering, and full or billed-month CSV downloads
-- **Reports** with server-rendered, zero-JS SVG charts for balance evolution, monthly cash flow, installments, cards and accounts, and expense categories
-- **Categories and subcategories** with a per-user default seed on signup and CSV import/export
-- **Category collections** — example CSV files in [English and Brazilian Portuguese](docs/categories-collection/) that can be imported to start or share a category structure
-- **Payment methods** with credit-card billing cycles (statement day and due day) and per-transaction bill overrides
-- **Investments log** — a parallel universe to `Transaction` for tracking manual deposits, withdrawals, and yields, with settings to manage banks, brokers, investment products, free-form assets, and exchange rates. Automatic monthly and annual yield calculations are `Coming soon`
-- **Light/dark theme** toggle with a Darcula-inspired dark palette
-- **Configurable currency** — pick BRL, USD, EUR, GBP, JPY, or CHF; the symbol and number format always match
-- **English and Brazilian Portuguese UI** — selected from the public or authenticated navbar without changing URLs
-- **Optional public signup control** — keep registration open for a community instance or close it while existing accounts continue to log in
-
-## Stack
-
-| | |
-|---|---|
-| Backend | Python 3.12 · Django 6.0 (CBVs, native auth) |
-| Frontend | Django Template Language · TailwindCSS |
-| Database | SQLite (native, no separate service) |
-| Tooling | [`uv`](https://docs.astral.sh/uv/) |
-| Runtime | Django development server (`runserver`) |
-
-## Quick start
+## 🚀 Quick start
 
 Requires Python 3.12 and [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
 
@@ -64,172 +37,170 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Run the `printf` command only once. It saves a private, stable key in the local
-`.env` file, so restarting the computer does not require exporting it again.
-Both `.env` and the database created by `migrate` (`db.sqlite3`) are ignored by
-Git. Keep both files private and include them in your local backup routine.
+Open <http://127.0.0.1:8000/>, create an account, then add a bank and one of
+its accounts before recording the first transaction.
 
-Open <http://127.0.0.1:8000/>, create your account from the landing page, then
-add a bank and a currency-specific account before recording your first
-transaction. To start the app again later, enter the project directory and run
-only `uv run python manage.py runserver`.
+The generated `.env` and `db.sqlite3` files are ignored by Git. Keep both
+private and include the database in a protected backup routine. To start the
+application again later, run only:
 
-### Validation and CI
+```bash
+uv run python manage.py runserver
+```
 
-Run the same checks used by the repository's GitHub Actions workflow from a
-local checkout:
+## 🎥 Tutorials
+
+Updated walkthroughs will be available in both supported languages:
+
+| Language | Tutorial |
+|---|---|
+| 🇧🇷 Português (Brasil) | _Add the updated PT-BR tutorial link here_ |
+| 🇺🇸 English | _Add the English tutorial link here_ |
+
+## ✨ Highlights
+
+| | What it does |
+|---|---|
+| 📊 **Dashboard & outlook** | Separates current cash, monthly income, expenses, investments, open card bills, and projected month-end balance. |
+| 🧾 **Transactions** | Records income and expenses with categories, payment channels, fixed recurrences, installments, search, ordering, and CSV export. |
+| 🏦 **Banking** | Organizes banks, currency-specific accounts, PIX, debit and credit cards, invoice cycles, own-account transfers, loyalty programs, and exchange rates. |
+| 📈 **Reports** | Uses responsive, server-rendered SVG charts with accessible summaries and progressive HTMX updates—no client-side chart library. |
+| 💼 **Investments** | Tracks manual deposits, withdrawals, yields, products, assets, quantities, unit prices, fees, and historical conversion evidence. |
+| 🌍 **Localization** | Offers English and Brazilian Portuguese independently from BRL, USD, EUR, GBP, JPY, or CHF reporting currency. |
+| 🌗 **Accessible themes** | Uses a readable Inter-based light/dark interface with distinct colors for income, expenses, investments, installments, fixed, and one-off activity. |
+
+> **Financial meaning matters:** Current Balance is realized account cash through
+> today. Projected (end of month) is the forward-looking close. Credit-card
+> purchases belong to their statement month, while cash moves on the invoice due
+> date.
+
+<details>
+<summary><strong>🎨 Visual language</strong></summary>
+
+<br>
+
+The interface follows the Tuxedo Finance design system: calm foundations,
+high-contrast typography, caramel actions, and semantic financial colors.
+
+| Token | Color | Purpose |
+|---|---:|---|
+| `cream` | `#FAF8F3` | Light background |
+| `forest` | `#1A2E26` | Primary text and dark surfaces |
+| `forest-deep` | `#101E18` | Dark background |
+| `caramel` | `#B88A59` | Brand and primary actions |
+| `income` | `#176B52` | Income and positive account movement |
+| `expense` | `#B42318` | Expenses, negatives, and destructive actions |
+| `investment` | `#7C5C13` | Investment activity |
+| `installment` | `#6B4E8A` | Installment plans |
+| `fixed` | `#A65300` | Fixed recurrences |
+| `oneoff` | `#52605A` | One-off activity |
+
+The dark theme uses the corresponding lighter semantic companions documented in
+the canonical catalog, preserving contrast without changing financial meaning.
+
+The canonical component catalog lives in
+[`design-system/tuxedo-final-design-system.html`](design-system/tuxedo-final-design-system.html),
+with implementation guidance in [`docs/frontend.md`](docs/frontend.md).
+
+</details>
+
+## 🧭 How the pieces fit together
+
+```text
+Accounts ──► Banking ──► Transactions ──► Dashboard & Reports
+                 │              │
+                 └──────────────┴──────► Investments
+```
+
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.12 · Django 6.0 · native authentication |
+| Frontend | Django Template Language · Tailwind CSS · small vanilla-JS/HTMX enhancement layer |
+| Charts | Inline server-rendered SVG |
+| Database | SQLite in WAL mode |
+| Dependency management | `uv` with a committed lockfile |
+
+## ⚙️ Configuration
+
+Configuration is read from the local `.env` file or process environment.
+Process variables take priority.
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `SECRET_KEY` | Django signing key | Required |
+| `DEBUG` | Development debug mode | `True` |
+| `ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
+| `HTTPS` | Secure cookies, HTTPS redirect, and HSTS | `False` |
+| `ALLOW_SIGNUPS` | Allow new public accounts | `True` |
+| `CASHFLOW_DATA_DIR` | Directory containing `db.sqlite3` | Project root |
+| `TUXEDO_ENV_FILE` | Alternate environment file | Project-root `.env` |
+| `LOG_LEVEL` | Application log level | `INFO` |
+
+Set `ALLOW_SIGNUPS=False` after creating your account if the installation
+should accept only existing users. Set `HTTPS=True` only when the application
+is actually served over TLS.
+
+## ✅ Development checks
 
 ```bash
 uv sync --locked
 uv run python manage.py check
-uv run python manage.py makemigrations --check --dry-run
-uv run python manage.py compilemessages
-uv run coverage run --branch manage.py test
-uv run coverage report --show-missing
-uvx --from 'ruff>=0.9,<1' ruff check .
+uv run python manage.py test
+npm ci
+npm run build:css
 ```
 
-CI also audits the locked runtime requirements with `pip-audit` and publishes
-branch-coverage XML and HTML artifacts. CI enforces the documented 70% line
-coverage floor while financial-service branches continue to be expanded.
+For browser smoke tests, start the app on port 8765 in one terminal and run the
+suite from another.
 
-## Choosing the interface language
+Terminal 1:
 
-The interface supports English (`en`) and Brazilian Portuguese (`pt-br`). Use
-the language selector in the public navbar or, after login, in either the
-desktop navbar or mobile menu. Django posts the choice to
-`/i18n/set_language/` and stores it in its native language cookie; application
-URLs remain stable and never gain a language prefix. On a first visit without
-that cookie, `LocaleMiddleware` selects a supported language from the browser's
-`Accept-Language` header and otherwise falls back to English.
-
-Language selection also applies to HTMX responses because they pass through the
-same middleware. It translates interface copy, validation and system messages,
-not user-entered names or financial data: category names and other user data
-remain exactly as entered.
-
-## Local files and database ownership
-
-Each clone is an independent local installation. The repository does not
-include a database or a secret key: the Quick start creates `db.sqlite3` with
-`manage.py migrate` and stores the installation key in `.env`. Both files are
-ignored by Git.
-
-Each installation owner controls the contents of that local database and is
-responsible for its access permissions, protection and backups. Never add the
-database to version control or publish it with application source. Before an
-upgrade or other risky operation, stop application writes and make a protected
-copy of the database. See the complete backup, restore, retention and rehearsal
-procedure in [`docs/operations.md`](docs/operations.md).
-
-## Choosing your currency
-
-Choose a reporting currency from the authenticated **Settings** screen. The
-selection belongs to the current user, so two users in the same database may
-use different reporting currencies. It changes consolidated presentation only;
-account, transaction, investment, and other financial records retain their
-native currencies and amounts. Missing exchange rates remain explicit.
-
-| Code | Renders as | | Code | Renders as |
-|---|---|---|---|---|
-| `BRL` | `R$ 1.000,00` | | `GBP` | `£ 1,000.00` |
-| `USD` | `$ 1,000.00` | | `JPY` | `¥ 1,000.00` |
-| `EUR` | `€ 1.000,00` | | `CHF` | `CHF 1'000.00` |
-
-The supported registry pairs each code with its symbol and number format in
-[`core/currencies.py`](core/currencies.py). New users and existing users
-without a preference start with BRL. Interface language and currency are
-independent; matching `core/formats/en/` and `core/formats/pt_BR/` overrides
-preserve the selected currency's separators in either language.
-
-## Project layout
-
-```
-core/          # Project configuration (settings, urls, wsgi, asgi)
-pages/         # Public landing page
-accounts/      # Sign up, login, logout (native auth)
-dashboard/     # Aggregations, projections, and report charts
-transactions/  # Transaction model + CRUD
-categories/    # Category model + CRUD (self-related)
-banking/       # Banks, accounts, cards, balances, invoices, points, and FX
-investments/   # Investment log + manual ExchangeRate (multi-currency)
-templates/     # Project-level Django templates
-static/        # Project-level static assets
+```bash
+uv run python manage.py runserver 127.0.0.1:8765
 ```
 
-## Tests and continuous integration
+Terminal 2:
 
-The supported development path is Python 3.12 with `uv`, Django's native test
-runner and SQLite. CI reproduces that setup from `uv.lock` and runs system
-checks, missing-migration checks, translation validation, the full test suite,
-Ruff, and a locked-runtime dependency audit. It reports branch coverage and
-requires at least 70% line coverage; the XML and HTML reports are retained as
-build artifacts. No alternate database or SaaS-scale matrix is maintained.
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
 
-Run the coverage gate locally with `uv run coverage run --branch manage.py test`
-followed by `uv run coverage report --show-missing --fail-under=70`. The full
-policy and affected-tests guidance live in
-[`docs/coverage-baseline.md`](docs/coverage-baseline.md) and
-[`CONTRIBUTING.md`](CONTRIBUTING.md).
+The browser suite expects the application at `http://127.0.0.1:8765` by default;
+set `E2E_BASE_URL` to use another local address. The CI workflow also verifies
+the compiled CSS and vendored HTMX against their pinned sources, checks migrations
+and translations, enforces the documented coverage floor, runs Ruff, and audits
+the locked runtime dependencies. See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for the complete development workflow.
 
-## Configuration reference
+## 📚 Documentation
 
-Set configuration in the local `.env` file or through the environment of the
-process that runs Django. Process variables take priority:
+- [Documentation index](docs/README.md) — architecture, data model, frontend, and per-app references
+- [Changelog](CHANGELOG.md) — notable changes grouped by release
+- [Versioning and releases](docs/versioning.md) — SemVer policy, validation and release workflow
+- [Product requirements](docs/ProductRequirementsDocument.md) — approved behavior and acceptance criteria
+- [Operations guide](docs/operations.md) — dependency updates and SQLite backup/restore procedures
+- [Coverage baseline](docs/coverage-baseline.md) — test coverage policy and commands
+- [Category collections](docs/categories-collection/) — import-ready English and Brazilian Portuguese examples
 
-| Variable | Purpose | Default if unset |
-|---|---|---|
-| `SECRET_KEY` | Django's cryptographic signing key | **required** |
-| `DEBUG` | `True` / `False` | `True` |
-| `ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
-| `HTTPS` | Secure cookies, HTTPS redirect, HSTS | `False` |
-| `LOG_LEVEL` | Log verbosity on stdout | `INFO` |
-| `ALLOW_SIGNUPS` | Allow creation of new accounts from the public signup route | `True` |
-| `TUXEDO_ENV_FILE` | Optional alternate `.env` path for automation/testing | project-root `.env` |
+## 🔐 Data ownership
 
-The app refuses to start without `SECRET_KEY`. Generate one with Django's
-`get_random_secret_key()` command shown in Quick start; it is loaded
-automatically from the ignored `.env` file. Never commit or share it. An
-explicit process variable takes priority over `.env`. Replacing the key
-invalidates existing sessions and password-reset tokens.
+Each clone is an independent installation. Financial records remain in its
+local SQLite database; they are not included in the repository. The installation
+owner is responsible for access permissions, backups, retention, and restore
+testing. Before upgrades or risky maintenance, stop writes and follow the
+documented backup procedure.
 
-Set `ALLOW_SIGNUPS=False` to close public registration after creating an account
-or when running a private instance. The signup route returns a localized
-explanation and never creates a user while disabled; login for existing users is
-unchanged. Leave it unset (or set it to `True`) for an open community instance.
+## 🤝 Contributing
 
-Set `HTTPS=True` only once the instance is actually served over TLS — it sends session and CSRF cookies as `Secure`, redirects HTTP to HTTPS, emits HSTS, and trusts `X-Forwarded-Proto`. Over plain HTTP it would break login outright.
+Contributions, bug reports, and suggestions are welcome. Please read
+[`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a change.
 
-## Future deployment security
+## 📄 License
 
-The native `runserver` workflow is the supported path. Before any non-local
-deployment, apply Django's deployment checklist and these safeguards:
+Copyright (c) 2026 Henrique Mayer.
 
-- Set a real `SECRET_KEY` and `DEBUG=False`.
-- List your real domains in `ALLOWED_HOSTS`.
-- Set `HTTPS=True` if served over TLS; confirm with `manage.py check --deploy`.
-- Use a private environment or secret store for `SECRET_KEY`.
-- Protect and back up the local SQLite database; it is not stored in Git.
-
-## Documentation
-
-- [`docs/ProductRequirementsDocument.md`](docs/ProductRequirementsDocument.md) — full product specification and requirements
-- [`docs/`](docs/README.md) — technical reference for every app, model, view, and template
-- [`docs/categories-collection/`](docs/categories-collection/) — import-ready category collections: [English](docs/categories-collection/en-categories.csv) and [Brazilian Portuguese](docs/categories-collection/ptbr-categories.csv)
-- [`docs/operations.md`](docs/operations.md) — dependency updates and local SQLite backup/restore operations
-- [`docs/svg/`](docs/svg/) — initial project sketches that guided the application structure
-
-## License
-
-Copyright (c) 2026 Henrique Mayer
-
-Licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). Personal, noncommercial use is permitted — including cloning, adapting, and running your own local instance; selling this software, or using it for any commercial purpose, is not. See [LICENSE](LICENSE) for the full terms.
-
-Copies and modified distributions must preserve the license terms and the
-required copyright notice. Public source code cannot be made technically
-impossible to copy; the copyright and license define which uses are permitted.
-
-## Contributing
-
-Contributions are welcome under the same PolyForm Noncommercial License. Read
-[CONTRIBUTING.md](CONTRIBUTING.md) before opening a change.
+Licensed under the
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0).
+Personal and other noncommercial use is permitted. Commercial use and resale
+are not permitted; see [`LICENSE`](LICENSE) for the complete terms.

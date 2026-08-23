@@ -1,11 +1,11 @@
 [project]
 name = "tuxedo-finance"
 version = "0.1.0"
-description = "Tuxedo Finance — a self-hosted personal finance tracker built with Django, server-rendered and zero-JS."
+description = "Tuxedo Finance — a self-hosted, server-rendered personal finance tracker built with Django and progressive enhancement."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "django>=6.0.7,<6.1",
+    "django>=6.0.8,<6.1",
     "python-dotenv>=1.1,<2",
 ]
 

@@ -6,12 +6,12 @@
 {% block content %}
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><a href="{% url 'banking:list' %}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400">{% translate "Banks" %}</a><h1 class="mt-1 text-3xl font-bold">{% translate "Exchange rates" %}</h1><p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate "Historical rates consolidate account and investment values into the base currency." %}</p></div>
-        <a href="{% url 'banking:exchange_rate_create' %}" class="rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white">{% translate "New rate" %}</a>
+        <div><a href="{% url 'banking:list' %}" class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Banks" %}</a><h1 class="mt-1 font-sans text-4xl font-semibold tracking-tight">{% translate "Exchange rates" %}</h1><p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate "Historical rates consolidate account and investment values into the base currency." %}</p></div>
+        <a href="{% url 'banking:exchange_rate_create' %}" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep">{% translate "New rate" %}</a>
     </div>
     {% if rates %}
-        <ul class="divide-y divide-slate-200 rounded-2xl bg-white px-5 ring-1 ring-slate-200 dark:divide-slate-700 dark:bg-[#313335] dark:ring-[#323232]">
-            {% for rate in rates %}<li class="py-4"><span class="font-semibold">1 {{ rate.from_currency }} = {{ rate.rate }} {{ rate.to_currency }}</span><p class="text-sm text-slate-500">{{ rate.effective_date|date:USER_DATE_FORMAT }}{% if rate.notes %} - {{ rate.notes }}{% endif %}</p></li>{% endfor %}
+        <ul class="divide-y divide-forest/10 rounded-3xl bg-white px-5 ring-1 ring-forest/10 dark:divide-cream/10 dark:bg-forest dark:ring-cream/10">
+            {% for rate in rates %}<li class="py-4"><span class="font-semibold">1 {{ rate.from_currency }} = {{ rate.rate }} {{ rate.to_currency }}</span><p class="text-sm text-forest/70 dark:text-cream/70">{{ rate.effective_date|date:USER_DATE_FORMAT }}{% if rate.notes %} - {{ rate.notes }}{% endif %}</p></li>{% endfor %}
         </ul>
     {% else %}
         {% url 'banking:exchange_rate_create' as rate_create_url %}

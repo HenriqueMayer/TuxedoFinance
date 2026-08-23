@@ -6,9 +6,9 @@ from investments.models import Asset, Investment, InvestmentProduct
 
 
 INPUT_CLASSES = (
-    'w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 '
-    'text-slate-900 dark:text-neutral-100 placeholder:text-slate-400 dark:placeholder:text-neutral-500 '
-    'focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
+    'w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm text-forest '
+    'placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 '
+    'dark:border-cream/20 dark:bg-forest-deep dark:text-cream dark:placeholder:text-cream/40'
 )
 
 

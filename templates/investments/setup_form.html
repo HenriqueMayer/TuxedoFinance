@@ -6,17 +6,17 @@
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <div>
-        <a href="{% url 'investments:settings' %}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400">&larr; {% translate 'Back to Settings' %}</a>
-        <h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-neutral-100">{{ setup_title }}</h1>
-        <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+        <a href="{% url 'investments:settings' %}" class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">&larr; {% translate 'Back to Settings' %}</a>
+        <h1 class="mt-2 font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{{ setup_title }}</h1>
+        <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
             {{ setup_description }}
         </p>
     </div>
 
-    <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
+    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
-            {% for error in form.non_field_errors %}<p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+            {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         {% endif %}
         {% if form.valuation_mode %}
             {% include 'partials/form_field.html' with field=form.name %}
@@ -41,8 +41,8 @@
             {% endfor %}
         {% endif %}
         <div class="flex items-center gap-3">
-            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90">{% translate 'Save' %}</button>
-            <a href="{% url 'investments:settings' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200">{% translate 'Cancel' %}</a>
+            <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light">{% translate 'Save' %}</button>
+            <a href="{% url 'investments:settings' %}" class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90">{% translate 'Cancel' %}</a>
         </div>
     </form>
 </div>

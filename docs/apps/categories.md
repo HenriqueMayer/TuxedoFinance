@@ -91,9 +91,14 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
 ## Default category seeding (FR27)
 
 ```python
+from django.utils.translation import gettext, gettext_noop
+
 DEFAULT_CATEGORY_NAMES = (
-    'Groceries', 'Food & Dining', 'Subscriptions', 'Education',
-    'Fitness', 'Transportation', 'Pets', 'Hobbies & Entertainment', 'Services',
+    gettext_noop('Groceries'), gettext_noop('Food & Dining'),
+    gettext_noop('Subscriptions'), gettext_noop('Education'),
+    gettext_noop('Fitness'), gettext_noop('Transportation'),
+    gettext_noop('Pets'), gettext_noop('Hobbies & Entertainment'),
+    gettext_noop('Services'),
 )
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL, dispatch_uid='categories_seed_defaults')
@@ -101,7 +106,7 @@ def seed_default_categories(sender, instance, created, **kwargs):
     if not created:
         return
     Category.objects.bulk_create(
-        Category(user=instance, name=name) for name in DEFAULT_CATEGORY_NAMES
+        Category(user=instance, name=gettext(name)) for name in DEFAULT_CATEGORY_NAMES
     )
 ```
 
@@ -115,7 +120,7 @@ class CategoriesConfig(AppConfig):
         import categories.signals  # noqa: F401
 ```
 
-**Why this exists:** `Transaction.category` is a required FK. Without this signal, a brand-new user would hit a dead end — an empty dropdown — the first time they tried to record a transaction. All 9 default categories are top-level (no `parent_category`); the user is free to add subcategories or additional top-level categories afterward. No synthetic financial records are created. `dispatch_uid='categories_seed_defaults'` prevents the receiver from double-registering if `categories.signals` is ever imported more than once (e.g. Django's autoreloader).
+**Why this exists:** `Transaction.category` is a required FK. Without this signal, a brand-new user would hit a dead end — an empty dropdown — the first time they tried to record a transaction. All 9 default categories are top-level (no `parent_category`) and are resolved once in the language active during account creation. They are then ordinary persisted names: changing the UI language does not rename them. The user is free to rename them or add subcategories and additional top-level categories afterward. No synthetic financial records are created. `dispatch_uid='categories_seed_defaults'` prevents the receiver from double-registering if `categories.signals` is ever imported more than once (e.g. Django's autoreloader).
 
 ## Optional transaction type
 

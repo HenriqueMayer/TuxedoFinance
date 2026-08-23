@@ -143,8 +143,9 @@ no data migration. Upgrade normally with `manage.py migrate`; rollback with
 `manage.py migrate categories 0001` removes only this optional classification.
 Neither direction changes transactions or financial amounts.
 
-Creating an account seeds only the nine approved top-level category names
-defined in `categories.signals`; it does not create synthetic transactions,
+Creating an account seeds only the nine approved top-level category names,
+localized once from the account-creation language and defined in
+`categories.signals`; it does not create synthetic transactions,
 banks, accounts, cards, investments, or shared credentials.
 
 ## Loyalty

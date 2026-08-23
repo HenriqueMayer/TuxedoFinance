@@ -1,35 +1,72 @@
 # Frontend: Design System & Templates
 
-The approved banking release preserves the existing server-rendered Django
-Template Language and TailwindCSS visual system. There is no SPA, JavaScript
-framework or client-side chart library. Theme persistence and HTMX chart-island
-swaps remain the deliberately narrow JavaScript layer; every mutation is a
-normal CSRF-protected POST and every filter has a plain GET fallback.
+The current design-system release preserves the server-rendered Django
+Template Language and precompiled Tailwind CSS visual system. There is no SPA, JavaScript
+framework or client-side chart library. Theme persistence, boosted link
+navigation and HTMX chart-island swaps remain the deliberately narrow JavaScript
+layer; every mutation is a normal CSRF-protected POST and every filter has a
+plain GET fallback.
+
+Tailwind CSS is generated ahead of time into `static/css/app.css`, so full-page
+navigation never waits for browser-side class discovery or CSS compilation. The
+generated file is versioned with the application and does not require Node/npm
+at runtime. Frontend tooling is pinned in `package.json`/`package-lock.json` for
+development and CI. After changing Tailwind classes or tokens, rebuild it from
+`assets/css/tailwind.css` with:
+
+```bash
+npm ci
+npm run build:css
+```
+
+Bump the `?v=` query string in `base.html` whenever the generated stylesheet
+changes so long-lived browser caches cannot retain the previous design.
+
+Same-origin links inherit `hx-boost` from the page shell. HTMX keeps the current
+document visible while it requests the next server-rendered page, then replaces
+the body and updates browser history. Native links remain the fallback whenever
+JavaScript is unavailable. Mutating forms, uploads, locale changes, logout and
+download links explicitly opt out of boosting, so POST, CSRF, validation and
+file responses keep their ordinary Django behavior. GET filter forms may use
+HTMX when they target a documented page or island update. Full-page swaps move
+focus to the new `h1`; report and investment chart islands keep their existing
+focus and scroll restoration. The
+investment movement island updates filters and pagination independently, then
+returns to the beginning of the movement section instead of the top of the page;
+plain GET links and the section anchor provide the same no-JavaScript fallback.
 
 ## Visual language
 
-The light/dark theme, Inter typography, rounded bordered surfaces, gradient
-primary actions and semantic finance colors remain consistent across the new
-screens.
+The interface follows the final Haven & Hound design language documented in
+`design-system/tuxedo-final-design-system.html`: cream and forest foundations,
+caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
+throughout. Light cards use white surfaces and soft shadows; dark cards use flat
+forest surfaces over the forest-deep page background. Body copy starts at
+16/24px, supporting copy at 14/20px, and compact labels never fall below 12px.
 
 | Role | Semantic treatment |
 |---|---|
-| Income / account credit | Emerald |
-| Expense / account debit | Rose |
-| Investment | Amber |
-| Own transfer | Indigo/neutral; never income/expense colored |
-| Credit-card payable | Violet |
-| Warning / overdue invoice | Amber plus explicit text/icon |
+| Income / account credit | `income` #176B52; dark `income-light` #64D8B1 |
+| Expense / account debit / negative | `expense` #B42318; dark `expense-light` #FF8A80 |
+| Investment | `investment` #7C5C13; dark `investment-light` #F4C95D |
+| Installment plan | `installment` #6B4E8A; dark `installment-light` #C4A7E7 |
+| Fixed recurrence | `fixed` #A65300; dark `fixed-light` #FFB45C |
+| One-off purchase | `oneoff` #52605A; dark `oneoff-light` #B8C0BC |
+| Own transfer | Neutral forest/cream; never income/expense colored |
+| Credit-card payable | Caramel |
+| Warning / overdue invoice | Caramel plus explicit text/icon |
 
 Color is never the only carrier of status. Monetary labels always include a
 currency symbol or ISO code, especially when native and base values are shown
 together.
 
-The `TuxedoFinance` wordmark is rendered as adjacent text spans in the top
-navigation, with slate/white for `Tuxedo` and amber for `Finance`. The cat mark remains a
-decorative image in the footer and brand story, with an empty `alt` where the
-adjacent wordmark already names the product. Existing indigo-violet-fuchsia
-action gradients and semantic financial colors remain unchanged in both themes.
+The navigation brand combines `tuxedo-mark-256.png` with a two-line uppercase
+wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. It always
+links to the public landing page, including for authenticated users. Primary
+actions are solid caramel pills with forest-deep text; `caramel-ink` carries
+brand links over light surfaces. Outline actions invert to forest/cream on
+hover. Titles, labels, controls and tabular monetary figures all use Inter.
+Secondary text uses at least forest/70 or cream/70 contrast.
 
 ## Root layout and navigation
 
@@ -38,20 +75,34 @@ authenticated navbar, messages, content block and footer. The authenticated
 navigation becomes:
 
 ```text
-Dashboard | Transactions | Categories | Banking | Investments | Reports
+Dashboard | Reports | Transactions | Categories | Banks | Investments
 ```
 
-`Banking` remains active for nested bank, account, card, invoice, movement and
-loyalty routes. The mobile `<details>/<summary>` menu uses the same links and
-ordering as desktop.
+`Banks` remains active for nested bank, account, card, invoice, movement and
+loyalty routes. The authenticated desktop navigation starts at the `xl`
+breakpoint so tablet and narrow-laptop widths do not compress or overflow the
+full link set. Below that breakpoint, the mobile navigation is a full-screen
+forest-deep modal with the same links and ordering as desktop. It slides in,
+locks page scrolling, makes background content inert, contains keyboard focus,
+closes on Escape and restores focus to its trigger.
 
-`partials/language_selector.html` is included once in the public navbar and in
-both authenticated variants: the desktop controls and CSS-only mobile menu. It
+`partials/language_selector.html` is included once in each active navbar. It
 posts the current path and `en` or `pt-br` to Django's
 `/i18n/set_language/`; JavaScript submits on change and the `noscript` Apply
 button preserves the server-rendered fallback. The choice is stored in Django's
 language cookie, not local storage or the user model, and URLs have no locale
 prefix.
+
+HTMX 2.0.10 is vendored at `static/js/vendor/htmx.min.js`; the application does
+not contact a JavaScript CDN at runtime. CI verifies the vendored file against
+the upstream release checksum before running browser smoke tests.
+
+Django's content-security-policy middleware restricts script sources, forms,
+images and connections to this installation. Inline scripts and styles remain
+allowed because translated progressive-enhancement copy and server-calculated
+chart geometry are rendered directly by Django templates; Google Fonts is the
+only external presentation origin. Language selection uses a delegated local
+listener instead of an inline event handler and retains its `noscript` submit.
 
 ## Template tree
 
@@ -101,9 +152,9 @@ authoritative no-JavaScript path, while JavaScript reveals the fields relevant
 to the selected payment channel and enhances category search. Hidden client-side
 controls never replace server-side ownership and compatibility validation.
 
-Forms use the established `form_field.html`, validation summary, standard input
-classes and Save/Cancel action pattern. Server-side validation remains
-authoritative.
+Forms use the established `form_field.html`, validation summary, forest/cream
+inputs with caramel focus, and the Save/Cancel pill action pattern. Checkboxes
+use `accent-caramel`. Server-side validation remains authoritative.
 
 - PIX/account/debit choices state `Affects account balance immediately`.
 - Credit card choices state `Added to the card invoice; account debited on due date`.
@@ -143,9 +194,10 @@ deferred Python declarations, `gettext` for runtime Python messages,
 `{% translate %}` (the modern spelling of `{% trans %}`) for short template
 strings and `{% blocktranslate %}` for longer copy or interpolated values.
 Update and compile the `pt_BR` gettext catalog after changing marked strings.
-Dynamic values are not translation
-keys: category/subcategory names and all other user-entered titles, notes,
-institutions and financial data render verbatim.
+The nine system-provided category names are translated once during account
+creation and then stored as user-owned data. Other category/subcategory names
+and all user-entered titles, notes, institutions and financial data are not
+translation keys and render verbatim.
 
 HTMX report and investment chart islands need no separate locale mechanism.
 Their requests retain the language cookie, pass through `LocaleMiddleware` and
@@ -155,24 +207,29 @@ render translated fragments in the active request language.
 
 Stat cards separate concepts instead of collapsing them into one balance:
 
-- Available cash
+- Current Balance (realized cash)
 - Income this month
 - Expenses this month
-- Credit-card payable
-- Investments
-- Net worth
+- Investments this month
+- Balance this month
+- Projected balance at the end of the month
 
-Account cash cards drill into the movement ledger. Invoice payable cards drill
-into open invoices. Own transfers may appear in activity but are visually
-neutral and absent from income/expense charts. Projected figures are labeled and
-never presented as posted cash.
+Current Balance remains distinct from the projected month-end close. Credit-card
+purchases belong to the statement month but affect cash only when the invoice is
+settled. Own transfers may appear in activity but are visually neutral and
+absent from income/expense charts. Projected figures are labeled and never
+presented as posted cash.
 
 ## Reports and charts
 
-Charts remain inline server-rendered SVG/CSS with native `<title>` tooltips,
-responsive overflow containers and accessible text summaries. HTMX swaps only
-the report island while preserving focus and viewport; plain links/forms remain
-equivalent.
+Charts remain inline server-rendered SVG/CSS with native `<title>` fallbacks,
+forest/cream tooltip pills on mouse hover and keyboard focus, responsive
+overflow containers and accessible text summaries. Reports and Investments use
+the same interaction contract. Income uses the green pair, expense uses the red pair, and
+investment has its own ochre pair. The recurrence donut uses purple
+installments, orange fixed recurrences and neutral one-off purchases; its zero
+line is neutral. HTMX swaps only the report island while preserving focus and
+viewport; plain links/forms remain equivalent.
 
 Every chart states its reporting currency and actual versus projected period.
 The selected per-user base currency, snapshot status where supported, and
@@ -190,3 +247,11 @@ internal horizontal scrolling rather than forcing body overflow. Bank/account
 hierarchies collapse to stacked cards on small screens. Labels, status text,
 focus rings, keyboard navigation and confirmation screens remain available
 without relying on hover, color or JavaScript.
+
+## Automated browser checks
+
+`tests/e2e/design-system.spec.js` covers the cross-layer behavior that template
+assertions cannot prove: English/Portuguese landing copy, locally served HTMX,
+native CSV download, the tablet navigation breakpoint and mobile modal focus
+containment. CI runs the suite in Chromium after the Python checks and uploads
+screenshots, video and traces only when a browser test fails.
