@@ -1,7 +1,7 @@
 {% load i18n static %}
 <!DOCTYPE html>
 {% comment %}
-Tuxedo Finance base layout (PRD §9 — Design System).
+Tuxedo Finance base layout — Final Design System (design-system/tuxedo-final-design-system.html).
 
 Every page in the project MUST extend this template and reuse the partials
 below instead of hand-rolling one-off markup (PRD risk R2).
@@ -17,15 +17,15 @@ Partials included here:
   partials/messages.html      — renders Django `messages` with semantic colors.
   partials/footer.html        — shared footer.
 
-Design tokens (PRD §9.1): light+dark palette driven by a `.dark` class on
-<html>. Light surface `bg-white`, page `bg-slate-50`, text `text-slate-900`;
-dark surface a PyCharm-Darcula-style `bg-[#313335]` on page `bg-[#2B2B2B]`,
-text `dark:text-neutral-100`. Cards switched from `border` to `ring-1`
-(`ring-slate-200 dark:ring-[#323232]`). Brand primary gradient
-from-indigo-500 via-violet-500 to-fuchsia-500 unchanged. Income emerald,
-Expense rose, Investment amber — bold dual-class form so light uses -600 and
-dark keeps -400 (`text-emerald-600 dark:text-emerald-400`). Font: Inter
-(font-sans). Monetary values: tabular-nums font-semibold.
+Design tokens (Final Design System §2): Haven & Hound palette with derived
+tokens for dark theme and financial semantics, driven by a `.dark` class on
+<html>. Light page `bg-cream` (#FAF8F3), text `text-forest` (#1A2E26); dark
+page `bg-forest-deep` (#101E18), text `dark:text-cream`. Cards are white
+rounded-3xl in light and flat forest (#1A2E26) surfaces in dark. Semantic
+mapping: Income forest (sage #7FA08F on dark), Expense terracotta
+(#A85D3C, light variant #C4825E), Investment caramel (#B88A59). Primary
+actions are caramel pills; headings use Playfair Display (`font-serif`),
+body/labels/numerals use Inter (`font-sans`, tabular-nums for money).
 
 Theme: a synchronous inline `<head>` script reads `localStorage`/OS
 preference and toggles `.dark` before paint (no flash of the wrong theme).
@@ -66,22 +66,38 @@ build step.
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    colors: {
+                        cream: { DEFAULT: '#FAF8F3', dark: '#EBE7DE' },
+                        forest: { DEFAULT: '#1A2E26', light: '#2A4338', deep: '#101E18' },
+                        caramel: { DEFAULT: '#B88A59', light: '#D4AD86' },
+                        sage: '#7FA08F',
+                        terracotta: { DEFAULT: '#A85D3C', light: '#C4825E' }
                     },
-                },
-            },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
         };
     </script>
+    <style>
+        /* Custom scrollbar (Final Design System §2, recolored for both themes) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #FAF8F3; }
+        ::-webkit-scrollbar-thumb { background: #1A2E26; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-track { background: #101E18; }
+        .dark ::-webkit-scrollbar-thumb { background: #B88A59; }
+    </style>
 </head>
-<body class="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-900 antialiased dark:bg-[#2B2B2B] dark:text-neutral-100">
+<body class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-white dark:bg-forest-deep dark:text-cream">
     {% if request.user.is_authenticated %}
         {% include 'partials/navbar_app.html' %}
     {% else %}
@@ -96,7 +112,8 @@ build step.
     {% include 'partials/footer.html' %}
 
     <script src="{% static 'js/theme.js' %}?v=2"></script>
-    <script src="{% static 'js/project-menu.js' %}?v=1"></script>
+    <script src="{% static 'js/project-menu.js' %}?v=2"></script>
+    <script src="{% static 'js/mobile-menu.js' %}?v=1"></script>
 
     {% comment %}HTMX (PRD §5 — partial-swap navigation on the Reports
     page). The script is opt-in per-element via `hx-get` / `hx-target`

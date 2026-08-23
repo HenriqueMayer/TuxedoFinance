@@ -1,5 +1,5 @@
 {% comment %}
-Reusable form field renderer (PRD §9.4).
+Reusable form field renderer (Final Design System §4).
 
 Usage:
   {% include 'partials/form_field.html' with field=form.amount %}
@@ -10,33 +10,34 @@ The owning form must style its own widgets (e.g. via Meta.widgets or the
 form's __init__) using the exact design-system input classes below so every
 input/select/textarea in the project looks identical:
 
-  "w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5
-   text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:text-neutral-500 focus:border-indigo-500
-   focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+  "w-full rounded-xl border border-forest/20 bg-white px-4 py-3
+   text-sm text-forest placeholder:text-forest/40 focus:border-caramel
+   focus:outline-none focus:ring-2 focus:ring-caramel/30
+   dark:bg-forest-deep dark:border-cream/20 dark:text-cream dark:placeholder:text-cream/40"
 
 `select` and `textarea` widgets reuse the exact same class string. Wrap a
 group of fields in a form card:
 
-  <form method="post" class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6">
+  <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
       {% csrf_token %}
       {% include 'partials/form_field.html' with field=form.title %}
       ...
   </form>
 {% endcomment %}
 {% if field %}
-    <div class="space-y-1.5">
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">
-            {{ field.label }}{% if field.field.required %} <span class="text-rose-600 dark:text-rose-400">*</span>{% endif %}
+    <div class="space-y-2">
+        <label for="{{ field.id_for_label }}" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">
+            {{ field.label }}{% if field.field.required %} <span class="text-terracotta">*</span>{% endif %}
         </label>
 
         {{ field }}
 
         {% if field.help_text %}
-            <p id="{{ field.id_for_label }}-help" class="text-sm text-slate-500 dark:text-neutral-500">{{ field.help_text }}</p>
+            <p id="{{ field.id_for_label }}-help" class="text-sm font-light text-forest/60 dark:text-cream/60">{{ field.help_text }}</p>
         {% endif %}
 
         {% for error in field.errors %}
-            <p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
+            <p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>
         {% endfor %}
     </div>
 {% endif %}

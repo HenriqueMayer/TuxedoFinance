@@ -1,17 +1,21 @@
 {% comment %}
-Renders Django's `messages` framework with the design-system semantic colors
-(PRD §9.1). Included automatically by base.html right above {% block content %}.
+Renders Django's `messages` framework with the Final Design System semantic
+colors (§6.3). Included automatically by base.html right above
+{% block content %}.
+
+Mapping: success → sage, error → terracotta, warning → caramel,
+info/default → neutral forest-on-cream card.
 
 Default Django message tags: debug, info, success, warning, error.
 {% endcomment %}
 {% if messages %}
-    <div class="mb-6 space-y-3" role="status" aria-live="polite">
+    <div class="mb-8 space-y-3" role="status" aria-live="polite">
         {% for message in messages %}
-            <div class="flex items-start gap-3 rounded-xl border px-4 py-3 text-sm
-                {% if message.tags == 'success' %}border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400
-                {% elif message.tags == 'error' %}border-rose-500/30 bg-rose-500/10 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400
-                {% elif message.tags == 'warning' %}border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400
-                {% else %}border-indigo-500/30 bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300
+            <div class="flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm
+                {% if message.tags == 'success' %}border-sage/40 bg-sage/10 text-forest dark:text-sage
+                {% elif message.tags == 'error' %}border-terracotta/40 bg-terracotta/10 text-terracotta dark:text-terracotta-light
+                {% elif message.tags == 'warning' %}border-caramel/40 bg-caramel/10 text-caramel dark:text-caramel-light
+                {% else %}border-forest/20 bg-cream-dark/60 text-forest dark:border-cream/20 dark:bg-forest-deep dark:text-cream/80
                 {% endif %}">
                 <p class="font-medium">{{ message }}</p>
             </div>
