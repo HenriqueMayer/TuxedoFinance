@@ -7,6 +7,7 @@ breaking release.
 
 | Doc | Covers |
 |---|---|
+| [Interface preview](https://henriquemayer.github.io/TuxedoFinance/) | Bilingual static tour of the application using synthetic financial data. |
 | [ProductRequirementsDocument.md](ProductRequirementsDocument.md) | Approved scope, requirements, acceptance criteria and clean-reset delivery. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
@@ -36,10 +37,12 @@ These documents describe the approved target release, not the legacy schema
 currently present in older databases. The release requires fresh migrations and
 a new SQLite database. Existing data is not automatically migrated.
 
-The repository does not include a synthetic dataset, shared account, fixed
-credential, or data-population management command. New accounts receive only
-the approved default categories; all financial records are created by their
-owner.
+The repository does not include a runtime demo database, shared account, fixed
+credential, or data-population management command. The developer-only preview
+capture command creates disposable synthetic records in a guarded temporary
+database, deletes that database after capture, and commits only screenshots.
+Normal new accounts receive only the approved default categories; all financial
+records are created by their owner.
 
 Dependency maintenance and local database operations are documented in
 [operations.md](operations.md). The database owner is responsible for choosing
