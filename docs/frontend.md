@@ -26,7 +26,10 @@ the body and updates browser history. Native links remain the fallback whenever
 JavaScript or the HTMX CDN is unavailable. Forms explicitly opt out of boosting,
 so POST, CSRF, validation, uploads, locale changes and redirects keep their
 ordinary Django behavior. Full-page swaps move focus to the new `h1`; report and
-investment chart islands keep their existing focus and scroll restoration.
+investment chart islands keep their existing focus and scroll restoration. The
+investment movement island updates filters and pagination independently, then
+returns to the beginning of the movement section instead of the top of the page;
+plain GET links and the section anchor provide the same no-JavaScript fallback.
 
 ## Visual language
 

@@ -1,13 +1,14 @@
-/* Tuxedo Finance — HTMX navigation and chart-swap continuity. */
+/* Tuxedo Finance — HTMX navigation and focused island-swap continuity. */
 (function () {
     'use strict';
 
-    var preservedChartView = null;
+    var preservedIslandView = null;
 
-    function isChartTarget(target) {
+    function isPreservedIsland(target) {
         return target && (
             target.id === 'reports-charts' ||
-            target.id === 'investments-charts'
+            target.id === 'investments-charts' ||
+            target.id === 'investment-movements'
         );
     }
 
@@ -25,11 +26,11 @@
             document.body.setAttribute('aria-busy', 'true');
             return;
         }
-        if (!isChartTarget(event.detail.target)) return;
+        if (!isPreservedIsland(event.detail.target)) return;
 
         var active = document.activeElement;
         var trigger = event.detail.elt;
-        preservedChartView = {
+        preservedIslandView = {
             top: window.scrollY,
             focusId: active && active.id ? active.id : null,
             scrollTarget: trigger && trigger.dataset
@@ -52,10 +53,10 @@
             });
             return;
         }
-        if (!isChartTarget(event.detail.target) || !preservedChartView) return;
+        if (!isPreservedIsland(event.detail.target) || !preservedIslandView) return;
 
-        var view = preservedChartView;
-        preservedChartView = null;
+        var view = preservedIslandView;
+        preservedIslandView = null;
         window.requestAnimationFrame(function () {
             if (view.scrollTarget) {
                 scrollToAnchor(view.scrollTarget);

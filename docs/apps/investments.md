@@ -93,3 +93,8 @@ class allocation and native/base currency exposure. HTMX is progressive
 enhancement; every filter and navigation control retains a normal GET fallback.
 Points and non-zero bars expose the same value pill as Reports on mouse hover
 and keyboard focus, while the native SVG title remains available as a fallback.
+
+The operation history is a separate `#investment-movements` island below the
+charts. Filtering, clearing filters and changing pages replace only that island
+and return the viewport to its heading. Native GET actions append the same
+section anchor, so the user keeps the portfolio context when HTMX is unavailable.

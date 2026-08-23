@@ -577,6 +577,47 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertContains(response, 'tabindex="0"')
         self.assertContains(response, 'R$ 123,45')
 
+    def test_charts_appear_before_operation_filters_and_movements(self):
+        operation = self.operation()
+        operation.full_clean()
+        operation.save()
+
+        response = self.client.get(reverse('investments:list'))
+        content = response.content.decode()
+
+        self.assertLess(
+            content.index('id="investments-charts"'),
+            content.index('id="investment-search"'),
+        )
+        self.assertLess(
+            content.index('id="investment-search"'),
+            content.index(reverse('investments:update', args=[operation.pk])),
+        )
+
+    def test_movement_pagination_uses_a_position_preserving_htmx_island(self):
+        for index in range(11):
+            operation = self.operation(reason=f'Operation {index + 1}')
+            operation.full_clean()
+            operation.save()
+
+        response = self.client.get(reverse('investments:list'))
+        self.assertContains(response, 'id="investment-movements"')
+        self.assertContains(response, 'hx-target="#investment-movements"')
+        self.assertContains(response, 'data-scroll-target="investment-movements"')
+        self.assertContains(response, '?page=2#investment-movements')
+
+        htmx = self.client.get(
+            reverse('investments:list'),
+            {'page': '2'},
+            HTTP_HX_REQUEST='true',
+            HTTP_HX_TARGET='investment-movements',
+        )
+        self.assertEqual(htmx.status_code, 200)
+        self.assertContains(htmx, 'id="investment-movements"')
+        self.assertContains(htmx, 'Page 2 of 2')
+        self.assertNotContains(htmx, 'id="investments-charts"')
+        self.assertNotContains(htmx, '<html')
+
     def test_historical_conversion_uses_banking_exchange_rate(self):
         foreign = Asset.objects.create(
             user=self.user, name='Dollar', code='USD',

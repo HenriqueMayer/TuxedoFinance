@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 13:50+0000\n"
+"POT-Creation-Date: 2026-08-23 17:04+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -1666,6 +1666,9 @@ msgstr "Como sua conta se movimentou nos últimos meses e para onde está indo."
 
 msgid "Back to dashboard"
 msgstr "Voltar ao Dashboard"
+
+msgid "Investment operations"
+msgstr "Movimentações de investimentos"
 
 msgid "Investment evolution"
 msgstr "Evolução dos investimentos"
