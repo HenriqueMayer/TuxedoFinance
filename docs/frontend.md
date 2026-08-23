@@ -10,15 +10,19 @@ normal CSRF-protected POST and every filter has a plain GET fallback.
 
 The interface follows the final Haven & Hound design language documented in
 `design-system/tuxedo-final-design-system.html`: cream and forest foundations,
-caramel actions, restrained semantic colors, rounded surfaces, Inter body text
-and Playfair Display headings. Light cards use white surfaces and soft shadows;
-dark cards use flat forest surfaces over the forest-deep page background.
+caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
+throughout. Light cards use white surfaces and soft shadows; dark cards use flat
+forest surfaces over the forest-deep page background. Body copy starts at
+16/24px, supporting copy at 14/20px, and compact labels never fall below 12px.
 
 | Role | Semantic treatment |
 |---|---|
-| Income / account credit | Forest in light, sage in dark |
-| Expense / account debit | Terracotta |
-| Investment | Caramel |
+| Income / account credit | `income` #176B52; dark `income-light` #64D8B1 |
+| Expense / account debit / negative | `expense` #B42318; dark `expense-light` #FF8A80 |
+| Investment | `investment` #7C5C13; dark `investment-light` #F4C95D |
+| Installment plan | `installment` #6B4E8A; dark `installment-light` #C4A7E7 |
+| Fixed recurrence | `fixed` #A65300; dark `fixed-light` #FFB45C |
+| One-off purchase | `oneoff` #52605A; dark `oneoff-light` #B8C0BC |
 | Own transfer | Neutral forest/cream; never income/expense colored |
 | Credit-card payable | Caramel |
 | Warning / overdue invoice | Caramel plus explicit text/icon |
@@ -29,9 +33,10 @@ together.
 
 The navigation brand combines `tuxedo-mark-256.png` with a two-line uppercase
 wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. Primary
-actions are solid caramel pills; outline actions invert to forest/cream on
-hover. Titles use Playfair Display, while labels, controls and tabular monetary
-figures use Inter.
+actions are solid caramel pills with forest-deep text; `caramel-ink` carries
+brand links over light surfaces. Outline actions invert to forest/cream on
+hover. Titles, labels, controls and tabular monetary figures all use Inter.
+Secondary text uses at least forest/70 or cream/70 contrast.
 
 ## Root layout and navigation
 
@@ -174,10 +179,11 @@ presented as posted cash.
 
 Charts remain inline server-rendered SVG/CSS with native `<title>` tooltips,
 forest/cream tooltip pills, responsive overflow containers and accessible text
-summaries. Caramel is the primary series, forest/sage represents positive cash
-flow, terracotta represents expenses and caramel represents investments. HTMX
-swaps only the report island while preserving focus and viewport; plain
-links/forms remain equivalent.
+summaries. Income uses the green pair, expense uses the red pair, and
+investment has its own ochre pair. The recurrence donut uses purple
+installments, orange fixed recurrences and neutral one-off purchases; its zero
+line is neutral. HTMX swaps only the report island while preserving focus and
+viewport; plain links/forms remain equivalent.
 
 Every chart states its reporting currency and actual versus projected period.
 The selected per-user base currency, snapshot status where supported, and

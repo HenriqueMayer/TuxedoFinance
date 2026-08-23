@@ -4,7 +4,7 @@
     {# ---------------------------------------------------------------- #}
     {# Chart 1 — investment evolution (line), cumulative total in       #}
     {# {{ CURRENCY_SYMBOL }}, FX rate-at-time. Mirrors the Reports       #}
-    {# chart-1 visual contract (zero-line terracotta, caramel stroke). #}
+    {# chart-1 visual contract (neutral zero-line, investment stroke). #}
     {# ---------------------------------------------------------------- #}
     <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -49,7 +49,7 @@
                        hx-target="#investments-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
@@ -63,13 +63,13 @@
                   aria-label="{% translate 'Line chart of the cumulative investment total in base currency over the last 12 months' %}">
                 <defs>
                     <linearGradient id="investments-area" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="rgb(184 138 89)" stop-opacity="0.35" />
-                        <stop offset="100%" stop-color="rgb(184 138 89)" stop-opacity="0" />
+                        <stop offset="0%" stop-color="rgb(124 92 19)" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="rgb(124 92 19)" stop-opacity="0" />
                     </linearGradient>
                     <linearGradient id="investments-line" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="rgb(212 173 134)" />
-                        <stop offset="50%" stop-color="rgb(184 138 89)" />
-                        <stop offset="100%" stop-color="rgb(184 138 89)" />
+                        <stop offset="0%" stop-color="rgb(244 201 93)" />
+                        <stop offset="50%" stop-color="rgb(124 92 19)" />
+                        <stop offset="100%" stop-color="rgb(124 92 19)" />
                     </linearGradient>
                 </defs>
 
@@ -85,7 +85,7 @@
 
                 <line x1="{{ chart_total.plot_left }}" y1="{{ chart_total.zero_y }}"
                       x2="{{ chart_total.plot_right }}" y2="{{ chart_total.zero_y }}"
-                      class="stroke-terracotta dark:stroke-terracotta-light" stroke-width="1.5" stroke-dasharray="5 4" />
+                      class="stroke-forest/30 dark:stroke-cream/30" stroke-width="1.5" stroke-dasharray="5 4" />
 
                 <polygon points="{{ chart_total.area }}" fill="url(#investments-area)" />
                 <polyline points="{{ chart_total.line }}" fill="none"
@@ -94,7 +94,7 @@
 
                 {% for point in chart_total.points %}
                     <circle cx="{{ point.x }}" cy="{{ point.y }}" r="3.5"
-                            class="fill-white dark:fill-forest-deep stroke-caramel"
+                            class="fill-white stroke-investment dark:fill-forest-deep dark:stroke-investment-light"
                             stroke-width="2">
                         <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
                     </circle>
@@ -155,7 +155,7 @@
                        hx-target="#investments-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
@@ -163,9 +163,9 @@
                     {% for entry in chart_flow.legend %}
                         <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-cream/70">
                             <span class="h-2.5 w-2.5 rounded-sm
-                                {% if entry.tone == 'income' %}bg-forest dark:bg-sage
-                                {% elif entry.tone == 'investment' %}bg-caramel
-                                {% else %}bg-terracotta{% endif %}"></span>
+                                {% if entry.tone == 'income' %}bg-income dark:bg-income-light
+                                {% elif entry.tone == 'investment' %}bg-investment dark:bg-investment-light
+                                {% else %}bg-expense{% endif %}"></span>
                             {{ entry.name }}
                         </li>
                     {% endfor %}
@@ -192,9 +192,9 @@
                     {% for bar in group.bars %}
                         <rect x="{{ bar.x }}" y="{{ bar.y }}"
                               width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                               class="{% if bar.tone == 'income' %}fill-forest/80 dark:fill-sage/80
-                                      {% elif bar.tone == 'investment' %}fill-caramel/80
-                                      {% else %}fill-terracotta/80 dark:fill-terracotta-light/80{% endif %}">
+                               class="{% if bar.tone == 'income' %}fill-income/80 dark:fill-income-light/80
+                                      {% elif bar.tone == 'investment' %}fill-investment/80 dark:fill-investment-light/80
+                                      {% else %}fill-expense/80 dark:fill-expense-light/80{% endif %}">
                             <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
                         </rect>
                     {% endfor %}

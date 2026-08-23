@@ -243,8 +243,10 @@ currency/valuation date and whether it is actual or projected.
 
 ## 10. Frontend Requirements
 
-- Preserve the current light/dark design language, semantic colors, typography,
-  reusable partials and mobile-first behavior.
+- Preserve the current light/dark design language, accessible semantic colors,
+  Inter-only typography, reusable partials and mobile-first behavior. Normal
+  text maintains WCAG AA contrast and user-facing labels never render below
+  12px.
 - Keep banking as the navigation and settlement domain.
 - Banking screens expose hierarchy without hiding accounting consequences:
   bank, accounts/currencies/balances, capabilities/cards, ledger and invoices.

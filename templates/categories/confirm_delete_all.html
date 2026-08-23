@@ -9,7 +9,7 @@
 
     <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
         <div class="space-y-2">
-            <p class="font-semibold text-terracotta dark:text-terracotta-light">{% translate "This action cannot be undone." %}</p>
+            <p class="font-semibold text-expense dark:text-expense-light">{% translate "This action cannot be undone." %}</p>
             <p class="text-sm text-forest/80 dark:text-cream/80">
                 {% blocktranslate count count=category_count %}You are about to delete your only category.{% plural %}You are about to delete all {{ count }} categories.{% endblocktranslate %}
             </p>
@@ -21,7 +21,7 @@
         <form method="post" class="flex items-center gap-3">
             {% csrf_token %}
             <button type="submit"
-                    class="inline-flex items-center rounded-full bg-terracotta px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-terracotta-light focus:outline-none focus:ring-2 focus:ring-terracotta/40 focus:ring-offset-2 dark:focus:ring-offset-forest">
+                    class="inline-flex items-center rounded-full bg-expense px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-expense-light focus:outline-none focus:ring-2 focus:ring-expense/40 focus:ring-offset-2 dark:focus:ring-offset-forest">
                 {% translate "Yes, delete all" %}
             </button>
             <a href="{% url 'categories:list' %}"

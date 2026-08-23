@@ -8,12 +8,12 @@
     <h1 class="font-sans text-4xl font-semibold tracking-tight">{{ form_title }}</h1>
     <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
-        {% for error in form.non_field_errors %}<p class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>{% endfor %}
+        {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         {% for field in form.visible_fields %}
             {% include 'partials/form_field.html' with field=field %}
         {% endfor %}
         <div class="flex gap-3">
-            <button type="submit" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white">{% translate "Save" %}</button>
+            <button type="submit" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep">{% translate "Save" %}</button>
             <a href="{{ cancel_url }}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Cancel" %}</a>
         </div>
     </form>

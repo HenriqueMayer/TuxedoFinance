@@ -3,7 +3,8 @@ Renders Django's `messages` framework with the Final Design System semantic
 colors (§6.3). Included automatically by base.html right above
 {% block content %}.
 
-Mapping: success → sage, error → terracotta, warning → caramel,
+Mapping: success → income/income-light, error → expense/expense-light,
+warning → caramel/caramel-light,
 info/default → neutral forest-on-cream card.
 
 Default Django message tags: debug, info, success, warning, error.
@@ -12,9 +13,9 @@ Default Django message tags: debug, info, success, warning, error.
     <div class="mb-8 space-y-3" role="status" aria-live="polite">
         {% for message in messages %}
             <div class="flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm
-                {% if message.tags == 'success' %}border-sage/40 bg-sage/10 text-forest dark:text-sage
-                {% elif message.tags == 'error' %}border-terracotta/40 bg-terracotta/10 text-terracotta dark:text-terracotta-light
-                {% elif message.tags == 'warning' %}border-caramel/40 bg-caramel/10 text-caramel dark:text-caramel-light
+                {% if message.tags == 'success' %}border-income/40 bg-income/10 text-income dark:text-income-light
+                {% elif message.tags == 'error' %}border-expense/40 bg-expense/10 text-expense dark:text-expense-light
+                {% elif message.tags == 'warning' %}border-caramel/40 bg-caramel/10 text-caramel-ink dark:text-caramel-light
                 {% else %}border-forest/20 bg-cream-dark/60 text-forest dark:border-cream/20 dark:bg-forest-deep dark:text-cream/80
                 {% endif %}">
                 <p class="font-medium">{{ message }}</p>

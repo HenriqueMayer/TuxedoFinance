@@ -26,7 +26,7 @@ stable typed IDs rather than display labels.
 Design tokens (PRD §9.1): the `tone` values coming out of charts.py
 are mapped to Tailwind classes here so the design system stays in the
 template layer; the only literal color values are inside SVG
-<linearGradient> stops for the primary caramel stroke (Tailwind
+<linearGradient> stops for the neutral balance stroke (Tailwind
 utility classes do not apply to SVG stroke attributes). See the
 docstring at the top of `dashboard/reports.html` for the broader
 conventions this partial inherits.
@@ -50,16 +50,16 @@ conventions this partial inherits.
             {% translate "Best month" as best_month_label %}
             {% include 'partials/stat_card.html' with label=projected_window_label value=CURRENCY_SYMBOL|add:' '|add:closing_fmt %}
             {% if evolution.net_change < 0 %}
-                {% include 'partials/stat_card.html' with label=net_change_label value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-terracotta dark:text-terracotta-light' %}
+                {% include 'partials/stat_card.html' with label=net_change_label value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-expense dark:text-expense-light' %}
             {% else %}
-                {% include 'partials/stat_card.html' with label=net_change_label value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-forest dark:text-sage' %}
+                {% include 'partials/stat_card.html' with label=net_change_label value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-income dark:text-income-light' %}
             {% endif %}
             {% include 'partials/stat_card.html' with label=best_month_label value=evolution.best_month.date|date:'M Y' %}
         {% endwith %}
     </div>
 
     {% if missing_currencies %}
-        <div class="rounded-3xl border border-caramel/40 bg-caramel/10 p-4 text-sm text-caramel dark:border-caramel/40 dark:bg-caramel/10 dark:text-caramel-light">
+        <div class="rounded-3xl border border-caramel/40 bg-caramel/10 p-4 text-sm text-caramel-ink dark:border-caramel/40 dark:bg-caramel/10 dark:text-caramel-light">
             {% translate "Totals exclude currencies without a rate to the configured currency:" %} <strong>{{ missing_currencies|join:', ' }}</strong>.
         </div>
     {% endif %}
@@ -114,7 +114,7 @@ conventions this partial inherits.
                        hx-target="#reports-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                          {% translate "Back to today" %}
                     </a>
                 {% endif %}
@@ -150,7 +150,7 @@ conventions this partial inherits.
 
                 <line x1="{{ balance_chart.plot_left }}" y1="{{ balance_chart.zero_y }}"
                       x2="{{ balance_chart.plot_right }}" y2="{{ balance_chart.zero_y }}"
-                      class="stroke-terracotta dark:stroke-terracotta-light" stroke-width="1.5" stroke-dasharray="5 4" />
+                      class="stroke-forest/30 dark:stroke-cream/30" stroke-width="1.5" stroke-dasharray="5 4" />
 
                 <polygon points="{{ balance_chart.area }}" fill="url(#balance-area)" />
                 <polyline points="{{ balance_chart.line }}" fill="none"
@@ -189,7 +189,7 @@ conventions this partial inherits.
         <p class="text-sm text-forest/70 dark:text-cream/70">
             {% translate "Opening balance" %} {{ CURRENCY_SYMBOL }} {{ evolution.opening_balance|floatformat:2 }}
             &rarr; {% translate "projected" %} {{ CURRENCY_SYMBOL }} {{ evolution.closing_balance|floatformat:2 }}
-            <span class="{% if evolution.net_change < 0 %}text-terracotta dark:text-terracotta-light{% else %}text-forest dark:text-sage{% endif %} font-semibold tabular-nums">
+            <span class="{% if evolution.net_change < 0 %}text-expense dark:text-expense-light{% else %}text-income dark:text-income-light{% endif %} font-semibold tabular-nums">
                 ({% if evolution.net_change >= 0 %}+{% endif %}{{ CURRENCY_SYMBOL }} {{ evolution.net_change|floatformat:2 }})
             </span>
         </p>
@@ -220,9 +220,9 @@ conventions this partial inherits.
                     {% for entry in cashflow_chart.legend %}
                         <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-cream/70">
                             <span class="h-2.5 w-2.5 rounded-sm
-                                {% if entry.tone == 'income' %}bg-forest dark:bg-sage
-                                {% elif entry.tone == 'expense' %}bg-terracotta
-                                {% else %}bg-caramel{% endif %}"></span>
+                                {% if entry.tone == 'income' %}bg-income dark:bg-income-light
+                                {% elif entry.tone == 'expense' %}bg-expense
+                                {% else %}bg-investment dark:bg-investment-light{% endif %}"></span>
                             {{ entry.name }}
                         </li>
                     {% endfor %}
@@ -261,9 +261,9 @@ conventions this partial inherits.
                                aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
                                 <rect x="{{ bar.x }}" y="{{ bar.y }}"
                                       width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                      class="{% if bar.tone == 'income' %}fill-forest/80 dark:fill-sage/80 group-hover:fill-forest dark:group-hover:fill-sage
-                                             {% elif bar.tone == 'expense' %}fill-terracotta/80 dark:fill-terracotta-light/80 group-hover:fill-terracotta dark:group-hover:fill-terracotta-light
-                                             {% else %}fill-caramel/80 group-hover:fill-caramel{% endif %} transition-colors">
+                                      class="{% if bar.tone == 'income' %}fill-income/80 dark:fill-income-light/80 group-hover:fill-income dark:group-hover:fill-income-light
+                                             {% elif bar.tone == 'expense' %}fill-expense/80 dark:fill-expense-light/80 group-hover:fill-expense dark:group-hover:fill-expense-light
+                                             {% else %}fill-investment/80 dark:fill-investment-light/80 group-hover:fill-investment dark:group-hover:fill-investment-light{% endif %} transition-colors">
                                     <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
                                 </rect>
                                 <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
@@ -349,9 +349,9 @@ conventions this partial inherits.
                         <g class="group outline-none" tabindex="0"
                            aria-label="{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:'-1' }}%)">
                             <path d="{{ segment.d }}"
-                                  class="{% if segment.tone == 'installment' %}fill-terracotta dark:fill-terracotta-light
-                                         {% elif segment.tone == 'fixed' %}fill-caramel dark:fill-caramel-light
-                                         {% else %}fill-forest/70 dark:fill-cream/70{% endif %} transition-opacity group-hover:opacity-80">
+                                  class="{% if segment.tone == 'installment' %}fill-installment dark:fill-installment-light
+                                         {% elif segment.tone == 'fixed' %}fill-fixed dark:fill-fixed-light
+                                         {% else %}fill-oneoff dark:fill-oneoff-light{% endif %} transition-opacity group-hover:opacity-80">
                                 <title>{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:"-1" }}%)</title>
                             </path>
                             <g transform="translate({{ recurrence_chart.tooltip_x }} {{ recurrence_chart.tooltip_y }})"
@@ -372,9 +372,9 @@ conventions this partial inherits.
                         <li class="flex items-center justify-between gap-4">
                             <span class="flex items-center gap-3">
                                 <span class="h-3 w-3 rounded-sm
-                                    {% if slice.tone == 'installment' %}bg-terracotta dark:bg-terracotta-light
-                                    {% elif slice.tone == 'fixed' %}bg-caramel dark:bg-caramel-light
-                                    {% else %}bg-forest/40 dark:bg-cream/40{% endif %}"></span>
+                                    {% if slice.tone == 'installment' %}bg-installment dark:bg-installment-light
+                                    {% elif slice.tone == 'fixed' %}bg-fixed dark:bg-fixed-light
+                                    {% else %}bg-oneoff dark:bg-oneoff-light{% endif %}"></span>
                                 <span class="font-medium text-forest/90 dark:text-cream/90">{{ slice.name }}</span>
                             </span>
                             <span class="text-sm tabular-nums text-forest/70 dark:text-cream/70">
@@ -463,7 +463,7 @@ conventions this partial inherits.
                                            hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
                                            data-scroll-target="instrument-categories-expense" class="group cursor-pointer outline-none">
                                             <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                                  class="fill-terracotta/80 dark:fill-terracotta-light/80 hover:fill-terracotta dark:hover:fill-terracotta-light transition-colors">
+                                                  class="fill-expense/80 dark:fill-expense-light/80 hover:fill-expense dark:hover:fill-expense-light transition-colors">
                                                 <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Expenses for {{ label }}: {{ currency }} {{ total }}. Click to see categories.{% endblocktranslate %}</title>
                                             </rect>
                                             <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
@@ -480,7 +480,7 @@ conventions this partial inherits.
                                            hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
                                            data-scroll-target="account-categories-income" class="group cursor-pointer outline-none">
                                             <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                                  class="fill-forest/80 dark:fill-sage/80 hover:fill-forest dark:hover:fill-sage transition-colors">
+                                                  class="fill-income/80 dark:fill-income-light/80 hover:fill-income dark:hover:fill-income-light transition-colors">
                                                 <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Income for {{ label }}: {{ currency }} {{ total }}. Click to see categories.{% endblocktranslate %}</title>
                                             </rect>
                                             <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
@@ -521,14 +521,14 @@ conventions this partial inherits.
                                         <div class="mt-1 space-y-1 text-sm tabular-nums">
                                             {% if instrument.expense_total %}
                                                 <p class="flex items-center justify-between gap-4 text-forest/70 dark:text-cream/70">
-                                                    <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-terracotta"></span>{% translate "Expenses" %}</span>
-                                                    <span class="font-semibold text-terracotta dark:text-terracotta-light">{{ CURRENCY_SYMBOL }} {{ instrument.expense_total|floatformat:2 }}</span>
+                                                    <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-expense"></span>{% translate "Expenses" %}</span>
+                                                    <span class="font-semibold text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ instrument.expense_total|floatformat:2 }}</span>
                                                 </p>
                                             {% endif %}
                                             {% if instrument.income_total %}
                                                 <p class="flex items-center justify-between gap-4 text-forest/70 dark:text-cream/70">
-                                                    <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-forest dark:bg-sage"></span>{% translate "Income" %}</span>
-                                                    <span class="font-semibold text-forest dark:text-sage">{{ CURRENCY_SYMBOL }} {{ instrument.income_total|floatformat:2 }}</span>
+                                                    <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-income dark:bg-income-light"></span>{% translate "Income" %}</span>
+                                                    <span class="font-semibold text-income dark:text-income-light">{{ CURRENCY_SYMBOL }} {{ instrument.income_total|floatformat:2 }}</span>
                                                 </p>
                                             {% endif %}
                                         </div>
@@ -541,8 +541,8 @@ conventions this partial inherits.
             </div>
 
             <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-forest/70 dark:text-cream/70">
-                <p>{% translate "Total spent" %}: <span class="font-semibold tabular-nums text-terracotta dark:text-terracotta-light">{{ CURRENCY_SYMBOL }} {{ instrument_activity.expense_total|floatformat:2 }}</span></p>
-                <p>{% translate "Total received" %}: <span class="font-semibold tabular-nums text-forest dark:text-sage">{{ CURRENCY_SYMBOL }} {{ instrument_activity.income_total|floatformat:2 }}</span></p>
+                <p>{% translate "Total spent" %}: <span class="font-semibold tabular-nums text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ instrument_activity.expense_total|floatformat:2 }}</span></p>
+                <p>{% translate "Total received" %}: <span class="font-semibold tabular-nums text-income dark:text-income-light">{{ CURRENCY_SYMBOL }} {{ instrument_activity.income_total|floatformat:2 }}</span></p>
                 {% if instrument_activity.shown < instrument_activity.used %}
                     <p>{% blocktranslate with shown=instrument_activity.shown used=instrument_activity.used %}Showing the {{ shown }} largest of {{ used }} instruments used.{% endblocktranslate %}</p>
                 {% endif %}
@@ -555,12 +555,12 @@ conventions this partial inherits.
         {% endif %}
 
         {% if selected_expense_instrument %}
-            <div id="instrument-categories-expense" class="scroll-mt-6 space-y-4 rounded-3xl ring-1 ring-terracotta/40 dark:ring-terracotta/40 bg-terracotta/10 dark:bg-terracotta/10 p-5">
+            <div id="instrument-categories-expense" class="scroll-mt-6 space-y-4 rounded-3xl ring-1 ring-expense/40 dark:ring-expense/40 bg-expense/10 dark:bg-expense/10 p-5">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-forest dark:text-cream">
                             {% translate "Categories in" %} {{ instrument_categories_label }} {% translate "paid with" %}
-                            <span class="text-terracotta dark:text-terracotta-light">{{ selected_expense_instrument.label }}</span>
+                            <span class="text-expense dark:text-expense-light">{{ selected_expense_instrument.label }}</span>
                         </h3>
                         <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
                             {% if instrument_categories_window == 'current month' %}
@@ -584,12 +584,12 @@ conventions this partial inherits.
                                 <div class="flex items-baseline justify-between gap-4">
                                     <p class="truncate font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</p>
                                     <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-cream/70">
-                                        <span class="font-semibold text-terracotta dark:text-terracotta-light">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
+                                        <span class="font-semibold text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
                                         &middot; {{ category.share|floatformat:"-1" }}%
                                     </p>
                                 </div>
                                 <div class="h-2.5 w-full overflow-hidden rounded-full bg-forest/10 dark:bg-cream/10">
-                                    <div class="h-full rounded-full bg-terracotta" style="width: {{ category.bar_width|unlocalize }}%"></div>
+                                    <div class="h-full rounded-full bg-expense" style="width: {{ category.bar_width|unlocalize }}%"></div>
                                 </div>
                             </li>
                         {% endfor %}
@@ -603,12 +603,12 @@ conventions this partial inherits.
         {% endif %}
 
         {% if selected_income_account %}
-            <div id="account-categories-income" class="scroll-mt-6 space-y-4 rounded-3xl ring-1 ring-sage/40 dark:ring-sage/40 bg-sage/10 dark:bg-sage/10 p-5">
+            <div id="account-categories-income" class="scroll-mt-6 space-y-4 rounded-3xl ring-1 ring-income/40 dark:ring-income-light/40 bg-income/10 dark:bg-income-light/10 p-5">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-forest dark:text-cream">
                             {% translate "Categories in" %} {{ instrument_categories_label }} {% translate "received on" %}
-                            <span class="text-forest dark:text-sage">{{ selected_income_account.label }}</span>
+                            <span class="text-income dark:text-income-light">{{ selected_income_account.label }}</span>
                         </h3>
                         <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
                             {% if instrument_categories_window == 'current month' %}
@@ -632,12 +632,12 @@ conventions this partial inherits.
                                 <div class="flex items-baseline justify-between gap-4">
                                     <p class="truncate font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</p>
                                     <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-cream/70">
-                                        <span class="font-semibold text-forest dark:text-sage">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
+                                        <span class="font-semibold text-income dark:text-income-light">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
                                         &middot; {{ category.share|floatformat:"-1" }}%
                                     </p>
                                 </div>
                                 <div class="h-2.5 w-full overflow-hidden rounded-full bg-forest/10 dark:bg-cream/10">
-                                    <div class="h-full rounded-full bg-forest dark:bg-sage" style="width: {{ category.bar_width|unlocalize }}%"></div>
+                                    <div class="h-full rounded-full bg-income dark:bg-income-light" style="width: {{ category.bar_width|unlocalize }}%"></div>
                                 </div>
                             </li>
                         {% endfor %}
@@ -697,12 +697,12 @@ conventions this partial inherits.
                         <div class="flex items-baseline justify-between gap-4">
                             <p class="truncate font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</p>
                             <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-cream/70">
-                                <span class="font-semibold text-terracotta dark:text-terracotta-light">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
+                                <span class="font-semibold text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
                                 &middot; {{ category.share }}%
                             </p>
                         </div>
                         <div class="h-2.5 w-full overflow-hidden rounded-full bg-forest/10 dark:bg-cream/10">
-                            <div class="h-full rounded-full bg-terracotta"
+                            <div class="h-full rounded-full bg-expense"
                                  style="width: {{ category.bar_width|unlocalize }}%"></div>
                         </div>
                     </li>

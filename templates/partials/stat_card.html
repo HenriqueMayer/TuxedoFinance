@@ -5,9 +5,9 @@ Usage (neutral):
   {% include 'partials/stat_card.html' with label='Current Balance' value=CURRENCY_SYMBOL|add:' 0.00' %}
 
 Usage (semantic tone — pass a value_class matching Final DS §2.2):
-  {% include 'partials/stat_card.html' with label='Income (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-forest dark:text-sage' %}
-  {% include 'partials/stat_card.html' with label='Expenses (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-terracotta dark:text-terracotta-light' %}
-  {% include 'partials/stat_card.html' with label='Investments (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-caramel dark:text-caramel-light' %}
+  {% include 'partials/stat_card.html' with label='Income (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-income dark:text-income-light' %}
+  {% include 'partials/stat_card.html' with label='Expenses (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-expense dark:text-expense-light' %}
+  {% include 'partials/stat_card.html' with label='Investments (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-investment dark:text-investment-light' %}
 
 `value` must already be fully formatted by the caller (including the
 currency symbol, sourced from `{{ CURRENCY_SYMBOL }}` — never hardcoded,

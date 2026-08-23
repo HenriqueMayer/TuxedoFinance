@@ -6,7 +6,7 @@
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <div>
-        <a href="{% url 'investments:settings' %}" class="text-xs font-medium uppercase tracking-widest text-caramel dark:text-caramel-light">&larr; {% translate 'Back to Settings' %}</a>
+        <a href="{% url 'investments:settings' %}" class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">&larr; {% translate 'Back to Settings' %}</a>
         <h1 class="mt-2 font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{{ setup_title }}</h1>
         <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
             {{ setup_description }}
@@ -16,7 +16,7 @@
     <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
-            {% for error in form.non_field_errors %}<p class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>{% endfor %}
+            {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         {% endif %}
         {% if form.valuation_mode %}
             {% include 'partials/form_field.html' with field=form.name %}
@@ -41,7 +41,7 @@
             {% endfor %}
         {% endif %}
         <div class="flex items-center gap-3">
-            <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light">{% translate 'Save' %}</button>
+            <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light">{% translate 'Save' %}</button>
             <a href="{% url 'investments:settings' %}" class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90">{% translate 'Cancel' %}</a>
         </div>
     </form>

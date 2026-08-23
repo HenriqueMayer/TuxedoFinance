@@ -42,6 +42,6 @@ class LandingBrandTests(TestCase):
         )
         self.assertContains(
             response,
-            '<span class="block text-xs tracking-[0.15em] uppercase text-caramel mt-0.5">Finance</span>',
+            '<span class="block text-xs tracking-[0.15em] uppercase text-caramel-ink dark:text-caramel-light mt-0.5">Finance</span>',
             html=True,
         )

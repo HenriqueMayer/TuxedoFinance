@@ -40,40 +40,40 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
                 <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover ring-1 ring-forest/10 dark:ring-cream/20">
                 <span class="hidden sm:block text-left leading-tight">
                     <span class="block text-sm tracking-[0.2em] uppercase font-medium">{% translate 'Tuxedo' %}</span>
-                    <span class="block text-xs tracking-[0.15em] uppercase text-caramel mt-0.5">{% translate 'Finance' %}</span>
+                    <span class="block text-xs tracking-[0.15em] uppercase text-caramel-ink dark:text-caramel-light mt-0.5">{% translate 'Finance' %}</span>
                 </span>
             </a>
 
             <!-- Desktop links -->
             <div class="hidden items-center gap-7 md:flex">
                 <a href="{{ dashboard_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == dashboard_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == dashboard_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Dashboard' %}
                 </a>
                 <a href="{{ reports_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == reports_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == reports_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Reports' %}
                 </a>
                 <a href="{{ transactions_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == transactions_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == transactions_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Transactions' %}
                 </a>
                 <a href="{{ categories_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == categories_url %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == categories_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Categories' %}
                 </a>
                 <a href="{{ banking_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'banking' %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'banking' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Banks' %}
                 </a>
                 <a href="{{ investments_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'investments' %}text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'investments' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Investments' %}
                 </a>
                 <a href="{{ settings_url }}"
                    aria-label="{% translate 'Settings' %}"
                    title="{% translate 'Settings' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border transition-colors {% if request.resolver_match.url_name == 'settings' and request.resolver_match.namespace == 'accounts' %}border-caramel/40 text-caramel{% else %}border-forest/20 hover:bg-forest/5 dark:border-cream/20 dark:hover:bg-cream/10{% endif %}">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border transition-colors {% if request.resolver_match.url_name == 'settings' and request.resolver_match.namespace == 'accounts' %}border-caramel/40 text-caramel-ink dark:text-caramel-light{% else %}border-forest/20 hover:bg-forest/5 dark:border-cream/20 dark:hover:bg-cream/10{% endif %}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.073.04.145.083.216.127.325.2.72.263 1.077.13l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.993a6.8 6.8 0 0 1 0 .255c-.008.38.137.753.43.994l1.003.827c.424.35.534.954.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.491l-1.217-.456c-.357-.133-.752-.07-1.077.13a6.8 6.8 0 0 1-.216.127c-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.8 6.8 0 0 1-.216-.127c-.325-.2-.72-.263-1.077-.13l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.241.438-.614.43-.994a6.8 6.8 0 0 1 0-.255c.008-.38-.137-.753-.43-.993l-1.003-.827a1.125 1.125 0 0 1-.26-1.431L4.856 6.38a1.125 1.125 0 0 1 1.37-.49l1.217.456c.357.133.752.07 1.077-.13.071-.044.143-.087.216-.127.332-.184.582-.496.645-.87l.213-1.281Z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Z" />
@@ -115,28 +115,28 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
 <!-- Mobile fullscreen overlay menu (Final Design System §0) -->
 <div id="mobile-menu" class="fixed inset-0 bg-forest-deep z-50 transform translate-x-full transition-transform duration-500 ease-in-out flex flex-col justify-center items-center">
     <button type="button" id="close-menu-btn" aria-controls="mobile-menu" aria-expanded="false"
-            class="absolute top-6 right-6 p-2 text-cream hover:text-caramel transition-colors">
+            class="absolute top-6 right-6 p-2 text-cream transition-colors hover:text-caramel-light">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12" />
         </svg>
         <span class="sr-only">{% translate 'Close menu' %}</span>
     </button>
     <div class="flex flex-col items-center gap-7 text-cream">
-        <a href="{{ dashboard_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Dashboard' %}</a>
-        <a href="{{ reports_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Reports' %}</a>
-        <a href="{{ transactions_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Transactions' %}</a>
-        <a href="{{ categories_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Categories' %}</a>
-        <a href="{{ banking_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Banks' %}</a>
-        <a href="{{ investments_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Investments' %}</a>
-        <a href="{{ settings_url }}" class="font-sans text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">{% translate 'Settings' %}</a>
+        <a href="{{ dashboard_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Dashboard' %}</a>
+        <a href="{{ reports_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Reports' %}</a>
+        <a href="{{ transactions_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Transactions' %}</a>
+        <a href="{{ categories_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Categories' %}</a>
+        <a href="{{ banking_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Banks' %}</a>
+        <a href="{{ investments_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Investments' %}</a>
+        <a href="{{ settings_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Settings' %}</a>
         <div class="mt-4 flex items-center gap-4">
-            {% include 'partials/language_selector.html' with selector_id='mobile' %}
-            {% include 'partials/theme_toggle.html' %}
+            {% include 'partials/language_selector.html' with selector_id='mobile' overlay=True %}
+            {% include 'partials/theme_toggle.html' with overlay=True %}
         </div>
         <form method="post" action="{% url 'accounts:logout' %}">
             {% csrf_token %}
             <button type="submit"
-                    class="mt-2 rounded-full border border-caramel px-8 py-3 text-xs uppercase tracking-widest font-medium text-caramel hover:bg-caramel hover:text-white transition-colors">
+                    class="mt-2 rounded-full border border-caramel-light px-8 py-3 text-xs font-medium uppercase tracking-widest text-caramel-light transition-colors hover:bg-caramel-light hover:text-forest-deep">
                  {% translate 'Log out' %}
             </button>
         </form>

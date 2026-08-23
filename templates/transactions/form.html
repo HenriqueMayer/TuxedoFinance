@@ -22,7 +22,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         {% if form.non_field_errors %}
             <div class="space-y-1.5">
                 {% for error in form.non_field_errors %}
-                    <p class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>
+                    <p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>
                 {% endfor %}
             </div>
         {% endif %}
@@ -36,9 +36,9 @@ through the shared partials/form_field.html renderer (PRD §9.4).
                    placeholder="{% translate 'Type to filter categories' %}"
                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-cream/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
             <p id="category-selection" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
-            {% for error in form.category.errors %}<p id="category-error" class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>{% endfor %}
+            {% for error in form.category.errors %}<p id="category-error" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
             <ul id="category-results" role="listbox" class="max-h-48 overflow-y-auto rounded-xl border border-forest/30 bg-white p-1 dark:border-cream/30 dark:bg-forest"></ul>
-            <button id="clear-category" type="button" class="text-xs font-medium uppercase tracking-widest text-caramel hover:underline dark:text-caramel-light">{% translate "Clear category selection" %}</button>
+            <button id="clear-category" type="button" class="text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light">{% translate "Clear category selection" %}</button>
         </div>
         <div id="category-fallback">{% include 'partials/form_field.html' with field=form.category %}</div>
         {% include 'partials/form_field.html' with field=form.payment_channel %}
@@ -52,7 +52,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             {% include 'partials/form_field.html' with field=form.credit_card %}
             {% include 'partials/form_field.html' with field=form.installments %}
             {% include 'partials/form_field.html' with field=form.billing_override %}
-            <p id="credit-card-best-purchase" class="text-sm font-medium text-caramel dark:text-caramel-light" aria-live="polite"></p>
+            <p id="credit-card-best-purchase" class="text-sm font-medium text-caramel-ink dark:text-caramel-light" aria-live="polite"></p>
             <p id="credit-card-account" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
         </div>
         {% include 'partials/preferred_date_field.html' with field=form.date %}
@@ -65,7 +65,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
                     <div>
                         <label for="{{ form.is_fixed.id_for_label }}" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{{ form.is_fixed.label }}</label>
                         {% if form.is_fixed.help_text %}<p id="{{ form.is_fixed.id_for_label }}-help" class="text-sm text-forest/70 dark:text-cream/70">{{ form.is_fixed.help_text }}</p>{% endif %}
-                        {% for error in form.is_fixed.errors %}<p id="{{ form.is_fixed.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>{% endfor %}
+                        {% for error in form.is_fixed.errors %}<p id="{{ form.is_fixed.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
                     </div>
                 </div>
                 <div id="fixed-until-fields" data-has-errors="{{ form.fixed_until.errors|yesno:'true,false' }}">{% include 'partials/preferred_date_field.html' with field=form.fixed_until %}</div>
@@ -75,7 +75,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
 
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Save" %}
             </button>
             <a href="{% url 'transactions:list' %}"

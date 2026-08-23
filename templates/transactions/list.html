@@ -5,8 +5,8 @@
 Transaction list (PRD §13, Sprint 6 — 6.3.1/6.3.5/6.3.6; Sprint 8 — 8.1.5).
 Shows only the logged-in user's own transactions
 (`TransactionListView.get_queryset`), paginated, each row color-coded by
-`transaction_type` per the final semantic palette (Income forest/sage,
-Expense terracotta, Investment caramel).
+`transaction_type` per the accessible semantic palette (income, expense and
+investment tokens).
 
 Optional search/billed-month/exact-date/type filter (PRD 8.1.5, FR17): a plain
 `<form method="get">` with a `<button type="submit">` — no
@@ -34,17 +34,17 @@ the active filters survive page navigation.
                     {% translate "Export CSV" %}
                 </summary>
                 <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-forest/10 dark:bg-forest dark:ring-cream/10">
-                    <a href="{{ export_url }}" class="block text-xs font-medium uppercase tracking-widest text-caramel hover:underline dark:text-caramel-light">{% translate "Export all transactions" %}</a>
+                    <a href="{{ export_url }}" class="block text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light">{% translate "Export all transactions" %}</a>
                     <form action="{{ export_url }}" method="get" class="space-y-2">
                         <label for="export-month" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Billed month" %}</label>
                         <input id="export-month" type="month" name="month" required
                                class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3 py-2 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
-                        <button type="submit" class="w-full rounded-full bg-caramel px-3 py-2 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel">{% translate "Export selected month" %}</button>
+                        <button type="submit" class="w-full rounded-full bg-caramel px-3 py-2 text-xs font-medium uppercase tracking-widest text-forest-deep transition hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel">{% translate "Export selected month" %}</button>
                     </form>
                 </div>
             </details>
             <a href="{{ create_url }}"
-               class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+               class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "New Transaction" %}
             </a>
         </div>
@@ -112,14 +112,14 @@ the active filters survive page navigation.
                             <div class="flex flex-wrap items-center gap-2">
                                 <p class="font-sans text-lg">{{ transaction.title }}</p>
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
-                                    {% if transaction.transaction_type == 'INCOME' %}bg-forest/10 dark:bg-sage/15 text-forest dark:text-sage
-                                    {% elif transaction.transaction_type == 'EXPENSE' %}bg-terracotta/10 dark:bg-terracotta/15 text-terracotta dark:text-terracotta-light
-                                    {% else %}bg-caramel/10 dark:bg-caramel/15 text-caramel dark:text-caramel-light
+                                    {% if transaction.transaction_type == 'INCOME' %}bg-income/10 dark:bg-income-light/15 text-income dark:text-income-light
+                                    {% elif transaction.transaction_type == 'EXPENSE' %}bg-expense/10 dark:bg-expense/15 text-expense dark:text-expense-light
+                                    {% else %}bg-investment/10 dark:bg-investment-light/15 text-investment dark:text-investment-light
                                     {% endif %}">
                                     {{ transaction.get_transaction_type_display }}
                                 </span>
                                 {% if transaction.is_fixed %}
-                                    <span class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/20 px-2.5 py-0.5 text-xs font-medium text-forest/70 dark:text-cream/70">
+                                    <span class="inline-flex items-center rounded-full border border-fixed/30 bg-fixed/10 px-2.5 py-0.5 text-xs font-medium text-fixed dark:border-fixed-light/30 dark:bg-fixed-light/10 dark:text-fixed-light">
                                         {% if transaction.fixed_until %}
                                             {% blocktranslate with end_date=transaction.fixed_until|date:'M Y' %}Fixed &middot; until {{ end_date }}{% endblocktranslate %}
                                         {% else %}
@@ -128,7 +128,7 @@ the active filters survive page navigation.
                                     </span>
                                 {% endif %}
                                 {% if transaction.is_installment_plan %}
-                                    <span class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/20 px-2.5 py-0.5 text-xs font-medium text-forest/70 dark:text-cream/70">
+                                    <span class="inline-flex items-center rounded-full border border-installment/30 bg-installment/10 px-2.5 py-0.5 text-xs font-medium text-installment dark:border-installment-light/30 dark:bg-installment-light/10 dark:text-installment-light">
                                         {{ transaction.installments }}x
                                     </span>
                                 {% endif %}
@@ -142,9 +142,9 @@ the active filters survive page navigation.
                         <div class="flex items-center gap-4">
                             <div class="sm:text-right">
                                 <p class="text-lg font-semibold tabular-nums
-                                    {% if transaction.transaction_type == 'INCOME' %}text-forest dark:text-sage
-                                    {% elif transaction.transaction_type == 'EXPENSE' %}text-terracotta dark:text-terracotta-light
-                                    {% else %}text-caramel dark:text-caramel-light
+                                    {% if transaction.transaction_type == 'INCOME' %}text-income dark:text-income-light
+                                    {% elif transaction.transaction_type == 'EXPENSE' %}text-expense dark:text-expense-light
+                                    {% else %}text-investment dark:text-investment-light
                                     {% endif %}">
                                     {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}{{ transaction.native_currency }} {{ transaction.amount|floatformat:2 }}
                                 </p>
@@ -160,7 +160,7 @@ the active filters survive page navigation.
                                     {% translate "Edit" %}
                                 </a>
                                 <a href="{% url 'transactions:delete' transaction.pk %}"
-                                   class="inline-flex items-center gap-2 rounded-full bg-terracotta/10 dark:bg-terracotta/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light ring-1 ring-inset ring-terracotta/30 transition hover:bg-terracotta/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                                   class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                                     {% translate "Delete" %}
                                 </a>
                             </div>

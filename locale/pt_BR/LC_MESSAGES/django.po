@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 13:33+0000\n"
+"POT-Creation-Date: 2026-08-23 13:50+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -137,11 +137,9 @@ msgstr "Você já tem um programa de fidelidade com este nome."
 msgid "Every card must belong to you."
 msgstr "Todos os cartões devem pertencer a você."
 
-#| msgid "Every card must belong to the program owner."
 msgid "Every selected card must belong to the selected bank."
 msgstr "Todos os cartões selecionados devem pertencer ao banco selecionado."
 
-#| msgid "The program must belong to the entry owner."
 msgid "The program must belong to the selected bank."
 msgstr "O programa deve pertencer ao banco selecionado."
 
@@ -774,8 +772,6 @@ msgstr ""
 "operações de investimento."
 
 #, python-format
-#| msgid ""
-#| "Asset class cannot be changed after this asset has investment operations."
 msgid "%(label)s cannot be changed after this asset has investment operations."
 msgstr ""
 "O campo %(label)s não pode ser alterado depois que este ativo tiver "
@@ -1244,10 +1240,6 @@ msgid "Delete Category"
 msgstr "Excluir categoria"
 
 #, python-format
-#| msgid ""
-#| "Are you sure you want to delete <span class=\"font-semibold text-"
-#| "slate-900 dark:text-neutral-100\">%(category_name)s</span>? This action "
-#| "cannot be undone."
 msgid ""
 "Are you sure you want to delete <span class=\"font-semibold text-forest "
 "dark:text-cream\">%(category_name)s</span>? This action cannot be undone."
@@ -1462,9 +1454,6 @@ msgid "Money moved across your accounts and cards over all months."
 msgstr "Movimentação em suas contas e cartões durante todo o período."
 
 #, python-format
-#| msgid ""
-#| "Money moved across your accounts and cards in <span class=\"font-medium "
-#| "text-slate-700 dark:text-neutral-300\">%(window)s</span>."
 msgid ""
 "Money moved across your accounts and cards in <span class=\"font-medium text-"
 "forest/70 dark:text-cream/70\">%(window)s</span>."
@@ -1482,8 +1471,7 @@ msgstr "Gráfico de barras agrupadas de receitas e despesas por conta ou cartão
 msgid ""
 "Expenses for %(label)s: %(currency)s %(total)s. Click to see categories."
 msgstr ""
-"Despesas de %(label)s: %(currency)s %(total)s. Clique para ver as "
-"categorias."
+"Despesas de %(label)s: %(currency)s %(total)s. Clique para ver as categorias."
 
 #, python-format
 msgid "Income for %(label)s: %(currency)s %(total)s. Click to see categories."
@@ -2075,7 +2063,6 @@ msgstr "Cadastre-se gratuitamente"
 msgid "Tuxedo"
 msgstr "Tuxedo"
 
-#| msgid "Cancel"
 msgid "Finance"
 msgstr "Finance"
 
@@ -2097,7 +2084,6 @@ msgstr "Sair"
 msgid "Toggle menu"
 msgstr "Alternar menu"
 
-#| msgid "Toggle menu"
 msgid "Close menu"
 msgstr "Fechar menu"
 
@@ -2141,10 +2127,6 @@ msgid "Delete Transaction"
 msgstr "Excluir transação"
 
 #, python-format
-#| msgid ""
-#| "Are you sure you want to delete <span class=\"font-semibold text-"
-#| "slate-900 dark:text-neutral-100\">%(title)s</span>? This action cannot be "
-#| "undone."
 msgid ""
 "Are you sure you want to delete <span class=\"font-semibold text-forest "
 "dark:text-cream\">%(title)s</span>? This action cannot be undone."

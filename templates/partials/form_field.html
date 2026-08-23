@@ -27,7 +27,7 @@ group of fields in a form card:
 {% if field %}
     <div class="space-y-2">
         <label for="{{ field.id_for_label }}" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">
-            {{ field.label }}{% if field.field.required %} <span class="text-terracotta">*</span>{% endif %}
+            {{ field.label }}{% if field.field.required %} <span class="text-expense">*</span>{% endif %}
         </label>
 
         {{ field }}
@@ -37,7 +37,7 @@ group of fields in a form card:
         {% endif %}
 
         {% for error in field.errors %}
-            <p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>
+            <p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>
         {% endfor %}
     </div>
 {% endif %}

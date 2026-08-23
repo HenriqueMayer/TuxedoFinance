@@ -17,7 +17,7 @@
             <a href="{% url 'banking:entry_create' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Points entry" %}</a>
             <a href="{% url 'banking:redemption_create' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Redeem points" %}</a>
             <a href="{% url 'banking:exchange_rates' %}" class="inline-flex items-center rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Exchange rates" %}</a>
-            <a href="{{ create_url }}" class="inline-flex items-center rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light">{% translate "New bank" %}</a>
+            <a href="{{ create_url }}" class="inline-flex items-center rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light">{% translate "New bank" %}</a>
         </div>
     </div>
 
@@ -35,8 +35,8 @@
             {% for bank in banks %}
                 <article class="space-y-4 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
                     <div class="flex items-center justify-between gap-3">
-                        <a href="{% url 'banking:detail' bank.pk %}" class="font-sans text-2xl text-forest transition-colors hover:text-caramel dark:text-cream">{{ bank.name }}</a>
-                        <span class="text-xs font-medium uppercase tracking-wide text-forest/70">{% blocktranslate count account_count=bank.accounts.all|length %}{{ account_count }} account{% plural %}{{ account_count }} accounts{% endblocktranslate %}</span>
+                        <a href="{% url 'banking:detail' bank.pk %}" class="font-sans text-2xl text-forest transition-colors hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream">{{ bank.name }}</a>
+                        <span class="text-xs font-medium uppercase tracking-wide text-forest/70 dark:text-cream/70">{% blocktranslate count account_count=bank.accounts.all|length %}{{ account_count }} account{% plural %}{{ account_count }} accounts{% endblocktranslate %}</span>
                     </div>
                     {% for account in bank.accounts.all %}
                         <div class="rounded-xl bg-cream p-4 dark:bg-forest-deep">
@@ -72,10 +72,10 @@
 
     {% if independent_programs %}
         <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
-            <h2 class="font-semibold">{% translate "Independent loyalty programs" %}</h2>
+            <h2 class="text-xl font-semibold">{% translate "Independent loyalty programs" %}</h2>
             <div class="mt-3 flex flex-wrap gap-2">
                 {% for program in independent_programs %}
-                    <span class="inline-flex items-center gap-2 rounded-full bg-caramel/10 px-3 py-1.5 text-sm font-medium text-caramel dark:text-caramel-light">
+                    <span class="inline-flex items-center gap-2 rounded-full bg-caramel/10 px-3 py-1.5 text-sm font-medium text-caramel-ink dark:text-caramel-light">
                         <a href="{% url 'banking:program_update' program.pk %}">{{ program.name }}: {{ program.balance }} {{ program.unit_name }}</a>
                         <a href="{% url 'banking:entry_create' %}?program={{ program.pk }}" class="underline">{% translate "Entry" %}</a>
                     </span>

@@ -27,7 +27,7 @@ GET search plus top-level/subcategory filtering.
         <div class="flex flex-wrap items-center gap-3">
             {% if has_categories %}
                 <a href="{% url 'categories:delete_all' %}"
-                   class="inline-flex items-center rounded-full bg-terracotta/10 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-terracotta ring-1 ring-inset ring-terracotta/30 transition hover:bg-terracotta/20 dark:bg-terracotta/15 dark:text-terracotta-light">
+                   class="inline-flex items-center rounded-full bg-expense/10 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 dark:bg-expense/15 dark:text-expense-light">
                     {% translate "Delete all" %}
                 </a>
             {% endif %}
@@ -40,7 +40,7 @@ GET search plus top-level/subcategory filtering.
                 {% translate "Import CSV" %}
             </a>
             <a href="{{ create_url }}"
-               class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+               class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                  {{ new_category_label }}
             </a>
         </div>
@@ -95,7 +95,7 @@ GET search plus top-level/subcategory filtering.
                                  {% translate "Edit" %}
                             </a>
                             <a href="{% url 'categories:delete' category.pk %}"
-                               class="inline-flex items-center gap-2 rounded-full bg-terracotta/10 dark:bg-terracotta/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-terracotta dark:text-terracotta-light ring-1 ring-inset ring-terracotta/30 transition hover:bg-terracotta/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                               class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                                  {% translate "Delete" %}
                             </a>
                         </div>

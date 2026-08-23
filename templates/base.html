@@ -75,9 +75,13 @@ build step.
                     colors: {
                         cream: { DEFAULT: '#FAF8F3', dark: '#EBE7DE' },
                         forest: { DEFAULT: '#1A2E26', light: '#2A4338', deep: '#101E18' },
-                        caramel: { DEFAULT: '#B88A59', light: '#D4AD86' },
-                        sage: '#7FA08F',
-                        terracotta: { DEFAULT: '#A85D3C', light: '#C4825E' }
+                        caramel: { DEFAULT: '#B88A59', light: '#D4AD86', ink: '#8A5A2F' },
+                        income: { DEFAULT: '#176B52', light: '#64D8B1' },
+                        expense: { DEFAULT: '#B42318', light: '#FF8A80' },
+                        investment: { DEFAULT: '#7C5C13', light: '#F4C95D' },
+                        installment: { DEFAULT: '#6B4E8A', light: '#C4A7E7' },
+                        fixed: { DEFAULT: '#A65300', light: '#FFB45C' },
+                        oneoff: { DEFAULT: '#52605A', light: '#B8C0BC' }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -95,7 +99,7 @@ build step.
         .dark ::-webkit-scrollbar-thumb { background: #B88A59; }
     </style>
 </head>
-<body class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-white dark:bg-forest-deep dark:text-cream">
+<body class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-forest-deep dark:text-cream">
     {% if request.user.is_authenticated %}
         {% include 'partials/navbar_app.html' %}
     {% else %}
