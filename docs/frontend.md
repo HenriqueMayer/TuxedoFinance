@@ -200,9 +200,10 @@ presented as posted cash.
 
 ## Reports and charts
 
-Charts remain inline server-rendered SVG/CSS with native `<title>` tooltips,
-forest/cream tooltip pills, responsive overflow containers and accessible text
-summaries. Income uses the green pair, expense uses the red pair, and
+Charts remain inline server-rendered SVG/CSS with native `<title>` fallbacks,
+forest/cream tooltip pills on mouse hover and keyboard focus, responsive
+overflow containers and accessible text summaries. Reports and Investments use
+the same interaction contract. Income uses the green pair, expense uses the red pair, and
 investment has its own ochre pair. The recurrence donut uses purple
 installments, orange fixed recurrences and neutral one-off purchases; its zero
 line is neutral. HTMX swaps only the report island while preserving focus and

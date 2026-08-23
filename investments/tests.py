@@ -560,6 +560,23 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertContains(htmx, 'id="investments-charts"')
         self.assertNotContains(htmx, '<html')
 
+    def test_charts_have_mouse_and_keyboard_tooltips(self):
+        operation = self.operation(
+            Investment.Kind.YIELD,
+            quantity=Decimal('3.00'),
+            unit_price=Decimal('41.15'),
+        )
+        operation.full_clean()
+        operation.save()
+
+        response = self.client.get(reverse('investments:list'))
+
+        self.assertContains(response, 'group-hover:opacity-100')
+        self.assertContains(response, 'group-focus-visible:opacity-100')
+        self.assertNotContains(response, 'group-focus:opacity-100')
+        self.assertContains(response, 'tabindex="0"')
+        self.assertContains(response, 'R$ 123,45')
+
     def test_historical_conversion_uses_banking_exchange_rate(self):
         foreign = Asset.objects.create(
             user=self.user, name='Dollar', code='USD',

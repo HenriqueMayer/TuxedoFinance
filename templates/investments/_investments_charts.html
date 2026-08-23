@@ -93,11 +93,25 @@
                           stroke-linecap="round" stroke-linejoin="round" />
 
                 {% for point in chart_total.points %}
-                    <circle cx="{{ point.x }}" cy="{{ point.y }}" r="3.5"
-                            class="fill-white stroke-investment dark:fill-forest-deep dark:stroke-investment-light"
-                            stroke-width="2">
-                        <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
-                    </circle>
+                    <g class="group outline-none" tabindex="0"
+                       aria-label="{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}">
+                        <circle cx="{{ point.x }}" cy="{{ point.y }}" r="4.5"
+                                class="fill-white stroke-investment dark:fill-forest-deep dark:stroke-investment-light group-hover:stroke-investment-light dark:group-hover:stroke-investment transition-colors"
+                                stroke-width="2">
+                            <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
+                        </circle>
+                        <g transform="translate({{ point.tooltip_x }} {{ point.tooltip_y }})"
+                           class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                            <rect width="176" height="38" rx="19"
+                                  class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                            <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
+                                {{ point.label.date|date:'M Y' }}
+                            </text>
+                            <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
+                                {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}
+                            </text>
+                        </g>
+                    </g>
                     <text x="{{ point.x }}" y="{{ chart_total.label_y }}" text-anchor="middle"
                           class="text-xs fill-forest/70 dark:fill-cream/70">
                         {{ point.label.date|date:'M' }}
@@ -190,13 +204,29 @@
 
                 {% for group in chart_flow.groups %}
                     {% for bar in group.bars %}
-                        <rect x="{{ bar.x }}" y="{{ bar.y }}"
-                              width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                               class="{% if bar.tone == 'income' %}fill-income/80 dark:fill-income-light/80
-                                      {% elif bar.tone == 'investment' %}fill-investment/80 dark:fill-investment-light/80
-                                      {% else %}fill-expense/80 dark:fill-expense-light/80{% endif %}">
-                            <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
-                        </rect>
+                        {% if bar.value %}
+                            <g class="group outline-none" tabindex="0"
+                               aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
+                                <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                                      width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                      class="{% if bar.tone == 'income' %}fill-income/80 dark:fill-income-light/80 group-hover:fill-income dark:group-hover:fill-income-light
+                                             {% elif bar.tone == 'investment' %}fill-investment/80 dark:fill-investment-light/80 group-hover:fill-investment dark:group-hover:fill-investment-light
+                                             {% else %}fill-expense/80 dark:fill-expense-light/80 group-hover:fill-expense dark:group-hover:fill-expense-light{% endif %} transition-colors">
+                                    <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
+                                </rect>
+                                <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
+                                   class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                    <rect width="176" height="38" rx="19"
+                                          class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                                    <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
+                                        {{ group.label.date|date:'M Y' }} &middot; {{ bar.name }}
+                                    </text>
+                                    <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
+                                        {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}
+                                    </text>
+                                </g>
+                            </g>
+                        {% endif %}
                     {% endfor %}
                     <text x="{{ group.center }}" y="{{ chart_flow.label_y }}" text-anchor="middle"
                           class="text-xs fill-forest/70 dark:fill-cream/70">
