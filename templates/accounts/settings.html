@@ -5,49 +5,50 @@
 
 {% block content %}
 <div class="mx-auto max-w-2xl space-y-6">
-    <div>
-        <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Settings" %}</h1>
-        <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+    <div class="text-center">
+        <p class="mb-2 text-xs font-medium uppercase tracking-widest text-caramel">{% translate "Settings" %}</p>
+        <h1 class="font-serif text-4xl font-normal tracking-tight">{% translate "Settings" %}.</h1>
+        <p class="mx-auto mt-2 max-w-xl text-sm font-light text-forest/60 dark:text-cream/60">
             {% translate "Choose how Tuxedo Finance presents consolidated totals for your account." %}
         </p>
     </div>
 
-    <form method="post" class="space-y-6 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6" novalidate>
+    <form method="post" class="space-y-6 rounded-3xl bg-white p-8 shadow-lg dark:bg-forest" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
             <div class="space-y-1.5" role="alert">
                 {% for error in form.non_field_errors %}
-                    <p class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
+                    <p class="text-sm text-terracotta dark:text-terracotta-light">{{ error }}</p>
                 {% endfor %}
             </div>
         {% endif %}
 
         <section aria-labelledby="currency-heading" class="space-y-4">
             <div>
-                <h2 id="currency-heading" class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate "Base currency" %}</h2>
-                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                <h2 id="currency-heading" class="font-serif text-2xl tracking-tight">{% translate "Base currency" %}</h2>
+                <p class="mt-1 text-sm font-light text-forest/60 dark:text-cream/60">
                     {% translate "This currency is used for consolidated dashboard and report totals. Native account and transaction amounts are never changed." %}
                 </p>
             </div>
             {% include 'partials/form_field.html' with field=form.base_currency %}
         </section>
 
-        <section aria-labelledby="date-format-heading" class="space-y-4 border-t border-slate-200 pt-6 dark:border-slate-700">
+        <section aria-labelledby="date-format-heading" class="space-y-4 border-t border-forest/10 pt-6 dark:border-cream/10">
             <div>
-                <h2 id="date-format-heading" class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate "Date format" %}</h2>
-                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate "Choose how complete dates are displayed throughout the application." %}</p>
+                <h2 id="date-format-heading" class="font-serif text-2xl tracking-tight">{% translate "Date format" %}</h2>
+                <p class="mt-1 text-sm font-light text-forest/60 dark:text-cream/60">{% translate "Choose how complete dates are displayed throughout the application." %}</p>
             </div>
             {% include 'partials/form_field.html' with field=form.date_format %}
         </section>
 
         <div class="flex flex-wrap items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
+                    class="inline-flex flex-1 items-center justify-center rounded-full bg-caramel px-6 py-3 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel/40">
                 {% translate "Save settings" %}
             </button>
             <a href="{% url 'dashboard:index' %}"
-               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+               class="inline-flex items-center justify-center rounded-full border border-forest px-6 py-3 text-xs font-medium uppercase tracking-widest transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/50 dark:text-cream dark:hover:bg-cream dark:hover:text-forest">
                 {% translate "Cancel" %}
             </a>
         </div>
