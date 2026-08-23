@@ -255,3 +255,9 @@ assertions cannot prove: English/Portuguese landing copy, locally served HTMX,
 native CSV download, the tablet navigation breakpoint and mobile modal focus
 containment. CI runs the suite in Chromium after the Python checks and uploads
 screenshots, video and traces only when a browser test fails.
+
+`tests/preview/preview.spec.js` validates the static GitHub Pages tour in both
+languages, including the committed image dimensions, theme persistence,
+accessible screenshot dialog and mobile layout. Run `npm run test:preview` for
+that isolated site. `npm run preview:capture` regenerates its screenshots using
+only disposable synthetic records in a guarded temporary database.

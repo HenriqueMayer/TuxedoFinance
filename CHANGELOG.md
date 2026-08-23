@@ -7,6 +7,11 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Bilingual static interface tour for GitHub Pages, with reproducible synthetic
+  screenshots, accessible image expansion and an isolated preview test suite.
+
 ## [0.1.0] - 2026-08-23
 
 ### Added

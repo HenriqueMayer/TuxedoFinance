@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tuxedo Finance — Interface preview</title>
+    <meta name="description" content="Explore the Tuxedo Finance interface through a static tour made with synthetic financial data.">
+    <meta name="theme-color" content="#FAF8F3">
+    <meta property="og:title" content="Tuxedo Finance — Interface preview">
+    <meta property="og:description" content="A static, bilingual tour of the local-first personal finance application.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://henriquemayer.github.io/TuxedoFinance/">
+    <meta property="og:image" content="https://henriquemayer.github.io/TuxedoFinance/images/en/dashboard-light.png">
+    <link rel="canonical" href="https://henriquemayer.github.io/TuxedoFinance/">
+    <link rel="alternate" hreflang="en" href="https://henriquemayer.github.io/TuxedoFinance/">
+    <link rel="alternate" hreflang="pt-BR" href="https://henriquemayer.github.io/TuxedoFinance/pt-br/">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <script>
+        (function () {
+            var stored;
+            try { stored = localStorage.getItem('tuxedo-preview-theme'); } catch (error) {}
+            var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        })();
+    </script>
+    <link rel="stylesheet" href="assets/preview.css">
+    <script src="assets/preview.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to the tour</a>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="wordmark" href="#top" aria-label="Tuxedo Finance preview">Tuxedo<span>Finance</span></a>
+            <nav class="tour-nav" aria-label="Preview sections">
+                <a href="#dashboard">Dashboard</a>
+                <a href="#reports">Reports</a>
+                <a href="#transactions">Transactions</a>
+                <a href="#banking">Banking</a>
+                <a href="#investments">Investments</a>
+            </nav>
+            <div class="header-actions">
+                <div class="language-switch" aria-label="Language">
+                    <a href="./" lang="en" aria-current="page">EN</a>
+                    <a href="pt-br/" lang="pt-BR" hreflang="pt-BR">PT</a>
+                </div>
+                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme" aria-pressed="false">
+                    <span class="sun" aria-hidden="true">☀</span>
+                    <span class="moon" aria-hidden="true">◐</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main" id="main">
+        <section class="hero" id="top">
+            <div>
+                <p class="eyebrow">Interface preview</p>
+                <h1>Meet your finances beyond the spreadsheet.</h1>
+                <p class="hero-copy">Explore the real Tuxedo Finance interface before installing it. This guided tour covers cash flow, projections, reports, daily transactions, banking and investments.</p>
+                <div class="hero-actions">
+                    <a class="button button-primary" href="#dashboard">Start the tour</a>
+                    <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance">View repository</a>
+                    <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance#-quick-start">Run locally</a>
+                </div>
+            </div>
+            <aside class="notice" aria-label="About this preview">
+                <span class="notice-title">Safe, static tour</span>
+                <p>Every amount, institution and account shown here is synthetic. There is no login, backend or database, and nothing you do on this page is saved.</p>
+            </aside>
+        </section>
+
+        <section class="tour-section" id="dashboard">
+            <div class="section-heading">
+                <div><span class="section-number">01 / Dashboard</span><h2>Cash today and the month ahead.</h2></div>
+                <p class="section-copy">Current Balance represents realized account cash. The month cards keep income, expenses and investments separate, while Projected shows the expected closing balance.</p>
+            </div>
+            <div class="screenshot-grid">
+                <figure>
+                    <a class="screenshot-link" href="images/en/dashboard-light.png" data-lightbox>
+                        <img src="images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance dashboard in the light theme with current balance, monthly totals, bank accounts and scheduled card invoices" fetchpriority="high" decoding="async">
+                    </a>
+                    <figcaption>Light theme — current cash, monthly activity and projected close.</figcaption>
+                </figure>
+                <figure>
+                    <a class="screenshot-link" href="images/en/dashboard-dark.png" data-lightbox>
+                        <img src="images/en/dashboard-dark.png" width="1440" height="1000" alt="Tuxedo Finance dashboard showing the same synthetic financial summary in the dark theme" loading="lazy" decoding="async">
+                    </a>
+                    <figcaption>Dark theme — the same financial meanings with accessible companion colors.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="tour-section" id="reports">
+            <div class="section-heading">
+                <div><span class="section-number">02 / Reports</span><h2>Patterns that stay connected to the numbers.</h2></div>
+                <p class="section-copy">Server-rendered charts compare balance evolution, cash flow, payment instruments, categories, installments and recurring expenses without hiding the underlying values.</p>
+            </div>
+            <figure>
+                <a class="screenshot-link" href="images/en/reports-light.png" data-lightbox>
+                    <img src="images/en/reports-light.png" width="1440" height="1000" alt="Tuxedo Finance reports page with summary cards and financial charts based on synthetic data" loading="lazy" decoding="async">
+                </a>
+                <figcaption>Reports remain responsive, keyboard-readable and grouped around meaningful financial questions.</figcaption>
+            </figure>
+        </section>
+
+        <section class="tour-section" id="transactions">
+            <div class="section-heading">
+                <div><span class="section-number">03 / Transactions</span><h2>Every event, classified and searchable.</h2></div>
+                <p class="section-copy">Income and expenses retain their category, payment instrument, recurrence, installment plan, transaction date and billed month.</p>
+            </div>
+            <figure>
+                <a class="screenshot-link" href="images/en/transactions-light.png" data-lightbox>
+                    <img src="images/en/transactions-light.png" width="1440" height="1000" alt="Transaction list with search filters and synthetic income, fixed expenses, card installments and PIX payments" loading="lazy" decoding="async">
+                </a>
+                <figcaption>Search, ordering, month filters and CSV export support both quick checks and detailed review.</figcaption>
+            </figure>
+        </section>
+
+        <section class="tour-section" id="banking">
+            <div class="section-heading">
+                <div><span class="section-number">04 / Banking</span><h2>Accounts, cards and currencies in context.</h2></div>
+                <p class="section-copy">Banks group currency-specific accounts, native balances, debit and credit cards, statement cycles, transfers, loyalty and exchange rates.</p>
+            </div>
+            <figure>
+                <a class="screenshot-link" href="images/en/banking-light.png" data-lightbox>
+                    <img src="images/en/banking-light.png" width="1440" height="1000" alt="Banking overview with two fictional banks, BRL and USD accounts, cards and loyalty program" loading="lazy" decoding="async">
+                </a>
+                <figcaption>Native account values remain visible even when consolidated reporting uses another currency.</figcaption>
+            </figure>
+        </section>
+
+        <section class="tour-section" id="investments">
+            <div class="section-heading">
+                <div><span class="section-number">05 / Investments</span><h2>A separate ledger for position flows.</h2></div>
+                <p class="section-copy">Manual deposits, withdrawals and yields preserve quantities, unit prices, fees, cash endpoints and historical conversion evidence.</p>
+            </div>
+            <figure>
+                <a class="screenshot-link" href="images/en/investments-light.png" data-lightbox>
+                    <img src="images/en/investments-light.png" width="1440" height="1000" alt="Investments overview with a synthetic reserve fund, global equity ETF, position totals and flow charts" loading="lazy" decoding="async">
+                </a>
+                <figcaption>The totals describe recorded acquisition and value flows, not live market quotations.</figcaption>
+            </figure>
+        </section>
+    </main>
+
+    <dialog class="image-dialog" id="image-dialog" aria-label="Expanded interface screenshot">
+        <div class="dialog-inner">
+            <button class="dialog-close" type="button" data-dialog-close aria-label="Close expanded screenshot">×</button>
+            <img id="dialog-image" alt="">
+        </div>
+    </dialog>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <p>Tuxedo Finance — personal finance, simplified.</p>
+            <p>Static preview · Synthetic data · Nothing is saved</p>
+        </div>
+    </footer>
+</body>
+</html>
