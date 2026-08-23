@@ -79,6 +79,7 @@ class LanguageSelectionTests(TestCase):
 
         self.assertContains(response, '<html lang="en"', html=False)
         self.assertContains(response, 'id="language-select-public"')
+        self.assertEqual(response.content.count(b'class="bg-white text-forest"'), 2)
         self.assertContains(response, 'Log in')
         self.assertContains(
             response,
