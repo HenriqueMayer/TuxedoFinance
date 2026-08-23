@@ -156,8 +156,8 @@
                     <form action="#" method="post" class="inline-flex" aria-label="Language">
                         <label class="sr-only" for="lang-desktop">Language</label>
                         <select id="lang-desktop" name="language" class="h-10 rounded-full border border-forest/20 bg-transparent px-3 text-xs uppercase tracking-widest font-medium focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/20">
-                            <option value="en" selected>EN</option>
-                            <option value="pt-br">PT</option>
+                            <option class="bg-white text-forest" value="en" selected>EN</option>
+                            <option class="bg-white text-forest" value="pt-br">PT</option>
                         </select>
                     </form>
                     <button type="button" data-theme-toggle aria-label="Toggle color theme" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
@@ -199,7 +199,7 @@
                 <form action="#" method="post" class="inline-flex" aria-label="Language">
                     <label class="sr-only" for="lang-mobile">Language</label>
                     <select id="lang-mobile" name="language" class="h-10 rounded-full border border-cream/30 bg-transparent px-3 text-xs uppercase tracking-widest font-medium text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40">
-                        <option value="en" selected>EN</option><option value="pt-br">PT</option>
+                        <option class="bg-white text-forest" value="en" selected>EN</option><option class="bg-white text-forest" value="pt-br">PT</option>
                     </select>
                 </form>
                 <button type="button" data-theme-toggle aria-label="Toggle color theme" class="flex h-10 w-10 items-center justify-center rounded-full border border-cream/30 hover:bg-cream/10 transition-colors text-cream">
@@ -573,13 +573,13 @@
             <p class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Compact selects</p>
             <div class="flex flex-wrap gap-3 pt-1">
                 <select class="h-10 rounded-full border border-forest/20 bg-transparent px-3 text-xs uppercase tracking-widest font-medium focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/20 dark:text-cream">
-                    <option selected>EN</option><option>PT</option>
+                    <option class="bg-white text-forest" selected>EN</option><option class="bg-white text-forest">PT</option>
                 </select>
                 <select class="h-10 rounded-full border border-forest/20 bg-transparent px-3 text-xs uppercase tracking-widest font-medium focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/20 dark:text-cream">
                     <option>Aug 2026</option><option>Jul 2026</option>
                 </select>
             </div>
-            <p class="text-sm font-normal text-forest/70 dark:text-cream/70">Navbar pill selects (language / month).</p>
+            <p class="text-sm font-normal text-forest/70 dark:text-cream/70">Navbar pill selects (language / month). Language options keep a white background and forest text so the native popup remains legible in dark mode.</p>
         </div>
         <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
             <p class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70 mb-3">Checkbox</p>
