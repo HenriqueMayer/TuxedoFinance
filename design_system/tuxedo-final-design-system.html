@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<!--
+  Tuxedo Finance - FINAL DESIGN SYSTEM (merged)
+  Fusion of:
+    * Haven & Hound visual language (layout, cream/forest/caramel palette,
+      Playfair Display headings, pill buttons, rounded-3xl cards, motion)
+    * Tuxedo Finance functional components (navbar structure, KPIs,
+      transactions, outlook table, forms, alerts, pagination, charts)
+  Derived tokens documented in Section 2: forest.deep, sage, terracotta.
+  Theme toggle is live (data-theme-toggle wired by ../static/js/theme.js).
+-->
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuxedo Finance &mdash; Final Design System</title>
+    <link rel="icon" type="image/x-icon" href="../static/brand/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/brand/favicon-32.png">
+
+    <!-- Theme bootstrap (FOUC guard, adapted from base.html) -->
+    <script>
+        (function () {
+            var stored = localStorage.getItem('theme');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var isDark = stored ? stored === 'dark' : prefersDark;
+            document.documentElement.classList.toggle('dark', isDark);
+        })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Playfair+Display:ital,wght@0,400;0,500;1,400&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cream: { DEFAULT: '#FAF8F3', dark: '#EBE7DE' },
+                        forest: { DEFAULT: '#1A2E26', light: '#2A4338', deep: '#101E18' },
+                        caramel: { DEFAULT: '#B88A59', light: '#D4AD86' },
+                        sage: '#7FA08F',
+                        terracotta: { DEFAULT: '#A85D3C', light: '#C4825E' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        /* Custom scrollbar (Haven & Hound, recolored for both themes) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #FAF8F3; }
+        ::-webkit-scrollbar-thumb { background: #1A2E26; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-track { background: #101E18; }
+        .dark ::-webkit-scrollbar-thumb { background: #B88A59; }
+    </style>
+</head>
+<body class="min-h-screen bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-white dark:bg-forest-deep dark:text-cream">
+
+<!-- Documentation anchor nav -->
+<header class="fixed inset-x-0 top-0 z-[60] border-b border-forest/10 bg-white/90 backdrop-blur dark:border-cream/10 dark:bg-forest-deep/90">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+        <a href="#shell" class="flex shrink-0 items-center gap-2">
+            <img src="../static/brand/tuxedo-mark-256.png" alt="" class="h-7 w-7 rounded-lg object-cover">
+            <span class="text-xs uppercase tracking-[0.2em] font-medium">Tuxedo <span class="text-caramel">Finance</span></span>
+            <span class="hidden sm:inline text-[10px] uppercase tracking-widest text-forest/50 dark:text-cream/40">&mdash; Final Design System</span>
+        </a>
+        <div class="flex items-center gap-4 lg:gap-5 whitespace-nowrap overflow-x-auto text-[11px] uppercase tracking-widest font-medium">
+            <a href="#shell" class="hover:text-caramel transition-colors">Shell</a>
+            <a href="#typography" class="hover:text-caramel transition-colors">Type</a>
+            <a href="#colors" class="hover:text-caramel transition-colors">Colors</a>
+            <a href="#navigation" class="hover:text-caramel transition-colors">Nav</a>
+            <a href="#forms" class="hover:text-caramel transition-colors">Forms</a>
+            <a href="#data" class="hover:text-caramel transition-colors">Data</a>
+            <a href="#components" class="hover:text-caramel transition-colors">UI</a>
+            <a href="#layout" class="hover:text-caramel transition-colors">Layout</a>
+            <a href="#motion" class="hover:text-caramel transition-colors">Motion</a>
+            <a href="#icons" class="hover:text-caramel transition-colors">Icons</a>
+        </div>
+    </nav>
+</header>
+<div class="h-14"></div>
+
+<main class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
+
+<!-- ============================================================ -->
+<!-- SECTION 0 - APPLICATION SHELL                                -->
+<!-- ============================================================ -->
+<section id="shell" class="scroll-mt-20 pt-10 space-y-8">
+    <div class="max-w-3xl">
+        <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 0</span>
+        <h2 class="font-serif text-4xl lg:text-5xl tracking-tight font-normal">Application shell.</h2>
+        <p class="mt-4 text-base text-forest/70 dark:text-cream/70 leading-relaxed font-light">Every functional element of the current app &mdash; navbar, alerts, KPI grid, month navigation, panels, outlook table, footer &mdash; re-skinned with the Haven &amp; Hound language. Theme toggle, dropdowns and the mobile overlay are live.</p>
+    </div>
+
+    <div class="rounded-3xl border border-forest/10 dark:border-cream/10 max-h-[90vh] overflow-y-auto">
+    <!-- APP NAVBAR -->
+    <header class="sticky top-0 z-40 border-b border-forest/10 dark:border-cream/10 bg-cream/90 dark:bg-forest-deep/90 backdrop-blur">
+        <nav class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between gap-4">
+                <!-- Logo block (H&H style) -->
+                <a href="#shell" class="flex shrink-0 items-center gap-3 group">
+                    <img src="../static/brand/tuxedo-mark-256.png" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover ring-1 ring-forest/10 dark:ring-cream/20">
+                    <span class="hidden sm:block text-left leading-tight">
+                        <span class="block text-sm tracking-[0.2em] uppercase font-medium">Tuxedo</span>
+                        <span class="block text-xs tracking-[0.15em] uppercase text-caramel mt-0.5">Finance</span>
+                    </span>
+                </a>
+
+                <!-- Desktop links -->
+                <div class="hidden items-center gap-7 md:flex">
+                    <a href="#shell" class="relative pb-1 text-[11px] uppercase tracking-widest font-medium text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel">Dashboard</a>
+                    <a href="#" class="pb-1 text-[11px] uppercase tracking-widest font-medium text-forest/70 hover:text-caramel transition-colors dark:text-cream/70">Reports</a>
+                    <a href="#" class="pb-1 text-[11px] uppercase tracking-widest font-medium text-forest/70 hover:text-caramel transition-colors dark:text-cream/70">Transactions</a>
+                    <a href="#" class="pb-1 text-[11px] uppercase tracking-widest font-medium text-forest/70 hover:text-caramel transition-colors dark:text-cream/70">Categories</a>
+                    <a href="#" class="pb-1 text-[11px] uppercase tracking-widest font-medium text-forest/70 hover:text-caramel transition-colors dark:text-cream/70">Banks</a>
+                    <a href="#" class="pb-1 text-[11px] uppercase tracking-widest font-medium text-forest/70 hover:text-caramel transition-colors dark:text-cream/70">Investments</a>
+                </div>
+
+                <!-- User area (desktop) -->
+                <div class="hidden items-center gap-3 md:flex">
+                    <details class="relative" data-project-menu>
+                        <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10 [&::-webkit-details-marker]:hidden" aria-label="Project links" title="Project links">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9a3.75 3.75 0 1 1 6.544 2.5c-.916 1.023-2.272 1.48-2.272 3M12 18h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                            <span class="sr-only">Open project links</span>
+                        </summary>
+                        <div class="absolute right-0 z-50 mt-2 w-72 space-y-1 rounded-3xl bg-white p-3 shadow-lg border border-forest/10 dark:bg-forest dark:border-cream/10">
+                            <a href="https://github.com/HenriqueMayer/TuxedoFinance/issues/new" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-cream-dark dark:hover:bg-forest-light">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-caramel" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 10.5h.008v.008h-.008V10.5Zm3.367 0H12v.008h-.008V10.5Zm3.367 0h.008v.008h-.008V10.5ZM21 12c0 4.142-4.03 7.5-9 7.5a10.2 10.2 0 0 1-3.38-.563L3 20.25l1.575-4.2A6.8 6.8 0 0 1 3 12c0-4.142 4.03-7.5 9-7.5s9 3.358 9 7.5Z" /></svg>
+                                <span>Problems / Suggestions</span>
+                            </a>
+                            <details class="group">
+                                <summary class="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-cream-dark dark:hover:bg-forest-light [&::-webkit-details-marker]:hidden">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-caramel" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m0 0v2.25m0-2.25h6.75m-6.75 0H5.25M15 4.5v2.25m0 0V15m0-8.25h3.75M15 6.75H9" /></svg>
+                                    <span class="flex-1">Roadmap</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                                </summary>
+                                <div class="mx-3 mb-2 mt-1 rounded-2xl bg-cream p-3 text-sm text-forest/70 dark:bg-forest-deep dark:text-cream/70">
+                                    <p class="font-serif text-base text-forest dark:text-cream">Coming next</p>
+                                    <ul class="mt-2 list-disc space-y-1 pl-4 font-light">
+                                        <li>A personal Tuxedo assistant to review your finances.</li>
+                                        <li>Automatic monthly and annual yield calculations.</li>
+                                    </ul>
+                                </div>
+                            </details>
+                        </div>
+                    </details>
+                    <form action="#" method="post" class="inline-flex" aria-label="Language">
+                        <label class="sr-only" for="lang-desktop">Language</label>
+                        <select id="lang-desktop" name="language" class="h-10 rounded-full border border-forest/20 bg-transparent px-3 text-[11px] uppercase tracking-widest font-medium focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/20">
+                            <option value="en" selected>EN</option>
+                            <option value="pt-br">PT</option>
+                        </select>
+                    </form>
+                    <button type="button" data-theme-toggle aria-label="Toggle color theme" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
+                        <svg class="h-5 w-5 dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>
+                        <svg class="hidden h-5 w-5 dark:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
+                    </button>
+                    <span class="text-sm text-forest/60 dark:text-cream/60 font-light hidden lg:inline">demo-user</span>
+                    <form method="post" action="#">
+                        <button type="submit" class="rounded-full border border-forest/30 px-5 py-2 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">Log out</button>
+                    </form>
+                </div>
+
+                <!-- Mobile actions -->
+                <div class="flex items-center gap-2 md:hidden">
+                    <button id="menu-btn" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        <span class="sr-only">Toggle menu</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Mobile overlay menu -->
+    <div id="mobile-menu" class="fixed inset-0 bg-forest-deep z-50 transform translate-x-full transition-transform duration-500 ease-in-out flex flex-col justify-center items-center">
+        <button id="close-menu-btn" class="absolute top-6 right-6 p-2 text-cream hover:text-caramel transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12" /></svg>
+            <span class="sr-only">Close menu</span>
+        </button>
+        <div class="flex flex-col items-center gap-7 text-cream">
+            <a href="#shell" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">Dashboard</a>
+            <a href="#" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">Reports</a>
+            <a href="#" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">Transactions</a>
+            <a href="#" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">Categories</a>
+            <a href="#" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">Banks</a>
+            <a href="#" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">Investments</a>
+            <a href="#" class="font-serif text-3xl tracking-tight hover:text-caramel transition-colors mobile-link">Settings</a>
+            <div class="mt-4 flex items-center gap-4">
+                <form action="#" method="post" class="inline-flex" aria-label="Language">
+                    <label class="sr-only" for="lang-mobile">Language</label>
+                    <select id="lang-mobile" name="language" class="h-10 rounded-full border border-cream/30 bg-transparent px-3 text-[11px] uppercase tracking-widest font-medium text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                        <option value="en" selected>EN</option><option value="pt-br">PT</option>
+                    </select>
+                </form>
+                <button type="button" data-theme-toggle aria-label="Toggle color theme" class="flex h-10 w-10 items-center justify-center rounded-full border border-cream/30 hover:bg-cream/10 transition-colors text-cream">
+                    <svg class="h-5 w-5 dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>
+                    <svg class="hidden h-5 w-5 dark:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
+                </button>
+            </div>
+            <form method="post" action="#">
+                <button type="submit" class="mt-2 rounded-full border border-caramel px-8 py-3 text-xs uppercase tracking-widest font-medium text-caramel hover:bg-caramel hover:text-white transition-colors">Log out</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP MAIN (demo content) -->
+    <main class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+        <div class="space-y-3" role="status" aria-live="polite">
+            <div class="flex items-start gap-3 rounded-2xl border border-sage/40 bg-sage/10 px-4 py-3 text-sm text-forest dark:text-sage">
+                <p class="font-medium">Transaction created successfully.</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-2">August 2026 &middot; Current month</span>
+                <h1 class="font-serif text-4xl tracking-tight font-normal">Design System</h1>
+                <p class="mt-2 text-sm text-forest/60 dark:text-cream/60 font-light">Your cash flow at a glance, demo-user.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="#layout" class="inline-flex items-center rounded-full border border-forest px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/40 dark:hover:bg-cream dark:hover:text-forest">Layout patterns</a>
+                <a href="#components" class="group inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-white transition-colors hover:bg-caramel-light">
+                    New Transaction
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI grid -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+                <p class="text-[11px] uppercase tracking-widest text-forest/60 dark:text-cream/60">Current Balance</p>
+                <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums">$ 4,250.00</p>
+            </div>
+            <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+                <p class="text-[11px] uppercase tracking-widest text-forest/60 dark:text-cream/60">Income (month)</p>
+                <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums text-forest dark:text-sage">$ 3,200.00</p>
+            </div>
+            <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+                <p class="text-[11px] uppercase tracking-widest text-forest/60 dark:text-cream/60">Expenses (month)</p>
+                <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums text-terracotta dark:text-terracotta-light">$ 1,180.00</p>
+            </div>
+            <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+                <p class="text-[11px] uppercase tracking-widest text-forest/60 dark:text-cream/60">Investments (month)</p>
+                <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums text-caramel dark:text-caramel-light">$ 300.00</p>
+            </div>
+            <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+                <p class="text-[11px] uppercase tracking-widest text-forest/60 dark:text-cream/60">Balance (month)</p>
+                <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums text-forest dark:text-sage">$ 1,850.00</p>
+            </div>
+            <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+                <p class="text-[11px] uppercase tracking-widest text-forest/60 dark:text-cream/60">Projected (end of month)</p>
+                <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums">$ 6,100.00</p>
+            </div>
+        </div>
+        <p class="-mt-4 text-xs text-forest/50 dark:text-cream/50 font-light"><span class="font-semibold">?</span> Projected closing includes this month's income and expenses. Credit-card purchases belong to the statement month.</p>
+    </main>
+
+    <!-- APP FOOTER -->
+    <footer class="bg-forest text-cream/70">
+        <div class="mx-auto flex w-full max-w-7xl flex-col items-center gap-3 px-4 py-10 text-center sm:flex-row sm:justify-between sm:gap-4 sm:text-left sm:px-6 lg:px-8">
+            <div class="flex items-center gap-2">
+                <img src="../static/brand/tuxedo-mark-256.png" alt="" class="h-8 w-8 rounded-lg object-cover">
+                <span class="text-sm tracking-[0.2em] uppercase font-medium text-cream">Tuxedo <span class="text-caramel">Finance</span></span>
+            </div>
+            <p class="font-serif italic text-sm text-cream/80">Your money, in black and white.</p>
+            <p class="text-xs font-light">&copy; 2026 <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer" class="hover:text-caramel transition-colors">HenriqueMayer</a>. All rights reserved.</p>
+        </div>
+    </footer>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 1 - TYPOGRAPHY                                       -->
+<!-- ============================================================ -->
+<section id="typography" class="scroll-mt-20 mt-16 py-12 rounded-3xl bg-white shadow-sm dark:bg-forest">
+    <div class="px-6 sm:px-10 space-y-6">
+        <div>
+            <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 1</span>
+            <h2 class="font-serif text-4xl tracking-tight font-normal">Typography.</h2>
+            <p class="mt-4 text-base text-forest/70 dark:text-cream/70 leading-relaxed font-light max-w-2xl">Serif display: Playfair Display 400/500 + italic for headings and quotes. Sans: Inter 300&ndash;600 for body, labels and all numeric data (tabular-nums). Eyebrows are Inter uppercase tracking-widest in caramel.</p>
+        </div>
+
+        <div class="divide-y divide-forest/10 dark:divide-cream/10 border-y border-forest/10 dark:border-cream/10">
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-end sm:justify-between">
+                <h3 class="font-serif text-5xl lg:text-7xl tracking-tight leading-[1.1] font-normal">Your money,<br><span class="italic text-caramel">elegantly tracked.</span></h3>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Hero Title &middot; serif &middot; 48&rarr;72px / 1.1</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-end sm:justify-between">
+                <div><p class="text-caramel uppercase tracking-widest text-xs font-medium mb-2">August 2026 &middot; Current month</p>
+                <h3 class="font-serif text-4xl tracking-tight font-normal">Page Title</h3></div>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Eyebrow + Page Title &middot; serif 36px / 40px</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-end sm:justify-between">
+                <h3 class="font-serif text-2xl tracking-tight">Card Title</h3>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Card / Panel Title &middot; serif 24px / 32px</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-end sm:justify-between">
+                <h4 class="font-serif text-xl tracking-tight">Sub-card Title</h4>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Sub-title &middot; serif 20px / 28px</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-center sm:justify-between">
+                <p class="whitespace-nowrap text-2xl font-bold tabular-nums text-caramel dark:text-caramel-light">$ 300.00</p>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Stat Value &middot; Inter bold tabular-nums 24px / 32px</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-center sm:justify-between">
+                <p class="max-w-lg text-base leading-relaxed font-light">A calm, focused home for understanding your finances &mdash; every record categorized, every month projected.</p>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Body &middot; Inter light 16px / 24px</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-center sm:justify-between">
+                <p class="max-w-lg text-sm font-light">Groceries &middot; Gold Card &middot; Credit Card &middot; Aug 22, 2026</p>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Body Small &middot; 14px / 20px light</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-center sm:justify-between">
+                <label class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Amount <span class="text-terracotta">*</span></label>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Form Label &middot; 12px uppercase tracking-widest</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-center sm:justify-between">
+                <p role="alert" class="text-sm text-terracotta dark:text-terracotta-light">This field is required.</p>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Error Message &middot; 14px terracotta</span>
+            </div>
+            <div class="flex flex-col gap-2 py-6 sm:flex-row sm:items-center sm:justify-between">
+                <p class="font-serif italic text-base leading-relaxed">&ldquo;Clear money, elegantly presented.&rdquo;</p>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Quote &middot; serif italic 16px</span>
+            </div>
+            <div class="flex flex-col gap-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-xs text-forest/50 dark:text-cream/50 font-light"><span class="font-semibold">?</span> Projected closing includes this month's income and expenses.</p>
+                <span class="shrink-0 text-sm text-forest/60 dark:text-cream/60">Footnote &middot; 12px light</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 - COLORS & SEMANTIC STATES                         -->
+<!-- ============================================================ -->
+<section id="colors" class="scroll-mt-20 mt-16 py-12 rounded-3xl bg-forest text-cream relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-1/2 h-full bg-forest-light/20 rounded-l-full blur-3xl"></div>
+    <div class="relative px-6 sm:px-10 space-y-8">
+        <div class="max-w-3xl">
+            <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 2</span>
+            <h2 class="font-serif text-4xl tracking-tight font-normal">Palette &amp; semantics.</h2>
+            <p class="mt-4 text-base text-cream/80 leading-relaxed font-light">Base palette from Haven &amp; Hound; derived tokens (<span class="font-medium">forest.deep, sage, terracotta</span>) extend it for the dark theme and the remapped financial semantics.</p>
+        </div>
+
+        <h3 class="font-serif text-2xl tracking-tight">2.1 &mdash; Core tokens</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-cream"></div><div class="p-5"><p class="font-serif text-lg text-forest">cream #FAF8F3</p><p class="text-sm text-forest/70 font-light">page bg &middot; icon chips</p></div></div>
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-cream-dark"></div><div class="p-5"><p class="font-serif text-lg text-forest">cream.dark #EBE7DE</p><p class="text-sm text-forest/70 font-light">selected rows &middot; secondary pills</p></div></div>
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-forest"></div><div class="p-5"><p class="font-serif text-lg text-forest">forest #1A2E26</p><p class="text-sm text-forest/70 font-light">primary text &middot; dark surfaces &middot; income</p></div></div>
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-forest-light"></div><div class="p-5"><p class="font-serif text-lg text-forest">forest.light #2A4338</p><p class="text-sm text-forest/70 font-light">hover fills &middot; elevated dark cards</p></div></div>
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-forest-deep"></div><div class="p-5"><p class="font-serif text-lg text-forest">forest.deep #101E18 <span class="text-[10px] uppercase tracking-widest text-caramel">&mdash; new</span></p><p class="text-sm text-forest/70 font-light">dark page background</p></div></div>
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-caramel"></div><div class="p-5"><p class="font-serif text-lg text-forest">caramel #B88A59</p><p class="text-sm text-forest/70 font-light">primary actions &middot; investment &middot; accents</p></div></div>
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-caramel-light"></div><div class="p-5"><p class="font-serif text-lg text-forest">caramel.light #D4AD86</p><p class="text-sm text-forest/70 font-light">primary hover &middot; investment on dark</p></div></div>
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-sage"></div><div class="p-5"><p class="font-serif text-lg text-forest">sage #7FA08F <span class="text-[10px] uppercase tracking-widest text-caramel">&mdash; new</span></p><p class="text-sm text-forest/70 font-light">income on dark &middot; positive charts</p></div></div>
+            <div class="bg-white rounded-3xl overflow-hidden"><div class="h-24 bg-terracotta"></div><div class="p-5"><p class="font-serif text-lg text-forest">terracotta #A85D3C <span class="text-[10px] uppercase tracking-widest text-caramel">&mdash; new</span></p><p class="text-sm text-forest/70 font-light">expense &middot; danger (light variant #C4825E)</p></div></div>
+        </div>
+
+        <h3 class="font-serif text-2xl tracking-tight">2.2 &mdash; Semantic mapping (light / dark)</h3>
+        <div class="overflow-x-auto rounded-3xl bg-white text-forest shadow-lg">
+            <table class="w-full min-w-[52rem] text-sm">
+                <thead>
+                    <tr class="border-b border-forest/10 text-left">
+                        <th scope="col" class="px-5 py-3 text-[11px] uppercase tracking-widest font-medium text-forest/60">Function</th>
+                        <th scope="col" class="px-5 py-3 text-[11px] uppercase tracking-widest font-medium text-forest/60">Badge &middot; light</th>
+                        <th scope="col" class="px-5 py-3 text-[11px] uppercase tracking-widest font-medium text-forest/60">Badge &middot; dark</th>
+                        <th scope="col" class="px-5 py-3 text-[11px] uppercase tracking-widest font-medium text-forest/60">Alert</th>
+                        <th scope="col" class="px-5 py-3 text-[11px] uppercase tracking-widest font-medium text-forest/60">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-forest/10">
+                    <tr>
+                        <td class="px-5 py-3 font-medium">Income</td>
+                        <td class="px-5 py-3"><span class="inline-flex items-center rounded-full bg-forest/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-forest">Income</span></td>
+                        <td class="px-5 py-3"><span class="inline-flex items-center rounded-full bg-sage/15 px-3 py-1 text-[11px] font-semibold tracking-wide text-sage">Income</span></td>
+                        <td class="px-5 py-3"><div class="inline-flex rounded-xl border border-sage/40 bg-sage/10 px-3 py-1.5 text-xs">Saved successfully.</div></td>
+                        <td class="whitespace-nowrap px-5 py-3 font-semibold tabular-nums">$ 3,200.00</td>
+                    </tr>
+                    <tr>
+                        <td class="px-5 py-3 font-medium">Expense</td>
+                        <td class="px-5 py-3"><span class="inline-flex items-center rounded-full bg-terracotta/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-terracotta">Expense</span></td>
+                        <td class="px-5 py-3"><span class="inline-flex items-center rounded-full bg-terracotta/15 px-3 py-1 text-[11px] font-semibold tracking-wide text-terracotta-light">Expense</span></td>
+                        <td class="px-5 py-3"><div class="inline-flex rounded-xl border border-terracotta/40 bg-terracotta/10 px-3 py-1.5 text-xs text-terracotta">Could not delete.</div></td>
+                        <td class="whitespace-nowrap px-5 py-3 font-semibold tabular-nums text-terracotta">-$ 1,180.00</td>
+                    </tr>
+                    <tr>
+                        <td class="px-5 py-3 font-medium">Investment</td>
+                        <td class="px-5 py-3"><span class="inline-flex items-center rounded-full bg-caramel/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-caramel">Investment</span></td>
+                        <td class="px-5 py-3"><span class="inline-flex items-center rounded-full bg-caramel/15 px-3 py-1 text-[11px] font-semibold tracking-wide text-caramel-light">Investment</span></td>
+                        <td class="px-5 py-3"><div class="inline-flex rounded-xl border border-caramel/40 bg-caramel/10 px-3 py-1.5 text-xs text-caramel">Review this entry.</div></td>
+                        <td class="whitespace-nowrap px-5 py-3 font-semibold tabular-nums text-caramel">$ 300.00</td>
+                    </tr>
+                    <tr>
+                        <td class="px-5 py-3 font-medium">Info / neutral</td>
+                        <td class="px-5 py-3"><span class="inline-flex items-center rounded-full border border-forest/20 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest/70">Fixed</span></td>
+                        <td class="px-5 py-3"><span class="inline-flex items-center rounded-full border border-cream/30 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-cream/70 bg-forest">Fixed</span></td>
+                        <td class="px-5 py-3"><div class="inline-flex rounded-xl border border-forest/20 bg-cream px-3 py-1.5 text-xs">CSV imported with 42 categories.</div></td>
+                        <td class="whitespace-nowrap px-5 py-3 font-semibold tabular-nums">$ 4,250.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="font-serif text-2xl tracking-tight">2.3 &mdash; Surfaces &amp; effects</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm text-forest"><p class="font-serif text-lg">shadow-sm &rarr; hover:shadow-xl</p><p class="mt-1 text-sm text-forest/70 font-light">Cards lift on hover (300ms). Dark keeps flat forest surfaces.</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm text-forest"><p class="font-serif text-lg">blur-3xl glow</p><p class="mt-1 text-sm text-forest/70 font-light">bg-forest-light/20 rounded-l-full decorative shape (this section).</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm text-forest"><p class="font-serif text-lg">backdrop-blur bars</p><p class="mt-1 text-sm text-forest/70 font-light">Navbar: bg-cream/90 or bg-forest-deep/90 + backdrop-blur over content.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 - NAVIGATION                                       -->
+<!-- ============================================================ -->
+<section id="navigation" class="scroll-mt-20 mt-16 py-12 rounded-3xl bg-white shadow-sm dark:bg-forest">
+    <div class="px-6 sm:px-10 space-y-8">
+        <div>
+            <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 3</span>
+            <h2 class="font-serif text-4xl tracking-tight font-normal">Navigation.</h2>
+            <p class="mt-4 text-base text-forest/70 dark:text-cream/70 leading-relaxed font-light max-w-2xl">Active page: caramel text with a 1px caramel rule. Hover crossfades to caramel. Icon buttons are circles; dropdowns are white rounded-3xl panels. Mobile uses the forest overlay (Section 0).</p>
+        </div>
+
+        <div class="rounded-3xl border border-forest/10 dark:border-cream/10 p-6 sm:p-8">
+            <p class="text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60 mb-5">Link states</p>
+            <nav class="flex flex-wrap items-center gap-x-7 gap-y-4">
+                <a href="#navigation" class="relative pb-1 text-[11px] uppercase tracking-widest font-medium text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel">Dashboard</a>
+                <a href="#navigation" class="pb-1 text-[11px] uppercase tracking-widest font-medium text-forest/70 hover:text-caramel transition-colors dark:text-cream/70">Reports</a>
+                <span class="pb-1 text-[11px] uppercase tracking-widest font-medium text-caramel">Hovered state</span>
+                <a href="#navigation" aria-label="Settings" title="Settings" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.073.04.145.083.216.127.325.2.72.263 1.077.13l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.993a6.8 6.8 0 0 1 0 .255c-.008.38.137.753.43.994l1.003.827c.424.35.534.954.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.491l-1.217-.456c-.357-.133-.752-.07-1.077.13a6.8 6.8 0 0 1-.216.127c-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.8 6.8 0 0 1-.216-.127c-.325-.2-.72-.263-1.077-.13l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.241.438-.614.43-.994a6.8 6.8 0 0 1 0-.255c.008-.38-.137-.753-.43-.993l-1.003-.827a1.125 1.125 0 0 1-.26-1.431L4.856 6.38a1.125 1.125 0 0 1 1.37-.49l1.217.456c.357.133.752.07 1.077-.13.071-.044.143-.087.216-.127.332-.184.582-.496.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                </a>
+                <button type="button" onclick="(function(){var m=document.getElementById('mobile-menu');m.classList.remove('translate-x-full');document.body.style.overflow='hidden';})()" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                <span class="text-xs text-forest/50 dark:text-cream/50 font-light">&larr; opens the live overlay</span>
+            </nav>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- Dropdown panel -->
+            <div class="rounded-3xl border border-forest/10 dark:border-cream/10 p-6 sm:p-8">
+                <p class="text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60 mb-5">Dropdown menu (open by default)</p>
+                <div class="w-72 space-y-1 rounded-3xl bg-white p-3 shadow-lg border border-forest/10 dark:bg-forest dark:border-cream/10 relative z-10">
+                    <a href="#" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-cream-dark dark:hover:bg-forest-light">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-caramel" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 10.5h.008v.008h-.008V10.5Zm3.367 0H12v.008h-.008V10.5Zm3.367 0h.008v.008h-.008V10.5ZM21 12c0 4.142-4.03 7.5-9 7.5a10.2 10.2 0 0 1-3.38-.563L3 20.25l1.575-4.2A6.8 6.8 0 0 1 3 12c0-4.142 4.03-7.5 9-7.5s9 3.358 9 7.5Z" /></svg>
+                        Menu item with icon
+                    </a>
+                    <details class="group" open>
+                        <summary class="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-cream-dark dark:hover:bg-forest-light [&::-webkit-details-marker]:hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-caramel" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m0 0v2.25m0-2.25h6.75m-6.75 0H5.25M15 4.5v2.25m0 0V15m0-8.25h3.75M15 6.75H9" /></svg>
+                            <span class="flex-1">Grouped submenu</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                        </summary>
+                        <div class="mx-3 mb-2 mt-1 rounded-2xl bg-cream p-3 text-sm text-forest/70 dark:bg-forest-deep dark:text-cream/70">
+                            <p class="font-serif text-base">Nested panel</p>
+                            <ul class="mt-2 list-disc space-y-1 pl-4 font-light"><li>Nested content item.</li></ul>
+                        </div>
+                    </details>
+                    <div class="my-2 border-t border-forest/10 dark:border-cream/10"></div>
+                    <button type="button" class="block w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium text-terracotta transition-colors hover:bg-terracotta/10 dark:hover:bg-terracotta/20">Destructive action</button>
+                </div>
+            </div>
+
+            <!-- Month navigation + pagination -->
+            <div class="space-y-6">
+                <div class="rounded-3xl bg-cream p-6 dark:bg-forest-deep">
+                    <p class="text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60 mb-4">Month navigation card</p>
+                    <div class="flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-sm dark:bg-forest">
+                        <a href="#" aria-label="Previous month" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">&larr;</a>
+                        <div class="text-center">
+                            <p class="font-serif text-lg leading-tight">August 2026</p>
+                            <p class="text-[11px] uppercase tracking-widest text-forest/60 dark:text-cream/60 mt-1">Current month</p>
+                        </div>
+                        <a href="#" aria-label="Next month" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">&rarr;</a>
+                    </div>
+                    <a href="#" class="mt-3 inline-block text-[11px] uppercase tracking-widest font-medium text-caramel hover:text-forest dark:hover:text-cream transition-colors">Back to this month</a>
+                </div>
+
+                <div class="rounded-3xl bg-cream p-6 dark:bg-forest-deep">
+                    <p class="text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60 mb-4">Pagination &mdash; circular arrows, edges render as empty spans</p>
+                    <nav class="flex items-center justify-between gap-4" aria-label="Pagination">
+                        <a href="#" class="inline-flex items-center gap-2 rounded-full border border-forest/30 px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">Previous</a>
+                        <p class="text-sm text-forest/60 dark:text-cream/60 font-light">Page 2 of 5</p>
+                        <a href="#" class="inline-flex items-center gap-2 rounded-full border border-forest/30 px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">Next</a>
+                    </nav>
+                    <nav class="mt-4 flex items-center justify-between gap-4 opacity-60" aria-label="Pagination edges unavailable">
+                        <span></span><p class="text-sm font-light text-forest/60 dark:text-cream/60">Page 1 of 1</p><span></span>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 - FORMS                                            -->
+<!-- ============================================================ -->
+<section id="forms" class="scroll-mt-20 mt-16 py-12 rounded-3xl bg-cream-dark/60 dark:bg-forest-light/20 space-y-8">
+    <div class="px-6 sm:px-10">
+        <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 4</span>
+        <h2 class="font-serif text-4xl tracking-tight font-normal">Forms.</h2>
+        <p class="mt-4 text-base text-forest/70 dark:text-cream/70 leading-relaxed font-light max-w-2xl">Same field contract as the app (label, help text, errors). Inputs keep generous rounding with forest borders and caramel focus; labels become small caps eyebrows. Disabled/read-only variants do not exist in the application.</p>
+    </div>
+
+    <div class="px-6 sm:px-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div class="space-y-2 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <label for="fx-default" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Title <span class="text-terracotta">*</span></label>
+            <input id="fx-default" type="text" placeholder="e.g. Grocery shopping"
+                   class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-cream/20 dark:text-cream dark:placeholder:text-cream/40">
+            <p class="text-sm font-light text-forest/60 dark:text-cream/60">Default + helper text below.</p>
+        </div>
+        <div class="space-y-2 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <label for="fx-filled" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Amount <span class="text-terracotta">*</span></label>
+            <input id="fx-filled" type="number" step="0.01" min="0.01" value="120.00"
+                   class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-cream/20 dark:text-cream">
+            <p class="text-sm font-light text-forest/60 dark:text-cream/60">Filled (NumberInput step 0.01).</p>
+        </div>
+        <div class="space-y-2 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <label for="fx-error" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Title <span class="text-terracotta">*</span></label>
+            <input id="fx-error" type="text" aria-invalid="true" aria-describedby="fx-error-msg"
+                   class="w-full rounded-xl border border-terracotta/50 bg-white px-4 py-3 text-sm focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-terracotta/60 dark:text-cream">
+            <p id="fx-error-msg" role="alert" class="text-sm text-terracotta dark:text-terracotta-light">This field is required.</p>
+        </div>
+        <div class="space-y-2 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <label for="fx-search" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Search</label>
+            <input id="fx-search" type="search" placeholder="Category name"
+                   class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-cream/20 dark:text-cream dark:placeholder:text-cream/40">
+            <p class="text-sm font-light text-forest/60 dark:text-cream/60">Search input (filters form).</p>
+        </div>
+        <div class="space-y-2 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <label for="fx-date" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Date <span class="text-terracotta">*</span></label>
+            <div class="flex gap-2">
+                <input id="fx-date" type="date" class="min-w-0 flex-1 rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-cream/20 dark:text-cream">
+                <button type="button" data-open-date-picker class="shrink-0 rounded-xl border border-forest/20 px-4 text-xs uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/20 dark:hover:bg-cream dark:hover:text-forest">Select date</button>
+                <input type="date" class="sr-only" tabindex="-1" aria-hidden="true" data-native-date-picker>
+            </div>
+            <p class="text-sm font-light text-forest/60 dark:text-cream/60">Date field + companion picker button.</p>
+        </div>
+        <div class="space-y-2 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <label for="fx-textarea" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Notes</label>
+            <textarea id="fx-textarea" rows="4" placeholder="Optional notes"
+                      class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-cream/20 dark:text-cream dark:placeholder:text-cream/40"></textarea>
+            <p class="text-sm font-light text-forest/60 dark:text-cream/60">Textarea (rows=4).</p>
+        </div>
+        <div class="space-y-2 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <label for="fx-select" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Level</label>
+            <select id="fx-select" class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-cream/20 dark:text-cream">
+                <option value="">All levels</option><option value="top">Top-level</option><option value="sub">Subcategories</option>
+            </select>
+            <p class="text-sm font-light text-forest/60 dark:text-cream/60">Select with empty placeholder option.</p>
+        </div>
+        <div class="space-y-2 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <p class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Compact selects</p>
+            <div class="flex flex-wrap gap-3 pt-1">
+                <select class="h-10 rounded-full border border-forest/20 bg-transparent px-3 text-[11px] uppercase tracking-widest font-medium focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/20 dark:text-cream">
+                    <option selected>EN</option><option>PT</option>
+                </select>
+                <select class="h-10 rounded-full border border-forest/20 bg-transparent px-3 text-[11px] uppercase tracking-widest font-medium focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/20 dark:text-cream">
+                    <option>Aug 2026</option><option>Jul 2026</option>
+                </select>
+            </div>
+            <p class="text-sm font-light text-forest/60 dark:text-cream/60">Navbar pill selects (language / month).</p>
+        </div>
+        <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+            <p class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70 mb-3">Checkbox</p>
+            <div class="flex items-start gap-3 rounded-2xl bg-cream-dark/70 p-4 dark:bg-forest-deep">
+                <input type="checkbox" checked class="mt-0.5 h-5 w-5 accent-caramel">
+                <div>
+                    <label class="block text-sm font-medium">Fixed transaction</label>
+                    <p class="text-sm font-light text-forest/60 dark:text-cream/60">Repeat every month until canceled.</p>
+                </div>
+            </div>
+            <p class="mt-2 text-sm font-light text-forest/60 dark:text-cream/60">accent-caramel. No radio or switch exists in the app.</p>
+        </div>
+    </div>
+
+    <!-- Login composition -->
+    <div class="px-6 sm:px-10">
+        <div class="mx-auto max-w-md">
+            <div class="mb-8 text-center">
+                <p class="text-caramel uppercase tracking-widest text-xs font-medium mb-2">Welcome back</p>
+                <h3 class="font-serif text-4xl tracking-tight font-normal">Log in.</h3>
+                <p class="mt-2 text-sm font-light text-forest/60 dark:text-cream/60">Log in to see your dashboard.</p>
+            </div>
+            <form method="post" class="space-y-5 rounded-3xl bg-white p-8 shadow-lg dark:bg-forest" novalidate onsubmit="return false">
+                <p class="text-sm text-terracotta dark:text-terracotta-light">Your username and password didn't match. Please try again.</p>
+                <div class="space-y-2">
+                    <label for="fx-user" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Username <span class="text-terracotta">*</span></label>
+                    <input id="fx-user" type="text" class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-cream/20 dark:text-cream">
+                </div>
+                <div class="space-y-2">
+                    <label for="fx-pass" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Password <span class="text-terracotta">*</span></label>
+                    <input id="fx-pass" type="password" class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest-deep dark:border-cream/20 dark:text-cream">
+                </div>
+                <button type="submit" class="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-caramel px-6 py-3 text-xs uppercase tracking-widest font-medium text-white transition-colors hover:bg-caramel-light">
+                    Log in
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
+                </button>
+            </form>
+            <p class="mt-6 text-center text-sm font-light text-forest/70 dark:text-cream/70">
+                Don't have an account?
+                <a href="#" class="font-medium text-caramel underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-caramel/40 rounded">Sign up</a>
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 - TABLES & DATA DISPLAY                            -->
+<!-- ============================================================ -->
+<section id="data" class="scroll-mt-20 mt-16 py-12 rounded-3xl bg-white shadow-sm dark:bg-forest space-y-10">
+    <div class="px-6 sm:px-10">
+        <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 5</span>
+        <h2 class="font-serif text-4xl tracking-tight font-normal">Tables &amp; data display.</h2>
+        <p class="mt-4 text-base text-forest/70 dark:text-cream/70 leading-relaxed font-light max-w-2xl">Lists become divided white cards; the Outlook table lives in a rounded-3xl card with small-caps headers; charts stay server-rendered SVG, recolored to caramel / forest / sage / terracotta.</p>
+    </div>
+
+    <!-- Panels -->
+    <div class="px-6 sm:px-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="rounded-3xl bg-cream p-8 dark:bg-forest-deep">
+            <h3 class="font-serif text-2xl tracking-tight">Bank accounts today</h3>
+            <p class="mt-1 text-sm font-light text-forest/60 dark:text-cream/60">Native balances from opening balance and posted movements.</p>
+            <ul class="mt-5 divide-y divide-forest/10 dark:divide-cream/10">
+                <li class="flex items-center justify-between gap-4 py-3.5">
+                    <span class="text-sm font-medium">Checking &middot; Inter</span>
+                    <span class="shrink-0 tabular-nums text-sm">BRL 4,250.00</span>
+                </li>
+                <li class="flex items-center justify-between gap-4 py-3.5">
+                    <span class="text-sm font-medium">Savings &middot; Nubank</span>
+                    <span class="shrink-0 tabular-nums text-sm">BRL 12,000.00</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="rounded-3xl bg-cream p-8 dark:bg-forest-deep">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="font-serif text-2xl tracking-tight">Open and scheduled invoices</h3>
+                    <p class="mt-1 text-sm font-light text-forest/60 dark:text-cream/60">Card purchases affect cash only on the invoice due date.</p>
+                </div>
+                <span class="shrink-0 rounded-full border border-caramel px-3 py-1 text-[10px] uppercase tracking-widest font-medium text-caramel">Next: Aug 25</span>
+            </div>
+            <ul class="mt-5 divide-y divide-forest/10 dark:divide-cream/10">
+                <li class="flex items-center justify-between gap-4 py-3.5">
+                    <span>
+                        <span class="block text-sm font-medium">Inter &gt; Gold Card</span>
+                        <span class="text-xs font-light text-forest/60 dark:text-cream/60">Due Sep 10 <strong class="uppercase tracking-widest text-[10px] text-terracotta dark:text-terracotta-light">Overdue</strong></span>
+                    </span>
+                    <span class="shrink-0 tabular-nums text-sm font-semibold text-caramel dark:text-caramel-light">BRL 940.00</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Transaction list -->
+    <div class="px-6 sm:px-10">
+        <p class="mb-4 text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">Transaction rows (ul.divide-y) &mdash; remapped badges, amounts, installment note, row actions</p>
+        <div class="rounded-3xl bg-cream p-2 dark:bg-forest-deep">
+            <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+                <li class="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="space-y-1.5">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="font-serif text-lg tracking-tight">Salary</p>
+                            <span class="inline-flex items-center rounded-full bg-forest/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-forest dark:bg-sage/15 dark:text-sage">Income</span>
+                        </div>
+                        <p class="text-sm font-light text-forest/60 dark:text-cream/60">Salary &middot; Checking Account &middot; Account transfer &middot; Aug 5, 2026</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="whitespace-nowrap text-lg font-bold tabular-nums text-forest dark:text-sage">+ BRL 3,200.00</p>
+                        <div class="flex items-center gap-2">
+                            <a href="#" class="rounded-full border border-forest/30 px-4 py-2 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">Edit</a>
+                            <a href="#" class="rounded-full bg-terracotta/10 px-4 py-2 text-[11px] uppercase tracking-widest font-medium text-terracotta ring-1 ring-inset ring-terracotta/30 transition-colors hover:bg-terracotta/20 dark:text-terracotta-light">Delete</a>
+                        </div>
+                    </div>
+                </li>
+                <li class="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="space-y-1.5">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="font-serif text-lg tracking-tight">Notebook</p>
+                            <span class="inline-flex items-center rounded-full bg-terracotta/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-terracotta dark:text-terracotta-light">Expense</span>
+                            <span class="inline-flex items-center rounded-full border border-forest/20 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest/70 dark:border-cream/25 dark:text-cream/70">12x</span>
+                        </div>
+                        <p class="text-sm font-light text-forest/60 dark:text-cream/60">Electronics &middot; Gold Card &middot; Credit Card &middot; Aug 12, 2026</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="sm:text-right">
+                            <p class="whitespace-nowrap text-lg font-bold tabular-nums text-terracotta dark:text-terracotta-light">- BRL 6,000.00</p>
+                            <p class="whitespace-nowrap text-sm tabular-nums font-light text-forest/60 dark:text-cream/60">12x BRL 500.00 / month</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="#" class="rounded-full border border-forest/30 px-4 py-2 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">Edit</a>
+                            <a href="#" class="rounded-full bg-terracotta/10 px-4 py-2 text-[11px] uppercase tracking-widest font-medium text-terracotta ring-1 ring-inset ring-terracotta/30 transition-colors hover:bg-terracotta/20 dark:text-terracotta-light">Delete</a>
+                        </div>
+                    </div>
+                </li>
+                <li class="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="space-y-1.5">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="font-serif text-lg tracking-tight">Index fund contribution</p>
+                            <span class="inline-flex items-center rounded-full bg-caramel/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-caramel dark:text-caramel-light">Investment</span>
+                        </div>
+                        <p class="text-sm font-light text-forest/60 dark:text-cream/60">Investments &middot; Brokerage &middot; Account transfer &middot; Aug 15, 2026</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="whitespace-nowrap text-lg font-bold tabular-nums text-caramel dark:text-caramel-light">- BRL 300.00</p>
+                        <div class="flex items-center gap-2">
+                            <a href="#" class="rounded-full border border-forest/30 px-4 py-2 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">Edit</a>
+                            <a href="#" class="rounded-full bg-terracotta/10 px-4 py-2 text-[11px] uppercase tracking-widest font-medium text-terracotta ring-1 ring-inset ring-terracotta/30 transition-colors hover:bg-terracotta/20 dark:text-terracotta-light">Delete</a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Outlook table -->
+    <div class="px-6 sm:px-10 space-y-4">
+        <div>
+            <h3 class="font-serif text-2xl tracking-tight">Outlook table</h3>
+            <p class="mt-1 text-sm font-light text-forest/60 dark:text-cream/60">Selected-month highlight, small-caps header, semantic right-aligned columns, "Now" pill.</p>
+        </div>
+        <div class="overflow-x-auto rounded-3xl bg-cream p-2 dark:bg-forest-deep">
+            <table class="w-full min-w-[40rem] text-sm">
+                <thead>
+                    <tr class="border-b border-forest/10 text-left dark:border-cream/10">
+                        <th scope="col" class="px-6 py-4 text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">Month</th>
+                        <th scope="col" class="px-6 py-4 text-right text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">Income</th>
+                        <th scope="col" class="px-6 py-4 text-right text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">Expenses</th>
+                        <th scope="col" class="px-6 py-4 text-right text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">Investments</th>
+                        <th scope="col" class="px-6 py-4 text-right text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">Net</th>
+                        <th scope="col" class="px-6 py-4 text-right text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">Projected balance</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-forest/10 dark:divide-cream/10">
+                    <tr class="bg-white dark:bg-forest-light/40">
+                        <td class="whitespace-nowrap px-6 py-3.5 font-medium rounded-l-2xl">
+                            Aug 2026
+                            <span class="ml-2 inline-flex items-center rounded-full border border-forest/20 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-widest text-forest/70 dark:border-cream/25 dark:text-cream/70">Now</span>
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-forest dark:text-sage">$ 3,200.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-terracotta dark:text-terracotta-light">$ 1,180.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-caramel dark:text-caramel-light">$ 300.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right font-semibold tabular-nums">$ 1,720.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right font-semibold tabular-nums rounded-r-2xl">$ 5,970.00</td>
+                    </tr>
+                    <tr>
+                        <td class="whitespace-nowrap px-6 py-3.5 font-medium">Sep 2026</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-forest dark:text-sage">$ 3,200.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-terracotta dark:text-terracotta-light">$ 1,680.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-caramel dark:text-caramel-light">$ 300.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right font-semibold tabular-nums text-terracotta dark:text-terracotta-light">-$ 1,220.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right font-semibold tabular-nums">$ 4,750.00</td>
+                    </tr>
+                    <tr>
+                        <td class="whitespace-nowrap px-6 py-3.5 font-medium">Oct 2026</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-forest dark:text-sage">$ 3,200.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-terracotta dark:text-terracotta-light">$ 980.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right tabular-nums text-caramel dark:text-caramel-light">$ 300.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right font-semibold tabular-nums">$ 1,920.00</td>
+                        <td class="whitespace-nowrap px-6 py-3.5 text-right font-semibold tabular-nums">$ 6,670.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Empty state + chart wrapper -->
+    <div class="px-6 sm:px-10 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div class="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-forest/20 dark:border-cream/20 p-12 text-center">
+            <span class="flex h-14 w-14 items-center justify-center rounded-full bg-cream-dark text-caramel dark:bg-forest-light" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-19.5 0v6a2.25 2.25 0 002.25 2.25h15a2.25 2.25 0 002.25-2.25v-6m-19.5 0h4.5a2.25 2.25 0 011.591.659l1.09 1.09a2.25 2.25 0 001.591.659h4.5a2.25 2.25 0 001.591-.659l1.09-1.09a2.25 2.25 0 011.591-.659h4.5" /></svg>
+            </span>
+            <div class="space-y-1.5">
+                <p class="font-serif text-xl tracking-tight">No transactions yet</p>
+                <p class="mx-auto max-w-sm text-sm font-light text-forest/60 dark:text-cream/60">Record your first transaction to start tracking your cash flow.</p>
+            </div>
+            <a href="#" class="group mt-2 inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-white transition-colors hover:bg-caramel-light">New Transaction
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
+            </a>
+        </div>
+
+        <section class="space-y-4 rounded-3xl bg-cream p-8 dark:bg-forest-deep">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h3 class="font-serif text-2xl tracking-tight">Balance evolution</h3>
+                    <p class="mt-1 text-sm font-light text-forest/60 dark:text-cream/60">Server-rendered SVG (zero JS). Bars below illustrate the wrapper: primary caramel, secondary forest/sage, negatives terracotta.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="#" aria-label="Previous window" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">&larr;</a>
+                    <a href="#" aria-label="Next window" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">&rarr;</a>
+                </div>
+            </div>
+            <div class="flex h-44 items-end gap-2 rounded-2xl bg-white p-4 shadow-sm dark:bg-forest">
+                <div class="w-full flex-1 self-end"><div class="rounded-t-md h-2/5 bg-forest/50 hover:bg-forest transition-colors dark:bg-sage/50 dark:hover:bg-sage"></div></div>
+                <div class="w-full flex-1 self-end"><div class="rounded-t-md h-3/5 bg-forest/50 hover:bg-forest transition-colors dark:bg-sage/50 dark:hover:bg-sage"></div></div>
+                <div class="relative w-full flex-1 self-end group/hl"><div class="rounded-t-md w-full h-4/5 bg-caramel transition-colors hover:bg-caramel-light"></div><div class="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-forest px-3 py-1.5 text-xs text-cream opacity-0 transition-opacity duration-300 group-hover/hl:opacity-100">Aug 2026 &middot; $ 1,720.00</div></div>
+                <div class="w-full flex-1 self-end"><div class="rounded-t-md h-1/2 bg-terracotta/60 hover:bg-terracotta transition-colors dark:bg-terracotta-light/60"></div></div>
+                <div class="w-full flex-1 self-end"><div class="rounded-t-md h-3/4 bg-forest/50 hover:bg-forest transition-colors dark:bg-sage/50 dark:hover:bg-sage"></div></div>
+            </div>
+        </section>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 - UI COMPONENTS                                    -->
+<!-- ============================================================ -->
+<section id="components" class="scroll-mt-20 mt-16 py-12 rounded-3xl bg-forest text-cream relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-1/2 h-full bg-forest-light/20 rounded-l-full blur-3xl"></div>
+    <div class="relative px-6 sm:px-10 space-y-8">
+        <div>
+            <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 6</span>
+            <h2 class="font-serif text-4xl tracking-tight font-normal">Components.</h2>
+            <p class="mt-4 text-base text-cream/80 leading-relaxed font-light max-w-2xl">All button variants, badges, alerts and tooltips. Modals, JS toasts, avatars and skeletons do not exist in the application.</p>
+        </div>
+
+        <div class="rounded-3xl bg-white p-6 sm:p-8 text-forest dark:bg-forest-light/40">
+            <p class="mb-5 text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">6.1 &mdash; Button variants (hover/focus live)</p>
+            <div class="flex flex-wrap items-center gap-4">
+                <button type="button" class="group inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-white transition-colors hover:bg-caramel-light">
+                    Primary
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
+                </button>
+                <button type="button" class="inline-flex items-center rounded-full bg-forest px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-cream transition-colors hover:bg-forest-light dark:bg-cream dark:text-forest dark:hover:bg-cream-dark">Secondary solid</button>
+                <button type="button" class="inline-flex items-center rounded-full border border-forest px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/50 dark:text-cream dark:hover:bg-cream dark:hover:text-forest">Outline</button>
+                <button type="button" class="inline-flex items-center rounded-full bg-terracotta/10 px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-terracotta ring-1 ring-inset ring-terracotta/30 transition-colors hover:bg-terracotta/20 dark:text-terracotta-light">Danger soft</button>
+                <button type="button" class="inline-flex items-center rounded-full bg-terracotta px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-white transition-colors hover:bg-terracotta-light">Danger solid</button>
+                <a href="#" onclick="return false" class="group inline-flex items-center gap-2 text-[11px] uppercase tracking-widest font-medium text-caramel transition-colors hover:text-forest dark:hover:text-cream">
+                    Text link<span class="w-10 h-[1px] bg-caramel group-hover:w-16 transition-all duration-300"></span>
+                </a>
+                <button type="button" title="Project links" class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9a3.75 3.75 0 1 1 6.544 2.5c-.916 1.023-2.272 1.48-2.272 3M12 18h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                </button>
+            </div>
+            <p class="mt-4 text-xs font-light text-forest/60 dark:text-cream/60">One default pill size plus circular icon variant. No disabled/loading styling exists in the source.</p>
+        </div>
+
+        <div class="rounded-3xl bg-cream-dark/70 p-6 sm:p-8 !text-forest dark:!bg-forest-deep/60 dark:!text-cream">
+            <p class="mb-5 text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">6.2 &mdash; Badges &amp; status pills</p>
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="inline-flex items-center rounded-full bg-forest/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-forest dark:bg-sage/15 dark:text-sage">Income</span>
+                <span class="inline-flex items-center rounded-full bg-terracotta/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-terracotta dark:text-terracotta-light">Expense</span>
+                <span class="inline-flex items-center rounded-full bg-caramel/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-caramel dark:text-caramel-light">Investment</span>
+                <span class="inline-flex items-center rounded-full border border-forest/20 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest/70 dark:border-cream/25 dark:text-cream/70">Fixed</span>
+                <span class="inline-flex items-center rounded-full border border-forest/20 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest/70 dark:border-cream/25 dark:text-cream/70">Fixed &middot; until Sep 2026</span>
+                <span class="inline-flex items-center rounded-full border border-forest/20 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest/70 dark:border-cream/25 dark:text-cream/70">12x</span>
+                <span class="rounded-full border border-caramel px-3 py-1 text-[10px] uppercase tracking-widest font-medium text-caramel">Next: Aug 25</span>
+                <span class="rounded-full bg-caramel px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-white">Popular / New</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="rounded-3xl bg-white p-6 sm:p-8 text-forest dark:bg-forest-light/40">
+                <p class="mb-5 text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">6.3 &mdash; Alerts (messages partial)</p>
+                <div class="space-y-3" role="status" aria-live="polite">
+                    <div class="flex items-start gap-3 rounded-2xl border border-sage/40 bg-sage/10 px-4 py-3 text-sm"><p class="font-medium">Transaction saved successfully.</p></div>
+                    <div class="flex items-start gap-3 rounded-2xl border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-sm text-terracotta dark:text-terracotta-light"><p class="font-medium">Could not delete the category.</p></div>
+                    <div class="flex items-start gap-3 rounded-2xl border border-caramel/40 bg-caramel/10 px-4 py-3 text-sm text-caramel dark:text-caramel-light"><p class="font-medium">Review the highlighted fields.</p></div>
+                    <div class="flex items-start gap-3 rounded-2xl border border-forest/20 bg-cream-dark/60 px-4 py-3 text-sm dark:border-cream/20 dark:bg-forest-deep dark:text-cream/80"><p class="font-medium">CSV imported with 42 categories.</p></div>
+                    <div class="rounded-2xl border border-caramel/40 bg-caramel/10 p-4 text-sm text-forest dark:text-cream/90">
+                        Not included in consolidated totals because an exchange rate to the configured currency is missing: <strong>USD</strong>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="rounded-3xl bg-white p-6 sm:p-8 text-forest dark:bg-forest-light/40">
+                    <p class="mb-5 text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">6.4 &mdash; Tooltips (native title + chart pattern)</p>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <button type="button" title="Project links" class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream dark:border-cream/30">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9a3.75 3.75 0 1 1 6.544 2.5c-.916 1.023-2.272 1.48-2.272 3M12 18h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                        </button>
+                        <span class="group relative inline-block cursor-default rounded-full bg-caramel px-4 py-1.5 text-xs font-semibold text-white">Hover me
+                            <span class="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-forest px-3 py-1.5 text-xs text-cream opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-cream dark:text-forest">Aug 2026 &middot; $ 1,720.00</span>
+                        </span>
+                    </div>
+                    <p class="mt-3 text-xs font-light text-forest/60 dark:text-cream/60">Chart tooltip pill: rounded-full bg-forest text-cream, fade via opacity duration-300.</p>
+                </div>
+
+                <div class="rounded-3xl bg-white p-6 sm:p-8 text-forest dark:bg-forest-light/40">
+                    <p class="mb-5 text-[11px] uppercase tracking-widest font-medium text-forest/60 dark:text-cream/60">6.5 &mdash; Header action rows</p>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <a href="#" onclick="return false" class="group inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-white transition-colors hover:bg-caramel-light">New Transaction
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
+                        </a>
+                        <a href="#" onclick="return false" class="inline-flex items-center rounded-full border border-forest/30 px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">Clear filters</a>
+                        <a href="#" onclick="return false" class="inline-flex items-center rounded-full bg-terracotta/10 px-5 py-2.5 text-[11px] uppercase tracking-widest font-semibold text-terracotta ring-1 ring-inset ring-terracotta/30 transition-colors hover:bg-terracotta/20 dark:text-terracotta-light">Delete all</a>
+                    </div>
+                    <p class="mt-3 text-xs font-light text-forest/60 dark:text-cream/60">Primary + outline + destructive soft, exactly as the app's header rows compose them.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 7 - LAYOUT & SPACING                                 -->
+<!-- ============================================================ -->
+<section id="layout" class="scroll-mt-20 mt-16 space-y-6">
+    <div class="max-w-3xl">
+        <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 7</span>
+        <h2 class="font-serif text-4xl lg:text-5xl tracking-tight font-normal">Layout &amp; spacing.</h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="rounded-3xl bg-white p-8 shadow-sm dark:bg-forest">
+            <p class="text-caramel uppercase tracking-widest text-xs font-medium mb-3">Container</p>
+            <p class="font-serif text-xl">max-w-7xl mx-auto<br>px-4 sm:px-6 lg:px-8</p>
+            <p class="mt-2 text-sm font-light text-forest/60 dark:text-cream/60">Page rhythm: space-y-8; cards padded p-6 / p-8.</p>
+        </div>
+        <div class="rounded-3xl bg-white p-8 shadow-sm dark:bg-forest">
+            <p class="text-caramel uppercase tracking-widest text-xs font-medium mb-3">KPI grid</p>
+            <p class="font-serif text-xl">1 / sm:2 / lg:3 / xl:6 &middot; gap-4</p>
+            <p class="mt-2 text-sm font-light text-forest/60 dark:text-cream/60">White rounded-3xl shadow-sm cards; small-caps labels, bold tabular values.</p>
+        </div>
+        <div class="rounded-3xl bg-white p-8 shadow-sm dark:bg-forest">
+            <p class="text-caramel uppercase tracking-widest text-xs font-medium mb-3">Page header row</p>
+            <p class="font-serif text-xl">Eyebrow + serif title left,<br>pill actions right</p>
+            <p class="mt-2 text-sm font-light text-forest/60 dark:text-cream/60">sm:flex-row sm:items-end sm:justify-between, demoed in Section 0.</p>
+        </div>
+
+        <div class="rounded-3xl bg-white p-8 shadow-sm dark:bg-forest lg:col-span-2">
+            <p class="text-caramel uppercase tracking-widest text-xs font-medium mb-3">Pattern A &mdash; List screen (header + filter card + list card)</p>
+            <div class="space-y-4 rounded-2xl border border-dashed border-forest/20 p-5 dark:border-cream/20">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="font-serif text-2xl tracking-tight">Categories</p>
+                        <p class="mt-1 text-sm font-light text-forest/60 dark:text-cream/60">Organize your transactions with categories and subcategories.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="#" onclick="return false" class="inline-flex items-center rounded-full border border-forest/30 px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30">Export CSV</a>
+                        <a href="#" onclick="return false" class="group inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-white transition-colors hover:bg-caramel-light">New Category
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <form class="flex flex-col gap-3 rounded-3xl bg-cream p-5 dark:bg-forest-deep sm:flex-row sm:items-end" onsubmit="return false">
+                    <div class="min-w-[14rem] flex-[2] space-y-2">
+                        <label for="ly-search" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Search</label>
+                        <input id="ly-search" type="search" placeholder="Category name" class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest dark:border-cream/20 dark:text-cream dark:placeholder:text-cream/40">
+                    </div>
+                    <div class="min-w-[12rem] flex-1 space-y-2">
+                        <label for="ly-level" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">Level</label>
+                        <select id="ly-level" class="w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:bg-forest dark:border-cream/20 dark:text-cream"><option>All levels</option></select>
+                    </div>
+                    <button type="button" class="rounded-full border border-forest/30 px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30">Filter</button>
+                </form>
+                <div class="rounded-3xl bg-cream p-2 dark:bg-forest-deep">
+                    <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+                        <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div><p class="font-serif text-lg">Groceries</p><p class="mt-1 text-xs uppercase tracking-widest text-forest/50 dark:text-cream/50">Top-level category</p></div>
+                            <div class="flex items-center gap-2">
+                                <a href="#" onclick="return false" class="rounded-full border border-forest/30 px-4 py-2 text-[11px] uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30">Edit</a>
+                                <a href="#" onclick="return false" class="rounded-full bg-terracotta/10 px-4 py-2 text-[11px] uppercase tracking-widest font-medium text-terracotta ring-1 ring-inset ring-terracotta/30 transition-colors hover:bg-terracotta/20">Delete</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="rounded-3xl bg-white p-8 shadow-sm dark:bg-forest">
+                <p class="text-caramel uppercase tracking-widest text-xs font-medium mb-3">Pattern B &mdash; Form screen</p>
+                <p class="font-serif text-xl">mx-auto max-w-md<br>card p-6&ndash;p-8, actions bottom-left</p>
+                <p class="mt-2 text-sm font-light text-forest/60 dark:text-cream/60">Full live composition in Section 4 (login): Save = caramel pill full width.</p>
+            </div>
+            <div class="rounded-3xl bg-white p-8 shadow-sm dark:bg-forest">
+                <p class="text-caramel uppercase tracking-widest text-xs font-medium mb-3">Pattern C &mdash; Dashboard</p>
+                <p class="font-serif text-xl">KPIs &rarr; month card &rarr;<br>2 panels lg:grid-cols-2 &rarr; outlook table</p>
+                <p class="mt-2 text-sm font-light text-forest/60 dark:text-cream/60">Exactly the stack demoed live in Section 0's shell frame.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 8 - MOTION & INTERACTION                             -->
+<!-- ============================================================ -->
+<section id="motion" class="scroll-mt-20 mt-16 py-12 rounded-3xl bg-white shadow-sm dark:bg-forest">
+    <div class="px-6 sm:px-10 space-y-8">
+        <div>
+            <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 8</span>
+            <h2 class="font-serif text-4xl tracking-tight font-normal">Motion.</h2>
+            <p class="mt-4 text-base text-forest/70 dark:text-cream/70 leading-relaxed font-light max-w-2xl">Durations inherited from Haven &amp; Hound: 300ms for colors/shadows/opacity, 500ms ease-in-out for the overlay, 700ms reserved for image zoom (not used in the app UI). No custom keyframes. Everything below is interactive.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">Primary hover &mdash; color swap + icon nudge</p>
+                <button type="button" class="group inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-white transition-colors duration-300 hover:bg-caramel-light">Primary
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
+                </button>
+                <p class="mt-2 text-xs font-light text-forest/60 dark:text-cream/60">transition-colors duration-300</p>
+            </div>
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">Outline invert &mdash; fills with forest</p>
+                <button type="button" class="inline-flex items-center rounded-full border border-forest px-5 py-2.5 text-[11px] uppercase tracking-widest font-medium transition-colors duration-300 hover:bg-forest hover:text-cream dark:border-cream/40 dark:text-cream dark:hover:bg-cream dark:hover:text-forest">Outline</button>
+            </div>
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">Card lift &mdash; shadow grow</p>
+                <div class="flex h-20 cursor-default items-center justify-center rounded-3xl bg-cream shadow-sm transition-shadow duration-300 hover:shadow-xl dark:bg-forest-deep">
+                    <span class="text-xs uppercase tracking-widest text-forest/50 dark:text-cream/50">Hover the tile</span>
+                </div>
+                <p class="mt-2 text-xs font-light text-forest/60 dark:text-cream/60">shadow-sm hover:shadow-xl duration-300</p>
+            </div>
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">Nav link &mdash; rule appears on active, color fade on hover</p>
+                <nav class="flex items-center gap-6">
+                    <a href="#motion" class="relative pb-1 text-[11px] uppercase tracking-widest font-medium text-caramel after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel">Active</a>
+                    <a href="#motion" class="pb-1 text-[11px] uppercase tracking-widest font-medium text-forest/70 transition-colors hover:text-caramel dark:text-cream/70">Hover me</a>
+                </nav>
+            </div>
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">Dropdown chevron &mdash; rotate 180</p>
+                <details class="group w-max">
+                    <summary class="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-cream-dark dark:hover:bg-forest-light [&::-webkit-details-marker]:hidden">
+                        Roadmap
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-caramel transition group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                    </summary>
+                    <div class="mt-1 rounded-2xl bg-cream-dark/60 p-3 text-sm font-light dark:bg-forest-deep">Open state content.</div>
+                </details>
+            </div>
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">Tooltip fade &mdash; opacity 300ms</p>
+                <div class="group relative inline-block">
+                    <span class="cursor-default inline-block h-9 w-9 rounded-full bg-caramel"></span>
+                    <span class="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-forest px-3 py-1.5 text-xs text-cream opacity-0 transition-opacity duration-300 group-hover:opacity-100">$ 1,720.00</span>
+                </div>
+                <p class="mt-2 text-xs font-light text-forest/60 dark:text-cream/60">Same pattern as SVG chart points.</p>
+            </div>
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">Overlay slide &mdash; 500ms ease-in-out</p>
+                <button type="button" onclick="(function(){var m=document.getElementById('mobile-menu');m.classList.remove('translate-x-full');document.body.style.overflow='hidden';})()" class="rounded-full bg-forest px-6 py-2.5 text-[11px] uppercase tracking-widest font-medium text-cream transition-colors duration-300 hover:bg-forest-light">Open mobile menu</button>
+                <p class="mt-2 text-xs font-light text-forest/60 dark:text-cream/60">translate-x-full &rarr; translate-x-0, body scroll lock.</p>
+            </div>
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">Smooth anchor scroll</p>
+                <a href="#shell" class="group inline-flex items-center gap-2 text-[11px] uppercase tracking-widest font-medium text-caramel transition-colors hover:text-forest dark:hover:text-cream">Back to top<span class="w-10 h-[1px] bg-caramel group-hover:w-16 transition-all duration-300"></span></a>
+                <p class="mt-2 text-xs font-light text-forest/60 dark:text-cream/60">html.scroll-smooth (H&amp;H native).</p>
+            </div>
+            <div class="rounded-2xl border border-forest/10 p-6 dark:border-cream/10">
+                <p class="mb-3 text-sm font-medium">HTMX partial swaps</p>
+                <p class="text-xs font-light text-forest/60 dark:text-cream/60">Reports page swaps #reports-charts in place via hx-get / hx-target / hx-push-url with no-JS fallback; htmx.org@2.0.4 loaded deferred as in base.html.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 9 - ICONS                                            -->
+<!-- ============================================================ -->
+<section id="icons" class="scroll-mt-20 mt-16 mb-4 py-12 rounded-3xl bg-forest-deep text-cream relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-1/2 h-full bg-forest-light/20 rounded-l-full blur-3xl"></div>
+    <div class="relative px-6 sm:px-10 space-y-8">
+        <div>
+            <span class="text-caramel uppercase tracking-widest text-xs font-medium block mb-4">Section 9</span>
+            <h2 class="font-serif text-4xl tracking-tight font-normal">Icons.</h2>
+            <p class="mt-4 text-base text-cream/80 leading-relaxed font-light max-w-2xl">The application keeps its inline Heroicons-style SVGs (stroke currentColor), now inheriting the merged palette via text color classes. Stroke widths: 1.5 (empty state), 1.75 (settings, theme), 2 (menus/actions).</p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-6 w-6 text-caramel" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.073.04.145.083.216.127.325.2.72.263 1.077.13l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.993a6.8 6.8 0 0 1 0 .255c-.008.38.137.753.43.994l1.003.827c.424.35.534.954.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.491l-1.217-.456c-.357-.133-.752-.07-1.077.13a6.8 6.8 0 0 1-.216.127c-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.8 6.8 0 0 1-.216-.127c-.325-.2-.72-.263-1.077-.13l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.241.438-.614.43-.994a6.8 6.8 0 0 1 0-.255c.008-.38-.137-.753-.43-.993l-1.003-.827a1.125 1.125 0 0 1-.26-1.431L4.856 6.38a1.125 1.125 0 0 1 1.37-.49l1.217.456c.357.133.752.07 1.077-.13.071-.044.143-.087.216-.127.332-.184.582-.496.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">settings 1.75</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-6 w-6 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">menu 2</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-6 w-6 text-caramel" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9a3.75 3.75 0 1 1 6.544 2.5c-.916 1.023-2.272 1.48-2.272 3M12 18h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">project links 2</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-6 w-6 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 10.5h.008v.008h-.008V10.5Zm3.367 0H12v.008h-.008V10.5Zm3.367 0h.008v.008h-.008V10.5ZM21 12c0 4.142-4.03 7.5-9 7.5a10.2 10.2 0 0 1-3.38-.563L3 20.25l1.575-4.2A6.8 6.8 0 0 1 3 12c0-4.142 4.03-7.5 9-7.5s9 3.358 9 7.5Z" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">feedback 2</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-6 w-6 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m0 0v2.25m0-2.25h6.75m-6.75 0H5.25M15 4.5v2.25m0 0V15m0-8.25h3.75M15 6.75H9" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">roadmap 2</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-4 w-4 text-caramel transition group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">chevron h-4 2</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-6 w-6 text-sage" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-19.5 0v6a2.25 2.25 0 002.25 2.25h15a2.25 2.25 0 002.25-2.25v-6m-19.5 0h4.5a2.25 2.25 0 011.591.659l1.09 1.09a2.25 2.25 0 001.591.659h4.5a2.25 2.25 0 001.591-.659l1.09-1.09a2.25 2.25 0 011.591-.659h4.5" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">inbox 1.5</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg class="mx-auto h-6 w-6 text-caramel dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">moon (light) 1.75</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg class="hidden mx-auto h-6 w-6 text-caramel dark:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg><p class="mt-2 text-[11px] uppercase tracking-widest text-cream/60">sun (dark) 1.75</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center col-span-2 sm:col-span-3 lg:col-span-5 text-left"><p class="font-serif text-lg text-cream">Brand mark</p><p class="mt-1 text-xs font-light text-cream/70">Navbar and footer use ../static/brand/tuxedo-mark-256.png in a rounded-xl chip next to the two-line wordmark (TUXEDO / FINANCE in caramel) &mdash; replacing the old gradient-free text-only brand row.</p></div>
+        </div>
+    </div>
+</section>
+
+<footer class="py-10 text-center">
+    <p class="font-serif italic text-sm text-forest/60 dark:text-cream/50">&ldquo;Your money, elegantly presented.&rdquo;</p>
+    <p class="mt-2 text-xs font-light text-forest/40 dark:text-cream/30">Final design system &mdash; Tuxedo Finance functionality in the Haven &amp; Hound visual language.</p>
+</footer>
+
+</main>
+
+<script src="../static/js/theme.js"></script>
+<script src="../static/js/project-menu.js"></script>
+<script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+<script>
+    // Mobile overlay toggle (behavior from the Haven & Hound source)
+    var menuBtn = document.getElementById('menu-btn');
+    var closeMenuBtn = document.getElementById('close-menu-btn');
+    var mobileMenu = document.getElementById('mobile-menu');
+
+    function toggleMenu() {
+        var isClosed = mobileMenu.classList.contains('translate-x-full');
+        if (isClosed) {
+            mobileMenu.classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden';
+        } else {
+            mobileMenu.classList.add('translate-x-full');
+            document.body.style.overflow = '';
+        }
+    }
+
+    if (menuBtn) menuBtn.addEventListener('click', toggleMenu);
+    if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleMenu);
+    document.querySelectorAll('.mobile-link').forEach(function (link) {
+        link.addEventListener('click', toggleMenu);
+    });
+</script>
+</body>
+</html>
