@@ -24,21 +24,20 @@ record of financial activity. It is designed for personal use and simple local
 operation—not as a SaaS platform—and keeps the database under the installation
 owner's control.
 
-## Interface preview
+## 🏙️ Interface preview
 
-<p align="center">
-  <a href="https://henriquemayer.github.io/TuxedoFinance/">
-    <img src="preview/images/en/dashboard-light.png" alt="Tuxedo Finance dashboard preview with synthetic financial data">
-  </a>
+Explore the real Tuxedo Finance interface before installing it. The bilingual
+tour walks through the Dashboard, Reports, Transactions, Banking, and
+Investments in both light and dark themes.
+
+<p align="left">
+  <strong>
+    <a href="https://henriquemayer.github.io/TuxedoFinance/"> 🟢 Open the tour</a>
+  </strong>
 </p>
 
-<p align="center">
-  <a href="https://henriquemayer.github.io/TuxedoFinance/"><strong>Open the bilingual interface tour →</strong></a>
-</p>
-
-<p align="center">
-  <sub>Static preview with synthetic data. There is no login or backend, and nothing is saved.</sub>
-</p>
+> The preview uses synthetic data and runs as a static tour. There is no login,
+> public backend, or persistence, and nothing is saved.
 
 ## 🚀 Quick start
 
