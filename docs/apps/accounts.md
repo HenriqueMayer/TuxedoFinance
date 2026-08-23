@@ -60,7 +60,7 @@ class SignupView(SuccessMessageMixin, CreateView):
         return response
 ```
 
-Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly calls Django's `login()` after `super().form_valid(form)` saves the user, so signup redirects directly to the dashboard. Signup seeds only the approved default categories and creates the user's `UserPreference` with BRL as the bootstrap reporting currency. No synthetic financial records or shared credentials are provided. Banks, accounts and cards are never fabricated; the first-run Banking flow asks the user to create their real structure.
+Creates a standard `django.contrib.auth.models.User`. `form_valid` explicitly calls Django's `login()` after `super().form_valid(form)` saves the user, so signup redirects directly to the dashboard. Signup seeds only the approved default categories in the active interface language and creates the user's `UserPreference` with BRL as the bootstrap reporting currency. The localized names are persisted and are not renamed on later language changes. No synthetic financial records or shared credentials are provided. Banks, accounts and cards are never fabricated; the first-run Banking flow asks the user to create their real structure.
 
 When `ALLOW_SIGNUPS=False`, the view does not validate or save a user. It returns
 the localized registration-closed response instead. This server-side guard is

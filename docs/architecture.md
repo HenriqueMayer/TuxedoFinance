@@ -145,9 +145,11 @@ all domain URLs remain stable across languages.
 Translation concerns stop at fixed interface and system copy. Python uses
 `gettext_lazy` for deferred declarations and `gettext` at runtime; templates
 use `translate` and `blocktranslate`. The project-level Portuguese catalog is
-`locale/pt_BR/LC_MESSAGES/django.po`/`django.mo`. Persisted domain and user data,
-including categories, are not looked up in gettext and therefore remain
-language-neutral. Currency is a separate axis: parallel `core.formats.en` and
+`locale/pt_BR/LC_MESSAGES/django.po`/`django.mo`. The nine default category
+names are resolved once through gettext in the language active when the account
+is created, then stored as ordinary user-owned data. Existing and user-entered
+categories are never translated automatically. Currency is a separate axis:
+parallel `core.formats.en` and
 `core.formats.pt_BR` modules both resolve separators from currency metadata.
 
 ## Delivery and reset

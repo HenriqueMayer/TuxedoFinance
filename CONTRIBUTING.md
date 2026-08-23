@@ -14,15 +14,19 @@ license notices.
 - Update README, PRD, data model and affected app documentation with code.
 - Add or update English and Brazilian Portuguese interface strings together.
 - Run `manage.py check`, `makemigrations --check --dry-run`, tests and
-  `compilemessages` before proposing a change.
+  `compilemessages` before proposing a change. Frontend changes must also
+  rebuild Tailwind and pass the Playwright smoke suite.
 
 ## Test strategy and CI
 
-The supported path is Python 3.12, `uv`, Django's test runner and SQLite. The
-single CI job reproduces that local workflow from `uv.lock`; it does not test
+The supported path is Python 3.12, `uv`, Django's test runner, SQLite and the
+frontend tools pinned by npm. The single CI job reproduces that local workflow
+from both lockfiles; it does not test
 other databases or SaaS deployment matrices. It runs Django
 checks, missing-migration checks, translation compilation, the full suite with
-branch coverage, Ruff, and a locked-runtime `pip-audit` scan.
+branch coverage, Ruff, a locked-runtime `pip-audit` scan, generated-asset
+consistency and focused Chromium smoke tests. Browser failures upload screenshots,
+video and trace artifacts for diagnosis.
 
 Coverage is reported as XML and HTML artifacts. CI enforces a repository-wide
 70% line-coverage floor; branch coverage is reported but not independently

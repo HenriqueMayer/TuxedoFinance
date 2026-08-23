@@ -23,4 +23,9 @@
             menu.querySelector(':scope > summary').focus();
         });
     });
+
+    document.addEventListener('change', function (event) {
+        if (!event.target.matches('[data-language-selector]')) return;
+        event.target.form.submit();
+    });
 })();

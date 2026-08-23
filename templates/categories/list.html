@@ -31,7 +31,7 @@ GET search plus top-level/subcategory filtering.
                     {% translate "Delete all" %}
                 </a>
             {% endif %}
-            <a href="{% url 'categories:export' %}"
+            <a href="{% url 'categories:export' %}" hx-boost="false"
                class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest">
                 {% translate "Export CSV" %}
             </a>

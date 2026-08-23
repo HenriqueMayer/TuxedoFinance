@@ -1,7 +1,7 @@
 # Frontend: Design System & Templates
 
-The approved banking release preserves the existing server-rendered Django
-Template Language and precompiled TailwindCSS visual system. There is no SPA, JavaScript
+The current design-system release preserves the server-rendered Django
+Template Language and precompiled Tailwind CSS visual system. There is no SPA, JavaScript
 framework or client-side chart library. Theme persistence, boosted link
 navigation and HTMX chart-island swaps remain the deliberately narrow JavaScript
 layer; every mutation is a normal CSRF-protected POST and every filter has a
@@ -10,11 +10,13 @@ plain GET fallback.
 Tailwind CSS is generated ahead of time into `static/css/app.css`, so full-page
 navigation never waits for browser-side class discovery or CSS compilation. The
 generated file is versioned with the application and does not require Node/npm
-at runtime. After changing Tailwind classes or tokens, rebuild it from
-`assets/css/tailwind.css` with the standalone Tailwind CSS 3.4.17 CLI:
+at runtime. Frontend tooling is pinned in `package.json`/`package-lock.json` for
+development and CI. After changing Tailwind classes or tokens, rebuild it from
+`assets/css/tailwind.css` with:
 
 ```bash
-tailwindcss -c tailwind.config.js -i assets/css/tailwind.css -o static/css/app.css --minify
+npm ci
+npm run build:css
 ```
 
 Bump the `?v=` query string in `base.html` whenever the generated stylesheet
@@ -23,10 +25,12 @@ changes so long-lived browser caches cannot retain the previous design.
 Same-origin links inherit `hx-boost` from the page shell. HTMX keeps the current
 document visible while it requests the next server-rendered page, then replaces
 the body and updates browser history. Native links remain the fallback whenever
-JavaScript or the HTMX CDN is unavailable. Forms explicitly opt out of boosting,
-so POST, CSRF, validation, uploads, locale changes and redirects keep their
-ordinary Django behavior. Full-page swaps move focus to the new `h1`; report and
-investment chart islands keep their existing focus and scroll restoration. The
+JavaScript is unavailable. Mutating forms, uploads, locale changes, logout and
+download links explicitly opt out of boosting, so POST, CSRF, validation and
+file responses keep their ordinary Django behavior. GET filter forms may use
+HTMX when they target a documented page or island update. Full-page swaps move
+focus to the new `h1`; report and investment chart islands keep their existing
+focus and scroll restoration. The
 investment movement island updates filters and pagination independently, then
 returns to the beginning of the movement section instead of the top of the page;
 plain GET links and the section anchor provide the same no-JavaScript fallback.
@@ -71,13 +75,16 @@ authenticated navbar, messages, content block and footer. The authenticated
 navigation becomes:
 
 ```text
-Dashboard | Transactions | Categories | Banking | Investments | Reports
+Dashboard | Reports | Transactions | Categories | Banks | Investments
 ```
 
-`Banking` remains active for nested bank, account, card, invoice, movement and
-loyalty routes. The mobile navigation is a full-screen forest-deep overlay with
-the same links and ordering as desktop. It slides in and locks page scrolling
-while open.
+`Banks` remains active for nested bank, account, card, invoice, movement and
+loyalty routes. The authenticated desktop navigation starts at the `xl`
+breakpoint so tablet and narrow-laptop widths do not compress or overflow the
+full link set. Below that breakpoint, the mobile navigation is a full-screen
+forest-deep modal with the same links and ordering as desktop. It slides in,
+locks page scrolling, makes background content inert, contains keyboard focus,
+closes on Escape and restores focus to its trigger.
 
 `partials/language_selector.html` is included once in each active navbar. It
 posts the current path and `en` or `pt-br` to Django's
@@ -85,6 +92,17 @@ posts the current path and `en` or `pt-br` to Django's
 button preserves the server-rendered fallback. The choice is stored in Django's
 language cookie, not local storage or the user model, and URLs have no locale
 prefix.
+
+HTMX 2.0.10 is vendored at `static/js/vendor/htmx.min.js`; the application does
+not contact a JavaScript CDN at runtime. CI verifies the vendored file against
+the upstream release checksum before running browser smoke tests.
+
+Django's content-security-policy middleware restricts script sources, forms,
+images and connections to this installation. Inline scripts and styles remain
+allowed because translated progressive-enhancement copy and server-calculated
+chart geometry are rendered directly by Django templates; Google Fonts is the
+only external presentation origin. Language selection uses a delegated local
+listener instead of an inline event handler and retains its `noscript` submit.
 
 ## Template tree
 
@@ -176,9 +194,10 @@ deferred Python declarations, `gettext` for runtime Python messages,
 `{% translate %}` (the modern spelling of `{% trans %}`) for short template
 strings and `{% blocktranslate %}` for longer copy or interpolated values.
 Update and compile the `pt_BR` gettext catalog after changing marked strings.
-Dynamic values are not translation
-keys: category/subcategory names and all other user-entered titles, notes,
-institutions and financial data render verbatim.
+The nine system-provided category names are translated once during account
+creation and then stored as user-owned data. Other category/subcategory names
+and all user-entered titles, notes, institutions and financial data are not
+translation keys and render verbatim.
 
 HTMX report and investment chart islands need no separate locale mechanism.
 Their requests retain the language cookie, pass through `LocaleMiddleware` and
@@ -228,3 +247,11 @@ internal horizontal scrolling rather than forcing body overflow. Bank/account
 hierarchies collapse to stacked cards on small screens. Labels, status text,
 focus rings, keyboard navigation and confirmation screens remain available
 without relying on hover, color or JavaScript.
+
+## Automated browser checks
+
+`tests/e2e/design-system.spec.js` covers the cross-layer behavior that template
+assertions cannot prove: English/Portuguese landing copy, locally served HTMX,
+native CSV download, the tablet navigation breakpoint and mobile modal focus
+containment. CI runs the suite in Chromium after the Python checks and uploads
+screenshots, video and traces only when a browser test fails.

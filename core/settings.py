@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.csp import CSP
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
 
@@ -65,6 +66,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -164,6 +166,23 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+# Restrict executable content to this installation. Inline scripts and styles
+# remain allowed because the server-rendered templates contain the synchronous
+# theme bootstrap, translated progressive-enhancement copy and calculated chart
+# geometry. Google Fonts is the only external presentation origin.
+SECURE_CSP = {
+    'default-src': [CSP.SELF],
+    'script-src': [CSP.SELF, CSP.UNSAFE_INLINE],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, 'https://fonts.googleapis.com'],
+    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
+    'img-src': [CSP.SELF, 'data:'],
+    'connect-src': [CSP.SELF],
+    'object-src': [CSP.NONE],
+    'base-uri': [CSP.SELF],
+    'form-action': [CSP.SELF],
+    'frame-ancestors': [CSP.NONE],
+}
 
 HTTPS = os.environ.get('HTTPS', 'False') == 'True'
 

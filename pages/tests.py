@@ -11,7 +11,8 @@ class LandingBrandTests(TestCase):
         self.assertContains(response, 'A tuxedo cat in a home office beside charts and the Tuxedo Finance wordmark.')
         content = response.content.decode()
         self.assertNotIn('Your finances deserve more than a', content)
-        self.assertLess(content.index('Tuxedo Finance replaces the single column'), content.index('Clear money, elegantly presented.'))
+        self.assertNotIn('Tuxedo Finance replaces the single column', content)
+        self.assertLess(content.index('Understand your cash flow'), content.index('Clear money, elegantly presented.'))
 
     @override_settings(LANGUAGE_CODE='pt-br')
     def test_landing_translates_primary_copy_to_brazilian_portuguese(self):
@@ -20,11 +21,9 @@ class LandingBrandTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Language'], 'pt-br')
-        self.assertContains(
-            response,
-            'O Tuxedo Finance substitui a coluna única de sinais de mais e menos',
-        )
+        self.assertContains(response, 'Entenda seu fluxo de caixa')
         self.assertNotIn('Tuxedo Finance replaces the single column', content)
+        self.assertNotIn('Understand your cash flow', content)
 
     def test_shared_shell_exposes_wordmark_and_favicon(self):
         response = self.client.get('/')

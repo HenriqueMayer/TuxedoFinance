@@ -531,6 +531,33 @@ msgstr ""
 "Esta categoria possui transações de outro tipo e não pode receber essa "
 "classificação."
 
+msgid "Groceries"
+msgstr "Mercado"
+
+msgid "Food & Dining"
+msgstr "Alimentação"
+
+msgid "Subscriptions"
+msgstr "Assinaturas"
+
+msgid "Education"
+msgstr "Educação"
+
+msgid "Fitness"
+msgstr "Academia"
+
+msgid "Transportation"
+msgstr "Transporte"
+
+msgid "Pets"
+msgstr "Animais de estimação"
+
+msgid "Hobbies & Entertainment"
+msgstr "Hobbies e entretenimento"
+
+msgid "Services"
+msgstr "Serviços"
+
 #, python-format
 msgid "Category \"%(name)s\" created."
 msgstr "Categoria \"%(name)s\" criada."
@@ -1937,15 +1964,11 @@ msgid "Personal finance, simplified"
 msgstr "Finanças pessoais simplificadas"
 
 msgid ""
-"Tuxedo Finance replaces the single column of plus and minus signs with a "
-"normalized, categorized record of every transaction — so you always know "
-"your Current Balance, your Income, your Expenses, and where your money goes "
-"each month."
+"Understand your cash flow, recurring expenses, card bills, investments, and "
+"where your money goes each month."
 msgstr ""
-"O Tuxedo Finance substitui a coluna única de sinais de mais e menos por um "
-"registro normalizado e categorizado de cada transação — para que você sempre "
-"saiba seu Saldo atual, suas Receitas, suas Despesas e para onde vai seu "
-"dinheiro a cada mês."
+"Entenda seu fluxo de caixa, despesas recorrentes, faturas de cartão, "
+"investimentos e para onde vai seu dinheiro a cada mês."
 
 msgid ""
 "Built from the everyday frustration of adapting spreadsheets to real "
@@ -2086,6 +2109,9 @@ msgstr "Sair"
 
 msgid "Toggle menu"
 msgstr "Alternar menu"
+
+msgid "Navigation menu"
+msgstr "Menu de navegação"
 
 msgid "Close menu"
 msgstr "Fechar menu"
@@ -2358,12 +2384,6 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
-
-#~ msgid "Your finances deserve more than a"
-#~ msgstr "Suas finanças merecem mais do que uma"
-
-#~ msgid "spreadsheet"
-#~ msgstr "planilha"
 
 #~ msgid "Monthly spending by credit card"
 #~ msgstr "Gastos mensais por cartão de crédito"

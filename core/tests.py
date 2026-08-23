@@ -87,7 +87,7 @@ class LanguageSelectionTests(TestCase):
         )
         self.assertContains(response, 'Problems / Suggestions')
         self.assertContains(response, 'Roadmap')
-        self.assertContains(response, '/static/js/project-menu.js?v=3')
+        self.assertContains(response, '/static/js/project-menu.js?v=4')
         self.assertContains(
             response,
             'A personal Tuxedo assistant to ask questions, review your finances, and plan.',
@@ -135,9 +135,11 @@ class LanguageSelectionTests(TestCase):
     def test_precompiled_tailwind_is_used_without_the_play_cdn(self):
         response = self.client.get(reverse('pages:landing'))
 
-        self.assertContains(response, '/static/css/app.css?v=3')
+        self.assertContains(response, '/static/css/app.css?v=4')
         self.assertNotContains(response, 'https://cdn.tailwindcss.com')
+        self.assertNotContains(response, 'unpkg.com')
         self.assertNotContains(response, 'css/output.css')
+        self.assertContains(response, '/static/js/vendor/htmx.min.js?v=2.0.10')
         self.assertContains(response, 'hx-boost="true"')
         self.assertContains(response, 'hx-request=\'{"noHeaders":true}\'')
         self.assertContains(response, 'hx-boost="false"')
@@ -154,14 +156,26 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.content.count(b'data-theme-toggle'), 2)
         self.assertEqual(response.content.count(b'id="theme-toggle"'), 1)
         self.assertContains(response, '/static/js/theme.js?v=3')
-        self.assertContains(response, '/static/js/project-menu.js?v=3')
-        self.assertContains(response, '/static/js/mobile-menu.js?v=2')
+        self.assertContains(response, '/static/js/project-menu.js?v=4')
+        self.assertContains(response, '/static/js/mobile-menu.js?v=3')
+        self.assertContains(response, 'role="dialog"')
+        self.assertContains(response, 'aria-modal="true"')
         self.assertContains(
             response,
             f'href="{reverse("pages:landing")}" class="flex shrink-0 items-center gap-3 group',
         )
         self.assertContains(response, 'aria-label="Settings"')
         self.assertContains(response, reverse('accounts:settings'))
+
+    def test_shell_enforces_content_security_policy(self):
+        response = self.client.get(reverse('pages:landing'))
+
+        policy = response.headers['Content-Security-Policy']
+        self.assertIn("default-src 'self'", policy)
+        self.assertIn("object-src 'none'", policy)
+        self.assertIn("frame-ancestors 'none'", policy)
+        self.assertIn("script-src 'self' 'unsafe-inline'", policy)
+        self.assertNotContains(response, 'onchange=')
 
     def test_htmx_reports_respect_selected_language(self):
         user = User.objects.create_user('reports-language', password='test')

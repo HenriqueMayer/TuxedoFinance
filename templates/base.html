@@ -66,16 +66,16 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=4">
 
-    {% comment %}HTMX progressively enhances same-origin links so the current
+    {% comment %}The locally vendored HTMX progressively enhances same-origin links so the current
     document stays visible until the next server-rendered page is ready. Forms
     explicitly opt out and preserve their native POST/validation flow. All
-    navigation still works when JavaScript or the CDN is unavailable.{% endcomment %}
-    <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+    navigation still works when JavaScript is unavailable.{% endcomment %}
+    <script src="{% static 'js/vendor/htmx.min.js' %}?v=2.0.10" defer></script>
     <script src="{% static 'js/theme.js' %}?v=3" defer></script>
-    <script src="{% static 'js/project-menu.js' %}?v=3" defer></script>
-    <script src="{% static 'js/mobile-menu.js' %}?v=2" defer></script>
+    <script src="{% static 'js/project-menu.js' %}?v=4" defer></script>
+    <script src="{% static 'js/mobile-menu.js' %}?v=3" defer></script>
     <script src="{% static 'js/navigation.js' %}?v=2" defer></script>
 </head>
 <body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-forest-deep dark:text-cream">

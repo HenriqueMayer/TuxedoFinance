@@ -23,6 +23,30 @@ record of financial activity. It is designed for personal use and simple local
 operation—not as a SaaS platform—and keeps the database under the installation
 owner's control.
 
+## 🚀 Quick start
+
+Requires Python 3.12 and [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
+
+```bash
+git clone https://github.com/HenriqueMayer/TuxedoFinance.git
+cd TuxedoFinance
+uv sync
+printf 'SECRET_KEY=%s\n' "$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" > .env
+uv run python manage.py migrate
+uv run python manage.py runserver
+```
+
+Open <http://127.0.0.1:8000/>, create an account, then add a bank and one of
+its accounts before recording the first transaction.
+
+The generated `.env` and `db.sqlite3` files are ignored by Git. Keep both
+private and include the database in a protected backup routine. To start the
+application again later, run only:
+
+```bash
+uv run python manage.py runserver
+```
+
 ## 🎥 Tutorials
 
 Updated walkthroughs will be available in both supported languages:
@@ -49,7 +73,10 @@ Updated walkthroughs will be available in both supported languages:
 > purchases belong to their statement month, while cash moves on the invoice due
 > date.
 
-## 🎨 Visual language
+<details>
+<summary><strong>🎨 Visual language</strong></summary>
+
+<br>
 
 The interface follows the Tuxedo Finance design system: calm foundations,
 high-contrast typography, caramel actions, and semantic financial colors.
@@ -74,29 +101,7 @@ The canonical component catalog lives in
 [`design-system/tuxedo-final-design-system.html`](design-system/tuxedo-final-design-system.html),
 with implementation guidance in [`docs/frontend.md`](docs/frontend.md).
 
-## 🚀 Quick start
-
-Requires Python 3.12 and [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
-
-```bash
-git clone https://github.com/HenriqueMayer/TuxedoFinance.git
-cd TuxedoFinance
-uv sync
-printf 'SECRET_KEY=%s\n' "$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" > .env
-uv run python manage.py migrate
-uv run python manage.py runserver
-```
-
-Open <http://127.0.0.1:8000/>, create an account, then add a bank and one of
-its accounts before recording the first transaction.
-
-The generated `.env` and `db.sqlite3` files are ignored by Git. Keep both
-private and include the database in a protected backup routine. To start the
-application again later, run only:
-
-```bash
-uv run python manage.py runserver
-```
+</details>
 
 ## 🧭 How the pieces fit together
 
@@ -140,10 +145,31 @@ is actually served over TLS.
 uv sync --locked
 uv run python manage.py check
 uv run python manage.py test
+npm ci
+npm run build:css
 ```
 
-The CI workflow also checks migrations and translations, enforces the documented
-coverage floor, runs Ruff, and audits the locked runtime dependencies. See
+For browser smoke tests, start the app on port 8765 in one terminal and run the
+suite from another.
+
+Terminal 1:
+
+```bash
+uv run python manage.py runserver 127.0.0.1:8765
+```
+
+Terminal 2:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+The browser suite expects the application at `http://127.0.0.1:8765` by default;
+set `E2E_BASE_URL` to use another local address. The CI workflow also verifies
+the compiled CSS and vendored HTMX against their pinned sources, checks migrations
+and translations, enforces the documented coverage floor, runs Ruff, and audits
+the locked runtime dependencies. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for the complete development workflow.
 
 ## 📚 Documentation
