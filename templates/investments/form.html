@@ -9,7 +9,7 @@
         <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %}</h1>
         <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate 'Choose an asset and operation type to see only the fields you need.' %}</p>
     </div>
-    <form method="post" class="space-y-6 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
+    <form method="post" hx-boost="false" class="space-y-6 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
         {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         <section class="space-y-5">

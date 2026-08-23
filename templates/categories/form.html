@@ -16,7 +16,7 @@ the shared partials/form_field.html renderer (PRD §9.4).
         {% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %}
     </h1>
 
-    <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
+    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}

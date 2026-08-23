@@ -87,7 +87,7 @@ class LanguageSelectionTests(TestCase):
         )
         self.assertContains(response, 'Problems / Suggestions')
         self.assertContains(response, 'Roadmap')
-        self.assertContains(response, '/static/js/project-menu.js?v=2')
+        self.assertContains(response, '/static/js/project-menu.js?v=3')
         self.assertContains(
             response,
             'A personal Tuxedo assistant to ask questions, review your finances, and plan.',
@@ -132,11 +132,16 @@ class LanguageSelectionTests(TestCase):
         )
 
     @override_settings(DEBUG=False)
-    def test_tailwind_cdn_is_used_without_a_production_static_build(self):
+    def test_precompiled_tailwind_is_used_without_the_play_cdn(self):
         response = self.client.get(reverse('pages:landing'))
 
-        self.assertContains(response, 'https://cdn.tailwindcss.com')
+        self.assertContains(response, '/static/css/app.css?v=2')
+        self.assertNotContains(response, 'https://cdn.tailwindcss.com')
         self.assertNotContains(response, 'css/output.css')
+        self.assertContains(response, 'hx-boost="true"')
+        self.assertContains(response, 'hx-request=\'{"noHeaders":true}\'')
+        self.assertContains(response, 'hx-boost="false"')
+        self.assertContains(response, '/static/js/navigation.js?v=1')
 
     def test_authenticated_nav_has_desktop_and_mobile_selectors(self):
         user = User.objects.create_user('language', password='test')
@@ -148,7 +153,9 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, 'id="language-select-mobile"')
         self.assertEqual(response.content.count(b'data-theme-toggle'), 2)
         self.assertEqual(response.content.count(b'id="theme-toggle"'), 1)
-        self.assertContains(response, '/static/js/theme.js?v=2')
+        self.assertContains(response, '/static/js/theme.js?v=3')
+        self.assertContains(response, '/static/js/project-menu.js?v=3')
+        self.assertContains(response, '/static/js/mobile-menu.js?v=2')
         self.assertContains(response, 'aria-label="Settings"')
         self.assertContains(response, reverse('accounts:settings'))
 

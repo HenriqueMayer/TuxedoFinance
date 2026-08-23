@@ -29,12 +29,12 @@ use Inter at readable weights and sizes.
 Theme: a synchronous inline `<head>` script reads `localStorage`/OS
 preference and toggles `.dark` before paint (no flash of the wrong theme).
 The toggle itself is `partials/theme_toggle.html`, wired by
-`static/js/theme.js`. ~25 lines of vendored vanilla JS, no CDN, no JS build —
-still within the project's no-JS-for-charts rule (PRD §5 scope change).
+`static/js/theme.js`. Small delegated scripts preserve shell interactions after
+HTMX navigation, with no client-side application framework or JS build.
 
-Tailwind loads from the Play CDN with `darkMode: 'class'` so its `dark:`
-variants match the inline FOUC class. The supported local runtime has no CSS
-build step.
+Tailwind is precompiled to `static/css/app.css`, with `darkMode: 'class'`, so
+every page arrives fully styled and its `dark:` variants match the inline FOUC
+class. The generated asset avoids browser-side recompilation during navigation.
 {% endcomment %}
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}" class="">
@@ -65,41 +65,20 @@ build step.
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        cream: { DEFAULT: '#FAF8F3', dark: '#EBE7DE' },
-                        forest: { DEFAULT: '#1A2E26', light: '#2A4338', deep: '#101E18' },
-                        caramel: { DEFAULT: '#B88A59', light: '#D4AD86', ink: '#8A5A2F' },
-                        income: { DEFAULT: '#176B52', light: '#64D8B1' },
-                        expense: { DEFAULT: '#B42318', light: '#FF8A80' },
-                        investment: { DEFAULT: '#7C5C13', light: '#F4C95D' },
-                        installment: { DEFAULT: '#6B4E8A', light: '#C4A7E7' },
-                        fixed: { DEFAULT: '#A65300', light: '#FFB45C' },
-                        oneoff: { DEFAULT: '#52605A', light: '#B8C0BC' }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        };
-    </script>
-    <style>
-        /* Custom scrollbar (Final Design System §2, recolored for both themes) */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #FAF8F3; }
-        ::-webkit-scrollbar-thumb { background: #1A2E26; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-track { background: #101E18; }
-        .dark ::-webkit-scrollbar-thumb { background: #B88A59; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=2">
+
+    {% comment %}HTMX progressively enhances same-origin links so the current
+    document stays visible until the next server-rendered page is ready. Forms
+    explicitly opt out and preserve their native POST/validation flow. All
+    navigation still works when JavaScript or the CDN is unavailable.{% endcomment %}
+    <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+    <script src="{% static 'js/theme.js' %}?v=3" defer></script>
+    <script src="{% static 'js/project-menu.js' %}?v=3" defer></script>
+    <script src="{% static 'js/mobile-menu.js' %}?v=2" defer></script>
+    <script src="{% static 'js/navigation.js' %}?v=1" defer></script>
 </head>
-<body class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-forest-deep dark:text-cream">
+<body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-forest-deep dark:text-cream">
     {% if request.user.is_authenticated %}
         {% include 'partials/navbar_app.html' %}
     {% else %}
@@ -113,77 +92,6 @@ build step.
 
     {% include 'partials/footer.html' %}
 
-    <script src="{% static 'js/theme.js' %}?v=2"></script>
-    <script src="{% static 'js/project-menu.js' %}?v=2"></script>
-    <script src="{% static 'js/mobile-menu.js' %}?v=1"></script>
-
-    {% comment %}HTMX (PRD §5 — partial-swap navigation on the Reports
-    page). The script is opt-in per-element via `hx-get` / `hx-target`
-    attributes, so screens that do not use it are unaffected and the
-    Charts 1/2 prev/next arrows and the breakdown selects can swap the
-    `#reports-charts` region in place instead of doing a full page load.
-    Loaded with `defer` so it never blocks the first paint, and from
-    unpkg so it is versioned and cached independently of the app — the
-    only HTMX version we depend on is the one pinned in this tag.{% endcomment %}
-    <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
-
-    {% comment %}Smooth-scroll helper used by the Reports page's
-    `data-scroll-target` triggers. The bar links and close buttons
-    intentionally drop the URL fragment from the `hx-get` request so the
-    browser does not auto-scroll to it before the swap completes
-    (otherwise the page briefly flickers as the browser and HTMX
-    disagree on the scroll target). After the swap, this helper scrolls
-    to the right element with a smooth animation. The optional-chaining
-    `if (el)` is a no-op when the target is missing — e.g. the bar's
-    method is not in the breakdown and the view returns no panel.{% endcomment %}
-    <script>
-        function scrollToAnchor(id) {
-            var el = document.getElementById(id);
-            if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
-        }
-
-        // HTMX replaces the chart island in place, but a changed chart height
-        // can still make the browser appear to jump. Keep the viewport and
-        // the active filter stable across those swaps.
-        var preservedChartView = null;
-
-        function isChartTarget(target) {
-            return target && (
-                target.id === 'reports-charts' ||
-                target.id === 'investments-charts'
-            );
-        }
-
-        document.body.addEventListener('htmx:beforeRequest', function (event) {
-            if (!isChartTarget(event.detail.target)) return;
-            var active = document.activeElement;
-            var trigger = event.detail.elt;
-            preservedChartView = {
-                top: window.scrollY,
-                focusId: active && active.id ? active.id : null,
-                scrollTarget: trigger && trigger.dataset
-                    ? trigger.dataset.scrollTarget
-                    : null,
-            };
-        });
-
-        document.body.addEventListener('htmx:afterSwap', function (event) {
-            if (!isChartTarget(event.detail.target) || !preservedChartView) return;
-            var view = preservedChartView;
-            preservedChartView = null;
-            window.requestAnimationFrame(function () {
-                if (view.scrollTarget) {
-                    scrollToAnchor(view.scrollTarget);
-                } else {
-                    window.scrollTo(0, view.top);
-                }
-                if (view.focusId) {
-                    var field = document.getElementById(view.focusId);
-                    if (field) field.focus({preventScroll: true});
-                }
-            });
-        });
-    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

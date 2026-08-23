@@ -237,8 +237,9 @@ The dashboard separates cash, economic activity, liabilities and positions:
 | Investment value | Investment quantities and historical/current valuation. |
 | Net worth | Converted cash + investments - card payable. |
 
-Reports remain responsive, server-rendered SVG/CSS. HTMX may swap chart islands,
-but all filters and navigation retain plain GET fallbacks. Every total states its
+Reports remain responsive, server-rendered SVG/CSS. HTMX may swap chart islands
+and progressively enhance same-origin links, but all filters and navigation
+retain plain GET fallbacks. Every total states its
 currency/valuation date and whether it is actual or projected.
 
 ## 10. Frontend Requirements

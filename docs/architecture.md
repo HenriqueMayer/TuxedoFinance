@@ -152,8 +152,10 @@ language-neutral. Currency is a separate axis: parallel `core.formats.en` and
 
 ## Delivery and reset
 
-Settings, middleware, authentication, Tailwind CDN delivery and the
-server-rendered request flow remain deliberately small and local-first.
+Settings, middleware, authentication, precompiled Tailwind delivery and the
+server-rendered request flow remain deliberately small and local-first. The
+browser receives a versioned static stylesheet and never compiles utility
+classes during navigation.
 The current schema is intentionally incompatible with legacy financial data;
 there is no dual-write or automatic conversion. See
 [data-model.md](data-model.md#breaking-release).

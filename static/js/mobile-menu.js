@@ -12,32 +12,39 @@
 // does not move. `aria-expanded` on both buttons is kept in sync for
 // screen readers.
 (function () {
-    var menuBtn = document.getElementById('menu-btn');
-    var closeMenuBtn = document.getElementById('close-menu-btn');
-    var mobileMenu = document.getElementById('mobile-menu');
+    function setMenu(open, restoreFocus) {
+        var menuBtn = document.getElementById('menu-btn');
+        var closeMenuBtn = document.getElementById('close-menu-btn');
+        var mobileMenu = document.getElementById('mobile-menu');
+        if (!mobileMenu) return;
 
-    if (!mobileMenu) return;
-
-    function toggleMenu() {
-        var isClosed = mobileMenu.classList.contains('translate-x-full');
-        mobileMenu.classList.toggle('translate-x-full', !isClosed);
-        document.body.style.overflow = isClosed ? 'hidden' : '';
+        mobileMenu.classList.toggle('translate-x-full', !open);
+        mobileMenu.toggleAttribute('inert', !open);
+        mobileMenu.setAttribute('aria-hidden', String(!open));
+        document.body.style.overflow = open ? 'hidden' : '';
         [menuBtn, closeMenuBtn].forEach(function (btn) {
-            if (btn) btn.setAttribute('aria-expanded', String(isClosed));
+            if (btn) btn.setAttribute('aria-expanded', String(open));
         });
+        if (open && closeMenuBtn) closeMenuBtn.focus();
+        if (!open && restoreFocus && menuBtn) menuBtn.focus();
     }
 
-    if (menuBtn) menuBtn.addEventListener('click', toggleMenu);
-    if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleMenu);
-    document.querySelectorAll('.mobile-link').forEach(function (link) {
-        link.addEventListener('click', toggleMenu);
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('#menu-btn')) {
+            setMenu(true, false);
+        } else if (event.target.closest('#close-menu-btn')) {
+            setMenu(false, true);
+        } else if (event.target.closest('.mobile-link')) {
+            setMenu(false, false);
+        }
     });
 
     // Safety net: Escape closes the overlay and restores scrolling.
     document.addEventListener('keydown', function (event) {
         if (event.key !== 'Escape') return;
+        var mobileMenu = document.getElementById('mobile-menu');
+        if (!mobileMenu) return;
         if (mobileMenu.classList.contains('translate-x-full')) return;
-        toggleMenu();
-        if (menuBtn) menuBtn.focus();
+        setMenu(false, true);
     });
 })();

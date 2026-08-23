@@ -18,7 +18,7 @@
             </p>
         </div>
 
-        <form method="post" class="flex items-center gap-3">
+        <form method="post" hx-boost="false" class="flex items-center gap-3">
             {% csrf_token %}
             <button type="submit"
                     class="inline-flex items-center rounded-full bg-expense px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-expense-light focus:outline-none focus:ring-2 focus:ring-expense/40 focus:ring-offset-2 dark:focus:ring-offset-forest">

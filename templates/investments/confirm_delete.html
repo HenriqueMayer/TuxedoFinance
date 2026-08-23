@@ -20,7 +20,7 @@ the project — never a plain link/GET, always a POST from this page.
             {% translate 'This action cannot be undone.' %}
         </p>
 
-        <form method="post" class="flex items-center gap-3">
+        <form method="post" hx-boost="false" class="flex items-center gap-3">
             {% csrf_token %}
             <button type="submit"
                     class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">

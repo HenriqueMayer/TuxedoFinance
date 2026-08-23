@@ -29,13 +29,13 @@ the active filters survive page navigation.
             <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate "Every income, expense, and investment you have recorded." %}</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-            <details class="relative" data-export-menu>
+            <details class="relative" data-export-menu hx-boost="false">
                 <summary class="cursor-pointer list-none rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel">
                     {% translate "Export CSV" %}
                 </summary>
                 <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-forest/10 dark:bg-forest dark:ring-cream/10">
                     <a href="{{ export_url }}" class="block text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light">{% translate "Export all transactions" %}</a>
-                    <form action="{{ export_url }}" method="get" class="space-y-2">
+                    <form action="{{ export_url }}" method="get" hx-boost="false" class="space-y-2">
                         <label for="export-month" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Billed month" %}</label>
                         <input id="export-month" type="month" name="month" required
                                class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3 py-2 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
@@ -211,13 +211,19 @@ the active filters survive page navigation.
 
 {% block extra_js %}
 <script>
-    document.querySelectorAll('details[data-export-menu]').forEach(menu => {
+    if (!document.documentElement.dataset.exportMenuBound) {
+        document.documentElement.dataset.exportMenuBound = 'true';
         document.addEventListener('click', event => {
-            if (menu.open && !menu.contains(event.target)) menu.open = false;
+            document.querySelectorAll('details[data-export-menu][open]').forEach(menu => {
+                if (!menu.contains(event.target)) menu.open = false;
+            });
         });
-        menu.addEventListener('keydown', event => {
-            if (event.key === 'Escape') menu.open = false;
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape') return;
+            document.querySelectorAll('details[data-export-menu][open]').forEach(menu => {
+                menu.open = false;
+            });
         });
-    });
+    }
 </script>
 {% endblock %}

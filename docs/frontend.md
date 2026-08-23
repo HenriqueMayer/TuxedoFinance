@@ -1,10 +1,32 @@
 # Frontend: Design System & Templates
 
 The approved banking release preserves the existing server-rendered Django
-Template Language and TailwindCSS visual system. There is no SPA, JavaScript
-framework or client-side chart library. Theme persistence and HTMX chart-island
-swaps remain the deliberately narrow JavaScript layer; every mutation is a
-normal CSRF-protected POST and every filter has a plain GET fallback.
+Template Language and precompiled TailwindCSS visual system. There is no SPA, JavaScript
+framework or client-side chart library. Theme persistence, boosted link
+navigation and HTMX chart-island swaps remain the deliberately narrow JavaScript
+layer; every mutation is a normal CSRF-protected POST and every filter has a
+plain GET fallback.
+
+Tailwind CSS is generated ahead of time into `static/css/app.css`, so full-page
+navigation never waits for browser-side class discovery or CSS compilation. The
+generated file is versioned with the application and does not require Node/npm
+at runtime. After changing Tailwind classes or tokens, rebuild it from
+`assets/css/tailwind.css` with the standalone Tailwind CSS 3.4.17 CLI:
+
+```bash
+tailwindcss -c tailwind.config.js -i assets/css/tailwind.css -o static/css/app.css --minify
+```
+
+Bump the `?v=` query string in `base.html` whenever the generated stylesheet
+changes so long-lived browser caches cannot retain the previous design.
+
+Same-origin links inherit `hx-boost` from the page shell. HTMX keeps the current
+document visible while it requests the next server-rendered page, then replaces
+the body and updates browser history. Native links remain the fallback whenever
+JavaScript or the HTMX CDN is unavailable. Forms explicitly opt out of boosting,
+so POST, CSRF, validation, uploads, locale changes and redirects keep their
+ordinary Django behavior. Full-page swaps move focus to the new `h1`; report and
+investment chart islands keep their existing focus and scroll restoration.
 
 ## Visual language
 

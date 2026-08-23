@@ -29,7 +29,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=optional" rel="stylesheet">
+    <!-- Portable catalogue only. The Django app serves precompiled static/css/app.css. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -1002,6 +1003,7 @@
             <span class="text-caramel-ink dark:text-caramel-light uppercase tracking-widest text-xs font-medium block mb-4">Section 8</span>
             <h2 class="font-sans text-4xl tracking-tight font-semibold">Motion.</h2>
             <p class="mt-4 text-base text-forest/70 dark:text-cream/70 leading-relaxed font-normal max-w-2xl">Durations inherited from Haven &amp; Hound: 300ms for colors/shadows/opacity, 500ms ease-in-out for the overlay, 700ms reserved for image zoom (not used in the app UI). No custom keyframes. Everything below is interactive.</p>
+            <p class="mt-3 text-sm text-forest/70 dark:text-cream/70 max-w-2xl">Application navigation does not fade the whole interface. HTMX keeps the current server-rendered document visible until the next body is ready, then swaps it immediately; native links remain the no-JavaScript fallback.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

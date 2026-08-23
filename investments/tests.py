@@ -492,6 +492,10 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(operation.bank_movement.amount, Decimal('1653.10'))
         response = self.client.get(reverse('investments:list'))
         self.assertContains(response, 'Balance: BRL 1.653,10')
+        self.assertContains(
+            response,
+            'class="mt-1 text-xs text-forest/70 dark:text-cream/70"',
+        )
         self.assertNotContains(response, '1.00000000 units')
 
     def test_update_and_delete_views_replace_and_cleanup_ledger(self):

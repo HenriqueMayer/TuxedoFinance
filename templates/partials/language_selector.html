@@ -1,6 +1,6 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
-<form action="{% url 'set_language' %}" method="post" class="inline-flex" aria-label="{% translate 'Language' %}">
+<form action="{% url 'set_language' %}" method="post" hx-boost="false" class="inline-flex" aria-label="{% translate 'Language' %}">
     {% csrf_token %}
     <input name="next" type="hidden" value="{{ request.get_full_path }}">
     <label class="sr-only" for="language-select-{{ selector_id|default:'default' }}">{% translate 'Language' %}</label>

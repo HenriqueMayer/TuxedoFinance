@@ -6,7 +6,7 @@
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <h1 class="font-sans text-4xl font-semibold tracking-tight">{% blocktranslate with item_name=item %}Delete {{ item_name }}?{% endblocktranslate %}</h1>
-    <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+        <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
         {% csrf_token %}
         <p class="text-sm text-forest/70 dark:text-cream/70">{% translate "This action cannot be undone. Financial records that reference this item will prevent deletion." %}</p>
         <div class="flex gap-3">

@@ -13,7 +13,7 @@
         </p>
     </div>
 
-    <form method="post" class="space-y-6 rounded-3xl bg-white p-8 shadow-lg dark:bg-forest" novalidate>
+    <form method="post" hx-boost="false" class="space-y-6 rounded-3xl bg-white p-8 shadow-lg dark:bg-forest" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
