@@ -24,7 +24,7 @@ record of financial activity. It is designed for personal use and simple local
 operation—not as a SaaS platform—and keeps the database under the installation
 owner's control.
 
-## 👀 Interface preview
+## Interface preview
 
 <p align="center">
   <a href="https://henriquemayer.github.io/TuxedoFinance/">
