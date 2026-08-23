@@ -10,21 +10,21 @@ never a plain link/GET — it requires a POST from this confirmation page.
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
-    <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Delete Category" %}</h1>
+    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Delete Category" %}</h1>
 
-    <div class="space-y-5 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-6">
-        <p class="text-sm text-slate-700 dark:text-neutral-300">
-            {% blocktranslate with category_name=category.name %}Are you sure you want to delete <span class="font-semibold text-slate-900 dark:text-neutral-100">{{ category_name }}</span>? This action cannot be undone.{% endblocktranslate %}
+    <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+        <p class="text-sm text-forest/80 dark:text-cream/80">
+            {% blocktranslate with category_name=category.name %}Are you sure you want to delete <span class="font-semibold text-forest dark:text-cream">{{ category_name }}</span>? This action cannot be undone.{% endblocktranslate %}
         </p>
 
-        <form method="post" class="flex items-center gap-3">
+        <form method="post" hx-boost="false" class="flex items-center gap-3">
             {% csrf_token %}
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                  {% translate "Delete" %}
             </button>
             <a href="{% url 'categories:list' %}"
-               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                  {% translate "Cancel" %}
             </a>
         </form>

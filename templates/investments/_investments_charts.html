@@ -1,16 +1,16 @@
 {% load i18n l10n %}
-<div id="investments-charts" class="space-y-8">
+<div id="investments-charts" hx-request='{"noHeaders":false}' class="space-y-8">
 
     {# ---------------------------------------------------------------- #}
     {# Chart 1 — investment evolution (line), cumulative total in       #}
     {# {{ CURRENCY_SYMBOL }}, FX rate-at-time. Mirrors the Reports       #}
-    {# chart-1 visual contract (zero-line rose, indigo→fuchsia stroke). #}
+    {# chart-1 visual contract (neutral zero-line, investment stroke). #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+    <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
-                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate 'Investment evolution' %}</h2>
-                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate 'Investment evolution' %}</h2>
+                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
                     {% blocktranslate %}Your cumulative portfolio total in {{ CURRENCY_SYMBOL }} at the close of each month, converted through the exchange rate that was current at the time. Currencies with no rate set are excluded — see the warning on the “Simulated total” card above.{% endblocktranslate %}
                 </p>
             </div>
@@ -21,14 +21,14 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Previous window' %}"
-                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
                     &larr;
                 </a>
                 <div>
-                    <p class="text-sm font-semibold text-slate-900 dark:text-neutral-100">
+                    <p class="text-sm font-semibold text-forest dark:text-cream">
                         {{ total_window_start_date|date:'M Y' }} &ndash; {{ total_window_end_date|date:'M Y' }}
                     </p>
-                    <p class="text-xs text-slate-500 dark:text-neutral-500">
+                    <p class="text-xs text-forest/70 dark:text-cream/70">
                          {% if is_total_anchored_today %}{% translate 'Anchored on today' %}
                          {% elif total_anchor_date < today %}{% translate 'Past window' %}
                          {% else %}{% translate 'Future window' %}{% endif %}
@@ -40,7 +40,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Next window' %}"
-                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
                     &rarr;
                 </a>
                 {% if not is_total_anchored_today %}
@@ -49,7 +49,7 @@
                        hx-target="#investments-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
@@ -63,29 +63,29 @@
                   aria-label="{% translate 'Line chart of the cumulative investment total in base currency over the last 12 months' %}">
                 <defs>
                     <linearGradient id="investments-area" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="rgb(139 92 246)" stop-opacity="0.35" />
-                        <stop offset="100%" stop-color="rgb(139 92 246)" stop-opacity="0" />
+                        <stop offset="0%" stop-color="rgb(124 92 19)" stop-opacity="0.35" />
+                        <stop offset="100%" stop-color="rgb(124 92 19)" stop-opacity="0" />
                     </linearGradient>
                     <linearGradient id="investments-line" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="rgb(99 102 241)" />
-                        <stop offset="50%" stop-color="rgb(139 92 246)" />
-                        <stop offset="100%" stop-color="rgb(217 70 239)" />
+                        <stop offset="0%" stop-color="rgb(244 201 93)" />
+                        <stop offset="50%" stop-color="rgb(124 92 19)" />
+                        <stop offset="100%" stop-color="rgb(124 92 19)" />
                     </linearGradient>
                 </defs>
 
                 {% for line in chart_total.grid %}
                     <line x1="{{ chart_total.plot_left }}" y1="{{ line.y }}"
                           x2="{{ chart_total.plot_right }}" y2="{{ line.y }}"
-                          class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
+                          class="stroke-forest/10 dark:stroke-cream/10" stroke-width="1" />
                     <text x="{{ chart_total.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                          text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
+                          text-anchor="end" class="fill-forest/70 dark:fill-cream/70 text-xs tabular-nums">
                         {{ line.value|floatformat:0 }}
                     </text>
                 {% endfor %}
 
                 <line x1="{{ chart_total.plot_left }}" y1="{{ chart_total.zero_y }}"
                       x2="{{ chart_total.plot_right }}" y2="{{ chart_total.zero_y }}"
-                      class="stroke-rose-400 dark:stroke-rose-500" stroke-width="1.5" stroke-dasharray="5 4" />
+                      class="stroke-forest/30 dark:stroke-cream/30" stroke-width="1.5" stroke-dasharray="5 4" />
 
                 <polygon points="{{ chart_total.area }}" fill="url(#investments-area)" />
                 <polyline points="{{ chart_total.line }}" fill="none"
@@ -93,13 +93,27 @@
                           stroke-linecap="round" stroke-linejoin="round" />
 
                 {% for point in chart_total.points %}
-                    <circle cx="{{ point.x }}" cy="{{ point.y }}" r="3.5"
-                            class="fill-white dark:fill-slate-950 stroke-violet-400"
-                            stroke-width="2">
-                        <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
-                    </circle>
+                    <g class="group outline-none" tabindex="0"
+                       aria-label="{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}">
+                        <circle cx="{{ point.x }}" cy="{{ point.y }}" r="4.5"
+                                class="fill-white stroke-investment dark:fill-forest-deep dark:stroke-investment-light group-hover:stroke-investment-light dark:group-hover:stroke-investment transition-colors"
+                                stroke-width="2">
+                            <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
+                        </circle>
+                        <g transform="translate({{ point.tooltip_x }} {{ point.tooltip_y }})"
+                           class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                            <rect width="176" height="38" rx="19"
+                                  class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                            <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
+                                {{ point.label.date|date:'M Y' }}
+                            </text>
+                            <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
+                                {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}
+                            </text>
+                        </g>
+                    </g>
                     <text x="{{ point.x }}" y="{{ chart_total.label_y }}" text-anchor="middle"
-                          class="text-[11px] fill-slate-600 dark:fill-slate-500">
+                          class="text-xs fill-forest/70 dark:fill-cream/70">
                         {{ point.label.date|date:'M' }}
                     </text>
                 {% endfor %}
@@ -112,11 +126,11 @@
     {# Chart 2 — monthly flow (grouped bars): deposits, yields, withdrawals #}
     {# per month, both in {{ CURRENCY_SYMBOL }}, per-entry FX.          #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-5">
+    <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
-                <h2 class="text-xl font-semibold text-slate-900 dark:text-neutral-100">{% translate 'Monthly flow' %}</h2>
-                <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">
+                <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate 'Monthly flow' %}</h2>
+                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
                     {% blocktranslate %}What you deposited, earned, and withdrew each month — both in {{ CURRENCY_SYMBOL }}, converted at the rate that was current on each entry’s date.{% endblocktranslate %}
                 </p>
             </div>
@@ -127,14 +141,14 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Previous window' %}"
-                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
                     &larr;
                 </a>
                 <div>
-                    <p class="text-sm font-semibold text-slate-900 dark:text-neutral-100">
+                    <p class="text-sm font-semibold text-forest dark:text-cream">
                         {{ flow_window_start_date|date:'M Y' }} &ndash; {{ flow_window_end_date|date:'M Y' }}
                     </p>
-                    <p class="text-xs text-slate-500 dark:text-neutral-500">
+                    <p class="text-xs text-forest/70 dark:text-cream/70">
                          {% if is_flow_anchored_today %}{% translate 'Anchored on today' %}
                          {% elif flow_anchor_date < today %}{% translate 'Past window' %}
                          {% else %}{% translate 'Future window' %}{% endif %}
@@ -146,7 +160,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Next window' %}"
-                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
                     &rarr;
                 </a>
                 {% if not is_flow_anchored_today %}
@@ -155,17 +169,17 @@
                        hx-target="#investments-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-sm font-medium text-indigo-600 dark:text-indigo-400 transition hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
                 <ul class="flex flex-wrap items-center gap-4">
                     {% for entry in chart_flow.legend %}
-                        <li class="flex items-center gap-2 text-sm text-slate-600 dark:text-neutral-400">
+                        <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-cream/70">
                             <span class="h-2.5 w-2.5 rounded-sm
-                                {% if entry.tone == 'income' %}bg-emerald-400
-                                {% elif entry.tone == 'investment' %}bg-amber-400
-                                {% else %}bg-rose-400{% endif %}"></span>
+                                {% if entry.tone == 'income' %}bg-income dark:bg-income-light
+                                {% elif entry.tone == 'investment' %}bg-investment dark:bg-investment-light
+                                {% else %}bg-expense{% endif %}"></span>
                             {{ entry.name }}
                         </li>
                     {% endfor %}
@@ -181,25 +195,41 @@
                 {% for line in chart_flow.grid %}
                     <line x1="{{ chart_flow.plot_left }}" y1="{{ line.y }}"
                           x2="{{ chart_flow.plot_right }}" y2="{{ line.y }}"
-                          class="stroke-slate-200 dark:stroke-slate-700" stroke-width="1" />
+                          class="stroke-forest/10 dark:stroke-cream/10" stroke-width="1" />
                     <text x="{{ chart_flow.plot_left }}" y="{{ line.y }}" dx="-8" dy="4"
-                          text-anchor="end" class="fill-slate-600 dark:fill-slate-500 text-[11px] tabular-nums">
+                          text-anchor="end" class="fill-forest/70 dark:fill-cream/70 text-xs tabular-nums">
                         {{ line.value|floatformat:0 }}
                     </text>
                 {% endfor %}
 
                 {% for group in chart_flow.groups %}
                     {% for bar in group.bars %}
-                        <rect x="{{ bar.x }}" y="{{ bar.y }}"
-                              width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                               class="{% if bar.tone == 'income' %}fill-emerald-400/80
-                                      {% elif bar.tone == 'investment' %}fill-amber-400/80
-                                      {% else %}fill-rose-400/80{% endif %}">
-                            <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
-                        </rect>
+                        {% if bar.value %}
+                            <g class="group outline-none" tabindex="0"
+                               aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
+                                <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                                      width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                      class="{% if bar.tone == 'income' %}fill-income/80 dark:fill-income-light/80 group-hover:fill-income dark:group-hover:fill-income-light
+                                             {% elif bar.tone == 'investment' %}fill-investment/80 dark:fill-investment-light/80 group-hover:fill-investment dark:group-hover:fill-investment-light
+                                             {% else %}fill-expense/80 dark:fill-expense-light/80 group-hover:fill-expense dark:group-hover:fill-expense-light{% endif %} transition-colors">
+                                    <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
+                                </rect>
+                                <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
+                                   class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                    <rect width="176" height="38" rx="19"
+                                          class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                                    <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
+                                        {{ group.label.date|date:'M Y' }} &middot; {{ bar.name }}
+                                    </text>
+                                    <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
+                                        {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}
+                                    </text>
+                                </g>
+                            </g>
+                        {% endif %}
                     {% endfor %}
                     <text x="{{ group.center }}" y="{{ chart_flow.label_y }}" text-anchor="middle"
-                          class="text-[11px] fill-slate-600 dark:fill-slate-500">
+                          class="text-xs fill-forest/70 dark:fill-cream/70">
                         {{ group.label.date|date:'M' }}
                     </text>
                 {% endfor %}

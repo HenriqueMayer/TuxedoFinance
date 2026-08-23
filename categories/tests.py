@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import translation
 
 from categories.models import Category
 
@@ -34,6 +35,25 @@ class DefaultCategorySeedingTests(TestCase):
             expected_names,
         )
         self.assertFalse(categories.exclude(parent_category=None).exists())
+
+    def test_new_portuguese_user_receives_localized_default_categories(self):
+        with translation.override('pt-br'):
+            user = User.objects.create_user('nova-conta', password='test')
+
+        self.assertEqual(
+            list(Category.objects.filter(user=user).order_by('pk').values_list('name', flat=True)),
+            [
+                'Mercado',
+                'Alimentação',
+                'Assinaturas',
+                'Educação',
+                'Academia',
+                'Transporte',
+                'Animais de estimação',
+                'Hobbies e entretenimento',
+                'Serviços',
+            ],
+        )
 
 
 class CategoryListFilterTests(TestCase):

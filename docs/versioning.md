@@ -1,0 +1,62 @@
+# Versioning and releases
+
+Tuxedo Finance uses [Semantic Versioning](https://semver.org/) with versions in
+the form `MAJOR.MINOR.PATCH`:
+
+- `MAJOR` changes when an upgrade is intentionally incompatible.
+- `MINOR` changes when backward-compatible functionality is added.
+- `PATCH` changes when backward-compatible defects or security issues are fixed.
+
+Before `1.0.0`, a minor version may include an announced compatibility break.
+Any such change must be called out in the changelog and in the release notes.
+
+## Source of truth
+
+The canonical application version is `[project].version` in the root
+[`pyproject.toml`](../pyproject.toml). The corresponding project entry in
+`uv.lock`, the README version badge and the changelog are validated against it
+by `scripts/check_version.py`.
+
+`package.json` is a private manifest for Tailwind and Playwright development
+tools. It does not carry a second application version.
+
+Release tags use the same version prefixed with `v`, for example `v0.1.0`.
+
+## Preparing a release
+
+1. Choose the next version from the changes accumulated in `develop`.
+2. Update `[project].version` in `pyproject.toml`.
+3. Run `uv lock` so the editable project entry in `uv.lock` matches.
+4. Move the relevant entries from `Unreleased` to a dated version section in
+   [`CHANGELOG.md`](../CHANGELOG.md).
+5. Run the version validator and the complete project checks:
+
+   ```bash
+   uv run python scripts/check_version.py
+   uv run python manage.py check
+   uv run python manage.py makemigrations --check --dry-run
+   uv run python manage.py test
+   npm run test:e2e
+   ```
+
+6. Open the release pull request from `develop` to `main` and wait for CI.
+7. After the release commit is on `main`, create and push the annotated tag:
+
+   ```bash
+   git switch main
+   git pull --ff-only
+   git tag -a v0.1.0 -m "Tuxedo Finance v0.1.0"
+   git push origin v0.1.0
+   ```
+
+8. Create the GitHub release from that tag using the matching changelog section.
+
+Feature branches continue to target `develop`. They normally add notes under
+`Unreleased` but do not create tags themselves.
+
+## Automated guarantees
+
+CI validates every pull request and pushes to `main` or `develop`. It also runs
+for `v*` tags; tagged builds fail when the tag differs from `pyproject.toml` or
+when the matching dated changelog section is missing. This prevents publishing
+two different versions under the same release identity.

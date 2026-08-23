@@ -4,9 +4,8 @@
  * and the OS `prefers-color-scheme` *before* the stylesheet paints and
  * toggles the `dark` class on <html> so the first render is already in the
  * right theme. This file owns the only piece that needs the DOM: wiring the
- * navbar's theme buttons so a click flips that class and persists
- * the choice. ~15 lines of vanilla JS — the only JavaScript in the project
- * beside the browser-loaded Tailwind Play CDN. */
+ * navbar's theme buttons so a click flips that class and persists the choice.
+ * Delegation keeps the controls working after HTMX replaces the page body. */
 (function () {
     'use strict';
 
@@ -20,15 +19,7 @@
         }
     }
 
-    function init() {
-        document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
-            btn.addEventListener('click', toggle);
-        });
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-theme-toggle]')) toggle();
+    });
 })();

@@ -1,26 +1,33 @@
-{% load i18n %}
+{% load i18n static %}
 {% comment %}
-Public navbar (PRD §9.6): Tuxedo Finance wordmark and theme toggle +
-Log in / Sign up on the right. Included automatically by base.html for
-anonymous visitors — never include this directly in a page template.
+Public navbar — Final Design System §0/§3 (Haven & Hound language).
+
+Included automatically by base.html for anonymous visitors — never include
+this directly in a page template. Brand block (chip + two-line wordmark),
+language selector, theme toggle and Log in / Sign up pills on the right.
 {% endcomment %}
-<header class="sticky top-0 z-40 border-b border-slate-200 dark:border-[#323232] bg-white/80 dark:bg-[#2B2B2B]/80 backdrop-blur">
+<header class="sticky top-0 z-40 border-b border-forest/10 dark:border-cream/10 bg-cream/90 dark:bg-forest-deep/90 backdrop-blur">
     <nav class="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <a href="{% url 'pages:landing' %}" class="flex items-center gap-0 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B] rounded-lg">
-            <span class="text-slate-900 dark:text-white">Tuxedo</span><span class="hidden text-amber-600 dark:text-amber-400 sm:inline">Finance</span>
+        <a href="{% url 'pages:landing' %}" class="flex shrink-0 items-center gap-3 focus:outline-none focus:ring-2 focus:ring-caramel/40 rounded-xl">
+            <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover ring-1 ring-forest/10 dark:ring-cream/20">
+            <span class="hidden sm:block text-left leading-tight">
+                <span class="block text-sm tracking-[0.2em] uppercase font-medium">{% translate 'Tuxedo' %}</span>
+                <span class="block text-xs tracking-[0.15em] uppercase text-caramel-ink dark:text-caramel-light mt-0.5">{% translate 'Finance' %}</span>
+            </span>
         </a>
 
         <div class="flex items-center gap-2 sm:gap-3">
             {% include 'partials/language_selector.html' with selector_id='public' %}
             {% include 'partials/theme_toggle.html' with legacy_theme_id=True %}
             <a href="{% url 'accounts:login' %}"
-               class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B] sm:px-4">
+               class="inline-flex items-center rounded-full border border-forest px-5 py-2.5 text-xs uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/50 dark:text-cream dark:hover:bg-cream dark:hover:text-forest">
                  {% translate 'Log in' %}
             </a>
             {% if ALLOW_SIGNUPS %}
                 <a href="{% url 'accounts:signup' %}"
-                   class="hidden items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B] sm:inline-flex">
-                 {% translate 'Sign up' %}
+                   class="group hidden items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-xs uppercase tracking-widest font-medium text-forest-deep transition-colors hover:bg-caramel-light sm:inline-flex">
+                     {% translate 'Sign up' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
                 </a>
             {% endif %}
             {% include 'partials/project_menu.html' %}

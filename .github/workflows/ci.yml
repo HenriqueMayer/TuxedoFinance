@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main, refactoring]
+    branches: [main, develop]
+    tags: ['v*']
   pull_request:
 
 permissions:
@@ -26,11 +27,30 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
       - name: Install gettext
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y gettext
 
       - name: Sync locked dependencies
         run: uv sync --locked
+
+      - name: Validate project version
+        run: uv run python scripts/check_version.py
+
+      - name: Install pinned frontend tools
+        run: npm ci
+
+      - name: Verify compiled frontend assets
+        run: |
+          npx tailwindcss -c tailwind.config.js -i assets/css/tailwind.css -o "$RUNNER_TEMP/app.css" --minify
+          cmp "$RUNNER_TEMP/app.css" static/css/app.css
+          actual_htmx_sri=$(python -c "import base64, hashlib, pathlib; data=pathlib.Path('static/js/vendor/htmx.min.js').read_bytes().rstrip(b'\\n'); print(base64.b64encode(hashlib.sha384(data).digest()).decode())")
+          test "$actual_htmx_sri" = "H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V"
 
       - name: Django system checks
         env:
@@ -77,3 +97,34 @@ jobs:
         run: |
           uv export --locked --no-dev --format requirements-txt > "$RUNNER_TEMP/requirements.txt"
           uvx --from 'pip-audit>=2.7,<3' pip-audit --strict -r "$RUNNER_TEMP/requirements.txt"
+
+      - name: Install Chromium for browser smoke tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser smoke tests
+        env:
+          SECRET_KEY: ci-browser-test-secret-key
+          CASHFLOW_DATA_DIR: ${{ runner.temp }}/e2e-data
+          E2E_BASE_URL: http://127.0.0.1:8765
+        run: |
+          mkdir -p "$CASHFLOW_DATA_DIR"
+          uv run python manage.py migrate --noinput
+          uv run python manage.py runserver 127.0.0.1:8765 --noreload &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..30}; do
+            curl --fail --silent "$E2E_BASE_URL/" >/dev/null && break
+            sleep 1
+          done
+          curl --fail --silent "$E2E_BASE_URL/" >/dev/null
+          npm run test:e2e
+
+      - name: Upload browser failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-artifacts
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore

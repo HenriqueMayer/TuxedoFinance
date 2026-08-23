@@ -27,6 +27,11 @@ local_settings.py
 coverage.xml
 htmlcov/
 
+# Frontend development and browser-test artifacts
+node_modules/
+playwright-report/
+test-results/
+
 # Raw screen recordings (~70 MB, above GitHub's push limit). The compressed
 # re-encodes beside them are the ones committed.
 docs/media/*.mp4

@@ -15,7 +15,7 @@ methods to explicit banking and ledger concepts.
 | Authentication | Native `django.contrib.auth` |
 | Dependency management | `uv` |
 | Views | Class-Based Views |
-| Supported runtime | Django development server (`runserver`); optional single-instance Docker packaging |
+| Supported runtime | Django development server (`runserver`) |
 | Localization | Django gettext (`en`, `pt-br`) |
 
 Public registration is a deployment-level policy, not a separate account model:
@@ -23,12 +23,6 @@ Public registration is a deployment-level policy, not a separate account model:
 accounts signup view enforces it on every request, while public templates merely
 mirror the state by showing or hiding signup calls to action. Existing login
 flows are independent of this switch.
-
-Docker is packaging only, not a second architecture: it runs the same Django
-application and SQLite database in one container, with `/data` as the persistent
-data mount and automatic startup migrations. The image runs as a non-root user;
-its HTTP healthcheck is intended only for local visibility. It does not provide
-replicas, a separate database, production orchestration, or automated backups.
 
 ## Domain apps
 
@@ -151,15 +145,19 @@ all domain URLs remain stable across languages.
 Translation concerns stop at fixed interface and system copy. Python uses
 `gettext_lazy` for deferred declarations and `gettext` at runtime; templates
 use `translate` and `blocktranslate`. The project-level Portuguese catalog is
-`locale/pt_BR/LC_MESSAGES/django.po`/`django.mo`. Persisted domain and user data,
-including categories, are not looked up in gettext and therefore remain
-language-neutral. Currency is a separate axis: parallel `core.formats.en` and
+`locale/pt_BR/LC_MESSAGES/django.po`/`django.mo`. The nine default category
+names are resolved once through gettext in the language active when the account
+is created, then stored as ordinary user-owned data. Existing and user-entered
+categories are never translated automatically. Currency is a separate axis:
+parallel `core.formats.en` and
 `core.formats.pt_BR` modules both resolve separators from currency metadata.
 
 ## Delivery and reset
 
-Settings, middleware, authentication, Tailwind CDN delivery and the
-server-rendered request flow remain deliberately small and local-first.
+Settings, middleware, authentication, precompiled Tailwind delivery and the
+server-rendered request flow remain deliberately small and local-first. The
+browser receives a versioned static stylesheet and never compiles utility
+classes during navigation.
 The current schema is intentionally incompatible with legacy financial data;
 there is no dual-write or automatic conversion. See
 [data-model.md](data-model.md#breaking-release).

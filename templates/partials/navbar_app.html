@@ -1,124 +1,146 @@
-{% load i18n %}
+{% load i18n static %}
 {% comment %}
-Authenticated navbar (PRD §9.6): links (Dashboard, Reports, Transactions,
-Categories, Banks), a theme toggle (PRD §9 — light/dark), and a user menu
-with Log out. Included automatically by base.html for authenticated users —
-never include this directly in a page template.
+Authenticated navbar — Final Design System §0/§3 (Haven & Hound language).
 
-Active link state: text-slate-900 dark:text-white + gradient underline.
-Inactive link state: text-slate-600 dark:text-neutral-400, hover
-text-slate-900 dark:hover:text-neutral-200.
+Included automatically by base.html for authenticated users — never include
+this directly in a page template.
+
+Brand block: tuxedo-mark-256.png chip in a rounded-xl frame + two-line
+wordmark (TUXEDO / FINANCE in caramel), linked to the public landing page.
+
+Active link state: caramel text + 1px caramel rule underneath (`after:`).
+Inactive: forest/70 (cream/70 on dark), hover crossfades to caramel.
+
+Icon buttons are circles; dropdown panels are white rounded-3xl cards.
+
+Mobile menu: fullscreen forest-deep modal that slides in from the right
+(500ms ease-in-out), wired by static/js/mobile-menu.js via #menu-btn,
+#close-menu-btn and the `.mobile-link` class. Body scroll and background focus
+are locked while the overlay is open; Tab is contained inside the dialog.
 
 Theme toggles use the `data-theme-toggle` attribute; static/js/theme.js wires
-each desktop/mobile click handler. The matching FOUC
-snippet in base.html sets the `.dark` class on <html> before paint.
+each desktop/overlay click handler. The matching FOUC snippet in base.html
+sets the `.dark` class on <html> before paint.
 
-Log out is a POST <form> (CSRF token) styled as a nav link/button — Django's
+Log out is a POST <form> (CSRF token) styled as a pill button — Django's
 LogoutView rejects GET requests, so it must never be a plain <a href>.
-
-Mobile menu: CSS-only disclosure via <details>/<summary> (no JS), collapsed
-below the md breakpoint per PRD §9.6 (`hidden md:flex` on desktop nav).
 {% endcomment %}
 {% url 'dashboard:index' as dashboard_url %}
+{% url 'pages:landing' as landing_url %}
 {% url 'dashboard:reports' as reports_url %}
 {% url 'transactions:list' as transactions_url %}
 {% url 'categories:list' as categories_url %}
 {% url 'banking:list' as banking_url %}
 {% url 'investments:list' as investments_url %}
 {% url 'accounts:settings' as settings_url %}
-<header class="sticky top-0 z-40 border-b border-slate-200 dark:border-[#323232] bg-white/80 dark:bg-[#2B2B2B]/80 backdrop-blur">
+<header class="sticky top-0 z-40 border-b border-forest/10 dark:border-cream/10 bg-cream/90 dark:bg-forest-deep/90 backdrop-blur">
     <nav class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between gap-4">
-            <a href="{{ dashboard_url }}" class="flex shrink-0 items-center gap-0 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B] rounded-lg">
-                <span class="hidden text-slate-900 dark:text-white sm:inline">Tuxedo</span><span class="hidden text-amber-600 dark:text-amber-400 sm:inline">Finance</span>
+            <!-- Brand block -->
+            <a href="{{ landing_url }}" class="flex shrink-0 items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-caramel/40 rounded-xl">
+                <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover ring-1 ring-forest/10 dark:ring-cream/20">
+                <span class="hidden sm:block text-left leading-tight">
+                    <span class="block text-sm tracking-[0.2em] uppercase font-medium">{% translate 'Tuxedo' %}</span>
+                    <span class="block text-xs tracking-[0.15em] uppercase text-caramel-ink dark:text-caramel-light mt-0.5">{% translate 'Finance' %}</span>
+                </span>
             </a>
 
             <!-- Desktop links -->
-            <div class="hidden items-center gap-6 md:flex">
+            <div class="hidden items-center gap-7 xl:flex">
                 <a href="{{ dashboard_url }}"
-                   class="relative pb-1 text-sm font-medium transition {% if request.path == dashboard_url %}text-slate-900 dark:text-white after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-indigo-500 after:via-violet-500 after:to-fuchsia-500{% else %}text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == dashboard_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Dashboard' %}
                 </a>
                 <a href="{{ reports_url }}"
-                   class="relative pb-1 text-sm font-medium transition {% if request.path == reports_url %}text-slate-900 dark:text-white after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-indigo-500 after:via-violet-500 after:to-fuchsia-500{% else %}text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == reports_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Reports' %}
                 </a>
                 <a href="{{ transactions_url }}"
-                   class="relative pb-1 text-sm font-medium transition {% if request.path == transactions_url %}text-slate-900 dark:text-white after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-indigo-500 after:via-violet-500 after:to-fuchsia-500{% else %}text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == transactions_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Transactions' %}
                 </a>
                 <a href="{{ categories_url }}"
-                   class="relative pb-1 text-sm font-medium transition {% if request.path == categories_url %}text-slate-900 dark:text-white after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-indigo-500 after:via-violet-500 after:to-fuchsia-500{% else %}text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == categories_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Categories' %}
                 </a>
                 <a href="{{ banking_url }}"
-                   class="relative pb-1 text-sm font-medium transition {% if request.resolver_match.namespace == 'banking' %}text-slate-900 dark:text-white after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-indigo-500 after:via-violet-500 after:to-fuchsia-500{% else %}text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'banking' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Banks' %}
                 </a>
                 <a href="{{ investments_url }}"
-                   class="relative pb-1 text-sm font-medium transition {% if request.resolver_match.namespace == 'investments' %}text-slate-900 dark:text-white after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-gradient-to-r after:from-indigo-500 after:via-violet-500 after:to-fuchsia-500{% else %}text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'investments' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
                      {% translate 'Investments' %}
                 </a>
                 <a href="{{ settings_url }}"
                    aria-label="{% translate 'Settings' %}"
                    title="{% translate 'Settings' %}"
-                   class="inline-flex h-9 w-9 items-center justify-center rounded-lg transition focus:outline-none focus:ring-2 focus:ring-indigo-500 {% if request.resolver_match.url_name == 'settings' and request.resolver_match.namespace == 'accounts' %}bg-indigo-500/10 text-indigo-600 dark:text-indigo-400{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-neutral-400 dark:hover:bg-[#3a3a3a] dark:hover:text-neutral-200{% endif %}">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border transition-colors {% if request.resolver_match.url_name == 'settings' and request.resolver_match.namespace == 'accounts' %}border-caramel/40 text-caramel-ink dark:text-caramel-light{% else %}border-forest/20 hover:bg-forest/5 dark:border-cream/20 dark:hover:bg-cream/10{% endif %}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.073.04.145.083.216.127.325.2.72.263 1.077.13l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.993a6.8 6.8 0 0 1 0 .255c-.008.38.137.753.43.994l1.003.827c.424.35.534.954.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.491l-1.217-.456c-.357-.133-.752-.07-1.077.13a6.8 6.8 0 0 1-.216.127c-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.8 6.8 0 0 1-.216-.127c-.325-.2-.72-.263-1.077-.13l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.241.438-.614.43-.994a6.8 6.8 0 0 1 0-.255c.008-.38-.137-.753-.43-.993l-1.003-.827a1.125 1.125 0 0 1-.26-1.431L4.856 6.38a1.125 1.125 0 0 1 1.37-.49l1.217.456c.357.133.752.07 1.077-.13.071-.044.143-.087.216-.127.332-.184.582-.496.645-.87l.213-1.281Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Z" />
                     </svg>
                     <span class="sr-only">{% translate 'Settings' %}</span>
                 </a>
             </div>
 
-            <!-- User menu (desktop) -->
-            <div class="hidden items-center gap-3 md:flex">
+            <!-- User area (desktop) -->
+            <div class="hidden items-center gap-3 xl:flex">
                 {% include 'partials/project_menu.html' %}
                 {% include 'partials/language_selector.html' with selector_id='desktop' %}
                 {% include 'partials/theme_toggle.html' with legacy_theme_id=True %}
-                <span class="text-sm text-slate-600 dark:text-neutral-400">{{ request.user.username }}</span>
-                <form method="post" action="{% url 'accounts:logout' %}">
+                <span class="hidden lg:inline text-sm text-forest/70 dark:text-cream/70 font-normal">{{ request.user.username }}</span>
+                <form method="post" action="{% url 'accounts:logout' %}" hx-boost="false">
                     {% csrf_token %}
                     <button type="submit"
-                            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                            class="rounded-full border border-forest/30 px-5 py-2 text-xs uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
                          {% translate 'Log out' %}
                     </button>
                 </form>
             </div>
 
-            <!-- Mobile project and navigation menus -->
-            <div class="flex items-center gap-2 md:hidden">
+            <!-- Mobile actions -->
+            <div class="flex items-center gap-2 xl:hidden">
                 {% include 'partials/project_menu.html' %}
-                <details class="relative">
-                <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 [&::-webkit-details-marker]:hidden">
+                <button type="button" id="menu-btn" aria-controls="mobile-menu" aria-expanded="false"
+                        class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
-                     <span class="sr-only">{% translate 'Toggle menu' %}</span>
-                </summary>
-                <div class="absolute right-0 z-50 mt-2 w-56 space-y-1 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-3 shadow-lg">
-                    <p class="px-3 pb-1 text-sm text-slate-500 dark:text-neutral-500">{{ request.user.username }}</p>
-                     <a href="{{ dashboard_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.path == dashboard_url %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">{% translate 'Dashboard' %}</a>
-                     <a href="{{ reports_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.path == reports_url %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">{% translate 'Reports' %}</a>
-                     <a href="{{ transactions_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.path == transactions_url %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">{% translate 'Transactions' %}</a>
-                     <a href="{{ categories_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.path == categories_url %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">{% translate 'Categories' %}</a>
-                     <a href="{{ banking_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.resolver_match.namespace == 'banking' %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">{% translate 'Banks' %}</a>
-                     <a href="{{ investments_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.resolver_match.namespace == 'investments' %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">{% translate 'Investments' %}</a>
-                     <a href="{{ settings_url }}" class="block rounded-lg px-3 py-2 text-sm font-medium {% if request.resolver_match.url_name == 'settings' and request.resolver_match.namespace == 'accounts' %}text-slate-900 dark:text-white{% else %}text-slate-700 dark:text-neutral-200{% endif %} hover:bg-slate-100 dark:hover:bg-[#3a3a3a]">{% translate 'Settings' %}</a>
-                     <div class="my-2 flex items-center justify-between px-3">
-                         {% include 'partials/language_selector.html' with selector_id='mobile' %}
-                         {% include 'partials/theme_toggle.html' %}
-                    </div>
-                    <div class="my-2 border-t border-slate-200 dark:border-slate-700"></div>
-                    <form method="post" action="{% url 'accounts:logout' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="block w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10">
-                             {% translate 'Log out' %}
-                        </button>
-                    </form>
-                </div>
-                </details>
+                    <span class="sr-only">{% translate 'Toggle menu' %}</span>
+                </button>
             </div>
         </div>
     </nav>
 </header>
+
+<!-- Mobile fullscreen overlay menu (Final Design System §0) -->
+<div id="mobile-menu" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title" class="fixed inset-0 bg-forest-deep z-50 transform translate-x-full transition-transform duration-500 ease-in-out flex flex-col justify-center items-center" aria-hidden="true" inert>
+    <h2 id="mobile-menu-title" class="sr-only">{% translate 'Navigation menu' %}</h2>
+    <button type="button" id="close-menu-btn" aria-controls="mobile-menu" aria-expanded="false"
+            class="absolute top-6 right-6 p-2 text-cream transition-colors hover:text-caramel-light">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12" />
+        </svg>
+        <span class="sr-only">{% translate 'Close menu' %}</span>
+    </button>
+    <div class="flex flex-col items-center gap-7 text-cream">
+        <a href="{{ dashboard_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Dashboard' %}</a>
+        <a href="{{ reports_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Reports' %}</a>
+        <a href="{{ transactions_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Transactions' %}</a>
+        <a href="{{ categories_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Categories' %}</a>
+        <a href="{{ banking_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Banks' %}</a>
+        <a href="{{ investments_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Investments' %}</a>
+        <a href="{{ settings_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Settings' %}</a>
+        <div class="mt-4 flex items-center gap-4">
+            {% include 'partials/language_selector.html' with selector_id='mobile' overlay=True %}
+            {% include 'partials/theme_toggle.html' with overlay=True %}
+        </div>
+        <form method="post" action="{% url 'accounts:logout' %}" hx-boost="false">
+            {% csrf_token %}
+            <button type="submit"
+                    class="mt-2 rounded-full border border-caramel-light px-8 py-3 text-xs font-medium uppercase tracking-widest text-caramel-light transition-colors hover:bg-caramel-light hover:text-forest-deep">
+                 {% translate 'Log out' %}
+            </button>
+        </form>
+    </div>
+</div>

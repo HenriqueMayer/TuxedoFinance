@@ -1,0 +1,193 @@
+{% load i18n %}
+{% url 'investments:list' as list_url %}
+<section id="investment-movements"
+         hx-request='{"noHeaders":false}'
+         class="scroll-mt-24 space-y-6 outline-none"
+         tabindex="-1"
+         aria-labelledby="investment-movements-title">
+    <h2 id="investment-movements-title"
+        class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">
+        {% translate "Investment operations" %}
+    </h2>
+
+    <form method="get"
+          action="{{ list_url }}#investment-movements"
+          hx-get="{{ list_url }}"
+          hx-target="#investment-movements"
+          hx-swap="outerHTML"
+          hx-push-url="true"
+          data-scroll-target="investment-movements"
+          class="grid gap-3 rounded-3xl bg-cream p-5 sm:grid-cols-2 lg:grid-cols-6 dark:bg-forest">
+        <div class="space-y-1.5 lg:col-span-2">
+            <label for="investment-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+                {% translate "Search investments" %}
+            </label>
+            <input id="investment-search" type="search" name="q" value="{{ search_query }}"
+                   placeholder="{% translate 'Product, asset, reason or notes' %}"
+                   class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest placeholder:text-forest/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream dark:placeholder:text-cream/70">
+        </div>
+        <div class="space-y-1.5">
+            <label for="investment-kind" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+                {% translate "Operation type" %}
+            </label>
+            <select id="investment-kind" name="kind"
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
+                <option value="">{% translate 'All types' %}</option>
+                {% for value, label in kind_choices %}
+                    <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="space-y-1.5">
+            <label for="investment-bank" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+                {% translate "Bank" %}
+            </label>
+            <select id="investment-bank" name="bank"
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
+                <option value="">{% translate 'All banks' %}</option>
+                {% for bank in bank_choices %}
+                    <option value="{{ bank.pk }}" {% if selected_bank == bank.pk|stringformat:'s' %}selected{% endif %}>{{ bank.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="space-y-1.5">
+            <label for="investment-product" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+                {% translate "Investment product" %}
+            </label>
+            <select id="investment-product" name="product"
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
+                <option value="">{% translate 'All products' %}</option>
+                {% for product in product_choices %}
+                    <option value="{{ product.pk }}" {% if selected_product == product.pk|stringformat:'s' %}selected{% endif %}>{{ product.bank.name }} / {{ product.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="space-y-1.5">
+            <label for="investment-asset" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+                {% translate "Asset" %}
+            </label>
+            <select id="investment-asset" name="asset"
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
+                <option value="">{% translate 'All assets' %}</option>
+                {% for asset in asset_choices %}
+                    <option value="{{ asset.pk }}" {% if selected_asset == asset.pk|stringformat:'s' %}selected{% endif %}>{{ asset.code }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-6">
+            <button type="submit"
+                    data-scroll-target="investment-movements"
+                    class="rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-forest dark:text-cream/90 dark:hover:bg-cream dark:hover:text-forest">
+                {% translate 'Filter' %}
+            </button>
+            {% if search_query or selected_kind or selected_bank or selected_product or selected_asset %}
+                <a href="{{ list_url }}#investment-movements"
+                   hx-get="{{ list_url }}"
+                   hx-target="#investment-movements"
+                   hx-swap="outerHTML"
+                   hx-push-url="true"
+                   data-scroll-target="investment-movements"
+                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 transition hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel dark:text-cream/70 dark:hover:text-cream">
+                    {% translate "Clear filters" %}
+                </a>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if investments %}
+        <div class="rounded-3xl bg-cream p-2 dark:bg-forest">
+            <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+                {% for investment in investments %}
+                    <li class="flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <div class="flex gap-2">
+                                <strong class="font-sans text-lg">{{ investment.asset.code }}</strong>
+                                <span class="text-sm">{{ investment.get_kind_display }}</span>
+                            </div>
+                            <p class="text-xs text-forest/70 dark:text-cream/70">{{ investment.product.bank.name }} / {{ investment.product.name }} - {{ investment.date|date:USER_DATE_FORMAT }}</p>
+                            <p class="mt-1 text-sm">
+                                {% if investment.asset.valuation_mode == 'MONETARY' %}
+                                    {% translate "Value:" %} {% include "partials/money.html" with currency=investment.currency amount=investment.amount %};
+                                    {% translate "Fees:" %} {% include "partials/money.html" with currency=investment.currency amount=investment.fees %}
+                                {% else %}
+                                    {{ investment.quantity|floatformat:8 }} {% translate "units at" %}
+                                    {% include "partials/money.html" with currency=investment.currency amount=investment.unit_price %} =
+                                    {% include "partials/money.html" with currency=investment.currency amount=investment.gross_value %};
+                                    {% translate "Fees:" %} {% include "partials/money.html" with currency=investment.currency amount=investment.fees %}
+                                {% endif %}
+                            </p>
+                            {% if investment.reason or investment.notes %}
+                                <p class="text-xs text-forest/70 dark:text-cream/70">{{ investment.reason }}{% if investment.reason and investment.notes %} - {% endif %}{{ investment.notes }}</p>
+                            {% endif %}
+                            <p class="text-xs text-forest/70 dark:text-cream/70">
+                                {% if investment.source_account %}
+                                    {% blocktranslate with account=investment.source_account %}Funded by {{ account }}:{% endblocktranslate %}
+                                    {% include "partials/money.html" with currency=investment.source_account.currency amount=investment.cash_amount %}
+                                {% elif investment.source_program %}
+                                    {% blocktranslate with program=investment.source_program points=investment.source_points|floatformat:2 %}Funded by {{ program }}: {{ points }} points{% endblocktranslate %}
+                                {% elif investment.destination_account %}
+                                    {% blocktranslate with account=investment.destination_account %}Paid to {{ account }}:{% endblocktranslate %}
+                                    {% include "partials/money.html" with currency=investment.destination_account.currency amount=investment.cash_amount %}
+                                {% else %}
+                                    {% translate 'Internal yield' %}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="{% url 'investments:update' investment.pk %}"
+                               class="rounded-full border border-forest/30 px-4 py-2 text-xs font-medium uppercase tracking-widest">
+                                {% translate 'Edit' %}
+                            </a>
+                            <a href="{% url 'investments:delete' investment.pk %}"
+                               class="rounded-full bg-expense/10 px-4 py-2 text-xs font-medium uppercase tracking-widest text-expense ring-1 ring-inset ring-expense/30">
+                                {% translate 'Delete' %}
+                            </a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p class="rounded-3xl bg-white p-6 text-sm font-normal text-forest/70 shadow-sm dark:bg-forest dark:text-cream/70">
+            {% translate 'No matching operations.' %}
+        </p>
+    {% endif %}
+
+    {% if is_paginated %}
+        <nav class="flex items-center justify-between gap-4" aria-label="{% translate 'Pagination' %}">
+            {% if page_obj.has_previous %}
+                {% querystring page=page_obj.previous_page_number as previous_url %}
+                <a href="{{ previous_url }}#investment-movements"
+                   hx-get="{{ previous_url }}"
+                   hx-target="#investment-movements"
+                   hx-swap="outerHTML"
+                   hx-push-url="true"
+                   data-scroll-target="investment-movements"
+                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-forest dark:text-cream/90 dark:hover:bg-cream dark:hover:text-forest">
+                    {% translate 'Previous' %}
+                </a>
+            {% else %}
+                <span></span>
+            {% endif %}
+
+            <p class="text-sm text-forest/70 dark:text-cream/70">
+                {% blocktranslate with number=page_obj.number total=page_obj.paginator.num_pages %}Page {{ number }} of {{ total }}{% endblocktranslate %}
+            </p>
+
+            {% if page_obj.has_next %}
+                {% querystring page=page_obj.next_page_number as next_url %}
+                <a href="{{ next_url }}#investment-movements"
+                   hx-get="{{ next_url }}"
+                   hx-target="#investment-movements"
+                   hx-swap="outerHTML"
+                   hx-push-url="true"
+                   data-scroll-target="investment-movements"
+                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-forest dark:text-cream/90 dark:hover:bg-cream dark:hover:text-forest">
+                    {% translate 'Next' %}
+                </a>
+            {% else %}
+                <span></span>
+            {% endif %}
+        </nav>
+    {% endif %}
+</section>

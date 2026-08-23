@@ -60,6 +60,8 @@ class InvestmentListView(LoginRequiredMixin, ListView):
 
     def get_template_names(self):
         if self.request.headers.get('HX-Request') == 'true':
+            if self.request.headers.get('HX-Target') == 'investment-movements':
+                return ['investments/_investment_movements.html']
             return ['investments/_investments_charts.html']
         return [self.template_name]
 

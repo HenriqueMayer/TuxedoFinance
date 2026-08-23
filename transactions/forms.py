@@ -8,12 +8,13 @@ from transactions.models import Transaction
 
 
 INPUT_CLASSES = (
-    'w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 '
-    'text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
+    'w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm text-forest '
+    'placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 '
+    'dark:border-cream/20 dark:bg-forest-deep dark:text-cream dark:placeholder:text-cream/40'
 )
 CHECKBOX_CLASSES = (
-    'h-5 w-5 rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] text-indigo-500 '
-    'focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
+    'h-5 w-5 rounded-md border-forest/20 bg-white accent-caramel '
+    'focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:border-cream/20 dark:bg-forest-deep'
 )
 
 

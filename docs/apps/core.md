@@ -5,12 +5,7 @@ The project package: cross-cutting configuration, localization, currency metadat
 `SECRET_KEY` is required from the process environment or the ignored root
 `.env` file. Settings contains no committed secret or automatic fallback;
 generate and keep a private key for each installation. Process variables take
-priority over `.env`, including in CI and Docker.
-
-When the optional Docker image is used, `CASHFLOW_DATA_DIR=/data` moves the
-SQLite file into the persistent container volume. The same settings and
-automatic migrations are used as in the native workflow; the image never
-ships runtime data or credentials.
+priority over `.env`, including in CI.
 
 ## Files
 
@@ -28,9 +23,8 @@ ships runtime data or credentials.
 
 ## Local SQLite database
 
-`DATABASES['default']` uses root `db.sqlite3` in the native workflow. When
-`CASHFLOW_DATA_DIR` is set, Django stores `db.sqlite3` there; the optional
-Docker package sets it to `/data`. The database file is
+`DATABASES['default']` uses root `db.sqlite3`. When `CASHFLOW_DATA_DIR` is
+set, Django stores `db.sqlite3` there instead. The database file is
 installation-owned runtime data and is ignored by Git. A clean clone creates it by running
 `manage.py migrate`; the source tree distributes migrations rather than
 financial records.

@@ -492,6 +492,10 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(operation.bank_movement.amount, Decimal('1653.10'))
         response = self.client.get(reverse('investments:list'))
         self.assertContains(response, 'Balance: BRL 1.653,10')
+        self.assertContains(
+            response,
+            'class="mt-1 text-xs text-forest/70 dark:text-cream/70"',
+        )
         self.assertNotContains(response, '1.00000000 units')
 
     def test_update_and_delete_views_replace_and_cleanup_ledger(self):
@@ -554,6 +558,64 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         )
         self.assertEqual(htmx.status_code, 200)
         self.assertContains(htmx, 'id="investments-charts"')
+        self.assertNotContains(htmx, '<html')
+
+    def test_charts_have_mouse_and_keyboard_tooltips(self):
+        operation = self.operation(
+            Investment.Kind.YIELD,
+            quantity=Decimal('3.00'),
+            unit_price=Decimal('41.15'),
+        )
+        operation.full_clean()
+        operation.save()
+
+        response = self.client.get(reverse('investments:list'))
+
+        self.assertContains(response, 'group-hover:opacity-100')
+        self.assertContains(response, 'group-focus-visible:opacity-100')
+        self.assertNotContains(response, 'group-focus:opacity-100')
+        self.assertContains(response, 'tabindex="0"')
+        self.assertContains(response, 'R$ 123,45')
+
+    def test_charts_appear_before_operation_filters_and_movements(self):
+        operation = self.operation()
+        operation.full_clean()
+        operation.save()
+
+        response = self.client.get(reverse('investments:list'))
+        content = response.content.decode()
+
+        self.assertLess(
+            content.index('id="investments-charts"'),
+            content.index('id="investment-search"'),
+        )
+        self.assertLess(
+            content.index('id="investment-search"'),
+            content.index(reverse('investments:update', args=[operation.pk])),
+        )
+
+    def test_movement_pagination_uses_a_position_preserving_htmx_island(self):
+        for index in range(11):
+            operation = self.operation(reason=f'Operation {index + 1}')
+            operation.full_clean()
+            operation.save()
+
+        response = self.client.get(reverse('investments:list'))
+        self.assertContains(response, 'id="investment-movements"')
+        self.assertContains(response, 'hx-target="#investment-movements"')
+        self.assertContains(response, 'data-scroll-target="investment-movements"')
+        self.assertContains(response, '?page=2#investment-movements')
+
+        htmx = self.client.get(
+            reverse('investments:list'),
+            {'page': '2'},
+            HTTP_HX_REQUEST='true',
+            HTTP_HX_TARGET='investment-movements',
+        )
+        self.assertEqual(htmx.status_code, 200)
+        self.assertContains(htmx, 'id="investment-movements"')
+        self.assertContains(htmx, 'Page 2 of 2')
+        self.assertNotContains(htmx, 'id="investments-charts"')
         self.assertNotContains(htmx, '<html')
 
     def test_historical_conversion_uses_banking_exchange_rate(self):

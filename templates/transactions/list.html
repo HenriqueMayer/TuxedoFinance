@@ -5,8 +5,8 @@
 Transaction list (PRD §13, Sprint 6 — 6.3.1/6.3.5/6.3.6; Sprint 8 — 8.1.5).
 Shows only the logged-in user's own transactions
 (`TransactionListView.get_queryset`), paginated, each row color-coded by
-`transaction_type` per PRD §9.1 (Income emerald / Expense rose / Investment
-amber).
+`transaction_type` per the accessible semantic palette (income, expense and
+investment tokens).
 
 Optional search/billed-month/exact-date/type filter (PRD 8.1.5, FR17): a plain
 `<form method="get">` with a `<button type="submit">` — no
@@ -25,53 +25,53 @@ the active filters survive page navigation.
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-neutral-100">{% translate "Transactions" %}</h1>
-            <p class="mt-1 text-sm text-slate-600 dark:text-neutral-400">{% translate "Every income, expense, and investment you have recorded." %}</p>
+            <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Transactions" %}</h1>
+            <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate "Every income, expense, and investment you have recorded." %}</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-            <details class="relative" data-export-menu>
-                <summary class="cursor-pointer list-none rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <details class="relative" data-export-menu hx-boost="false">
+                <summary class="cursor-pointer list-none rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel">
                     {% translate "Export CSV" %}
                 </summary>
-                <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-slate-200 dark:bg-[#313335] dark:ring-[#323232]">
-                    <a href="{{ export_url }}" class="block text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">{% translate "Export all transactions" %}</a>
-                    <form action="{{ export_url }}" method="get" class="space-y-2">
-                        <label for="export-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Billed month" %}</label>
+                <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-forest/10 dark:bg-forest dark:ring-cream/10">
+                    <a href="{{ export_url }}" class="block text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light">{% translate "Export all transactions" %}</a>
+                    <form action="{{ export_url }}" method="get" hx-boost="false" class="space-y-2">
+                        <label for="export-month" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Billed month" %}</label>
                         <input id="export-month" type="month" name="month" required
-                               class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3 py-2 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
-                        <button type="submit" class="w-full rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">{% translate "Export selected month" %}</button>
+                               class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3 py-2 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                        <button type="submit" class="w-full rounded-full bg-caramel px-3 py-2 text-xs font-medium uppercase tracking-widest text-forest-deep transition hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel">{% translate "Export selected month" %}</button>
                     </form>
                 </div>
             </details>
             <a href="{{ create_url }}"
-               class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:shadow-indigo-500/10 dark:focus:ring-offset-[#2B2B2B]">
+               class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "New Transaction" %}
             </a>
         </div>
     </div>
 
-    <form method="get" class="flex flex-col gap-3 rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335] p-4 sm:flex-row sm:flex-wrap sm:items-end">
+    <form method="get" class="flex flex-col gap-3 rounded-3xl ring-1 ring-forest/10 dark:ring-cream/10 bg-white dark:bg-forest p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div class="min-w-[14rem] flex-[2] space-y-1.5">
-            <label for="filter-search" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Search" %}</label>
+            <label for="filter-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Search" %}</label>
             <input type="search" id="filter-search" name="q" value="{{ search_query }}"
                    placeholder="{% translate 'Title, notes, category, bank, account or card' %}"
-                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 placeholder:text-slate-500 dark:text-neutral-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-cream/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-[12rem] flex-1 space-y-1.5">
             {% comment %}"Billed", not just "Month": the filter matches the month the money moves, so a card purchase past its best purchase day is found under the month its bill is paid, and a fixed transaction under every month it charges.{% endcomment %}
-            <label for="filter-month" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Billed month" %}</label>
+            <label for="filter-month" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Billed month" %}</label>
             <input type="month" id="filter-month" name="month" value="{{ selected_month }}"
-                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-[12rem] flex-1 space-y-1.5">
-            <label for="filter-date" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Transaction date" %}</label>
+            <label for="filter-date" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Transaction date" %}</label>
             <input type="date" id="filter-date" name="date" value="{{ selected_date }}"
-                   class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-type" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Type" %}</label>
+            <label for="filter-type" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Type" %}</label>
             <select id="filter-type" name="type"
-                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                 <option value="">{% translate "All types" %}</option>
                 {% for value, label in transaction_type_choices %}
                     <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
@@ -79,9 +79,9 @@ the active filters survive page navigation.
             </select>
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-sort" class="block text-sm font-medium text-slate-700 dark:text-neutral-300">{% translate "Sort by" %}</label>
+            <label for="filter-sort" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Sort by" %}</label>
             <select id="filter-sort" name="sort"
-                    class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-3.5 py-2.5 text-slate-900 dark:text-neutral-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                 <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>{% translate "Newest first" %}</option>
                 <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>{% translate "Oldest first" %}</option>
                 <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>{% translate "Last updated" %}</option>
@@ -91,12 +91,12 @@ the active filters survive page navigation.
         </div>
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                    class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Filter" %}
             </button>
             {% if search_query or selected_month or selected_date or selected_type or selected_sort != 'newest' %}
                 <a href="{{ list_url }}"
-                   class="rounded text-sm font-medium text-slate-600 dark:text-neutral-400 transition hover:text-slate-900 dark:hover:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70 transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                     {% translate "Clear filters" %}
                 </a>
             {% endif %}
@@ -104,22 +104,22 @@ the active filters survive page navigation.
     </form>
 
     {% if transactions %}
-        <div class="overflow-hidden rounded-2xl ring-1 ring-slate-200 dark:ring-[#323232] bg-white dark:bg-[#313335]">
-            <ul class="divide-y divide-slate-200 dark:divide-slate-700">
+        <div class="rounded-3xl bg-cream p-2 dark:bg-forest">
+            <ul class="divide-y divide-forest/10 dark:divide-cream/10">
                 {% for transaction in transactions %}
                     <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                         <div class="space-y-1">
                             <div class="flex flex-wrap items-center gap-2">
-                                <p class="font-medium text-slate-900 dark:text-neutral-100">{{ transaction.title }}</p>
+                                <p class="font-sans text-lg">{{ transaction.title }}</p>
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
-                                    {% if transaction.transaction_type == 'INCOME' %}bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400
-                                    {% elif transaction.transaction_type == 'EXPENSE' %}bg-rose-500/10 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400
-                                    {% else %}bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400
+                                    {% if transaction.transaction_type == 'INCOME' %}bg-income/10 dark:bg-income-light/15 text-income dark:text-income-light
+                                    {% elif transaction.transaction_type == 'EXPENSE' %}bg-expense/10 dark:bg-expense/15 text-expense dark:text-expense-light
+                                    {% else %}bg-investment/10 dark:bg-investment-light/15 text-investment dark:text-investment-light
                                     {% endif %}">
                                     {{ transaction.get_transaction_type_display }}
                                 </span>
                                 {% if transaction.is_fixed %}
-                                    <span class="inline-flex items-center rounded-full border border-slate-300 dark:border-[#3a3a3a] px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:text-neutral-400">
+                                    <span class="inline-flex items-center rounded-full border border-fixed/30 bg-fixed/10 px-2.5 py-0.5 text-xs font-medium text-fixed dark:border-fixed-light/30 dark:bg-fixed-light/10 dark:text-fixed-light">
                                         {% if transaction.fixed_until %}
                                             {% blocktranslate with end_date=transaction.fixed_until|date:'M Y' %}Fixed &middot; until {{ end_date }}{% endblocktranslate %}
                                         {% else %}
@@ -128,12 +128,12 @@ the active filters survive page navigation.
                                     </span>
                                 {% endif %}
                                 {% if transaction.is_installment_plan %}
-                                    <span class="inline-flex items-center rounded-full border border-slate-300 dark:border-[#3a3a3a] px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:text-neutral-400">
+                                    <span class="inline-flex items-center rounded-full border border-installment/30 bg-installment/10 px-2.5 py-0.5 text-xs font-medium text-installment dark:border-installment-light/30 dark:bg-installment-light/10 dark:text-installment-light">
                                         {{ transaction.installments }}x
                                     </span>
                                 {% endif %}
                             </div>
-                            <p class="text-sm text-slate-600 dark:text-neutral-400">
+                            <p class="text-sm text-forest/70 dark:text-cream/70">
                                 {{ transaction.category.name }} &middot; {{ transaction.payment_label }}
                                 &middot; {{ transaction.get_payment_channel_display }}
                                 &middot; {{ transaction.date|date:USER_DATE_FORMAT }}
@@ -142,25 +142,25 @@ the active filters survive page navigation.
                         <div class="flex items-center gap-4">
                             <div class="sm:text-right">
                                 <p class="text-lg font-semibold tabular-nums
-                                    {% if transaction.transaction_type == 'INCOME' %}text-emerald-600 dark:text-emerald-400
-                                    {% elif transaction.transaction_type == 'EXPENSE' %}text-rose-600 dark:text-rose-400
-                                    {% else %}text-amber-600 dark:text-amber-400
+                                    {% if transaction.transaction_type == 'INCOME' %}text-income dark:text-income-light
+                                    {% elif transaction.transaction_type == 'EXPENSE' %}text-expense dark:text-expense-light
+                                    {% else %}text-investment dark:text-investment-light
                                     {% endif %}">
                                     {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}{{ transaction.native_currency }} {{ transaction.amount|floatformat:2 }}
                                 </p>
                                 {% if transaction.is_installment_plan %}
-                                    <p class="text-sm tabular-nums text-slate-600 dark:text-neutral-400">
+                                    <p class="text-sm tabular-nums text-forest/70 dark:text-cream/70">
                                         {% blocktranslate with installments=transaction.installments currency=transaction.native_currency installment_amount=transaction.installment_amount|floatformat:2 %}{{ installments }}x {{ currency }} {{ installment_amount }} / month{% endblocktranslate %}
                                     </p>
                                 {% endif %}
                             </div>
                             <div class="flex items-center gap-3">
                                 <a href="{% url 'transactions:update' transaction.pk %}"
-                                   class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                                     {% translate "Edit" %}
                                 </a>
                                 <a href="{% url 'transactions:delete' transaction.pk %}"
-                                   class="inline-flex items-center gap-2 rounded-xl bg-rose-500/10 dark:bg-rose-500/15 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-500/30 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                                   class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                                     {% translate "Delete" %}
                                 </a>
                             </div>
@@ -174,20 +174,20 @@ the active filters survive page navigation.
             <nav class="flex items-center justify-between gap-4" aria-label="{% translate 'Pagination' %}">
                 {% if page_obj.has_previous %}
                     <a href="{% querystring page=page_obj.previous_page_number %}"
-                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                         {% translate "Previous" %}
                     </a>
                 {% else %}
                     <span></span>
                 {% endif %}
 
-                <p class="text-sm text-slate-600 dark:text-neutral-400">
+                <p class="text-sm text-forest/70 dark:text-cream/70">
                     {% blocktranslate with page_number=page_obj.number total_pages=page_obj.paginator.num_pages %}Page {{ page_number }} of {{ total_pages }}{% endblocktranslate %}
                 </p>
 
                 {% if page_obj.has_next %}
                     <a href="{% querystring page=page_obj.next_page_number %}"
-                       class="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-[#313335] px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-neutral-200 transition hover:bg-slate-100 dark:hover:bg-[#3a3a3a] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-[#2B2B2B]">
+                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                         {% translate "Next" %}
                     </a>
                 {% else %}
@@ -211,13 +211,19 @@ the active filters survive page navigation.
 
 {% block extra_js %}
 <script>
-    document.querySelectorAll('details[data-export-menu]').forEach(menu => {
+    if (!document.documentElement.dataset.exportMenuBound) {
+        document.documentElement.dataset.exportMenuBound = 'true';
         document.addEventListener('click', event => {
-            if (menu.open && !menu.contains(event.target)) menu.open = false;
+            document.querySelectorAll('details[data-export-menu][open]').forEach(menu => {
+                if (!menu.contains(event.target)) menu.open = false;
+            });
         });
-        menu.addEventListener('keydown', event => {
-            if (event.key === 'Escape') menu.open = false;
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape') return;
+            document.querySelectorAll('details[data-export-menu][open]').forEach(menu => {
+                menu.open = false;
+            });
         });
-    });
+    }
 </script>
 {% endblock %}
