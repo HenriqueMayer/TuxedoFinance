@@ -86,7 +86,7 @@ class LanguageSelectionTests(TestCase):
         )
         self.assertContains(response, 'Problems / Suggestions')
         self.assertContains(response, 'Roadmap')
-        self.assertContains(response, '/static/js/project-menu.js?v=1')
+        self.assertContains(response, '/static/js/project-menu.js?v=2')
         self.assertContains(
             response,
             'A personal Tuxedo assistant to ask questions, review your finances, and plan.',
