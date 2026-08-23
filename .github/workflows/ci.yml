@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    tags: ['v*']
   pull_request:
 
 permissions:
@@ -37,6 +38,9 @@ jobs:
 
       - name: Sync locked dependencies
         run: uv sync --locked
+
+      - name: Validate project version
+        run: uv run python scripts/check_version.py
 
       - name: Install pinned frontend tools
         run: npm ci

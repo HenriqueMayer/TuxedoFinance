@@ -14,6 +14,16 @@ Install the exact lockfile set with:
 uv sync --locked
 ```
 
+The application version is the `[project].version` value in `pyproject.toml`.
+Print and validate it together with the lockfile, README and changelog using:
+
+```bash
+uv run python scripts/check_version.py
+```
+
+See [versioning.md](versioning.md) for the Semantic Versioning and release-tag
+workflow.
+
 To review an update, change the compatible range in `pyproject.toml`, regenerate
 the lockfile, and run the release notes and validation checks before deploying:
 

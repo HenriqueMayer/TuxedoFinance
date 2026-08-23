@@ -12,6 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="CI status"></a>
+  <img src="https://img.shields.io/badge/version-0.1.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.1.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="English and Brazilian Portuguese interface">
@@ -175,6 +176,8 @@ the locked runtime dependencies. See
 ## 📚 Documentation
 
 - [Documentation index](docs/README.md) — architecture, data model, frontend, and per-app references
+- [Changelog](CHANGELOG.md) — notable changes grouped by release
+- [Versioning and releases](docs/versioning.md) — SemVer policy, validation and release workflow
 - [Product requirements](docs/ProductRequirementsDocument.md) — approved behavior and acceptance criteria
 - [Operations guide](docs/operations.md) — dependency updates and SQLite backup/restore procedures
 - [Coverage baseline](docs/coverage-baseline.md) — test coverage policy and commands

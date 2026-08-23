@@ -13,6 +13,9 @@ license notices.
   and no-JavaScript fallbacks.
 - Update README, PRD, data model and affected app documentation with code.
 - Add or update English and Brazilian Portuguese interface strings together.
+- Record user-visible changes under `Unreleased` in
+  [`CHANGELOG.md`](CHANGELOG.md). Version numbers and tags are prepared through
+  the documented [release workflow](docs/versioning.md), not on feature branches.
 - Run `manage.py check`, `makemigrations --check --dry-run`, tests and
   `compilemessages` before proposing a change. Frontend changes must also
   rebuild Tailwind and pass the Playwright smoke suite.

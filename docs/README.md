@@ -12,6 +12,7 @@ breaking release.
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
 | [frontend.md](frontend.md) | Server-rendered design system and updated banking UI structure. |
 | [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
+| [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |
 | [coverage-baseline.md](coverage-baseline.md) | Coverage report, 70% line floor, branch-reporting policy and local commands. |
 
 ## Per-app reference
