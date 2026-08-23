@@ -6,7 +6,7 @@ Included automatically by base.html for authenticated users — never include
 this directly in a page template.
 
 Brand block: tuxedo-mark-256.png chip in a rounded-xl frame + two-line
-wordmark (TUXEDO / FINANCE in caramel).
+wordmark (TUXEDO / FINANCE in caramel), linked to the public landing page.
 
 Active link state: caramel text + 1px caramel rule underneath (`after:`).
 Inactive: forest/70 (cream/70 on dark), hover crossfades to caramel.
@@ -26,6 +26,7 @@ Log out is a POST <form> (CSRF token) styled as a pill button — Django's
 LogoutView rejects GET requests, so it must never be a plain <a href>.
 {% endcomment %}
 {% url 'dashboard:index' as dashboard_url %}
+{% url 'pages:landing' as landing_url %}
 {% url 'dashboard:reports' as reports_url %}
 {% url 'transactions:list' as transactions_url %}
 {% url 'categories:list' as categories_url %}
@@ -36,7 +37,7 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
     <nav class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between gap-4">
             <!-- Brand block -->
-            <a href="{{ dashboard_url }}" class="flex shrink-0 items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-caramel/40 rounded-xl">
+            <a href="{{ landing_url }}" class="flex shrink-0 items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-caramel/40 rounded-xl">
                 <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover ring-1 ring-forest/10 dark:ring-cream/20">
                 <span class="hidden sm:block text-left leading-tight">
                     <span class="block text-sm tracking-[0.2em] uppercase font-medium">{% translate 'Tuxedo' %}</span>

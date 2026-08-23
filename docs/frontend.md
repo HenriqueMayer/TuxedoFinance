@@ -54,7 +54,8 @@ currency symbol or ISO code, especially when native and base values are shown
 together.
 
 The navigation brand combines `tuxedo-mark-256.png` with a two-line uppercase
-wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. Primary
+wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. It always
+links to the public landing page, including for authenticated users. Primary
 actions are solid caramel pills with forest-deep text; `caramel-ink` carries
 brand links over light surfaces. Outline actions invert to forest/cream on
 hover. Titles, labels, controls and tabular monetary figures all use Inter.

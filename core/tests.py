@@ -156,6 +156,10 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, '/static/js/theme.js?v=3')
         self.assertContains(response, '/static/js/project-menu.js?v=3')
         self.assertContains(response, '/static/js/mobile-menu.js?v=2')
+        self.assertContains(
+            response,
+            f'href="{reverse("pages:landing")}" class="flex shrink-0 items-center gap-3 group',
+        )
         self.assertContains(response, 'aria-label="Settings"')
         self.assertContains(response, reverse('accounts:settings'))
 
