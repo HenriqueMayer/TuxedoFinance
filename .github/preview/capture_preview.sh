@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 data_dir=$(mktemp -d "${TMPDIR:-/tmp}/tuxedo-preview-data.XXXXXX")
 image_stage=$(mktemp -d "${TMPDIR:-/tmp}/tuxedo-preview-images.XXXXXX")
 server_log="$data_dir/server.log"
@@ -34,7 +34,7 @@ export PREVIEW_BASE_URL="http://127.0.0.1:8766"
 export PREVIEW_OUTPUT_DIR="$image_stage"
 
 uv run python manage.py migrate --noinput
-uv run python scripts/seed_preview_data.py
+uv run python .github/preview/seed_preview_data.py
 uv run python manage.py runserver 127.0.0.1:8766 --noreload >"$server_log" 2>&1 &
 server_pid=$!
 
@@ -50,7 +50,7 @@ for _ in {1..40}; do
 done
 curl --fail --silent "$PREVIEW_BASE_URL/" >/dev/null
 
-node scripts/capture_preview.js
+node .github/preview/capture_preview.js
 
 for language in en pt-br; do
     for name in dashboard-light reports-light transactions-light banking-light investments-light dashboard-dark; do

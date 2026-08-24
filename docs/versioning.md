@@ -36,7 +36,10 @@ Release tags use the same version prefixed with `v`, for example `v0.1.0`.
    uv run python manage.py check
    uv run python manage.py makemigrations --check --dry-run
    uv run python manage.py test
+   npm ci
+   npm audit --audit-level=high
    npm run test:e2e
+   npm run test:preview
    ```
 
 6. Open the release pull request from `develop` to `main` and wait for CI.
@@ -53,6 +56,19 @@ Release tags use the same version prefixed with `v`, for example `v0.1.0`.
 
 Feature branches continue to target `develop`. They normally add notes under
 `Unreleased` but do not create tags themselves.
+
+## Maintaining the changelog
+
+Add a concise `Unreleased` entry when a change is notable to users, operators,
+or contributors. Use the Keep a Changelog headings `Added`, `Changed`,
+`Deprecated`, `Removed`, `Fixed`, and `Security` as needed. Do not create a new
+version section on a feature branch, and do not rewrite a published version.
+
+Implementation-only refactors, wording corrections, and CI maintenance normally
+do not need separate entries unless they change supported behavior or close a
+meaningful security risk. At release time, move the accumulated entries into a
+dated version section, update the comparison links at the bottom of
+`CHANGELOG.md`, and use that same section as the GitHub release notes.
 
 ## Automated guarantees
 

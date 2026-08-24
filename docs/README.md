@@ -1,13 +1,13 @@
 # Tuxedo Finance Documentation
 
-Technical and product documentation for the approved banking/multicurrency
-breaking release.
+Technical and product documentation for the current Tuxedo Finance release.
 
 ## Where to start
 
 | Doc | Covers |
 |---|---|
 | [Interface preview](https://henriquemayer.github.io/TuxedoFinance/) | Bilingual static tour of the application using synthetic financial data. |
+| [Preview maintenance](../.github/preview/README.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
 | [ProductRequirementsDocument.md](ProductRequirementsDocument.md) | Approved scope, requirements, acceptance criteria and clean-reset delivery. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
@@ -33,9 +33,10 @@ breaking release.
 
 ## Documentation status
 
-These documents describe the approved target release, not the legacy schema
-currently present in older databases. The release requires fresh migrations and
-a new SQLite database. Existing data is not automatically migrated.
+These documents describe the current `0.1.x` release. Its schema has no
+automatic upgrade path from pre-release legacy databases; those installations
+must start with a newly migrated SQLite database and recreate or manually import
+their records.
 
 The repository does not include a runtime demo database, shared account, fixed
 credential, or data-population management command. The developer-only preview

@@ -1,8 +1,7 @@
 # Architecture
 
-The approved target architecture for Tuxedo Finance. The Django full-stack delivery
-model remains unchanged; the domain boundary changes from generic payment
-methods to explicit banking and ledger concepts.
+The current architecture for Tuxedo Finance uses Django's full-stack delivery
+model and explicit banking and ledger domain concepts.
 
 ## Stack
 

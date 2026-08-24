@@ -45,6 +45,9 @@ jobs:
       - name: Install pinned frontend tools
         run: npm ci
 
+      - name: Audit pinned frontend tools
+        run: npm audit --audit-level=high
+
       - name: Verify compiled frontend assets
         run: |
           npx tailwindcss -c tailwind.config.js -i assets/css/tailwind.css -o "$RUNNER_TEMP/app.css" --minify

@@ -45,10 +45,11 @@ the dependency's release notes and compatibility policy.
 The supported local Python path is reproduced by `.github/workflows/ci.yml` on
 pushes and pull requests. CI installs the exact `uv.lock` set, then runs Django
 system checks, missing-migration checks, the full test suite with branch
-coverage, translation compilation, Ruff lint, and a `pip-audit` scan of the
-locked runtime requirements. Coverage XML and HTML reports are retained as
-workflow artifacts. CI enforces the documented 70% line-coverage floor;
-the policy is documented in [coverage-baseline.md](coverage-baseline.md).
+coverage, translation compilation, Ruff lint, a `pip-audit` scan of the locked
+Python runtime requirements, and an `npm audit` gate for high-severity issues in
+the pinned frontend tooling. Coverage XML and HTML reports are retained as
+workflow artifacts. CI enforces the documented 70% line-coverage floor; the
+policy is documented in [coverage-baseline.md](coverage-baseline.md).
 
 ## SQLite backup
 
@@ -113,10 +114,9 @@ The following isolated restore rehearsal was completed before release:
 - Smoke check: the restored copy opened read-only through SQLite and its schema
   was queryable.
 
-The repository's existing local database was not used as the rehearsal source:
-it is an owner-managed working file with legacy rows and pending migrations,
-so it must be backed up before upgrading and validated separately rather than
-treated as a clean fixture.
+No installation owner's working database was used as the rehearsal source. A
+live database must be backed up before upgrading and validated separately rather
+than treated as a clean fixture.
 
 Future rehearsals should record the same details. A rehearsal must not overwrite
 the owner’s live database.

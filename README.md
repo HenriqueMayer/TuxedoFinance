@@ -24,17 +24,23 @@ record of financial activity. It is designed for personal use and simple local
 operation—not as a SaaS platform—and keeps the database under the installation
 owner's control.
 
-## 🏙️ Interface preview
+## Interface preview
 
-Explore the real Tuxedo Finance interface before installing it. The bilingual
-tour walks through the Dashboard, Reports, Transactions, Banking, and
-Investments in both light and dark themes.
-
-<p align="left">
-  <strong>
-    <a href="https://henriquemayer.github.io/TuxedoFinance/"> 🟢 Open the tour</a>
-  </strong>
-</p>
+<table>
+  <tr>
+    <td width="96" align="center">
+      <a href="https://henriquemayer.github.io/TuxedoFinance/">
+        <img src="static/brand/tuxedo-mark-256.png" width="72" alt="Open the Tuxedo Finance interface preview">
+      </a>
+    </td>
+    <td>
+      <strong>See Tuxedo Finance before installing it.</strong><br>
+      Explore the bilingual tour across Dashboard, Reports, Transactions,
+      Banking, and Investments, with light and dark Dashboard views.<br><br>
+      <a href="https://henriquemayer.github.io/TuxedoFinance/"><strong>Open the interface preview →</strong></a>
+    </td>
+  </tr>
+</table>
 
 > The preview uses synthetic data and runs as a static tour. There is no login,
 > public backend, or persistence, and nothing is saved.
@@ -69,8 +75,8 @@ Updated walkthroughs will be available in both supported languages:
 
 | Language | Tutorial |
 |---|---|
-| 🇧🇷 Português (Brasil) | _Add the updated PT-BR tutorial link here_ |
-| 🇺🇸 English | _Add the English tutorial link here_ |
+| 🇧🇷 Português (Brasil) | _link_TODO_ |
+| 🇺🇸 English | _link_TODO_ |
 
 ## ✨ Highlights
 
@@ -162,6 +168,7 @@ uv sync --locked
 uv run python manage.py check
 uv run python manage.py test
 npm ci
+npm audit --audit-level=high
 npm run build:css
 ```
 
@@ -186,7 +193,7 @@ The browser suite expects the application at `http://127.0.0.1:8765` by default;
 set `E2E_BASE_URL` to use another local address. The CI workflow also verifies
 the compiled CSS and vendored HTMX against their pinned sources, checks migrations
 and translations, enforces the documented coverage floor, runs Ruff, and audits
-the locked runtime dependencies. See
+the locked Python runtime and npm development dependencies. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for the complete development workflow.
 
 To regenerate the committed interface-tour images from disposable synthetic

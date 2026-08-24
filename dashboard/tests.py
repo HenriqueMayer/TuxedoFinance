@@ -149,7 +149,7 @@ class LedgerBalanceTests(DashboardFixture):
             payment_channel=Transaction.PaymentChannel.CREDIT_CARD,
             bank_account=None,
             credit_card=card,
-            date=today,
+            date=today.replace(day=1),
         )
         sync_user_ledger(self.user)
 

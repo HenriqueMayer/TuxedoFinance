@@ -27,9 +27,8 @@ priority over `.env`, including in CI.
 set, Django stores `db.sqlite3` there instead. The database file is
 installation-owned runtime data and is ignored by Git. A clean clone creates it by running
 `manage.py migrate`; the source tree distributes migrations rather than
-financial records.
-database versions pending the coordinated history cleanup. The installation
-owner is responsible for file access, protection and backup; see
+financial records. The installation owner is responsible for file access,
+protection and backup; see
 [`../operations.md`](../operations.md) for the supported procedure.
 
 ## Context processors

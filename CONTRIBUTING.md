@@ -27,7 +27,7 @@ frontend tools pinned by npm. The single CI job reproduces that local workflow
 from both lockfiles; it does not test
 other databases or SaaS deployment matrices. It runs Django
 checks, missing-migration checks, translation compilation, the full suite with
-branch coverage, Ruff, a locked-runtime `pip-audit` scan, generated-asset
+branch coverage, Ruff, locked Python and npm dependency audits, generated-asset
 consistency and focused Chromium smoke tests. Browser failures upload screenshots,
 video and trace artifacts for diagnosis.
 

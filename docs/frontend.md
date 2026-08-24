@@ -260,4 +260,6 @@ screenshots, video and traces only when a browser test fails.
 languages, including the committed image dimensions, theme persistence,
 accessible screenshot dialog and mobile layout. Run `npm run test:preview` for
 that isolated site. `npm run preview:capture` regenerates its screenshots using
-only disposable synthetic records in a guarded temporary database.
+only disposable synthetic records in a guarded temporary database. The capture
+and test configuration is documented in
+[`../.github/preview/README.md`](../.github/preview/README.md).
