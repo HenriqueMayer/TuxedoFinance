@@ -142,7 +142,37 @@
             var row = removeButton.closest('[data-variable-row]');
             if (!row) return;
             row.remove();
+            return;
         }
+
+        var addDeductionButton = event.target.closest('[data-add-deduction]');
+        if (addDeductionButton) {
+            var deductionWorkspace = addDeductionButton.closest('#sandbox-workspace');
+            var deductionTemplate = deductionWorkspace && deductionWorkspace.querySelector('#sandbox-deduction-template');
+            var deductionContainer = deductionWorkspace && deductionWorkspace.querySelector('[data-deduction-rows]');
+            if (deductionTemplate && deductionContainer) {
+                deductionContainer.insertAdjacentHTML('beforeend', deductionTemplate.innerHTML.trim());
+                var deductionLabels = deductionContainer.querySelectorAll('input[name="deduction_label"]');
+                deductionLabels[deductionLabels.length - 1].focus();
+            }
+            return;
+        }
+
+        var removeDeductionButton = event.target.closest('[data-remove-deduction]');
+        if (removeDeductionButton) {
+            var deductionRow = removeDeductionButton.closest('[data-deduction-row]');
+            if (deductionRow) deductionRow.remove();
+        }
+    });
+
+    document.addEventListener('change', function (event) {
+        var checkbox = event.target.closest && event.target.closest('[data-use-clt]');
+        if (!checkbox) return;
+        var workspace = checkbox.closest('#sandbox-workspace');
+        var cltOptions = workspace && workspace.querySelector('[data-clt-options]');
+        var manualOptions = workspace && workspace.querySelector('[data-manual-options]');
+        if (cltOptions) cltOptions.hidden = !checkbox.checked;
+        if (manualOptions) manualOptions.hidden = checkbox.checked;
     });
 
     document.addEventListener('keydown', function (event) {

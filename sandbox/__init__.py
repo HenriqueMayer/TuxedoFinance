@@ -1,1 +1,1 @@
-"""Salary and contractor comparison sandbox."""
+"""Non-persistent salary planning sandbox."""

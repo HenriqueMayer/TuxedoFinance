@@ -129,7 +129,7 @@ The route namespaces remain domain-based:
 | `/categories/` | `categories` | category CRUD |
 | `/banking/` | `banking` | banks, accounts, ledger, PIX, cards, invoices, loyalty |
 | `/investments/` | `investments` | portfolio, products, assets, operations, rates |
-| `/sandbox/clt-pj/` | `sandbox` | authenticated, non-persistent CLT × PJ simulations |
+| `/sandbox/` | `sandbox` | authenticated, non-persistent salary planning |
 | `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
 
 All authenticated CBVs constrain root querysets to `request.user`; forms also
