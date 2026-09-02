@@ -27,4 +27,5 @@ urlpatterns = [
     path('categories/', include('categories.urls')),
     path('banking/', include('banking.urls')),
     path('investments/', include('investments.urls')),
+    path('sandbox/', include('sandbox.urls')),
 ]

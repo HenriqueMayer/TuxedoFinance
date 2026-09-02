@@ -34,6 +34,7 @@ banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
 transactions/  # categorized economic events and recurrence schedules
 dashboard/     # ledger, cash-flow, invoice and net-worth read models
 investments/   # products, assets, position operations and valuation
+sandbox/       # non-persistent compensation and budget simulations
 ```
 
 `banking/` owns every settlement instrument and the account ledger. `Bank` is
@@ -128,6 +129,7 @@ The route namespaces remain domain-based:
 | `/categories/` | `categories` | category CRUD |
 | `/banking/` | `banking` | banks, accounts, ledger, PIX, cards, invoices, loyalty |
 | `/investments/` | `investments` | portfolio, products, assets, operations, rates |
+| `/sandbox/clt-pj/` | `sandbox` | authenticated, non-persistent CLT × PJ simulations |
 | `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
 
 All authenticated CBVs constrain root querysets to `request.user`; forms also

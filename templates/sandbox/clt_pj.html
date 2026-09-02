@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+
+{% block title %}{% translate "CLT × PJ Sandbox" %} — Tuxedo Finance{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <header>
+        <p class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Planning tool" %}</p>
+        <h1 class="mt-2 font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "CLT × PJ Sandbox" %}</h1>
+        <p class="mt-2 max-w-3xl text-sm leading-6 text-forest/70 dark:text-cream/70">{% translate "Calculate one income at a time, organize your monthly plan, and compare equivalent CLT and PJ packages." %}</p>
+        <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-forest/60 dark:text-cream/60">
+            <div class="flex gap-1"><dt>{% translate "Competence" %}:</dt><dd>{{ rules.year|stringformat:"d" }}</dd></div>
+            <div class="flex gap-1"><dt>{% translate "Rules reviewed" %}:</dt><dd>{{ rules.reviewed_on|date:"d/m/Y" }}</dd></div>
+            <div class="flex gap-1"><dt>{% translate "Currency" %}:</dt><dd>BRL</dd></div>
+        </dl>
+    </header>
+
+    {% include 'sandbox/_workspace.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/sandbox.js' %}?v=3" defer></script>
+{% endblock %}

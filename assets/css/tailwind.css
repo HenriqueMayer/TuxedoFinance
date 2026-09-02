@@ -9,6 +9,7 @@
 @layer base {
   html {
     background-color: #FAF8F3;
+    overflow-x: clip;
   }
 
   html.dark {
