@@ -74,14 +74,14 @@ HTMX progressive enhancement.
 | FR11 | Transactions | CRUD/search/filter for income and expense events, with category, amount, date, recurrence and banking settlement links. The entry form progressively reveals the selected payment channel while retaining server-rendered no-JavaScript controls and validation. |
 | FR12 | Categories | Existing category/subcategory management remains for income and expense. |
 | FR13 | Loyalty programs | A program may be independent, linked to a bank, linked to cards, or linked to both. |
-| FR14 | Loyalty ledger | `LoyaltyEntry` supports invoice award, points purchase, adjustment, expiration and redemption. |
-| FR15 | Redemption details | Redemption records points, target monetary amount/currency, IOF, and IOF funding instrument. Positive IOF requires an owned account, debit card or credit card. |
+| FR14 | Loyalty ledger | `LoyaltyEntry` records signed invoice awards, points purchases, adjustments, expirations and redemption debits. |
+| FR15 | Redemption details | `RewardRedemption` coordinates the points debit, target-account credit and optional IOF. Positive IOF requires an owned bank account or credit card. |
 | FR16 | Multicurrency | Each user selects a supported reporting currency in Settings; native amounts and currencies remain unchanged. |
 | FR17 | Historical FX | Retain source/target currencies, applied rate, effective date, and conversion status so later rate edits cannot rewrite history. |
 | FR18 | Investments structure | Investments remain separate, use `Bank` instead of `Institution`, and group products and assets by bank/product/asset. |
 | FR19 | Assets | Every asset has name, code, asset class and currency; class/currency are immutable after use. |
-| FR20 | Investment operations | Every operation records kind, quantity and unit price and has no title. Gross value is derived. |
-| FR21 | Investment cash endpoints | Deposit requires a source bank account; withdrawal requires a destination bank account. Their movements post atomically with the operation. |
+| FR20 | Investment operations | Every `Investment` records a kind and has no title. Unit-valued assets use quantity/unit price; monetary assets use amount. |
+| FR21 | Investment cash endpoints | Deposit requires exactly one source bank account or loyalty program; withdrawal requires a destination bank account. Related ledger entries post atomically. |
 | FR22 | Internal yield | Yield changes the investment position only and creates no bank income/movement until withdrawn. |
 | FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth using the user's base currency, with historical snapshots and clearly labeled current valuations. |
 | FR24 | Forecasts | Recurrences and future invoices may be projected but do not alter the posted ledger before settlement. |
@@ -125,10 +125,11 @@ reserved for explicitly labeled current-value simulations elsewhere.
 
 - Points balance is the signed sum of `LoyaltyEntry` rows.
 - Invoice awards may reference the eligible invoice.
-- Purchase, adjustment, expiration and redemption remain distinguishable.
-- A redemption carries points, target money amount/currency, IOF amount and IOF
-  funding instrument. IOF settlement follows that instrument's normal rule:
-  account/debit immediately, credit through an invoice.
+- Purchases, adjustments, expirations and redemption debits remain
+  distinguishable in the points ledger.
+- `RewardRedemption` carries the points, target amount/account and IOF details,
+  then links the generated points debit and bank movements. Account-funded IOF
+  settles immediately; credit-card IOF follows the card-invoice flow.
 
 ### 5.4 Currency
 
@@ -149,9 +150,11 @@ reserved for explicitly labeled current-value simulations elsewhere.
 - The investment position ledger and categorized transaction ledger stay
   separate.
 - `Bank` replaces `Institution` as investment product provider.
-- Quantity and unit price are stored; operation title is removed.
+- Unit-valued assets store quantity and unit price; monetary assets store amount.
+  The `Investment` operation has no title.
 - Deposit/withdrawal cash movements are not income/expense.
-- Deposit source and withdrawal destination are mandatory.
+- A deposit has exactly one account or loyalty-program source; a withdrawal has
+  one destination account.
 - Yield is internal and creates no account movement.
 
 ### 5.6 Public registration
@@ -166,25 +169,10 @@ reserved for explicitly labeled current-value simulations elsewhere.
 
 ## 6. Data Structure
 
-```mermaid
-erDiagram
-    USER ||--o{ BANK : owns
-    BANK ||--o{ BANK_ACCOUNT : contains
-    BANK_ACCOUNT ||--o{ BANK_MOVEMENT : posts
-    BANK_ACCOUNT ||--o{ DEBIT_CARD : has
-    BANK_ACCOUNT ||--o{ CREDIT_CARD : settles
-    CREDIT_CARD ||--o{ CARD_INVOICE : generates
-    CARD_INVOICE ||--o{ TRANSACTION : contains
-    CATEGORY ||--o{ TRANSACTION : classifies
-    USER ||--o{ LOYALTY_PROGRAM : owns
-    LOYALTY_PROGRAM ||--o{ LOYALTY_ENTRY : records
-    BANK ||--o{ INVESTMENT_PRODUCT : provides
-    INVESTMENT_PRODUCT ||--o{ INVESTMENT_OPERATION : records
-    ASSET ||--o{ INVESTMENT_OPERATION : denominates
-```
-
-Detailed fields, constraints and formulas are normative in
-[data-model.md](data-model.md).
+The canonical entity-relationship diagram and posting-flow diagram are in
+[data-model.md](data-model.md). That document uses the implemented Django model
+names and is the normative reference for fields, relationships, constraints and
+formulas.
 
 ## 7. App Organization
 

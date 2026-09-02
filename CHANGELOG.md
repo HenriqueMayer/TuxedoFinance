@@ -12,6 +12,18 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Bilingual static interface tour for GitHub Pages, with reproducible synthetic
   screenshots, accessible image expansion and an isolated preview test suite.
 
+### Changed
+
+- Reorganized project documentation, design-system references and category
+  collections around consistent, descriptive paths.
+- Expanded the database documentation with the current entity relationships and
+  the posting flows for transactions, transfers, investments and rewards.
+
+### Removed
+
+- Obsolete design sketches, unused source-brand duplicates and an unnecessary
+  static-directory placeholder.
+
 ## [0.1.0] - 2026-08-23
 
 ### Added

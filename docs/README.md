@@ -8,10 +8,11 @@ Technical and product documentation for the current Tuxedo Finance release.
 |---|---|
 | [Interface preview](https://henriquemayer.github.io/TuxedoFinance/) | Bilingual static tour of the application using synthetic financial data. |
 | [Preview maintenance](../.github/preview/README.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
-| [ProductRequirementsDocument.md](ProductRequirementsDocument.md) | Approved scope, requirements, acceptance criteria and clean-reset delivery. |
+| [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and clean-reset delivery. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
 | [frontend.md](frontend.md) | Server-rendered design system and updated banking UI structure. |
+| [design-system.html](design-system.html) | Canonical visual tokens and component catalog. |
 | [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
 | [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |
 | [coverage-baseline.md](coverage-baseline.md) | Coverage report, 70% line floor, branch-reporting policy and local commands. |
@@ -30,6 +31,26 @@ Technical and product documentation for the current Tuxedo Finance release.
   investments and net-worth read models.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
   banks/accounts for provider and cash endpoints.
+
+## Repository layout
+
+The repository follows Django and frontend-tool conventions without a separate
+QA or preview-project layer:
+
+| Path | Responsibility |
+|---|---|
+| Django app directories | Domain code, migrations and focused unit tests kept beside each app. |
+| `assets/` | Tailwind source input; files here are compiled rather than served directly. |
+| `static/` | Versioned assets served by Django, including compiled CSS, JavaScript and brand files. |
+| `tests/` | Cross-application browser tests; app-level Python tests remain with their apps. |
+| `preview/` | Self-contained bilingual static tour published by GitHub Pages. |
+| `.github/preview/` | Isolated tooling that generates and tests the public preview. |
+| `scripts/` | Small repository-wide maintenance and validation commands. |
+| `docs/` | Product, architecture, data, operations and frontend documentation. |
+
+Root configuration files remain at the repository root because Django, `uv`,
+npm, Tailwind, Playwright and CI discover or share them there. The application
+and preview use the same locked frontend toolchain.
 
 ## Documentation status
 

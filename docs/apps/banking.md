@@ -15,7 +15,8 @@ Bank
 │   └── CreditCard
 │       └── CardInvoice
 └── LoyaltyProgram (optional)
-    └── LoyaltyEntry
+    ├── LoyaltyEntry
+    └── RewardRedemption
 ```
 
 A `Bank` may have any number of `BankAccount` rows, including multiple accounts
@@ -69,11 +70,13 @@ ledger supports:
 | `EXPIRATION` | Points removed on expiry. |
 | `REDEMPTION` | Points spent for a benefit or monetary target. |
 
-A redemption records the points used, target monetary amount and currency, IOF
-amount, and the funding instrument used to pay IOF. When IOF is positive, its
-funding instrument is required and must be one owned account, debit card, or
-credit card. Debit/account funding settles immediately; credit funding enters
-the corresponding card invoice under the same no-double-counting rule.
+`RewardRedemption` coordinates a redemption rather than replacing the points
+ledger. It records the points used, target account and monetary amount, IOF, and
+an optional IOF funding instrument. The service links it to a debit
+`LoyaltyEntry`, a credit `BankMovement` for the reward, and an IOF movement when
+IOF is paid from an account. Credit-card IOF remains pending for the normal card
+invoice flow. Positive IOF requires exactly one owned bank account or credit
+card; zero IOF permits neither.
 
 ## Multicurrency
 

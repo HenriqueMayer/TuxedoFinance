@@ -38,7 +38,7 @@ plain GET links and the section anchor provide the same no-JavaScript fallback.
 ## Visual language
 
 The interface follows the final Haven & Hound design language documented in
-`design-system/tuxedo-final-design-system.html`: cream and forest foundations,
+`design-system.html`: cream and forest foundations,
 caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
 throughout. Light cards use white surfaces and soft shadows; dark cards use flat
 forest surfaces over the forest-deep page background. Body copy starts at

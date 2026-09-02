@@ -68,8 +68,8 @@ event and its movements runs in one database transaction.
 | What cash is available? | `BankAccount.opening_balance` + `BankMovement`. |
 | What was income or expense? | Categorized `Transaction`. |
 | What is owed on credit cards? | `CardInvoice` and its items/payments. |
-| What investment quantity is held? | `InvestmentOperation`. |
-| How many loyalty points exist? | `LoyaltyEntry`. |
+| What investment quantity is held? | `Investment`. |
+| How many loyalty points exist? | Signed `LoyaltyEntry` rows. |
 | What was a transfer or investment worth historically? | Its persisted FX snapshot, including source/target currencies, rate, effective date, and status. |
 | What is another amount worth now? | User's `UserPreference.base_currency` plus a current `ExchangeRate`, shown as a labeled current valuation. |
 
@@ -90,11 +90,13 @@ Services, rather than views or templates, own atomic posting:
 4. **Own transfer:** create two movements sharing a transfer identifier. The
    event is `TRANSFER`, not income/expense; cross-currency pairs retain both
    native amounts and their persisted FX snapshot when conversion is available.
-5. **Investment deposit/withdrawal:** create the position operation and required
-   source/destination account movement atomically. Yield remains internal.
-6. **Loyalty redemption:** post the points entry and, when IOF applies, settle it
-   through the selected funding instrument using its normal immediate or invoice
-   path.
+5. **Investment deposit/withdrawal:** create the `Investment` and its required
+   account movement or points-ledger entry atomically. Deposits accept exactly
+   one account or loyalty-program source; withdrawals require a destination
+   account. Yield remains internal.
+6. **Loyalty redemption:** create a `RewardRedemption`, its points debit and the
+   target-account reward credit atomically. Account-funded IOF posts immediately;
+   credit-card IOF enters the invoice synchronization path.
 
 Personal financial entries are editable; audit-grade reversal workflows are out
 of scope.

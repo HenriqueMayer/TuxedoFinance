@@ -9,7 +9,7 @@ become ordinary categorized transactions.
 ```text
 Bank
 └── InvestmentProduct
-    └── InvestmentOperation ── Asset
+    └── Investment ── Asset
 
 Asset = name + code + asset class + currency + valuation mode
 ```
@@ -45,15 +45,16 @@ server-side ownership and financial validation remains authoritative.
 
 | Kind | Banking requirement | Position effect |
 |---|---|---|
-| `DEPOSIT` | Source `BankAccount` required; creates linked debit movement. | Adds acquired quantity/cost basis. |
+| `DEPOSIT` | Exactly one source account or loyalty program; creates a linked bank movement or points debit. | Adds acquired quantity/cost basis. |
 | `WITHDRAWAL` | Destination `BankAccount` required; creates linked credit movement. | Removes quantity and records proceeds. |
 | `YIELD` | No source or destination account. | Internal growth only. |
 
-A deposit source and withdrawal destination are mandatory even when the account
-belongs to the same bank as the product. Cross-currency operations retain their
-native cash and asset amounts and the applied FX snapshot when conversion is
-available. Missing rates preserve native data and mark conversion incomplete.
-The operation and its required movement are posted atomically.
+A deposit requires exactly one funding source: a `BankAccount`, or a
+`LoyaltyProgram` with a positive points amount. A withdrawal always requires a
+destination account. Cross-currency operations retain their native cash and
+asset amounts and the applied FX snapshot when conversion is available. Missing
+rates preserve native data and mark conversion incomplete. The operation and
+its required bank or points ledger entry are posted atomically.
 
 Yield is internal: it changes the portfolio position/value and appears in
 investment performance, but does not create bank income or available cash. Cash

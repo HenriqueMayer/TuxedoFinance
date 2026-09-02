@@ -120,7 +120,7 @@ The dark theme uses the corresponding lighter semantic companions documented in
 the canonical catalog, preserving contrast without changing financial meaning.
 
 The canonical component catalog lives in
-[`design-system/tuxedo-final-design-system.html`](design-system/tuxedo-final-design-system.html),
+[`docs/design-system.html`](docs/design-system.html),
 with implementation guidance in [`docs/frontend.md`](docs/frontend.md).
 
 </details>
@@ -205,10 +205,10 @@ database and never writes to the installation owner's `db.sqlite3`.
 - [Documentation index](docs/README.md) — architecture, data model, frontend, and per-app references
 - [Changelog](CHANGELOG.md) — notable changes grouped by release
 - [Versioning and releases](docs/versioning.md) — SemVer policy, validation and release workflow
-- [Product requirements](docs/ProductRequirementsDocument.md) — approved behavior and acceptance criteria
+- [Product requirements](docs/product-requirements.md) — approved behavior and acceptance criteria
 - [Operations guide](docs/operations.md) — dependency updates and SQLite backup/restore procedures
 - [Coverage baseline](docs/coverage-baseline.md) — test coverage policy and commands
-- [Category collections](docs/categories-collection/) — import-ready English and Brazilian Portuguese examples
+- [Category collections](docs/category-collections/) — import-ready English and Brazilian Portuguese examples
 
 ## 🔐 Data ownership
 

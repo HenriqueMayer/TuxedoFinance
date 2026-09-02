@@ -7,25 +7,103 @@ automatically migrated. See [Breaking release](#breaking-release).
 
 ```mermaid
 erDiagram
+    USER ||--|| USER_PREFERENCE : configures
     USER ||--o{ BANK : owns
+    USER ||--o{ CATEGORY : owns
+    USER ||--o{ TRANSACTION : records
+    USER ||--o{ BANK_TRANSFER : records
+    USER ||--o{ EXCHANGE_RATE : records
+    USER ||--o{ LOYALTY_PROGRAM : owns
+    USER ||--o{ REWARD_REDEMPTION : records
+    USER ||--o{ INVESTMENT_PRODUCT : owns
+    USER ||--o{ ASSET : owns
+    USER ||--o{ INVESTMENT : records
+
     BANK ||--o{ BANK_ACCOUNT : contains
     BANK_ACCOUNT ||--o{ BANK_MOVEMENT : posts
     BANK_ACCOUNT ||--o{ DEBIT_CARD : issues
-    BANK_ACCOUNT ||--o{ CREDIT_CARD : settles
-    CREDIT_CARD ||--o{ CARD_INVOICE : bills
-    CARD_INVOICE ||--o{ TRANSACTION : contains
+    BANK_ACCOUNT ||--o{ CREDIT_CARD : issues
+    BANK_ACCOUNT ||--o{ BANK_TRANSFER : sends
+    BANK_ACCOUNT ||--o{ BANK_TRANSFER : receives
+    CREDIT_CARD ||--o{ CARD_INVOICE : generates
+    CARD_INVOICE |o--o| BANK_MOVEMENT : settles_as
+    BANK_TRANSFER ||--|{ BANK_MOVEMENT : posts_two
+    EXCHANGE_RATE |o--o{ BANK_TRANSFER : evidences
+
+    CATEGORY |o--o{ CATEGORY : parent_of
     CATEGORY ||--o{ TRANSACTION : classifies
-    BANK_ACCOUNT ||--o{ TRANSACTION : settles_immediately
-    BANK_MOVEMENT |o--o| TRANSACTION : realizes
-    USER ||--o{ LOYALTY_PROGRAM : owns
-    LOYALTY_PROGRAM ||--o{ LOYALTY_ENTRY : records
+    BANK_ACCOUNT |o--o{ TRANSACTION : account_or_pix
+    DEBIT_CARD |o--o{ TRANSACTION : debit_channel
+    CREDIT_CARD |o--o{ TRANSACTION : credit_channel
+
     BANK |o--o{ LOYALTY_PROGRAM : offers
-    USER ||--o{ INVESTMENT_PRODUCT : owns
+    CREDIT_CARD }o--o{ LOYALTY_PROGRAM : participates_in
+    LOYALTY_PROGRAM ||--o{ LOYALTY_ENTRY : records
+    CARD_INVOICE |o--o{ LOYALTY_ENTRY : awards
+    BANK_ACCOUNT |o--o{ LOYALTY_ENTRY : funds_purchase
+    CREDIT_CARD |o--o{ LOYALTY_ENTRY : funds_purchase
+    LOYALTY_ENTRY |o--o| BANK_MOVEMENT : posts_purchase_debit
+    LOYALTY_PROGRAM ||--o{ REWARD_REDEMPTION : redeems
+    REWARD_REDEMPTION |o--o| LOYALTY_ENTRY : posts_points_debit
+    REWARD_REDEMPTION |o--o| BANK_MOVEMENT : posts_reward_credit
+    REWARD_REDEMPTION |o--o| BANK_MOVEMENT : posts_iof_debit
+    BANK_ACCOUNT ||--o{ REWARD_REDEMPTION : receives_reward
+    BANK_ACCOUNT |o--o{ REWARD_REDEMPTION : funds_iof
+    CREDIT_CARD |o--o{ REWARD_REDEMPTION : funds_iof
+
     BANK ||--o{ INVESTMENT_PRODUCT : provides
-    USER ||--o{ ASSET : owns
-    INVESTMENT_PRODUCT ||--o{ INVESTMENT_OPERATION : records
-    ASSET ||--o{ INVESTMENT_OPERATION : denominates
+    INVESTMENT_PRODUCT |o--o{ ASSET : holds_opening_position
+    INVESTMENT_PRODUCT ||--o{ INVESTMENT : records
+    ASSET ||--o{ INVESTMENT : denominates
+    BANK_ACCOUNT |o--o{ INVESTMENT : funds_or_receives
+    LOYALTY_PROGRAM |o--o{ INVESTMENT : funds_with_points
+    EXCHANGE_RATE |o--o{ INVESTMENT : evidences
+    INVESTMENT |o--o| BANK_MOVEMENT : posts_cash_leg
+    INVESTMENT |o--o| LOYALTY_ENTRY : posts_points_leg
 ```
+
+Every financial model also carries a direct `user` foreign key, even when the
+diagram emphasizes its domain relationship. Optional edges reflect nullable
+foreign keys. Business services enforce stronger rules where the database shape
+alone cannot—for example, a transfer posts exactly two movements and a
+transaction selects exactly one payment instrument.
+
+`Transaction` does not have a foreign key to `CardInvoice` or `BankMovement`.
+The idempotent ledger synchronization service derives immediate movements and
+card-invoice totals from the transaction's channel, instrument, date and
+recurrence fields. The generated movement's `source_key` preserves that source
+identity without creating a model relationship.
+
+## Posting and data flow
+
+```mermaid
+flowchart TD
+    T[Transaction] --> Channel{Payment channel}
+    Channel -->|Account, PIX or debit card| Immediate[Create or update immediate BankMovement]
+    Channel -->|Credit card| Invoice[Derive CardInvoice total by card and statement month]
+    Invoice --> Due[Create or update due-date BankMovement]
+
+    Transfer[BankTransfer] --> TransferDebit[Source-account debit movement]
+    Transfer --> TransferCredit[Destination-account credit movement]
+
+    Investment[Investment] --> InvestmentKind{Kind and source}
+    InvestmentKind -->|Deposit from account| InvestmentDebit[Account debit movement]
+    InvestmentKind -->|Deposit from loyalty program| PointsDebit[LoyaltyEntry debit]
+    InvestmentKind -->|Withdrawal| InvestmentCredit[Destination-account credit movement]
+    InvestmentKind -->|Yield| PositionOnly[Position change only]
+
+    Redemption[RewardRedemption] --> RedemptionPoints[LoyaltyEntry redemption debit]
+    Redemption --> RewardCredit[Target-account reward credit]
+    Redemption --> IOF{Positive IOF?}
+    IOF -->|Bank account| IOFDebit[Immediate IOF debit movement]
+    IOF -->|Credit card| IOFInvoice[Include IOF in card-invoice synchronization]
+    IOF -->|No| NoIOF[No IOF ledger entry]
+```
+
+The service layer posts each workflow atomically and synchronizes derived rows
+idempotently. `BankMovement` remains the source of realized account cash;
+transactions, invoices, investment positions and loyalty points retain their
+separate economic meaning.
 
 ## Banking
 
@@ -95,10 +173,11 @@ account. A `CardInvoice` belongs to a credit card and records reference month,
 due date, amount, status, paid timestamp and its settlement movement.
 
 A debit purchase creates a transaction and immediate debit movement. A credit
-purchase creates a transaction assigned to one invoice and no immediate
-movement. On the invoice due date, payment creates one `INVOICE` debit
-for the invoice payable total. Dashboard logic must never add invoice purchases
-to account balance separately from that payment.
+purchase has no direct invoice foreign key: synchronization groups it by card
+and statement month into a `CardInvoice`, with no purchase-date account debit.
+The invoice has one due-date `INVOICE` movement for its payable total. Dashboard
+logic must never add invoice purchases to account balance separately from that
+movement.
 
 ## Transactions
 
@@ -153,15 +232,20 @@ banks, accounts, cards, investments, or shared credentials.
 `LoyaltyProgram` has a name, points unit, optional `Bank`, optional many-to-many
 card links, and owner. It is valid with none of those links.
 
-`LoyaltyEntry` is a points ledger with `points` and kind
+`LoyaltyEntry` is the signed points ledger. It stores a positive `amount`, a
+`CREDIT` or `DEBIT` direction, and kind
 `INVOICE_AWARD`, `PURCHASE`, `ADJUSTMENT`, `EXPIRATION`, or `REDEMPTION`.
-Invoice awards may reference an invoice; all entries retain event date and
-notes. Balance is the signed sum of entries.
+Invoice awards may reference an invoice. Purchased points store their cash
+amount and exactly one funding account or credit card; all entries retain event
+date and notes. Balance is the signed sum of entry amounts.
 
-A redemption additionally requires `target_amount`, `target_currency`, and
-`iof_amount`. If `iof_amount > 0`, exactly one owned IOF funding instrument is
-required: bank account, debit card, or credit card. Its settlement follows the
-same immediate/deferred card rules as any other payment.
+`RewardRedemption` is the orchestration record for a monetary redemption. It
+stores the points, target account and amount, IOF amount, date and optional IOF
+account or credit card. Its target currency comes from the target account. The
+posting service links it to the generated redemption `LoyaltyEntry`, reward
+credit movement and, for account-funded IOF, debit movement. If `iof_amount >
+0`, exactly one owned IOF account or credit card is required; zero IOF permits
+neither. Credit-card IOF is included by the invoice synchronization flow.
 
 ## Currency and historical conversion
 
@@ -212,19 +296,20 @@ available for later withdrawals and also has no linked bank movement.
 
 | Entity | Required fields |
 |---|---|
-| `InvestmentProduct` | owner, `bank`, name, product kind. |
-| `Asset` | owner, name, code, `asset_class`, currency. |
-| `InvestmentOperation` | owner, product, asset, kind, quantity, unit price, currency, date. |
+| `InvestmentProduct` | owner, `bank`, name, yield mode. |
+| `Asset` | owner, name, code, `asset_class`, currency, valuation mode. |
+| `Investment` | owner, product, asset, kind and date; valuation and funding fields depend on the selected modes. |
 
-`asset_class` is mandatory (for example `CASH`, `FIXED_INCOME`, `EQUITY`, `FUND`,
-`CRYPTO`, or `OTHER`). An operation has no `title`; identity comes from product,
-asset, kind, and date. Gross value is `quantity * unit_price`, preserving both
-position quantity and historical execution price.
+`asset_class` is mandatory: `LIQUIDITY`, `CURRENCY`, `CRYPTO`, `FIXED_INCOME`,
+`EQUITY`, or `OTHER`. An `Investment` has no `title`; identity comes from
+product, asset, kind, and date. Unit-valued assets derive gross value as
+`quantity * unit_price`; monetary assets use their positive `amount` directly.
 
 Operation kinds are `DEPOSIT`, `WITHDRAWAL`, and `YIELD`:
 
-- `DEPOSIT` requires a source `BankAccount` and a linked debit
-  `BankMovement(kind=INVESTMENT)`.
+- `DEPOSIT` requires exactly one source: a `BankAccount` with a linked debit
+  `BankMovement(kind=INVESTMENT)`, or a `LoyaltyProgram` with a linked redemption
+  `LoyaltyEntry`.
 - `WITHDRAWAL` requires a destination `BankAccount` and a linked credit movement.
 - `YIELD` is internal to the investment position. It changes quantity/value but
   does not create bank income or an account movement.
