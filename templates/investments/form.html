@@ -20,10 +20,13 @@
             {% include 'partials/form_field.html' with field=form.date %}
             <p id="asset-mode-status" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
             <div id="money-fields" data-has-errors="{% if form.amount.errors or form.ending_balance.errors %}true{% else %}false{% endif %}" class="space-y-5">
-                <div id="regular-amount-field">
+                <div id="regular-amount-field"
+                     data-has-errors="{{ form.amount.errors|yesno:'true,false' }}">
                     {% include 'partials/form_field.html' with field=form.amount %}
                 </div>
-                <div id="monetary-yield-fields" class="space-y-5 rounded-xl bg-cream p-4 dark:bg-forest-deep">
+                <div id="monetary-yield-fields"
+                     data-has-errors="{% if form.yield_input_mode.errors or form.ending_balance.errors %}true{% else %}false{% endif %}"
+                     class="space-y-5 rounded-xl bg-cream p-4 dark:bg-forest-deep">
                     <fieldset class="space-y-3" aria-describedby="{{ form.yield_input_mode.id_for_label }}-help">
                         <legend class="text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{{ form.yield_input_mode.label }}</legend>
                         <div class="space-y-2">
@@ -37,7 +40,8 @@
                         <p id="{{ form.yield_input_mode.id_for_label }}-help" class="text-sm text-forest/70 dark:text-cream/70">{{ form.yield_input_mode.help_text }}</p>
                         {% for error in form.yield_input_mode.errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
                     </fieldset>
-                    <div id="ending-balance-field">
+                    <div id="ending-balance-field"
+                         data-has-errors="{{ form.ending_balance.errors|yesno:'true,false' }}">
                         {% include 'partials/form_field.html' with field=form.ending_balance %}
                     </div>
                     <div id="yield-preview" class="rounded-lg border border-forest/10 bg-white p-4 text-sm dark:border-cream/10 dark:bg-forest" aria-live="polite" hx-post="{% url 'investments:yield_preview' %}" hx-trigger="input changed delay:250ms from:#id_ending_balance, input changed delay:250ms from:#id_amount, change from:#id_product, change from:#id_asset, change from:#id_kind, change from:#id_date, change from:input[name='yield_input_mode']" hx-target="this" hx-swap="innerHTML" hx-include="#investment-operation-form" hx-request='{"noHeaders":false}' hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
@@ -141,6 +145,10 @@
             const isYield = isMonetaryYield();
             const selectedMode = document.querySelector('input[name="yield_input_mode"]:checked');
             const usesEndingBalance = selectedMode && selectedMode.value === 'ENDING_BALANCE';
+            if (clearStale) {
+                if (!isYield || !usesEndingBalance) endingBalance.value = '';
+                if (isYield && usesEndingBalance) amount.value = '';
+            }
             setHidden(groups.yield, !isYield, !clearStale);
             if (!isYield) {
                 setHidden(groups.amount, false, !clearStale);
@@ -227,10 +235,10 @@
             updateFundingFields(false);
         });
         kind.addEventListener('change', () => updateFundingFields(true));
-        kind.addEventListener('change', () => updateAssetFields(false));
+        kind.addEventListener('change', () => updateAssetFields(true));
         sourceAccount.addEventListener('change', () => updateFundingFields(true, 'account'));
         sourceProgram.addEventListener('change', () => updateFundingFields(true, 'program'));
-        yieldInputModes.forEach(input => input.addEventListener('change', () => updateYieldFields(false)));
+        yieldInputModes.forEach(input => input.addEventListener('change', () => updateYieldFields(true)));
         [product, asset, kind, document.getElementById('{{ form.date.id_for_label }}'), endingBalance, amount]
             .filter(Boolean)
             .forEach(input => input.addEventListener('input', scheduleYieldPreview));

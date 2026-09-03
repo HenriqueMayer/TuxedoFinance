@@ -37,6 +37,9 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Loyalty entries now hide points-purchase payment fields for invoice awards
   and clear values from the inactive invoice or purchase branch when the entry
   kind changes (FIN-6).
+- Investment operation fields now preserve server-side validation errors on
+  initial render and clear stale inactive yield values after deliberate mode,
+  asset or operation-type changes.
 
 ### Removed
 

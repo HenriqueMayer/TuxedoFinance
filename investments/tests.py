@@ -433,6 +433,41 @@ class MonetaryYieldTests(InvestmentFixtureMixin, TestCase):
         self.assertFalse(lower.is_valid())
         self.assertIn('ending_balance', lower.errors)
 
+    def test_operation_form_marks_nested_yield_error_groups(self):
+        ending_balance_response = self.client.post(
+            reverse('investments:create'),
+            self.yield_data(
+                yield_input_mode=YIELD_INPUT_AMOUNT,
+                ending_balance='0',
+                amount='200.00',
+            ),
+        )
+
+        self.assertEqual(ending_balance_response.status_code, 200)
+        self.assertIn('ending_balance', ending_balance_response.context['form'].errors)
+        ending_balance_html = ending_balance_response.content.decode()
+        self.assertRegex(
+            ending_balance_html,
+            r'id="monetary-yield-fields"\s+data-has-errors="true"',
+        )
+        self.assertRegex(
+            ending_balance_html,
+            r'id="ending-balance-field"\s+data-has-errors="true"',
+        )
+
+        amount_response = self.client.post(
+            reverse('investments:create'),
+            self.yield_data(amount='not-a-number'),
+        )
+
+        self.assertEqual(amount_response.status_code, 200)
+        self.assertIn('amount', amount_response.context['form'].errors)
+        self.assertRegex(
+            amount_response.content.decode(),
+            r'id="regular-amount-field"\s+data-has-errors="true"',
+        )
+        self.assertEqual(Investment.objects.count(), 0)
+
     def test_same_day_calculation_uses_registration_order_when_editing(self):
         first = Investment.objects.create(
             user=self.user, product=self.product, asset=self.savings,
