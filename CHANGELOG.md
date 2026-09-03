@@ -18,6 +18,14 @@ and project versions follow [Semantic Versioning](https://semver.org/).
   collections around consistent, descriptive paths.
 - Expanded the database documentation with the current entity relationships and
   the posting flows for transactions, transfers, investments and rewards.
+- Established progressive disclosure as the project-wide rule for conditional
+  forms, filters, pickers, menus and category-driven flows.
+
+### Fixed
+
+- Loyalty entries now hide points-purchase payment fields for invoice awards
+  and clear values from the inactive invoice or purchase branch when the entry
+  kind changes (FIN-6).
 
 ### Removed
 

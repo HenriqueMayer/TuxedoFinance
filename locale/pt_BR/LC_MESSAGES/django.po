@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-02 22:59+0000\n"
+"POT-Creation-Date: 2026-09-03 18:38+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -1345,8 +1345,17 @@ msgid ""
 msgstr ""
 "Adicione taxas históricas antes de consolidar contas em moedas diferentes."
 
+msgid "Choose an entry type to see only the fields you need."
+msgstr "Escolha um tipo de lançamento para ver apenas os campos necessários."
+
 msgid "Save"
 msgstr "Salvar"
+
+msgid "Choose the invoice that awarded these points."
+msgstr "Escolha a fatura que concedeu estes pontos."
+
+msgid "Choose one payment source and enter the amount paid."
+msgstr "Escolha uma forma de pagamento e informe o valor pago."
 
 msgid "Accounts, cards, native balances, and loyalty in one place."
 msgstr "Contas, cartões, saldos nativos e fidelidade em um só lugar."

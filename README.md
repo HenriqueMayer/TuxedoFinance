@@ -89,6 +89,7 @@ Updated walkthroughs will be available in both supported languages:
 | 💼 **Investments** | Tracks manual deposits, withdrawals, yields, products, assets, quantities, unit prices, fees, and historical conversion evidence. |
 | 🌍 **Localization** | Offers English and Brazilian Portuguese independently from BRL, USD, EUR, GBP, JPY, or CHF reporting currency. |
 | 🌗 **Accessible themes** | Uses a readable Inter-based light/dark interface with distinct colors for income, expenses, investments, installments, fixed, and one-off activity. |
+| 🧭 **Focused workflows** | Uses progressive disclosure across conditional forms and filters, showing only the fields relevant to the selected option or category while retaining server validation and a complete no-JavaScript path. |
 
 > **Financial meaning matters:** Current Balance is realized account cash through
 > today. Projected (end of month) is the forward-looking close. Credit-card

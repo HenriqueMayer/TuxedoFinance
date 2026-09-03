@@ -74,7 +74,7 @@ HTMX progressive enhancement.
 | FR11 | Transactions | CRUD/search/filter for income and expense events, with category, amount, date, recurrence and banking settlement links. The entry form progressively reveals the selected payment channel while retaining server-rendered no-JavaScript controls and validation. |
 | FR12 | Categories | Existing category/subcategory management remains for income and expense. |
 | FR13 | Loyalty programs | A program may be independent, linked to a bank, linked to cards, or linked to both. |
-| FR14 | Loyalty ledger | `LoyaltyEntry` records signed invoice awards, points purchases, adjustments, expirations and redemption debits. |
+| FR14 | Loyalty ledger | `LoyaltyEntry` records signed invoice awards, points purchases, adjustments, expirations and redemption debits. Its form reveals invoice fields only for invoice awards and payment fields only for purchases. |
 | FR15 | Redemption details | `RewardRedemption` coordinates the points debit, target-account credit and optional IOF. Positive IOF requires an owned bank account or credit card. |
 | FR16 | Multicurrency | Each user selects a supported reporting currency in Settings; native amounts and currencies remain unchanged. |
 | FR17 | Historical FX | Retain source/target currencies, applied rate, effective date, and conversion status so later rate edits cannot rewrite history. |
@@ -255,6 +255,11 @@ currency/valuation date and whether it is actual or projected.
   is created. From that point onward, categories and all other user-entered or
   persisted domain data are displayed verbatim and are not translated
   automatically.
+- Progressive disclosure applies to every conditional form, filter, picker,
+  menu and categorized flow: show only the branch relevant to the current
+  selection, clear stale inactive values after deliberate changes, preserve
+  errored branches for recovery, and keep server validation plus a complete
+  no-JavaScript path.
 
 ## 11. Non-Functional Requirements
 

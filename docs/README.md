@@ -11,7 +11,7 @@ Technical and product documentation for the current Tuxedo Finance release.
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and clean-reset delivery. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
-| [frontend.md](frontend.md) | Server-rendered design system and updated banking UI structure. |
+| [frontend.md](frontend.md) | Server-rendered design system, progressive-disclosure policy and banking UI structure. |
 | [design-system.html](design-system.html) | Canonical visual tokens and component catalog. |
 | [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
 | [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |

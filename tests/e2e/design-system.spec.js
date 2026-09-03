@@ -85,6 +85,42 @@ test('authenticated navigation remains usable at tablet widths', async ({ page }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('loyalty entry reveals only the fields for the selected entry type', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.goto('/banking/loyalty-entries/create/');
+
+    const kind = page.getByLabel('Kind');
+    const invoice = page.getByLabel('Invoice');
+    const fundingAccount = page.getByLabel('Funding account');
+    const fundingCreditCard = page.getByLabel('Funding credit card');
+    const cashAmount = page.getByLabel('Amount paid');
+
+    await expect(invoice).toBeHidden();
+    await expect(fundingAccount).toBeHidden();
+    await expect(fundingCreditCard).toBeHidden();
+    await expect(cashAmount).toBeHidden();
+
+    await kind.selectOption('PURCHASE');
+    await expect(invoice).toBeHidden();
+    await expect(fundingAccount).toBeVisible();
+    await expect(fundingCreditCard).toBeVisible();
+    await expect(cashAmount).toBeVisible();
+    await cashAmount.fill('25');
+
+    await kind.selectOption('INVOICE_AWARD');
+    await expect(invoice).toBeVisible();
+    await expect(fundingAccount).toBeHidden();
+    await expect(fundingCreditCard).toBeHidden();
+    await expect(cashAmount).toBeHidden();
+    await expect(cashAmount).toHaveValue('');
+
+    await kind.selectOption('ADJUSTMENT');
+    await expect(invoice).toBeHidden();
+    await expect(fundingAccount).toBeHidden();
+    await expect(fundingCreditCard).toBeHidden();
+    await expect(cashAmount).toBeHidden();
+});
+
 test('mobile navigation traps focus and restores it on Escape', async ({ page }, testInfo) => {
     await createAccount(page, testInfo);
     await page.setViewportSize({ width: 390, height: 844 });

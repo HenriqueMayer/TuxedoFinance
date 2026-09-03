@@ -152,6 +152,29 @@ authoritative no-JavaScript path, while JavaScript reveals the fields relevant
 to the selected payment channel and enhances category search. Hidden client-side
 controls never replace server-side ownership and compatibility validation.
 
+Progressive disclosure is a project-wide interface rule, not a pattern limited
+to one form. Every new or updated form, filter, picker, menu or categorized flow
+must initially present only the information needed to make the current choice,
+then reveal the fields and explanations that belong to the selected option or
+category. Implementations must:
+
+- hide inactive branches instead of leaving unrelated controls competing for
+  attention;
+- clear stale values from a branch when the user deliberately switches away
+  from it, so hidden inputs cannot affect the submitted result;
+- keep a branch visible when it contains a server-side validation error, giving
+  the user a clear recovery path;
+- announce useful selection consequences in text when they are not already
+  evident from the visible labels;
+- retain a complete server-rendered, no-JavaScript submission path and enforce
+  ownership, compatibility and accounting rules on the server.
+
+When an existing screen with conditional branches is changed, those branches
+must be brought into this contract as part of the change. The loyalty-entry form,
+for example, shows an invoice only for an invoice award, shows payment-source
+and amount fields only for a points purchase, and shows neither branch for an
+adjustment, expiration or redemption.
+
 Forms use the established `form_field.html`, validation summary, forest/cream
 inputs with caramel focus, and the Save/Cancel pill action pattern. Checkboxes
 use `accent-caramel`. Server-side validation remains authoritative.
@@ -161,6 +184,9 @@ use `accent-caramel`. Server-side validation remains authoritative.
 - Own transfer forms identify source and destination, show both currencies, and
   explain that the transfer is not income or expense.
 - Credit transaction forms show the target invoice/due date when known.
+- Loyalty invoice awards show only the related invoice; points purchases show
+  only their payment source and amount. Switching kind clears the inactive
+  branch.
 - Investment deposit forms require `Source account`; withdrawals require
   `Destination account`; yield forms state `Internal yield, no bank movement`.
 - Loyalty redemption forms show points, target monetary amount/currency, IOF and

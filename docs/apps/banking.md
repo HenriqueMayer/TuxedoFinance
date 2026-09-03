@@ -70,6 +70,13 @@ ledger supports:
 | `EXPIRATION` | Points removed on expiry. |
 | `REDEMPTION` | Points spent for a benefit or monetary target. |
 
+The entry form follows the project-wide progressive-disclosure contract. An
+invoice award reveals only its invoice selector; a points purchase reveals only
+the account/card funding selectors and cash amount; adjustment, expiration and
+redemption entries reveal neither conditional branch. Changing the entry kind
+clears values from the branch that became inactive, while server validation
+remains authoritative and the no-JavaScript form remains complete.
+
 `RewardRedemption` coordinates a redemption rather than replacing the points
 ledger. It records the points used, target account and monetary amount, IOF, and
 an optional IOF funding instrument. The service links it to a debit
