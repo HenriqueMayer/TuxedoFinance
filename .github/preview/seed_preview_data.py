@@ -114,9 +114,9 @@ def validate_capture_environment() -> str:
     password = os.environ.get('PREVIEW_PASSWORD', '')
     if not password:
         raise SystemExit('PREVIEW_PASSWORD is required for disposable users.')
-    data_dir_value = os.environ.get('CASHFLOW_DATA_DIR', '')
+    data_dir_value = os.environ.get('TUXEDO_DATA_DIR', '')
     if not data_dir_value:
-        raise SystemExit('CASHFLOW_DATA_DIR must point to the disposable preview directory.')
+        raise SystemExit('TUXEDO_DATA_DIR must point to the disposable preview directory.')
     data_dir = Path(data_dir_value).resolve()
     if data_dir == PROJECT_ROOT or PROJECT_ROOT in data_dir.parents:
         raise SystemExit('Refusing to use a data directory inside the project workspace.')

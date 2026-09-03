@@ -40,7 +40,8 @@ Reports retain server-rendered SVG/CSS and HTMX-enhanced filters with plain GET
 fallbacks. The approved report set is organized by source of truth:
 
 1. Available cash evolution from account opening balances and movements.
-2. Monthly income and expense from categorized transactions.
+2. Monthly income and expenses from categorized transactions, with investment
+   deposits and withdrawal credits shown as separate cash-flow series.
 3. Spending by category and settlement instrument.
 4. Credit-card invoice evolution, due dates and paid/open status.
 5. Currency-aware balances with persisted investment-operation snapshots and

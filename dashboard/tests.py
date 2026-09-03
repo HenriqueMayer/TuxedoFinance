@@ -306,13 +306,40 @@ class InvestmentAggregationTests(DashboardFixture):
             date=timezone.localdate(),
         )
         sync_investment_ledger(operation)
+        withdrawal = Investment.objects.create(
+            user=self.user,
+            product=product,
+            asset=asset,
+            kind=Investment.Kind.WITHDRAWAL,
+            quantity='1',
+            unit_price='100',
+            cash_amount='95.00',
+            destination_account=self.account,
+            date=timezone.localdate(),
+        )
+        sync_investment_ledger(withdrawal)
         sync_user_ledger(self.user)
 
         summary = get_dashboard_summary(self.user)
+        evolution = get_account_evolution(self.user)
+        current_month = next(
+            row for row in evolution['months'] if row['is_current_month']
+        )
+        response = self.client.get(reverse('dashboard:reports'))
 
         self.assertEqual(summary['investment_month'], Decimal('200.00'))
         self.assertEqual(summary['expense_month'], Decimal('0.00'))
-        self.assertEqual(summary['current_balance'], Decimal('800.00'))
+        self.assertEqual(summary['income_month'], Decimal('0.00'))
+        self.assertEqual(summary['current_balance'], Decimal('895.00'))
+        self.assertEqual(summary['projected_balance'], Decimal('895.00'))
+        self.assertEqual(summary['balance_month'], Decimal('-105.00'))
+        self.assertEqual(current_month['withdrawals'], Decimal('95.00'))
+        self.assertEqual(current_month['balance'], Decimal('-105.00'))
+        self.assertContains(response, 'Withdrawals')
+        self.assertContains(
+            response,
+            'Grouped bar chart of income, expenses, investments, and withdrawals per month',
+        )
 
 
 class InstrumentReportTests(DashboardFixture):
@@ -568,16 +595,28 @@ class DashboardPageContractTests(DashboardFixture):
         expected = f'{date(*first, 1):%b %Y} &ndash; {date(*last, 1):%b %Y}'
         self.assertContains(response, expected)
 
-    def test_cashflow_bars_have_mouse_and_keyboard_tooltips(self):
+    def test_report_charts_have_foreground_mouse_and_keyboard_tooltips(self):
         self.transaction(amount='123.45')
 
         response = self.client.get(reverse('dashboard:reports'))
+        content = response.content.decode()
 
         self.assertContains(response, 'group-hover:opacity-100')
         self.assertContains(response, 'group-focus-visible:opacity-100')
         self.assertNotContains(response, 'group-focus:opacity-100')
         self.assertContains(response, 'tabindex="0"')
         self.assertContains(response, 'R$ 123,45')
+        for marks, interactions in (
+            ('balance-marks', 'balance-interactions'),
+            ('cashflow-marks', 'cashflow-interactions'),
+            ('recurrence-marks', 'recurrence-interactions'),
+            ('instrument-marks', 'instrument-interactions'),
+        ):
+            with self.subTest(chart=marks):
+                self.assertLess(
+                    content.index(f'data-chart-layer="{marks}"'),
+                    content.index(f'data-chart-layer="{interactions}"'),
+                )
 
     def test_evolution_uses_ledger_projection(self):
         future = timezone.localdate() + timedelta(days=35)

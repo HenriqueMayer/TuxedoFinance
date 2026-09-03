@@ -107,21 +107,36 @@ def _investment_value(user, operation, base_currency, missing):
     return value
 
 
-def _investment_totals(user, window):
+def _investment_cash_flows(user, window):
     wanted = set(window)
-    total = ZERO
+    investments = ZERO
+    withdrawals = ZERO
     missing = set()
     base_currency = UserPreference.for_user(user).base_currency
     operations = Investment.objects.filter(
-        user=user, kind=Investment.Kind.DEPOSIT
-    ).select_related('asset', 'source_account')
+        user=user,
+        kind__in=(Investment.Kind.DEPOSIT, Investment.Kind.WITHDRAWAL),
+    ).select_related('asset', 'source_account', 'destination_account')
     for operation in operations:
         if (operation.date.year, operation.date.month) not in wanted:
             continue
-        value = _investment_value(user, operation, base_currency, missing)
+        if operation.kind == Investment.Kind.DEPOSIT:
+            value = _investment_value(user, operation, base_currency, missing)
+            if value is not None:
+                investments += value
+            continue
+        if not operation.cash_amount or not operation.destination_account_id:
+            continue
+        value = _convert_or_missing(
+            user,
+            operation.cash_amount,
+            operation.destination_account.currency,
+            operation.date,
+            missing,
+        )
         if value is not None:
-            total += value
-    return total, sorted(missing)
+            withdrawals += value
+    return investments, withdrawals, sorted(missing)
 
 
 def _transaction_value(user, transaction, year, month, missing):
@@ -154,13 +169,16 @@ def _monthly_totals(user, transactions, year, month):
     )
     expenses += banking_expenses
     missing.update(banking_missing)
-    investments, investment_missing = _investment_totals(user, [(year, month)])
+    investments, withdrawals, investment_missing = _investment_cash_flows(
+        user, [(year, month)]
+    )
     missing.update(investment_missing)
     return {
         'income': income,
         'expenses': expenses,
         'investments': investments,
-        'balance': income - expenses - investments,
+        'withdrawals': withdrawals,
+        'balance': income + withdrawals - expenses - investments,
         'missing_currencies': sorted(missing),
     }
 

@@ -5,8 +5,8 @@ from django.utils.translation import gettext, gettext_noop
 
 from categories.models import Category
 
-# Default top-level categories seeded for every new user (PRD FR27, domain
-# diagram — docs/svg/diagram.svg). Keeps a brand-new account usable
+# Default top-level categories seeded for every new user (PRD FR27 and
+# docs/data-model.md). Keeps a brand-new account usable
 # immediately, since `Transaction.category` is a required field.
 DEFAULT_CATEGORY_NAMES = (
     gettext_noop('Groceries'),

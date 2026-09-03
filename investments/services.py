@@ -1,9 +1,12 @@
 """Investment ledger synchronization and portfolio aggregation."""
 
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -16,6 +19,15 @@ from investments.models import Asset, Investment
 ZERO = Decimal('0.00')
 CENTS = Decimal('0.01')
 TIMESERIES_MONTHS = 12
+YIELD_INPUT_ENDING_BALANCE = 'ENDING_BALANCE'
+YIELD_INPUT_AMOUNT = 'YIELD_AMOUNT'
+
+
+@dataclass(frozen=True)
+class MonetaryYieldCalculation:
+    previous_balance: Decimal
+    yield_amount: Decimal
+    ending_balance: Decimal
 
 
 def opening_unit_value(asset):
@@ -188,15 +200,91 @@ def cleanup_investment_ledger(operation):
         entry.delete()
 
 
+def monetary_position_before(*, user, product, asset, operation_date, operation=None, lock=False):
+    """Return a monetary position immediately before an operation.
+
+    Existing same-day operations are ordered by their registration timestamp.
+    A new operation therefore follows all operations already registered on its
+    date; an edited operation keeps its original place in that ordering.
+    """
+    if asset.valuation_mode != Asset.ValuationMode.MONETARY:
+        raise ValueError('A monetary position requires a monetary asset.')
+
+    queryset = Investment.objects.filter(user=user, product=product, asset=asset)
+    if operation and operation.pk and operation.created_at:
+        queryset = queryset.filter(
+            Q(date__lt=operation_date)
+            | Q(date=operation_date, created_at__lt=operation.created_at)
+        )
+    else:
+        queryset = queryset.filter(date__lte=operation_date)
+    queryset = queryset.order_by('date', 'created_at', 'pk')
+    if lock:
+        queryset = queryset.select_for_update()
+
+    total = asset.opening_balance if asset.opening_product_id == product.pk else ZERO
+    for item in queryset:
+        total += item.signed_value
+    return total.quantize(CENTS)
+
+
+def calculate_monetary_yield(
+    *, user, product, asset, operation_date, input_mode, value, operation=None, lock=False
+):
+    """Calculate a monetary yield from either the final balance or the yield."""
+    field = 'ending_balance' if input_mode == YIELD_INPUT_ENDING_BALANCE else 'amount'
+    if value is None:
+        message = (
+            _('Enter the new investment balance.')
+            if input_mode == YIELD_INPUT_ENDING_BALANCE
+            else _('Enter the yield amount.')
+        )
+        raise ValidationError({field: message})
+
+    previous_balance = monetary_position_before(
+        user=user,
+        product=product,
+        asset=asset,
+        operation_date=operation_date,
+        operation=operation,
+        lock=lock,
+    )
+    if input_mode == YIELD_INPUT_ENDING_BALANCE:
+        ending_balance = value.quantize(CENTS)
+        yield_amount = (ending_balance - previous_balance).quantize(CENTS)
+        if yield_amount == ZERO:
+            raise ValidationError({
+                'ending_balance': _('The new balance must be greater than the previous balance.'),
+            })
+        if yield_amount < ZERO:
+            raise ValidationError({
+                'ending_balance': _('The new balance is lower than the previous balance. Record a withdrawal instead.'),
+            })
+    elif input_mode == YIELD_INPUT_AMOUNT:
+        yield_amount = value.quantize(CENTS)
+        if yield_amount <= ZERO:
+            raise ValidationError({'amount': _('Enter a positive yield amount.')})
+        ending_balance = (previous_balance + yield_amount).quantize(CENTS)
+    else:
+        raise ValidationError({'yield_input_mode': _('Choose how to enter the yield.')})
+
+    return MonetaryYieldCalculation(
+        previous_balance=previous_balance,
+        yield_amount=yield_amount,
+        ending_balance=ending_balance,
+    )
+
+
 def available_value(operation):
     """Position value available immediately before this operation."""
-    queryset = Investment.objects.filter(user=operation.user, product=operation.product, asset=operation.asset, date__lte=operation.date)
-    if operation.pk:
-        queryset = queryset.exclude(pk=operation.pk)
-    total = operation.asset.opening_balance if operation.asset.valuation_mode == Asset.ValuationMode.MONETARY else ZERO
-    for item in queryset.select_for_update():
-        total += item.signed_value
-    return total
+    return monetary_position_before(
+        user=operation.user,
+        product=operation.product,
+        asset=operation.asset,
+        operation_date=operation.date,
+        operation=operation,
+        lock=True,
+    )
 
 
 def available_quantity(operation):

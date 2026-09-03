@@ -1,8 +1,9 @@
-# PRD — Tuxedo Finance Banking and Multicurrency Update
+# PRD — Tuxedo Finance
 
-**Status:** Approved
+**Status:** Approved current baseline
 
-**Release type:** Breaking, clean migration reset
+**Current release:** 0.2.x
+**Legacy migration policy:** Breaking, clean migration reset
 **Product:** Django personal finance tracker
 
 ## 1. Overview
@@ -12,7 +13,9 @@ release adds banks, currency-specific accounts, an authoritative movement
 ledger, PIX, debit and credit cards, card invoices and loyalty points.
 Per-user multicurrency preferences and retained historical conversion evidence
 are implemented. Investments remain separate while sharing banks and bank
-accounts for providers and cash settlement.
+accounts for providers and cash settlement. An authenticated, non-persistent
+salary sandbox estimates automatic CLT or manually adjusted take-home pay and
+turns it into an isolated monthly spending plan.
 
 The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
@@ -28,6 +31,7 @@ HTMX progressive enhancement.
 | G4 | Multicurrency reporting | Preserve currency-specific account data with per-user reporting and historical FX evidence. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
 | G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
+| G7 | Support isolated planning | Salary and monthly-budget scenarios are calculated without reading or writing financial records. |
 
 ## 3. Scope
 
@@ -44,7 +48,11 @@ HTMX progressive enhancement.
 - Currency-specific bank accounts and manual exchange rates.
 - Investment products, classified assets, quantity/unit-price operations and
   mandatory bank cash endpoints.
+- Monetary investment yields entered directly or derived from a new total
+  balance, with a non-persistent preview before saving.
 - Dashboard/read models updated for cash, invoices, investments and net worth.
+- Authenticated salary planning with automatic 2026 CLT rules, manual
+  deductions, and a non-persistent monthly budget.
 
 ### Out of scope
 
@@ -74,14 +82,14 @@ HTMX progressive enhancement.
 | FR11 | Transactions | CRUD/search/filter for income and expense events, with category, amount, date, recurrence and banking settlement links. The entry form progressively reveals the selected payment channel while retaining server-rendered no-JavaScript controls and validation. |
 | FR12 | Categories | Existing category/subcategory management remains for income and expense. |
 | FR13 | Loyalty programs | A program may be independent, linked to a bank, linked to cards, or linked to both. |
-| FR14 | Loyalty ledger | `LoyaltyEntry` supports invoice award, points purchase, adjustment, expiration and redemption. |
-| FR15 | Redemption details | Redemption records points, target monetary amount/currency, IOF, and IOF funding instrument. Positive IOF requires an owned account, debit card or credit card. |
+| FR14 | Loyalty ledger | `LoyaltyEntry` records signed invoice awards, points purchases, adjustments, expirations and redemption debits. Its form reveals invoice fields only for invoice awards and payment fields only for purchases. |
+| FR15 | Redemption details | `RewardRedemption` coordinates the points debit, target-account credit and optional IOF. Positive IOF requires an owned bank account or credit card. |
 | FR16 | Multicurrency | Each user selects a supported reporting currency in Settings; native amounts and currencies remain unchanged. |
 | FR17 | Historical FX | Retain source/target currencies, applied rate, effective date, and conversion status so later rate edits cannot rewrite history. |
 | FR18 | Investments structure | Investments remain separate, use `Bank` instead of `Institution`, and group products and assets by bank/product/asset. |
 | FR19 | Assets | Every asset has name, code, asset class and currency; class/currency are immutable after use. |
-| FR20 | Investment operations | Every operation records kind, quantity and unit price and has no title. Gross value is derived. |
-| FR21 | Investment cash endpoints | Deposit requires a source bank account; withdrawal requires a destination bank account. Their movements post atomically with the operation. |
+| FR20 | Investment operations | Every `Investment` records a kind and has no title. Unit-valued assets use quantity/unit price; monetary assets use amount. |
+| FR21 | Investment cash endpoints | Deposit requires exactly one source bank account or loyalty program; withdrawal requires a destination bank account. Related ledger entries post atomically. |
 | FR22 | Internal yield | Yield changes the investment position only and creates no bank income/movement until withdrawn. |
 | FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth using the user's base currency, with historical snapshots and clearly labeled current valuations. |
 | FR24 | Forecasts | Recurrences and future invoices may be projected but do not alter the posted ledger before settlement. |
@@ -89,6 +97,7 @@ HTMX progressive enhancement.
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
 | FR28 | Local database ownership | The repository does not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. |
+| FR29 | Salary sandbox | Authenticated users can estimate automatic CLT or manually adjusted take-home pay and allocate a monthly plan without reading or persisting application financial data or scenario inputs. |
 
 ## 5. Domain Rules
 
@@ -125,10 +134,11 @@ reserved for explicitly labeled current-value simulations elsewhere.
 
 - Points balance is the signed sum of `LoyaltyEntry` rows.
 - Invoice awards may reference the eligible invoice.
-- Purchase, adjustment, expiration and redemption remain distinguishable.
-- A redemption carries points, target money amount/currency, IOF amount and IOF
-  funding instrument. IOF settlement follows that instrument's normal rule:
-  account/debit immediately, credit through an invoice.
+- Purchases, adjustments, expirations and redemption debits remain
+  distinguishable in the points ledger.
+- `RewardRedemption` carries the points, target amount/account and IOF details,
+  then links the generated points debit and bank movements. Account-funded IOF
+  settles immediately; credit-card IOF follows the card-invoice flow.
 
 ### 5.4 Currency
 
@@ -149,9 +159,11 @@ reserved for explicitly labeled current-value simulations elsewhere.
 - The investment position ledger and categorized transaction ledger stay
   separate.
 - `Bank` replaces `Institution` as investment product provider.
-- Quantity and unit price are stored; operation title is removed.
+- Unit-valued assets store quantity and unit price; monetary assets store amount.
+  The `Investment` operation has no title.
 - Deposit/withdrawal cash movements are not income/expense.
-- Deposit source and withdrawal destination are mandatory.
+- A deposit has exactly one account or loyalty-program source; a withdrawal has
+  one destination account.
 - Yield is internal and creates no account movement.
 
 ### 5.6 Public registration
@@ -164,27 +176,23 @@ reserved for explicitly labeled current-value simulations elsewhere.
 - Public navigation reflects the same setting, but authorization is enforced in
   the server-side signup view rather than by link visibility alone.
 
+### 5.7 Salary sandbox
+
+- The sandbox is authenticated but isolated from transactions, banking,
+  investments, user preferences, and other persisted financial records.
+- Automatic mode uses a versioned, source-attributed 2026 CLT rule set; manual
+  mode applies only the deductions supplied in the current request.
+- Both modes can feed a monthly plan with fixed costs, reserve and investment
+  targets, and up to 20 additional expense rows.
+- Scenario inputs are submitted by POST and are not stored in models, URLs, or
+  the authenticated session.
+
 ## 6. Data Structure
 
-```mermaid
-erDiagram
-    USER ||--o{ BANK : owns
-    BANK ||--o{ BANK_ACCOUNT : contains
-    BANK_ACCOUNT ||--o{ BANK_MOVEMENT : posts
-    BANK_ACCOUNT ||--o{ DEBIT_CARD : has
-    BANK_ACCOUNT ||--o{ CREDIT_CARD : settles
-    CREDIT_CARD ||--o{ CARD_INVOICE : generates
-    CARD_INVOICE ||--o{ TRANSACTION : contains
-    CATEGORY ||--o{ TRANSACTION : classifies
-    USER ||--o{ LOYALTY_PROGRAM : owns
-    LOYALTY_PROGRAM ||--o{ LOYALTY_ENTRY : records
-    BANK ||--o{ INVESTMENT_PRODUCT : provides
-    INVESTMENT_PRODUCT ||--o{ INVESTMENT_OPERATION : records
-    ASSET ||--o{ INVESTMENT_OPERATION : denominates
-```
-
-Detailed fields, constraints and formulas are normative in
-[data-model.md](data-model.md).
+The canonical entity-relationship diagram and posting-flow diagram are in
+[data-model.md](data-model.md). That document uses the implemented Django model
+names and is the normative reference for fields, relationships, constraints and
+formulas.
 
 ## 7. App Organization
 
@@ -197,6 +205,7 @@ banking/       # banks, accounts, ledger, PIX, cards, invoices, loyalty, FX
 transactions/  # economic events and recurrence
 dashboard/     # read models and reports
 investments/   # products, assets, position operations and valuation
+sandbox/       # non-persistent salary and monthly-budget planning
 ```
 
 Navigation and financial relationships use the current banking concepts.
@@ -209,6 +218,7 @@ flowchart TD
     Dashboard --> Banking
     Dashboard --> Transactions
     Dashboard --> Investments
+    Dashboard --> SalarySandbox[Salary sandbox]
     Banking --> Bank
     Bank --> Account
     Account --> PIX
@@ -267,6 +277,11 @@ currency/valuation date and whether it is actual or projected.
   is created. From that point onward, categories and all other user-entered or
   persisted domain data are displayed verbatim and are not translated
   automatically.
+- Progressive disclosure applies to every conditional form, filter, picker,
+  menu and categorized flow: show only the branch relevant to the current
+  selection, clear stale inactive values after deliberate changes, preserve
+  errored branches for recovery, and keep server validation plus a complete
+  no-JavaScript path.
 
 ## 11. Non-Functional Requirements
 
@@ -300,6 +315,8 @@ currency/valuation date and whether it is actual or projected.
 - [x] Fresh migrations install successfully on an empty SQLite database.
 - [x] The root SQLite database is ignored by Git and a clean clone becomes usable after migrations.
 - [x] Legacy database use is blocked/documented; no partial in-place migration is implied.
+- [x] Monetary yields can derive the stored yield from a new total balance without creating a bank movement.
+- [x] The authenticated salary sandbox supports automatic CLT and manual modes without persisting scenario data.
 
 ## 13. Delivery Plan
 

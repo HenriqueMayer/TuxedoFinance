@@ -1,0 +1,98 @@
+{% load i18n %}
+<section class="space-y-6" aria-labelledby="scenario-result-title">
+    <div>
+        <p class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Your result" %}</p>
+        <h2 id="scenario-result-title" class="mt-2 font-sans text-3xl font-semibold tracking-tight text-forest dark:text-cream">{% if result.mode == 'clt' %}{% translate "Automatic CLT calculation" %}{% else %}{% translate "Manual calculation" %}{% endif %}</h2>
+    </div>
+
+    {% if result.mode == 'clt' %}
+        {% with clt=result.clt %}
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <article class="rounded-3xl bg-forest p-6 text-cream shadow-sm sm:p-8">
+                <p class="text-xs font-medium uppercase tracking-widest text-caramel-light">{% translate "Monthly result" %}</p>
+                <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    {% translate "Net in an ordinary month" as ordinary_net_label %}{% translate "Amount received in a regular month after INSS, IRRF and the informed payroll deductions." as ordinary_net_help %}
+                    <div>{% include 'sandbox/_metric_label.html' with metric_id='clt-ordinary-net-help' metric_label=ordinary_net_label metric_help=ordinary_net_help %}<p class="mt-1 text-3xl font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ clt.ordinary.net|floatformat:2 }}</p></div>
+                    {% translate "Normalized monthly net" as normalized_label %}{% translate "Annual net including vacation and 13th salary, divided by twelve months for planning." as normalized_help %}
+                    <div>{% include 'sandbox/_metric_label.html' with metric_id='clt-normalized-help' metric_label=normalized_label metric_help=normalized_help %}<p class="mt-1 text-3xl font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ clt.monthly_normalized_net|floatformat:2 }}</p></div>
+                </div>
+                <dl class="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 border-t border-cream/15 pt-5 text-sm sm:grid-cols-2">
+                    {% translate "Gross salary" as gross_label %}{% translate "Monthly salary before employee taxes and deductions." as gross_help %}
+                    <div><dt class="text-cream/60">{% include 'sandbox/_metric_label.html' with metric_id='clt-gross-help' metric_label=gross_label metric_help=gross_help %}</dt><dd class="mt-1 tabular-nums">{{ CURRENCY_SYMBOL }} {{ clt.ordinary.gross|floatformat:2 }}</dd></div>
+                    {% translate "Employee social-security contribution calculated progressively for an ordinary month." as inss_help %}
+                    <div><dt class="text-cream/60">{% include 'sandbox/_metric_label.html' with metric_id='clt-inss-help' metric_label='INSS' metric_help=inss_help %}</dt><dd class="mt-1 tabular-nums">− {{ CURRENCY_SYMBOL }} {{ clt.ordinary.inss|floatformat:2 }}</dd></div>
+                    {% translate "Income tax withheld after applying the most favorable monthly deduction method." as irrf_help %}
+                    <div><dt class="text-cream/60">{% include 'sandbox/_metric_label.html' with metric_id='clt-irrf-help' metric_label='IRRF' metric_help=irrf_help %}</dt><dd class="mt-1 tabular-nums">− {{ CURRENCY_SYMBOL }} {{ clt.ordinary.irrf|floatformat:2 }}</dd></div>
+                    {% translate "Other deductions" as deductions_label %}{% translate "Transport, food, health and other payroll deductions entered in the form." as deductions_help %}
+                    <div><dt class="text-cream/60">{% include 'sandbox/_metric_label.html' with metric_id='clt-deductions-help' metric_label=deductions_label metric_help=deductions_help %}</dt><dd class="mt-1 tabular-nums">− {{ CURRENCY_SYMBOL }} {{ clt.ordinary.deductions|floatformat:2 }}</dd></div>
+                </dl>
+            </article>
+            <article class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest sm:p-8">
+                {% translate "Annual projection" as annual_label %}{% translate "Projected annual cash received with the automatic CLT rules." as annual_help %}
+                <div class="text-caramel-ink dark:text-caramel-light">{% include 'sandbox/_metric_label.html' with metric_id='clt-annual-help' metric_label=annual_label metric_help=annual_help %}</div>
+                <p class="mt-3 text-3xl font-semibold tabular-nums text-forest dark:text-cream">{{ CURRENCY_SYMBOL }} {{ clt.annual_net|floatformat:2 }}</p>
+                <dl class="mt-5 space-y-3 text-sm">
+                    {% translate "Net 13th salary" as thirteenth_label %}{% translate "Net value of the separate annual 13th salary payment." as thirteenth_help %}
+                    <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-4"><dt class="text-forest/65 dark:text-cream/65">{% include 'sandbox/_metric_label.html' with metric_id='clt-thirteenth-help' metric_label=thirteenth_label metric_help=thirteenth_help %}</dt><dd class="tabular-nums">{{ CURRENCY_SYMBOL }} {{ clt.thirteenth.net|floatformat:2 }}</dd></div>
+                    {% translate "Vacation net with one-third" as vacation_label %}{% translate "Net vacation payment including the constitutional one-third addition." as vacation_help %}
+                    <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-4"><dt class="text-forest/65 dark:text-cream/65">{% include 'sandbox/_metric_label.html' with metric_id='clt-vacation-help' metric_label=vacation_label metric_help=vacation_help %}</dt><dd class="tabular-nums">{{ CURRENCY_SYMBOL }} {{ clt.vacation.net|floatformat:2 }}</dd></div>
+                    {% translate "Employer deposits accumulated during the year; this is not ordinary cash available each month." as fgts_help %}
+                    <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-4"><dt class="text-forest/65 dark:text-cream/65">{% include 'sandbox/_metric_label.html' with metric_id='clt-fgts-help' metric_label='FGTS' metric_help=fgts_help %}</dt><dd class="tabular-nums">{{ CURRENCY_SYMBOL }} {{ clt.annual_fgts|floatformat:2 }}</dd></div>
+                </dl>
+            </article>
+        </div>
+        {% endwith %}
+    {% else %}
+        {% with manual=result.manual %}
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <article class="rounded-3xl bg-forest p-6 text-cream shadow-sm sm:p-8">
+                <p class="text-xs font-medium uppercase tracking-widest text-caramel-light">{% translate "Monthly result" %}</p>
+                <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    {% translate "Monthly net" as manual_net_label %}{% translate "Gross salary minus all manually entered deductions and taxes." as manual_net_help %}
+                    <div>{% include 'sandbox/_metric_label.html' with metric_id='manual-net-help' metric_label=manual_net_label metric_help=manual_net_help %}<p class="mt-1 text-3xl font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ manual.monthly_net|floatformat:2 }}</p></div>
+                    {% translate "Total deductions" as manual_deductions_label %}{% translate "Sum of fixed and percentage deductions entered for one month." as manual_deductions_help %}
+                    <div>{% include 'sandbox/_metric_label.html' with metric_id='manual-deductions-help' metric_label=manual_deductions_label metric_help=manual_deductions_help %}<p class="mt-1 text-3xl font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ manual.monthly_deductions|floatformat:2 }}</p></div>
+                </div>
+                <div class="mt-6 border-t border-cream/15 pt-5">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-left text-xs uppercase tracking-widest text-cream/60"><th class="pb-3">{% translate "Deduction" %}</th><th class="pb-3 text-right">{% translate "Entered" %}</th><th class="pb-3 text-right">{% translate "Monthly amount" %}</th></tr></thead>
+                        <tbody class="divide-y divide-cream/10">
+                            {% for deduction in manual.deductions %}<tr><th scope="row" class="py-3 text-left font-medium">{{ deduction.label }}</th><td class="py-3 text-right tabular-nums">{% if deduction.value_type == 'percent' %}{{ deduction.value|floatformat:2 }}%{% else %}{{ CURRENCY_SYMBOL }} {{ deduction.value|floatformat:2 }}{% endif %}</td><td class="py-3 text-right tabular-nums">− {{ CURRENCY_SYMBOL }} {{ deduction.monthly_amount|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="3" class="py-4 text-cream/60">{% translate "No manual deductions entered." %}</td></tr>{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+            <article class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest sm:p-8">
+                {% translate "Simple annual projection" as manual_annual_label %}{% translate "The current monthly result repeated for twelve months, without automatic benefits or extra payments." as manual_annual_help %}
+                <div class="text-caramel-ink dark:text-caramel-light">{% include 'sandbox/_metric_label.html' with metric_id='manual-annual-help' metric_label=manual_annual_label metric_help=manual_annual_help %}</div>
+                <p class="mt-3 text-3xl font-semibold tabular-nums text-forest dark:text-cream">{{ CURRENCY_SYMBOL }} {{ manual.annual_net|floatformat:2 }}</p>
+                <dl class="mt-5 space-y-3 text-sm">
+                    {% translate "Annual gross" as annual_gross_label %}{% translate "Gross monthly salary multiplied by twelve." as annual_gross_help %}
+                    <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-4"><dt class="text-forest/65 dark:text-cream/65">{% include 'sandbox/_metric_label.html' with metric_id='manual-annual-gross-help' metric_label=annual_gross_label metric_help=annual_gross_help %}</dt><dd class="tabular-nums">{{ CURRENCY_SYMBOL }} {{ manual.annual_gross|floatformat:2 }}</dd></div>
+                    {% translate "Annual deductions" as annual_deductions_label %}{% translate "Monthly manual deductions multiplied by twelve." as annual_deductions_help %}
+                    <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-4"><dt class="text-forest/65 dark:text-cream/65">{% include 'sandbox/_metric_label.html' with metric_id='manual-annual-deductions-help' metric_label=annual_deductions_label metric_help=annual_deductions_help %}</dt><dd class="tabular-nums">− {{ CURRENCY_SYMBOL }} {{ manual.annual_deductions|floatformat:2 }}</dd></div>
+                </dl>
+            </article>
+        </div>
+        {% endwith %}
+    {% endif %}
+
+    <article class="rounded-3xl border border-forest/10 bg-cream-dark/40 p-6 dark:border-cream/10 dark:bg-forest-deep/50 sm:p-8">
+        <h3 class="font-sans text-xl font-semibold text-forest dark:text-cream">{% translate "Monthly plan with current inputs" %}</h3>
+        <div class="mt-5 overflow-x-auto"><table class="w-full min-w-[34rem] text-sm"><thead><tr class="border-b border-forest/10 text-left text-xs uppercase tracking-widest text-forest/60 dark:border-cream/10 dark:text-cream/60"><th class="px-3 py-3">{% translate "Category" %}</th><th class="px-3 py-3 text-right">{% translate "Monthly amount" %}</th></tr></thead><tbody class="divide-y divide-forest/10 dark:divide-cream/10">
+            {% if result.mode == 'clt' %}
+                {% translate "Net in an ordinary month" as income_label %}{% translate "Amount received in a regular month after INSS, IRRF and the informed payroll deductions." as income_help %}
+            {% else %}
+                {% translate "Monthly net income" as income_label %}{% translate "Net income used by the monthly plan." as income_help %}
+            {% endif %}
+            <tr><th scope="row" class="px-3 py-3 text-left font-medium">{% include 'sandbox/_metric_label.html' with metric_id='budget-income-help' metric_label=income_label metric_help=income_help %}</th><td class="px-3 py-3 text-right tabular-nums">{{ CURRENCY_SYMBOL }} {{ result.budget.income|floatformat:2 }}</td></tr>
+            {% translate "Monthly fixed-cost amount and its percentage of net income, regardless of the unit entered." as fixed_help %}<tr><th scope="row" class="px-3 py-3 text-left font-medium">{% include 'sandbox/_metric_label.html' with metric_id='budget-fixed-help' metric_label=_('Fixed costs target') metric_help=fixed_help %}</th><td class="px-3 py-3 text-right tabular-nums">− {{ CURRENCY_SYMBOL }} {{ result.budget.fixed_bills|floatformat:2 }} <span class="whitespace-nowrap text-forest/55 dark:text-cream/55">({{ result.budget.fixed_percent_equivalent|floatformat:2 }}%)</span></td></tr>
+            {% translate "Monthly amount reserved for emergencies according to the selected percentage." as emergency_help %}<tr><th scope="row" class="px-3 py-3 text-left font-medium">{% include 'sandbox/_metric_label.html' with metric_id='budget-emergency-help' metric_label=_('Emergency reserve') metric_help=emergency_help %}</th><td class="px-3 py-3 text-right tabular-nums">− {{ CURRENCY_SYMBOL }} {{ result.budget.emergency|floatformat:2 }}</td></tr>
+            {% translate "Monthly amount allocated to investments according to the selected percentage." as investments_help %}<tr><th scope="row" class="px-3 py-3 text-left font-medium">{% include 'sandbox/_metric_label.html' with metric_id='budget-investments-help' metric_label=_('Investments') metric_help=investments_help %}</th><td class="px-3 py-3 text-right tabular-nums">− {{ CURRENCY_SYMBOL }} {{ result.budget.investments|floatformat:2 }}</td></tr>
+            {% translate "Custom monthly expense entered in the plan." as custom_help %}{% for variable in result.variables %}{% with counter=forloop.counter|stringformat:'s' %}{% with help_id='budget-custom-'|add:counter %}<tr><th scope="row" class="px-3 py-3 text-left font-medium">{% include 'sandbox/_metric_label.html' with metric_id=help_id metric_label=variable.label metric_help=custom_help %}</th><td class="px-3 py-3 text-right tabular-nums">− {{ CURRENCY_SYMBOL }} {{ variable.monthly_amount|floatformat:2 }}</td></tr>{% endwith %}{% endwith %}{% endfor %}
+            {% translate "Monthly net remaining after every planned expense; negative values indicate a deficit." as available_help %}<tr><th scope="row" class="px-3 py-3 text-left font-semibold">{% include 'sandbox/_metric_label.html' with metric_id='budget-available-help' metric_label=_('Available after plan') metric_help=available_help %}</th><td class="px-3 py-3 text-right font-semibold tabular-nums {% if result.budget.remaining < 0 %}text-expense dark:text-expense-light{% else %}text-income dark:text-income-light{% endif %}">{{ CURRENCY_SYMBOL }} {{ result.budget.remaining|floatformat:2 }}</td></tr>
+        </tbody></table></div>
+    </article>
+
+    {% if result.mode == 'clt' %}<div class="space-y-1 text-xs leading-5 text-forest/60 dark:text-cream/60">{% for warning in result.clt.warnings %}<p>{{ warning }}</p>{% endfor %}</div>{% endif %}
+</section>

@@ -1,0 +1,21 @@
+{% load i18n %}
+<span class="relative inline-flex shrink-0" data-help-popover>
+    <button type="button"
+            class="flex h-6 w-6 cursor-help items-center justify-center rounded-full text-current opacity-70 transition-colors hover:bg-caramel/15 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:hover:bg-cream/10"
+            data-help-trigger
+            aria-label="{% blocktranslate with label=help_label %}Explain {{ label }}{% endblocktranslate %}"
+            aria-controls="{{ help_id }}"
+            aria-expanded="false">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path stroke-linecap="round" d="M12 10.75v5.5M12 7.75h.01"></path>
+        </svg>
+    </button>
+    <span id="{{ help_id }}"
+         class="fixed z-50 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-forest/15 bg-white p-4 text-left text-sm font-normal normal-case leading-5 tracking-normal text-forest shadow-xl dark:border-cream/15 dark:bg-forest-deep dark:text-cream"
+         data-help-content
+         role="tooltip"
+         hidden>
+        {{ help_text }}
+    </span>
+</span>

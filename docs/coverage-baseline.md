@@ -1,8 +1,9 @@
 # Coverage baseline
 
-The stabilized suite is measured in CI with branch coverage. On 2026-08-13 the
-complete Django suite passed with 111 tests. CI publishes `coverage.xml` and an
-HTML report as build artifacts for every push and pull request.
+The stabilized suite is measured in CI with branch coverage. On 2026-09-03 the
+complete Django suite passed with 186 tests and 89% total coverage. CI publishes
+`coverage.xml` and an HTML report as build artifacts for every push and pull
+request.
 
 The policy is a modest 70% minimum line-coverage floor (`--fail-under=70`).
 Branch coverage is reported to expose untested financial-service decisions, but

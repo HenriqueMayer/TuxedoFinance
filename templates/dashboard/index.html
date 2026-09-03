@@ -15,6 +15,7 @@ convention as the transaction list filter.
 
 {% block content %}
 {% url 'transactions:create' as create_url %}
+{% url 'sandbox:index' as sandbox_url %}
 <div class="space-y-8">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -22,6 +23,10 @@ convention as the transaction list filter.
             <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% blocktranslate with username=request.user.username %}Your cash flow at a glance, {{ username }}.{% endblocktranslate %}</p>
         </div>
         <div class="flex items-center gap-3">
+            <a href="{{ sandbox_url }}"
+               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                {% translate "Sandbox" %}
+            </a>
             <a href="{% url 'dashboard:reports' %}"
                class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
                 {% translate "Reports" %}

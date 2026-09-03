@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.1.0">
+  <img src="https://img.shields.io/badge/version-0.2.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.2.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="English and Brazilian Portuguese interface">
@@ -87,8 +87,10 @@ Updated walkthroughs will be available in both supported languages:
 | 🏦 **Banking** | Organizes banks, currency-specific accounts, PIX, debit and credit cards, invoice cycles, own-account transfers, loyalty programs, and exchange rates. |
 | 📈 **Reports** | Uses responsive, server-rendered SVG charts with accessible summaries and progressive HTMX updates—no client-side chart library. |
 | 💼 **Investments** | Tracks manual deposits, withdrawals, yields, products, assets, quantities, unit prices, fees, and historical conversion evidence. |
+| 🧮 **Salary Sandbox** | Estimates CLT or manually adjusted take-home pay and builds a monthly spending plan without retaining scenario data. |
 | 🌍 **Localization** | Offers English and Brazilian Portuguese independently from BRL, USD, EUR, GBP, JPY, or CHF reporting currency. |
 | 🌗 **Accessible themes** | Uses a readable Inter-based light/dark interface with distinct colors for income, expenses, investments, installments, fixed, and one-off activity. |
+| 🧭 **Focused workflows** | Uses progressive disclosure across conditional forms and filters, showing only the fields relevant to the selected option or category while retaining server validation and a complete no-JavaScript path. |
 
 > **Financial meaning matters:** Current Balance is realized account cash through
 > today. Projected (end of month) is the forward-looking close. Credit-card
@@ -120,7 +122,7 @@ The dark theme uses the corresponding lighter semantic companions documented in
 the canonical catalog, preserving contrast without changing financial meaning.
 
 The canonical component catalog lives in
-[`design-system/tuxedo-final-design-system.html`](design-system/tuxedo-final-design-system.html),
+[`docs/design-system.html`](docs/design-system.html),
 with implementation guidance in [`docs/frontend.md`](docs/frontend.md).
 
 </details>
@@ -153,7 +155,7 @@ Process variables take priority.
 | `ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
 | `HTTPS` | Secure cookies, HTTPS redirect, and HSTS | `False` |
 | `ALLOW_SIGNUPS` | Allow new public accounts | `True` |
-| `CASHFLOW_DATA_DIR` | Directory containing `db.sqlite3` | Project root |
+| `TUXEDO_DATA_DIR` | Directory containing `db.sqlite3` | Project root |
 | `TUXEDO_ENV_FILE` | Alternate environment file | Project-root `.env` |
 | `LOG_LEVEL` | Application log level | `INFO` |
 
@@ -205,10 +207,10 @@ database and never writes to the installation owner's `db.sqlite3`.
 - [Documentation index](docs/README.md) — architecture, data model, frontend, and per-app references
 - [Changelog](CHANGELOG.md) — notable changes grouped by release
 - [Versioning and releases](docs/versioning.md) — SemVer policy, validation and release workflow
-- [Product requirements](docs/ProductRequirementsDocument.md) — approved behavior and acceptance criteria
+- [Product requirements](docs/product-requirements.md) — approved behavior and acceptance criteria
 - [Operations guide](docs/operations.md) — dependency updates and SQLite backup/restore procedures
 - [Coverage baseline](docs/coverage-baseline.md) — test coverage policy and commands
-- [Category collections](docs/categories-collection/) — import-ready English and Brazilian Portuguese examples
+- [Category collections](docs/category-collections/) — import-ready English and Brazilian Portuguese examples
 
 ## 🔐 Data ownership
 

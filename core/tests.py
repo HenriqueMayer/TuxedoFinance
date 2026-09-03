@@ -72,6 +72,34 @@ class SettingsSecurityTests(SimpleTestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), 'process-secret')
 
+    def test_tuxedo_data_dir_sets_database_location(self):
+        environment = os.environ.copy()
+        environment['SECRET_KEY'] = 'process-secret'
+        environment['TUXEDO_ENV_FILE'] = '/path/that/does/not/exist/.env'
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            environment['TUXEDO_DATA_DIR'] = temporary_directory
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    '-c',
+                    (
+                        'from django.conf import settings; '
+                        'print(settings.DATABASES["default"]["NAME"])'
+                    ),
+                ],
+                cwd=Path(__file__).resolve().parent.parent,
+                env=environment,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            Path(result.stdout.strip()),
+            Path(temporary_directory) / 'db.sqlite3',
+        )
+
 
 class LanguageSelectionTests(TestCase):
     def test_public_page_defaults_to_english_and_shows_selector(self):
@@ -135,7 +163,7 @@ class LanguageSelectionTests(TestCase):
     def test_precompiled_tailwind_is_used_without_the_play_cdn(self):
         response = self.client.get(reverse('pages:landing'))
 
-        self.assertContains(response, '/static/css/app.css?v=4')
+        self.assertContains(response, '/static/css/app.css?v=6')
         self.assertNotContains(response, 'https://cdn.tailwindcss.com')
         self.assertNotContains(response, 'unpkg.com')
         self.assertNotContains(response, 'css/output.css')

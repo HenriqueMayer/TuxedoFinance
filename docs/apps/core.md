@@ -23,7 +23,7 @@ priority over `.env`, including in CI.
 
 ## Local SQLite database
 
-`DATABASES['default']` uses root `db.sqlite3`. When `CASHFLOW_DATA_DIR` is
+`DATABASES['default']` uses root `db.sqlite3`. When `TUXEDO_DATA_DIR` is
 set, Django stores `db.sqlite3` there instead. The database file is
 installation-owned runtime data and is ignored by Git. A clean clone creates it by running
 `manage.py migrate`; the source tree distributes migrations rather than
@@ -119,6 +119,6 @@ currency separators under both UI languages.
 
 `core` stays empty of domain logic. `accounts` owns the base-currency
 preference; core provides registry and formatting primitives. Historical
-Historical conversion evidence belongs to transfers and investments in the
+conversion evidence belongs to transfers and investments in the
 current implementation; `core` only provides currency metadata and formatting
 primitives.

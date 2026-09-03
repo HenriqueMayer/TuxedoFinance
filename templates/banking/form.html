@@ -5,17 +5,94 @@
 
 {% block content %}
 <div class="mx-auto max-w-lg space-y-6">
-    <h1 class="font-sans text-4xl font-semibold tracking-tight">{{ form_title }}</h1>
+    <div>
+        <h1 class="font-sans text-4xl font-semibold tracking-tight">{{ form_title }}</h1>
+        {% if form_variant == 'loyalty_entry' %}
+            <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate "Choose an entry type to see only the fields you need." %}</p>
+        {% endif %}
+    </div>
     <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
         {% csrf_token %}
         {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
-        {% for field in form.visible_fields %}
-            {% include 'partials/form_field.html' with field=field %}
-        {% endfor %}
+        {% if form_variant == 'loyalty_entry' %}
+            {% include 'partials/form_field.html' with field=form.program %}
+            {% include 'partials/form_field.html' with field=form.kind %}
+            {% include 'partials/form_field.html' with field=form.direction %}
+            {% include 'partials/form_field.html' with field=form.amount %}
+            {% include 'partials/form_field.html' with field=form.date %}
+            <p id="loyalty-kind-status" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
+            <div id="loyalty-invoice-fields"
+                 data-has-errors="{{ form.invoice.errors|yesno:'true,false' }}">
+                {% include 'partials/form_field.html' with field=form.invoice %}
+            </div>
+            <div id="loyalty-purchase-fields"
+                 class="space-y-5 rounded-xl bg-cream p-4 dark:bg-forest-deep"
+                 data-has-errors="{% if form.funding_account.errors or form.funding_credit_card.errors or form.cash_amount.errors %}true{% else %}false{% endif %}">
+                {% include 'partials/form_field.html' with field=form.funding_account %}
+                {% include 'partials/form_field.html' with field=form.funding_credit_card %}
+                {% include 'partials/form_field.html' with field=form.cash_amount %}
+            </div>
+            {% include 'partials/form_field.html' with field=form.notes %}
+        {% else %}
+            {% for field in form.visible_fields %}
+                {% include 'partials/form_field.html' with field=field %}
+            {% endfor %}
+        {% endif %}
         <div class="flex gap-3">
             <button type="submit" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep">{% translate "Save" %}</button>
             <a href="{{ cancel_url }}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Cancel" %}</a>
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if form_variant == 'loyalty_entry' %}
+<script>
+    (function () {
+        const kind = document.getElementById('{{ form.kind.id_for_label }}');
+        const invoice = document.getElementById('{{ form.invoice.id_for_label }}');
+        const fundingAccount = document.getElementById('{{ form.funding_account.id_for_label }}');
+        const fundingCreditCard = document.getElementById('{{ form.funding_credit_card.id_for_label }}');
+        const cashAmount = document.getElementById('{{ form.cash_amount.id_for_label }}');
+        const invoiceFields = document.getElementById('loyalty-invoice-fields');
+        const purchaseFields = document.getElementById('loyalty-purchase-fields');
+        const status = document.getElementById('loyalty-kind-status');
+        if (!kind || !invoice || !fundingAccount || !fundingCreditCard || !cashAmount) return;
+
+        function setHidden(group, hidden, preserveErrors) {
+            group.hidden = hidden && !(preserveErrors && group.dataset.hasErrors === 'true');
+        }
+
+        function updateKindFields(clearStale) {
+            const isInvoiceAward = kind.value === 'INVOICE_AWARD';
+            const isPurchase = kind.value === 'PURCHASE';
+            setHidden(invoiceFields, !isInvoiceAward, !clearStale);
+            setHidden(purchaseFields, !isPurchase, !clearStale);
+
+            if (clearStale) {
+                if (!isInvoiceAward) invoice.value = '';
+                if (!isPurchase) {
+                    fundingAccount.value = '';
+                    fundingCreditCard.value = '';
+                    cashAmount.value = '';
+                }
+            }
+
+            if (isInvoiceAward) {
+                status.textContent = '{% translate "Choose the invoice that awarded these points." %}';
+            } else if (isPurchase) {
+                status.textContent = '{% translate "Choose one payment source and enter the amount paid." %}';
+            } else {
+                status.textContent = '';
+            }
+        }
+
+        kind.addEventListener('change', function () {
+            updateKindFields(true);
+        });
+        updateKindFields(false);
+    })();
+</script>
+{% endif %}
 {% endblock %}

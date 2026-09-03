@@ -38,7 +38,7 @@ plain GET links and the section anchor provide the same no-JavaScript fallback.
 ## Visual language
 
 The interface follows the final Haven & Hound design language documented in
-`design-system/tuxedo-final-design-system.html`: cream and forest foundations,
+`design-system.html`: cream and forest foundations,
 caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
 throughout. Light cards use white surfaces and soft shadows; dark cards use flat
 forest surfaces over the forest-deep page background. Body copy starts at
@@ -152,6 +152,29 @@ authoritative no-JavaScript path, while JavaScript reveals the fields relevant
 to the selected payment channel and enhances category search. Hidden client-side
 controls never replace server-side ownership and compatibility validation.
 
+Progressive disclosure is a project-wide interface rule, not a pattern limited
+to one form. Every new or updated form, filter, picker, menu or categorized flow
+must initially present only the information needed to make the current choice,
+then reveal the fields and explanations that belong to the selected option or
+category. Implementations must:
+
+- hide inactive branches instead of leaving unrelated controls competing for
+  attention;
+- clear stale values from a branch when the user deliberately switches away
+  from it, so hidden inputs cannot affect the submitted result;
+- keep a branch visible when it contains a server-side validation error, giving
+  the user a clear recovery path;
+- announce useful selection consequences in text when they are not already
+  evident from the visible labels;
+- retain a complete server-rendered, no-JavaScript submission path and enforce
+  ownership, compatibility and accounting rules on the server.
+
+When an existing screen with conditional branches is changed, those branches
+must be brought into this contract as part of the change. The loyalty-entry form,
+for example, shows an invoice only for an invoice award, shows payment-source
+and amount fields only for a points purchase, and shows neither branch for an
+adjustment, expiration or redemption.
+
 Forms use the established `form_field.html`, validation summary, forest/cream
 inputs with caramel focus, and the Save/Cancel pill action pattern. Checkboxes
 use `accent-caramel`. Server-side validation remains authoritative.
@@ -161,6 +184,9 @@ use `accent-caramel`. Server-side validation remains authoritative.
 - Own transfer forms identify source and destination, show both currencies, and
   explain that the transfer is not income or expense.
 - Credit transaction forms show the target invoice/due date when known.
+- Loyalty invoice awards show only the related invoice; points purchases show
+  only their payment source and amount. Switching kind clears the inactive
+  branch.
 - Investment deposit forms require `Source account`; withdrawals require
   `Destination account`; yield forms state `Internal yield, no bank movement`.
 - Loyalty redemption forms show points, target monetary amount/currency, IOF and
@@ -230,6 +256,14 @@ investment has its own ochre pair. The recurrence donut uses purple
 installments, orange fixed recurrences and neutral one-off purchases; its zero
 line is neutral. HTMX swaps only the report island while preserving focus and
 viewport; plain links/forms remain equivalent.
+
+SVG paint order is part of that contract. Every interactive chart renders all
+data marks and axis labels in a base `data-chart-layer="*-marks"` layer, then
+renders transparent hit targets, hover/focus highlights and tooltip pills in a
+final `data-chart-layer="*-interactions"` layer. Tooltips must never be nested
+only beside their original mark in series order: later SVG elements would paint
+over them. Tooltip content remains `pointer-events-none`, while its transparent
+hit target retains the native `<title>`, keyboard focus and any chart link.
 
 Every chart states its reporting currency and actual versus projected period.
 The selected per-user base currency, snapshot status where supported, and

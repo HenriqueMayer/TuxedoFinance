@@ -641,3 +641,40 @@ class BankingViewTests(TestCase):
         self.assertEqual(program.name, 'Travel Miles')
         self.client.post(reverse('banking:program_delete', args=[program.pk]))
         self.assertFalse(LoyaltyProgram.objects.filter(pk=program.pk).exists())
+
+    def test_loyalty_entry_form_marks_conditional_invoice_and_purchase_fields(self):
+        response = self.client.get(reverse('banking:entry_create'))
+
+        self.assertEqual(response.context['form_variant'], 'loyalty_entry')
+        self.assertContains(response, 'id="loyalty-invoice-fields"')
+        self.assertContains(response, 'id="loyalty-purchase-fields"')
+        self.assertContains(response, "kind.value === 'INVOICE_AWARD'")
+        self.assertContains(response, "kind.value === 'PURCHASE'")
+
+    def test_invoice_entry_link_prefills_the_relevant_kind_and_direction(self):
+        card = CreditCard.objects.create(
+            user=self.user,
+            account=self.account,
+            name='Rewards card',
+            closing_day=10,
+            due_day=20,
+        )
+        invoice = CardInvoice.objects.create(
+            user=self.user,
+            card=card,
+            reference_month=date(2026, 9, 1),
+            due_date=date(2026, 9, 20),
+            amount=Decimal('0.00'),
+        )
+
+        response = self.client.get(reverse('banking:entry_create'), {'invoice': invoice.pk})
+
+        self.assertEqual(response.context['form']['invoice'].value(), str(invoice.pk))
+        self.assertEqual(
+            response.context['form']['kind'].value(),
+            LoyaltyEntry.Kind.INVOICE_AWARD,
+        )
+        self.assertEqual(
+            response.context['form']['direction'].value(),
+            LoyaltyEntry.Direction.CREDIT,
+        )

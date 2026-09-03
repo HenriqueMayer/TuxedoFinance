@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 17:04+0000\n"
+"POT-Creation-Date: 2026-09-03 18:38+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -651,6 +651,27 @@ msgstr "Despesas"
 msgid "Investments"
 msgstr "Investimentos"
 
+msgid "Use the final balance"
+msgstr "Usar o saldo final"
+
+msgid "Enter the yield amount"
+msgstr "Informe o valor do rendimento."
+
+msgid "How to enter the yield"
+msgstr "Como informar o rendimento"
+
+msgid ""
+"Choose the final balance to calculate the yield, or enter the yield directly."
+msgstr ""
+"Escolha o saldo final para calcular o rendimento ou informe o rendimento "
+"diretamente."
+
+msgid "New investment balance"
+msgstr "Novo saldo do investimento"
+
+msgid "Total balance after the yield is credited."
+msgstr "Saldo total após o crédito do rendimento."
+
 msgid "Product destination"
 msgstr "Produto de destino"
 
@@ -962,6 +983,27 @@ msgstr "A operação de investimento deve ser salva antes da sincronização."
 msgid "Withdrawal exceeds the available position on this date."
 msgstr "O resgate excede a posição disponível nesta data."
 
+msgid "Enter the new investment balance."
+msgstr "Informe o novo saldo do investimento."
+
+msgid "Enter the yield amount."
+msgstr "Informe o valor do rendimento."
+
+msgid "The new balance must be greater than the previous balance."
+msgstr "O novo saldo deve ser maior que o saldo anterior."
+
+msgid ""
+"The new balance is lower than the previous balance. Record a withdrawal "
+"instead."
+msgstr ""
+"O novo saldo é menor que o saldo anterior. Registre um resgate em vez disso."
+
+msgid "Enter a positive yield amount."
+msgstr "Informe um valor de rendimento positivo."
+
+msgid "Choose how to enter the yield."
+msgstr "Escolha como informar o rendimento."
+
 msgid "Deposits"
 msgstr "Aportes"
 
@@ -1027,6 +1069,112 @@ msgstr "%(entity)s excluído."
 
 msgid "Investment operation deleted."
 msgstr "Operação de investimento excluída."
+
+msgid "Gross monthly salary"
+msgstr "Salário bruto mensal"
+
+msgid "Monthly salary before any automatic or manually entered deductions."
+msgstr ""
+"Salário mensal antes de descontos automáticos ou informados manualmente."
+
+msgid "Calculate CLT deductions automatically"
+msgstr "Calcular descontos CLT automaticamente"
+
+msgid ""
+"Uses the official 2026 INSS and IRRF rules and includes vacation, 13th "
+"salary and FGTS."
+msgstr ""
+"Usa as regras oficiais de INSS e IRRF de 2026 e inclui férias, 13º salário e "
+"FGTS."
+
+msgid "Dependents"
+msgstr "Dependentes"
+
+msgid ""
+"Legal dependents considered when choosing the most favorable monthly IRRF "
+"deduction."
+msgstr ""
+"Dependentes legais considerados na escolha da dedução mensal de IRRF mais "
+"vantajosa."
+
+msgid "Court-ordered pension"
+msgstr "Pensão judicial"
+
+msgid "Monthly amount deductible from IRRF."
+msgstr "Valor mensal dedutível do IRRF."
+
+msgid "Receive transport voucher"
+msgstr "Recebo vale-transporte"
+
+#, python-format
+msgid ""
+"Limits the payroll deduction to 6% of salary or the actual transport cost, "
+"whichever is lower."
+msgstr ""
+"Limita o desconto em folha a 6% do salário ou ao custo real do transporte, o "
+"que for menor."
+
+msgid "Actual monthly transport cost"
+msgstr "Custo real mensal de transporte"
+
+msgid "Monthly public-transport cost supplied by the employer."
+msgstr "Custo mensal do transporte público fornecido pelo empregador."
+
+msgid "Food benefit employee share"
+msgstr "Coparticipação do empregado na alimentação"
+
+msgid "Amount deducted from payroll for meal or food benefits."
+msgstr "Valor descontado em folha por vale-refeição ou alimentação."
+
+msgid "Health plan employee share"
+msgstr "Coparticipação do empregado no plano de saúde"
+
+msgid "Monthly plan fee or copayment deducted from payroll."
+msgstr "Mensalidade ou coparticipação do plano descontada em folha."
+
+msgid "Other payroll deductions"
+msgstr "Outros descontos em folha"
+
+msgid "Other recurring amounts deducted directly from the employee."
+msgstr "Outros valores recorrentes descontados diretamente do trabalhador."
+
+msgid "Fixed costs unit"
+msgstr "Unidade dos custos fixos"
+
+msgid "Fixed costs target"
+msgstr "Meta de custos fixos"
+
+msgid ""
+"Choose a percentage of monthly net income or a fixed amount in reais. The "
+"result shows the amount and its equivalent percentage."
+msgstr ""
+"Escolha um percentual da renda líquida mensal ou um valor fixo em reais. O "
+"resultado mostra o valor e seu percentual equivalente."
+
+msgid "Emergency reserve target (%)"
+msgstr "Meta de reserva de emergência (%)"
+
+msgid "Share of monthly net income set aside for an emergency fund."
+msgstr "Parcela da renda líquida mensal destinada à reserva de emergência."
+
+msgid "Investments target (%)"
+msgstr "Meta de investimentos (%)"
+
+msgid "Share of monthly net income allocated to investments."
+msgstr "Parcela da renda líquida mensal destinada a investimentos."
+
+msgid "Enter the gross monthly salary."
+msgstr "Informe o salário bruto mensal."
+
+msgid "Enter a percentage from 0 to 100."
+msgstr "Informe um percentual de 0 a 100."
+
+msgid ""
+"The 40% FGTS severance fine is contingent and is not included in this "
+"projection."
+msgstr ""
+"A multa rescisória de 40% do FGTS é contingente e não está incluída nesta "
+"projeção."
 
 msgid "Log in"
 msgstr "Entrar"
@@ -1197,8 +1345,17 @@ msgid ""
 msgstr ""
 "Adicione taxas históricas antes de consolidar contas em moedas diferentes."
 
+msgid "Choose an entry type to see only the fields you need."
+msgstr "Escolha um tipo de lançamento para ver apenas os campos necessários."
+
 msgid "Save"
 msgstr "Salvar"
+
+msgid "Choose the invoice that awarded these points."
+msgstr "Escolha a fatura que concedeu estes pontos."
+
+msgid "Choose one payment source and enter the amount paid."
+msgstr "Escolha uma forma de pagamento e informe o valor pago."
 
 msgid "Accounts, cards, native balances, and loyalty in one place."
 msgstr "Contas, cartões, saldos nativos e fidelidade em um só lugar."
@@ -1437,6 +1594,10 @@ msgid "Grouped bar chart of income, expenses and investments per month"
 msgstr ""
 "Gráfico de barras agrupadas de receitas, despesas e investimentos por mês"
 
+msgid "Grouped bar chart of income, expenses, investments, and withdrawals per month"
+msgstr ""
+"Gráfico de barras agrupadas de receitas, despesas, investimentos e resgates por mês"
+
 msgid "How much is on installments"
 msgstr "Quanto está parcelado"
 
@@ -1582,6 +1743,9 @@ msgstr "Dashboard"
 msgid "Your cash flow at a glance, %(username)s."
 msgstr "Seu fluxo de caixa em um só olhar, %(username)s."
 
+msgid "Sandbox"
+msgstr "Sandbox"
+
 msgid "Reports"
 msgstr "Relatórios"
 
@@ -1697,6 +1861,70 @@ msgstr "Voltar ao Dashboard"
 msgid "Investment operations"
 msgstr "Movimentações de investimentos"
 
+msgid "Search investments"
+msgstr "Pesquisar investimentos"
+
+msgid "Product, asset, reason or notes"
+msgstr "Produto, ativo, motivo ou observações"
+
+msgid "Operation type"
+msgstr "Tipo de operação"
+
+msgid "All types"
+msgstr "Todos os tipos"
+
+msgid "All banks"
+msgstr "Todos os bancos"
+
+msgid "Investment product"
+msgstr "Produto de investimento"
+
+msgid "All products"
+msgstr "Todos os produtos"
+
+msgid "All assets"
+msgstr "Todos os ativos"
+
+msgid "Value:"
+msgstr "Valor:"
+
+msgid "Fees:"
+msgstr "Taxas:"
+
+msgid "units at"
+msgstr "unidades a"
+
+#, python-format
+msgid "Funded by %(account)s:"
+msgstr "Financiado por %(account)s:"
+
+#, python-format
+msgid "Funded by %(program)s: %(points)s points"
+msgstr "Financiado por %(program)s: %(points)s pontos"
+
+#, python-format
+msgid "Paid to %(account)s:"
+msgstr "Pago em %(account)s:"
+
+msgid "Internal yield"
+msgstr "Rendimento interno"
+
+msgid "No matching operations."
+msgstr "Nenhuma operação encontrada."
+
+msgid "Pagination"
+msgstr "Paginação"
+
+msgid "Previous"
+msgstr "Anterior"
+
+#, python-format
+msgid "Page %(number)s of %(total)s"
+msgstr "Página %(number)s de %(total)s"
+
+msgid "Next"
+msgstr "Próxima"
+
 msgid "Investment evolution"
 msgstr "Evolução dos investimentos"
 
@@ -1737,6 +1965,22 @@ msgstr ""
 "Gráfico de barras agrupadas de aportes, rendimentos e resgates por mês na "
 "moeda base"
 
+msgid "Previous balance"
+msgstr "Saldo anterior"
+
+msgid "Calculated yield"
+msgstr "Rendimento calculado"
+
+msgid "New balance"
+msgstr "Novo saldo"
+
+msgid ""
+"Choose a product, monetary asset, date, and value to preview the calculated "
+"yield."
+msgstr ""
+"Escolha um produto, ativo monetário, data e valor para visualizar o "
+"rendimento calculado."
+
 msgid "Delete Investment"
 msgstr "Excluir investimento"
 
@@ -1762,6 +2006,9 @@ msgstr "Origem dos recursos ou destino"
 
 msgid "Advanced options"
 msgstr "Opções avançadas"
+
+msgid "Money asset: enter its new balance or the yield amount in"
+msgstr "Ativo monetário: informe o novo saldo ou o valor do rendimento em"
 
 msgid "Money asset: enter the investment amount in"
 msgstr "Ativo monetário: informe o valor do investimento em"
@@ -1819,67 +2066,6 @@ msgstr ""
 
 msgid "Create a bank in Banking, then add a product and asset."
 msgstr "Crie um banco em Bancos e depois adicione um produto e um ativo."
-
-msgid "Search investments"
-msgstr "Pesquisar investimentos"
-
-msgid "Product, asset, reason or notes"
-msgstr "Produto, ativo, motivo ou observações"
-
-msgid "Operation type"
-msgstr "Tipo de operação"
-
-msgid "All types"
-msgstr "Todos os tipos"
-
-msgid "All banks"
-msgstr "Todos os bancos"
-
-msgid "Investment product"
-msgstr "Produto de investimento"
-
-msgid "All products"
-msgstr "Todos os produtos"
-
-msgid "All assets"
-msgstr "Todos os ativos"
-
-msgid "Value:"
-msgstr "Valor:"
-
-msgid "Fees:"
-msgstr "Taxas:"
-
-msgid "units at"
-msgstr "unidades a"
-
-#, python-format
-msgid "Funded by %(account)s:"
-msgstr "Financiado por %(account)s:"
-
-#, python-format
-msgid "Funded by %(program)s: %(points)s points"
-msgstr "Financiado por %(program)s: %(points)s pontos"
-
-#, python-format
-msgid "Paid to %(account)s:"
-msgstr "Pago em %(account)s:"
-
-msgid "Internal yield"
-msgstr "Rendimento interno"
-
-msgid "No matching operations."
-msgstr "Nenhuma operação encontrada."
-
-msgid "Previous"
-msgstr "Anterior"
-
-#, python-format
-msgid "Page %(number)s of %(total)s"
-msgstr "Página %(number)s de %(total)s"
-
-msgid "Next"
-msgstr "Próxima"
 
 #, python-format
 msgid "Delete %(label)s"
@@ -2152,6 +2338,324 @@ msgstr "Cálculos automáticos de rendimento mensal e anual dos investimentos."
 msgid "Toggle color theme"
 msgstr "Alternar tema de cores"
 
+#, python-format
+msgid "Explain %(label)s"
+msgstr "Explicar %(label)s"
+
+msgid "Deduction description"
+msgstr "Descrição do desconto"
+
+msgid "E.g. tax"
+msgstr "Ex.: imposto"
+
+msgid "Deduction type"
+msgstr "Tipo do desconto"
+
+msgid "Deduction value"
+msgstr "Valor do desconto"
+
+msgid "Remove deduction"
+msgstr "Remover desconto"
+
+msgid "Your result"
+msgstr "Seu resultado"
+
+msgid "Automatic CLT calculation"
+msgstr "Cálculo automático CLT"
+
+msgid "Manual calculation"
+msgstr "Cálculo manual"
+
+msgid "Monthly result"
+msgstr "Resultado mensal"
+
+msgid "Net in an ordinary month"
+msgstr "Líquido em um mês comum"
+
+msgid ""
+"Amount received in a regular month after INSS, IRRF and the informed payroll "
+"deductions."
+msgstr ""
+"Valor recebido em um mês comum após INSS, IRRF e os descontos informados."
+
+msgid "Normalized monthly net"
+msgstr "Líquido mensal normalizado"
+
+msgid ""
+"Annual net including vacation and 13th salary, divided by twelve months for "
+"planning."
+msgstr ""
+"Líquido anual recebido, incluindo férias e 13º salário, dividido por doze "
+"meses para o planejamento."
+
+msgid "Gross salary"
+msgstr "Salário bruto"
+
+msgid "Monthly salary before employee taxes and deductions."
+msgstr "Salário mensal antes dos tributos e descontos do trabalhador."
+
+msgid ""
+"Employee social-security contribution calculated progressively for an "
+"ordinary month."
+msgstr ""
+"Contribuição previdenciária do trabalhador calculada progressivamente no mês "
+"comum."
+
+msgid ""
+"Income tax withheld after applying the most favorable monthly deduction "
+"method."
+msgstr ""
+"Imposto de renda retido após aplicar o método mensal de dedução mais "
+"vantajoso."
+
+msgid "Other deductions"
+msgstr "Outros descontos em folha"
+
+msgid ""
+"Transport, food, health and other payroll deductions entered in the form."
+msgstr ""
+"Descontos de transporte, alimentação, saúde e outros informados no "
+"formulário."
+
+msgid "Annual projection"
+msgstr "Projeção anual"
+
+msgid "Projected annual cash received with the automatic CLT rules."
+msgstr "Valor anual projetado recebido com as regras automáticas da CLT."
+
+msgid "Net 13th salary"
+msgstr "Líquido do 13º salário"
+
+msgid "Net value of the separate annual 13th salary payment."
+msgstr "Valor líquido do pagamento anual separado do 13º salário."
+
+msgid "Vacation net with one-third"
+msgstr "Líquido de férias com um terço"
+
+msgid "Net vacation payment including the constitutional one-third addition."
+msgstr ""
+"Pagamento líquido de férias incluindo o adicional constitucional de um terço."
+
+msgid ""
+"Employer deposits accumulated during the year; this is not ordinary cash "
+"available each month."
+msgstr ""
+"Depósitos patronais acumulados durante o ano; não são dinheiro disponível em "
+"um mês comum."
+
+msgid "Monthly net"
+msgstr "Líquido mensal"
+
+msgid "Gross salary minus all manually entered deductions and taxes."
+msgstr ""
+"Salário bruto menos todos os descontos e impostos informados manualmente."
+
+msgid "Total deductions"
+msgstr "Total de descontos"
+
+msgid "Sum of fixed and percentage deductions entered for one month."
+msgstr "Soma dos descontos fixos e percentuais informados para um mês."
+
+msgid "Deduction"
+msgstr "Desconto"
+
+msgid "Entered"
+msgstr "Informado"
+
+msgid "Monthly amount"
+msgstr "Valor mensal"
+
+msgid "No manual deductions entered."
+msgstr "Nenhum desconto manual informado."
+
+msgid "Simple annual projection"
+msgstr "Projeção anual simples"
+
+msgid ""
+"The current monthly result repeated for twelve months, without automatic "
+"benefits or extra payments."
+msgstr ""
+"O resultado mensal atual repetido por doze meses, sem benefícios ou "
+"pagamentos extras automáticos."
+
+msgid "Annual gross"
+msgstr "Bruto anual"
+
+msgid "Gross monthly salary multiplied by twelve."
+msgstr "Salário bruto mensal multiplicado por doze."
+
+msgid "Annual deductions"
+msgstr "Descontos anuais"
+
+msgid "Monthly manual deductions multiplied by twelve."
+msgstr "Descontos manuais mensais multiplicados por doze."
+
+msgid "Monthly plan with current inputs"
+msgstr "Plano mensal com os dados atuais"
+
+msgid "Category"
+msgstr "Categoria"
+
+msgid "Net income used by the monthly plan."
+msgstr "Renda líquida usada pelo plano mensal."
+
+msgid "Monthly net income"
+msgstr "Renda líquida mensal"
+
+msgid ""
+"Monthly fixed-cost amount and its percentage of net income, regardless of "
+"the unit entered."
+msgstr ""
+"Valor mensal dos custos fixos e seu percentual da renda líquida, "
+"independentemente da unidade informada."
+
+msgid ""
+"Monthly amount reserved for emergencies according to the selected percentage."
+msgstr ""
+"Valor mensal reservado para emergências conforme o percentual selecionado."
+
+msgid "Emergency reserve"
+msgstr "Reserva de emergência"
+
+msgid ""
+"Monthly amount allocated to investments according to the selected percentage."
+msgstr ""
+"Valor mensal destinado a investimentos conforme o percentual selecionado."
+
+msgid "Custom monthly expense entered in the plan."
+msgstr "Despesa mensal personalizada informada no plano."
+
+msgid ""
+"Monthly net remaining after every planned expense; negative values indicate "
+"a deficit."
+msgstr ""
+"Líquido mensal restante após todas as despesas planejadas; valores negativos "
+"indicam déficit."
+
+msgid "Available after plan"
+msgstr "Disponível após o plano"
+
+msgid "Expense description"
+msgstr "Descrição da despesa"
+
+msgid "E.g. leisure"
+msgstr "Ex.: lazer"
+
+msgid "Expense type"
+msgstr "Tipo da despesa"
+
+msgid "Expense value"
+msgstr "Valor da despesa"
+
+msgid "Remove expense"
+msgstr "Remover despesa"
+
+msgid "Step 1"
+msgstr "Etapa 1"
+
+msgid "Enter your income"
+msgstr "Informe sua renda"
+
+msgid ""
+"Enter the monthly gross amount and choose whether CLT deductions should be "
+"calculated automatically."
+msgstr ""
+"Informe o valor bruto mensal e escolha se os descontos CLT devem ser "
+"calculados automaticamente."
+
+msgid "Optional CLT details"
+msgstr "Detalhes opcionais da CLT"
+
+msgid "Manual deductions and taxes"
+msgstr "Descontos e impostos manuais"
+
+msgid "Add each amount that should be subtracted from the gross salary."
+msgstr "Adicione cada valor que deve ser subtraído do salário bruto."
+
+msgid "Add deduction"
+msgstr "Adicionar desconto"
+
+msgid "Name used to identify the deduction or tax."
+msgstr "Nome usado para identificar o desconto ou imposto."
+
+msgid "Choose a fixed amount in reais or a percentage of gross salary."
+msgstr "Escolha um valor fixo em reais ou um percentual do salário bruto."
+
+msgid "Amount or percentage subtracted every month."
+msgstr "Valor ou percentual subtraído todos os meses."
+
+msgid "Description"
+msgstr "Descrição"
+
+msgid "Value"
+msgstr "Valor"
+
+msgid "Actions"
+msgstr "Ações"
+
+msgid "Step 2"
+msgstr "Etapa 2"
+
+msgid "Set your monthly plan"
+msgstr "Defina seu plano mensal"
+
+msgid "Use the suggested categories or add your own monthly expenses."
+msgstr ""
+"Use as categorias sugeridas ou adicione suas próprias despesas mensais."
+
+msgid "Clear estimates"
+msgstr "Limpar estimativas"
+
+msgid "Additional monthly expenses"
+msgstr "Despesas mensais adicionais"
+
+msgid "Add expense"
+msgstr "Adicionar despesa"
+
+msgid "Name used to identify this monthly expense."
+msgstr "Nome usado para identificar esta despesa mensal."
+
+msgid "Choose a fixed amount in reais or a percentage of monthly net income."
+msgstr ""
+"Escolha um valor fixo em reais ou um percentual da renda líquida mensal."
+
+msgid "Monthly amount or percentage assigned to this expense."
+msgstr "Valor mensal ou percentual atribuído a esta despesa."
+
+msgid "Calculate"
+msgstr "Calcular"
+
+msgid "Nothing is saved."
+msgstr "Nada é salvo."
+
+msgid ""
+"This is an estimate using the selected inputs. The automatic CLT calculation "
+"does not replace professional advice or a collective agreement."
+msgstr ""
+"Esta é uma estimativa baseada nos dados informados. O cálculo automático CLT "
+"não substitui orientação profissional nem convenção coletiva."
+
+msgid "Official CLT rule sources"
+msgstr "Fontes oficiais das regras CLT"
+
+msgid "Planning tool"
+msgstr "Ferramenta de planejamento"
+
+msgid "Salary Sandbox"
+msgstr "Sandbox de Salário"
+
+msgid ""
+"Estimate your take-home pay and organize a monthly spending plan without "
+"saving any data."
+msgstr ""
+"Estime seu salário líquido e organize um plano mensal sem salvar nenhum dado."
+
+msgid "Competence"
+msgstr "Competência"
+
+msgid "Rules reviewed"
+msgstr "Regras revisadas"
+
 msgid "Delete Transaction"
 msgstr "Excluir transação"
 
@@ -2254,9 +2758,6 @@ msgstr "Fixa &middot; até %(end_date)s"
 msgid "%(installments)sx %(currency)s %(installment_amount)s / month"
 msgstr "%(installments)sx de %(currency)s %(installment_amount)s / mês"
 
-msgid "Pagination"
-msgstr "Paginação"
-
 #, python-format
 msgid "Page %(page_number)s of %(total_pages)s"
 msgstr "Página %(page_number)s de %(total_pages)s"
@@ -2289,9 +2790,6 @@ msgstr "Valor"
 
 msgid "Transaction type"
 msgstr "Tipo de transação"
-
-msgid "Category"
-msgstr "Categoria"
 
 msgid "Payment channel"
 msgstr "Canal de pagamento"
@@ -2385,195 +2883,687 @@ msgstr "Transação \"%(title)s\" atualizada."
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
 
-#~ msgid "Monthly spending by credit card"
-#~ msgstr "Gastos mensais por cartão de crédito"
+#~ msgid "Yield amount"
+#~ msgstr "Valor do rendimento"
+
+#~ msgid "Income type"
+#~ msgstr "Tipo de renda"
+
+#~ msgid "CLT salary"
+#~ msgstr "Salário CLT"
+
+#~ msgid "PJ invoice"
+#~ msgstr "Faturamento PJ"
+
+#~ msgid "Tax year"
+#~ msgstr "Ano fiscal"
+
+#~ msgid "Salary before INSS, IRRF and other payroll deductions."
+#~ msgstr "Salário antes do INSS, IRRF e demais descontos em folha."
+
+#~ msgid "Employer-paid benefits per month"
+#~ msgstr "Benefícios pagos pelo empregador por mês"
 
 #~ msgid ""
-#~ "Invoice-competence spending for up to eight cards in the period shown "
-#~ "above."
+#~ "Benefits paid by the employer and added to the comparable annual package."
 #~ msgstr ""
-#~ "Gastos por competência da fatura para até oito cartões no período exibido "
-#~ "acima."
+#~ "Benefícios pagos pelo empregador e adicionados ao pacote anual comparável."
 
-#~ msgid "Grouped monthly spending by credit card"
-#~ msgstr "Gastos mensais agrupados por cartão de crédito"
-
-#~ msgid "No credit-card spending"
-#~ msgstr "Nenhum gasto com cartão de crédito"
-
-#~ msgid "There are no credit-card expenses in this period."
-#~ msgstr "Não há despesas de cartão de crédito neste período."
-
-#~ msgid "Spending by card or account"
-#~ msgstr "Gastos por cartão ou conta"
-
-#~ msgid "How"
-#~ msgstr "Como"
-
-#~ msgid "your expenses across all months"
-#~ msgstr "suas despesas em todos os meses"
-
-#, python-format
-#~ msgid ""
-#~ "<span class=\"font-medium text-slate-700 dark:text-"
-#~ "neutral-300\">%(window)s</span>'s expenses"
-#~ msgstr ""
-#~ "despesas de <span class=\"font-medium text-slate-700 dark:text-"
-#~ "neutral-300\">%(window)s</span>"
+#~ msgid "RAT rate (%)"
+#~ msgstr "Alíquota RAT (%)"
 
 #~ msgid ""
-#~ "split across your cards and accounts - fixed transactions and open "
-#~ "installments included."
+#~ "Employer workplace-risk rate, usually from 1% to 3%, before the FAP "
+#~ "multiplier."
 #~ msgstr ""
-#~ "divididas entre seus cartões e contas - incluindo transações fixas e "
-#~ "parcelas em aberto."
+#~ "Alíquota patronal de risco do trabalho, geralmente de 1% a 3%, antes do "
+#~ "multiplicador FAP."
 
-#~ msgid "Bar chart of expenses per card or account for the selected window"
-#~ msgstr ""
-#~ "Gráfico de barras das despesas por cartão ou conta no período selecionado"
+#~ msgid "FAP multiplier"
+#~ msgstr "Multiplicador FAP"
 
-#, python-format
-#~ msgid ""
-#~ "%(label)s: %(currency)s %(total)s · %(share)s%% of the window. Click to "
-#~ "see categories."
-#~ msgstr ""
-#~ "%(label)s: %(currency)s %(total)s · %(share)s%% do período. Clique para "
-#~ "ver as categorias."
+#~ msgid "Multiplier from 0.50 to 2.00 applied to the employer RAT rate."
+#~ msgstr "Multiplicador de 0,50 a 2,00 aplicado à alíquota patronal do RAT."
 
-#~ msgid "across all months"
-#~ msgstr "em todos os meses"
-
-#, python-format
-#~ msgid "in %(window)s"
-#~ msgstr "em %(window)s"
-
-#, python-format
-#~ msgid ""
-#~ "- charted across the %(shown)s biggest of %(used)s instruments used, so "
-#~ "the shares above stop short of 100%%."
-#~ msgstr ""
-#~ "- exibido considerando os %(shown)s maiores entre %(used)s meios "
-#~ "utilizados, por isso as proporções acima não chegam a 100%%."
-
-#~ msgid "No expenses recorded"
-#~ msgstr "Nenhuma despesa registrada"
-
-#~ msgid "Record an expense to see which card or account it came from."
-#~ msgstr "Registre uma despesa para ver de qual cartão ou conta ela veio."
-
-#~ msgid "Income by bank account"
-#~ msgstr "Receitas por conta bancária"
-
-#~ msgid "Where"
-#~ msgstr "Onde"
-
-#~ msgid "your income across all months"
-#~ msgstr "suas receitas em todos os meses"
-
-#, python-format
-#~ msgid ""
-#~ "<span class=\"font-medium text-slate-700 dark:text-"
-#~ "neutral-300\">%(window)s</span>'s income"
-#~ msgstr ""
-#~ "receitas de <span class=\"font-medium text-slate-700 dark:text-"
-#~ "neutral-300\">%(window)s</span>"
+#~ msgid "Third-party contributions (%)"
+#~ msgstr "Contribuições a terceiros (%)"
 
 #~ msgid ""
-#~ "landed - the same window as the spending chart above, with recurrences "
-#~ "counted the same way."
+#~ "Employer contributions such as Salary-Education and Sistema S; the "
+#~ "default estimate is 5.8%."
 #~ msgstr ""
-#~ "foram recebidas - o mesmo período do gráfico de gastos acima, com as "
-#~ "recorrências contabilizadas da mesma forma."
+#~ "Contribuições patronais como Salário-Educação e Sistema S; a estimativa "
+#~ "padrão é de 5,8%."
 
-#~ msgid "Bar chart of income per bank account for the selected window"
-#~ msgstr ""
-#~ "Gráfico de barras das receitas por conta bancária no período selecionado"
+#~ msgid "Gross service revenue invoiced in each billed month."
+#~ msgstr "Receita bruta de serviços emitida em cada mês faturado."
 
-#, python-format
-#~ msgid ""
-#~ "- charted across the %(shown)s biggest of %(used)s accounts used, so the "
-#~ "shares above stop short of 100%%."
-#~ msgstr ""
-#~ "- exibido considerando as %(shown)s maiores entre %(used)s contas "
-#~ "utilizadas, por isso as proporções acima não chegam a 100%%."
+#~ msgid "Tax regime"
+#~ msgstr "Regime tributário"
 
-#~ msgid "No income recorded"
-#~ msgstr "Nenhuma receita registrada"
+#~ msgid "Simples Nacional — Annex III/V"
+#~ msgstr "Simples Nacional — Anexo III/V"
 
-#~ msgid "Record income to see its destination bank account."
-#~ msgstr "Registre uma receita para ver sua conta bancária de destino."
-
-#~ msgid "The selected debit card determines the bank account."
-#~ msgstr "O cartão de débito selecionado determina a conta bancária."
-
-#~ msgid "The selected credit card determines the bank account."
-#~ msgstr "O cartão de crédito selecionado determina a conta bancária."
-
-#~ msgid "Select one channel, then select only its matching instrument below."
-#~ msgstr "Selecione um canal e depois somente o meio correspondente abaixo."
-
-#~ msgid "Required for Bank account and PIX channels."
-#~ msgstr "Obrigatório para os canais Conta bancária e PIX."
-
-#~ msgid "Required only for the Debit card channel."
-#~ msgstr "Obrigatório somente para o canal Cartão de débito."
-
-#~ msgid "Required only for the Credit card channel."
-#~ msgstr "Obrigatório somente para o canal Cartão de crédito."
-
-#~ msgid "Credit card only. Enter the full purchase total above."
-#~ msgstr "Somente cartão de crédito. Informe acima o valor total da compra."
-
-#~ msgid "Credit card only. Automatic follows the card closing day."
-#~ msgstr ""
-#~ "Somente cartão de crédito. A opção Automática segue o dia de fechamento "
-#~ "do cartão."
+#~ msgid "Lucro Presumido"
+#~ msgstr "Lucro Presumido"
 
 #~ msgid ""
-#~ "All funding fields remain visible. Fill only those relevant to the "
-#~ "selected operation type."
+#~ "Simples chooses Annex III or V through Fator R. Lucro Presumido applies "
+#~ "separate federal and municipal taxes."
 #~ msgstr ""
-#~ "Todos os campos de origem dos recursos permanecem visíveis. Preencha "
-#~ "somente os relevantes para o tipo de operação selecionado."
+#~ "O Simples escolhe o Anexo III ou V pelo Fator R. O Lucro Presumido aplica "
+#~ "tributos federais e municipais separadamente."
 
-#~ msgid "Monetary value: use this field for savings pots."
-#~ msgstr "Valor monetário: use este campo para cofrinhos."
+#~ msgid "Monthly pró-labore"
+#~ msgstr "Pró-labore mensal"
 
 #~ msgid ""
-#~ "Deposit: one source. Withdrawal: destination. Yield: leave all empty."
+#~ "Taxable monthly compensation for the partner’s work, subject to INSS and "
+#~ "possibly IRRF."
 #~ msgstr ""
-#~ "Aporte: uma origem. Resgate: destino. Rendimento: deixe tudo em branco."
+#~ "Remuneração mensal tributável pelo trabalho do sócio, sujeita a INSS e, "
+#~ "quando aplicável, IRRF."
 
-#~ msgid "Personal finance tracking, simplified."
-#~ msgstr "Acompanhamento simplificado das finanças pessoais."
+#~ msgid "Billed months per year"
+#~ msgstr "Meses faturados pela PJ por ano"
 
-#, python-format
-#~ msgid "%(amount)s %(currency)s; fees %(fees)s %(currency)s"
-#~ msgstr "%(amount)s %(currency)s; taxas %(fees)s %(currency)s"
-
-#, python-format
 #~ msgid ""
-#~ "%(quantity)s units x %(price)s %(currency)s = %(gross)s %(currency)s; "
-#~ "fees %(fees)s %(currency)s"
+#~ "Number of months with revenue in the annual projection; 11 reserves one "
+#~ "month without billing."
 #~ msgstr ""
-#~ "%(quantity)s unidades x %(price)s %(currency)s = %(gross)s %(currency)s; "
-#~ "taxas %(fees)s %(currency)s"
+#~ "Quantidade de meses com receita na projeção anual; 11 reserva um mês sem "
+#~ "faturamento."
 
-#, python-format
-#~ msgid "Funded by %(account)s: %(amount)s %(currency)s"
-#~ msgstr "Financiado por %(account)s: %(amount)s %(currency)s"
+#~ msgid "Company age"
+#~ msgstr "Idade da empresa"
 
-#~ msgid "Quantity"
-#~ msgstr "Quantidade"
+#~ msgid "month(s) of activity"
+#~ msgstr "mês(es) de atividade"
 
-#~ msgid "Unit price"
-#~ msgstr "Preço unitário"
+#~ msgid "13+ months (mature company)"
+#~ msgstr "13+ meses (empresa madura)"
 
-#~ msgid "Cash amount"
-#~ msgstr "Valor monetário"
+#~ msgid ""
+#~ "Determines how Simples annualizes revenue and payroll for the current "
+#~ "period."
+#~ msgstr ""
+#~ "Define como o Simples anualiza receita e folha na competência atual."
 
-#~ msgid "Asset units added or removed."
-#~ msgstr "Unidades do ativo adicionadas ou removidas."
+#~ msgid "Previous revenue used for RBT12"
+#~ msgstr "Receita anterior usada no RBT12"
 
-#~ msgid "Add asset"
-#~ msgstr "Adicionar ativo"
+#~ msgid "Only needed from the second month of activity onward."
+#~ msgstr "Necessário somente a partir do segundo mês de atividade."
+
+#~ msgid "Previous payroll used for Fator R"
+#~ msgstr "Folha anterior usada no Fator R"
+
+#~ msgid "Include pró-labore, payroll and applicable charges."
+#~ msgstr "Inclua pró-labore, folha e encargos aplicáveis."
+
+#~ msgid "ISS rate (%)"
+#~ msgstr "Alíquota de ISS (%)"
+
+#~ msgid "Municipal service-tax rate used by the Lucro Presumido estimate."
+#~ msgstr ""
+#~ "Alíquota municipal de serviços usada na estimativa do Lucro Presumido."
+
+#~ msgid "ISS outside Simples per billed month"
+#~ msgstr "ISS fora do Simples por mês faturado"
+
+#~ msgid "Required when the Simples ISS sublimite is exceeded."
+#~ msgstr "Obrigatório quando o sublimite de ISS do Simples for excedido."
+
+#~ msgid "Accounting cost per month"
+#~ msgstr "Custo contábil por mês"
+
+#~ msgid "Recurring accounting service paid by the company."
+#~ msgstr "Serviço contábil recorrente pago pela empresa."
+
+#~ msgid "PJ bank cost per month"
+#~ msgstr "Custo bancário da PJ por mês"
+
+#~ msgid "Recurring bank account and payment-service fees."
+#~ msgstr "Tarifas recorrentes da conta bancária e dos serviços de pagamento."
+
+#~ msgid "Digital certificate per year"
+#~ msgstr "Certificado digital por ano"
+
+#~ msgid "Annualized cost of the company digital certificate."
+#~ msgstr "Custo anual do certificado digital da empresa."
+
+#~ msgid "Municipal fees per year"
+#~ msgstr "Taxas municipais por ano"
+
+#~ msgid "Annual municipal registration, inspection or operating fees."
+#~ msgstr "Taxas municipais anuais de cadastro, fiscalização ou funcionamento."
+
+#~ msgid "Professional council per year"
+#~ msgstr "Conselho profissional por ano"
+
+#~ msgid ""
+#~ "Annual company registration fee when a professional council requires it."
+#~ msgstr ""
+#~ "Anuidade da empresa quando um conselho profissional exige o registro."
+
+#~ msgid "Other PJ costs per month"
+#~ msgstr "Outros custos da PJ por mês"
+
+#~ msgid "Other recurring operating costs paid by the company."
+#~ msgstr "Outros custos operacionais recorrentes pagos pela empresa."
+
+#~ msgid "PJ regime for comparison"
+#~ msgstr "Regime PJ para comparação"
+
+#~ msgid ""
+#~ "Selects the company tax calculation used to find the equivalent PJ "
+#~ "invoice."
+#~ msgstr ""
+#~ "Seleciona o cálculo tributário usado para encontrar o faturamento PJ "
+#~ "equivalente."
+
+#~ msgid "Pró-labore for comparison"
+#~ msgstr "Pró-labore para comparação"
+
+#~ msgid "Pró-labore assumed while solving the equivalent PJ invoice."
+#~ msgstr "Pró-labore considerado ao calcular o faturamento PJ equivalente."
+
+#~ msgid "Billed months in comparison"
+#~ msgstr "Meses faturados na comparação"
+
+#~ msgid "Months of PJ revenue used to match the complete annual CLT package."
+#~ msgstr ""
+#~ "Meses de receita PJ usados para igualar o pacote anual CLT completo."
+
+#~ msgid "CLT employer profile for comparison"
+#~ msgstr "Perfil do empregador CLT na comparação"
+
+#~ msgid "General regime (Presumed or Actual Profit)"
+#~ msgstr "Regime geral (Lucro Presumido ou Real)"
+
+#~ msgid "Simples Nacional — Annex IV"
+#~ msgstr "Simples Nacional — Anexo IV"
+
+#~ msgid ""
+#~ "General regime adds CPP, RAT/FAP and third parties. Simples III/V has no "
+#~ "separate payroll charge for them. Simples IV adds CPP and RAT/FAP, "
+#~ "without third parties."
+#~ msgstr ""
+#~ "O regime geral acrescenta CPP, RAT/FAP e terceiros. O Simples III/V não "
+#~ "tem cobrança separada desses encargos na folha. O Simples IV acrescenta "
+#~ "CPP e RAT/FAP, sem terceiros."
+
+#~ msgid "Choose CLT or PJ to continue."
+#~ msgstr "Escolha CLT ou PJ para continuar."
+
+#~ msgid "Enter the monthly pró-labore."
+#~ msgstr "Informe o pró-labore mensal."
+
+#~ msgid ""
+#~ "Enter the previous revenue for a company with more than one month of "
+#~ "activity."
+#~ msgstr ""
+#~ "Informe a receita anterior para uma empresa com mais de um mês de "
+#~ "atividade."
+
+#~ msgid ""
+#~ "Enter the ISS paid outside Simples when the ISS sublimite is exceeded."
+#~ msgstr ""
+#~ "Informe o ISS pago fora do Simples quando o sublimite de ISS for excedido."
+
+#~ msgid "Salary, 13th and vacation 1/3"
+#~ msgstr "Salário, 13º e 1/3 de férias"
+
+#~ msgid "FGTS"
+#~ msgstr "FGTS"
+
+#~ msgid "Employer CPP"
+#~ msgstr "CPP patronal"
+
+#~ msgid "RAT adjusted by FAP"
+#~ msgstr "RAT ajustado pelo FAP"
+
+#~ msgid "Third parties"
+#~ msgstr "Terceiros"
+
+#~ msgid "Employer benefits"
+#~ msgstr "Benefícios do empregador"
+
+#~ msgid "Revenue exceeds the Simples Nacional limit."
+#~ msgstr "A receita excede o limite do Simples Nacional."
+
+#~ msgid ""
+#~ "The annual projection repeats the current competence; future RBT12 is not "
+#~ "recalculated."
+#~ msgstr ""
+#~ "A projeção anual repete a competência atual; a RBT12 futura não é "
+#~ "recalculada."
+
+#~ msgid ""
+#~ "ISS above the sublimite was entered manually, so this estimate is partial."
+#~ msgstr ""
+#~ "O ISS acima do sublimite foi informado manualmente, portanto esta "
+#~ "estimativa é parcial."
+
+#~ msgid ""
+#~ "A ten percent dividend withholding was applied to monthly distributions "
+#~ "above R$ 50,000.00."
+#~ msgstr ""
+#~ "Foi aplicada retenção de 10% sobre distribuições mensais acima de R$ "
+#~ "50.000,00."
+
+#~ msgid "Revenue exceeds the Lucro Presumido limit."
+#~ msgstr "A receita excede o limite do Lucro Presumido."
+
+#~ msgid ""
+#~ "The annual projection repeats the same revenue in all four quarters and "
+#~ "is an estimate."
+#~ msgstr ""
+#~ "A projeção anual repete a mesma receita nos quatro trimestres e é uma "
+#~ "estimativa."
+
+#~ msgid "CPP on pro-labore"
+#~ msgstr "CPP sobre pró-labore"
+
+#~ msgid ""
+#~ "The annual CLT value exceeds the calculable limit for this PJ regime."
+#~ msgstr "O valor anual da CLT excede o limite calculável deste regime PJ."
+
+#~ msgid "CLT × PJ Sandbox"
+#~ msgstr "Sandbox CLT × PJ"
+
+#~ msgid "Equivalent comparison"
+#~ msgstr "Comparação equivalente"
+
+#~ msgid "CLT and PJ side by side"
+#~ msgstr "CLT e PJ lado a lado"
+
+#~ msgid "Estimated PJ invoice required to preserve the annual CLT package."
+#~ msgstr ""
+#~ "Faturamento PJ estimado necessário para preservar o pacote anual CLT."
+
+#~ msgid ""
+#~ "Estimated gross CLT salary required to preserve the annual PJ net income."
+#~ msgstr ""
+#~ "Salário bruto CLT estimado para preservar a renda líquida anual da PJ."
+
+#~ msgid "Gross salary / monthly invoice"
+#~ msgstr "Salário bruto / faturamento mensal"
+
+#~ msgid ""
+#~ "The CLT gross salary and PJ monthly invoice that produce equivalent "
+#~ "annual packages."
+#~ msgstr ""
+#~ "O salário bruto CLT e o faturamento mensal PJ que produzem pacotes anuais "
+#~ "equivalentes."
+
+#~ msgid ""
+#~ "Each projected annual net divided by twelve months for a comparable "
+#~ "monthly view."
+#~ msgstr ""
+#~ "Cada líquido anual projetado dividido por doze para uma visão mensal "
+#~ "comparável."
+
+#~ msgid "Annual net"
+#~ msgstr "Líquido anual"
+
+#~ msgid ""
+#~ "Cash retained during the projected year after taxes, deductions and "
+#~ "company costs."
+#~ msgstr ""
+#~ "Valor mantido no ano projetado após tributos, descontos e custos da "
+#~ "empresa."
+
+#~ msgid "Separate annual CLT payment already included in the CLT annual net."
+#~ msgstr "Pagamento anual separado já incluído no líquido anual CLT."
+
+#~ msgid ""
+#~ "CLT vacation payment including the constitutional one-third addition."
+#~ msgstr ""
+#~ "Pagamento de férias CLT incluindo o adicional constitucional de um terço."
+
+#~ msgid ""
+#~ "Employer deposits accumulated for the CLT worker and included in the "
+#~ "annual package."
+#~ msgstr ""
+#~ "Depósitos patronais acumulados para o trabalhador CLT e incluídos no "
+#~ "pacote anual."
+
+#~ msgid "Business taxes"
+#~ msgstr "Tributos da empresa"
+
+#~ msgid ""
+#~ "Taxes paid by the PJ before determining the amount retained by the "
+#~ "partner."
+#~ msgstr ""
+#~ "Tributos pagos pela PJ antes de determinar o valor mantido pelo sócio."
+
+#~ msgid "Operating costs"
+#~ msgstr "Custos operacionais"
+
+#~ msgid "Recurring and annual company expenses included in the PJ scenario."
+#~ msgstr "Despesas recorrentes e anuais da empresa incluídas no cenário PJ."
+
+#~ msgid "Comparable annual package"
+#~ msgstr "Pacote anual comparável"
+
+#~ msgid ""
+#~ "CLT annual net plus FGTS and benefits compared with the PJ annual net."
+#~ msgstr ""
+#~ "Líquido anual CLT mais FGTS e benefícios comparado ao líquido anual PJ."
+
+#~ msgid "Available after monthly plan"
+#~ msgstr "Disponível após o plano mensal"
+
+#~ msgid ""
+#~ "Remaining normalized monthly income after applying the same plan to each "
+#~ "side."
+#~ msgstr ""
+#~ "Renda mensal normalizada restante após aplicar o mesmo plano a cada lado."
+
+#~ msgid "Annual employer cost"
+#~ msgstr "Custo anual do contratante"
+
+#~ msgid ""
+#~ "Recurring annual cost estimated from the selected employer profile; it "
+#~ "does not change the employee deductions."
+#~ msgstr ""
+#~ "Custo anual recorrente estimado pelo perfil patronal selecionado; ele não "
+#~ "altera os descontos do trabalhador."
+
+#~ msgid "Annual package difference"
+#~ msgstr "Diferença do pacote anual"
+
+#~ msgid ""
+#~ "Residual difference caused by cent rounding after solving the equivalent "
+#~ "amount."
+#~ msgstr ""
+#~ "Diferença residual causada pelo arredondamento em centavos do valor "
+#~ "equivalente."
+
+#~ msgid "Difference percentage"
+#~ msgstr "Diferença percentual"
+
+#~ msgid ""
+#~ "Annual package difference as a percentage of the CLT comparable package."
+#~ msgstr "Diferença anual como percentual do pacote CLT comparável."
+
+#~ msgid "CLT income after payroll"
+#~ msgstr "Renda CLT após a folha"
+
+#~ msgid "PJ income after taxes and costs"
+#~ msgstr "Renda PJ após impostos e custos"
+
+#~ msgid "Annual package"
+#~ msgstr "Pacote anual"
+
+#~ msgid ""
+#~ "Annual net received plus FGTS and employer-paid benefits used by the "
+#~ "equivalence calculation."
+#~ msgstr ""
+#~ "Líquido anual recebido mais FGTS e benefícios pagos pelo empregador "
+#~ "usados no cálculo de equivalência."
+
+#~ msgid "Annual net received"
+#~ msgstr "Líquido anual recebido"
+
+#~ msgid ""
+#~ "Sum of ordinary months, vacation pay and 13th salary after employee "
+#~ "deductions."
+#~ msgstr ""
+#~ "Soma dos meses comuns, férias e 13º salário após os descontos do "
+#~ "trabalhador."
+
+#~ msgid "Employer-paid benefits"
+#~ msgstr "Benefícios pagos pelo empregador"
+
+#~ msgid ""
+#~ "Annual value of benefits paid by the employer and informed in the "
+#~ "scenario."
+#~ msgstr ""
+#~ "Valor anual dos benefícios pagos pelo empregador e informados no cenário."
+
+#~ msgid "Gross service revenue in each billed month."
+#~ msgstr "Receita bruta de serviços em cada mês faturado."
+
+#~ msgid ""
+#~ "Projected annual net after taxes and company costs, divided by twelve "
+#~ "months."
+#~ msgstr ""
+#~ "Líquido anual projetado após tributos e custos da empresa, dividido por "
+#~ "doze meses."
+
+#~ msgid "Business taxes per month"
+#~ msgstr "Tributos da empresa por mês"
+
+#~ msgid ""
+#~ "Estimated company taxes for one billed month under the selected regime."
+#~ msgstr ""
+#~ "Tributos estimados da empresa em um mês faturado no regime selecionado."
+
+#~ msgid "Pró-labore INSS"
+#~ msgstr "INSS do pró-labore"
+
+#~ msgid ""
+#~ "Partner social-security contribution withheld from the monthly pró-labore."
+#~ msgstr "Contribuição previdenciária do sócio retida no pró-labore mensal."
+
+#~ msgid "Pró-labore IRRF"
+#~ msgstr "IRRF do pró-labore"
+
+#~ msgid "Income tax withheld from pró-labore after the applicable deduction."
+#~ msgstr "Imposto de renda retido do pró-labore após a dedução aplicável."
+
+#~ msgid "Effective rate"
+#~ msgstr "Alíquota efetiva"
+
+#~ msgid ""
+#~ "Effective Simples rate after applying the current RBT12 band and "
+#~ "deduction."
+#~ msgstr ""
+#~ "Alíquota efetiva do Simples após aplicar a faixa e a dedução da RBT12 "
+#~ "atual."
+
+#~ msgid ""
+#~ "Projected cash retained by the partner after company taxes, operating "
+#~ "costs and personal withholding."
+#~ msgstr ""
+#~ "Valor projetado mantido pelo sócio após tributos, custos e retenções "
+#~ "pessoais."
+
+#~ msgid "Annual invoice"
+#~ msgstr "Faturamento anual"
+
+#~ msgid "Monthly invoice multiplied by the informed number of billed months."
+#~ msgstr ""
+#~ "Faturamento mensal multiplicado pela quantidade informada de meses "
+#~ "faturados."
+
+#~ msgid "Total company taxes projected for the billed months."
+#~ msgstr "Total de tributos da empresa projetado para os meses faturados."
+
+#~ msgid ""
+#~ "Accounting, bank, certificate, municipal, council and other informed "
+#~ "company costs."
+#~ msgstr ""
+#~ "Custos informados de contabilidade, banco, certificado, município, "
+#~ "conselho e outros."
+
+#~ msgid "Distributable profit"
+#~ msgstr "Lucro distribuível"
+
+#~ msgid ""
+#~ "Accounting profit available after revenue, taxes, pró-labore and "
+#~ "operating costs."
+#~ msgstr ""
+#~ "Lucro contábil disponível após receita, tributos, pró-labore e custos "
+#~ "operacionais."
+
+#~ msgid "Dividend withholding"
+#~ msgstr "Retenção sobre dividendos"
+
+#~ msgid ""
+#~ "Income-tax withholding on monthly profit distributions above the 2026 "
+#~ "threshold."
+#~ msgstr ""
+#~ "Retenção de imposto sobre distribuições mensais de lucro acima do limite "
+#~ "de 2026."
+
+#~ msgid "Fator R"
+#~ msgstr "Fator R"
+
+#~ msgid ""
+#~ "Payroll divided by revenue, truncated to two decimal places, used to "
+#~ "choose Simples Annex III or V."
+#~ msgstr ""
+#~ "Folha dividida pela receita, truncada em duas casas decimais, usada para "
+#~ "escolher o Anexo III ou V do Simples."
+
+#~ msgid ""
+#~ "Component included in the detailed tax calculation for the selected PJ "
+#~ "regime."
+#~ msgstr ""
+#~ "Componente incluído na memória tributária detalhada do regime PJ "
+#~ "selecionado."
+
+#~ msgid "Normalized net income"
+#~ msgstr "Renda líquida normalizada"
+
+#~ msgid ""
+#~ "Annual net divided by twelve; this is the base used by percentage plan "
+#~ "items."
+#~ msgstr ""
+#~ "Líquido anual dividido por doze; é a base dos itens percentuais do plano."
+
+#~ msgid "Variable label"
+#~ msgstr "Rótulo da variável"
+
+#~ msgid "Variable type"
+#~ msgstr "Tipo da variável"
+
+#~ msgid "Variable value"
+#~ msgstr "Valor da variável"
+
+#~ msgid "Remove variable"
+#~ msgstr "Remover variável"
+
+#~ msgid "Which income do you already know?"
+#~ msgstr "Qual renda você já conhece?"
+
+#~ msgid ""
+#~ "Choose one path to reveal only the information needed for that "
+#~ "calculation."
+#~ msgstr ""
+#~ "Escolha um caminho para revelar somente as informações necessárias ao "
+#~ "cálculo."
+
+#~ msgid "I know the gross salary"
+#~ msgstr "Sei o salário bruto"
+
+#~ msgid "I know the monthly invoice"
+#~ msgstr "Sei o faturamento mensal"
+
+#~ msgid "See company taxes, pró-labore, costs and distributable profit."
+#~ msgstr "Veja impostos da empresa, pró-labore, custos e lucro distribuível."
+
+#~ msgid "Enter your CLT income"
+#~ msgstr "Informe sua renda CLT"
+
+#~ msgid "Optional PJ details"
+#~ msgstr "Detalhes opcionais da PJ"
+
+#~ msgid "Step 3"
+#~ msgstr "Etapa 3"
+
+#~ msgid ""
+#~ "Suggested percentages and custom variables are optional and can be "
+#~ "cleared at once."
+#~ msgstr ""
+#~ "Os percentuais sugeridos e as variáveis personalizadas são opcionais e "
+#~ "podem ser limpos de uma vez."
+
+#~ msgid "Add variable"
+#~ msgstr "Adicionar variável"
+
+#~ msgid "Label"
+#~ msgstr "Rótulo"
+
+#~ msgid "Next step"
+#~ msgstr "Próxima etapa"
+
+#~ msgid "Prepare the PJ comparison"
+#~ msgstr "Prepare a comparação PJ"
+
+#~ msgid "Prepare the CLT comparison"
+#~ msgstr "Prepare a comparação CLT"
+
+#~ msgid ""
+#~ "The equivalent amount preserves the complete annual package; the same "
+#~ "monthly plan is then applied to both sides."
+#~ msgstr ""
+#~ "O valor equivalente preserva o pacote anual completo; depois, o mesmo "
+#~ "plano mensal é aplicado aos dois lados."
+
+#~ msgid "See comparison with PJ"
+#~ msgstr "Ver comparação para PJ"
+
+#~ msgid "See comparison with CLT"
+#~ msgstr "Ver comparação para CLT"
+
+#~ msgid ""
+#~ "This is an estimate for the selected 2026 assumptions. It does not "
+#~ "replace an accountant, lawyer, collective agreement, CNAE classification "
+#~ "or municipal legislation."
+#~ msgstr ""
+#~ "Esta é uma estimativa para as premissas de 2026 selecionadas. Ela não "
+#~ "substitui contador, advogado, convenção coletiva, enquadramento CNAE ou "
+#~ "legislação municipal."
+
+#~ msgid ""
+#~ "Calculate one income at a time, organize your monthly plan, and compare "
+#~ "equivalent CLT and PJ packages."
+#~ msgstr ""
+#~ "Calcule uma renda por vez, organize seu plano mensal e compare pacotes "
+#~ "CLT e PJ equivalentes."
+
+#~ msgid "Fixed costs target (%)"
+#~ msgstr "Meta de custos fixos (%)"
+
+#~ msgid ""
+#~ "Share of normalized monthly net income reserved for recurring essential "
+#~ "costs."
+#~ msgstr ""
+#~ "Parcela da renda líquida mensal normalizada reservada para custos "
+#~ "essenciais recorrentes."
+
+#~ msgid ""
+#~ "Monthly amount produced by the fixed-cost percentage entered in the plan."
+#~ msgstr ""
+#~ "Valor mensal produzido pelo percentual de custos fixos informado no plano."
+
+#~| msgid "CLT employer profile"
+#~ msgid "Employer tax profile"
+#~ msgstr "Perfil tributário do empregador"
+
+#~ msgid "Usually 1% to 3% before FAP."
+#~ msgstr "Normalmente de 1% a 3% antes do FAP."
+
+#~| msgid "Employer cost"
+#~ msgid "Employer cost details"
+#~ msgstr "Detalhes do custo do empregador"
+
+#~ msgid "Step 4"
+#~ msgstr "Etapa 4"
+
+#~ msgid "Compare equivalent packages"
+#~ msgstr "Compare pacotes equivalentes"
+
+#~ msgid ""
+#~ "The comparison finds the other gross amount needed to preserve the annual "
+#~ "package, including CLT FGTS and benefits."
+#~ msgstr ""
+#~ "A comparação encontra o outro valor bruto necessário para preservar o "
+#~ "pacote anual, incluindo FGTS e benefícios CLT."
+
+#~ msgid "Compare CLT and PJ"
+#~ msgstr "Comparar CLT e PJ"

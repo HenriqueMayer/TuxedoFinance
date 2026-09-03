@@ -8,6 +8,7 @@ app_name = 'investments'
 urlpatterns = [
     path('', views.InvestmentListView.as_view(), name='list'),
     path('create/', views.InvestmentCreateView.as_view(), name='create'),
+    path('yield-preview/', views.yield_preview, name='yield_preview'),
     path('settings/', views.InvestmentSettingsView.as_view(), name='settings'),
     path('products/create/', views.InvestmentProductCreateView.as_view(), name='create_product'),
     path('products/<int:pk>/edit/', views.InvestmentProductUpdateView.as_view(), name='update_product'),

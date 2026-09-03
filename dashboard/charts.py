@@ -171,53 +171,87 @@ def build_line_chart(labels, values):
     return {**_frame(bounds), 'points': points, 'line': line, 'area': area}
 
 
-def build_bar_chart(labels, series):
-    """Grouped-bar geometry: one group per label, one bar per series entry.
+def _stack_key(entry, position):
+    """Column id for a series: explicit `stack`, or its own grouped slot."""
+    return entry.get('stack', f'__ungrouped_{position}')
 
-    `series` is a list of `{'name': ..., 'tone': ..., 'values': [...]}`. All
-    values are totals, so they are never negative and every bar grows upward
-    from the baseline.
+
+def build_bar_chart(labels, series):
+    """Bar geometry: grouped columns, or stacked columns when series share `stack`.
+
+    `series` is a list of `{'name': ..., 'tone': ..., 'values': [...]}`. An
+    optional `'stack'` key puts series in the same column (later series sit on
+    top of earlier ones). Series without `stack` each occupy their own column,
+    which is the original grouped-bar layout.
+
+    All values are totals, so they are never negative and every bar grows
+    upward from the baseline. The y-axis uses the tallest stack total, not the
+    tallest individual series.
 
     Callers must pass at least one label: with none there is no slot to divide
     the plot into, and the caller has an empty state to render anyway.
     """
-    values = [value for entry in series for value in entry['values']]
-    bounds = (0.0, max([*values, 0.0]) * (1 + PADDING_RATIO) or 1.0)
     count = len(labels)
+    stack_order = []
+    for position, entry in enumerate(series):
+        key = _stack_key(entry, position)
+        if key not in stack_order:
+            stack_order.append(key)
+
+    stack_totals = []
+    for index in range(count):
+        totals = {key: 0.0 for key in stack_order}
+        for position, entry in enumerate(series):
+            totals[_stack_key(entry, position)] += entry['values'][index]
+        stack_totals.extend(totals.values())
+    bounds = (0.0, max([*stack_totals, 0.0]) * (1 + PADDING_RATIO) or 1.0)
 
     group_width = _slot_width(count) * GROUP_WIDTH_RATIO
-    bar_width = group_width / len(series) if series else group_width
+    column_count = len(stack_order) or 1
+    bar_width = group_width / column_count
 
     groups = []
     for index, label in enumerate(labels):
         center = _slot_center(index, count)
         bars = []
-        for position, entry in enumerate(series):
-            value = entry['values'][index]
-            y = _y(value, bounds)
+        for column, key in enumerate(stack_order):
             rendered_width = bar_width * 0.86
-            rendered_x = center - group_width / 2 + bar_width * position
+            rendered_x = center - group_width / 2 + bar_width * column
+            running = 0.0
+            column_bars = []
+            for position, entry in enumerate(series):
+                if _stack_key(entry, position) != key:
+                    continue
+                value = entry['values'][index]
+                bottom_y = _y(running, bounds)
+                top_y = _y(running + value, bounds)
+                running += value
+                column_bars.append(
+                    {
+                        'name': entry['name'],
+                        'tone': entry['tone'],
+                        'value': value,
+                        'x': round(rendered_x, 2),
+                        'y': top_y,
+                        'value_y': round(top_y - VALUE_LABEL_OFFSET, 2),
+                        'width': round(rendered_width, 2),
+                        'height': round(bottom_y - top_y, 2),
+                        'is_stack_top': False,
+                    }
+                )
+            stack_top_y = _y(running, bounds)
             tooltip_x = rendered_x + rendered_width / 2 - TOOLTIP_WIDTH / 2
             tooltip_x = max(4, min(tooltip_x, WIDTH - TOOLTIP_WIDTH - 4))
-            bars.append(
-                {
-                    'name': entry['name'],
-                    'tone': entry['tone'],
-                    'value': value,
-                    'x': round(rendered_x, 2),
-                    'y': y,
-                    # Baseline for a caption sitting just above the bar; only
-                    # single-series charts have the room to use it.
-                    'value_y': round(y - VALUE_LABEL_OFFSET, 2),
-                    # Leave a hairline gutter between bars in a group.
-                    'width': round(rendered_width, 2),
-                    'height': round(PLOT_BOTTOM - y, 2),
-                    'tooltip_x': round(tooltip_x, 2),
-                    'tooltip_y': round(
-                        max(4, y - TOOLTIP_HEIGHT - TOOLTIP_GAP), 2
-                    ),
-                }
+            tooltip_y = round(
+                max(4, stack_top_y - TOOLTIP_HEIGHT - TOOLTIP_GAP), 2
             )
+            visible = [bar for bar in column_bars if bar['value']]
+            if visible:
+                visible[-1]['is_stack_top'] = True
+            for bar in column_bars:
+                bar['tooltip_x'] = round(tooltip_x, 2)
+                bar['tooltip_y'] = tooltip_y
+            bars.extend(column_bars)
         groups.append({'label': label, 'center': center, 'bars': bars})
 
     return {

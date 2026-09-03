@@ -133,6 +133,7 @@ class BankDetailView(LoginRequiredMixin, DetailView):
 class OwnedFormMixin(LoginRequiredMixin):
     template_name = 'banking/form.html'
     form_title = ''
+    form_variant = ''
 
     def get_queryset(self):
         return self.model.objects.filter(user=self.request.user)
@@ -153,6 +154,7 @@ class OwnedFormMixin(LoginRequiredMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form_title'] = self.form_title
+        context['form_variant'] = self.form_variant
         context['cancel_url'] = self.get_cancel_url()
         return context
 
@@ -356,6 +358,7 @@ class LoyaltyEntryCreateView(OwnedFormMixin, CreateView):
     model = LoyaltyEntry
     form_class = LoyaltyEntryForm
     form_title = _('New points or miles entry')
+    form_variant = 'loyalty_entry'
     success_url = reverse_lazy('banking:list')
 
     def get_initial(self):
@@ -365,6 +368,9 @@ class LoyaltyEntryCreateView(OwnedFormMixin, CreateView):
             value = self.request.GET.get(field)
             if value:
                 initial[field] = value
+        if initial.get('invoice'):
+            initial['kind'] = LoyaltyEntry.Kind.INVOICE_AWARD
+            initial['direction'] = LoyaltyEntry.Direction.CREDIT
         return initial
 
     def form_valid(self, form):
@@ -390,6 +396,7 @@ class LoyaltyEntryUpdateView(OwnedFormMixin, UpdateView):
     model = LoyaltyEntry
     form_class = LoyaltyEntryForm
     form_title = _('Edit points or miles entry')
+    form_variant = 'loyalty_entry'
     success_url = reverse_lazy('banking:list')
 
     def form_valid(self, form):

@@ -30,7 +30,7 @@ Deliberately the simplest possible CBV — no `LoginRequiredMixin` (this is the 
 
 ## Template (`templates/pages/landing.html`)
 
-Extends `base.html`. Four sections, all built from the standard design-system components documented in [frontend.md](../frontend.md) — no one-off markup:
+Extends `base.html`. Five sections, all built from the standard design-system components documented in [frontend.md](../frontend.md) — no one-off markup:
 
 1. **Hero** — value proposition, a short statement of the spreadsheet frustration that motivated Tuxedo Finance, conditional "Sign up" / "Log in" CTAs (linking to `accounts:signup` / `accounts:login` when `ALLOW_SIGNUPS=True`), and a **sample dashboard preview** built from four `partials/stat_card.html` includes with hardcoded example figures (this is presentation only — it does not query the database or require authentication).
 2. **Brand story** — the localized Tuxedo Finance hero image, served as an optimized static asset with intrinsic dimensions and lazy loading; it is decorative/product storytelling and contains no application data.

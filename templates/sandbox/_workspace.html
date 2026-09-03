@@ -1,0 +1,101 @@
+{% load i18n %}
+<div id="sandbox-workspace">
+    <form method="post" action="{% url 'sandbox:index' %}" hx-post="{% url 'sandbox:index' %}" hx-target="#sandbox-workspace" hx-swap="outerHTML" hx-vals='{"response_mode":"fragment"}' hx-request='{"noHeaders":false}' hx-boost="false" class="space-y-8" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}<div class="rounded-2xl border border-expense/40 bg-expense/10 p-4 text-sm text-expense dark:text-expense-light" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+
+        <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest sm:p-8" aria-labelledby="salary-input-title">
+            <p class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Step 1" %}</p>
+            <h2 id="salary-input-title" class="mt-2 font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Enter your income" %}</h2>
+            <p class="mt-2 text-sm leading-6 text-forest/70 dark:text-cream/70">{% translate "Enter the monthly gross amount and choose whether CLT deductions should be calculated automatically." %}</p>
+            <div class="mt-6 max-w-2xl">{% include 'sandbox/_form_field.html' with field=form.gross_salary %}</div>
+            <div class="max-w-2xl">{% include 'sandbox/_checkbox_field.html' with field=form.use_clt %}</div>
+
+            <div data-clt-options{% if not form.use_clt.value %} hidden{% endif %}>
+                <details class="mt-6 rounded-2xl border border-forest/10 dark:border-cream/10">
+                    <summary class="cursor-pointer px-5 py-4 text-sm font-medium text-forest dark:text-cream">{% translate "Optional CLT details" %}</summary>
+                    <div class="grid grid-cols-1 gap-5 border-t border-forest/10 p-5 dark:border-cream/10 md:grid-cols-2 lg:grid-cols-3">
+                        {% include 'sandbox/_form_field.html' with field=form.dependents %}
+                        {% include 'sandbox/_form_field.html' with field=form.pension %}
+                        {% include 'sandbox/_checkbox_field.html' with field=form.vt_enabled %}
+                        {% include 'sandbox/_form_field.html' with field=form.vt_cost %}
+                        {% include 'sandbox/_form_field.html' with field=form.food_employee %}
+                        {% include 'sandbox/_form_field.html' with field=form.health_employee %}
+                        {% include 'sandbox/_form_field.html' with field=form.other_deductions %}
+                    </div>
+                </details>
+            </div>
+
+            <div data-manual-options{% if form.use_clt.value %} hidden{% endif %} class="mt-7 border-t border-forest/10 pt-6 dark:border-cream/10">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h3 class="font-sans text-lg font-semibold text-forest dark:text-cream">{% translate "Manual deductions and taxes" %}</h3>
+                        <p class="mt-1 text-sm text-forest/65 dark:text-cream/65">{% translate "Add each amount that should be subtracted from the gross salary." %}</p>
+                    </div>
+                    <button type="button" data-add-deduction class="rounded-full border border-forest/20 px-4 py-2 text-xs font-medium uppercase tracking-widest text-forest transition-colors hover:border-caramel hover:text-caramel-ink dark:border-cream/20 dark:text-cream dark:hover:border-caramel dark:hover:text-caramel-light">+ {% translate "Add deduction" %}</button>
+                </div>
+                <div class="mt-4 overflow-x-auto">
+                    <table class="w-full min-w-[38rem] text-sm">
+                        <thead><tr class="border-b border-forest/10 text-left text-xs uppercase tracking-widest text-forest/60 dark:border-cream/10 dark:text-cream/60">
+                            {% translate "Name used to identify the deduction or tax." as deduction_label_help %}{% translate "Choose a fixed amount in reais or a percentage of gross salary." as deduction_type_help %}{% translate "Amount or percentage subtracted every month." as deduction_value_help %}
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Description" %}{% include 'sandbox/_help_popover.html' with help_id='deduction-label-help' help_label=_('Description') help_text=deduction_label_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Type" %}{% include 'sandbox/_help_popover.html' with help_id='deduction-type-help' help_label=_('Type') help_text=deduction_type_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Value" %}{% include 'sandbox/_help_popover.html' with help_id='deduction-value-help' help_label=_('Value') help_text=deduction_value_help %}</span></th>
+                            <th class="w-16 px-2 py-3"><span class="sr-only">{% translate "Actions" %}</span></th>
+                        </tr></thead>
+                        <tbody data-deduction-rows>{% for row in deduction_rows %}{% include 'sandbox/_manual_deduction_row.html' with row=row %}{% endfor %}</tbody>
+                    </table>
+                </div>
+                <template id="sandbox-deduction-template">{% include 'sandbox/_manual_deduction_row.html' with row=None %}</template>
+            </div>
+        </section>
+
+        <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest sm:p-8" aria-labelledby="planning-title">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Step 2" %}</p>
+                    <h2 id="planning-title" class="mt-2 font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Set your monthly plan" %}</h2>
+                    <p class="mt-2 text-sm text-forest/70 dark:text-cream/70">{% translate "Use the suggested categories or add your own monthly expenses." %}</p>
+                </div>
+                <button type="button" data-clear-planning class="rounded-full border border-forest/20 px-4 py-2 text-xs font-medium uppercase tracking-widest text-forest transition-colors hover:border-caramel hover:text-caramel-ink dark:border-cream/20 dark:text-cream dark:hover:border-caramel dark:hover:text-caramel-light">{% translate "Clear estimates" %}</button>
+            </div>
+            <div class="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
+                {% include 'sandbox/_fixed_cost_field.html' with type_field=form.fixed_cost_type value_field=form.fixed_cost_value %}
+                {% include 'sandbox/_form_field.html' with field=form.emergency_percent %}
+                {% include 'sandbox/_form_field.html' with field=form.investments_percent %}
+            </div>
+            <div class="mt-7 border-t border-forest/10 pt-6 dark:border-cream/10">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="font-sans text-lg font-semibold text-forest dark:text-cream">{% translate "Additional monthly expenses" %}</h3>
+                    <button type="button" data-add-variable class="rounded-full border border-forest/20 px-4 py-2 text-xs font-medium uppercase tracking-widest text-forest transition-colors hover:border-caramel hover:text-caramel-ink dark:border-cream/20 dark:text-cream dark:hover:border-caramel dark:hover:text-caramel-light">+ {% translate "Add expense" %}</button>
+                </div>
+                <div class="mt-4 overflow-x-auto">
+                    <table class="w-full min-w-[38rem] text-sm">
+                        <thead><tr class="border-b border-forest/10 text-left text-xs uppercase tracking-widest text-forest/60 dark:border-cream/10 dark:text-cream/60">
+                            {% translate "Name used to identify this monthly expense." as variable_label_help %}{% translate "Choose a fixed amount in reais or a percentage of monthly net income." as variable_type_help %}{% translate "Monthly amount or percentage assigned to this expense." as variable_value_help %}
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Description" %}{% include 'sandbox/_help_popover.html' with help_id='variable-label-help' help_label=_('Description') help_text=variable_label_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Type" %}{% include 'sandbox/_help_popover.html' with help_id='variable-type-help' help_label=_('Type') help_text=variable_type_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Value" %}{% include 'sandbox/_help_popover.html' with help_id='variable-value-help' help_label=_('Value') help_text=variable_value_help %}</span></th>
+                            <th class="w-16 px-2 py-3"><span class="sr-only">{% translate "Actions" %}</span></th>
+                        </tr></thead>
+                        <tbody data-variable-rows>{% for row in variable_rows %}{% include 'sandbox/_variable_row.html' with row=row %}{% endfor %}</tbody>
+                    </table>
+                </div>
+                <template id="sandbox-variable-template">{% include 'sandbox/_variable_row.html' with row=None %}</template>
+            </div>
+        </section>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <button type="submit" class="inline-flex items-center rounded-full bg-caramel px-6 py-3 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">{% translate "Calculate" %}</button>
+            <span class="text-xs text-forest/60 dark:text-cream/60">{% translate "Nothing is saved." %}</span>
+        </div>
+
+        {% if result %}{% include 'sandbox/_scenario_result.html' %}{% endif %}
+    </form>
+
+    <div class="mt-8 space-y-2 text-xs leading-5 text-forest/60 dark:text-cream/60">
+        <p>{% translate "This is an estimate using the selected inputs. The automatic CLT calculation does not replace professional advice or a collective agreement." %}</p>
+        <p>{% translate "Official CLT rule sources" %}: {% for source in rules.source_urls %}<a class="underline hover:text-caramel-ink dark:hover:text-caramel-light" href="{{ source }}" target="_blank" rel="noopener noreferrer">{{ forloop.counter }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+    </div>
+</div>

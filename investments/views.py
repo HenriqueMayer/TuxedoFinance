@@ -2,15 +2,18 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Count, ProtectedError, Q
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.text import format_lazy
 from django.utils.translation import gettext as _, gettext_lazy
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
 
 from banking.models import Bank
@@ -191,10 +194,19 @@ class InvestmentFormMixin(LoginRequiredMixin):
     def form_valid(self, form):
         refresh_snapshot = not self.object or bool(
             set(form.changed_data)
-            & {'asset', 'quantity', 'unit_price', 'amount', 'fees', 'date'}
+            & {'asset', 'quantity', 'unit_price', 'amount', 'ending_balance', 'fees', 'date'}
         )
         form.instance.user = self.request.user
         with transaction.atomic():
+            try:
+                form.refresh_yield_amount(lock=True)
+                form.instance.full_clean()
+            except ValidationError as error:
+                for field, values in error.message_dict.items():
+                    target = field if field in form.fields else None
+                    for value in values:
+                        form.add_error(target, value)
+                return self.form_invalid(form)
             response = super().form_valid(form)
             if refresh_snapshot:
                 refresh_fx_snapshot(self.object)
@@ -218,6 +230,30 @@ class InvestmentCreateView(InvestmentFormMixin, SuccessMessageMixin, CreateView)
 
 class InvestmentUpdateView(InvestmentFormMixin, SuccessMessageMixin, UpdateView):
     success_message = gettext_lazy('Investment operation updated.')
+
+
+@login_required
+@require_POST
+def yield_preview(request):
+    """Render a non-persistent, server-calculated monetary yield preview."""
+    operation = None
+    operation_id = request.POST.get('operation_id', '')
+    if operation_id.isdigit():
+        operation = get_object_or_404(Investment, pk=operation_id, user=request.user)
+
+    form = InvestmentForm(request.POST, user=request.user, instance=operation)
+    form.is_valid()
+    preview = form.yield_preview if not form.errors else None
+    error = None
+    for field in ('ending_balance', 'amount', 'yield_input_mode'):
+        if form.errors.get(field):
+            error = form.errors[field][0]
+            break
+    return render(request, 'investments/_yield_preview.html', {
+        'preview': preview,
+        'currency': form.cleaned_data['asset'].currency if preview else None,
+        'error': error,
+    })
 
 
 class InvestmentSettingsView(LoginRequiredMixin, TemplateView):

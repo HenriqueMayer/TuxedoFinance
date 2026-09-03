@@ -107,10 +107,10 @@ jobs:
       - name: Run browser smoke tests
         env:
           SECRET_KEY: ci-browser-test-secret-key
-          CASHFLOW_DATA_DIR: ${{ runner.temp }}/e2e-data
+          TUXEDO_DATA_DIR: ${{ runner.temp }}/e2e-data
           E2E_BASE_URL: http://127.0.0.1:8765
         run: |
-          mkdir -p "$CASHFLOW_DATA_DIR"
+          mkdir -p "$TUXEDO_DATA_DIR"
           uv run python manage.py migrate --noinput
           uv run python manage.py runserver 127.0.0.1:8765 --noreload &
           server_pid=$!

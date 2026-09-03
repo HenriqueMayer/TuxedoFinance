@@ -59,11 +59,11 @@ current migration state. Store backups outside the checkout, with restrictive
 permissions:
 
 ```bash
-mkdir -p "$HOME/cashflow-backups"
-chmod 700 "$HOME/cashflow-backups"
-uv run python manage.py showmigrations > /tmp/cashflow-migrations.txt
-sqlite3 db.sqlite3 ".backup '$HOME/cashflow-backups/cashflow-$(date +%Y%m%d-%H%M%S).sqlite3'"
-chmod 600 "$HOME/cashflow-backups"/*.sqlite3
+mkdir -p "$HOME/tuxedo-finance-backups"
+chmod 700 "$HOME/tuxedo-finance-backups"
+uv run python manage.py showmigrations > /tmp/tuxedo-finance-migrations.txt
+sqlite3 db.sqlite3 ".backup '$HOME/tuxedo-finance-backups/tuxedo-finance-$(date +%Y%m%d-%H%M%S).sqlite3'"
+chmod 600 "$HOME/tuxedo-finance-backups"/*.sqlite3
 ```
 
 SQLite's `.backup` command captures a consistent database and handles WAL
@@ -83,9 +83,9 @@ Stop application writes before restoring. Preserve the current database as a
 separate rollback copy, then restore the selected backup to the expected path:
 
 ```bash
-cp db.sqlite3 "$HOME/cashflow-backups/before-restore-$(date +%Y%m%d-%H%M%S).sqlite3"
+cp db.sqlite3 "$HOME/tuxedo-finance-backups/before-restore-$(date +%Y%m%d-%H%M%S).sqlite3"
 rm -f db.sqlite3-wal db.sqlite3-shm
-cp "$HOME/cashflow-backups/cashflow-YYYYMMDD-HHMMSS.sqlite3" db.sqlite3
+cp "$HOME/tuxedo-finance-backups/tuxedo-finance-YYYYMMDD-HHMMSS.sqlite3" db.sqlite3
 chmod 600 db.sqlite3
 uv run python manage.py migrate
 uv run python manage.py check

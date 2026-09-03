@@ -1,0 +1,15 @@
+{% load i18n %}
+<div class="space-y-2">
+    <div class="flex items-center justify-between gap-2">
+        <label for="{{ value_field.id_for_label }}" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+            {{ value_field.label }}
+        </label>
+        {% include 'sandbox/_help_popover.html' with help_id=value_field.id_for_label|add:'-help' help_label=value_field.label help_text=value_field.help_text %}
+    </div>
+    <div class="grid grid-cols-[6rem_minmax(0,1fr)] gap-2">
+        {{ type_field }}
+        {{ value_field }}
+    </div>
+    {% for error in type_field.errors %}<p id="{{ type_field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+    {% for error in value_field.errors %}<p id="{{ value_field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+</div>
