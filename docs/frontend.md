@@ -231,6 +231,14 @@ installments, orange fixed recurrences and neutral one-off purchases; its zero
 line is neutral. HTMX swaps only the report island while preserving focus and
 viewport; plain links/forms remain equivalent.
 
+SVG paint order is part of that contract. Every interactive chart renders all
+data marks and axis labels in a base `data-chart-layer="*-marks"` layer, then
+renders transparent hit targets, hover/focus highlights and tooltip pills in a
+final `data-chart-layer="*-interactions"` layer. Tooltips must never be nested
+only beside their original mark in series order: later SVG elements would paint
+over them. Tooltip content remains `pointer-events-none`, while its transparent
+hit target retains the native `<title>`, keyboard focus and any chart link.
+
 Every chart states its reporting currency and actual versus projected period.
 The selected per-user base currency, snapshot status where supported, and
 explicit missing-FX totals are shown. Current valuation charts display their

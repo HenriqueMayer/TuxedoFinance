@@ -26,6 +26,29 @@ async function createAccount(page, testInfo) {
     await expect(page).toHaveURL(/\/dashboard\/$/);
 }
 
+async function createMonetaryInvestment(page, testInfo) {
+    await createAccount(page, testInfo);
+
+    await page.goto('/banking/create/');
+    await page.getByLabel('Name').fill('Investment bank');
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await page.goto('/investments/products/create/');
+    await page.getByLabel('Bank').selectOption({ label: 'Investment bank' });
+    await page.getByLabel('Name').fill('Savings');
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await page.goto('/investments/assets/create/');
+    await page.getByLabel('Name').fill('Savings pot');
+    await page.getByLabel('Code').fill('POT');
+    await page.getByLabel('Asset class').selectOption('LIQUIDITY');
+    await page.getByLabel('Currency').selectOption('BRL');
+    await page.getByLabel('How this asset is valued').selectOption('MONETARY');
+    await page.getByRole('spinbutton', { name: /^Opening balance/ }).fill('1000');
+    await page.getByLabel('Opening balance product').selectOption({ label: 'Investment bank - Savings' });
+    await page.getByRole('button', { name: 'Save' }).click();
+}
+
 test('landing keeps concise translated copy and local frontend dependencies', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Understand your cash flow');
@@ -85,6 +108,34 @@ test('mobile navigation traps focus and restores it on Escape', async ({ page },
     await expect(menu).toHaveAttribute('aria-hidden', 'true');
     await expect(openButton).toBeFocused();
     await expect(page.locator('header')).not.toHaveAttribute('inert', '');
+});
+
+test('monetary yield previews a final balance and stores only the calculated yield', async ({ page }, testInfo) => {
+    await createMonetaryInvestment(page, testInfo);
+    await page.goto('/investments/create/');
+
+    await page.getByLabel('Product destination').selectOption({ label: 'Investment bank - Savings' });
+    await page.getByRole('combobox', { name: /^Asset/ }).selectOption({ label: 'Savings pot (POT)' });
+    await page.getByLabel('Type').selectOption('YIELD');
+    await page.getByLabel('Date').fill('2026-09-02');
+    await page.getByRole('radio', { name: 'Use the final balance' }).check();
+    await page.getByRole('spinbutton', { name: 'New investment balance' }).fill('1200');
+
+    const preview = page.locator('#yield-preview');
+    await expect(preview.getByText('Previous balance')).toBeVisible();
+    await expect(preview.getByText('Calculated yield')).toBeVisible();
+    await expect(preview).toContainText('200,00');
+    await expect(page.getByLabel('Investment amount')).toBeHidden();
+
+    await page.getByRole('radio', { name: 'Enter the yield amount' }).check();
+    await expect(page.getByLabel('Investment amount')).toBeVisible();
+    await expect(page.getByLabel('New investment balance')).toBeHidden();
+
+    await page.getByRole('radio', { name: 'Use the final balance' }).check();
+    await page.getByRole('spinbutton', { name: 'New investment balance' }).fill('1200');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByText('Balance: BRL 1.200,00')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test('salary sandbox supports a complete manual calculation without comparisons', async ({ page }, testInfo) => {
@@ -174,4 +225,31 @@ test('salary sandbox switches to automatic CLT and clears only plan estimates', 
 
     await page.getByRole('button', { name: 'Toggle color theme' }).click();
     await expect(page.locator('html')).toHaveClass(/dark/);
+});
+
+test('reports keep the next-window control stable when returning to today becomes available', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.goto('/dashboard/reports/');
+
+    const evolution = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Balance evolution' }) });
+    const nextWindow = evolution.getByRole('link', { name: 'Next window' });
+    const initialBox = await nextWindow.boundingBox();
+
+    await nextWindow.click();
+    await expect(page).toHaveURL(/charts_offset=1/);
+    await expect(evolution.getByRole('link', { name: 'Back to today' })).toBeVisible();
+
+    const nextAfterFirstSwap = evolution.getByRole('link', { name: 'Next window' });
+    const movedBox = await nextAfterFirstSwap.boundingBox();
+    expect(movedBox.x).toBeCloseTo(initialBox.x, 0);
+    expect(movedBox.y).toBeCloseTo(initialBox.y, 0);
+
+    await nextAfterFirstSwap.click();
+    await expect(page).toHaveURL(/charts_offset=2/);
+    await evolution.getByRole('link', { name: 'Back to today' }).click();
+    await expect(page).toHaveURL(/charts_offset=0/);
+    await expect(evolution.getByRole('link', { name: 'Back to today' })).toHaveCount(0);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

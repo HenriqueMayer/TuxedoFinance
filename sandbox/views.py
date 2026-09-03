@@ -38,7 +38,9 @@ class SalarySandboxView(LoginRequiredMixin, FormView):
         use_clt = form.cleaned_data.get('use_clt', False)
         if use_clt:
             clt = calculate_clt(clt_scenario_from_form(form))
-            income = clt.monthly_normalized_net
+            # The monthly plan must be affordable from a normal paycheque;
+            # vacation and the 13th salary remain visible in the annual view.
+            income = clt.ordinary.net
             result = {'mode': 'clt', 'clt': clt}
         else:
             manual = calculate_manual(

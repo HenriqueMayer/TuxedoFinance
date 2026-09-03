@@ -135,7 +135,12 @@ class SandboxViewTests(TestCase):
         self.assertContains(response, 'Net 13th salary')
         self.assertContains(response, 'Vacation net with one-third')
         self.assertContains(response, 'FGTS')
+        self.assertContains(response, 'Net in an ordinary month')
         self.assertNotContains(response, 'Manual calculation')
+        self.assertEqual(
+            response.context['result']['budget'].income,
+            response.context['result']['clt'].ordinary.net,
+        )
 
     def test_manual_post_uses_entered_deductions_and_monthly_plan(self):
         self.client.force_login(self.user)

@@ -77,44 +77,46 @@ conventions this partial inherits.
                     {% translate "is projected from your fixed transactions and open installment plans." %}
                 </p>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="{% querystring charts_offset=previous_offset_param %}"
+            <div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                <div class="flex items-center gap-3">
+                    <a href="{% querystring charts_offset=previous_offset_param %}"
                    hx-get="{% querystring charts_offset=previous_offset_param %}"
                    hx-target="#reports-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
                     aria-label="{% translate 'Previous window' %}"
                    class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
-                    &larr;
-                </a>
-                <div>
-                    <p class="text-sm font-semibold text-forest dark:text-cream">
-                         {% with last_month=evolution.months|last %}
-                             {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ last_month.date|date:'M Y' }}
-                         {% endwith %}
-                    </p>
-                    <p class="text-xs text-forest/70 dark:text-cream/70">
-                        {% if evolution.is_anchored_today %}{% translate "Anchored on today" %}
-                        {% elif evolution.anchor_date < today %}{% translate "Past window" %}
-                        {% else %}{% translate "Future window" %}{% endif %}
-                    </p>
+                        &larr;
+                    </a>
+                    <div>
+                        <p class="text-sm font-semibold text-forest dark:text-cream">
+                             {% with last_month=evolution.months|last %}
+                                 {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ last_month.date|date:'M Y' }}
+                             {% endwith %}
+                        </p>
+                        <p class="text-xs text-forest/70 dark:text-cream/70">
+                            {% if evolution.is_anchored_today %}{% translate "Anchored on today" %}
+                            {% elif evolution.anchor_date < today %}{% translate "Past window" %}
+                            {% else %}{% translate "Future window" %}{% endif %}
+                        </p>
+                    </div>
+                    <a href="{% querystring charts_offset=next_offset_param %}"
+                       hx-get="{% querystring charts_offset=next_offset_param %}"
+                       hx-target="#reports-charts"
+                       hx-swap="outerHTML"
+                       hx-push-url="true"
+                        aria-label="{% translate 'Next window' %}"
+                       class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
+                        &rarr;
+                    </a>
                 </div>
-                <a href="{% querystring charts_offset=next_offset_param %}"
-                   hx-get="{% querystring charts_offset=next_offset_param %}"
-                   hx-target="#reports-charts"
-                   hx-swap="outerHTML"
-                   hx-push-url="true"
-                    aria-label="{% translate 'Next window' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
-                    &rarr;
-                </a>
                 {% if not evolution.is_anchored_today %}
                     <a href="{% querystring charts_offset=0 %}"
                        hx-get="{% querystring charts_offset=0 %}"
                        hx-target="#reports-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="self-start rounded text-xs font-medium uppercase tracking-widest text-caramel-ink transition hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel dark:text-caramel-light dark:hover:text-cream sm:self-end">
                          {% translate "Back to today" %}
                     </a>
                 {% endif %}
@@ -157,31 +159,42 @@ conventions this partial inherits.
                           stroke="url(#balance-line)" stroke-width="2.5"
                           stroke-linecap="round" stroke-linejoin="round" />
 
-                {% for point in balance_chart.points %}
-                    <g class="group outline-none" tabindex="0"
-                       aria-label="{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate 'projected' %}){% endif %}">
+                <g data-chart-layer="balance-marks">
+                    {% for point in balance_chart.points %}
                         <circle cx="{{ point.x }}" cy="{{ point.y }}" r="4.5"
-                                class="fill-white dark:fill-forest-deep {% if point.label.is_future %}stroke-caramel/60{% else %}stroke-caramel{% endif %} group-hover:stroke-caramel-light dark:group-hover:stroke-caramel-light transition-colors"
-                                stroke-width="2">
-                            <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate "projected" %}){% endif %}</title>
-                        </circle>
-                        <g transform="translate({{ point.tooltip_x }} {{ point.tooltip_y }})"
-                           class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                            <rect width="176" height="38" rx="19"
-                                  class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                            <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
-                                {{ point.label.date|date:'M Y' }}{% if point.label.is_future %} &middot; {% translate "projected" %}{% endif %}
-                            </text>
-                            <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
-                                {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}
-                            </text>
+                                class="fill-white dark:fill-forest-deep {% if point.label.is_future %}stroke-caramel/60{% else %}stroke-caramel{% endif %}"
+                                stroke-width="2" />
+                        <text x="{{ point.x }}" y="{{ balance_chart.label_y }}" text-anchor="middle"
+                              class="text-xs {% if point.label.is_current_month %}fill-forest/80 dark:fill-cream/80 font-semibold{% else %}fill-forest/70 dark:fill-cream/70{% endif %}">
+                            {{ point.label.date|date:'M' }}
+                        </text>
+                    {% endfor %}
+                </g>
+
+                <g data-chart-layer="balance-interactions">
+                    {% for point in balance_chart.points %}
+                        <g class="group outline-none" tabindex="0"
+                           aria-label="{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate 'projected' %}){% endif %}">
+                            <circle cx="{{ point.x }}" cy="{{ point.y }}" r="6" fill="transparent">
+                                <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate "projected" %}){% endif %}</title>
+                            </circle>
+                            <circle cx="{{ point.x }}" cy="{{ point.y }}" r="4.5"
+                                    class="pointer-events-none fill-white stroke-caramel-light opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:fill-forest-deep dark:stroke-caramel-light"
+                                    stroke-width="2" />
+                            <g transform="translate({{ point.tooltip_x }} {{ point.tooltip_y }})"
+                               class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                <rect width="176" height="38" rx="19"
+                                      class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                                <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
+                                    {{ point.label.date|date:'M Y' }}{% if point.label.is_future %} &middot; {% translate "projected" %}{% endif %}
+                                </text>
+                                <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
+                                    {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}
+                                </text>
+                            </g>
                         </g>
-                    </g>
-                    <text x="{{ point.x }}" y="{{ balance_chart.label_y }}" text-anchor="middle"
-                          class="text-xs {% if point.label.is_current_month %}fill-forest/80 dark:fill-cream/80 font-semibold{% else %}fill-forest/70 dark:fill-cream/70{% endif %}">
-                        {{ point.label.date|date:'M' }}
-                    </text>
-                {% endfor %}
+                    {% endfor %}
+                </g>
             </svg>
             {% endlocalize %}
         </div>
@@ -222,6 +235,7 @@ conventions this partial inherits.
                             <span class="h-2.5 w-2.5 rounded-sm
                                 {% if entry.tone == 'income' %}bg-income dark:bg-income-light
                                 {% elif entry.tone == 'expense' %}bg-expense
+                                {% elif entry.tone == 'withdrawal' %}bg-caramel dark:bg-caramel-light
                                 {% else %}bg-investment dark:bg-investment-light{% endif %}"></span>
                             {{ entry.name }}
                         </li>
@@ -243,7 +257,7 @@ conventions this partial inherits.
             {% localize off %}
             <svg viewBox="0 0 {{ cashflow_chart.width }} {{ cashflow_chart.height }}"
                  class="h-auto w-full min-w-[44rem]" role="img"
-                 aria-label="{% translate 'Grouped bar chart of income, expenses and investments per month' %}">
+                 aria-label="{% translate 'Grouped bar chart of income, expenses, investments, and withdrawals per month' %}">
                 {% for line in cashflow_chart.grid %}
                     <line x1="{{ cashflow_chart.plot_left }}" y1="{{ line.y }}"
                           x2="{{ cashflow_chart.plot_right }}" y2="{{ line.y }}"
@@ -254,37 +268,60 @@ conventions this partial inherits.
                     </text>
                 {% endfor %}
 
-                {% for group in cashflow_chart.groups %}
-                    {% for bar in group.bars %}
-                        {% if bar.value %}
-                            <g class="group outline-none" tabindex="0"
-                               aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
+                {# Paint every bar first so the tooltip layer always stays above it. #}
+                <g data-chart-layer="cashflow-marks">
+                    {% for group in cashflow_chart.groups %}
+                        {% for bar in group.bars %}
+                            {% if bar.value %}
                                 <rect x="{{ bar.x }}" y="{{ bar.y }}"
                                       width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                      class="{% if bar.tone == 'income' %}fill-income/80 dark:fill-income-light/80 group-hover:fill-income dark:group-hover:fill-income-light
-                                             {% elif bar.tone == 'expense' %}fill-expense/80 dark:fill-expense-light/80 group-hover:fill-expense dark:group-hover:fill-expense-light
-                                             {% else %}fill-investment/80 dark:fill-investment-light/80 group-hover:fill-investment dark:group-hover:fill-investment-light{% endif %} transition-colors">
-                                    <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
-                                </rect>
-                                <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
-                                   class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                                    <rect width="176" height="38" rx="19"
-                                          class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                    <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
-                                        {{ group.label.date|date:'M Y' }} &middot; {{ bar.name }}
-                                    </text>
-                                    <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
-                                        {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}
-                                    </text>
-                                </g>
-                            </g>
-                        {% endif %}
+                                      class="{% if bar.tone == 'income' %}fill-income/80 dark:fill-income-light/80
+                                             {% elif bar.tone == 'expense' %}fill-expense/80 dark:fill-expense-light/80
+                                             {% elif bar.tone == 'withdrawal' %}fill-caramel/80 dark:fill-caramel-light/80
+                                             {% else %}fill-investment/80 dark:fill-investment-light/80{% endif %}" />
+                            {% endif %}
+                        {% endfor %}
+                        <text x="{{ group.center }}" y="{{ cashflow_chart.label_y }}" text-anchor="middle"
+                              class="text-xs {% if group.label.is_current_month %}fill-forest/80 dark:fill-cream/80 font-semibold{% else %}fill-forest/70 dark:fill-cream/70{% endif %}">
+                            {{ group.label.date|date:'M' }}
+                        </text>
                     {% endfor %}
-                    <text x="{{ group.center }}" y="{{ cashflow_chart.label_y }}" text-anchor="middle"
-                          class="text-xs {% if group.label.is_current_month %}fill-forest/80 dark:fill-cream/80 font-semibold{% else %}fill-forest/70 dark:fill-cream/70{% endif %}">
-                        {{ group.label.date|date:'M' }}
-                    </text>
-                {% endfor %}
+                </g>
+
+                <g data-chart-layer="cashflow-interactions">
+                    {% for group in cashflow_chart.groups %}
+                        {% for bar in group.bars %}
+                            {% if bar.value %}
+                                <g class="group outline-none" tabindex="0"
+                                   aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
+                                    <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                                          width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                          fill="transparent">
+                                        <title>{{ group.label.date|date:'F Y' }} &middot; {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</title>
+                                    </rect>
+                                    <rect x="{{ bar.x }}" y="{{ bar.y }}"
+                                          width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                          class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100
+                                                 {% if bar.tone == 'income' %}fill-income dark:fill-income-light
+                                                 {% elif bar.tone == 'expense' %}fill-expense dark:fill-expense-light
+                                                 {% elif bar.tone == 'withdrawal' %}fill-caramel dark:fill-caramel-light
+                                                 {% else %}fill-investment dark:fill-investment-light{% endif %}" />
+                                    <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
+                                       class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                        <rect width="176" height="38" rx="19"
+                                              class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                                        <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
+                                            {{ group.label.date|date:'M Y' }} &middot; {{ bar.name }}
+                                        </text>
+                                        <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
+                                            {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}
+                                        </text>
+                                    </g>
+                                </g>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </g>
             </svg>
             {% endlocalize %}
         </div>
@@ -345,26 +382,36 @@ conventions this partial inherits.
                           class="fill-forest/80 dark:fill-cream/90 text-lg font-semibold tabular-nums">
                         {{ CURRENCY_SYMBOL }} {{ recurrence_chart.total|floatformat:2 }}
                     </text>
-                    {% for segment in recurrence_chart.segments %}
-                        <g class="group outline-none" tabindex="0"
-                           aria-label="{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:'-1' }}%)">
+                    <g data-chart-layer="recurrence-marks">
+                        {% for segment in recurrence_chart.segments %}
                             <path d="{{ segment.d }}"
                                   class="{% if segment.tone == 'installment' %}fill-installment dark:fill-installment-light
                                          {% elif segment.tone == 'fixed' %}fill-fixed dark:fill-fixed-light
-                                         {% else %}fill-oneoff dark:fill-oneoff-light{% endif %} transition-opacity group-hover:opacity-80">
-                                <title>{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:"-1" }}%)</title>
-                            </path>
-                            <g transform="translate({{ recurrence_chart.tooltip_x }} {{ recurrence_chart.tooltip_y }})"
-                               class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                                <rect width="{{ recurrence_chart.tooltip_width }}" height="{{ recurrence_chart.tooltip_height }}" rx="19"
-                                      class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                <text x="12" y="19" class="fill-cream dark:fill-forest text-[12px]">{{ segment.name }} &middot; {{ segment.share|floatformat:"-1" }}%</text>
-                                <text x="12" y="39" class="fill-white dark:fill-forest text-[15px] font-semibold tabular-nums">
-                                    {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }}
-                                </text>
+                                         {% else %}fill-oneoff dark:fill-oneoff-light{% endif %}" />
+                        {% endfor %}
+                    </g>
+
+                    <g data-chart-layer="recurrence-interactions">
+                        {% for segment in recurrence_chart.segments %}
+                            <g class="group outline-none" tabindex="0"
+                               aria-label="{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:'-1' }}%)">
+                                <path d="{{ segment.d }}" fill="transparent">
+                                    <title>{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:"-1" }}%)</title>
+                                </path>
+                                <path d="{{ segment.d }}"
+                                      class="pointer-events-none fill-cream opacity-0 transition-opacity group-hover:opacity-20 group-focus-visible:opacity-20 dark:fill-forest" />
+                                <g transform="translate({{ recurrence_chart.tooltip_x }} {{ recurrence_chart.tooltip_y }})"
+                                   class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                    <rect width="{{ recurrence_chart.tooltip_width }}" height="{{ recurrence_chart.tooltip_height }}" rx="19"
+                                          class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                                    <text x="12" y="19" class="fill-cream dark:fill-forest text-[12px]">{{ segment.name }} &middot; {{ segment.share|floatformat:"-1" }}%</text>
+                                    <text x="12" y="39" class="fill-white dark:fill-forest text-[15px] font-semibold tabular-nums">
+                                        {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }}
+                                    </text>
+                                </g>
                             </g>
-                        </g>
-                    {% endfor %}
+                        {% endfor %}
+                    </g>
                 </svg>
                 {% endlocalize %}
                 <ul class="w-full space-y-3 lg:w-auto lg:flex-1">
@@ -454,57 +501,72 @@ conventions this partial inherits.
                             </text>
                         {% endfor %}
 
-                        {% for group in instrument_chart.groups %}
-                            {% for bar in group.bars %}
-                                {% if bar.value %}
-                                    {% if bar.tone == 'expense' %}
-                                        <a href="{% querystring expense_instrument=group.label.key income_account=None %}#instrument-categories-expense"
-                                           hx-get="{% querystring expense_instrument=group.label.key income_account=None %}"
-                                           hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
-                                           data-scroll-target="instrument-categories-expense" class="group cursor-pointer outline-none">
-                                            <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                                  class="fill-expense/80 dark:fill-expense-light/80 hover:fill-expense dark:hover:fill-expense-light transition-colors">
-                                                <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Expenses for {{ label }}: {{ currency }} {{ total }}. Click to see categories.{% endblocktranslate %}</title>
-                                            </rect>
-                                            <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
-                                               class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                                                <rect width="176" height="38" rx="19"
-                                                      class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                                <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">{{ group.label.short_label }} &middot; {% translate "Expenses" %}</text>
-                                                <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
-                                            </g>
-                                        </a>
-                                    {% else %}
-                                        <a href="{% querystring income_account=group.label.key expense_instrument=None %}#account-categories-income"
-                                           hx-get="{% querystring income_account=group.label.key expense_instrument=None %}"
-                                           hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
-                                           data-scroll-target="account-categories-income" class="group cursor-pointer outline-none">
-                                            <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
-                                                  class="fill-income/80 dark:fill-income-light/80 hover:fill-income dark:hover:fill-income-light transition-colors">
-                                                <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Income for {{ label }}: {{ currency }} {{ total }}. Click to see categories.{% endblocktranslate %}</title>
-                                            </rect>
-                                            <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
-                                               class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                                                <rect width="176" height="38" rx="19"
-                                                      class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                                <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">{{ group.label.short_label }} &middot; {% translate "Income" %}</text>
-                                                <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
-                                            </g>
-                                        </a>
+                        <g data-chart-layer="instrument-marks">
+                            {% for group in instrument_chart.groups %}
+                                {% for bar in group.bars %}
+                                    {% if bar.value %}
+                                        <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                              class="{% if bar.tone == 'expense' %}fill-expense/80 dark:fill-expense-light/80{% else %}fill-income/80 dark:fill-income-light/80{% endif %}" />
                                     {% endif %}
-                                {% endif %}
+                                {% endfor %}
+                                <text x="{{ group.center }}" y="{{ instrument_chart.label_y|add:'-4' }}" text-anchor="middle"
+                                      class="fill-forest/70 dark:fill-cream/70 text-xs font-medium pointer-events-none">
+                                    {{ group.label.short_label|truncatechars:instrument_chart.label_chars }}
+                                </text>
                             {% endfor %}
-                            <text x="{{ group.center }}" y="{{ instrument_chart.label_y|add:'-4' }}" text-anchor="middle"
-                                  class="fill-forest/70 dark:fill-cream/70 text-xs font-medium pointer-events-none">
-                                {{ group.label.short_label|truncatechars:instrument_chart.label_chars }}
-                            </text>
-                        {% endfor %}
-                        {% for bank in instrument_chart.bank_groups %}
-                            <text x="{{ bank.center }}" y="{{ instrument_chart.label_y|add:'10' }}" text-anchor="middle"
-                                  class="fill-forest/70 dark:fill-cream/70 text-xs pointer-events-none">
-                                {{ bank.label }}
-                            </text>
-                        {% endfor %}
+                            {% for bank in instrument_chart.bank_groups %}
+                                <text x="{{ bank.center }}" y="{{ instrument_chart.label_y|add:'10' }}" text-anchor="middle"
+                                      class="fill-forest/70 dark:fill-cream/70 text-xs pointer-events-none">
+                                    {{ bank.label }}
+                                </text>
+                            {% endfor %}
+                        </g>
+
+                        <g data-chart-layer="instrument-interactions">
+                            {% for group in instrument_chart.groups %}
+                                {% for bar in group.bars %}
+                                    {% if bar.value %}
+                                        {% if bar.tone == 'expense' %}
+                                            <a href="{% querystring expense_instrument=group.label.key income_account=None %}#instrument-categories-expense"
+                                               hx-get="{% querystring expense_instrument=group.label.key income_account=None %}"
+                                               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
+                                               data-scroll-target="instrument-categories-expense" class="group cursor-pointer outline-none">
+                                                <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2" fill="transparent">
+                                                    <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Expenses for {{ label }}: {{ currency }} {{ total }}. Click to see categories.{% endblocktranslate %}</title>
+                                                </rect>
+                                                <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                                      class="pointer-events-none fill-expense opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:fill-expense-light" />
+                                                <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
+                                                   class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                                    <rect width="176" height="38" rx="19"
+                                                          class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                                                    <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">{{ group.label.short_label }} &middot; {% translate "Expenses" %}</text>
+                                                    <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
+                                                </g>
+                                            </a>
+                                        {% else %}
+                                            <a href="{% querystring income_account=group.label.key expense_instrument=None %}#account-categories-income"
+                                               hx-get="{% querystring income_account=group.label.key expense_instrument=None %}"
+                                               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
+                                               data-scroll-target="account-categories-income" class="group cursor-pointer outline-none">
+                                                <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2" fill="transparent">
+                                                    <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Income for {{ label }}: {{ currency }} {{ total }}. Click to see categories.{% endblocktranslate %}</title>
+                                                </rect>
+                                                <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
+                                                      class="pointer-events-none fill-income opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:fill-income-light" />
+                                                <g transform="translate({{ bar.tooltip_x }} {{ bar.tooltip_y }})"
+                                                   class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                                    <rect width="176" height="38" rx="19"
+                                                          class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
+                                                    <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">{{ group.label.short_label }} &middot; {% translate "Income" %}</text>
+                                                    <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
+                                                </g>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </g>
                     </svg>
                     {% endlocalize %}
                 </div>

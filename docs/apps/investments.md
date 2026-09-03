@@ -60,8 +60,15 @@ Yield is internal: it changes the portfolio position/value and appears in
 investment performance, but does not create bank income or available cash. Cash
 exists only after an explicit withdrawal to a destination account.
 
-> **Coming soon:** automatic monthly and annual yield calculations. Current
-> yield operations are entered manually.
+For monetary assets, such as savings pots, a yield can be entered either as the
+yield amount or as the new total balance. When the total balance is entered, the
+application calculates and stores only the difference from the position that
+existed immediately before the operation. The form previews the previous
+balance, calculated yield and resulting balance before saving. Operations on the
+same date use their registration order; no bank movement is created.
+
+> **Coming soon:** automatic monthly and annual yield calculations. Yield is
+> still entered manually; the total-balance option only derives its value.
 
 ## Valuation
 

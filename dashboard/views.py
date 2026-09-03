@@ -154,9 +154,30 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
                 'cashflow_chart': build_bar_chart(
                     months,
                     [
-                        {'name': _('Income'), 'tone': 'income', 'values': [float(row['income']) for row in months]},
-                        {'name': _('Expenses'), 'tone': 'expense', 'values': [float(row['expenses']) for row in months]},
-                        {'name': _('Investments'), 'tone': 'investment', 'values': [float(row['investments']) for row in months]},
+                        {
+                            'name': _('Income'),
+                            'tone': 'income',
+                            'stack': 'inflow',
+                            'values': [float(row['income']) for row in months],
+                        },
+                        {
+                            'name': _('Withdrawals'),
+                            'tone': 'withdrawal',
+                            'stack': 'inflow',
+                            'values': [float(row['withdrawals']) for row in months],
+                        },
+                        {
+                            'name': _('Expenses'),
+                            'tone': 'expense',
+                            'stack': 'outflow',
+                            'values': [float(row['expenses']) for row in months],
+                        },
+                        {
+                            'name': _('Investments'),
+                            'tone': 'investment',
+                            'stack': 'outflow',
+                            'values': [float(row['investments']) for row in months],
+                        },
                     ],
                 ),
                 'month_choices': _month_choices(),

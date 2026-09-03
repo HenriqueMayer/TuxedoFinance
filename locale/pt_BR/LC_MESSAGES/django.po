@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-02 22:08+0000\n"
+"POT-Creation-Date: 2026-09-02 22:59+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -651,6 +651,27 @@ msgstr "Despesas"
 msgid "Investments"
 msgstr "Investimentos"
 
+msgid "Use the final balance"
+msgstr "Usar o saldo final"
+
+msgid "Enter the yield amount"
+msgstr "Informe o valor do rendimento."
+
+msgid "How to enter the yield"
+msgstr "Como informar o rendimento"
+
+msgid ""
+"Choose the final balance to calculate the yield, or enter the yield directly."
+msgstr ""
+"Escolha o saldo final para calcular o rendimento ou informe o rendimento "
+"diretamente."
+
+msgid "New investment balance"
+msgstr "Novo saldo do investimento"
+
+msgid "Total balance after the yield is credited."
+msgstr "Saldo total após o crédito do rendimento."
+
 msgid "Product destination"
 msgstr "Produto de destino"
 
@@ -961,6 +982,27 @@ msgstr "A operação de investimento deve ser salva antes da sincronização."
 
 msgid "Withdrawal exceeds the available position on this date."
 msgstr "O resgate excede a posição disponível nesta data."
+
+msgid "Enter the new investment balance."
+msgstr "Informe o novo saldo do investimento."
+
+msgid "Enter the yield amount."
+msgstr "Informe o valor do rendimento."
+
+msgid "The new balance must be greater than the previous balance."
+msgstr "O novo saldo deve ser maior que o saldo anterior."
+
+msgid ""
+"The new balance is lower than the previous balance. Record a withdrawal "
+"instead."
+msgstr ""
+"O novo saldo é menor que o saldo anterior. Registre um resgate em vez disso."
+
+msgid "Enter a positive yield amount."
+msgstr "Informe um valor de rendimento positivo."
+
+msgid "Choose how to enter the yield."
+msgstr "Escolha como informar o rendimento."
 
 msgid "Deposits"
 msgstr "Aportes"
@@ -1543,6 +1585,10 @@ msgid "Grouped bar chart of income, expenses and investments per month"
 msgstr ""
 "Gráfico de barras agrupadas de receitas, despesas e investimentos por mês"
 
+msgid "Grouped bar chart of income, expenses, investments, and withdrawals per month"
+msgstr ""
+"Gráfico de barras agrupadas de receitas, despesas, investimentos e resgates por mês"
+
 msgid "How much is on installments"
 msgstr "Quanto está parcelado"
 
@@ -1910,6 +1956,22 @@ msgstr ""
 "Gráfico de barras agrupadas de aportes, rendimentos e resgates por mês na "
 "moeda base"
 
+msgid "Previous balance"
+msgstr "Saldo anterior"
+
+msgid "Calculated yield"
+msgstr "Rendimento calculado"
+
+msgid "New balance"
+msgstr "Novo saldo"
+
+msgid ""
+"Choose a product, monetary asset, date, and value to preview the calculated "
+"yield."
+msgstr ""
+"Escolha um produto, ativo monetário, data e valor para visualizar o "
+"rendimento calculado."
+
 msgid "Delete Investment"
 msgstr "Excluir investimento"
 
@@ -1935,6 +1997,9 @@ msgstr "Origem dos recursos ou destino"
 
 msgid "Advanced options"
 msgstr "Opções avançadas"
+
+msgid "Money asset: enter its new balance or the yield amount in"
+msgstr "Ativo monetário: informe o novo saldo ou o valor do rendimento em"
 
 msgid "Money asset: enter the investment amount in"
 msgstr "Ativo monetário: informe o valor do investimento em"
@@ -2809,6 +2874,9 @@ msgstr "Transação \"%(title)s\" atualizada."
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
 
+#~ msgid "Yield amount"
+#~ msgstr "Valor do rendimento"
+
 #~ msgid "Income type"
 #~ msgstr "Tipo de renda"
 
@@ -3018,9 +3086,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "Choose CLT or PJ to continue."
 #~ msgstr "Escolha CLT ou PJ para continuar."
-
-#~ msgid "Enter the monthly invoice."
-#~ msgstr "Informe o faturamento mensal."
 
 #~ msgid "Enter the monthly pró-labore."
 #~ msgstr "Informe o pró-labore mensal."

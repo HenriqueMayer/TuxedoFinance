@@ -314,6 +314,13 @@ Operation kinds are `DEPOSIT`, `WITHDRAWAL`, and `YIELD`:
 - `YIELD` is internal to the investment position. It changes quantity/value but
   does not create bank income or an account movement.
 
+For monetary assets, the operation form can receive either the positive yield
+amount or the balance after the credit. In the latter case, the application
+derives and persists the positive `amount` as `final balance - prior position`.
+The final balance is not stored separately. The prior position includes the
+opening balance only for its holding product and then applies earlier
+operations; operations dated equally use registration order.
+
 The source/destination account currency may differ from the asset currency; the
 operation retains native values and a historical FX snapshot when conversion is
 required. Deposit and withdrawal cash legs are never manually duplicated as
