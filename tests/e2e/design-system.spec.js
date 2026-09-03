@@ -174,6 +174,53 @@ test('monetary yield previews a final balance and stores only the calculated yie
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('monetary yield keeps server errors visible and clears stale inactive values', async ({ page }, testInfo) => {
+    await createMonetaryInvestment(page, testInfo);
+    await page.goto('/investments/create/');
+
+    const product = page.getByLabel('Product destination');
+    const asset = page.getByRole('combobox', { name: /^Asset/ });
+    const kind = page.getByLabel('Type');
+    const amountMode = page.getByRole('radio', { name: 'Enter the yield amount' });
+    const endingMode = page.getByRole('radio', { name: 'Use the final balance' });
+    const amount = page.getByLabel('Investment amount');
+    const endingBalance = page.getByLabel('New investment balance');
+
+    await product.selectOption({ label: 'Investment bank - Savings' });
+    await asset.selectOption({ label: 'Savings pot (POT)' });
+    await kind.selectOption('YIELD');
+    await page.getByLabel('Date').fill('2026-09-02');
+    await amountMode.check();
+    await amount.fill('200');
+
+    // Simulate a stale inactive value posted by an older page or direct client.
+    await page.evaluate(() => { document.querySelector('#id_ending_balance').value = '0'; });
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    const endingError = page.locator('#id_ending_balance-error-1');
+    await expect(page).toHaveURL(/\/investments\/create\/$/);
+    await expect(endingError).toBeVisible();
+    await expect(page.locator('#ending-balance-field')).toHaveAttribute('data-has-errors', 'true');
+
+    await endingMode.check();
+    await amountMode.check();
+    await expect(endingBalance).toHaveValue('');
+    await expect(endingBalance).toBeHidden();
+    await amount.fill('200');
+
+    await endingMode.check();
+    await endingBalance.fill('0');
+    await kind.selectOption('DEPOSIT');
+    await expect(endingBalance).toHaveValue('');
+    await expect(endingBalance).toBeHidden();
+
+    await kind.selectOption('YIELD');
+    await endingBalance.fill('0');
+    await asset.selectOption('');
+    await expect(endingBalance).toHaveValue('');
+    await expect(endingBalance).toBeHidden();
+});
+
 test('salary sandbox supports a complete manual calculation without comparisons', async ({ page }, testInfo) => {
     await createAccount(page, testInfo);
     await page.goto('/sandbox/');

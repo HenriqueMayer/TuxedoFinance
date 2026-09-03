@@ -1,7 +1,7 @@
 # Coverage baseline
 
 The stabilized suite is measured in CI with branch coverage. On 2026-09-03 the
-complete Django suite passed with 186 tests and 89% total coverage. CI publishes
+complete Django suite passed with 187 tests and 89% total coverage. CI publishes
 `coverage.xml` and an HTML report as build artifacts for every push and pull
 request.
 
