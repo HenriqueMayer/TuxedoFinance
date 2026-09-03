@@ -2,7 +2,7 @@
 
 The authenticated `/sandbox/` page is a small, non-persistent salary and
 monthly-budget estimator. It does not read or write transactions, accounts,
-investments, sessions, or user preferences.
+investments, user preferences, or scenario data in the authenticated session.
 
 ## Calculation modes
 
@@ -17,8 +17,12 @@ The user enters one gross monthly salary and chooses between two modes:
   repeats the resulting month twelve times and does not infer benefits, extra
   payments, or tax rules.
 
-The automatic catalog contains only the official sources and values required
-for CLT calculations. Runtime calculation never searches the internet.
+The automatic catalog was reviewed on 2026-09-02 against the official
+[INSS contribution table](https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal),
+[2026 Receita Federal tables](https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026),
+and [FGTS rules](https://www.fgts.gov.br/Paginas/sobre-o-fgts/regras.aspx).
+The review date and source URLs are versioned with the values in
+`sandbox/tax_rules/y2026.py`. Runtime calculation never searches the internet.
 
 ## Monthly plan
 

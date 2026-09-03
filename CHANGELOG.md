@@ -7,10 +7,16 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-03
+
 ### Added
 
 - Bilingual static interface tour for GitHub Pages, with reproducible synthetic
   screenshots, accessible image expansion and an isolated preview test suite.
+- Authenticated, non-persistent Salary Sandbox with automatic 2026 CLT rules,
+  manual deductions and monthly-budget planning.
+- Monetary investment-yield entry by new total balance, including a
+  non-persistent preview and save-time server recalculation.
 
 ### Changed
 
@@ -20,6 +26,11 @@ and project versions follow [Semantic Versioning](https://semver.org/).
   the posting flows for transactions, transfers, investments and rewards.
 - Established progressive disclosure as the project-wide rule for conditional
   forms, filters, pickers, menus and category-driven flows.
+- Improved Reports and Investments chart navigation, hover and keyboard
+  interactions, and low-value axis labels.
+- Renamed the runtime data-directory setting from `CASHFLOW_DATA_DIR` to
+  `TUXEDO_DATA_DIR`; existing installations that customize the database
+  location must update their environment configuration.
 
 ### Fixed
 
@@ -63,5 +74,6 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.1.0

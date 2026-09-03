@@ -24,7 +24,7 @@ else
     local_db_fingerprint='missing'
 fi
 
-export CASHFLOW_DATA_DIR="$data_dir"
+export TUXEDO_DATA_DIR="$data_dir"
 export PREVIEW_CAPTURE=1
 export SECRET_KEY
 SECRET_KEY=$(uv run python -c 'import secrets; print(secrets.token_urlsafe(48))')

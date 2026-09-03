@@ -1,6 +1,6 @@
 [project]
 name = "tuxedo-finance"
-version = "0.1.0"
+version = "0.2.0"
 description = "Tuxedo Finance — a self-hosted, server-rendered personal finance tracker built with Django and progressive enhancement."
 readme = "README.md"
 requires-python = ">=3.12"

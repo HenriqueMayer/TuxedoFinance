@@ -20,7 +20,7 @@ by `scripts/check_version.py`.
 `package.json` is a private manifest for Tailwind and Playwright development
 tools. It does not carry a second application version.
 
-Release tags use the same version prefixed with `v`, for example `v0.1.0`.
+Release tags use the same version prefixed with `v`, for example `v0.2.0`.
 
 ## Preparing a release
 
@@ -47,9 +47,10 @@ Release tags use the same version prefixed with `v`, for example `v0.1.0`.
 
    ```bash
    git switch main
-   git pull --ff-only
-   git tag -a v0.1.0 -m "Tuxedo Finance v0.1.0"
-   git push origin v0.1.0
+   git pull --ff-only origin main
+   version=$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+   git tag -a "v$version" -m "Tuxedo Finance v$version"
+   git push origin "v$version"
    ```
 
 8. Create the GitHub release from that tag using the matching changelog section.

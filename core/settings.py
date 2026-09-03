@@ -104,7 +104,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': Path(os.environ.get('CASHFLOW_DATA_DIR', BASE_DIR)) / 'db.sqlite3',
+        'NAME': Path(os.environ.get('TUXEDO_DATA_DIR', BASE_DIR)) / 'db.sqlite3',
         'OPTIONS': {
             'init_command': (
                 'PRAGMA journal_mode=WAL;'

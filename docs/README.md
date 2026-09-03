@@ -31,6 +31,8 @@ Technical and product documentation for the current Tuxedo Finance release.
   investments and net-worth read models.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
   banks/accounts for provider and cash endpoints.
+- [apps/sandbox.md](apps/sandbox.md) — authenticated, non-persistent salary and
+  monthly-budget planning.
 
 ## Repository layout
 
@@ -54,7 +56,7 @@ and preview use the same locked frontend toolchain.
 
 ## Documentation status
 
-These documents describe the current `0.1.x` release. Its schema has no
+These documents describe the current `0.2.x` release. Its schema has no
 automatic upgrade path from pre-release legacy databases; those installations
 must start with a newly migrated SQLite database and recreate or manually import
 their records.

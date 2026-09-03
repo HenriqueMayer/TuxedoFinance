@@ -1,8 +1,9 @@
-# PRD — Tuxedo Finance Banking and Multicurrency Update
+# PRD — Tuxedo Finance
 
-**Status:** Approved
+**Status:** Approved current baseline
 
-**Release type:** Breaking, clean migration reset
+**Current release:** 0.2.x
+**Legacy migration policy:** Breaking, clean migration reset
 **Product:** Django personal finance tracker
 
 ## 1. Overview
@@ -12,7 +13,9 @@ release adds banks, currency-specific accounts, an authoritative movement
 ledger, PIX, debit and credit cards, card invoices and loyalty points.
 Per-user multicurrency preferences and retained historical conversion evidence
 are implemented. Investments remain separate while sharing banks and bank
-accounts for providers and cash settlement.
+accounts for providers and cash settlement. An authenticated, non-persistent
+salary sandbox estimates automatic CLT or manually adjusted take-home pay and
+turns it into an isolated monthly spending plan.
 
 The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
@@ -28,6 +31,7 @@ HTMX progressive enhancement.
 | G4 | Multicurrency reporting | Preserve currency-specific account data with per-user reporting and historical FX evidence. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
 | G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
+| G7 | Support isolated planning | Salary and monthly-budget scenarios are calculated without reading or writing financial records. |
 
 ## 3. Scope
 
@@ -44,7 +48,11 @@ HTMX progressive enhancement.
 - Currency-specific bank accounts and manual exchange rates.
 - Investment products, classified assets, quantity/unit-price operations and
   mandatory bank cash endpoints.
+- Monetary investment yields entered directly or derived from a new total
+  balance, with a non-persistent preview before saving.
 - Dashboard/read models updated for cash, invoices, investments and net worth.
+- Authenticated salary planning with automatic 2026 CLT rules, manual
+  deductions, and a non-persistent monthly budget.
 
 ### Out of scope
 
@@ -89,6 +97,7 @@ HTMX progressive enhancement.
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
 | FR28 | Local database ownership | The repository does not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. |
+| FR29 | Salary sandbox | Authenticated users can estimate automatic CLT or manually adjusted take-home pay and allocate a monthly plan without reading or persisting application financial data or scenario inputs. |
 
 ## 5. Domain Rules
 
@@ -167,6 +176,17 @@ reserved for explicitly labeled current-value simulations elsewhere.
 - Public navigation reflects the same setting, but authorization is enforced in
   the server-side signup view rather than by link visibility alone.
 
+### 5.7 Salary sandbox
+
+- The sandbox is authenticated but isolated from transactions, banking,
+  investments, user preferences, and other persisted financial records.
+- Automatic mode uses a versioned, source-attributed 2026 CLT rule set; manual
+  mode applies only the deductions supplied in the current request.
+- Both modes can feed a monthly plan with fixed costs, reserve and investment
+  targets, and up to 20 additional expense rows.
+- Scenario inputs are submitted by POST and are not stored in models, URLs, or
+  the authenticated session.
+
 ## 6. Data Structure
 
 The canonical entity-relationship diagram and posting-flow diagram are in
@@ -185,6 +205,7 @@ banking/       # banks, accounts, ledger, PIX, cards, invoices, loyalty, FX
 transactions/  # economic events and recurrence
 dashboard/     # read models and reports
 investments/   # products, assets, position operations and valuation
+sandbox/       # non-persistent salary and monthly-budget planning
 ```
 
 Navigation and financial relationships use the current banking concepts.
@@ -197,6 +218,7 @@ flowchart TD
     Dashboard --> Banking
     Dashboard --> Transactions
     Dashboard --> Investments
+    Dashboard --> SalarySandbox[Salary sandbox]
     Banking --> Bank
     Bank --> Account
     Account --> PIX
@@ -293,6 +315,8 @@ currency/valuation date and whether it is actual or projected.
 - [x] Fresh migrations install successfully on an empty SQLite database.
 - [x] The root SQLite database is ignored by Git and a clean clone becomes usable after migrations.
 - [x] Legacy database use is blocked/documented; no partial in-place migration is implied.
+- [x] Monetary yields can derive the stored yield from a new total balance without creating a bank movement.
+- [x] The authenticated salary sandbox supports automatic CLT and manual modes without persisting scenario data.
 
 ## 13. Delivery Plan
 
