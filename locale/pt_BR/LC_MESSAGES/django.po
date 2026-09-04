@@ -1739,6 +1739,183 @@ msgstr ""
 msgid "Dashboard"
 msgstr "Dashboard"
 
+msgid "Monthly performance"
+msgstr "Desempenho mensal"
+
+#, python-format
+msgid "A clear check of this month, %(username)s."
+msgstr "Um panorama claro deste mês, %(username)s."
+
+#, python-format
+msgid "Progress through %(cutoff)s"
+msgstr "Progresso até %(cutoff)s"
+
+msgid "Planned month"
+msgstr "Mês planejado"
+
+msgid "Completed month"
+msgstr "Mês concluído"
+
+msgid "Cash position"
+msgstr "Posição de caixa"
+
+msgid "Monthly balance summary"
+msgstr "Resumo mensal dos saldos"
+
+msgid "What is available now and where this month is heading."
+msgstr "O que está disponível agora e para onde este mês está caminhando."
+
+msgid "Projected opening, change, and closing for the planned month."
+msgstr "Abertura, variação e fechamento projetados para o mês planejado."
+
+msgid "Opening, change, and closing for the completed month."
+msgstr "Abertura, variação e fechamento do mês concluído."
+
+msgid "Available cash today"
+msgstr "Caixa disponível hoje"
+
+msgid "Cash change through today"
+msgstr "Variação de caixa até hoje"
+
+msgid "Projected month-end cash"
+msgstr "Caixa projetado no fim do mês"
+
+msgid "Projected month-end balance"
+msgstr "Saldo projetado no fim do mês"
+
+msgid "Projected opening cash"
+msgstr "Caixa inicial projetado"
+
+msgid "Projected opening balance"
+msgstr "Saldo inicial projetado"
+
+msgid "Planned cash change"
+msgstr "Variação de caixa planejada"
+
+msgid "Planned balance change"
+msgstr "Variação de saldo planejada"
+
+msgid "Projected closing cash"
+msgstr "Caixa final projetado"
+
+msgid "Projected closing balance"
+msgstr "Saldo final projetado"
+
+msgid "Opening cash"
+msgstr "Caixa inicial"
+
+msgid "Cash change"
+msgstr "Variação de caixa"
+
+msgid "Balance change"
+msgstr "Variação do saldo"
+
+msgid "Net activity"
+msgstr "Atividade líquida"
+
+msgid "Closing cash"
+msgstr "Caixa final"
+
+msgid "Closing balance"
+msgstr "Saldo final"
+
+msgid "Month performance"
+msgstr "Desempenho do mês"
+
+msgid "Recorded or modeled through today, with the rest of the month shown as planned."
+msgstr "Valores registrados ou modelados até hoje, com o restante do mês exibido como planejado."
+
+msgid "Activity planned for the selected month."
+msgstr "Atividade planejada para o mês selecionado."
+
+msgid "Complete activity assigned to the selected month."
+msgstr "Atividade completa atribuída ao mês selecionado."
+
+msgid "Income through today"
+msgstr "Receitas até hoje"
+
+msgid "Expenses through today"
+msgstr "Despesas até hoje"
+
+msgid "Invested through today"
+msgstr "Investido até hoje"
+
+msgid "Withdrawn through today"
+msgstr "Resgatado até hoje"
+
+msgid "remaining planned"
+msgstr "planejado para o restante"
+
+msgid "Planned income"
+msgstr "Receitas planejadas"
+
+msgid "Planned expenses"
+msgstr "Despesas planejadas"
+
+msgid "Planned investments"
+msgstr "Investimentos planejados"
+
+msgid "Planned withdrawals"
+msgstr "Resgates planejados"
+
+msgid "Income and expenses describe economic activity; available cash changes when account movements and card invoices are settled. Investment deposits and withdrawals stay separate."
+msgstr "Receitas e despesas descrevem a atividade econômica; o caixa disponível muda quando movimentações de conta e faturas de cartão são liquidadas. Aportes e resgates de investimentos permanecem separados."
+
+msgid "Expenses by category"
+msgstr "Despesas por categoria"
+
+#, python-format
+msgid "Categorized activity through %(cutoff)s."
+msgstr "Atividade categorizada até %(cutoff)s."
+
+msgid "Categorized activity planned for this month."
+msgstr "Atividade categorizada planejada para este mês."
+
+msgid "Categorized activity for the completed month."
+msgstr "Atividade categorizada do mês concluído."
+
+msgid "Explore in Reports"
+msgstr "Explorar nos relatórios"
+
+msgid "No categorized expenses are planned for this month."
+msgstr "Nenhuma despesa categorizada está planejada para este mês."
+
+msgid "No categorized expenses through today."
+msgstr "Nenhuma despesa categorizada até hoje."
+
+msgid "No categorized expenses were recorded for this month."
+msgstr "Nenhuma despesa categorizada foi registrada neste mês."
+
+msgid "Live native balances, independent of the selected month."
+msgstr "Saldos nativos atuais, independentemente do mês selecionado."
+
+msgid "View Banking"
+msgstr "Ver bancos"
+
+#, python-format
+msgid "%(hidden)s more account"
+msgid_plural "%(hidden)s more accounts"
+msgstr[0] "%(hidden)s conta adicional"
+msgstr[1] "%(hidden)s contas adicionais"
+
+msgid "Upcoming invoices"
+msgstr "Próximas faturas"
+
+msgid "Scheduled card cash settlements, independent of the selected month."
+msgstr "Liquidações agendadas de cartão, independentemente do mês selecionado."
+
+#, python-format
+msgid "%(hidden)s more invoice"
+msgid_plural "%(hidden)s more invoices"
+msgstr[0] "%(hidden)s fatura adicional"
+msgstr[1] "%(hidden)s faturas adicionais"
+
+msgid "Six-month outlook"
+msgstr "Perspectiva de seis meses"
+
+msgid "Monthly activity and projected closing balances from the selected month."
+msgstr "Atividade mensal e saldos finais projetados a partir do mês selecionado."
+
 #, python-format
 msgid "Your cash flow at a glance, %(username)s."
 msgstr "Seu fluxo de caixa em um só olhar, %(username)s."

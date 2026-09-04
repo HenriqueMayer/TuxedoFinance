@@ -163,7 +163,7 @@ class LanguageSelectionTests(TestCase):
     def test_precompiled_tailwind_is_used_without_the_play_cdn(self):
         response = self.client.get(reverse('pages:landing'))
 
-        self.assertContains(response, '/static/css/app.css?v=6')
+        self.assertContains(response, '/static/css/app.css?v=7')
         self.assertNotContains(response, 'https://cdn.tailwindcss.com')
         self.assertNotContains(response, 'unpkg.com')
         self.assertNotContains(response, 'css/output.css')

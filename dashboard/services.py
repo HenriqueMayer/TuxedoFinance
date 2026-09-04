@@ -27,6 +27,8 @@ EVOLUTION_MONTHS = 12
 EVOLUTION_PAST_MONTHS = 5
 TOP_CATEGORIES = 6
 TOP_INSTRUMENTS = 8
+DASHBOARD_PREVIEW_LIMIT = 5
+FLOW_KEYS = ('income', 'expenses', 'investments', 'withdrawals', 'balance')
 
 
 def add_months(year, month, offset):
@@ -107,7 +109,7 @@ def _investment_value(user, operation, base_currency, missing):
     return value
 
 
-def _investment_cash_flows(user, window):
+def _investment_cash_flows(user, window, cutoff=None):
     wanted = set(window)
     investments = ZERO
     withdrawals = ZERO
@@ -119,6 +121,8 @@ def _investment_cash_flows(user, window):
     ).select_related('asset', 'source_account', 'destination_account')
     for operation in operations:
         if (operation.date.year, operation.date.month) not in wanted:
+            continue
+        if cutoff is not None and operation.date > cutoff:
             continue
         if operation.kind == Investment.Kind.DEPOSIT:
             value = _investment_value(user, operation, base_currency, missing)
@@ -152,11 +156,56 @@ def _transaction_value(user, transaction, year, month, missing):
     return converted
 
 
-def _monthly_totals(user, transactions, year, month):
+def _transaction_occurrence_date(transaction, year, month):
+    """Return the modeled economic date for an amount assigned to a month."""
+    if not transaction.amount_for_month(year, month):
+        return None
+    if transaction.is_installment_plan:
+        # Later installments remain known obligations from the original purchase.
+        return transaction.date
+    if not transaction.is_fixed:
+        return transaction.date
+    occurrence_year, occurrence_month = add_months(
+        year, month, -transaction.billing_offset
+    )
+    return date(
+        occurrence_year,
+        occurrence_month,
+        min(
+            transaction.date.day,
+            monthrange(occurrence_year, occurrence_month)[1],
+        ),
+    )
+
+
+def _empty_flow():
+    return {
+        'income': ZERO,
+        'expenses': ZERO,
+        'investments': ZERO,
+        'withdrawals': ZERO,
+        'balance': ZERO,
+        'missing_currencies': [],
+    }
+
+
+def _remaining_flow(full_month, through_cutoff):
+    remaining = {
+        key: full_month[key] - through_cutoff[key]
+        for key in FLOW_KEYS
+    }
+    remaining['missing_currencies'] = full_month['missing_currencies']
+    return remaining
+
+
+def _monthly_totals(user, transactions, year, month, cutoff=None):
     income = ZERO
     expenses = ZERO
     missing = set()
     for item in transactions:
+        occurrence = _transaction_occurrence_date(item, year, month)
+        if occurrence is None or (cutoff is not None and occurrence > cutoff):
+            continue
         value = _transaction_value(user, item, year, month, missing)
         if value is None:
             continue
@@ -165,12 +214,12 @@ def _monthly_totals(user, transactions, year, month):
         elif item.transaction_type == Transaction.TransactionType.EXPENSE:
             expenses += value
     banking_expenses, banking_missing = _banking_expenses_for_month(
-        user, year, month
+        user, year, month, cutoff=cutoff
     )
     expenses += banking_expenses
     missing.update(banking_missing)
     investments, withdrawals, investment_missing = _investment_cash_flows(
-        user, [(year, month)]
+        user, [(year, month)], cutoff=cutoff
     )
     missing.update(investment_missing)
     return {
@@ -183,7 +232,7 @@ def _monthly_totals(user, transactions, year, month):
     }
 
 
-def _banking_expenses_for_month(user, year, month):
+def _banking_expenses_for_month(user, year, month, cutoff=None):
     """Return points purchases and reward IOF without duplicating transactions."""
     total = ZERO
     missing = set()
@@ -194,6 +243,8 @@ def _banking_expenses_for_month(user, year, month):
         cash_amount__isnull=False,
     ).select_related('funding_account', 'funding_credit_card__account')
     for entry in purchases:
+        if cutoff is not None and entry.date > cutoff:
+            continue
         account = entry.funding_account or entry.funding_credit_card.account
         expense_month = (
             entry.funding_credit_card.statement_month(entry.date)
@@ -212,6 +263,8 @@ def _banking_expenses_for_month(user, year, month):
         user=user, iof_amount__gt=ZERO
     ).select_related('iof_account', 'iof_credit_card__account')
     for redemption in redemptions:
+        if cutoff is not None and redemption.date > cutoff:
+            continue
         account = redemption.iof_account or redemption.iof_credit_card.account
         expense_month = (
             redemption.iof_credit_card.statement_month(redemption.date)
@@ -242,6 +295,33 @@ def get_dashboard_summary(user, year=None, month=None):
         user, _month_end(current_previous_year, current_previous_month)
     )
     is_current_month = (year, month) == (today.year, today.month)
+    is_future_month = (year, month) > (today.year, today.month)
+
+    if is_future_month:
+        period_kind = 'future'
+        cutoff = None
+        through_cutoff = _empty_flow()
+    elif is_current_month:
+        period_kind = 'current'
+        cutoff = today
+        through_cutoff = _monthly_totals(
+            user, transactions, year, month, cutoff=cutoff
+        )
+    else:
+        period_kind = 'past'
+        cutoff = _month_end(year, month)
+        through_cutoff = selected
+    remaining = _remaining_flow(selected, through_cutoff)
+
+    category_cutoff = cutoff if period_kind != 'future' else None
+    expense_categories, category_missing = _expenses_by_category(
+        user,
+        transactions,
+        year,
+        month,
+        1,
+        cutoff=category_cutoff,
+    )
 
     selected_offset = (year - today.year) * 12 + month - today.month
     path_months = max(0, selected_offset) + OUTLOOK_MONTHS
@@ -253,8 +333,8 @@ def get_dashboard_summary(user, year=None, month=None):
         rolling_projected += path_totals['balance']
         projected_path[(path_year, path_month)] = rolling_projected
 
+    previous_year, previous_month = add_months(year, month, -1)
     if selected_offset >= 0:
-        previous_year, previous_month = add_months(year, month, -1)
         period_start_total = (
             current_period_start['total']
             if selected_offset == 0
@@ -262,23 +342,20 @@ def get_dashboard_summary(user, year=None, month=None):
         )
         projected_total = projected_path[(year, month)]
     else:
-        previous_year, previous_month = add_months(year, month, -1)
         period_start = get_ledger_snapshot(
             user, _month_end(previous_year, previous_month)
         )
+        period_close = get_ledger_snapshot(user, _month_end(year, month))
         period_start_total = period_start['total']
-        projected_total = get_ledger_snapshot(
-            user, _month_end(year, month)
-        )['total']
-
-    displayed_current = current if is_current_month else current_period_start
+        projected_total = period_close['total']
 
     outlook = []
-    missing = (
-        set(current['missing_currencies'])
-    )
-    if not is_current_month:
-        missing.update(current_period_start['missing_currencies'])
+    missing = set(current['missing_currencies'])
+    missing.update(current_period_start['missing_currencies'])
+    if selected_offset < 0:
+        missing.update(period_start['missing_currencies'])
+        missing.update(period_close['missing_currencies'])
+    missing.update(category_missing)
     for offset in range(OUTLOOK_MONTHS):
         row_year, row_month = add_months(year, month, offset)
         totals = _monthly_totals(user, transactions, row_year, row_month)
@@ -307,27 +384,55 @@ def get_dashboard_summary(user, year=None, month=None):
         .select_related('card__account__bank')
         .order_by('due_date', 'card__name')
     )
+    account_preview = current['accounts'][:DASHBOARD_PREVIEW_LIMIT]
+    invoice_preview = invoices[:DASHBOARD_PREVIEW_LIMIT]
+    cash_change_through_cutoff = (
+        ZERO
+        if is_future_month
+        else (
+            current['total'] - period_start_total
+            if is_current_month
+            else projected_total - period_start_total
+        )
+    )
     return {
         'selected_year': year,
         'selected_month': month,
         'selected_month_date': date(year, month, 1),
+        'period_kind': period_kind,
+        'period_cutoff': cutoff,
         'is_current_month': is_current_month,
-        'is_future_month': (year, month) > (today.year, today.month),
-        # For the current month this is the realized cash balance today. For
-        # another selected month it is that month's opening cash balance,
-        # i.e. the projected closing balance of the previous month.
-        'current_balance': displayed_current['total'],
+        'is_future_month': is_future_month,
+        'current_balance': current['total'],
+        'period_opening_balance': period_start_total,
+        'period_closing_balance': projected_total,
+        'cash_change_through_cutoff': cash_change_through_cutoff,
+        'balance_change_full_month': projected_total - period_start_total,
+        'cash_change_full_month': projected_total - period_start_total,
+        'performance': {
+            'through_cutoff': through_cutoff,
+            'remaining': remaining,
+            'full_month': selected,
+        },
         'projected_balance': projected_total,
-        'account_balances': displayed_current['accounts'],
+        'account_balances': current['accounts'],
+        'account_balances_preview': account_preview,
+        'account_balances_hidden': max(
+            0, len(current['accounts']) - len(account_preview)
+        ),
         'open_invoices': invoices,
+        'open_invoices_preview': invoice_preview,
+        'open_invoices_hidden': max(0, len(invoices) - len(invoice_preview)),
         'next_invoice': invoices[0] if invoices else None,
         'income_month': selected['income'],
         'expense_month': selected['expenses'],
         'investment_month': selected['investments'],
+        'withdrawal_month': selected['withdrawals'],
         # This card must reconcile with the two balance cards. `selected`
         # remains the transaction/reporting flow, where card purchases belong
         # to their statement month; cash closing follows invoice due dates.
         'balance_month': projected_total - period_start_total,
+        'expense_categories': expense_categories,
         'missing_currencies': sorted(missing | set(selected['missing_currencies'])),
         'outlook': outlook,
     }
@@ -345,20 +450,28 @@ def _category_rows(totals):
     return ranked[:TOP_CATEGORIES]
 
 
-def _expenses_by_category(user, transactions, year, month, months):
+def _expenses_by_category(user, transactions, year, month, months, cutoff=None):
     targets = _window(year, month, months)
     totals = {}
     missing = set()
     for item in transactions:
         if item.transaction_type != Transaction.TransactionType.EXPENSE:
             continue
-        value = sum(
-            (
-                _transaction_value(user, item, y, m, missing) or ZERO
-                for y, m in targets
-            ),
-            ZERO,
-        )
+        value = ZERO
+        for target_year, target_month in targets:
+            occurrence = _transaction_occurrence_date(
+                item, target_year, target_month
+            )
+            if occurrence is None or (
+                cutoff is not None and occurrence > cutoff
+            ):
+                continue
+            value += (
+                _transaction_value(
+                    user, item, target_year, target_month, missing
+                )
+                or ZERO
+            )
         if value:
             row = totals.setdefault(
                 item.category_id,

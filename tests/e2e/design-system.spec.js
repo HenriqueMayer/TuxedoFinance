@@ -85,6 +85,35 @@ test('authenticated navigation remains usable at tablet widths', async ({ page }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('dashboard keeps current, past, and future month states clear and responsive', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+
+    await expect(page.getByText('Available cash today')).toHaveCount(0);
+    await expect(page.getByText('Income through today')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Expenses by category' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Six-month outlook' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Previous month' }).click();
+    await expect(page.getByText('Completed month', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Back to this month' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Next month' }).click();
+    await expect(page.getByText('Progress through', { exact: false })).toBeVisible();
+    await page.getByRole('link', { name: 'Next month' }).click();
+    await expect(page.getByText('Planned month', { exact: true })).toBeVisible();
+    await expect(page.getByText('Planned income')).toBeVisible();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole('heading', { name: 'Month performance' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
+    await page.getByRole('dialog', { name: 'Navigation menu' })
+        .getByRole('button', { name: 'Toggle color theme' }).click();
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test('loyalty entry reveals only the fields for the selected entry type', async ({ page }, testInfo) => {
     await createAccount(page, testInfo);
     await page.goto('/banking/loyalty-entries/create/');

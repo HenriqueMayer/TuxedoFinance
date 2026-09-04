@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -11,6 +12,7 @@ from dashboard.charts import build_donut_chart, build_instrument_chart
 from banking.models import (
     Bank,
     BankAccount,
+    CardInvoice,
     CreditCard,
     DebitCard,
     ExchangeRate,
@@ -66,6 +68,210 @@ class DashboardFixture(TestCase):
         }
         values.update(overrides)
         return Transaction.objects.create(**values)
+
+
+class DashboardPeriodPerformanceTests(DashboardFixture):
+    @patch(
+        'dashboard.services.timezone.localdate', return_value=date(2026, 9, 15)
+    )
+    def test_current_month_splits_modeled_activity_at_today(self, localdate):
+        food = Category.objects.create(user=self.user, name='Food')
+        rent = Category.objects.create(user=self.user, name='Rent')
+        card = CreditCard.objects.create(
+            user=self.user,
+            account=self.account,
+            name='Installment card',
+            closing_day=31,
+            due_day=28,
+        )
+        self.transaction(
+            title='Salary',
+            amount='200.00',
+            transaction_type=Transaction.TransactionType.INCOME,
+            date=date(2026, 9, 5),
+        )
+        self.transaction(amount='30.00', category=food, date=date(2026, 9, 10))
+        self.transaction(amount='40.00', category=rent, date=date(2026, 9, 20))
+        self.transaction(
+            amount='50.00',
+            category=rent,
+            date=date(2026, 8, 20),
+            is_fixed=True,
+        )
+        self.transaction(
+            amount='60.00',
+            category=food,
+            payment_channel=Transaction.PaymentChannel.CREDIT_CARD,
+            bank_account=None,
+            credit_card=card,
+            installments=2,
+            date=date(2026, 8, 5),
+        )
+
+        summary = get_dashboard_summary(self.user, 2026, 9)
+
+        self.assertEqual(summary['period_kind'], 'current')
+        self.assertEqual(summary['period_cutoff'], date(2026, 9, 15))
+        self.assertEqual(
+            summary['performance']['through_cutoff']['income'],
+            Decimal('200.00'),
+        )
+        self.assertEqual(
+            summary['performance']['through_cutoff']['expenses'],
+            Decimal('60.00'),
+        )
+        self.assertEqual(
+            summary['performance']['remaining']['expenses'],
+            Decimal('90.00'),
+        )
+        self.assertEqual(
+            summary['performance']['full_month']['expenses'],
+            Decimal('150.00'),
+        )
+        self.assertEqual(
+            [(row['name'], row['total']) for row in summary['expense_categories']],
+            [('Food', Decimal('60.00'))],
+        )
+
+    @patch(
+        'dashboard.services.timezone.localdate', return_value=date(2026, 9, 15)
+    )
+    def test_past_is_complete_and_future_is_entirely_planned(self, localdate):
+        self.transaction(amount='75.00', date=date(2026, 8, 25))
+        self.transaction(
+            amount='125.00',
+            transaction_type=Transaction.TransactionType.INCOME,
+            date=date(2026, 10, 5),
+        )
+
+        past = get_dashboard_summary(self.user, 2026, 8)
+        future = get_dashboard_summary(self.user, 2026, 10)
+
+        self.assertEqual(past['period_kind'], 'past')
+        self.assertEqual(
+            past['performance']['through_cutoff']['expenses'], Decimal('75.00')
+        )
+        self.assertEqual(
+            past['performance']['remaining']['expenses'], Decimal('0.00')
+        )
+        self.assertEqual(future['period_kind'], 'future')
+        self.assertEqual(
+            future['performance']['through_cutoff']['income'], Decimal('0.00')
+        )
+        self.assertEqual(
+            future['performance']['remaining']['income'], Decimal('125.00')
+        )
+        self.assertEqual(
+            future['performance']['full_month']['income'], Decimal('125.00')
+        )
+
+    def test_fixed_recurrence_clamps_to_last_day_for_cutoff(self):
+        self.transaction(amount='80.00', date=date(2027, 1, 31), is_fixed=True)
+
+        with patch(
+            'dashboard.services.timezone.localdate', return_value=date(2027, 2, 27)
+        ):
+            before = get_dashboard_summary(self.user, 2027, 2)
+        with patch(
+            'dashboard.services.timezone.localdate', return_value=date(2027, 2, 28)
+        ):
+            on_date = get_dashboard_summary(self.user, 2027, 2)
+
+        self.assertEqual(
+            before['performance']['through_cutoff']['expenses'], Decimal('0.00')
+        )
+        self.assertEqual(
+            before['performance']['remaining']['expenses'], Decimal('80.00')
+        )
+        self.assertEqual(
+            on_date['performance']['through_cutoff']['expenses'], Decimal('80.00')
+        )
+
+    @patch(
+        'dashboard.services.timezone.localdate', return_value=date(2026, 9, 15)
+    )
+    def test_investments_and_withdrawals_follow_the_cutoff(self, localdate):
+        product = InvestmentProduct.objects.create(
+            user=self.user, bank=self.bank, name='Brokerage'
+        )
+        asset = Asset.objects.create(
+            user=self.user,
+            name='Fund',
+            code='CUT',
+            asset_class=Asset.AssetClass.FIXED_INCOME,
+            currency='BRL',
+        )
+        Investment.objects.create(
+            user=self.user,
+            product=product,
+            asset=asset,
+            kind=Investment.Kind.DEPOSIT,
+            quantity='1',
+            unit_price='100',
+            cash_amount='100.00',
+            source_account=self.account,
+            date=date(2026, 9, 10),
+        )
+        Investment.objects.create(
+            user=self.user,
+            product=product,
+            asset=asset,
+            kind=Investment.Kind.DEPOSIT,
+            quantity='2',
+            unit_price='100',
+            cash_amount='200.00',
+            source_account=self.account,
+            date=date(2026, 9, 20),
+        )
+        Investment.objects.create(
+            user=self.user,
+            product=product,
+            asset=asset,
+            kind=Investment.Kind.WITHDRAWAL,
+            quantity='0.25',
+            unit_price='100',
+            cash_amount='25.00',
+            destination_account=self.account,
+            date=date(2026, 9, 12),
+        )
+
+        summary = get_dashboard_summary(self.user, 2026, 9)
+
+        self.assertEqual(
+            summary['performance']['through_cutoff']['investments'],
+            Decimal('100.0000000000000000'),
+        )
+        self.assertEqual(
+            summary['performance']['remaining']['investments'],
+            Decimal('200.0000000000000000'),
+        )
+        self.assertEqual(
+            summary['performance']['through_cutoff']['withdrawals'],
+            Decimal('25.00'),
+        )
+
+    @patch(
+        'dashboard.services.timezone.localdate', return_value=date(2026, 9, 15)
+    )
+    def test_category_breakdown_is_ranked_and_limited_to_six(self, localdate):
+        for index in range(1, 8):
+            category = Category.objects.create(
+                user=self.user, name=f'Category {index}'
+            )
+            self.transaction(
+                amount=f'{index * 10}.00',
+                category=category,
+                date=date(2026, 9, 5),
+            )
+
+        summary = get_dashboard_summary(self.user, 2026, 9)
+
+        self.assertEqual(len(summary['expense_categories']), 6)
+        self.assertEqual(summary['expense_categories'][0]['name'], 'Category 7')
+        self.assertEqual(summary['expense_categories'][0]['bar_width'], 100.0)
+        self.assertNotIn(
+            'Category 1', [row['name'] for row in summary['expense_categories']]
+        )
 
 
 class LedgerBalanceTests(DashboardFixture):
@@ -226,7 +432,7 @@ class LedgerBalanceTests(DashboardFixture):
         summary = get_dashboard_summary(self.user)
 
         self.assertEqual(summary['current_balance'], Decimal('1050.0000000000'))
-        self.assertEqual(summary['missing_currencies'], ['EUR'])
+        self.assertEqual(summary['missing_currencies'], ['EUR', 'USD'])
         native = {row['account'].pk: row for row in summary['account_balances']}
         self.assertEqual(native[usd.pk]['native_balance'], Decimal('10.00'))
         self.assertIsNone(native[eur.pk]['converted_balance'])
@@ -565,6 +771,90 @@ class InstrumentReportTests(DashboardFixture):
 
 
 class DashboardPageContractTests(DashboardFixture):
+    def test_index_translates_new_dashboard_copy_to_portuguese(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'pt-br'
+
+        response = self.client.get(reverse('dashboard:index'))
+
+        self.assertContains(response, 'Desempenho mensal')
+        self.assertContains(response, 'Despesas por categoria')
+        self.assertContains(response, 'Perspectiva de seis meses')
+        self.assertNotContains(response, 'Posição dos saldos')
+
+    def test_index_explains_current_month_performance_and_categories(self):
+        self.transaction(amount='45.00', date=timezone.localdate())
+
+        response = self.client.get(reverse('dashboard:index'))
+
+        self.assertContains(response, 'Monthly performance')
+        self.assertNotContains(response, 'Available cash today')
+        self.assertNotContains(
+            response,
+            'What is available now and where this month is heading.',
+        )
+        self.assertContains(response, 'Income through today')
+        self.assertContains(response, 'remaining planned')
+        self.assertContains(response, 'Expenses by category')
+        self.assertContains(response, 'Groceries')
+        self.assertContains(
+            response,
+            f'category_month={timezone.localdate():%Y-%m}',
+        )
+
+    def test_index_uses_period_appropriate_past_and_future_labels(self):
+        today = timezone.localdate()
+        past_year, past_month = add_months(today.year, today.month, -1)
+        future_year, future_month = add_months(today.year, today.month, 1)
+
+        past = self.client.get(
+            reverse('dashboard:index'),
+            {'month': f'{past_year:04d}-{past_month:02d}'},
+        )
+        future = self.client.get(
+            reverse('dashboard:index'),
+            {'month': f'{future_year:04d}-{future_month:02d}'},
+        )
+
+        self.assertContains(past, 'Completed month')
+        self.assertContains(past, 'Complete activity assigned to the selected month.')
+        self.assertContains(future, 'Planned month')
+        self.assertContains(future, 'Planned income')
+        self.assertNotContains(future, 'Income through today')
+        self.assertContains(future, 'Back to this month')
+
+    def test_index_limits_live_account_and_invoice_previews(self):
+        for index in range(5):
+            BankAccount.objects.create(
+                user=self.user,
+                bank=self.bank,
+                name=f'Extra account {index}',
+                currency='BRL',
+            )
+        for index in range(6):
+            card = CreditCard.objects.create(
+                user=self.user,
+                account=self.account,
+                name=f'Card {index}',
+                closing_day=20,
+                due_day=28,
+            )
+            CardInvoice.objects.create(
+                user=self.user,
+                card=card,
+                reference_month=date(2099, 1, 1),
+                due_date=date(2099, 1, index + 1),
+                amount='10.00',
+            )
+
+        with patch('dashboard.views.sync_user_ledger'):
+            response = self.client.get(reverse('dashboard:index'))
+
+        self.assertContains(response, '1 more account')
+        self.assertContains(response, '1 more invoice')
+        self.assertEqual(len(response.context['account_balances_preview']), 5)
+        self.assertEqual(len(response.context['open_invoices_preview']), 5)
+        self.assertContains(response, 'View Banking', count=2)
+
     def test_views_sync_before_render_and_show_current_headings(self):
         for name in ('dashboard:index', 'dashboard:reports'):
             with self.subTest(name=name), patch(
