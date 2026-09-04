@@ -233,18 +233,19 @@ render translated fragments in the active request language.
 
 Stat cards separate concepts instead of collapsing them into one balance:
 
-- Current Balance (realized cash)
-- Income this month
-- Expenses this month
-- Investments this month
-- Balance this month
-- Projected balance at the end of the month
+- available cash, selected-month balance change, and projected closing balance;
+- income, expenses, investments, and withdrawals as separate performance cards;
+- current-month values through today with the remaining plan shown underneath;
+- complete values for past months and explicitly planned values for future months.
 
 Current Balance remains distinct from the projected month-end close. Credit-card
 purchases belong to the statement month but affect cash only when the invoice is
 settled. Own transfers may appear in activity but are visually neutral and
 absent from income/expense charts. Projected figures are labeled and never
-presented as posted cash.
+presented as posted cash. A compact top-six category breakdown follows the same
+month-to-date, completed-month, or planned-month context as the cards. Live bank
+accounts and upcoming invoices are limited to five rows each and link to Banking
+for the complete lists.
 
 ## Reports and charts
 

@@ -9,10 +9,9 @@ Usage (semantic tone — pass a value_class matching Final DS §2.2):
   {% include 'partials/stat_card.html' with label='Expenses (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-expense dark:text-expense-light' %}
   {% include 'partials/stat_card.html' with label='Investments (month)' value=CURRENCY_SYMBOL|add:' 0.00' value_class='text-investment dark:text-investment-light' %}
 
-`value` must already be fully formatted by the caller (including the
-currency symbol, sourced from `{{ CURRENCY_SYMBOL }}` — never hardcoded,
-PRD §8.5) — this partial only handles layout and color, never currency
-logic. Compose cards in the standard indicator grid:
+Pass either a fully formatted `value`, or a numeric `amount` to use the
+request's `CURRENCY_SYMBOL`. `detail_value` and `detail_label` add an optional
+compact secondary line.
 
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-N">
       {% include 'partials/stat_card.html' with label='...' value='...' %}
@@ -21,5 +20,12 @@ logic. Compose cards in the standard indicator grid:
 {% endcomment %}
 <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
     <p class="text-xs uppercase tracking-widest text-forest/70 dark:text-cream/70">{{ label }}</p>
-    <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums {{ value_class|default:'text-forest dark:text-cream' }}">{{ value }}</p>
+    <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums {{ value_class|default:'text-forest dark:text-cream' }}">
+        {% if amount is not None %}{{ CURRENCY_SYMBOL }} {{ amount|floatformat:2 }}{% else %}{{ value }}{% endif %}
+    </p>
+    {% if detail_value is not None %}
+        <p class="mt-2 text-xs text-forest/60 dark:text-cream/60">
+            <span class="font-medium tabular-nums">{{ CURRENCY_SYMBOL }} {{ detail_value|floatformat:2 }}</span> {{ detail_label }}
+        </p>
+    {% endif %}
 </div>

@@ -8,12 +8,20 @@ account ledger.
 
 The main screen presents:
 
-- available balance by bank account;
-- consolidated available balance in the authenticated user's base currency;
-- monthly income and expenses, excluding own transfers and investment cash legs;
-- open credit-card invoices and upcoming due dates;
-- investment value and net worth;
-- a forward outlook from recurring transactions and scheduled invoice payments.
+- a live available-cash total and compact native balances by bank account;
+- selected-month opening, balance change and closing balance;
+- income, expenses, investment deposits and withdrawals for the selected month;
+- a top-six categorized-expense breakdown;
+- compact open-invoice previews and upcoming due dates;
+- a six-month outlook from recurring transactions and scheduled invoice payments.
+
+For the current month, performance is split at the local current date. One-off
+transactions use their recorded date, fixed recurrences keep their configured
+day (clamped to the target month's last day), and installments remain known
+obligations from their original purchase. Investment and loyalty events use
+their own event date. The portion after the cutoff is shown as planned. Past
+months are complete; future months are entirely planned. Category totals follow
+the same current/past/future rule.
 
 Per-user base currency is implemented through `UserPreference`. Historical
 investment operations consume their persisted FX evidence; account balances,
@@ -33,6 +41,14 @@ consolidated cash and are excluded from income/expense.
 Investment deposits and withdrawals move cash between banking and the portfolio
 without becoming income/expense. Yield affects investment value internally; it
 does not increase available bank balance.
+
+The dashboard keeps economic performance distinct from cash settlement. Income,
+expenses and the selected month's projected closing describe activity assigned
+to the month. Available cash and the current month's through-today cash change
+come from posted account movements. Card purchases therefore stay in their
+statement month while actual account cash changes when the invoice is settled.
+The live account and open-invoice panels always describe today, even while
+another month is selected.
 
 ## Reports
 
