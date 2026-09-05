@@ -15,7 +15,8 @@ copyright and license notices.
   removes demonstrated duplication. File length alone does not justify a split.
 - Update documentation affected by a change. Maintain equivalent content in
   `README.md` and `README.pt-BR.md`; technical guides remain in English. Use
-  precise, professional language without decorative emojis or informal copy.
+  precise, professional language. Keep icons consistent with the established
+  README layout; technical guides do not need decorative emojis.
 - Update English and Brazilian Portuguese interface strings together. Keep
   user-entered data outside the translation catalog.
 - Record notable changes for users, operators, or contributors under
