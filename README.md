@@ -113,8 +113,11 @@ high-contrast typography, caramel actions, and semantic financial colors.
 | Token | Color | Purpose |
 |---|---:|---|
 | `cream` | `#FAF8F3` | Light background |
-| `forest` | `#1A2E26` | Primary text and dark surfaces |
-| `forest-deep` | `#101E18` | Dark background |
+| `forest` | `#1A2E26` | Light-theme text and brand surfaces |
+| `forest-deep` | `#101E18` | Light-theme brand contrast |
+| `night` | `#101010` | Dark background |
+| `night-surface` | `#1B1B1B` | Dark panels |
+| `night-raised` | `#262626` | Dark elevated and hover surfaces |
 | `caramel` | `#B88A59` | Brand and primary actions |
 | `income` | `#176B52` | Income and positive account movement |
 | `expense` | `#B42318` | Expenses, negatives, and destructive actions |
@@ -123,8 +126,10 @@ high-contrast typography, caramel actions, and semantic financial colors.
 | `fixed` | `#A65300` | Fixed recurrences |
 | `oneoff` | `#52605A` | One-off activity |
 
-The dark theme uses the corresponding lighter semantic companions documented in
-the canonical catalog, preserving contrast without changing financial meaning.
+The dark theme uses neutral black and graphite foundations with the lighter
+semantic companions documented in the canonical catalog, preserving contrast
+without changing financial meaning. The public homepage presents factual
+capabilities and access links beside a horizontal cat photograph in a translucent double frame.
 
 The canonical component catalog lives in
 [`docs/design-system.html`](docs/design-system.html),

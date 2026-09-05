@@ -67,13 +67,13 @@ conventions this partial inherits.
     {# -------------------------------------------------------------- #}
     {# Chart 1 — balance evolution (slideable 12-month window)        #}
     {# -------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
+    <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-night">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Balance evolution" %}</h2>
-                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
+                <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
                     {% translate "Your balance at the close of each month. Everything after" %}
-                    <span class="font-medium text-forest/70 dark:text-cream/70">{{ evolution.anchor_date|date:'F Y' }}</span>
+                    <span class="font-medium text-forest/70 dark:text-night-muted">{{ evolution.anchor_date|date:'F Y' }}</span>
                     {% translate "is projected from your fixed transactions and open installment plans." %}
                 </p>
             </div>
@@ -85,7 +85,7 @@ conventions this partial inherits.
                    hx-swap="outerHTML"
                    hx-push-url="true"
                     aria-label="{% translate 'Previous window' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                         &larr;
                     </a>
                     <div>
@@ -94,7 +94,7 @@ conventions this partial inherits.
                                  {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ last_month.date|date:'M Y' }}
                              {% endwith %}
                         </p>
-                        <p class="text-xs text-forest/70 dark:text-cream/70">
+                        <p class="text-xs text-forest/70 dark:text-night-muted">
                             {% if evolution.is_anchored_today %}{% translate "Anchored on today" %}
                             {% elif evolution.anchor_date < today %}{% translate "Past window" %}
                             {% else %}{% translate "Future window" %}{% endif %}
@@ -106,7 +106,7 @@ conventions this partial inherits.
                        hx-swap="outerHTML"
                        hx-push-url="true"
                         aria-label="{% translate 'Next window' %}"
-                       class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
+                       class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                         &rarr;
                     </a>
                 </div>
@@ -162,7 +162,7 @@ conventions this partial inherits.
                 <g data-chart-layer="balance-marks">
                     {% for point in balance_chart.points %}
                         <circle cx="{{ point.x }}" cy="{{ point.y }}" r="4.5"
-                                class="fill-white dark:fill-forest-deep {% if point.label.is_future %}stroke-caramel/60{% else %}stroke-caramel{% endif %}"
+                                class="fill-white dark:fill-night {% if point.label.is_future %}stroke-caramel/60{% else %}stroke-caramel{% endif %}"
                                 stroke-width="2" />
                         <text x="{{ point.x }}" y="{{ balance_chart.label_y }}" text-anchor="middle"
                               class="text-xs {% if point.label.is_current_month %}fill-forest/80 dark:fill-cream/80 font-semibold{% else %}fill-forest/70 dark:fill-cream/70{% endif %}">
@@ -179,16 +179,16 @@ conventions this partial inherits.
                                 <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate "projected" %}){% endif %}</title>
                             </circle>
                             <circle cx="{{ point.x }}" cy="{{ point.y }}" r="4.5"
-                                    class="pointer-events-none fill-white stroke-caramel-light opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:fill-forest-deep dark:stroke-caramel-light"
+                                    class="pointer-events-none fill-white stroke-caramel-light opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:fill-night dark:stroke-caramel-light"
                                     stroke-width="2" />
                             <g transform="translate({{ point.tooltip_x }} {{ point.tooltip_y }})"
                                class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                                 <rect width="176" height="38" rx="19"
                                       class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
+                                <text x="10" y="15" class="fill-cream dark:fill-night-surface text-xs">
                                     {{ point.label.date|date:'M Y' }}{% if point.label.is_future %} &middot; {% translate "projected" %}{% endif %}
                                 </text>
-                                <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
+                                <text x="10" y="30" class="fill-white dark:fill-night-surface text-[12px] font-semibold tabular-nums">
                                     {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}
                                 </text>
                             </g>
@@ -199,7 +199,7 @@ conventions this partial inherits.
             {% endlocalize %}
         </div>
 
-        <p class="text-sm text-forest/70 dark:text-cream/70">
+        <p class="text-sm text-forest/70 dark:text-night-muted">
             {% translate "Opening balance" %} {{ CURRENCY_SYMBOL }} {{ evolution.opening_balance|floatformat:2 }}
             &rarr; {% translate "projected" %} {{ CURRENCY_SYMBOL }} {{ evolution.closing_balance|floatformat:2 }}
             <span class="{% if evolution.net_change < 0 %}text-expense dark:text-expense-light{% else %}text-income dark:text-income-light{% endif %} font-semibold tabular-nums">
@@ -211,11 +211,11 @@ conventions this partial inherits.
     {# -------------------------------------------------------------- #}
     {# Chart 2 — monthly cash flow (same window as chart 1)            #}
     {# -------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
+    <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-night">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Monthly cash flow" %}</h2>
-                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
+                <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
                     {% translate "What comes in and what goes out each month, side by side." %}
                 </p>
             </div>
@@ -226,15 +226,15 @@ conventions this partial inherits.
                    hx-swap="outerHTML"
                    hx-push-url="true"
                     aria-label="{% translate 'Previous window' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &larr;
                 </a>
                 <ul class="flex flex-wrap items-center gap-4">
                     {% for entry in cashflow_chart.legend %}
-                        <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-cream/70">
+                        <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-night-muted">
                             <span class="h-2.5 w-2.5 rounded-sm
                                 {% if entry.tone == 'income' %}bg-income dark:bg-income-light
-                                {% elif entry.tone == 'expense' %}bg-expense
+                                {% elif entry.tone == 'expense' %}bg-expense dark:bg-expense-light
                                 {% elif entry.tone == 'withdrawal' %}bg-caramel dark:bg-caramel-light
                                 {% else %}bg-investment dark:bg-investment-light{% endif %}"></span>
                             {{ entry.name }}
@@ -247,7 +247,7 @@ conventions this partial inherits.
                    hx-swap="outerHTML"
                    hx-push-url="true"
                     aria-label="{% translate 'Next window' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
+                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &rarr;
                 </a>
             </div>
@@ -310,10 +310,10 @@ conventions this partial inherits.
                                        class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                                         <rect width="176" height="38" rx="19"
                                               class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                        <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">
+                                        <text x="10" y="15" class="fill-cream dark:fill-night-surface text-xs">
                                             {{ group.label.date|date:'M Y' }} &middot; {{ bar.name }}
                                         </text>
-                                        <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">
+                                        <text x="10" y="30" class="fill-white dark:fill-night-surface text-[12px] font-semibold tabular-nums">
                                             {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}
                                         </text>
                                     </g>
@@ -330,13 +330,13 @@ conventions this partial inherits.
     {# -------------------------------------------------------------- #}
     {# Installments vs fixed vs one-off (donut)                       #}
     {# -------------------------------------------------------------- #}
-    <section id="installments" class="scroll-mt-6 space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
+    <section id="installments" class="scroll-mt-6 space-y-4 rounded-3xl bg-cream p-6 dark:bg-night">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "How much is on installments" %}</h2>
-                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
+                <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
                     {% blocktranslate with currency=CURRENCY_SYMBOL %}Of every {{ currency }} you spend in{% endblocktranslate %}
-                    <span class="font-medium text-forest/70 dark:text-cream/70">{{ installment_window_label|lower }}</span>,
+                    <span class="font-medium text-forest/70 dark:text-night-muted">{{ installment_window_label|lower }}</span>,
                     {% translate "this is how much comes from open installment plans, fixed recurrences, and one-off purchases." %}
                 </p>
             </div>
@@ -353,16 +353,16 @@ conventions this partial inherits.
                     {% endif %}
                 {% endfor %}
                 <div class="min-w-[12rem] space-y-1.5">
-                    <label for="installment-month" class="block text-sm font-medium text-forest/70 dark:text-cream/70">{% translate "Window" %}</label>
+                    <label for="installment-month" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate "Window" %}</label>
                     <select id="installment-month" name="installment_month"
-                            class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                            class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                         {% for value, label in month_choices %}
                             <option value="{{ value }}" {% if installment_month_param == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                        class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                     {% translate "Filter" %}
                 </button>
             </form>
@@ -399,13 +399,13 @@ conventions this partial inherits.
                                     <title>{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:"-1" }}%)</title>
                                 </path>
                                 <path d="{{ segment.d }}"
-                                      class="pointer-events-none fill-cream opacity-0 transition-opacity group-hover:opacity-20 group-focus-visible:opacity-20 dark:fill-forest" />
+                                      class="pointer-events-none fill-cream opacity-0 transition-opacity group-hover:opacity-20 group-focus-visible:opacity-20 dark:fill-night-surface" />
                                 <g transform="translate({{ recurrence_chart.tooltip_x }} {{ recurrence_chart.tooltip_y }})"
                                    class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                                     <rect width="{{ recurrence_chart.tooltip_width }}" height="{{ recurrence_chart.tooltip_height }}" rx="19"
                                           class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                    <text x="12" y="19" class="fill-cream dark:fill-forest text-[12px]">{{ segment.name }} &middot; {{ segment.share|floatformat:"-1" }}%</text>
-                                    <text x="12" y="39" class="fill-white dark:fill-forest text-[15px] font-semibold tabular-nums">
+                                    <text x="12" y="19" class="fill-cream dark:fill-night-surface text-[12px]">{{ segment.name }} &middot; {{ segment.share|floatformat:"-1" }}%</text>
+                                    <text x="12" y="39" class="fill-white dark:fill-night-surface text-[15px] font-semibold tabular-nums">
                                         {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }}
                                     </text>
                                 </g>
@@ -424,7 +424,7 @@ conventions this partial inherits.
                                     {% else %}bg-oneoff dark:bg-oneoff-light{% endif %}"></span>
                                 <span class="font-medium text-forest/90 dark:text-cream/90">{{ slice.name }}</span>
                             </span>
-                            <span class="text-sm tabular-nums text-forest/70 dark:text-cream/70">
+                            <span class="text-sm tabular-nums text-forest/70 dark:text-night-muted">
                                 <span class="font-semibold text-forest/90 dark:text-cream/90">{{ CURRENCY_SYMBOL }} {{ slice.value|floatformat:2 }}</span>
                                 &middot; {{ slice.share }}%
                             </span>
@@ -443,15 +443,15 @@ conventions this partial inherits.
     {# -------------------------------------------------------------- #}
     {# Combined income and spending by banking instrument             #}
     {# -------------------------------------------------------------- #}
-    <section id="instrument-activity" class="scroll-mt-6 space-y-5 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
+    <section id="instrument-activity" class="scroll-mt-6 space-y-5 rounded-3xl bg-cream p-6 dark:bg-night">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Income and expenses by account or card" %}</h2>
-                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
+                <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
                     {% if instrument_month_param == 'ALL' %}
                         {% translate "Money moved across your accounts and cards over all months." %}
                     {% else %}
-                        {% blocktranslate with window=instrument_window_label %}Money moved across your accounts and cards in <span class="font-medium text-forest/70 dark:text-cream/70">{{ window }}</span>.{% endblocktranslate %}
+                        {% blocktranslate with window=instrument_window_label %}Money moved across your accounts and cards in <span class="font-medium text-forest/70 dark:text-night-muted">{{ window }}</span>.{% endblocktranslate %}
                     {% endif %}
                     {% translate "Click a bar to see its categories." %}
                 </p>
@@ -469,16 +469,16 @@ conventions this partial inherits.
                     {% endif %}
                 {% endfor %}
                 <div class="min-w-[12rem] space-y-1.5">
-                    <label for="instrument-month" class="block text-sm font-medium text-forest/70 dark:text-cream/70">{% translate "Window" %}</label>
+                    <label for="instrument-month" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate "Window" %}</label>
                     <select id="instrument-month" name="instrument_month"
-                            class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                            class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                         {% for value, label in month_choices %}
                             <option value="{{ value }}" {% if instrument_month_param == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                        class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                     {% translate "Filter" %}
                 </button>
             </form>
@@ -540,8 +540,8 @@ conventions this partial inherits.
                                                    class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                                                     <rect width="176" height="38" rx="19"
                                                           class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                                    <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">{{ group.label.short_label }} &middot; {% translate "Expenses" %}</text>
-                                                    <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
+                                                    <text x="10" y="15" class="fill-cream dark:fill-night-surface text-xs">{{ group.label.short_label }} &middot; {% translate "Expenses" %}</text>
+                                                    <text x="10" y="30" class="fill-white dark:fill-night-surface text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
                                                 </g>
                                             </a>
                                         {% else %}
@@ -558,8 +558,8 @@ conventions this partial inherits.
                                                    class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                                                     <rect width="176" height="38" rx="19"
                                                           class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                                    <text x="10" y="15" class="fill-cream dark:fill-forest text-xs">{{ group.label.short_label }} &middot; {% translate "Income" %}</text>
-                                                    <text x="10" y="30" class="fill-white dark:fill-forest text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
+                                                    <text x="10" y="15" class="fill-cream dark:fill-night-surface text-xs">{{ group.label.short_label }} &middot; {% translate "Income" %}</text>
+                                                    <text x="10" y="30" class="fill-white dark:fill-night-surface text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
                                                 </g>
                                             </a>
                                         {% endif %}
@@ -575,20 +575,20 @@ conventions this partial inherits.
                     {% regroup instrument_activity.instruments by bank_label as bank_list %}
                     {% for bank in bank_list %}
                         <section>
-                            <h3 class="text-xs font-semibold uppercase tracking-wide text-forest/70 dark:text-cream/70">{{ bank.grouper }}</h3>
+                            <h3 class="text-xs font-semibold uppercase tracking-wide text-forest/70 dark:text-night-muted">{{ bank.grouper }}</h3>
                             <ul class="mt-1 divide-y divide-forest/10 dark:divide-cream/10">
                                 {% for instrument in bank.list %}
                                     <li class="py-2.5">
                                         <p class="font-medium text-forest/90 dark:text-cream/90">{{ instrument.short_label }}</p>
                                         <div class="mt-1 space-y-1 text-sm tabular-nums">
                                             {% if instrument.expense_total %}
-                                                <p class="flex items-center justify-between gap-4 text-forest/70 dark:text-cream/70">
-                                                    <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-expense"></span>{% translate "Expenses" %}</span>
+                                                <p class="flex items-center justify-between gap-4 text-forest/70 dark:text-night-muted">
+                                                    <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-expense dark:bg-expense-light"></span>{% translate "Expenses" %}</span>
                                                     <span class="font-semibold text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ instrument.expense_total|floatformat:2 }}</span>
                                                 </p>
                                             {% endif %}
                                             {% if instrument.income_total %}
-                                                <p class="flex items-center justify-between gap-4 text-forest/70 dark:text-cream/70">
+                                                <p class="flex items-center justify-between gap-4 text-forest/70 dark:text-night-muted">
                                                     <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-income dark:bg-income-light"></span>{% translate "Income" %}</span>
                                                     <span class="font-semibold text-income dark:text-income-light">{{ CURRENCY_SYMBOL }} {{ instrument.income_total|floatformat:2 }}</span>
                                                 </p>
@@ -602,7 +602,7 @@ conventions this partial inherits.
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-forest/70 dark:text-cream/70">
+            <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-forest/70 dark:text-night-muted">
                 <p>{% translate "Total spent" %}: <span class="font-semibold tabular-nums text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ instrument_activity.expense_total|floatformat:2 }}</span></p>
                 <p>{% translate "Total received" %}: <span class="font-semibold tabular-nums text-income dark:text-income-light">{{ CURRENCY_SYMBOL }} {{ instrument_activity.income_total|floatformat:2 }}</span></p>
                 {% if instrument_activity.shown < instrument_activity.used %}
@@ -624,7 +624,7 @@ conventions this partial inherits.
                             {% translate "Categories in" %} {{ instrument_categories_label }} {% translate "paid with" %}
                             <span class="text-expense dark:text-expense-light">{{ selected_expense_instrument.label }}</span>
                         </h3>
-                        <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
+                        <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
                             {% if instrument_categories_window == 'current month' %}
                                 {% translate '"All time" was selected on the chart above, so the panel scopes to the current month for the freshest read.' %}
                             {% else %}
@@ -635,7 +635,7 @@ conventions this partial inherits.
                     <a href="{% querystring expense_instrument=None %}#instrument-activity"
                        hx-get="{% querystring expense_instrument=None %}" hx-target="#reports-charts"
                        hx-swap="outerHTML" hx-push-url="true" data-scroll-target="instrument-activity"
-                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel">
                         {% translate "Close" %}
                     </a>
                 </div>
@@ -645,13 +645,13 @@ conventions this partial inherits.
                             <li class="space-y-1.5">
                                 <div class="flex items-baseline justify-between gap-4">
                                     <p class="truncate font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</p>
-                                    <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-cream/70">
+                                    <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-night-muted">
                                         <span class="font-semibold text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
                                         &middot; {{ category.share|floatformat:"-1" }}%
                                     </p>
                                 </div>
                                 <div class="h-2.5 w-full overflow-hidden rounded-full bg-forest/10 dark:bg-cream/10">
-                                    <div class="h-full rounded-full bg-expense" style="width: {{ category.bar_width|unlocalize }}%"></div>
+                                    <div class="h-full rounded-full bg-expense dark:bg-expense-light" style="width: {{ category.bar_width|unlocalize }}%"></div>
                                 </div>
                             </li>
                         {% endfor %}
@@ -672,7 +672,7 @@ conventions this partial inherits.
                             {% translate "Categories in" %} {{ instrument_categories_label }} {% translate "received on" %}
                             <span class="text-income dark:text-income-light">{{ selected_income_account.label }}</span>
                         </h3>
-                        <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
+                        <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
                             {% if instrument_categories_window == 'current month' %}
                                 {% translate '"All time" was selected on the chart above, so the panel scopes to the current month for the freshest read.' %}
                             {% else %}
@@ -683,7 +683,7 @@ conventions this partial inherits.
                     <a href="{% querystring income_account=None %}#instrument-activity"
                        hx-get="{% querystring income_account=None %}" hx-target="#reports-charts"
                        hx-swap="outerHTML" hx-push-url="true" data-scroll-target="instrument-activity"
-                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel">
                         {% translate "Close" %}
                     </a>
                 </div>
@@ -693,7 +693,7 @@ conventions this partial inherits.
                             <li class="space-y-1.5">
                                 <div class="flex items-baseline justify-between gap-4">
                                     <p class="truncate font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</p>
-                                    <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-cream/70">
+                                    <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-night-muted">
                                         <span class="font-semibold text-income dark:text-income-light">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
                                         &middot; {{ category.share|floatformat:"-1" }}%
                                     </p>
@@ -715,13 +715,13 @@ conventions this partial inherits.
 
     {# Chart 6 — where the money goes (filter: ALL | YYYY-MM)          #}
     {# ---------------------------------------------------------------- #}
-    <section id="where" class="scroll-mt-6 space-y-4 rounded-3xl bg-cream p-6 dark:bg-forest-deep">
+    <section id="where" class="scroll-mt-6 space-y-4 rounded-3xl bg-cream p-6 dark:bg-night">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Where the money goes" %}</h2>
-                <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">
+                <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
                     {% translate "Your biggest expense categories for" %}
-                    <span class="font-medium text-forest/70 dark:text-cream/70">{{ category_window_label|lower }}</span>, {% translate "recurrences included." %}
+                    <span class="font-medium text-forest/70 dark:text-night-muted">{{ category_window_label|lower }}</span>, {% translate "recurrences included." %}
                 </p>
             </div>
             <form method="get"
@@ -737,16 +737,16 @@ conventions this partial inherits.
                     {% endif %}
                 {% endfor %}
                 <div class="min-w-[12rem] space-y-1.5">
-                    <label for="category-month" class="block text-sm font-medium text-forest/70 dark:text-cream/70">{% translate "Window" %}</label>
+                    <label for="category-month" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate "Window" %}</label>
                     <select id="category-month" name="category_month"
-                            class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                            class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                         {% for value, label in month_choices %}
                             <option value="{{ value }}" {% if category_month_param == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                        class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                     {% translate "Filter" %}
                 </button>
             </form>
@@ -758,13 +758,13 @@ conventions this partial inherits.
                     <li class="space-y-1.5">
                         <div class="flex items-baseline justify-between gap-4">
                             <p class="truncate font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</p>
-                            <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-cream/70">
+                            <p class="shrink-0 text-sm tabular-nums text-forest/70 dark:text-night-muted">
                                 <span class="font-semibold text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }}</span>
                                 &middot; {{ category.share }}%
                             </p>
                         </div>
                         <div class="h-2.5 w-full overflow-hidden rounded-full bg-forest/10 dark:bg-cream/10">
-                            <div class="h-full rounded-full bg-expense"
+                            <div class="h-full rounded-full bg-expense dark:bg-expense-light"
                                  style="width: {{ category.bar_width|unlocalize }}%"></div>
                         </div>
                     </li>

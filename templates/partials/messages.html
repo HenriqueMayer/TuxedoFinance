@@ -16,7 +16,7 @@ Default Django message tags: debug, info, success, warning, error.
                 {% if message.tags == 'success' %}border-income/40 bg-income/10 text-income dark:text-income-light
                 {% elif message.tags == 'error' %}border-expense/40 bg-expense/10 text-expense dark:text-expense-light
                 {% elif message.tags == 'warning' %}border-caramel/40 bg-caramel/10 text-caramel-ink dark:text-caramel-light
-                {% else %}border-forest/20 bg-cream-dark/60 text-forest dark:border-cream/20 dark:bg-forest-deep dark:text-cream/80
+                {% else %}border-forest/20 bg-cream-dark/60 text-forest dark:border-cream/20 dark:bg-night dark:text-cream/80
                 {% endif %}">
                 <p class="font-medium">{{ message }}</p>
             </div>

@@ -5,10 +5,10 @@
 
         {% if form.non_field_errors %}<div class="rounded-2xl border border-expense/40 bg-expense/10 p-4 text-sm text-expense dark:text-expense-light" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
 
-        <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest sm:p-8" aria-labelledby="salary-input-title">
+        <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface sm:p-8" aria-labelledby="salary-input-title">
             <p class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Step 1" %}</p>
             <h2 id="salary-input-title" class="mt-2 font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Enter your income" %}</h2>
-            <p class="mt-2 text-sm leading-6 text-forest/70 dark:text-cream/70">{% translate "Enter the monthly gross amount and choose whether CLT deductions should be calculated automatically." %}</p>
+            <p class="mt-2 text-sm leading-6 text-forest/70 dark:text-night-muted">{% translate "Enter the monthly gross amount and choose whether CLT deductions should be calculated automatically." %}</p>
             <div class="mt-6 max-w-2xl">{% include 'sandbox/_form_field.html' with field=form.gross_salary %}</div>
             <div class="max-w-2xl">{% include 'sandbox/_checkbox_field.html' with field=form.use_clt %}</div>
 
@@ -35,7 +35,7 @@
                     </div>
                     <button type="button" data-add-deduction class="rounded-full border border-forest/20 px-4 py-2 text-xs font-medium uppercase tracking-widest text-forest transition-colors hover:border-caramel hover:text-caramel-ink dark:border-cream/20 dark:text-cream dark:hover:border-caramel dark:hover:text-caramel-light">+ {% translate "Add deduction" %}</button>
                 </div>
-                <div class="mt-4 overflow-x-auto">
+                <div class="relative mt-4 overflow-x-auto">
                     <table class="w-full min-w-[38rem] text-sm">
                         <thead><tr class="border-b border-forest/10 text-left text-xs uppercase tracking-widest text-forest/60 dark:border-cream/10 dark:text-cream/60">
                             {% translate "Name used to identify the deduction or tax." as deduction_label_help %}{% translate "Choose a fixed amount in reais or a percentage of gross salary." as deduction_type_help %}{% translate "Amount or percentage subtracted every month." as deduction_value_help %}
@@ -51,12 +51,12 @@
             </div>
         </section>
 
-        <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest sm:p-8" aria-labelledby="planning-title">
+        <section class="rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface sm:p-8" aria-labelledby="planning-title">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <p class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Step 2" %}</p>
                     <h2 id="planning-title" class="mt-2 font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Set your monthly plan" %}</h2>
-                    <p class="mt-2 text-sm text-forest/70 dark:text-cream/70">{% translate "Use the suggested categories or add your own monthly expenses." %}</p>
+                    <p class="mt-2 text-sm text-forest/70 dark:text-night-muted">{% translate "Use the suggested categories or add your own monthly expenses." %}</p>
                 </div>
                 <button type="button" data-clear-planning class="rounded-full border border-forest/20 px-4 py-2 text-xs font-medium uppercase tracking-widest text-forest transition-colors hover:border-caramel hover:text-caramel-ink dark:border-cream/20 dark:text-cream dark:hover:border-caramel dark:hover:text-caramel-light">{% translate "Clear estimates" %}</button>
             </div>
@@ -70,7 +70,7 @@
                     <h3 class="font-sans text-lg font-semibold text-forest dark:text-cream">{% translate "Additional monthly expenses" %}</h3>
                     <button type="button" data-add-variable class="rounded-full border border-forest/20 px-4 py-2 text-xs font-medium uppercase tracking-widest text-forest transition-colors hover:border-caramel hover:text-caramel-ink dark:border-cream/20 dark:text-cream dark:hover:border-caramel dark:hover:text-caramel-light">+ {% translate "Add expense" %}</button>
                 </div>
-                <div class="mt-4 overflow-x-auto">
+                <div class="relative mt-4 overflow-x-auto">
                     <table class="w-full min-w-[38rem] text-sm">
                         <thead><tr class="border-b border-forest/10 text-left text-xs uppercase tracking-widest text-forest/60 dark:border-cream/10 dark:text-cream/60">
                             {% translate "Name used to identify this monthly expense." as variable_label_help %}{% translate "Choose a fixed amount in reais or a percentage of monthly net income." as variable_type_help %}{% translate "Monthly amount or percentage assigned to this expense." as variable_value_help %}
@@ -87,7 +87,7 @@
         </section>
 
         <div class="flex flex-wrap items-center gap-3">
-            <button type="submit" class="inline-flex items-center rounded-full bg-caramel px-6 py-3 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">{% translate "Calculate" %}</button>
+            <button type="submit" class="inline-flex items-center rounded-full bg-caramel px-6 py-3 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">{% translate "Calculate" %}</button>
             <span class="text-xs text-forest/60 dark:text-cream/60">{% translate "Nothing is saved." %}</span>
         </div>
 

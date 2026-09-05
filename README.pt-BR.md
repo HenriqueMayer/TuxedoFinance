@@ -113,8 +113,11 @@ tipografia de alto contraste, ações em caramelo e cores com significado financ
 | Token | Cor | Finalidade |
 |---|---:|---|
 | `cream` | `#FAF8F3` | Fundo claro |
-| `forest` | `#1A2E26` | Texto principal e superfícies escuras |
-| `forest-deep` | `#101E18` | Fundo escuro |
+| `forest` | `#1A2E26` | Texto e superfícies de marca no tema claro |
+| `forest-deep` | `#101E18` | Contraste de marca no tema claro |
+| `night` | `#101010` | Fundo escuro |
+| `night-surface` | `#1B1B1B` | Painéis escuros |
+| `night-raised` | `#262626` | Superfícies elevadas e hover no tema escuro |
 | `caramel` | `#B88A59` | Marca e ações principais |
 | `income` | `#176B52` | Receitas e movimentações positivas |
 | `expense` | `#B42318` | Despesas, valores negativos e ações destrutivas |
@@ -123,8 +126,10 @@ tipografia de alto contraste, ações em caramelo e cores com significado financ
 | `fixed` | `#A65300` | Recorrências fixas |
 | `oneoff` | `#52605A` | Movimentações avulsas |
 
-O tema escuro utiliza as variantes mais claras documentadas no catálogo,
-preservando o contraste e o significado financeiro de cada cor.
+O tema escuro usa bases neutras em preto e grafite com as variantes semânticas
+mais claras documentadas no catálogo, preservando o contraste e o significado
+financeiro de cada cor. A página pública apresenta funções e links de acesso
+ao lado de uma fotografia horizontal do gato em moldura dupla translúcida.
 
 O catálogo de componentes está em
 [`docs/design-system.html`](docs/design-system.html),

@@ -1,7 +1,7 @@
 {% load i18n %}
 <div class="space-y-2">
     <div class="flex items-center justify-between gap-2">
-        <label for="{{ value_field.id_for_label }}" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+        <label for="{{ value_field.id_for_label }}" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
             {{ value_field.label }}
         </label>
         {% include 'sandbox/_help_popover.html' with help_id=value_field.id_for_label|add:'-help' help_label=value_field.label help_text=value_field.help_text %}

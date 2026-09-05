@@ -7,11 +7,11 @@
 <div class="mx-auto max-w-lg space-y-6">
     <div>
         <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Import Categories" %}</h1>
-        <p class="mt-2 text-sm text-forest/70 dark:text-cream/70">
+        <p class="mt-2 text-sm text-forest/70 dark:text-night-muted">
             {% translate "Import categories from a CSV exported by Tuxedo Finance. Existing category names will be skipped." %}
         </p>
     </div>
-    <form method="post" hx-boost="false" enctype="multipart/form-data" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
+    <form method="post" hx-boost="false" enctype="multipart/form-data" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}
         {% include 'partials/form_field.html' with field=form.file %}
         <div class="flex items-center gap-3">

@@ -13,7 +13,8 @@
   }
 
   html.dark {
-    background-color: #101E18;
+    background-color: theme('colors.night.DEFAULT');
+    color-scheme: dark;
   }
 
   ::-webkit-scrollbar {
@@ -30,10 +31,20 @@
   }
 
   .dark ::-webkit-scrollbar-track {
-    background: #101E18;
+    background: theme('colors.night.DEFAULT');
   }
 
   .dark ::-webkit-scrollbar-thumb {
     background: #B88A59;
+  }
+
+  /* Controls need a visible boundary on both neutral dark surface levels. */
+  .dark :is(input:not([type='hidden']), select, textarea) {
+    border-color: theme('colors.night.line');
+  }
+
+  .dark :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid theme('colors.caramel.light');
+    outline-offset: 3px;
   }
 }

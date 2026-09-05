@@ -107,7 +107,7 @@ class LanguageSelectionTests(TestCase):
 
         self.assertContains(response, '<html lang="en"', html=False)
         self.assertContains(response, 'id="language-select-public"')
-        self.assertEqual(response.content.count(b'class="bg-white text-forest"'), 2)
+        self.assertEqual(response.content.count(b'class="bg-white text-forest dark:bg-night-surface dark:text-cream"'), 2)
         self.assertContains(response, 'Log in')
         self.assertContains(
             response,
@@ -142,7 +142,7 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(translated, 'Cadastre-se')
         self.assertContains(
             translated,
-            'Nascido da frustração diária de adaptar planilhas às finanças pessoais reais.',
+            'Aplicação local para registrar receitas e despesas, acompanhar contas e faturas e organizar investimentos.',
         )
         self.assertContains(translated, 'Problemas / Sugestões')
         self.assertContains(translated, 'Próximas implementações')
@@ -163,7 +163,7 @@ class LanguageSelectionTests(TestCase):
     def test_precompiled_tailwind_is_used_without_the_play_cdn(self):
         response = self.client.get(reverse('pages:landing'))
 
-        self.assertContains(response, '/static/css/app.css?v=7')
+        self.assertContains(response, '/static/css/app.css?v=9')
         self.assertNotContains(response, 'https://cdn.tailwindcss.com')
         self.assertNotContains(response, 'unpkg.com')
         self.assertNotContains(response, 'css/output.css')

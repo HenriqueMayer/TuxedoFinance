@@ -8,10 +8,10 @@
     <div>
         <h1 class="font-sans text-4xl font-semibold tracking-tight">{{ form_title }}</h1>
         {% if form_variant == 'loyalty_entry' %}
-            <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate "Choose an entry type to see only the fields you need." %}</p>
+            <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">{% translate "Choose an entry type to see only the fields you need." %}</p>
         {% endif %}
     </div>
-    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
+    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}
         {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         {% if form_variant == 'loyalty_entry' %}
@@ -20,13 +20,13 @@
             {% include 'partials/form_field.html' with field=form.direction %}
             {% include 'partials/form_field.html' with field=form.amount %}
             {% include 'partials/form_field.html' with field=form.date %}
-            <p id="loyalty-kind-status" class="text-sm text-forest/70 dark:text-cream/70" aria-live="polite"></p>
+            <p id="loyalty-kind-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
             <div id="loyalty-invoice-fields"
                  data-has-errors="{{ form.invoice.errors|yesno:'true,false' }}">
                 {% include 'partials/form_field.html' with field=form.invoice %}
             </div>
             <div id="loyalty-purchase-fields"
-                 class="space-y-5 rounded-xl bg-cream p-4 dark:bg-forest-deep"
+                 class="space-y-5 rounded-xl bg-cream p-4 dark:bg-night"
                  data-has-errors="{% if form.funding_account.errors or form.funding_credit_card.errors or form.cash_amount.errors %}true{% else %}false{% endif %}">
                 {% include 'partials/form_field.html' with field=form.funding_account %}
                 {% include 'partials/form_field.html' with field=form.funding_credit_card %}

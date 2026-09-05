@@ -13,12 +13,12 @@ input/select/textarea in the project looks identical:
   "w-full rounded-xl border border-forest/20 bg-white px-4 py-3
    text-sm text-forest placeholder:text-forest/70 focus:border-caramel
    focus:outline-none focus:ring-2 focus:ring-caramel/30
-   dark:bg-forest-deep dark:border-cream/20 dark:text-cream dark:placeholder:text-cream/70"
+   dark:bg-night dark:border-cream/20 dark:text-cream dark:placeholder:text-night-muted"
 
 `select` and `textarea` widgets reuse the exact same class string. Wrap a
 group of fields in a form card:
 
-  <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+  <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
       {% csrf_token %}
       {% include 'partials/form_field.html' with field=form.title %}
       ...
@@ -26,14 +26,14 @@ group of fields in a form card:
 {% endcomment %}
 {% if field %}
     <div class="space-y-2">
-        <label for="{{ field.id_for_label }}" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-cream/70">
-            {{ field.label }}{% if field.field.required %} <span class="text-expense">*</span>{% endif %}
+        <label for="{{ field.id_for_label }}" class="block text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-night-muted">
+            {{ field.label }}{% if field.field.required %} <span class="text-expense dark:text-expense-light">*</span>{% endif %}
         </label>
 
         {{ field }}
 
         {% if field.help_text %}
-            <p id="{{ field.id_for_label }}-help" class="text-sm font-normal text-forest/70 dark:text-cream/70">{{ field.help_text }}</p>
+            <p id="{{ field.id_for_label }}-help" class="text-sm font-normal text-forest/70 dark:text-night-muted">{{ field.help_text }}</p>
         {% endif %}
 
         {% for error in field.errors %}

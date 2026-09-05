@@ -1,16 +1,15 @@
 {% load i18n static %}
 {% comment %}
 Shared footer — Final Design System §0. Forest band with the brand chip,
-italic Inter tagline and copyright, included automatically by base.html on
+copyright, included automatically by base.html on
 every screen.
 {% endcomment %}
-<footer class="bg-forest text-cream/70">
+<footer class="bg-forest text-cream/70 dark:bg-night-surface dark:text-night-muted">
     <div class="mx-auto flex w-full max-w-7xl flex-col items-center gap-3 px-4 py-10 text-center sm:flex-row sm:justify-between sm:gap-4 sm:text-left sm:px-6 lg:px-8">
         <div class="flex items-center gap-2">
             <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="" class="h-8 w-8 rounded-lg object-cover">
             <span class="text-sm tracking-[0.2em] uppercase font-medium text-cream">{% translate 'Tuxedo' %} <span class="text-caramel-light">{% translate 'Finance' %}</span></span>
         </div>
-        <p class="font-sans italic text-sm text-cream/80">{% translate 'Your money, in black and white.' %}</p>
         <p class="text-xs font-normal">&copy; {% now 'Y' %} <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-caramel-light">HenriqueMayer</a>. {% translate 'All rights reserved.' %}</p>
     </div>
 </footer>
