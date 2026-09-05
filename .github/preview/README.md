@@ -17,7 +17,25 @@ The files that GitHub Pages publishes remain in `preview/`. Preview browser
 assertions remain in `tests/preview/`, and `.github/workflows/pages.yml`
 publishes only `preview/` after changes reach `main`.
 
+The tour preserves its section layout and light palette. Its dark theme matches
+the application's `night` tokens in `tailwind.config.js`: background `#101010`,
+surface `#1B1B1B`, raised/hover surface `#262626`, and muted text `#B8B8B8`.
+Caramel actions and the financial colors in application screenshots retain
+their meanings. Keep both language editions and their captions in sync with the
+current dashboard and transaction navigation when refreshing captures.
+
 ## Commands
+
+For local browsing, open `preview/index.html` or `preview/pt-br/index.html`
+directly. Language links include `index.html` so they also work with `file://`
+and JavaScript disabled. If an embedded browser blocks local files, serve the
+tour from the repository root with:
+
+```bash
+python3 -m http.server 4173 --bind 127.0.0.1 --directory preview
+```
+
+Then visit <http://127.0.0.1:4173/pt-br/> for Portuguese.
 
 Install the [development prerequisites](../../CONTRIBUTING.md#prerequisites),
 then run maintenance commands from the repository root. This workflow is

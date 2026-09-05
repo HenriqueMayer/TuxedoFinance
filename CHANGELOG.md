@@ -7,12 +7,21 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Static preview language links now target HTML files explicitly, allowing
+  English/Portuguese navigation when the tour is opened locally with `file://`.
+
 ### Added
 
 - Portuguese README with reciprocal language links and version validation for
   both English and Portuguese editions.
 
 ### Changed
+
+- Static interface tour now matches the black/graphite dark theme, with all 12
+  synthetic screenshots refreshed from the current application and bilingual
+  captions aligned with monthly dashboard activity and transaction navigation.
 
 - Transactions now use counted type cards, contextual category choices and
   recurrence shortcuts, with progressive date filters and no-JavaScript
