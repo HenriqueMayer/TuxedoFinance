@@ -13,7 +13,7 @@ model and explicit banking and ledger domain concepts.
 | Database | SQLite |
 | Authentication | Native `django.contrib.auth` |
 | Dependency management | `uv` |
-| Views | Class-Based Views |
+| Views | Class-based views plus focused function views for imports, exports, and bulk actions |
 | Supported runtime | Django development server (`runserver`) |
 | Localization | Django gettext (`en`, `pt-br`) |
 
@@ -28,7 +28,7 @@ flows are independent of this switch.
 ```text
 core/          # settings, root URLs, currency registry and shared formatting
 pages/         # public landing page
-accounts/      # authentication
+accounts/      # authentication and presentation preferences
 categories/    # income and expense classification
 banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
 transactions/  # categorized economic events and recurrence schedules
@@ -43,11 +43,14 @@ shared with `investments`.
 ## Dependency direction
 
 ```text
-categories ────────┐
-                   v
-banking <──── transactions ────> dashboard
-   ^                                  ^
-   └──────── investments ─────────────┘
+dashboard views ──> transactions synchronization ──> banking models
+       │
+       └──> dashboard queries ──> banking / transactions / investments
+transactions models ──> banking / categories
+investments ──> banking
+banking views ──> transactions synchronization
+
+Arrows mean "calls or imports", not ownership.
 ```
 
 - `banking` owns settlement truth and can exist without categorized transactions.
@@ -55,8 +58,9 @@ banking <──── transactions ────> dashboard
   event settles; it does not calculate account balances.
 - `investments` reuses `Bank` and `BankAccount` for providers and cash legs, but
   keeps its position ledger independent from `Transaction`.
-- `dashboard` is read-only composition over all three ledgers. It owns no
-  financial records.
+- `dashboard` query services compose the ledgers without posting records. Its
+  views first call transaction synchronization, which can write derived banking
+  records. The app owns no financial model.
 
 Imports must avoid a model cycle. Cross-domain optional links that would create
 one use string model references or a dedicated service boundary; posting an
@@ -66,9 +70,9 @@ event and its movements runs in one database transaction.
 
 | Question | Source |
 |---|---|
-| What cash is available? | `BankAccount.opening_balance` + `BankMovement`. |
+| What cash is available? | `BankAccount.opening_balance` + signed `BankMovement` amounts effective through the requested date. |
 | What was income or expense? | Categorized `Transaction`. |
-| What is owed on credit cards? | `CardInvoice` and its items/payments. |
+| What is owed on credit cards? | Derived `CardInvoice` totals and due-date movements; source purchases remain transactions, loyalty purchases, or redemption IOF. |
 | What investment quantity is held? | `Investment`. |
 | How many loyalty points exist? | Signed `LoyaltyEntry` rows. |
 | What was a transfer or investment worth historically? | Its persisted FX snapshot, including source/target currencies, rate, effective date, and status. |
@@ -78,18 +82,38 @@ This separation prevents credit purchases from reducing cash before the invoice
 is paid and prevents the later invoice debit from counting the same spending a
 second time.
 
+## Request-time synchronization
+
+`transactions.services.sync_user_ledger` owns the idempotent projection of
+transactions into banking movements and card invoices. Transaction mutations
+call it within an atomic save/delete workflow. Dashboard and report views, bank
+list/account detail views, and relevant loyalty operations also invoke it.
+These page reads can therefore update, create, or delete derived rows.
+
+The default projection horizon is twelve months beyond today. Future-effective
+movements may already exist in storage; balance queries filter by effective
+date so they do not become realized cash early. Recurrences derive movements
+and invoice amounts from their source transaction, without creating additional
+`Transaction` rows. Invoice status is derived from the due date and the
+synchronization cutoff; it is not confirmation from an external bank.
+
+This keeps a local installation synchronized without a scheduler. As records
+and recurrence history grow, measure request latency, query counts, and SQLite
+write-lock time before changing the synchronization boundary. No asynchronous
+worker, cache, or extra service is required by the current repository structure.
+
 ## Posting workflows
 
 Services, rather than views or templates, own atomic posting:
 
-1. **PIX/debit/account transaction:** validate ownership and currency; create
-   the categorized transaction and immediate movement atomically.
-2. **Credit transaction:** create the transaction as an invoice item; create no
-   account movement.
+1. **PIX/debit/account transaction:** validate ownership and currency; save
+   the categorized transaction and synchronize its effective-date movement atomically.
+2. **Credit transaction:** save the source transaction and synchronize invoice
+   totals plus their due-date movements; create no purchase-date account debit.
 3. **Invoice settlement:** create one due-date account debit and attach it to the
    invoice. Re-running is idempotent and cannot create a second settlement.
 4. **Own transfer:** create two movements sharing a transfer identifier. The
-   event is `TRANSFER`, not income/expense; cross-currency pairs retain both
+   movements use kind `TRANSFER`, not income/expense; cross-currency pairs retain both
    native amounts and their persisted FX snapshot when conversion is available.
 5. **Investment deposit/withdrawal:** create the `Investment` and its required
    account movement or points-ledger entry atomically. Deposits accept exactly
@@ -124,6 +148,7 @@ The route namespaces remain domain-based:
 
 | Prefix | App | Scope |
 |---|---|---|
+| `/accounts/` | `accounts` | signup, login, POST logout, and authenticated preferences |
 | `/dashboard/` | `dashboard` | overview and reports |
 | `/transactions/` | `transactions` | categorized event CRUD/search |
 | `/categories/` | `categories` | category CRUD |

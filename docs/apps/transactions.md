@@ -12,7 +12,8 @@ is expressed through owned banking accounts, cards, invoices, and movements.
   authenticated user's base currency while native amounts remain unchanged.
 - Selection of PIX, debit card, credit card, or direct account as the settlement
   path. Own transfers are recorded separately in Banking.
-- Atomic delegation to `banking` posting services.
+- Atomic synchronization of derived `BankMovement` and `CardInvoice` rows
+  through this app's `sync_user_ledger` service.
 
 `INVESTMENT` is removed from `TransactionType`. Investment deposits and
 withdrawals belong to the investments workflow and create banking movements
@@ -24,8 +25,9 @@ without becoming income or expense.
 |---|---|---|
 | External PIX received | `INCOME` | Immediate account credit. |
 | External PIX sent | `EXPENSE` | Immediate account debit. |
-| Debit card/direct account | `INCOME` or `EXPENSE` | Immediate movement. |
-| Credit card | Usually `EXPENSE` | Added to `CardInvoice`; no purchase-date account movement. |
+| Direct account | `INCOME` or `EXPENSE` | Effective-date movement. |
+| Debit card | `EXPENSE` | Effective-date movement. |
+| Credit card | `EXPENSE` | Added to `CardInvoice`; no purchase-date account movement. |
 | Own-account transfer | Banking transfer | Paired debit/credit movements; excluded from income/expense. |
 
 PIX is therefore a settlement capability, not a transaction type. A PIX to or
@@ -60,10 +62,12 @@ the user's banks, accounts, cards and categories. Validation enforces:
 - installments only for credit cards and assigned across invoices without
   creating account movements for individual installments.
 
-Future recurrences are projections until posted. When an immediate recurrence
-becomes effective it creates one transaction occurrence and one movement; a
-credit recurrence creates one invoice item. Projection rows never alter the
-ledger by themselves.
+Synchronization derives recurrence and installment amounts from the original
+transaction without inserting new `Transaction` rows. It creates or updates
+movements and invoices through a projection horizon, normally twelve months
+beyond today. Future-effective rows may exist in the database, but balance
+queries exclude them until their effective date. See
+[request-time synchronization](../architecture.md#request-time-synchronization).
 
 ## Listing and reporting semantics
 
@@ -83,6 +87,6 @@ For monthly exports, `amount` is the amount charged in that month while
 Own transfers are visibly neutral and never receive income/expense colors or
 category totals.
 
-Transactions are editable and deletable by their owner. The related banking
-service keeps ledger and invoice data coherent; audit-grade reversals are out
+Transactions are editable and deletable by their owner. The transaction synchronization
+service keeps banking movements and invoices coherent; audit-grade reversals are out
 of scope.

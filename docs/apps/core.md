@@ -37,13 +37,20 @@ protection and backup; see
 
 ```python
 def currency(request):
-    return {'CURRENCY_CODE': code, 'CURRENCY_SYMBOL': symbol}
+    return {
+        'CURRENCY_CODE': code,
+        'CURRENCY_SYMBOL': symbol,
+        'ALLOW_SIGNUPS': settings.ALLOW_SIGNUPS,
+        'USER_DATE_FORMAT': date_format,
+    }
 ```
 
 For authenticated requests the context resolves the user's
 `UserPreference.base_currency`; anonymous requests use the BRL bootstrap default.
-Templates receive both `CURRENCY_CODE` and `CURRENCY_SYMBOL`. This value only
-controls presentation and never changes stored native amounts.
+Templates receive currency code/symbol, the registration policy, and
+`USER_DATE_FORMAT` (`d/m/Y` or `m/d/Y`). Authenticated requests use the saved
+date preference; anonymous requests default to `d/m/Y`. Preference lookup may
+create a missing `UserPreference` row, but never changes financial records.
 
 ## Currency registry (`core/currencies.py`)
 
@@ -75,7 +82,10 @@ Two deliberate constraints on this module:
 - **No `django.conf` import at module level.** `core/settings.py` imports it, so a top-level `from django.conf import settings` would be circular. Even the `ImproperlyConfigured` import inside `get_currency()` is lazy for the same reason.
 - **`get_currency()` raises on an unknown code** instead of falling back to the default. A silent fallback would label every amount in a finance app with the wrong symbol — a correctness bug, not a cosmetic one — and the error message lists the supported codes with a formatted example each, so the fix is immediate.
 
-Adding a currency is one line in `CURRENCIES` and nothing else.
+Adding a currency requires registry metadata and a translated choice label in
+`accounts.models.CURRENCY_NAMES`. Review model choices/migrations, formatting
+tests, and documentation together; existing stored amounts must retain their
+original currency meaning.
 
 ## Interface localization
 
@@ -92,13 +102,10 @@ language never changes or prefixes an application URL.
 `language` and the current path as `next`; Django validates the redirect and
 sets the cookie. No custom language preference model or endpoint exists.
 
-The Portuguese source catalog is `locale/pt_BR/LC_MESSAGES/django.po`, with
-the runtime catalog in `django.mo`. Regenerate it with GNU gettext installed:
-
-```bash
-uv run python manage.py makemessages -l pt_BR
-uv run python manage.py compilemessages
-```
+The Portuguese source and runtime catalogs are `django.po` and `django.mo`
+under `locale/pt_BR/LC_MESSAGES/`. The
+[contribution guide](../../CONTRIBUTING.md#frontend-and-translations) documents
+regeneration and compilation.
 
 For new interface strings, use `gettext_lazy` for module-level declarations
 such as model/form labels and choices, and `gettext` for messages evaluated at

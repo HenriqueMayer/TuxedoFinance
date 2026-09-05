@@ -92,7 +92,7 @@ HTMX progressive enhancement.
 | FR21 | Investment cash endpoints | Deposit requires exactly one source bank account or loyalty program; withdrawal requires a destination bank account. Related ledger entries post atomically. |
 | FR22 | Internal yield | Yield changes the investment position only and creates no bank income/movement until withdrawn. |
 | FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth using the user's base currency, with historical snapshots and clearly labeled current valuations. |
-| FR24 | Forecasts | Recurrences and future invoices may be projected but do not alter the posted ledger before settlement. |
+| FR24 | Forecasts | Recurrences and future invoices may create future-effective derived rows, but these do not alter realized cash before their effective date. |
 | FR25 | Breaking delivery | Use a clean migration reset with no compatibility or automatic legacy import. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
@@ -178,8 +178,10 @@ reserved for explicitly labeled current-value simulations elsewhere.
 
 ### 5.7 Salary sandbox
 
-- The sandbox is authenticated but isolated from transactions, banking,
-  investments, user preferences, and other persisted financial records.
+- The sandbox calculation is isolated from transactions, banking, investments,
+  user preferences, and other persisted financial records. Shared page context
+  may resolve or initialize presentation preferences; scenario calculations
+  do not consume or modify them.
 - Automatic mode uses a versioned, source-attributed 2026 CLT rule set; manual
   mode applies only the deductions supplied in the current request.
 - Both modes can feed a monthly plan with fixed costs, reserve and investment

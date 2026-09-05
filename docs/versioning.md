@@ -14,7 +14,7 @@ Any such change must be called out in the changelog and in the release notes.
 
 The canonical application version is `[project].version` in the root
 [`pyproject.toml`](../pyproject.toml). The corresponding project entry in
-`uv.lock`, the README version badge and the changelog are validated against it
+`uv.lock`, both README version badges and the changelog are validated against it
 by `scripts/check_version.py`.
 
 `package.json` is a private manifest for Tailwind and Playwright development
@@ -29,18 +29,10 @@ Release tags use the same version prefixed with `v`, for example `v0.2.0`.
 3. Run `uv lock` so the editable project entry in `uv.lock` matches.
 4. Move the relevant entries from `Unreleased` to a dated version section in
    [`CHANGELOG.md`](../CHANGELOG.md).
-5. Run the version validator and the complete project checks:
-
-   ```bash
-   uv run python scripts/check_version.py
-   uv run python manage.py check
-   uv run python manage.py makemigrations --check --dry-run
-   uv run python manage.py test
-   npm ci
-   npm audit --audit-level=high
-   npm run test:e2e
-   npm run test:preview
-   ```
+5. Run `uv run python scripts/check_version.py` and the complete
+   [development checks](../CONTRIBUTING.md), including isolated browser tests
+   and static-preview tests. Verify equivalent content and version badges in
+   both READMEs before preparing the release.
 
 6. Open the release pull request from `develop` to `main` and wait for CI.
 7. After the release commit is on `main`, create and push the annotated tag:
