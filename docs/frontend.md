@@ -24,12 +24,42 @@ the body and updates browser history. Native links remain the fallback whenever
 JavaScript is unavailable. Mutating forms, uploads, locale changes, logout and
 download links explicitly opt out of boosting, so POST, CSRF, validation and
 file responses keep their ordinary Django behavior. GET filter forms may use
-HTMX when they target a documented page or island update. Full-page swaps move
-focus to the new `h1`; report and investment chart islands keep their existing
+HTMX when they target a documented page or island update. Body swaps for the
+same pathname preserve viewport and focus; navigation to another pathname moves
+focus to the new `h1`. Report and investment chart islands keep their existing
 focus and scroll restoration. The
 investment movement island updates filters and pagination independently, then
 returns to the beginning of the movement section instead of the top of the page;
 plain GET links and the section anchor provide the same no-JavaScript fallback.
+
+## Preserve the user's location
+
+Every new or changed interaction that updates the current page must preserve the
+user's viewport and interaction context. This includes type/category cards,
+filters, sorting, pagination, refreshes, and inline edits or validation feedback.
+Do not send the user to the page heading or scroll to the top after an update.
+Treat navigation to another page and explicit links to a named section as
+navigation, rather than as an in-place update.
+
+- Reuse `static/js/navigation.js`: a successful HTMX body swap whose final URL
+  has the same origin and pathname restores the scroll coordinates captured
+  immediately before the swap. Query-string changes do not start a new page.
+  The handler overrides inherited `show:window:top` with `show:none` and restores
+  the surviving focused control with `focus({preventScroll: true})`.
+- Give controls stable, unique IDs so keyboard focus can survive replacement.
+  Do not add an unconditional `h1.focus()`, `scrollTo(0, 0)`, full-page reload or
+  `show:top` to an update flow. Reuse the existing island restoration for partial
+  updates; explicit section-navigation links may retain their named destination.
+- Preserve URL/history and server-rendered GET/POST fallbacks. Native navigation
+  without JavaScript remains usable; use meaningful section anchors where
+  appropriate rather than relying on scripts for access to results.
+- If filtering shortens the document, the browser may clamp the saved offset to
+  the new maximum scroll position. This is the only automatic position adjustment
+  expected for an ordinary update; do not jump to the heading as a fallback.
+- Browser acceptance must begin at a nonzero scroll position, trigger the real
+  interaction, wait for the swap to settle, and check scroll position and keyboard
+  focus. Cover desktop/mobile and both populated and empty results. Also confirm
+  that deliberate navigation to another page still opens that destination normally.
 
 ## Visual language
 

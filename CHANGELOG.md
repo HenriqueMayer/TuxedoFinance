@@ -14,6 +14,11 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Transactions now use counted type cards, contextual category choices and
+  recurrence shortcuts, with progressive date filters and no-JavaScript
+  navigation (FIN-10). Type cards are compact and stay on one line; same-page
+  HTMX updates retain viewport and keyboard focus instead of jumping to the top.
+
 - Public homepage now uses factual bilingual copy, access links, six feature
   rows, and a full horizontal cat photograph in a translucent double frame, without sample balances or promotional cards (FIN-9).
 - Dark-mode foundations now use neutral black and graphite throughout the

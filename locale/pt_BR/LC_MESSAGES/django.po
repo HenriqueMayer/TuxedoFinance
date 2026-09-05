@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-05 02:52+0000\n"
+"POT-Creation-Date: 2026-09-05 04:11+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -2712,8 +2712,8 @@ msgstr ""
 "Esta compra é adicionada à fatura do cartão de crédito selecionado e "
 "debitada no vencimento dessa fatura."
 
-msgid "Every income, expense, and investment you have recorded."
-msgstr "Todas as receitas, despesas e investimentos que você registrou."
+msgid "Your recorded income and expenses."
+msgstr "Suas receitas e despesas registradas."
 
 msgid "Export all transactions"
 msgstr "Exportar todas as transações"
@@ -2727,8 +2727,41 @@ msgstr "Exportar mês selecionado"
 msgid "Title, notes, category, bank, account or card"
 msgstr "Título, observações, categoria, banco, conta ou cartão"
 
+msgid "Transaction type"
+msgstr "Tipo de transação"
+
+msgid "Selected"
+msgstr "Selecionado"
+
+msgid "View transactions"
+msgstr "Ver transações"
+
+msgid ""
+"Counts follow your search and dates, before category and recurrence filters."
+msgstr ""
+"As contagens consideram a busca e as datas, antes dos filtros de categoria e "
+"recorrência."
+
+msgid "Recurrence"
+msgstr "Recorrência"
+
+msgid "All categories"
+msgstr "Todas as categorias"
+
+msgid "Apply filters"
+msgstr "Aplicar filtros"
+
+msgid "More filters"
+msgstr "Mais filtros"
+
 msgid "Transaction date"
 msgstr "Data da transação"
+
+#, python-format
+msgid "%(total)s transaction"
+msgid_plural "%(total)s transactions"
+msgstr[0] "%(total)s transação"
+msgstr[1] "%(total)s transações"
 
 msgid "Sort by"
 msgstr "Ordenar por"
@@ -2748,6 +2781,9 @@ msgstr "Maior valor"
 msgid "Lowest amount"
 msgstr "Menor valor"
 
+msgid "Sort"
+msgstr "Ordenar"
+
 #, python-format
 msgid "Fixed &middot; until %(end_date)s"
 msgstr "Fixa &middot; até %(end_date)s"
@@ -2763,12 +2799,8 @@ msgstr "Página %(page_number)s de %(total_pages)s"
 msgid "No matching transactions"
 msgstr "Nenhuma transação encontrada"
 
-msgid ""
-"Try a different search term, billed month, transaction date or type, or "
-"clear the filters to see everything."
-msgstr ""
-"Tente outro termo de pesquisa, mês da fatura, data ou tipo de transação, ou "
-"limpe os filtros para ver tudo."
+msgid "Try different filters or clear them to see all your transactions."
+msgstr "Tente outros filtros ou limpe-os para ver todas as suas transações."
 
 msgid "No transactions yet"
 msgstr "Ainda não há transações"
@@ -2785,9 +2817,6 @@ msgstr "Título"
 
 msgid "Amount"
 msgstr "Valor"
-
-msgid "Transaction type"
-msgstr "Tipo de transação"
 
 msgid "Payment channel"
 msgstr "Canal de pagamento"
@@ -2869,6 +2898,25 @@ msgstr "O mês final não pode ser anterior ao mês inicial."
 msgid "%(card_name)s invoice %(reference_month)s"
 msgstr "Fatura de %(card_name)s de %(reference_month)s"
 
+msgid "All"
+msgstr "Todas"
+
+msgctxt "transaction type filter"
+msgid "Income"
+msgstr "Receitas"
+
+msgctxt "transaction recurrence filter"
+msgid "Fixed"
+msgstr "Fixas"
+
+msgctxt "transaction recurrence filter"
+msgid "Installments"
+msgstr "Parceladas"
+
+msgctxt "transaction recurrence filter"
+msgid "One-off"
+msgstr "Avulsas"
+
 #, python-format
 msgid "Transaction \"%(title)s\" created."
 msgstr "Transação \"%(title)s\" criada."
@@ -2880,6 +2928,16 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+#~ msgid "Every income, expense, and investment you have recorded."
+#~ msgstr "Todas as receitas, despesas e investimentos que você registrou."
+
+#~ msgid ""
+#~ "Try a different search term, billed month, transaction date or type, or "
+#~ "clear the filters to see everything."
+#~ msgstr ""
+#~ "Tente outro termo de pesquisa, mês da fatura, data ou tipo de transação, "
+#~ "ou limpe os filtros para ver tudo."
 
 #~ msgid "Yield amount"
 #~ msgstr "Valor do rendimento"

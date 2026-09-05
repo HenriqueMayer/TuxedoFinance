@@ -89,7 +89,7 @@ Walkthroughs are planned in both supported languages:
 | Area | Capabilities |
 |---|---|
 | 📊 **Dashboard** | Current cash, monthly income and expenses, investments, open card bills, and projected month-end balance. |
-| 🧾 **Transactions** | Income and expenses, categories, payment channels, fixed recurrences, installments, filtering, and CSV export. |
+| 🧾 **Transactions** | Income and expenses, categories, payment channels, fixed recurrences, installments, counted type cards, category/recurrence filters, and CSV export. |
 | 🏦 **Banking** | Banks, currency-specific accounts, PIX, debit and credit cards, invoices, own-account transfers, loyalty programs, and manual exchange rates. |
 | 📈 **Reports** | Responsive server-rendered SVG charts, accessible summaries, and progressive HTMX updates. |
 | 💼 **Investments** | Manual deposits, withdrawals, yields, products, assets, quantities, unit prices, fees, and historical conversion evidence. |

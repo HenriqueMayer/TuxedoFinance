@@ -8,6 +8,10 @@ copyright and license notices.
 
 - Preserve the local-first Django architecture, user isolation, Decimal-based
   calculations, accessibility, and no-JavaScript form fallbacks.
+- Preserve viewport and keyboard focus when updating the current page (filters,
+  cards, sorting, pagination, refreshes and inline edits). Follow the
+  [location-preservation contract](docs/frontend.md#preserve-the-users-location)
+  and test from a nonzero scroll position; ordinary updates must not jump to the top.
 - Keep domain code and Python tests in their owning apps. Shared browser tests
   belong in `tests/e2e`, preview tests in `tests/preview`, and repository-tool
   tests in `tests/tooling`. Root manifests serve the shared toolchain.

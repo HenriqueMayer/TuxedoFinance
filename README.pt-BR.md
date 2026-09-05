@@ -89,7 +89,7 @@ Estão previstos tutoriais nos dois idiomas:
 | Área | Recursos |
 |---|---|
 | 📊 **Dashboard** | Saldo atual, receitas e despesas mensais, investimentos, faturas abertas e saldo projetado para o fim do mês. |
-| 🧾 **Transações** | Receitas e despesas, categorias, formas de pagamento, recorrências fixas, parcelas, filtros e exportação CSV. |
+| 🧾 **Transações** | Receitas e despesas, categorias, formas de pagamento, recorrências fixas, parcelas, cards por tipo com contagens, filtros por categoria/recorrência e exportação CSV. |
 | 🏦 **Bancos** | Bancos, contas por moeda, PIX, cartões de débito e crédito, faturas, transferências entre contas próprias, programas de fidelidade e taxas de câmbio manuais. |
 | 📈 **Relatórios** | Gráficos SVG responsivos renderizados no servidor, resumos acessíveis e atualizações progressivas com HTMX. |
 | 💼 **Investimentos** | Aportes, resgates e rendimentos manuais, produtos, ativos, quantidades, preços unitários, taxas e registros históricos de conversão. |

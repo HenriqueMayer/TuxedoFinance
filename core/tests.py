@@ -163,7 +163,7 @@ class LanguageSelectionTests(TestCase):
     def test_precompiled_tailwind_is_used_without_the_play_cdn(self):
         response = self.client.get(reverse('pages:landing'))
 
-        self.assertContains(response, '/static/css/app.css?v=9')
+        self.assertContains(response, '/static/css/app.css?v=11')
         self.assertNotContains(response, 'https://cdn.tailwindcss.com')
         self.assertNotContains(response, 'unpkg.com')
         self.assertNotContains(response, 'css/output.css')
@@ -171,7 +171,7 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, 'hx-boost="true"')
         self.assertContains(response, 'hx-request=\'{"noHeaders":true}\'')
         self.assertContains(response, 'hx-boost="false"')
-        self.assertContains(response, '/static/js/navigation.js?v=2')
+        self.assertContains(response, '/static/js/navigation.js?v=3')
 
     def test_authenticated_nav_has_desktop_and_mobile_selectors(self):
         user = User.objects.create_user('language', password='test')

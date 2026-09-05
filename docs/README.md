@@ -15,7 +15,7 @@ the root README is available in [English](../README.md) and
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and clean-reset delivery. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
-| [frontend.md](frontend.md) | Server-rendered design system, progressive-disclosure policy and banking UI structure. |
+| [frontend.md](frontend.md) | Server-rendered design system, viewport/focus preservation, progressive disclosure and banking UI structure. |
 | [design-system.html](design-system.html) | Canonical visual tokens and component catalog. |
 | [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
 | [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |
@@ -29,8 +29,8 @@ the root README is available in [English](../README.md) and
 - [apps/categories.md](apps/categories.md) — income/expense categories.
 - [apps/banking.md](apps/banking.md) — banks, accounts, movements, PIX, cards,
   invoices, loyalty and historical FX.
-- [apps/transactions.md](apps/transactions.md) — categorized economic events and
-  settlement behavior.
+- [apps/transactions.md](apps/transactions.md) — categorized economic events, progressive list
+  filters and settlement behavior.
 - [apps/dashboard.md](apps/dashboard.md) — cash, cash-flow, liabilities,
   investments and net-worth read models.
 - [apps/investments.md](apps/investments.md) — separate position ledger using

@@ -71,11 +71,40 @@ queries exclude them until their effective date. See
 
 ## Listing and reporting semantics
 
-Search covers title, notes, category, bank, account and card labels. Filters
-distinguish exact event date, billed month, transaction type and banking
-instrument. The billed-month filter follows the month in which money is charged:
-it shifts credit-card purchases according to the card cycle and includes each
-applicable occurrence of fixed and installment transactions.
+The list opens on the full history. Search covers title, notes, category, bank,
+account and card labels. Search and billed month remain visible; exact event
+date is under **More filters**, automatically expanded when a date is applied.
+Ordering lives beside the results. All controls work through ordinary GET
+requests, including without JavaScript. Enhanced filtering, card/recurrence
+selection, sorting and pagination preserve viewport position and keyboard focus
+through the [shared navigation contract](../frontend.md#preserve-the-users-location).
+
+**All**, **Income** and **Expenses** use compact cards in a single horizontal
+row, with each label and count side by side. They count records matching search, billed
+month and exact date, before category and recurrence refinements. A fixed
+transaction or installment plan counts once, not once per occurrence. Cards do
+not total monetary amounts.
+
+Category choices contain only owned categories with records matching the search,
+dates, type and recurrence. Parent names appear as `Parent › Child`; selecting a
+category matches that exact category, not its descendants. Recurrence shortcuts
+are All, Fixed (`is_fixed=True`), Installments (`is_fixed=False`, `installments>1`)
+and One-off (`is_fixed=False`, `installments=1`). Income hides Installments and
+clears an incompatible installment selection.
+
+The list accepts `category=<id>` and `recurrence=fixed|installment|oneoff` alongside
+`q`, `month=YYYY-MM`, `date=YYYY-MM-DD`, `type=INCOME|EXPENSE` and the existing
+`sort` values. Invalid, unavailable or incompatible selections are ignored and
+are not carried into navigation. Changing type or recurrence clears category;
+filter changes reset pagination. Search, dates and category use **Apply filters**.
+Sorting and pagination preserve applied filters. Empty installations invite the
+first transaction; empty filtered results offer filter recovery.
+
+Billed month uses `Transaction.amount_for_month`: credit purchases follow their
+statement cycle, while fixed and installment records appear in every applicable
+month. Fixed includes ended recurrences when no month is selected. Month-based
+filtering calculates eligibility once and reuses it for counts, categories and
+results; without a month, filtering and aggregation stay in SQL.
 
 Authenticated users may export all their transactions or the active billed
 month as UTF-8 CSV. Full exports download as `transactions.csv`; a monthly
