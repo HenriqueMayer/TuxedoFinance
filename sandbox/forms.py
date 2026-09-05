@@ -9,11 +9,11 @@ from sandbox.services import BudgetInput, CltScenario, CustomVariable
 INPUT_CLASSES = (
     'w-full rounded-xl border border-forest/20 bg-white px-4 py-3 text-sm text-forest '
     'placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 '
-    'dark:border-cream/20 dark:bg-forest-deep dark:text-cream dark:placeholder:text-cream/40'
+    'dark:border-cream/20 dark:bg-night dark:text-cream dark:placeholder:text-night-muted'
 )
 CHECKBOX_CLASSES = (
     'h-5 w-5 rounded-md border-forest/20 bg-white accent-caramel '
-    'focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:border-cream/20 dark:bg-forest-deep'
+    'focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:border-cream/20 dark:bg-night'
 )
 
 

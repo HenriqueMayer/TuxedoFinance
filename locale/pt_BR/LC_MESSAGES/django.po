@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-03 18:38+0000\n"
+"POT-Creation-Date: 2026-09-05 02:52+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -645,6 +645,9 @@ msgstr "Avulsa"
 msgid "All time"
 msgstr "Todo o período"
 
+msgid "Withdrawals"
+msgstr "Resgates"
+
 msgid "Expenses"
 msgstr "Despesas"
 
@@ -1006,9 +1009,6 @@ msgstr "Escolha como informar o rendimento."
 
 msgid "Deposits"
 msgstr "Aportes"
-
-msgid "Withdrawals"
-msgstr "Resgates"
 
 msgid "Yields"
 msgstr "Rendimentos"
@@ -1590,13 +1590,11 @@ msgstr "Fluxo de caixa mensal"
 msgid "What comes in and what goes out each month, side by side."
 msgstr "O que entra e o que sai a cada mês, lado a lado."
 
-msgid "Grouped bar chart of income, expenses and investments per month"
+msgid ""
+"Grouped bar chart of income, expenses, investments, and withdrawals per month"
 msgstr ""
-"Gráfico de barras agrupadas de receitas, despesas e investimentos por mês"
-
-msgid "Grouped bar chart of income, expenses, investments, and withdrawals per month"
-msgstr ""
-"Gráfico de barras agrupadas de receitas, despesas, investimentos e resgates por mês"
+"Gráfico de barras agrupadas de receitas, despesas, investimentos e resgates "
+"por mês"
 
 msgid "How much is on installments"
 msgstr "Quanto está parcelado"
@@ -1644,10 +1642,10 @@ msgstr "Movimentação em suas contas e cartões durante todo o período."
 #, python-format
 msgid ""
 "Money moved across your accounts and cards in <span class=\"font-medium text-"
-"forest/70 dark:text-cream/70\">%(window)s</span>."
+"forest/70 dark:text-night-muted\">%(window)s</span>."
 msgstr ""
 "Movimentação em suas contas e cartões em <span class=\"font-medium text-"
-"forest/70 dark:text-cream/70\">%(window)s</span>."
+"forest/70 dark:text-night-muted\">%(window)s</span>."
 
 msgid "Click a bar to see its categories."
 msgstr "Clique em uma barra para ver suas categorias."
@@ -1746,6 +1744,15 @@ msgstr "Desempenho mensal"
 msgid "A clear check of this month, %(username)s."
 msgstr "Um panorama claro deste mês, %(username)s."
 
+msgid "Sandbox"
+msgstr "Sandbox"
+
+msgid "Reports"
+msgstr "Relatórios"
+
+msgid "Previous month"
+msgstr "Mês anterior"
+
 #, python-format
 msgid "Progress through %(cutoff)s"
 msgstr "Progresso até %(cutoff)s"
@@ -1756,74 +1763,28 @@ msgstr "Mês planejado"
 msgid "Completed month"
 msgstr "Mês concluído"
 
-msgid "Cash position"
-msgstr "Posição de caixa"
+msgid "Next month"
+msgstr "Próximo mês"
 
-msgid "Monthly balance summary"
-msgstr "Resumo mensal dos saldos"
+msgid "Back to this month"
+msgstr "Voltar para este mês"
 
-msgid "What is available now and where this month is heading."
-msgstr "O que está disponível agora e para onde este mês está caminhando."
-
-msgid "Projected opening, change, and closing for the planned month."
-msgstr "Abertura, variação e fechamento projetados para o mês planejado."
-
-msgid "Opening, change, and closing for the completed month."
-msgstr "Abertura, variação e fechamento do mês concluído."
-
-msgid "Available cash today"
-msgstr "Caixa disponível hoje"
-
-msgid "Cash change through today"
-msgstr "Variação de caixa até hoje"
-
-msgid "Projected month-end cash"
-msgstr "Caixa projetado no fim do mês"
-
-msgid "Projected month-end balance"
-msgstr "Saldo projetado no fim do mês"
-
-msgid "Projected opening cash"
-msgstr "Caixa inicial projetado"
-
-msgid "Projected opening balance"
-msgstr "Saldo inicial projetado"
-
-msgid "Planned cash change"
-msgstr "Variação de caixa planejada"
-
-msgid "Planned balance change"
-msgstr "Variação de saldo planejada"
-
-msgid "Projected closing cash"
-msgstr "Caixa final projetado"
-
-msgid "Projected closing balance"
-msgstr "Saldo final projetado"
-
-msgid "Opening cash"
-msgstr "Caixa inicial"
-
-msgid "Cash change"
-msgstr "Variação de caixa"
-
-msgid "Balance change"
-msgstr "Variação do saldo"
-
-msgid "Net activity"
-msgstr "Atividade líquida"
-
-msgid "Closing cash"
-msgstr "Caixa final"
-
-msgid "Closing balance"
-msgstr "Saldo final"
+msgid ""
+"Not included in consolidated totals because an exchange rate to the "
+"configured currency is missing:"
+msgstr ""
+"Não incluído nos totais consolidados porque falta uma taxa de câmbio para a "
+"moeda configurada:"
 
 msgid "Month performance"
 msgstr "Desempenho do mês"
 
-msgid "Recorded or modeled through today, with the rest of the month shown as planned."
-msgstr "Valores registrados ou modelados até hoje, com o restante do mês exibido como planejado."
+msgid ""
+"Recorded or modeled through today, with the rest of the month shown as "
+"planned."
+msgstr ""
+"Valores registrados ou modelados até hoje, com o restante do mês exibido "
+"como planejado."
 
 msgid "Activity planned for the selected month."
 msgstr "Atividade planejada para o mês selecionado."
@@ -1858,8 +1819,14 @@ msgstr "Investimentos planejados"
 msgid "Planned withdrawals"
 msgstr "Resgates planejados"
 
-msgid "Income and expenses describe economic activity; available cash changes when account movements and card invoices are settled. Investment deposits and withdrawals stay separate."
-msgstr "Receitas e despesas descrevem a atividade econômica; o caixa disponível muda quando movimentações de conta e faturas de cartão são liquidadas. Aportes e resgates de investimentos permanecem separados."
+msgid ""
+"Income and expenses describe economic activity; available cash changes when "
+"account movements and card invoices are settled. Investment deposits and "
+"withdrawals stay separate."
+msgstr ""
+"Receitas e despesas descrevem a atividade econômica; o caixa disponível muda "
+"quando movimentações de conta e faturas de cartão são liquidadas. Aportes e "
+"resgates de investimentos permanecem separados."
 
 msgid "Expenses by category"
 msgstr "Despesas por categoria"
@@ -1886,6 +1853,9 @@ msgstr "Nenhuma despesa categorizada até hoje."
 msgid "No categorized expenses were recorded for this month."
 msgstr "Nenhuma despesa categorizada foi registrada neste mês."
 
+msgid "Bank accounts today"
+msgstr "Contas bancárias hoje"
+
 msgid "Live native balances, independent of the selected month."
 msgstr "Saldos nativos atuais, independentemente do mês selecionado."
 
@@ -1898,6 +1868,9 @@ msgid_plural "%(hidden)s more accounts"
 msgstr[0] "%(hidden)s conta adicional"
 msgstr[1] "%(hidden)s contas adicionais"
 
+msgid "No bank accounts yet."
+msgstr "Ainda não há contas bancárias."
+
 msgid "Upcoming invoices"
 msgstr "Próximas faturas"
 
@@ -1905,122 +1878,31 @@ msgid "Scheduled card cash settlements, independent of the selected month."
 msgstr "Liquidações agendadas de cartão, independentemente do mês selecionado."
 
 #, python-format
+msgid "Due %(due_date)s"
+msgstr "Vence em %(due_date)s"
+
+#, python-format
 msgid "%(hidden)s more invoice"
 msgid_plural "%(hidden)s more invoices"
 msgstr[0] "%(hidden)s fatura adicional"
 msgstr[1] "%(hidden)s faturas adicionais"
 
-msgid "Six-month outlook"
-msgstr "Perspectiva de seis meses"
-
-msgid "Monthly activity and projected closing balances from the selected month."
-msgstr "Atividade mensal e saldos finais projetados a partir do mês selecionado."
-
-#, python-format
-msgid "Your cash flow at a glance, %(username)s."
-msgstr "Seu fluxo de caixa em um só olhar, %(username)s."
-
-msgid "Sandbox"
-msgstr "Sandbox"
-
-msgid "Reports"
-msgstr "Relatórios"
-
-msgid "Previous month"
-msgstr "Mês anterior"
-
-msgid "Current month"
-msgstr "Mês atual"
-
-msgid "Projection"
-msgstr "Projeção"
-
-msgid "Past month"
-msgstr "Mês passado"
-
-msgid "Next month"
-msgstr "Próximo mês"
-
-msgid "Back to this month"
-msgstr "Voltar para este mês"
-
-msgid "Current Balance"
-msgstr "Saldo atual"
-
-msgid "Income (month)"
-msgstr "Receitas (mês)"
-
-msgid "Expenses (month)"
-msgstr "Despesas (mês)"
-
-msgid "Investments (month)"
-msgstr "Investimentos (mês)"
-
-msgid "Balance (month)"
-msgstr "Saldo (mês)"
-
-msgid "Projected (end of month)"
-msgstr "Projetado (fim do mês)"
-
-msgid ""
-"Projected closing includes this month's income and expenses. Credit-card "
-"purchases belong to the statement month, while cash is settled on the "
-"invoice due date."
-msgstr ""
-"O fechamento projetado inclui as receitas e despesas deste mês. As compras "
-"no cartão de crédito pertencem ao mês da fatura, enquanto o caixa é "
-"liquidado na data de vencimento da fatura."
-
-msgid ""
-"Not included in consolidated totals because an exchange rate to the "
-"configured currency is missing:"
-msgstr ""
-"Não incluído nos totais consolidados porque falta uma taxa de câmbio para a "
-"moeda configurada:"
-
-msgid "Bank accounts today"
-msgstr "Contas bancárias hoje"
-
-msgid "Native balances from opening balance and posted movements."
-msgstr ""
-"Saldos nativos calculados pelo saldo inicial e pelas movimentações lançadas."
-
-msgid "No bank accounts yet."
-msgstr "Ainda não há contas bancárias."
-
-msgid "Open and scheduled invoices"
-msgstr "Faturas em aberto e agendadas"
-
-msgid "Card purchases affect cash only on the invoice due date."
-msgstr ""
-"Compras no cartão afetam o caixa somente na data de vencimento da fatura."
-
-#, python-format
-msgid "Next: %(due_date)s"
-msgstr "Próxima: %(due_date)s"
-
-#, python-format
-msgid "Due %(due_date)s"
-msgstr "Vence em %(due_date)s"
-
 msgid "No open invoices."
 msgstr "Nenhuma fatura em aberto."
 
-msgid "Outlook"
-msgstr "Perspectiva"
+msgid "Six-month outlook"
+msgstr "Perspectiva de seis meses"
 
 msgid ""
-"Ledger balances at each month end, including synchronized invoices and "
-"recurrences."
+"Monthly activity and projected closing balances from the selected month."
 msgstr ""
-"Saldos contábeis ao fim de cada mês, incluindo faturas sincronizadas e "
-"recorrências."
+"Atividade mensal e saldos finais projetados a partir do mês selecionado."
 
 msgid "Month"
 msgstr "Mês"
 
-msgid "Net"
-msgstr "Líquido"
+msgid "Net activity"
+msgstr "Atividade líquida"
 
 msgid "Projected balance"
 msgstr "Saldo projetado"
@@ -2320,134 +2202,73 @@ msgstr "Nenhum ativo."
 msgid "Back to Settings"
 msgstr "Voltar às configurações"
 
-msgid "Tuxedo Finance — Take control of your personal finances"
-msgstr "Tuxedo Finance — Assuma o controle das suas finanças pessoais"
-
-msgid "Personal finance, simplified"
-msgstr "Finanças pessoais simplificadas"
-
 msgid ""
-"Understand your cash flow, recurring expenses, card bills, investments, and "
-"where your money goes each month."
+"A local application to record income and expenses, track accounts and card "
+"bills, and organize investments."
 msgstr ""
-"Entenda seu fluxo de caixa, despesas recorrentes, faturas de cartão, "
-"investimentos e para onde vai seu dinheiro a cada mês."
+"Aplicação local para registrar receitas e despesas, acompanhar contas e "
+"faturas e organizar investimentos."
+
+msgid "Open dashboard"
+msgstr "Abrir dashboard"
+
+msgid "Create account"
+msgstr "Criar conta"
+
+msgid "A black-and-white cat wearing a bow tie at a desk."
+msgstr "Um gato preto e branco de gravata-borboleta junto a uma mesa."
+
+msgid "Features"
+msgstr "Funcionalidades"
+
+msgid "Transactions and categories"
+msgstr "Transações e categorias"
 
 msgid ""
-"Built from the everyday frustration of adapting spreadsheets to real "
-"personal finances."
+"Record income and expenses with categories, payment details, and CSV export."
 msgstr ""
-"Nascido da frustração diária de adaptar planilhas às finanças pessoais reais."
+"Registre receitas e despesas com categorias, informações de pagamento e "
+"exportação CSV."
 
-msgid "Sample dashboard preview"
-msgstr "Prévia de exemplo do Dashboard"
+msgid "Accounts and cards"
+msgstr "Contas e cartões"
 
 msgid ""
-"A tuxedo cat in a home office beside charts and the Tuxedo Finance wordmark."
+"Track bank balances, own-account transfers, PIX, and debit and credit cards "
+"with their bills."
 msgstr ""
-"Um gato tuxedo em um escritório doméstico, ao lado de gráficos e do nome "
-"Tuxedo Finance."
+"Acompanhe saldos bancários, transferências entre suas contas, PIX e cartões "
+"de débito e crédito com suas faturas."
 
-msgid "Clear money, elegantly presented."
-msgstr "Dinheiro claro, apresentado com elegância."
-
-msgid "A focused home for understanding your finances in black and white."
-msgstr "Um espaço focado para entender suas finanças preto no branco."
-
-msgid "How Tuxedo Finance works"
-msgstr "Como o Tuxedo Finance funciona"
-
-msgid "Three steps between you and a clear picture of your money."
-msgstr "Três passos entre você e uma visão clara do seu dinheiro."
-
-msgid "Record"
-msgstr "Registre"
+msgid "Recurrences and installments"
+msgstr "Recorrências e parcelas"
 
 msgid ""
-"Log each transaction with a title, amount, type, category, and bank "
-"instrument in under 30 seconds — no more hunting for the right cell."
+"Schedule fixed income and expenses and distribute credit-card purchases "
+"across installments."
 msgstr ""
-"Registre cada transação com título, valor, tipo, categoria e meio bancário "
-"em menos de 30 segundos — sem precisar procurar a célula certa."
-
-msgid "Classify"
-msgstr "Classifique"
+"Programe receitas e despesas fixas e distribua compras no cartão de crédito "
+"em parcelas."
 
 msgid ""
-"Consistent categories, subcategories, accounts, and cards keep every entry "
-"comparable, month after month."
+"Record deposits, withdrawals, and yields in a separate investment ledger."
 msgstr ""
-"Categorias, subcategorias, contas e cartões consistentes mantêm todos os "
-"lançamentos comparáveis, mês após mês."
-
-msgid "Review"
-msgstr "Analise"
+"Registre aportes, resgates e rendimentos em um histórico separado de "
+"investimentos."
 
 msgid ""
-"Open your dashboard for a consolidated view of your Current Balance and how "
-"the month is performing."
+"Review income, expenses, and cash-flow projections by period and category."
 msgstr ""
-"Abra seu Dashboard para ter uma visão consolidada do seu saldo atual e do "
-"desempenho do mês."
+"Consulte receitas, despesas e projeções de fluxo de caixa por período e "
+"categoria."
 
-msgid "Everything you need to track your money"
-msgstr "Tudo o que você precisa para acompanhar seu dinheiro"
-
-msgid ""
-"Built for people who currently keep a spreadsheet — and want something "
-"better."
-msgstr "Feito para quem hoje usa uma planilha — e quer algo melhor."
-
-msgid "Types & categories"
-msgstr "Tipos e categorias"
+msgid "Salary sandbox"
+msgstr "Simulação salarial"
 
 msgid ""
-"Classify every entry as Income, Expense, or Investment, with categories and "
-"subcategories like Groceries or Transportation."
+"Estimate take-home pay and plan monthly expenses without saving the scenario."
 msgstr ""
-"Classifique cada lançamento como Receita, Despesa ou Investimento, com "
-"categorias e subcategorias como Mercado ou Transporte."
-
-msgid "Payment methods"
-msgstr "Formas de pagamento"
-
-msgid ""
-"Track how you paid — Credit Card, Debit Card, PIX, or Checking Account — for "
-"every transaction."
-msgstr ""
-"Acompanhe como você pagou — Cartão de crédito, Cartão de débito, PIX ou "
-"Conta corrente — em cada transação."
-
-msgid "Fixed vs. variable"
-msgstr "Fixo ou variável"
-
-msgid ""
-"Mark recurring bills as fixed and keep them separate from one-off, variable "
-"spending."
-msgstr ""
-"Marque contas recorrentes como fixas e mantenha-as separadas dos gastos "
-"avulsos e variáveis."
-
-msgid "Consolidated dashboard"
-msgstr "Dashboard consolidado"
-
-msgid ""
-"See Current Balance, Income, Expenses, and monthly Balance in a single, "
-"clear view."
-msgstr ""
-"Veja saldo atual, receitas, despesas e saldo mensal em uma única visão clara."
-
-msgid "Your money, in black and white."
-msgstr "Seu dinheiro, preto no branco."
-
-msgid "Ready to see your cash flow clearly?"
-msgstr "Pronto para enxergar seu fluxo de caixa com clareza?"
-
-msgid "Create your account and start recording transactions in minutes."
-msgstr "Crie sua conta e comece a registrar transações em poucos minutos."
-
-msgid "Sign up for free"
-msgstr "Cadastre-se gratuitamente"
+"Estime o salário líquido e planeje despesas mensais sem salvar o cenário."
 
 msgid "Tuxedo"
 msgstr "Tuxedo"
@@ -2673,11 +2494,11 @@ msgstr "Plano mensal com os dados atuais"
 msgid "Category"
 msgstr "Categoria"
 
-msgid "Net income used by the monthly plan."
-msgstr "Renda líquida usada pelo plano mensal."
-
 msgid "Monthly net income"
 msgstr "Renda líquida mensal"
+
+msgid "Net income used by the monthly plan."
+msgstr "Renda líquida usada pelo plano mensal."
 
 msgid ""
 "Monthly fixed-cost amount and its percentage of net income, regardless of "

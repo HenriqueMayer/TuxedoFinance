@@ -2,20 +2,20 @@
 {% if preview %}
     <dl class="grid gap-3 sm:grid-cols-3">
         <div>
-            <dt class="text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate 'Previous balance' %}</dt>
+            <dt class="text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate 'Previous balance' %}</dt>
             <dd class="mt-1 font-semibold">{% include 'partials/money.html' with currency=currency amount=preview.previous_balance %}</dd>
         </div>
         <div>
-            <dt class="text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate 'Calculated yield' %}</dt>
+            <dt class="text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate 'Calculated yield' %}</dt>
             <dd class="mt-1 font-semibold text-income dark:text-income-light">{% include 'partials/money.html' with currency=currency amount=preview.yield_amount %}</dd>
         </div>
         <div>
-            <dt class="text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate 'New balance' %}</dt>
+            <dt class="text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate 'New balance' %}</dt>
             <dd class="mt-1 font-semibold">{% include 'partials/money.html' with currency=currency amount=preview.ending_balance %}</dd>
         </div>
     </dl>
 {% elif error %}
     <p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>
 {% else %}
-    <p class="text-forest/70 dark:text-cream/70">{% translate 'Choose a product, monetary asset, date, and value to preview the calculated yield.' %}</p>
+    <p class="text-forest/70 dark:text-night-muted">{% translate 'Choose a product, monetary asset, date, and value to preview the calculated yield.' %}</p>
 {% endif %}

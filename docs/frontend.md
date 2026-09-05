@@ -34,10 +34,10 @@ plain GET links and the section anchor provide the same no-JavaScript fallback.
 ## Visual language
 
 The interface follows the Tuxedo Finance design language documented in
-`design-system.html`: cream and forest foundations,
-caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
+`design-system.html`: cream and forest light foundations, neutral black and
+graphite dark foundations, caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
 throughout. Light cards use white surfaces and soft shadows; dark cards use flat
-forest surfaces over the forest-deep page background. Body copy starts at
+graphite surfaces over the near-black page background. Body copy starts at
 16/24px, supporting copy at 14/20px, and compact labels never fall below 12px.
 
 | Role | Semantic treatment |
@@ -62,7 +62,30 @@ links to the public landing page, including for authenticated users. Primary
 actions are solid caramel pills with forest-deep text; `caramel-ink` carries
 brand links over light surfaces. Outline actions invert to forest/cream on
 hover. Titles, labels, controls and tabular monetary figures all use Inter.
-Secondary text uses at least forest/70 or cream/70 contrast.
+Secondary text uses forest/70 in light mode and neutral night-muted in dark mode.
+
+## Dark foundation tokens
+
+The light palette remains unchanged. Dark foundations use `night` (#101010),
+`night-surface` (#1B1B1B), and `night-raised` (#262626) for page, panel, and
+hover/elevated surfaces. Use `night-muted` (#B8B8B8) for secondary text and
+`night-line` (#808080) for form-control boundaries; decorative dividers may use
+cream/15. Main text stays cream and financial semantic colors retain their
+existing meaning. Do not redefine forest tokens to change the dark theme.
+
+Apply dark variants to structural backgrounds, including otherwise always-dark
+footers, mobile menus, and salary results. Native controls inherit dark
+`color-scheme`; keyboard focus uses a visible caramel-light outline. Field
+errors retain their semantic styling. Theme initialization and persistence are
+shared across full navigation and HTMX swaps.
+
+The public homepage uses factual copy, six separated feature rows, and the full
+horizontal cat photograph in a translucent double rounded frame with a subtle
+caramel glow. Its 4:3 mobile / 16:10 larger frame preserves the image's native
+ratio; padded hover zoom respects reduced motion. It has no promotional feature
+cards or example balances.
+Functional cards remain available in authenticated screens. See
+[pages](apps/pages.md) for the composition and authentication behavior.
 
 ## Root layout and navigation
 
@@ -78,7 +101,8 @@ Dashboard | Reports | Transactions | Categories | Banks | Investments
 loyalty routes. The authenticated desktop navigation starts at the `xl`
 breakpoint so tablet and narrow-laptop widths do not compress or overflow the
 full link set. Below that breakpoint, the mobile navigation is a full-screen
-forest-deep modal with the same links and ordering as desktop. It slides in,
+forest-deep modal in light mode and near-black modal in dark mode, with the same
+links and ordering as desktop. It slides in,
 locks page scrolling, makes background content inert, contains keyboard focus,
 closes on Escape and restores focus to its trigger.
 
@@ -246,7 +270,7 @@ for the complete lists.
 ## Reports and charts
 
 Charts remain inline server-rendered SVG/CSS with native `<title>` fallbacks,
-forest/cream tooltip pills on mouse hover and keyboard focus, responsive
+theme-aware tooltip pills on mouse hover and keyboard focus, responsive
 overflow containers and accessible text summaries. Reports and Investments use
 the same interaction contract. Income uses the green pair, expense uses the red pair, and
 investment has its own ochre pair. The recurrence donut uses purple

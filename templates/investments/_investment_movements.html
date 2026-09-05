@@ -17,21 +17,21 @@
           hx-swap="outerHTML"
           hx-push-url="true"
           data-scroll-target="investment-movements"
-          class="grid gap-3 rounded-3xl bg-cream p-5 sm:grid-cols-2 lg:grid-cols-6 dark:bg-forest">
+          class="grid gap-3 rounded-3xl bg-cream p-5 sm:grid-cols-2 lg:grid-cols-6 dark:bg-night-surface">
         <div class="space-y-1.5 lg:col-span-2">
-            <label for="investment-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+            <label for="investment-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {% translate "Search investments" %}
             </label>
             <input id="investment-search" type="search" name="q" value="{{ search_query }}"
                    placeholder="{% translate 'Product, asset, reason or notes' %}"
-                   class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest placeholder:text-forest/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream dark:placeholder:text-cream/70">
+                   class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest placeholder:text-forest/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream dark:placeholder:text-night-muted">
         </div>
         <div class="space-y-1.5">
-            <label for="investment-kind" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+            <label for="investment-kind" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {% translate "Operation type" %}
             </label>
             <select id="investment-kind" name="kind"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All types' %}</option>
                 {% for value, label in kind_choices %}
                     <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
@@ -39,11 +39,11 @@
             </select>
         </div>
         <div class="space-y-1.5">
-            <label for="investment-bank" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+            <label for="investment-bank" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {% translate "Bank" %}
             </label>
             <select id="investment-bank" name="bank"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All banks' %}</option>
                 {% for bank in bank_choices %}
                     <option value="{{ bank.pk }}" {% if selected_bank == bank.pk|stringformat:'s' %}selected{% endif %}>{{ bank.name }}</option>
@@ -51,11 +51,11 @@
             </select>
         </div>
         <div class="space-y-1.5">
-            <label for="investment-product" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+            <label for="investment-product" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {% translate "Investment product" %}
             </label>
             <select id="investment-product" name="product"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All products' %}</option>
                 {% for product in product_choices %}
                     <option value="{{ product.pk }}" {% if selected_product == product.pk|stringformat:'s' %}selected{% endif %}>{{ product.bank.name }} / {{ product.name }}</option>
@@ -63,11 +63,11 @@
             </select>
         </div>
         <div class="space-y-1.5">
-            <label for="investment-asset" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
+            <label for="investment-asset" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {% translate "Asset" %}
             </label>
             <select id="investment-asset" name="asset"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-forest dark:text-cream">
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All assets' %}</option>
                 {% for asset in asset_choices %}
                     <option value="{{ asset.pk }}" {% if selected_asset == asset.pk|stringformat:'s' %}selected{% endif %}>{{ asset.code }}</option>
@@ -77,7 +77,7 @@
         <div class="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-6">
             <button type="submit"
                     data-scroll-target="investment-movements"
-                    class="rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-forest dark:text-cream/90 dark:hover:bg-cream dark:hover:text-forest">
+                    class="rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface dark:text-cream/90 dark:hover:bg-cream dark:hover:text-night">
                 {% translate 'Filter' %}
             </button>
             {% if search_query or selected_kind or selected_bank or selected_product or selected_asset %}
@@ -87,7 +87,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    data-scroll-target="investment-movements"
-                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 transition hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel dark:text-cream/70 dark:hover:text-cream">
+                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 transition hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel dark:text-night-muted dark:hover:text-cream">
                     {% translate "Clear filters" %}
                 </a>
             {% endif %}
@@ -95,7 +95,7 @@
     </form>
 
     {% if investments %}
-        <div class="rounded-3xl bg-cream p-2 dark:bg-forest">
+        <div class="rounded-3xl bg-cream p-2 dark:bg-night-surface">
             <ul class="divide-y divide-forest/10 dark:divide-cream/10">
                 {% for investment in investments %}
                     <li class="flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
@@ -104,7 +104,7 @@
                                 <strong class="font-sans text-lg">{{ investment.asset.code }}</strong>
                                 <span class="text-sm">{{ investment.get_kind_display }}</span>
                             </div>
-                            <p class="text-xs text-forest/70 dark:text-cream/70">{{ investment.product.bank.name }} / {{ investment.product.name }} - {{ investment.date|date:USER_DATE_FORMAT }}</p>
+                            <p class="text-xs text-forest/70 dark:text-night-muted">{{ investment.product.bank.name }} / {{ investment.product.name }} - {{ investment.date|date:USER_DATE_FORMAT }}</p>
                             <p class="mt-1 text-sm">
                                 {% if investment.asset.valuation_mode == 'MONETARY' %}
                                     {% translate "Value:" %} {% include "partials/money.html" with currency=investment.currency amount=investment.amount %};
@@ -117,9 +117,9 @@
                                 {% endif %}
                             </p>
                             {% if investment.reason or investment.notes %}
-                                <p class="text-xs text-forest/70 dark:text-cream/70">{{ investment.reason }}{% if investment.reason and investment.notes %} - {% endif %}{{ investment.notes }}</p>
+                                <p class="text-xs text-forest/70 dark:text-night-muted">{{ investment.reason }}{% if investment.reason and investment.notes %} - {% endif %}{{ investment.notes }}</p>
                             {% endif %}
-                            <p class="text-xs text-forest/70 dark:text-cream/70">
+                            <p class="text-xs text-forest/70 dark:text-night-muted">
                                 {% if investment.source_account %}
                                     {% blocktranslate with account=investment.source_account %}Funded by {{ account }}:{% endblocktranslate %}
                                     {% include "partials/money.html" with currency=investment.source_account.currency amount=investment.cash_amount %}
@@ -139,7 +139,7 @@
                                 {% translate 'Edit' %}
                             </a>
                             <a href="{% url 'investments:delete' investment.pk %}"
-                               class="rounded-full bg-expense/10 px-4 py-2 text-xs font-medium uppercase tracking-widest text-expense ring-1 ring-inset ring-expense/30">
+                               class="rounded-full bg-expense/10 px-4 py-2 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30">
                                 {% translate 'Delete' %}
                             </a>
                         </div>
@@ -148,7 +148,7 @@
             </ul>
         </div>
     {% else %}
-        <p class="rounded-3xl bg-white p-6 text-sm font-normal text-forest/70 shadow-sm dark:bg-forest dark:text-cream/70">
+        <p class="rounded-3xl bg-white p-6 text-sm font-normal text-forest/70 shadow-sm dark:bg-night-surface dark:text-night-muted">
             {% translate 'No matching operations.' %}
         </p>
     {% endif %}
@@ -163,14 +163,14 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    data-scroll-target="investment-movements"
-                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-forest dark:text-cream/90 dark:hover:bg-cream dark:hover:text-forest">
+                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface dark:text-cream/90 dark:hover:bg-cream dark:hover:text-night">
                     {% translate 'Previous' %}
                 </a>
             {% else %}
                 <span></span>
             {% endif %}
 
-            <p class="text-sm text-forest/70 dark:text-cream/70">
+            <p class="text-sm text-forest/70 dark:text-night-muted">
                 {% blocktranslate with number=page_obj.number total=page_obj.paginator.num_pages %}Page {{ number }} of {{ total }}{% endblocktranslate %}
             </p>
 
@@ -182,7 +182,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    data-scroll-target="investment-movements"
-                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-forest dark:text-cream/90 dark:hover:bg-cream dark:hover:text-forest">
+                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface dark:text-cream/90 dark:hover:bg-cream dark:hover:text-night">
                     {% translate 'Next' %}
                 </a>
             {% else %}

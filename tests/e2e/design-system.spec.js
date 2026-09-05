@@ -51,15 +51,17 @@ async function createMonetaryInvestment(page, testInfo) {
 
 test('landing keeps concise translated copy and local frontend dependencies', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Understand your cash flow');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tuxedo Finance');
     await expect(page.getByText('Tuxedo Finance replaces the single column')).toHaveCount(0);
     await expect(page.locator('script[src*="unpkg.com"]')).toHaveCount(0);
     await expect(page.locator('script[src*="/static/js/vendor/htmx.min.js"]')).toHaveCount(1);
 
     await page.locator('#language-select-public').selectOption('pt-br');
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Entenda seu fluxo de caixa');
-    await expect(page.getByText('Understand your cash flow')).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tuxedo Finance');
+    await expect(page.getByText('Aplicação local para registrar receitas e despesas', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Funcionalidades' })).toBeVisible();
+    await expect(page.getByText('A local application', { exact: false })).toHaveCount(0);
 });
 
 test('category CSV is downloaded without replacing the page', async ({ page }, testInfo) => {
@@ -364,4 +366,89 @@ test('reports keep the next-window control stable when returning to today become
 
     await page.setViewportSize({ width: 390, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+for (const width of [390, 768, 1024, 1440]) {
+    for (const theme of ['light', 'dark']) {
+        test(`homepage stays readable at ${width}px in ${theme} mode`, async ({ page }) => {
+            await page.setViewportSize({ width, height: 1000 });
+            await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+            await page.goto('/');
+            await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tuxedo Finance');
+            await expect(page.locator('main dl > div')).toHaveCount(6);
+            await expect(page.getByText('Sample dashboard preview')).toHaveCount(0);
+            await expect(page.getByText('Your money, in black and white.')).toHaveCount(0);
+            const portrait = page.getByRole('img', { name: 'A black-and-white cat wearing a bow tie at a desk.' });
+            await expect(portrait).toBeVisible();
+            expect(await portrait.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            const background = await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor);
+            expect(background).toBe(theme === 'dark' ? 'rgb(16, 16, 16)' : 'rgb(250, 248, 243)');
+            await page.locator('main').getByRole('link', { name: 'Log in', exact: true }).click();
+            await expect(page).toHaveURL(/\/accounts\/login\/$/);
+            expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(theme === 'dark');
+            await page.reload();
+            expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(theme === 'dark');
+        });
+    }
+}
+
+test('dark forms, menus and charts retain contrast and keyboard interaction', async ({ page }, testInfo) => {
+    await page.addInitScript(() => localStorage.setItem('theme', 'dark'));
+    await createAccount(page, testInfo);
+    await page.goto('/transactions/create/');
+    const title = page.getByRole('textbox', { name: /Title/ });
+    await expect(title).toBeVisible();
+    const style = await title.evaluate(el => {
+        const css = getComputedStyle(el);
+        return { background: css.backgroundColor, color: css.color, border: css.borderColor, scheme: css.colorScheme };
+    });
+    expect(style.background).toBe('rgb(16, 16, 16)');
+    expect(style.color).toBe('rgb(250, 248, 243)');
+    expect(style.border).toBe('rgb(128, 128, 128)');
+    expect(style.scheme).toBe('dark');
+    await title.focus();
+    await expect(title).toBeFocused();
+    expect(await title.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
+    const menu = page.getByRole('dialog', { name: 'Navigation menu' });
+    await expect(menu).toBeVisible();
+    expect(await menu.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(16, 16, 16)');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeFocused();
+    await page.goto('/dashboard/reports/');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.goto('/sandbox/');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('public access and language selection work without JavaScript', async ({ browser }, testInfo) => {
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    await page.goto('/');
+    await expect(page.locator('main dl > div')).toHaveCount(6);
+    await page.locator('#language-select-public').selectOption('pt-br');
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.getByText('Aplicação local para registrar receitas e despesas', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Funcionalidades' })).toBeVisible();
+    await page.locator('main').getByRole('link', { name: 'Entrar', exact: true }).click();
+    await expect(page).toHaveURL(/\/accounts\/login\/$/);
+    await expect(page.locator('#id_username')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.goto('/accounts/signup/');
+    const username = `nojs-${testInfo.workerIndex}-${Date.now()}`;
+    await page.locator('#id_username').fill(username);
+    await page.locator('#id_email').fill(`${username}@example.test`);
+    await page.locator('#id_password1').fill('Tuxedo-E2E-2026!');
+    await page.locator('#id_password2').fill('Tuxedo-E2E-2026!');
+    await page.locator('main form button[type="submit"]').click();
+    await expect(page).toHaveURL(/\/dashboard\/$/);
+    await page.goto('/banking/create/');
+    await page.locator('#id_name').fill('Banco sem JavaScript');
+    await page.locator('main form button[type="submit"]').click();
+    await expect(page).toHaveURL(/\/banking\/$/);
+    await expect(page.getByText('Banco sem JavaScript', { exact: true })).toBeVisible();
+    await context.close();
 });

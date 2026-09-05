@@ -26,52 +26,52 @@ the active filters survive page navigation.
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Transactions" %}</h1>
-            <p class="mt-1 text-sm text-forest/70 dark:text-cream/70">{% translate "Every income, expense, and investment you have recorded." %}</p>
+            <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">{% translate "Every income, expense, and investment you have recorded." %}</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
             <details class="relative" data-export-menu hx-boost="false">
-                <summary class="cursor-pointer list-none rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel">
+                <summary class="cursor-pointer list-none rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel">
                     {% translate "Export CSV" %}
                 </summary>
-                <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-forest/10 dark:bg-forest dark:ring-cream/10">
+                <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-forest/10 dark:bg-night-surface dark:ring-cream/10">
                     <a href="{{ export_url }}" class="block text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light">{% translate "Export all transactions" %}</a>
                     <form action="{{ export_url }}" method="get" hx-boost="false" class="space-y-2">
-                        <label for="export-month" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Billed month" %}</label>
+                        <label for="export-month" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate "Billed month" %}</label>
                         <input id="export-month" type="month" name="month" required
-                               class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3 py-2 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                               class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3 py-2 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                         <button type="submit" class="w-full rounded-full bg-caramel px-3 py-2 text-xs font-medium uppercase tracking-widest text-forest-deep transition hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel">{% translate "Export selected month" %}</button>
                     </form>
                 </div>
             </details>
             <a href="{{ create_url }}"
-               class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+               class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                 {% translate "New Transaction" %}
             </a>
         </div>
     </div>
 
-    <form method="get" class="flex flex-col gap-3 rounded-3xl ring-1 ring-forest/10 dark:ring-cream/10 bg-white dark:bg-forest p-4 sm:flex-row sm:flex-wrap sm:items-end">
+    <form method="get" class="flex flex-col gap-3 rounded-3xl ring-1 ring-forest/10 dark:ring-cream/10 bg-white dark:bg-night-surface p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div class="min-w-[14rem] flex-[2] space-y-1.5">
-            <label for="filter-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Search" %}</label>
+            <label for="filter-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate "Search" %}</label>
             <input type="search" id="filter-search" name="q" value="{{ search_query }}"
                    placeholder="{% translate 'Title, notes, category, bank, account or card' %}"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-cream/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-night-muted focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-[12rem] flex-1 space-y-1.5">
             {% comment %}"Billed", not just "Month": the filter matches the month the money moves, so a card purchase past its best purchase day is found under the month its bill is paid, and a fixed transaction under every month it charges.{% endcomment %}
-            <label for="filter-month" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Billed month" %}</label>
+            <label for="filter-month" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate "Billed month" %}</label>
             <input type="month" id="filter-month" name="month" value="{{ selected_month }}"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-[12rem] flex-1 space-y-1.5">
-            <label for="filter-date" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Transaction date" %}</label>
+            <label for="filter-date" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate "Transaction date" %}</label>
             <input type="date" id="filter-date" name="date" value="{{ selected_date }}"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-type" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Type" %}</label>
+            <label for="filter-type" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate "Type" %}</label>
             <select id="filter-type" name="type"
-                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                 <option value="">{% translate "All types" %}</option>
                 {% for value, label in transaction_type_choices %}
                     <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
@@ -79,9 +79,9 @@ the active filters survive page navigation.
             </select>
         </div>
         <div class="min-w-[10rem] flex-1 space-y-1.5">
-            <label for="filter-sort" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">{% translate "Sort by" %}</label>
+            <label for="filter-sort" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate "Sort by" %}</label>
             <select id="filter-sort" name="sort"
-                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
                 <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>{% translate "Newest first" %}</option>
                 <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>{% translate "Oldest first" %}</option>
                 <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>{% translate "Last updated" %}</option>
@@ -91,12 +91,12 @@ the active filters survive page navigation.
         </div>
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                    class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                 {% translate "Filter" %}
             </button>
             {% if search_query or selected_month or selected_date or selected_type or selected_sort != 'newest' %}
                 <a href="{{ list_url }}"
-                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70 transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                     {% translate "Clear filters" %}
                 </a>
             {% endif %}
@@ -104,7 +104,7 @@ the active filters survive page navigation.
     </form>
 
     {% if transactions %}
-        <div class="rounded-3xl bg-cream p-2 dark:bg-forest">
+        <div class="rounded-3xl bg-cream p-2 dark:bg-night-surface">
             <ul class="divide-y divide-forest/10 dark:divide-cream/10">
                 {% for transaction in transactions %}
                     <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -133,7 +133,7 @@ the active filters survive page navigation.
                                     </span>
                                 {% endif %}
                             </div>
-                            <p class="text-sm text-forest/70 dark:text-cream/70">
+                            <p class="text-sm text-forest/70 dark:text-night-muted">
                                 {{ transaction.category.name }} &middot; {{ transaction.payment_label }}
                                 &middot; {{ transaction.get_payment_channel_display }}
                                 &middot; {{ transaction.date|date:USER_DATE_FORMAT }}
@@ -149,18 +149,18 @@ the active filters survive page navigation.
                                     {% if transaction.transaction_type == 'INCOME' %}+{% else %}-{% endif %}{{ transaction.native_currency }} {{ transaction.amount|floatformat:2 }}
                                 </p>
                                 {% if transaction.is_installment_plan %}
-                                    <p class="text-sm tabular-nums text-forest/70 dark:text-cream/70">
+                                    <p class="text-sm tabular-nums text-forest/70 dark:text-night-muted">
                                         {% blocktranslate with installments=transaction.installments currency=transaction.native_currency installment_amount=transaction.installment_amount|floatformat:2 %}{{ installments }}x {{ currency }} {{ installment_amount }} / month{% endblocktranslate %}
                                     </p>
                                 {% endif %}
                             </div>
                             <div class="flex items-center gap-3">
                                 <a href="{% url 'transactions:update' transaction.pk %}"
-                                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                                     {% translate "Edit" %}
                                 </a>
                                 <a href="{% url 'transactions:delete' transaction.pk %}"
-                                   class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                                   class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                                     {% translate "Delete" %}
                                 </a>
                             </div>
@@ -174,20 +174,20 @@ the active filters survive page navigation.
             <nav class="flex items-center justify-between gap-4" aria-label="{% translate 'Pagination' %}">
                 {% if page_obj.has_previous %}
                     <a href="{% querystring page=page_obj.previous_page_number %}"
-                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                         {% translate "Previous" %}
                     </a>
                 {% else %}
                     <span></span>
                 {% endif %}
 
-                <p class="text-sm text-forest/70 dark:text-cream/70">
+                <p class="text-sm text-forest/70 dark:text-night-muted">
                     {% blocktranslate with page_number=page_obj.number total_pages=page_obj.paginator.num_pages %}Page {{ page_number }} of {{ total_pages }}{% endblocktranslate %}
                 </p>
 
                 {% if page_obj.has_next %}
                     <a href="{% querystring page=page_obj.next_page_number %}"
-                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                       class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                         {% translate "Next" %}
                     </a>
                 {% else %}

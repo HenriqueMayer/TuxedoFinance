@@ -18,8 +18,8 @@ compact secondary line.
       ...
   </div>
 {% endcomment %}
-<div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
-    <p class="text-xs uppercase tracking-widest text-forest/70 dark:text-cream/70">{{ label }}</p>
+<div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
+    <p class="text-xs uppercase tracking-widest text-forest/70 dark:text-night-muted">{{ label }}</p>
     <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums {{ value_class|default:'text-forest dark:text-cream' }}">
         {% if amount is not None %}{{ CURRENCY_SYMBOL }} {{ amount|floatformat:2 }}{% else %}{{ value }}{% endif %}
     </p>

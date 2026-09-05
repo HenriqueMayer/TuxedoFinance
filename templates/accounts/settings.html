@@ -8,12 +8,12 @@
     <div class="text-center">
         <p class="mb-2 text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Settings" %}</p>
         <h1 class="font-sans text-4xl font-semibold tracking-tight">{% translate "Settings" %}.</h1>
-        <p class="mx-auto mt-2 max-w-xl text-sm font-normal text-forest/70 dark:text-cream/70">
+        <p class="mx-auto mt-2 max-w-xl text-sm font-normal text-forest/70 dark:text-night-muted">
             {% translate "Choose how Tuxedo Finance presents consolidated totals for your account." %}
         </p>
     </div>
 
-    <form method="post" hx-boost="false" class="space-y-6 rounded-3xl bg-white p-8 shadow-lg dark:bg-forest" novalidate>
+    <form method="post" hx-boost="false" class="space-y-6 rounded-3xl bg-white p-8 shadow-lg dark:bg-night-surface" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -27,7 +27,7 @@
         <section aria-labelledby="currency-heading" class="space-y-4">
             <div>
                 <h2 id="currency-heading" class="font-sans text-2xl tracking-tight font-semibold">{% translate "Base currency" %}</h2>
-                <p class="mt-1 text-sm font-normal text-forest/70 dark:text-cream/70">
+                <p class="mt-1 text-sm font-normal text-forest/70 dark:text-night-muted">
                     {% translate "This currency is used for consolidated dashboard and report totals. Native account and transaction amounts are never changed." %}
                 </p>
             </div>
@@ -37,7 +37,7 @@
         <section aria-labelledby="date-format-heading" class="space-y-4 border-t border-forest/10 pt-6 dark:border-cream/10">
             <div>
                 <h2 id="date-format-heading" class="font-sans text-2xl tracking-tight font-semibold">{% translate "Date format" %}</h2>
-                <p class="mt-1 text-sm font-normal text-forest/70 dark:text-cream/70">{% translate "Choose how complete dates are displayed throughout the application." %}</p>
+                <p class="mt-1 text-sm font-normal text-forest/70 dark:text-night-muted">{% translate "Choose how complete dates are displayed throughout the application." %}</p>
             </div>
             {% include 'partials/form_field.html' with field=form.date_format %}
         </section>
@@ -48,7 +48,7 @@
                 {% translate "Save settings" %}
             </button>
             <a href="{% url 'dashboard:index' %}"
-               class="inline-flex items-center justify-center rounded-full border border-forest px-6 py-3 text-xs font-medium uppercase tracking-widest transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/50 dark:text-cream dark:hover:bg-cream dark:hover:text-forest">
+               class="inline-flex items-center justify-center rounded-full border border-forest px-6 py-3 text-xs font-medium uppercase tracking-widest transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/50 dark:text-cream dark:hover:bg-cream dark:hover:text-night">
                 {% translate "Cancel" %}
             </a>
         </div>

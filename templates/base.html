@@ -20,8 +20,8 @@ Partials included here:
 Design tokens (Final Design System §2): Haven & Hound palette with derived
 tokens for dark theme and financial semantics, driven by a `.dark` class on
 <html>. Light page `bg-cream` (#FAF8F3), text `text-forest` (#1A2E26); dark
-page `bg-forest-deep` (#101E18), text `dark:text-cream`. Cards are white
-rounded-3xl in light and flat forest (#1A2E26) surfaces in dark. Semantic
+page `bg-night` (#101010), text `dark:text-cream`. Cards are white
+rounded-3xl in light and flat graphite (#1B1B1B) surfaces in dark. Semantic
 mapping is defined through explicit financial tokens. Primary actions are
 caramel pills. Headings, body text, labels and tabular monetary figures all
 use Inter at readable weights and sizes.
@@ -66,7 +66,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=9">
 
     {% comment %}The locally vendored HTMX progressively enhances same-origin links so the current
     document stays visible until the next server-rendered page is ready. Forms
@@ -78,7 +78,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <script src="{% static 'js/mobile-menu.js' %}?v=3" defer></script>
     <script src="{% static 'js/navigation.js' %}?v=2" defer></script>
 </head>
-<body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-forest-deep dark:text-cream">
+<body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
     {% if request.user.is_authenticated %}
         {% include 'partials/navbar_app.html' %}
     {% else %}

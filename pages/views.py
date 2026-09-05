@@ -2,6 +2,6 @@ from django.views.generic import TemplateView
 
 
 class LandingView(TemplateView):
-    """Public landing page. Full hero/sections ship in Sprint 2 (pages app)."""
+    """Public product overview; no financial records are queried."""
 
     template_name = 'pages/landing.html'

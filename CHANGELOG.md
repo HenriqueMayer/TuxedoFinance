@@ -14,6 +14,14 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Public homepage now uses factual bilingual copy, access links, six feature
+  rows, and a full horizontal cat photograph in a translucent double frame, without sample balances or promotional cards (FIN-9).
+- Dark-mode foundations now use neutral black and graphite throughout the
+  application, with readable controls and unchanged light/financial palettes (FIN-9).
+- Removed the promotional slogan from the shared footer.
+- Contained salary-table accessibility labels within their scroll area and
+  allowed the public navigation to wrap for no-JavaScript language controls.
+
 - `npm run test:e2e` now manages a disposable local Django server and database;
   local development and CI share the same isolated browser-test workflow.
 
