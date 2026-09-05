@@ -42,6 +42,9 @@ jobs:
       - name: Validate project version
         run: uv run python scripts/check_version.py
 
+      - name: Test repository tooling
+        run: uv run python -m unittest discover -s tests/tooling
+
       - name: Install pinned frontend tools
         run: npm ci
 
@@ -105,22 +108,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run browser smoke tests
-        env:
-          SECRET_KEY: ci-browser-test-secret-key
-          TUXEDO_DATA_DIR: ${{ runner.temp }}/e2e-data
-          E2E_BASE_URL: http://127.0.0.1:8765
-        run: |
-          mkdir -p "$TUXEDO_DATA_DIR"
-          uv run python manage.py migrate --noinput
-          uv run python manage.py runserver 127.0.0.1:8765 --noreload &
-          server_pid=$!
-          trap 'kill "$server_pid"' EXIT
-          for attempt in {1..30}; do
-            curl --fail --silent "$E2E_BASE_URL/" >/dev/null && break
-            sleep 1
-          done
-          curl --fail --silent "$E2E_BASE_URL/" >/dev/null
-          npm run test:e2e
+        run: npm run test:e2e
 
       - name: Test static interface preview
         run: npm run test:preview

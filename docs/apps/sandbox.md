@@ -1,8 +1,11 @@
 # Salary sandbox
 
 The authenticated `/sandbox/` page is a small, non-persistent salary and
-monthly-budget estimator. It does not read or write transactions, accounts,
-investments, user preferences, or scenario data in the authenticated session.
+monthly-budget estimator. Its calculation path does not read or write
+transactions, bank accounts, investments, user preferences, or scenario data in
+the authenticated session. Shared template context still resolves presentation
+preferences through `core.context_processors.currency`; a missing preference
+may be initialized there. Scenario inputs and results remain request-local.
 
 ## Calculation modes
 

@@ -1,11 +1,15 @@
 # Tuxedo Finance Documentation
 
-Technical and product documentation for the current Tuxedo Finance release.
+Technical and product documentation for the current code, including unreleased
+changes listed in the changelog. Technical guides are maintained in English;
+the root README is available in [English](../README.md) and
+[Português (Brasil)](../README.pt-BR.md).
 
 ## Where to start
 
 | Doc | Covers |
 |---|---|
+| [Contributing](../CONTRIBUTING.md) | Canonical developer setup, checks, translations, browser isolation, and documentation conventions. |
 | [Interface preview](https://henriquemayer.github.io/TuxedoFinance/) | Bilingual static tour of the application using synthetic financial data. |
 | [Preview maintenance](../.github/preview/README.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and clean-reset delivery. |
@@ -15,13 +19,13 @@ Technical and product documentation for the current Tuxedo Finance release.
 | [design-system.html](design-system.html) | Canonical visual tokens and component catalog. |
 | [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
 | [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |
-| [coverage-baseline.md](coverage-baseline.md) | Coverage report, 70% line floor, branch-reporting policy and local commands. |
+| [coverage-baseline.md](coverage-baseline.md) | Dated measurements, 70% combined line/branch floor, and report artifacts. |
 
 ## Per-app reference
 
 - [apps/core.md](apps/core.md) — project settings, currency registry and formatting.
 - [apps/pages.md](apps/pages.md) — public landing page.
-- [apps/accounts.md](apps/accounts.md) — native Django authentication.
+- [apps/accounts.md](apps/accounts.md) — native Django authentication and presentation preferences.
 - [apps/categories.md](apps/categories.md) — income/expense categories.
 - [apps/banking.md](apps/banking.md) — banks, accounts, movements, PIX, cards,
   invoices, loyalty and historical FX.
@@ -36,15 +40,15 @@ Technical and product documentation for the current Tuxedo Finance release.
 
 ## Repository layout
 
-The repository follows Django and frontend-tool conventions without a separate
-QA or preview-project layer:
+The repository follows Django conventions, with frontend tooling shared by the
+application and static preview:
 
 | Path | Responsibility |
 |---|---|
 | Django app directories | Domain code, migrations and focused unit tests kept beside each app. |
 | `assets/` | Tailwind source input; files here are compiled rather than served directly. |
 | `static/` | Versioned assets served by Django, including compiled CSS, JavaScript and brand files. |
-| `tests/` | Cross-application browser tests; app-level Python tests remain with their apps. |
+| `tests/` | Application and preview browser tests plus standard-library repository-tool tests; Django tests stay in their apps. |
 | `preview/` | Self-contained bilingual static tour published by GitHub Pages. |
 | `.github/preview/` | Isolated tooling that generates and tests the public preview. |
 | `scripts/` | Small repository-wide maintenance and validation commands. |
@@ -56,8 +60,8 @@ and preview use the same locked frontend toolchain.
 
 ## Documentation status
 
-These documents describe the current `0.2.x` release. Its schema has no
-automatic upgrade path from pre-release legacy databases; those installations
+These documents describe the current `0.2.x` code and relevant unreleased
+changes. Its schema has no automatic upgrade path from pre-release legacy databases; those installations
 must start with a newly migrated SQLite database and recreate or manually import
 their records.
 

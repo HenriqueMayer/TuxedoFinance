@@ -4,20 +4,16 @@ The current design-system release preserves the server-rendered Django
 Template Language and precompiled Tailwind CSS visual system. There is no SPA, JavaScript
 framework or client-side chart library. Theme persistence, boosted link
 navigation and HTMX chart-island swaps remain the deliberately narrow JavaScript
-layer; every mutation is a normal CSRF-protected POST and every filter has a
-plain GET fallback.
+layer. User-submitted mutations use CSRF-protected POSTs, and filters have
+plain GET fallbacks. Some page reads synchronize derived ledger records before
+rendering; see [request-time synchronization](architecture.md#request-time-synchronization).
 
 Tailwind CSS is generated ahead of time into `static/css/app.css`, so full-page
 navigation never waits for browser-side class discovery or CSS compilation. The
 generated file is versioned with the application and does not require Node/npm
 at runtime. Frontend tooling is pinned in `package.json`/`package-lock.json` for
-development and CI. After changing Tailwind classes or tokens, rebuild it from
-`assets/css/tailwind.css` with:
-
-```bash
-npm ci
-npm run build:css
-```
+development and CI. Follow the [frontend build workflow](../CONTRIBUTING.md#frontend-and-translations)
+after changing Tailwind classes or tokens.
 
 Bump the `?v=` query string in `base.html` whenever the generated stylesheet
 changes so long-lived browser caches cannot retain the previous design.
@@ -37,7 +33,7 @@ plain GET links and the section anchor provide the same no-JavaScript fallback.
 
 ## Visual language
 
-The interface follows the final Haven & Hound design language documented in
+The interface follows the Tuxedo Finance design language documented in
 `design-system.html`: cream and forest foundations,
 caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
 throughout. Light cards use white surfaces and soft shadows; dark cards use flat
@@ -121,7 +117,7 @@ templates/
 │   ├── form.html            confirm_delete.html
 │   └── exchange_rates.html
 ├── transactions/
-├── dashboard/
+├── dashboard/              sandbox/
 └── investments/
 ```
 
@@ -285,11 +281,16 @@ without relying on hover, color or JavaScript.
 
 ## Automated browser checks
 
-`tests/e2e/design-system.spec.js` covers the cross-layer behavior that template
-assertions cannot prove: English/Portuguese landing copy, locally served HTMX,
-native CSV download, the tablet navigation breakpoint and mobile modal focus
-containment. CI runs the suite in Chromium after the Python checks and uploads
-screenshots, video and traces only when a browser test fails.
+`tests/e2e/design-system.spec.js` checks translated landing copy, local HTMX,
+CSV downloads, responsive navigation, dashboard month states, conditional loyalty
+fields, monetary-yield forms, salary-sandbox calculations and help, and report
+navigation. These checks cover
+browser behavior that template assertions cannot prove.
+
+Run `npm run test:e2e` for an isolated application and temporary database. CI
+uses the same executor and retains configured browser failure artifacts. See
+[CONTRIBUTING.md](../CONTRIBUTING.md#browser-tests) for setup, argument forwarding,
+logs, and the advanced manually managed path.
 
 `tests/preview/preview.spec.js` validates the static GitHub Pages tour in both
 languages, including the committed image dimensions, theme persistence,

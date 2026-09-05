@@ -24,6 +24,11 @@ in the same currency. Each account has exactly one currency. Its available
 balance is `opening_balance + sum(BankMovement.signed_amount)`; transaction rows
 are never added to that formula independently.
 
+Bank list and account detail views synchronize derived transactions and invoices
+before reading balances. These requests may write to the ledger; the balance
+helpers themselves only query it. The synchronization service lives in
+`transactions`, while `banking` owns the resulting models.
+
 ## Immediate and deferred settlement
 
 - **PIX** is a standard account capability and is enabled by default. The user
@@ -31,7 +36,8 @@ are never added to that formula independently.
 - **Debit card** and **PIX** settlements create a `BankMovement` on the event
   date and affect the account balance immediately.
 - A **credit-card purchase** becomes an invoice item. It affects spending
-  reports on the purchase date but does not create an account debit then.
+  reports in the statement month, including the appropriate installment or
+  recurrence amount, and does not create a purchase-date account debit.
 - A `CardInvoice` is paid on its `due_date` by one debit movement against the
   linked account. Invoice items are not debited again, preventing double count.
 - An external PIX is an ordinary categorized `INCOME` or `EXPENSE` transaction,
@@ -51,9 +57,10 @@ cash-flow KPIs.
 ## Cards and invoices
 
 Both `DebitCard` and `CreditCard` belong to one `BankAccount`. A credit card also
-stores its statement-closing rule and due day. Each invoice has a statement
-period, due date, status, native currency, item total, and the single settlement
-movement when paid. Partial payments, if introduced, must be represented as
+stores its statement-closing rule and due day. Each invoice stores a reference month, due date, status, and amount; its
+native currency comes from the linked card account. Synchronization derives the
+total from source records and creates one due-date movement, including for
+future invoices. Available cash includes that movement only once effective. Partial payments, if introduced, must be represented as
 explicit invoice payments; they must not mutate purchase amounts.
 
 ## Loyalty

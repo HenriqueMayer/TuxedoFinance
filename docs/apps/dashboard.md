@@ -4,6 +4,11 @@ The dashboard composes banking cash, categorized cash flow, card liabilities
 and investments. It owns no model and never treats raw transaction amounts as an
 account ledger.
 
+Before composing either dashboard or reports, the views call
+`sync_user_ledger`. Query helpers are read-only, but the complete request can
+write derived movements and invoices. See the
+[synchronization boundary](../architecture.md#request-time-synchronization).
+
 ## Overview
 
 The main screen presents:

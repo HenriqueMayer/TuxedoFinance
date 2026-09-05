@@ -67,8 +67,9 @@ existed immediately before the operation. The form previews the previous
 balance, calculated yield and resulting balance before saving. Operations on the
 same date use their registration order; no bank movement is created.
 
-> **Coming soon:** automatic monthly and annual yield calculations. Yield is
-> still entered manually; the total-balance option only derives its value.
+Automatic monthly and annual yield calculations are not implemented. Yield
+is entered manually; the total-balance option derives the operation amount
+from the supplied balance without introducing automatic accrual.
 
 ## Valuation
 

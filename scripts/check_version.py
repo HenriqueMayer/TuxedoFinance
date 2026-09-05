@@ -7,11 +7,36 @@ import os
 import re
 import sys
 import tomllib
+from html.parser import HTMLParser
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
 SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
+
+
+class VersionBadges(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.badges = []
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag == 'img' and 'img.shields.io/badge/version-' in attributes.get('src', ''):
+            self.badges.append(attributes)
+
+
+def check_readme(path: Path, version: str, label: str) -> None:
+    parser = VersionBadges()
+    parser.feed(path.read_text(encoding='utf-8'))
+    if len(parser.badges) != 1:
+        fail(f'{path.name} must contain exactly one version badge')
+    badge = parser.badges[0]
+    if not re.match(
+        rf'^https://img\.shields\.io/badge/version-{re.escape(version)}(?:-|\?)',
+        badge['src'],
+    ) or badge.get('alt') != f'{label} {version}':
+        fail(f'{path.name} version badge does not match pyproject.toml')
 
 
 def fail(message: str) -> None:
@@ -43,9 +68,8 @@ def main() -> None:
             "run `uv lock`"
         )
 
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    if f'alt="Version {version}"' not in readme:
-        fail("README version badge does not match pyproject.toml")
+    check_readme(ROOT / 'README.md', version, 'Version')
+    check_readme(ROOT / 'README.pt-BR.md', version, 'Versão')
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     release_heading = re.compile(

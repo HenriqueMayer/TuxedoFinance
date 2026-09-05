@@ -1,142 +1,48 @@
-# `categories`
+# Categories
 
-Full CRUD for `Category`, including subcategories via a self-relationship, plus the default-category seeding signal (FR27).
+The app owns income/expense classification, optional subcategories, CSV exchange,
+and the default-category signup signal. See the
+[data model](../data-model.md#category) for fields and relationships.
 
-## Files
+## Forms and ownership
 
-| File | Contents |
-|---|---|
-| `categories/models.py` | `Category` |
-| `categories/forms.py` | `CategoryForm`, `CategoryImportForm` |
-| `categories/views.py` | Category CRUD plus CSV import/export views |
-| `categories/urls.py` | `app_name = 'categories'`; CRUD and CSV routes |
-| `categories/signals.py` | `seed_default_categories` |
-| `categories/apps.py` | `CategoriesConfig.ready()` wires the signal |
-| `categories/admin.py` | `CategoryAdmin` |
-| `templates/categories/{list,form,confirm_delete}.html` | screens |
+`CategoryForm` exposes `name`, optional `transaction_type`, and optional
+`parent_category`. Parent choices are scoped to the requesting user and exclude
+the edited category itself. Duplicate names are rejected with a field error;
+the view also handles a database uniqueness conflict if concurrent submissions
+pass validation. Model validation prevents incompatible transaction-type changes.
 
-For the `Category` model's fields and constraints, see [data-model.md § Category](../data-model.md#category).
+Create/update views share `CategoryFormMixin`. Its validation handling precedes
+`SuccessMessageMixin` so a rejected save cannot display a success message.
+All CRUD querysets are user-scoped; another user's identifier returns 404.
+Deletion of a category referenced by transactions is blocked by `PROTECT` and
+reported through a localized message.
 
-## Form (`CategoryForm`)
+## Listing and classification
 
-```python
-class CategoryForm(forms.ModelForm):
-    class Meta:
-        model = Category
-        fields = ('name', 'parent_category')
+The category list combines a trimmed, case-insensitive `q` name search with an
+optional `level` filter (`top` or `sub`). Missing or invalid levels do not narrow
+the queryset. Filtering uses ordinary GET requests and has no pagination.
 
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        queryset = Category.objects.filter(user=user)
-        if self.instance.pk:
-            queryset = queryset.exclude(pk=self.instance.pk)
-        self.fields['parent_category'].queryset = queryset
-        self.fields['parent_category'].required = False
-```
+A category may be classified as income or expense. Unclassified categories
+remain available for either transaction type. Existing incompatible transactions
+prevent a classification change; the nullable classification migration preserves
+existing records.
 
-Two things happen in `__init__` that aren't visible from `Meta` alone:
+## Default categories
 
-1. **User-scoped parent choices** — the `parent_category` dropdown only ever lists the requesting user's own categories, never another user's (the view passes `user=self.request.user` via `get_form_kwargs()`).
-2. **No self-parenting** — when editing an existing category, that category's own `pk` is excluded from its own parent choices, so a category can never be set as its own parent.
+The `post_save` user signal runs only when a user is created and seeds nine
+top-level categories: Groceries, Food & Dining, Subscriptions, Education, Fitness,
+Transportation, Pets, Hobbies & Entertainment, and Services. Names are translated
+once in the signup language, then stored as user-owned text. Users may rename,
+remove, or extend them; changing interface language does not rename them.
 
-## Views
-
-All four are `LoginRequiredMixin` CBVs. `CategoryListView` and the shared `CategoryFormMixin` both filter `get_queryset()` by `self.request.user` — a `404`, not another user's data, is what you get for guessing another user's category `pk`.
-
-### List search and filtering
-
-`CategoryListView` accepts two optional GET parameters. Both are applied after the queryset has been restricted to `request.user` and combine with AND:
-
-| Parameter | Behavior |
-|---|---|
-| `q` | Trimmed, case-insensitive partial match against `name`. |
-| `level` | `top` selects categories without a parent; `sub` selects categories with a parent. Missing or unknown values do not filter the list. |
-
-The template uses a plain `<form method="get">`, restores the active values, offers a direct **Clear filters** link, and distinguishes an empty filtered result from an account with no categories. No JavaScript or pagination is involved.
-
-### Create / Update
-
-```python
-class CategoryCreateView(SuccessMessageMixin, CategoryFormMixin, CreateView):
-    success_message = 'Category "%(name)s" created.'
-
-    def form_valid(self, form):
-        form.instance.user = self.request.user
-        return super().form_valid(form)
-```
-
-`CategoryUpdateView` reuses the same `CategoryFormMixin` (model, form class, template, success URL, user-scoped queryset, `get_form_kwargs`) and needs no `form_valid` override — the instance already belongs to `self.request.user` by construction of `get_queryset()`.
-
-### Deletion
-
-```python
-class CategoryDeleteView(LoginRequiredMixin, DeleteView):
-    def form_valid(self, form):
-        name = self.object.name
-        try:
-            response = super().form_valid(form)
-        except ProtectedError:
-            messages.error(
-                self.request,
-                f'"{name}" cannot be deleted because it is still '
-                'used by existing transactions.',
-            )
-            return redirect('categories:list')
-        messages.success(self.request, f'Category "{name}" deleted.')
-        return response
-```
-
-`Transaction.category` uses `on_delete=PROTECT` (see [data-model.md § Category](../data-model.md#category)), so deleting a category still referenced by any transaction raises `ProtectedError` at the database layer. The view turns that exception into a friendly redirect-with-message response instead of a 500.
-
-## Default category seeding (FR27)
-
-```python
-from django.utils.translation import gettext, gettext_noop
-
-DEFAULT_CATEGORY_NAMES = (
-    gettext_noop('Groceries'), gettext_noop('Food & Dining'),
-    gettext_noop('Subscriptions'), gettext_noop('Education'),
-    gettext_noop('Fitness'), gettext_noop('Transportation'),
-    gettext_noop('Pets'), gettext_noop('Hobbies & Entertainment'),
-    gettext_noop('Services'),
-)
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL, dispatch_uid='categories_seed_defaults')
-def seed_default_categories(sender, instance, created, **kwargs):
-    if not created:
-        return
-    Category.objects.bulk_create(
-        Category(user=instance, name=gettext(name)) for name in DEFAULT_CATEGORY_NAMES
-    )
-```
-
-Fires once, on the `post_save` signal of the `User` model, only when `created=True` (never on a profile edit/re-save). Wired via:
-
-```python
-class CategoriesConfig(AppConfig):
-    name = 'categories'
-
-    def ready(self):
-        import categories.signals  # noqa: F401
-```
-
-**Why this exists:** `Transaction.category` is a required FK. Without this signal, a brand-new user would hit a dead end — an empty dropdown — the first time they tried to record a transaction. All 9 default categories are top-level (no `parent_category`) and are resolved once in the language active during account creation. They are then ordinary persisted names: changing the UI language does not rename them. The user is free to rename them or add subcategories and additional top-level categories afterward. No synthetic financial records are created. `dispatch_uid='categories_seed_defaults'` prevents the receiver from double-registering if `categories.signals` is ever imported more than once (e.g. Django's autoreloader).
-
-## Optional transaction type
-
-A category can be classified as income or expense. This makes the transaction
-form immediately narrow its search results to the selected type. Leaving it
-unclassified intentionally keeps it available for either type, which preserves
-the meaning of existing categories. A category already used by transactions of
-another type cannot be classified incompatibly, so existing records remain
-editable. The `categories.0002_category_transaction_type`
-migration adds the nullable field without changing any category or transaction;
-rolling back removes only that optional classification.
+`CategoriesConfig.ready()` registers the receiver, whose stable `dispatch_uid`
+prevents duplicate registration. No financial records are seeded.
 
 ## CSV import and export
 
-The category list offers **Export CSV** and **Import CSV** actions. Exported
-files use UTF-8 and contain this exact header:
+Export uses UTF-8 with this header:
 
 ```csv
 name,transaction_type,parent_category
@@ -145,32 +51,23 @@ Restaurants,EXPENSE,Food
 Salary,INCOME,
 ```
 
-`transaction_type` accepts `INCOME`, `EXPENSE`, or an empty value. The parent
-is identified by its category name, which keeps files readable and makes them
-portable between users and installations. Import validates the complete file
-before writing, creates parents and subcategories regardless of row order, and
-skips names that already exist without changing their saved data.
+`transaction_type` accepts `INCOME`, `EXPENSE`, or an empty value. Parents are
+identified by category name. Import validates the whole file before writing,
+resolves parents independently of row order, and skips existing names without
+changing saved records. The import form requires a `.csv` file.
 
 ## Routes
 
-| Path | Name | View |
+| Path | Route name | Purpose |
 |---|---|---|
-| `/categories/` | `categories:list` | `CategoryListView` |
-| `/categories/create/` | `categories:create` | `CategoryCreateView` |
-| `/categories/export/` | `categories:export` | `export_categories` |
-| `/categories/import/` | `categories:import` | `import_categories` |
-| `/categories/<pk>/edit/` | `categories:update` | `CategoryUpdateView` |
-| `/categories/<pk>/delete/` | `categories:delete` | `CategoryDeleteView` |
+| `/categories/` | `categories:list` | List and filter |
+| `/categories/create/` | `categories:create` | Create |
+| `/categories/export/` | `categories:export` | Download CSV |
+| `/categories/import/` | `categories:import` | Upload CSV |
+| `/categories/<pk>/edit/` | `categories:update` | Update |
+| `/categories/<pk>/delete/` | `categories:delete` | Confirm and delete one category |
+| `/categories/delete-all/` | `categories:delete_all` | Confirm and delete the user's categories, subject to protected references |
 
-## Admin
-
-```python
-list_display = ('name', 'parent_category', 'user', 'created_at')
-list_filter = ('user',)
-search_fields = ('name',)
-```
-
-## Templates
-
-- `list.html` — GET name/level filters followed by one row per category, showing "Subcategory of {parent}" or "Top-level category"; Edit/Delete actions; `partials/empty_state.html` for either no matches or no categories (the latter shouldn't normally happen post-signup, but is reachable if all categories are deleted — though `PROTECT` blocks deleting any still in use).
-- `form.html` / `confirm_delete.html` — the standard shared card layout (see [frontend.md](../frontend.md)).
+Screens use shared fields, validation feedback, confirmation, and empty-state
+partials. Admin exposes category name, parent, and owner, with owner filtering
+and name search.

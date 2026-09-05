@@ -7,6 +7,16 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Portuguese README with reciprocal language links and version validation for
+  both English and Portuguese editions.
+
+### Changed
+
+- `npm run test:e2e` now manages a disposable local Django server and database;
+  local development and CI share the same isolated browser-test workflow.
+
 ## [0.2.0] - 2026-09-03
 
 ### Added

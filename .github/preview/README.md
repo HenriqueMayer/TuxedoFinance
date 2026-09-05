@@ -19,7 +19,9 @@ publishes only `preview/` after changes reach `main`.
 
 ## Commands
 
-Run the public maintenance commands from the repository root:
+Install the [development prerequisites](../../CONTRIBUTING.md#prerequisites),
+then run maintenance commands from the repository root. This workflow is
+separate from the disposable application smoke tests (`npm run test:e2e`):
 
 ```bash
 npm ci
