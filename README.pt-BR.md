@@ -81,8 +81,8 @@ Estão previstos tutoriais nos dois idiomas:
 
 | Idioma | Tutorial |
 |---|---|
-| 🇧🇷 Português (Brasil) | _link_TODO_ |
-| 🇺🇸 English | _link_TODO_ |
+| 🇧🇷 Português (Brasil) | TODO |
+| 🇺🇸 English | TODO |
 
 ## ✨ Funcionalidades
 

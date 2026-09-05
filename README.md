@@ -81,8 +81,8 @@ Walkthroughs are planned in both supported languages:
 
 | Language | Tutorial |
 |---|---|
-| 🇧🇷 Português (Brasil) | _link_TODO_ |
-| 🇺🇸 English | _link_TODO_ |
+| 🇧🇷 Português (Brasil) | TODO |
+| 🇺🇸 English | TODO |
 
 ## ✨ Features
 
