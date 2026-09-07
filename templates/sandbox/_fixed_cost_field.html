@@ -4,7 +4,7 @@
         <label for="{{ value_field.id_for_label }}" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
             {{ value_field.label }}
         </label>
-        {% include 'sandbox/_help_popover.html' with help_id=value_field.id_for_label|add:'-help' help_label=value_field.label help_text=value_field.help_text %}
+        {% include 'partials/help_popover.html' with help_id=value_field.id_for_label|add:'-help' help_label=value_field.label help_text=value_field.help_text %}
     </div>
     <div class="grid grid-cols-[6rem_minmax(0,1fr)] gap-2">
         {{ type_field }}

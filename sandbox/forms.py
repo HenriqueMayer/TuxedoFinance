@@ -40,7 +40,7 @@ class SalarySandboxForm(forms.Form):
     use_clt = forms.BooleanField(
         label=_('Calculate CLT deductions automatically'),
         required=False,
-        initial=True,
+        initial=False,
         help_text=_('Uses the official 2026 INSS and IRRF rules and includes vacation, 13th salary and FGTS.'),
     )
     dependents = forms.IntegerField(

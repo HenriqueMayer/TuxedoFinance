@@ -34,7 +34,7 @@
                 {% include 'partials/form_field.html' with field=form.opening_quantity %}
                 {% include 'partials/form_field.html' with field=form.opening_unit_price %}
             </div>
-            {% include 'partials/form_field.html' with field=form.opening_product %}
+            <div id="opening-product-fields" data-has-errors="{{ form.opening_product.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_product %}</div>
         {% else %}
             {% for field in form %}
                 {% include 'partials/form_field.html' with field=field %}
@@ -60,24 +60,33 @@
         const unitFields = document.getElementById('unit-opening-fields');
         if (!valuationMode || !openingBalance || !openingQuantity || !openingUnitPrice) return;
 
-        function setHidden(group, hidden, preserveErrors) {
-            group.hidden = hidden && !(preserveErrors && group.dataset.hasErrors === 'true');
-        }
+        const setHidden = window.TuxedoForms.setHidden;
 
         function updateOpeningFields(clearStale) {
             const isMonetary = valuationMode.value === 'MONETARY';
+            const isUnits = valuationMode.value === 'UNITS';
             setHidden(monetaryFields, !isMonetary, !clearStale);
-            setHidden(unitFields, isMonetary, !clearStale);
+            setHidden(unitFields, !isUnits, !clearStale);
 
-            if (!clearStale) return;
-            if (isMonetary) {
+            if (!clearStale) { updateOpeningProduct(false); return; }
+            if (!isUnits) {
                 openingQuantity.value = '0';
                 openingUnitPrice.value = '0';
-            } else {
-                openingBalance.value = '0';
             }
+            if (!isMonetary) openingBalance.value = '0';
+            updateOpeningProduct(true);
         }
 
+        function updateOpeningProduct(clearStale) {
+            const hasOpening = valuationMode.value === 'MONETARY' ? Number(openingBalance.value) > 0
+                : valuationMode.value === 'UNITS' && Number(openingQuantity.value) > 0;
+            if (!hasOpening && clearStale) document.getElementById('{{ form.opening_product.id_for_label }}').value = '';
+            setHidden(document.getElementById('opening-product-fields'), !hasOpening, !clearStale);
+        }
+        [openingBalance, openingQuantity].forEach(input => input.addEventListener('input', () => {
+            updateOpeningProduct(true);
+            window.TuxedoForms.refresh(input.form);
+        }));
         valuationMode.addEventListener('change', function () {
             updateOpeningFields(true);
         });

@@ -72,7 +72,7 @@
             <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                 <div class="min-w-0 space-y-1.5">
                     <label for="filter-category" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate "Category" %}</label>
-                    <select id="filter-category" name="category" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                    <select data-search-select id="filter-category" name="category" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
                         <option value="">{% translate "All categories" %}</option>
                         {% for category in category_choices %}
                             <option value="{{ category.pk }}" {% if selected_category == category.pk|stringformat:'s' %}selected{% endif %}>{% if category.parent_category %}{{ category.parent_category.name }} › {% endif %}{{ category.name }}</option>

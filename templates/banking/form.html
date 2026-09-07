@@ -30,12 +30,18 @@
                  data-has-errors="{% if form.funding_account.errors or form.funding_credit_card.errors or form.cash_amount.errors %}true{% else %}false{% endif %}">
                 {% include 'partials/form_field.html' with field=form.funding_account %}
                 {% include 'partials/form_field.html' with field=form.funding_credit_card %}
-                {% include 'partials/form_field.html' with field=form.cash_amount %}
+                <div id="loyalty-cash-fields" data-has-errors="{{ form.cash_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.cash_amount %}</div>
             </div>
             {% include 'partials/form_field.html' with field=form.notes %}
         {% else %}
             {% for field in form.visible_fields %}
-                {% include 'partials/form_field.html' with field=field %}
+                {% if field.name == 'iof_account' or field.name == 'iof_credit_card' %}
+                    <div data-form-when="{{ form.iof_amount.id_for_label }}" data-form-value="positive" data-has-errors="{{ field.errors|yesno:'true,false' }}">
+                        {% include 'partials/form_field.html' with field=field %}
+                    </div>
+                {% else %}
+                    {% include 'partials/form_field.html' with field=field %}
+                {% endif %}
             {% endfor %}
         {% endif %}
         <div class="flex gap-3">
@@ -60,9 +66,7 @@
         const status = document.getElementById('loyalty-kind-status');
         if (!kind || !invoice || !fundingAccount || !fundingCreditCard || !cashAmount) return;
 
-        function setHidden(group, hidden, preserveErrors) {
-            group.hidden = hidden && !(preserveErrors && group.dataset.hasErrors === 'true');
-        }
+        const setHidden = window.TuxedoForms.setHidden;
 
         function updateKindFields(clearStale) {
             const isInvoiceAward = kind.value === 'INVOICE_AWARD';
@@ -88,10 +92,32 @@
             }
         }
 
+        function updatePurchaseSource(clearStale, source) {
+            if (clearStale && source && source.value) {
+                if (source === fundingAccount) fundingCreditCard.value = '';
+                else fundingAccount.value = '';
+            }
+            const inactive = kind.value !== 'PURCHASE' || !(fundingAccount.value || fundingCreditCard.value);
+            if (inactive && clearStale) cashAmount.value = '';
+            setHidden(document.getElementById('loyalty-cash-fields'), inactive, !clearStale);
+        }
+        [fundingAccount, fundingCreditCard].forEach(input => input.addEventListener('change', () => updatePurchaseSource(true, input)));
+        updatePurchaseSource(false);
         kind.addEventListener('change', function () {
             updateKindFields(true);
+            updatePurchaseSource(true);
         });
         updateKindFields(false);
+    })();
+</script>
+{% endif %}
+{% if form.iof_amount %}
+<script>
+    (() => {
+        const account = document.getElementById('{{ form.iof_account.id_for_label }}');
+        const card = document.getElementById('{{ form.iof_credit_card.id_for_label }}');
+        account.addEventListener('change', () => { if (account.value) card.value = ''; });
+        card.addEventListener('change', () => { if (card.value) account.value = ''; });
     })();
 </script>
 {% endif %}

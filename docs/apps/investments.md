@@ -107,3 +107,9 @@ The operation history is a separate `#investment-movements` island below the
 charts. Filtering, clearing filters and changing pages replace only that island
 and return the viewport to its heading. Native GET actions append the same
 section anchor, so the user keeps the portfolio context when HTMX is unavailable.
+
+## Form keyboard behavior
+
+Record selectors use the shared keyboard-search component. Values and funding wait for the asset and operation type; monetary yields require an explicit input mode. New asset valuation choices begin empty, and opening-position products wait for an opening balance or quantity. Existing operations and invalid POSTs preserve their values and visible errors.
+
+Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).

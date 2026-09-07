@@ -290,10 +290,10 @@ class TransactionFormAndListTests(TransactionFixture):
 
     def test_create_form_includes_category_search(self):
         response = self.client.get(reverse('transactions:create'))
-        self.assertContains(response, 'id="category-search"', html=False)
-        self.assertContains(response, 'Type to filter categories')
-        self.assertContains(response, 'role="combobox"', html=False)
-        self.assertContains(response, 'id="category-fallback"', html=False)
+        self.assertContains(response, 'data-search-id="category-search"', html=False)
+        self.assertContains(response, 'Type to search')
+        self.assertContains(response, 'data-search-select', html=False)
+        self.assertContains(response, 'id="id_category"', html=False)
         self.assertContains(response, 'id="payment-channel-status"', html=False)
         self.assertNotContains(response, 'id="debit-card-fields" data-has-errors="false" hidden', html=False)
         self.assertNotContains(response, 'id="credit-card-fields" data-has-errors="false" hidden', html=False)

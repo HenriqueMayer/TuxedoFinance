@@ -1,3 +1,4 @@
+{% load form_ui %}
 {% comment %}
 Reusable form field renderer (Final Design System §4).
 
@@ -18,7 +19,7 @@ input/select/textarea in the project looks identical:
 `select` and `textarea` widgets reuse the exact same class string. Wrap a
 group of fields in a form card:
 
-  <form method="post" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
+  <form method="post" novalidate class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
       {% csrf_token %}
       {% include 'partials/form_field.html' with field=form.title %}
       ...
@@ -30,14 +31,14 @@ group of fields in a form card:
             {{ field.label }}{% if field.field.required %} <span class="text-expense dark:text-expense-light">*</span>{% endif %}
         </label>
 
-        {{ field }}
+        {% form_control field %}
 
         {% if field.help_text %}
             <p id="{{ field.id_for_label }}-help" class="text-sm font-normal text-forest/70 dark:text-night-muted">{{ field.help_text }}</p>
         {% endif %}
 
         {% for error in field.errors %}
-            <p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>
+            <p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" data-field-error class="text-sm text-expense dark:text-expense-light">{{ error }}</p>
         {% endfor %}
     </div>
 {% endif %}

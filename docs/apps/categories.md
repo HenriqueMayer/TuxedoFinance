@@ -71,3 +71,11 @@ changing saved records. The import form requires a `.csv` file.
 Screens use shared fields, validation feedback, confirmation, and empty-state
 partials. Admin exposes category name, parent, and owner, with owner filtering
 and name search.
+
+## Form keyboard behavior
+
+Parent-category selection uses the shared searchable record picker: type to
+filter, use arrows to highlight and Enter to confirm. Escape/Tab restore the
+committed choice. The native select remains available without JavaScript, with
+ownership and hierarchy validation on the server. Follow the
+[mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).

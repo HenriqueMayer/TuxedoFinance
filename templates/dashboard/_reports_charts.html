@@ -32,29 +32,18 @@ docstring at the top of `dashboard/reports.html` for the broader
 conventions this partial inherits.
 {% endcomment %}
 <div id="reports-charts" hx-request='{"noHeaders":false}' class="space-y-8">
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {% with now_fmt=evolution.balance_today|floatformat:2 closing_fmt=evolution.closing_balance|floatformat:2 net_change_fmt=evolution.net_change|floatformat:2 %}
-            {% if evolution.is_anchored_today %}
-                {% translate "Balance now" as balance_now_label %}
-                {% include 'partials/stat_card.html' with label=balance_now_label value=CURRENCY_SYMBOL|add:' '|add:now_fmt %}
-            {% else %}
-                {% with anchor_month=evolution.anchor_date|date:'M Y' %}
-                    {% blocktranslate with month=anchor_month asvar balance_label %}Balance at {{ month }}{% endblocktranslate %}
-                    {% with balance_label=balance_label %}
-                        {% include 'partials/stat_card.html' with label=balance_label value=CURRENCY_SYMBOL|add:' '|add:now_fmt %}
-                    {% endwith %}
-                {% endwith %}
-            {% endif %}
-            {% translate "Projected (end of window)" as projected_window_label %}
+    <div id="report-summary" class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {% with month_label=evolution.anchor_date|date:'F Y' window_start=evolution.months.0.date|date:'M Y' window_end=evolution.months|last %}
+            {% translate "Balance now" as balance_now_label %}
+            {% include 'partials/stat_card.html' with label=balance_now_label amount=evolution.balance_today %}
+            {% translate "Projected (month)" as projected_month_label %}
+            {% include 'partials/stat_card.html' with label=projected_month_label amount=evolution.current_month.balance caption=month_label help_id='report-month-help' help_template='dashboard/_monthly_result_help.html' %}
             {% translate "Net change (12 months)" as net_change_label %}
-            {% translate "Best month" as best_month_label %}
-            {% include 'partials/stat_card.html' with label=projected_window_label value=CURRENCY_SYMBOL|add:' '|add:closing_fmt %}
             {% if evolution.net_change < 0 %}
-                {% include 'partials/stat_card.html' with label=net_change_label value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-expense dark:text-expense-light' %}
+                {% include 'partials/stat_card.html' with label=net_change_label amount=evolution.net_change help_id='report-window-help' help_template='dashboard/_net_change_help.html' value_class='text-expense dark:text-expense-light' %}
             {% else %}
-                {% include 'partials/stat_card.html' with label=net_change_label value=CURRENCY_SYMBOL|add:' '|add:net_change_fmt value_class='text-income dark:text-income-light' %}
+                {% include 'partials/stat_card.html' with label=net_change_label amount=evolution.net_change help_id='report-window-help' help_template='dashboard/_net_change_help.html' value_class='text-income dark:text-income-light' %}
             {% endif %}
-            {% include 'partials/stat_card.html' with label=best_month_label value=evolution.best_month.date|date:'M Y' %}
         {% endwith %}
     </div>
 

@@ -9,15 +9,38 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Unified question-mark help across Reports and Sandbox: hover opens one
+  readable box, leaving or clicking outside closes it, and mouse clicks never
+  pin it. Structured formulas, keyboard/touch support and the mandatory help
+  design contract replace the narrow, persistent report disclosures.
+
+- Searchable form choices now bring their input and results into view when
+  reached by keyboard, including credit cards near the bottom of a transaction
+  form. Long lists keep the active option visible and adapt to short viewports.
+
+- Searchable choices now visibly highlight arrow-key navigation, reopen after
+  Escape, and confirm only with an explicit selection without submitting the form.
+
 - Static preview language links now target HTML files explicitly, allowing
   English/Portuguese navigation when the tour is opened locally with `file://`.
 
 ### Added
 
+- Shared keyboard-search controls for record selectors, searchable multi-select
+  checkboxes, and a mandatory form contract for contributors and agents.
+
 - Portuguese README with reciprocal language links and version validation for
   both English and Portuguese editions.
 
 ### Changed
+
+- Reports now show live bank cash, the identified month's projected inflows
+  minus outflows, and the existing full-window net change with an accessible
+  period explanation. Removed the best-month card.
+
+- Conditional creation choices now wait for explicit selection across transaction,
+  investment, banking and sandbox forms. Card details wait for a card, CLT starts
+  unchecked, and error recovery plus native no-JavaScript controls are preserved.
 
 - Static interface tour now matches the black/graphite dark theme, with all 12
   synthetic screenshots refreshed from the current application and bilingual

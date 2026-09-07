@@ -12,14 +12,14 @@
             <div class="mt-6 max-w-2xl">{% include 'sandbox/_form_field.html' with field=form.gross_salary %}</div>
             <div class="max-w-2xl">{% include 'sandbox/_checkbox_field.html' with field=form.use_clt %}</div>
 
-            <div data-clt-options{% if not form.use_clt.value %} hidden{% endif %}>
+            <div data-clt-options data-form-when="{{ form.use_clt.id_for_label }}" data-form-value="checked" data-has-errors="{% if form.dependents.errors or form.pension.errors or form.vt_enabled.errors or form.vt_cost.errors or form.food_employee.errors or form.health_employee.errors or form.other_deductions.errors %}true{% else %}false{% endif %}">
                 <details class="mt-6 rounded-2xl border border-forest/10 dark:border-cream/10">
                     <summary class="cursor-pointer px-5 py-4 text-sm font-medium text-forest dark:text-cream">{% translate "Optional CLT details" %}</summary>
                     <div class="grid grid-cols-1 gap-5 border-t border-forest/10 p-5 dark:border-cream/10 md:grid-cols-2 lg:grid-cols-3">
                         {% include 'sandbox/_form_field.html' with field=form.dependents %}
                         {% include 'sandbox/_form_field.html' with field=form.pension %}
                         {% include 'sandbox/_checkbox_field.html' with field=form.vt_enabled %}
-                        {% include 'sandbox/_form_field.html' with field=form.vt_cost %}
+                        <div data-form-when="{{ form.vt_enabled.id_for_label }}" data-form-value="checked" data-has-errors="{{ form.vt_cost.errors|yesno:'true,false' }}">{% include 'sandbox/_form_field.html' with field=form.vt_cost %}</div>
                         {% include 'sandbox/_form_field.html' with field=form.food_employee %}
                         {% include 'sandbox/_form_field.html' with field=form.health_employee %}
                         {% include 'sandbox/_form_field.html' with field=form.other_deductions %}
@@ -27,7 +27,7 @@
                 </details>
             </div>
 
-            <div data-manual-options{% if form.use_clt.value %} hidden{% endif %} class="mt-7 border-t border-forest/10 pt-6 dark:border-cream/10">
+            <div data-manual-options data-form-when="{{ form.use_clt.id_for_label }}" data-form-value="unchecked" class="mt-7 border-t border-forest/10 pt-6 dark:border-cream/10">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <h3 class="font-sans text-lg font-semibold text-forest dark:text-cream">{% translate "Manual deductions and taxes" %}</h3>
@@ -39,9 +39,9 @@
                     <table class="w-full min-w-[38rem] text-sm">
                         <thead><tr class="border-b border-forest/10 text-left text-xs uppercase tracking-widest text-forest/60 dark:border-cream/10 dark:text-cream/60">
                             {% translate "Name used to identify the deduction or tax." as deduction_label_help %}{% translate "Choose a fixed amount in reais or a percentage of gross salary." as deduction_type_help %}{% translate "Amount or percentage subtracted every month." as deduction_value_help %}
-                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Description" %}{% include 'sandbox/_help_popover.html' with help_id='deduction-label-help' help_label=_('Description') help_text=deduction_label_help %}</span></th>
-                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Type" %}{% include 'sandbox/_help_popover.html' with help_id='deduction-type-help' help_label=_('Type') help_text=deduction_type_help %}</span></th>
-                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Value" %}{% include 'sandbox/_help_popover.html' with help_id='deduction-value-help' help_label=_('Value') help_text=deduction_value_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Description" %}{% include 'partials/help_popover.html' with help_id='deduction-label-help' help_label=_('Description') help_text=deduction_label_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Type" %}{% include 'partials/help_popover.html' with help_id='deduction-type-help' help_label=_('Type') help_text=deduction_type_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Value" %}{% include 'partials/help_popover.html' with help_id='deduction-value-help' help_label=_('Value') help_text=deduction_value_help %}</span></th>
                             <th class="w-16 px-2 py-3"><span class="sr-only">{% translate "Actions" %}</span></th>
                         </tr></thead>
                         <tbody data-deduction-rows>{% for row in deduction_rows %}{% include 'sandbox/_manual_deduction_row.html' with row=row %}{% endfor %}</tbody>
@@ -74,9 +74,9 @@
                     <table class="w-full min-w-[38rem] text-sm">
                         <thead><tr class="border-b border-forest/10 text-left text-xs uppercase tracking-widest text-forest/60 dark:border-cream/10 dark:text-cream/60">
                             {% translate "Name used to identify this monthly expense." as variable_label_help %}{% translate "Choose a fixed amount in reais or a percentage of monthly net income." as variable_type_help %}{% translate "Monthly amount or percentage assigned to this expense." as variable_value_help %}
-                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Description" %}{% include 'sandbox/_help_popover.html' with help_id='variable-label-help' help_label=_('Description') help_text=variable_label_help %}</span></th>
-                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Type" %}{% include 'sandbox/_help_popover.html' with help_id='variable-type-help' help_label=_('Type') help_text=variable_type_help %}</span></th>
-                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Value" %}{% include 'sandbox/_help_popover.html' with help_id='variable-value-help' help_label=_('Value') help_text=variable_value_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Description" %}{% include 'partials/help_popover.html' with help_id='variable-label-help' help_label=_('Description') help_text=variable_label_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Type" %}{% include 'partials/help_popover.html' with help_id='variable-type-help' help_label=_('Type') help_text=variable_type_help %}</span></th>
+                            <th class="px-2 py-3"><span class="flex items-center justify-between gap-2">{% translate "Value" %}{% include 'partials/help_popover.html' with help_id='variable-value-help' help_label=_('Value') help_text=variable_value_help %}</span></th>
                             <th class="w-16 px-2 py-3"><span class="sr-only">{% translate "Actions" %}</span></th>
                         </tr></thead>
                         <tbody data-variable-rows>{% for row in variable_rows %}{% include 'sandbox/_variable_row.html' with row=row %}{% endfor %}</tbody>

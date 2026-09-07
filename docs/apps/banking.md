@@ -119,3 +119,9 @@ remain on live/current conversion until a future roadmap item extends coverage.
 This schema has no compatibility adapter, automatic conversion, or dual-write
 period for legacy financial data. Refer to the data model's breaking-release
 section before attempting an upgrade.
+
+## Form keyboard behavior
+
+Banks, accounts, cards, programs and invoices use shared searchable choices. Multiple eligible cards use searchable checkboxes with Tab/Space and retain selection when filtered. Purchased-points amounts wait for a funding source; IOF sources wait for a positive amount. A deliberate source change clears the incompatible alternative.
+
+Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).

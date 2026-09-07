@@ -38,7 +38,7 @@ class InvestmentForm(forms.ModelForm):
             (YIELD_INPUT_ENDING_BALANCE, _('Use the final balance')),
             (YIELD_INPUT_AMOUNT, _('Enter the yield amount')),
         ),
-        initial=YIELD_INPUT_ENDING_BALANCE,
+        initial=None,
         required=False,
         widget=forms.RadioSelect,
         label=_('How to enter the yield'),
@@ -177,6 +177,8 @@ class InvestmentForm(forms.ModelForm):
             return None
 
         input_mode = data.get('yield_input_mode')
+        if input_mode not in (YIELD_INPUT_AMOUNT, YIELD_INPUT_ENDING_BALANCE):
+            raise ValidationError({'yield_input_mode': _('Choose how to enter the yield.')})
         input_field = 'ending_balance' if input_mode == YIELD_INPUT_ENDING_BALANCE else 'amount'
         value = data.get(input_field)
         preview = calculate_monetary_yield(
@@ -273,6 +275,9 @@ class AssetForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.user = user
         self.instance.user = user
+        if not self.is_bound and not self.instance.pk and 'valuation_mode' not in (kwargs.get('initial') or {}):
+            self.initial['valuation_mode'] = ''
+        self.fields['valuation_mode'].choices = [('', _('Choose how this asset is valued')), *Asset.ValuationMode.choices]
         self.original_currency = self.instance.currency if self.instance.pk else None
         self.original_asset_class = self.instance.asset_class if self.instance.pk else None
         self.original_valuation_mode = self.instance.valuation_mode if self.instance.pk else None

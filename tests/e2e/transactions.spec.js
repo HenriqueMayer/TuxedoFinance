@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+const { selectChoice } = require('./helpers/forms');
 const { test, expect } = require('@playwright/test');
 
 async function postForm(page, path, fields) {
@@ -53,7 +54,7 @@ async function assertFits(page) {
     expect(Math.max(...boxes.map(box => box.y)) - Math.min(...boxes.map(box => box.y))).toBeLessThanOrEqual(1);
 
     const apply = page.locator('#transaction-filters button[type="submit"]');
-    const category = page.locator('#filter-category');
+    const category = page.locator('#filter-category-search, #filter-category:not([hidden])');
     const a = await apply.boundingBox();
     const b = await category.boundingBox();
     expect(a.y >= b.y + b.height - 1 || a.x >= b.x + b.width - 1).toBe(true);
@@ -70,7 +71,7 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await expect(expenses).toHaveAttribute('aria-current', 'true');
     await page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ }).click();
     await expect(page.getByRole('status')).toHaveText('1 transaction');
-    await page.locator('#filter-category').selectOption(category);
+    await selectChoice(page.locator('#filter-category'), category);
     await page.getByRole('button', { name: 'Apply filters' }).click();
     await expect(page).toHaveURL(new RegExp(`category=${category}`));
     await typeCards(page).getByRole('link', { name: /^Income/ }).click();

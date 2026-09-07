@@ -110,7 +110,7 @@ class SandboxViewTests(TestCase):
         response = self.client.get(reverse('sandbox:index'))
         self.assertRedirects(response, f'{reverse("accounts:login")}?next={reverse("sandbox:index")}')
 
-    def test_get_shows_one_salary_and_defaults_to_automatic_clt(self):
+    def test_get_requires_opt_in_to_clt_and_keeps_native_fields_available(self):
         self.client.force_login(self.user)
         response = self.client.get(reverse('sandbox:index'))
         self.assertContains(response, 'Salary Sandbox')
@@ -118,7 +118,8 @@ class SandboxViewTests(TestCase):
         self.assertContains(response, 'name="use_clt"')
         self.assertContains(response, 'name="use_clt"', count=1)
         self.assertContains(response, 'data-clt-options')
-        self.assertContains(response, 'data-manual-options hidden')
+        self.assertNotContains(response, 'data-manual-options hidden')
+        self.assertFalse(response.context['form']['use_clt'].value())
         self.assertNotContains(response, 'PJ regime')
         self.assertNotContains(response, 'comparison')
 

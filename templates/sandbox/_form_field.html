@@ -4,7 +4,7 @@
             <label for="{{ field.id_for_label }}" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {{ field.label }}{% if field.field.required %} <span class="text-expense dark:text-expense-light">*</span>{% endif %}
             </label>
-            {% if field.help_text %}{% include 'sandbox/_help_popover.html' with help_id=field.id_for_label|add:'-help' help_label=field.label help_text=field.help_text %}{% endif %}
+            {% if field.help_text %}{% include 'partials/help_popover.html' with help_id=field.id_for_label|add:'-help' help_label=field.label help_text=field.help_text %}{% endif %}
         </div>
         {{ field }}
         {% for error in field.errors %}<p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}

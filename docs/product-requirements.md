@@ -256,8 +256,19 @@ and progressively enhance same-origin links, but all filters and navigation
 retain plain GET fallbacks. Every total states its
 currency/valuation date and whether it is actual or projected.
 
+The Reports summary keeps live bank cash, the identified anchor month's inflows
+minus outflows, and net bank-balance change over the complete displayed window.
+Monthly result includes recorded investment deposits and withdrawals without
+adding the opening balance. A keyboard-accessible question-mark disclosure
+explains the full-window dates and incomplete totals when exchange rates are
+missing. Do not show the former best-month summary card.
+
 ## 10. Frontend Requirements
 
+- Question-mark icons follow the [shared help contract](frontend.md#question-mark-help):
+  one readable tooltip opens on hover or keyboard focus and closes on pointer
+  exit, outside click or Escape. Mouse clicks never pin it. Preserve touch and
+  no-JavaScript access, structured translated copy and viewport-safe placement.
 - Preserve the cream/forest light palette and use neutral black/graphite dark
   foundations with accessible semantic colors,
   Inter-only typography, reusable partials and mobile-first behavior. Normal
@@ -280,6 +291,14 @@ currency/valuation date and whether it is actual or projected.
   is created. From that point onward, categories and all other user-entered or
   persisted domain data are displayed verbatim and are not translated
   automatically.
+- Every form and record filter must follow the
+  [mandatory keyboard and choice contract](frontend.md#keyboard-and-choice-contract).
+  Record choices use shared searchable controls with arrows/Enter and explicit
+  confirmation. Short choices remain native; Tab, Space and advanced-section
+  activation must work throughout. Reaching or opening a search keeps the input
+  and results visible below the sticky header without moving focus; long results
+  scroll internally and adapt to the available viewport. Creation choices begin empty and conditional
+  checkboxes unchecked; preserve edits, invalid submissions and shortcut context.
 - Progressive disclosure applies to every conditional form, filter, picker,
   menu and categorized flow: show only the branch relevant to the current
   selection, clear stale inactive values after deliberate changes, preserve

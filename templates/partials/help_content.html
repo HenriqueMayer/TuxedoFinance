@@ -1,0 +1,6 @@
+<strong class="help-title">{{ help_label }}</strong>
+{% if help_template %}
+    {% include help_template %}
+{% else %}
+    <span class="help-paragraph">{{ help_text }}</span>
+{% endif %}

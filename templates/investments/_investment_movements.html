@@ -42,7 +42,7 @@
             <label for="investment-bank" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {% translate "Bank" %}
             </label>
-            <select id="investment-bank" name="bank"
+            <select data-search-select id="investment-bank" name="bank"
                     class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All banks' %}</option>
                 {% for bank in bank_choices %}
@@ -54,7 +54,7 @@
             <label for="investment-product" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {% translate "Investment product" %}
             </label>
-            <select id="investment-product" name="product"
+            <select data-search-select id="investment-product" name="product"
                     class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All products' %}</option>
                 {% for product in product_choices %}
@@ -66,7 +66,7 @@
             <label for="investment-asset" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
                 {% translate "Asset" %}
             </label>
-            <select id="investment-asset" name="asset"
+            <select data-search-select id="investment-asset" name="asset"
                     class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All assets' %}</option>
                 {% for asset in asset_choices %}

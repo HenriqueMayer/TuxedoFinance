@@ -36,3 +36,11 @@ All fixed copy and the image alternative text are translated in English and
 Brazilian Portuguese. Both themes use the shared design system; the light
 palette is unchanged and the dark theme uses black/graphite foundations.
 Navigation and access links work without JavaScript.
+
+## Shared form rendering
+
+The presentation helper `pages.templatetags.form_ui.form_control` supports the
+shared form-field partial across apps. It preserves native Django widgets and
+error/help associations, automatically marking model choices for the shared
+keyboard-search enhancement. See the
+[form contract](../frontend.md#keyboard-and-choice-contract).

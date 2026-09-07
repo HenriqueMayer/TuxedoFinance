@@ -51,7 +51,10 @@ the server rejects incompatible direct submissions. Recurrence and notes are
 kept under optional advanced options. Category selection is enhanced as an
 accessible, accent-insensitive search over the category and parent name; it
 immediately excludes categories explicitly classified for the other transaction
-type. Its native select remains the no-JavaScript fallback. Unclassified legacy
+type. Reaching a record search with Tab or opening its results scrolls just enough
+to show the input and list below the sticky header, while preserving keyboard
+focus. This also applies to the credit-card selector revealed by the payment
+channel. Its native select remains the no-JavaScript fallback. Unclassified legacy
 categories intentionally remain available for both types. Choices are limited to
 the user's banks, accounts, cards and categories. Validation enforces:
 
@@ -119,3 +122,9 @@ category totals.
 Transactions are editable and deletable by their owner. The transaction synchronization
 service keeps banking movements and invoices coherent; audit-grade reversals are out
 of scope.
+
+## Form keyboard behavior
+
+Categories now wait for the transaction type and use the shared searchable choice. Down/Up visibly navigate; Enter confirms; Escape/Tab cancel unconfirmed search text. Credit-card details wait for a specific card; recurrence dates wait for the checkbox. Advanced options are operable with Enter/Space.
+
+Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).

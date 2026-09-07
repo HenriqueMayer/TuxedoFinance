@@ -30,17 +30,9 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         {% include 'partials/form_field.html' with field=form.title %}
         {% include 'partials/form_field.html' with field=form.amount %}
         {% include 'partials/form_field.html' with field=form.transaction_type %}
-        <div id="category-picker" class="space-y-1.5" hidden>
-            <label for="category-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{% translate "Search category" %}</label>
-            <input id="category-search" type="search" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="category-results" aria-autocomplete="list" aria-required="true" aria-describedby="category-selection{% if form.category.errors %} category-error{% endif %}"{% if form.category.errors %} aria-invalid="true"{% endif %}
-                   placeholder="{% translate 'Type to filter categories' %}"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-night-muted focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
-            <p id="category-selection" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
-            {% for error in form.category.errors %}<p id="category-error" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
-            <ul id="category-results" role="listbox" class="max-h-48 overflow-y-auto rounded-xl border border-forest/30 bg-white p-1 dark:border-cream/30 dark:bg-night-surface"></ul>
-            <button id="clear-category" type="button" class="text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light">{% translate "Clear category selection" %}</button>
+        <div id="category-fields" data-has-errors="{{ form.category.errors|yesno:'true,false' }}">
+            {% include 'partials/form_field.html' with field=form.category %}
         </div>
-        <div id="category-fallback">{% include 'partials/form_field.html' with field=form.category %}</div>
         {% include 'partials/form_field.html' with field=form.payment_channel %}
         <p id="payment-channel-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
         <div id="bank-account-fields" class="space-y-5" data-has-errors="{{ form.bank_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.bank_account %}</div>
@@ -50,9 +42,11 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         </div>
         <div id="credit-card-fields" class="space-y-5" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
             {% include 'partials/form_field.html' with field=form.credit_card %}
-            {% include 'partials/form_field.html' with field=form.installments %}
-            {% include 'partials/form_field.html' with field=form.billing_override %}
-            <p id="credit-card-best-purchase" class="text-sm font-medium text-caramel-ink dark:text-caramel-light" aria-live="polite"></p>
+            <div id="credit-card-details" class="space-y-5" data-has-errors="{% if form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
+                {% include 'partials/form_field.html' with field=form.installments %}
+                {% include 'partials/form_field.html' with field=form.billing_override %}
+                <p id="credit-card-best-purchase" class="text-sm font-medium text-caramel-ink dark:text-caramel-light" aria-live="polite"></p>
+            </div>
             <p id="credit-card-account" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
         </div>
         {% include 'partials/preferred_date_field.html' with field=form.date %}
@@ -110,6 +104,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             return order === 'MDY' ? `${month}/${day}/${year}` : `${day}/${month}/${year}`;
         };
 
+        openPicker.hidden = false;
         picker.value = toIso(visible.value);
         openPicker.addEventListener('click', () => {
             if (typeof picker.showPicker === 'function') picker.showPicker();
@@ -129,13 +124,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
     });
 
     (function () {
-        const search = document.getElementById('category-search');
         const category = document.getElementById('{{ form.category.id_for_label }}');
-        const picker = document.getElementById('category-picker');
-        const fallback = document.getElementById('category-fallback');
-        const results = document.getElementById('category-results');
-        const selection = document.getElementById('category-selection');
-        const clearCategory = document.getElementById('clear-category');
         const channel = document.getElementById('{{ form.payment_channel.id_for_label }}');
         const transactionType = document.getElementById('{{ form.transaction_type.id_for_label }}');
         const bankAccount = document.getElementById('{{ form.bank_account.id_for_label }}');
@@ -153,61 +142,16 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             bank: document.getElementById('bank-account-fields'),
             debit: document.getElementById('debit-card-fields'),
             credit: document.getElementById('credit-card-fields'),
+            cardDetails: document.getElementById('credit-card-details'),
+            category: document.getElementById('category-fields'),
             fixedUntil: document.getElementById('fixed-until-fields'),
         };
-        if (!search || !category || !channel) return;
-
-        const normalize = value => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase();
-        const categoryOptions = () => Array.from(category.options).filter(option => option.value);
-        let activeIndex = -1;
-
-        function hideCategoryResults() {
-            results.hidden = true;
-            search.setAttribute('aria-expanded', 'false');
-            search.setAttribute('aria-activedescendant', '');
-        }
-
-        function renderCategories() {
-            const query = normalize(search.value.trim());
-            const matches = categoryOptions().filter(option => {
-                const typeMatches = !option.dataset.transactionType || option.dataset.transactionType === transactionType.value;
-                return typeMatches && (!query || normalize(option.dataset.search || option.text).includes(query));
-            });
-            results.replaceChildren();
-            results.hidden = false;
-            activeIndex = matches.length === 1 ? 0 : -1;
-            matches.forEach((option, index) => {
-                const item = document.createElement('li');
-                item.id = `category-option-${option.value}`;
-                item.role = 'option';
-                item.tabIndex = -1;
-                item.dataset.value = option.value;
-                item.setAttribute('aria-selected', String(index === activeIndex));
-                item.textContent = option.text;
-                item.className = 'cursor-pointer rounded-lg px-3 py-2 text-sm text-forest/90 hover:bg-forest hover:text-cream dark:text-cream dark:hover:bg-cream dark:hover:text-night';
-                item.addEventListener('mousedown', event => { event.preventDefault(); selectCategory(option.value); });
-                results.append(item);
-            });
-            if (!matches.length) {
-                const item = document.createElement('li');
-                item.className = 'px-3 py-2 text-sm text-forest/70 dark:text-night-muted';
-                item.textContent = '{% translate "No matching categories" %}';
-                results.append(item);
-            }
-            search.setAttribute('aria-expanded', 'true');
-        }
-
-        function selectCategory(value) {
-            category.value = value;
-            category.dispatchEvent(new Event('change', {bubbles: true}));
-            const option = category.selectedOptions[0];
-            selection.textContent = option && option.value ? '{% translate "Selected category:" %} ' + option.text : '{% translate "No category selected." %}';
-            search.value = option && option.value ? option.text : '';
-            hideCategoryResults();
-        }
-
-        function setHidden(group, hidden, preserveErrors) {
-            group.hidden = hidden && !(preserveErrors && group.dataset.hasErrors === 'true');
+        if (!category || !channel) return;
+        const setHidden = window.TuxedoForms.setHidden;
+        function updateCardDetails(clearStale) {
+            const inactive = channel.value !== 'CREDIT_CARD' || !creditCard.value;
+            if (inactive && clearStale) { installments.value = '1'; billingOverride.value = ''; }
+            setHidden(groups.cardDetails, inactive, !clearStale);
         }
         function updateCardAccountContext(card, output) {
             const option = card.selectedOptions[0];
@@ -236,6 +180,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             updateCardAccountContext(debitCard, debitAccountContext);
             updateCardAccountContext(creditCard, creditAccountContext);
             updateBestPurchaseDay();
+            updateCardDetails(clearStale);
             if (transactionType.value === 'INCOME' && isCard) {
                 status.textContent = '{% translate "Debit and credit cards are available only for expenses." %}';
             } else if (value === 'ACCOUNT') {
@@ -251,57 +196,40 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             }
         }
         function updateAvailableChannels(clearStale) {
-            Array.from(channel.options).forEach(option => {
-                option.hidden = transactionType.value === 'INCOME' && !option.selected && (
-                    option.value === 'DEBIT_CARD' || option.value === 'CREDIT_CARD'
-                );
-            });
             if (transactionType.value === 'INCOME' && (
                 channel.value === 'DEBIT_CARD' || channel.value === 'CREDIT_CARD'
             ) && clearStale) channel.value = '';
+            Array.from(channel.options).forEach(option => {
+                const unavailable = transactionType.value === 'INCOME' && !option.selected && (
+                    option.value === 'DEBIT_CARD' || option.value === 'CREDIT_CARD'
+                );
+                option.hidden = unavailable;
+                option.disabled = unavailable;
+            });
             updatePaymentFields(clearStale);
             const selectedCategory = category.selectedOptions[0];
             if (
                 clearStale && selectedCategory && selectedCategory.dataset.transactionType
                 && selectedCategory.dataset.transactionType !== transactionType.value
-            ) selectCategory('');
-            else if (document.activeElement === search) renderCategories();
-            else hideCategoryResults();
+            ) category.value = '';
+            if (!transactionType.value && clearStale) category.value = '';
+            Array.from(category.options).forEach(option => {
+                option.hidden = Boolean(option.dataset.transactionType && option.dataset.transactionType !== transactionType.value);
+            });
+            setHidden(groups.category, !transactionType.value, !clearStale);
         }
         function updateFixedFields(clearStale) {
             setHidden(groups.fixedUntil, !fixed.checked, !clearStale);
             if (!fixed.checked && clearStale) fixedUntil.value = '';
         }
 
-        picker.hidden = false;
-        fallback.hidden = true;
-        selectCategory(category.value);
         updateAvailableChannels(false);
-        updateFixedFields();
-        search.addEventListener('input', renderCategories);
-        search.addEventListener('focus', () => {
-            if (category.value) search.select();
-            renderCategories();
-        });
-        search.addEventListener('keydown', function (event) {
-            const options = Array.from(results.querySelectorAll('[role="option"]'));
-            if (event.key === 'Escape') { hideCategoryResults(); return; }
-            if (!options.length || !['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter'].includes(event.key)) return;
-            event.preventDefault();
-            if (event.key === 'Enter' && activeIndex >= 0) return selectCategory(options[activeIndex].dataset.value);
-            if (event.key === 'Home') activeIndex = 0;
-            else if (event.key === 'End') activeIndex = options.length - 1;
-            else activeIndex = event.key === 'ArrowDown' ? Math.min(activeIndex + 1, options.length - 1) : Math.max(activeIndex - 1, 0);
-            options.forEach((option, index) => option.setAttribute('aria-selected', String(index === activeIndex)));
-            search.setAttribute('aria-activedescendant', options[activeIndex].id);
-            options[activeIndex].scrollIntoView({block: 'nearest'});
-        });
-        clearCategory.addEventListener('click', () => selectCategory(''));
-        search.addEventListener('blur', () => window.setTimeout(hideCategoryResults, 150));
+        updateFixedFields(false);
         channel.addEventListener('change', () => updatePaymentFields(true));
         transactionType.addEventListener('change', () => updateAvailableChannels(true));
         debitCard.addEventListener('change', () => updateCardAccountContext(debitCard, debitAccountContext));
         creditCard.addEventListener('change', () => {
+            updateCardDetails(true);
             updateCardAccountContext(creditCard, creditAccountContext);
             updateBestPurchaseDay();
         });

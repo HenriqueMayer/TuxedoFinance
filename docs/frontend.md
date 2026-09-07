@@ -197,33 +197,95 @@ are not part of the current product.
 
 ## Forms and settlement disclosure
 
-Transaction entry uses progressive enhancement: server-rendered selects are the
-authoritative no-JavaScript path, while JavaScript reveals the fields relevant
-to the selected payment channel and enhances category search. Hidden client-side
-controls never replace server-side ownership and compatibility validation.
+### Keyboard and choice contract
 
-Progressive disclosure is a project-wide interface rule, not a pattern limited
-to one form. Every new or updated form, filter, picker, menu or categorized flow
-must initially present only the information needed to make the current choice,
-then reveal the fields and explanations that belong to the selected option or
-category. Implementations must:
+This is mandatory for **all existing, new and changed forms**, including filters,
+settings and imports. Use the shared field renderer and test the interaction;
+custom pickers must not be copied into individual templates. The implementation
+follows the [WAI-ARIA combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/).
 
-- hide inactive branches instead of leaving unrelated controls competing for
-  attention;
-- clear stale values from a branch when the user deliberately switches away
-  from it, so hidden inputs cannot affect the submitted result;
-- keep a branch visible when it contains a server-side validation error, giving
-  the user a clear recovery path;
-- announce useful selection consequences in text when they are not already
-  evident from the visible labels;
-- retain a complete server-rendered, no-JavaScript submission path and enforce
-  ownership, compatibility and accounting rules on the server.
+| Control | Keyboard behavior |
+|---|---|
+| All controls | Tab/Shift+Tab move forward/back in document order with visible focus. No positive tabindex or focus jumps when branches appear. |
+| Searchable record choice | Type to filter; Down/Up open results and highlight the next/previous option; Enter confirms the highlighted option. |
+| Search cancellation | Escape closes; Tab continues. Both restore the committed choice and discard unconfirmed search text. Enter never submits from the search input, including zero matches. |
+| Short native select | Use the browser's native keys (Space or Alt+Down to open where supported, arrows to navigate and Enter to confirm). |
+| Checkbox / multiple record choice | Space toggles a focused checkbox; Tab reaches each visible checkbox. Filtering preserves selected records. |
+| Advanced options | Focus the native summary and press Enter or Space; Tab then visits its fields. |
+| Save / other buttons | Enter or Space activates the focused button. |
 
-When an existing screen with conditional branches is changed, those branches
-must be brought into this contract as part of the change. The loyalty-entry form,
-for example, shows an invoice only for an invoice award, shows payment-source
-and amount fields only for a points purchase, and shows neither branch for an
-adjustment, expiration or redemption.
+Single-choice search uses manual confirmation, including when there is only one
+match. Focus remains on the search input; `aria-activedescendant`,
+`aria-selected` and the visible active highlight move together. Arrow navigation
+stops at the ends. Home/End and text-editing shortcuts retain native editing
+behavior. Mouse/touch selection and the explicitly labeled clear button perform
+the same committed change.
+
+When a user focuses, filters or opens a searchable choice, scroll only as far as
+needed to show the input and results below the sticky header. Keep focus on the
+input. Size the results to the available visual viewport, including after a
+mobile keyboard or window resize, and keep long lists internally scrollable.
+Arrow navigation keeps the active option visible inside that list; once the
+picker fits, it must not keep moving the page. Use immediate scrolling so keyboard
+input does not race an animation, including with reduced motion enabled.
+Initialization, background refreshes and merely revealing a conditional branch
+must not scroll the page. This targeted visibility adjustment applies when the
+user reaches the picker and does not change the HTMX location-preservation rule.
+
+All Django `ModelChoiceField` and `ModelMultipleChoiceField` controls rendered by
+`partials/form_field.html` receive `data-search-select` through the `form_control`
+template tag. This covers categories, parent categories, banks, accounts, cards,
+assets, investment products, programs and invoices. Handwritten record filters
+must also carry that attribute and a stable unique ID. Short enumeration choices
+remain native selects. Disabled fields remain native and disabled.
+
+`static/js/forms.js` progressively enhances these controls, using the original
+scoped options and preserving their names, values, metadata and `change` events.
+It reads translated text from `partials/form_ui_strings.html`. Initialization is
+idempotent on DOMContentLoaded and HTMX load. Domain handlers may update native
+values/options; the shared refresh runs after their change handlers. Call
+`TuxedoForms.refresh(form)` after changes outside a change event. User text is
+inserted with textContent, never interpreted as HTML. No remote search or new
+frontend dependency is involved. Entry forms use `novalidate` so hidden native
+selects cannot intercept error recovery; Django renders the validation errors.
+
+### Conditional fields and recovery
+
+- New choices that control branches begin empty; conditional checkboxes begin
+  unchecked. Preserve submitted values, existing records and validated shortcut
+  context. Model/storage defaults need not change to enforce the creation UI.
+- Transaction categories wait for income/expense; a credit channel reveals the
+  card selector, and a confirmed card reveals installment/bill details. Recurrence
+  reveals its end date only after the checkbox is selected.
+- Investment values and funding wait for an asset and operation type. Monetary
+  yield requires an explicit input-mode choice. Opening balances wait for the
+  valuation mode; their product appears when an opening position is supplied.
+- Points purchases reveal payment amounts after a funding source is selected.
+  Redemption IOF sources appear only for a positive IOF amount. Sandbox CLT and
+  transport-voucher details require their respective checkboxes.
+- Use `TuxedoForms.setHidden(group, inactive, preserveErrors)` for domain-specific
+  branches. Simple dependencies may use `data-form-when="controller-id"` plus
+  `data-form-value="checked|unchecked|positive|literal-value"`; these clear their
+  inactive controls after a deliberate controller change. `data-inactive-value`
+  can specify a domain-required reset value instead of an empty string.
+- Every directly toggled group, including parents, must expose its own
+  `data-has-errors`. Initial rendering keeps errored branches visible and opens
+  advanced sections containing errors. A deliberate switch clears incompatible
+  values and dismisses the abandoned branch's old errors; it must not erase
+  unrelated errors or unmodified values during initialization.
+- Keep dependent fields in normal DOM order and use hidden for inactive groups.
+  Revealing a group never steals focus; the next Tab reaches its first control.
+- Native controls remain rendered and usable without JavaScript. Do not render
+  inactive branches hidden on the server. The server remains authoritative for
+  ownership, compatibility and accounting validation.
+
+Form changes require keyboard browser tests for confirmation/cancellation,
+conditional transitions, invalid POST recovery, editing and the no-JavaScript
+path. Start viewport tests with the picker near the bottom; check the input,
+results and active option in desktop and short mobile viewports. Use the isolated
+E2E executor; inspect light/dark focus and active-state contrast. The contributor
+and agent instructions make this a review requirement,
+with regression tests included in the existing CI browser suite.
 
 Forms use the established `form_field.html`, validation summary, forest/cream
 inputs with caramel focus, and the Save/Cancel pill action pattern. Checkboxes
@@ -298,6 +360,61 @@ accounts and upcoming invoices are limited to five rows each and link to Banking
 for the complete lists.
 
 ## Reports and charts
+
+The Reports summary uses three cards: live bank cash, the identified anchor
+month's inflows minus outflows, and bank-balance change across the full chart
+window. Monthly result excludes the opening balance and includes recorded
+investment deposits/withdrawals separately from consumer income/expense. The
+window-wide change keeps its existing calculation and missing-rate warning.
+`stat_card.html` accepts a period `caption` and shared question-mark help through
+`help_id` plus `help_text` or a trusted `help_template`. The full-window explanation follows HTMX changes
+to the displayed dates. Reports no longer show a best-month summary card.
+
+### Question-mark help
+
+This contract is mandatory for every new or changed **?** help icon. Reuse
+`partials/help_popover.html`, `static/js/help-popovers.js` and the `.help-*`
+components in `assets/css/tailwind.css`. Reports and Sandbox share this behavior;
+do not add independent click-to-pin tooltips or use a native title as the only help.
+
+| Interaction | Required behavior |
+|---|---|
+| Mouse hover | Open without clicking. Keep the help visible when moving from the icon into its text. Close after leaving both, with a 120 ms crossing allowance. |
+| Mouse click | Never pin help. Clicking outside dismisses it immediately. Only one help box may be open. |
+| Keyboard | Tab focus opens help; Enter/Space can reopen it. Escape dismisses without moving focus; Tab away closes it. Pointer clicks must not leave a focus-driven tooltip stuck open. |
+| Touch | Tap toggles help. Another tap, an outside tap or another help icon dismisses the previous box. |
+| Navigation | HTMX swaps/history close floating help and initialize replacement controls once. No duplicate fallback controls or event handlers. |
+| No JavaScript | A native details/summary fallback exposes the same explanation by keyboard or touch. |
+
+Help is rendered above cards/charts in a floating container attached to the body,
+with a preferred width of **352 px**, a **12 px** viewport gutter and an **8 px**
+gap from the icon. Its width must never inherit the icon or label width. Reposition
+above the icon when needed, constrain height in short viewports, and allow internal
+scrolling. Reposition on resize/scroll without moving the page or stealing focus.
+
+Use 14 px text, 24 px line height, normal capitalization, left alignment and 16 px
+padding. Give the explanation a short title and separated paragraphs; put formulas
+in their own lightly shaded block. Keep paragraphs short and fully translated.
+Use the shared light/dark surfaces, borders and visible focus. Do not put links,
+form fields or other interactive controls inside a tooltip.
+
+Pass a stable, unique `help_id`, a translated `help_label`, and either plain
+`help_text` or a repository-owned `help_template`. The latter may use
+`.help-paragraph` and `.help-formula` spans for structured copy. Template paths
+must be authored literals, never user input. Both the tooltip and no-JavaScript
+fallback render the same content; ordinary text remains escaped. The trigger's
+accessible name explains its subject, and `aria-describedby` references the
+`role="tooltip"` content.
+
+```django
+{% include 'partials/help_popover.html' with help_id='budget-help' help_label=budget_label help_text=budget_help %}
+```
+
+Review changes with actual pointer, keyboard and touch tests: enter/leave the
+icon and content, outside click, click then leave, Escape/Tab, a second icon,
+HTMX/history and the no-JavaScript fallback. Inspect English/Portuguese copy in
+both themes at desktop and mobile widths; assert box width/viewport bounds so
+an extremely narrow column cannot pass as readable help.
 
 Charts remain inline server-rendered SVG/CSS with native `<title>` fallbacks,
 theme-aware tooltip pills on mouse hover and keyboard focus, responsive

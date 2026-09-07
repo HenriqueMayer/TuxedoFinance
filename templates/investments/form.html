@@ -19,7 +19,7 @@
             {% include 'partials/form_field.html' with field=form.kind %}
             {% include 'partials/form_field.html' with field=form.date %}
             <p id="asset-mode-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
-            <div id="money-fields" data-has-errors="{% if form.amount.errors or form.ending_balance.errors %}true{% else %}false{% endif %}" class="space-y-5">
+            <div id="money-fields" data-has-errors="{% if form.amount.errors or form.ending_balance.errors or form.yield_input_mode.errors %}true{% else %}false{% endif %}" class="space-y-5">
                 <div id="regular-amount-field"
                      data-has-errors="{{ form.amount.errors|yesno:'true,false' }}">
                     {% include 'partials/form_field.html' with field=form.amount %}
@@ -53,9 +53,9 @@
                 {% include 'partials/form_field.html' with field=form.quantity %}
                 {% include 'partials/form_field.html' with field=form.unit_price %}
             </div>
-            {% include 'partials/form_field.html' with field=form.fees %}
+            <div id="operation-fees" data-has-errors="{{ form.fees.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fees %}</div>
         </section>
-        <section id="funding-section" class="space-y-4 rounded-xl bg-cream p-4 dark:bg-night">
+        <section data-has-errors="{% if form.source_account.errors or form.source_program.errors or form.source_points.errors or form.cash_amount.errors or form.destination_account.errors %}true{% else %}false{% endif %}" id="funding-section" class="space-y-4 rounded-xl bg-cream p-4 dark:bg-night">
             <div>
                 <h2 class="text-xl font-semibold text-forest dark:text-cream">{% translate 'Funding or destination' %}</h2>
                 <p id="operation-kind-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
@@ -109,6 +109,7 @@
             yield: document.getElementById('monetary-yield-fields'),
             endingBalance: document.getElementById('ending-balance-field'),
             units: document.getElementById('unit-fields'),
+            fees: document.getElementById('operation-fees'),
             deposit: document.getElementById('deposit-fields'),
             points: document.getElementById('source-points-fields'),
             cash: document.getElementById('cash-fields'),
@@ -118,9 +119,7 @@
 
         const previewPlaceholder = yieldPreview ? yieldPreview.innerHTML : '';
 
-        function setHidden(group, hidden, preserveErrors) {
-            group.hidden = hidden && !(preserveErrors && group.dataset.hasErrors === 'true');
-        }
+        const setHidden = window.TuxedoForms.setHidden;
 
         function isMonetaryYield() {
             const option = asset.selectedOptions[0];
@@ -135,7 +134,7 @@
             const valueInput = selectedMode && selectedMode.value === 'ENDING_BALANCE'
                 ? endingBalance
                 : amount;
-            if (!product.value || !asset.value || !document.getElementById('{{ form.date.id_for_label }}').value || !valueInput.value) {
+            if (!selectedMode || !product.value || !asset.value || !document.getElementById('{{ form.date.id_for_label }}').value || !valueInput.value) {
                 yieldPreview.innerHTML = previewPlaceholder;
                 return;
             }
@@ -147,7 +146,8 @@
             const usesEndingBalance = selectedMode && selectedMode.value === 'ENDING_BALANCE';
             if (clearStale) {
                 if (!isYield || !usesEndingBalance) endingBalance.value = '';
-                if (isYield && usesEndingBalance) amount.value = '';
+                if (isYield && (!selectedMode || usesEndingBalance)) amount.value = '';
+                if (!isYield) yieldInputModes.forEach(input => { input.checked = false; });
             }
             setHidden(groups.yield, !isYield, !clearStale);
             if (!isYield) {
@@ -155,25 +155,26 @@
                 if (yieldPreview) yieldPreview.hidden = true;
                 return;
             }
-            setHidden(groups.amount, usesEndingBalance, !clearStale);
+            setHidden(groups.amount, !selectedMode || usesEndingBalance, !clearStale);
             setHidden(groups.endingBalance, !usesEndingBalance, !clearStale);
-            if (yieldPreview) yieldPreview.hidden = false;
+            if (yieldPreview) yieldPreview.hidden = !selectedMode;
             scheduleYieldPreview();
         }
 
         function updateAssetFields(clearStale) {
             const option = asset.selectedOptions[0];
-            const mode = option ? option.dataset.valuationMode : '';
+            const mode = option && asset.value && kind.value ? option.dataset.valuationMode : '';
             const currency = option ? option.dataset.currency : '';
             setHidden(groups.money, mode !== 'MONETARY', !clearStale);
             setHidden(groups.units, mode !== 'UNITS', !clearStale);
+            setHidden(groups.fees, !mode, !clearStale);
             if (clearStale) {
-                if (mode === 'MONETARY') {
+                if (mode !== 'UNITS') {
                     quantity.value = '';
                     unitPrice.value = '';
-                } else if (mode === 'UNITS') {
-                    amount.value = '';
                 }
+                if (mode !== 'MONETARY') amount.value = '';
+                if (!mode) document.getElementById('{{ form.fees.id_for_label }}').value = '0';
             }
             if (mode === 'MONETARY') {
                 assetStatus.textContent = kind.value === 'YIELD'
@@ -188,7 +189,7 @@
         }
 
         function updateFundingFields(clearStale, preferredSource) {
-            const value = kind.value;
+            const value = asset.value ? kind.value : '';
             const isDeposit = value === 'DEPOSIT';
             const isWithdrawal = value === 'WITHDRAWAL';
             const isYield = value === 'YIELD';
@@ -199,7 +200,7 @@
                     sourcePoints.value = '';
                 }
                 if (!isWithdrawal) destinationAccount.value = '';
-                if (isYield) cashAmount.value = '';
+                if (isYield || !value) cashAmount.value = '';
                 if (isDeposit && preferredSource === 'account') {
                     sourceProgram.value = '';
                     sourcePoints.value = '';
@@ -210,15 +211,15 @@
             }
             const option = asset.selectedOptions[0];
             const usesUnits = option && option.dataset.valuationMode === 'UNITS';
-            const hasFundingErrors = [groups.deposit, groups.points, groups.cash, groups.withdrawal]
-                .some(group => group.dataset.hasErrors === 'true');
-            const needsCash = usesUnits && (isWithdrawal || (isDeposit && sourceAccount.value));
+            const needsCash = usesUnits && ((isWithdrawal && destinationAccount.value) || (isDeposit && sourceAccount.value));
             const hasPreservedProgramCash = usesUnits && isDeposit && sourceProgram.value && cashAmount.value;
+            if (clearStale && !needsCash && !hasPreservedProgramCash) cashAmount.value = '';
+            if (clearStale && !(isDeposit && sourceProgram.value)) sourcePoints.value = '';
             setHidden(groups.deposit, !isDeposit, !clearStale);
             setHidden(groups.withdrawal, !isWithdrawal, !clearStale);
             setHidden(groups.cash, !(needsCash || hasPreservedProgramCash), !clearStale);
             setHidden(groups.points, !(isDeposit && sourceProgram.value), !clearStale);
-            fundingSection.hidden = !value || (isYield && !hasFundingErrors);
+            setHidden(fundingSection, !value || isYield, !clearStale);
             if (isDeposit) {
                 kindStatus.textContent = '{% translate "Choose one source: a bank account or a loyalty program." %}';
             } else if (isWithdrawal) {
@@ -232,12 +233,13 @@
         updateFundingFields(false);
         asset.addEventListener('change', () => {
             updateAssetFields(true);
-            updateFundingFields(false);
+            updateFundingFields(true);
         });
         kind.addEventListener('change', () => updateFundingFields(true));
         kind.addEventListener('change', () => updateAssetFields(true));
         sourceAccount.addEventListener('change', () => updateFundingFields(true, 'account'));
         sourceProgram.addEventListener('change', () => updateFundingFields(true, 'program'));
+        destinationAccount.addEventListener('change', () => updateFundingFields(true));
         yieldInputModes.forEach(input => input.addEventListener('change', () => updateYieldFields(true)));
         [product, asset, kind, document.getElementById('{{ form.date.id_for_label }}'), endingBalance, amount]
             .filter(Boolean)

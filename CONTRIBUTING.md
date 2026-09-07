@@ -6,8 +6,16 @@ copyright and license notices.
 
 ## Development principles
 
+- All new or changed forms must follow the mandatory
+  [keyboard and choice contract](docs/frontend.md#keyboard-and-choice-contract):
+  shared searchable record choices, native short choices, explicit conditional
+  selections, visible focus, error recovery and a complete no-JavaScript path.
+  Include real keyboard and conditional-transition tests in form reviews.
 - Preserve the local-first Django architecture, user isolation, Decimal-based
   calculations, accessibility, and no-JavaScript form fallbacks.
+- Use the [shared question-mark help contract](docs/frontend.md#question-mark-help)
+  for every new or changed help icon. Test hover dismissal, keyboard/touch,
+  outside clicks, readable viewport bounds and HTMX behavior.
 - Preserve viewport and keyboard focus when updating the current page (filters,
   cards, sorting, pagination, refreshes and inline edits). Follow the
   [location-preservation contract](docs/frontend.md#preserve-the-users-location)

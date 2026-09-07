@@ -57,6 +57,26 @@ another month is selected.
 
 ## Reports
 
+The summary has three cards:
+
+- **Balance now:** bank cash through today, even when browsing another chart
+  window. Investments are not included in this available bank balance.
+- **Projected (month):** the anchor month's inflows minus outflows, using
+  `income + recorded withdrawals - expenses - investment deposits`. The card
+  identifies that month and does not add an opening balance. Card expenses retain
+  their statement-month attribution, consistent with the monthly flow chart.
+- **Net change (12 months):** the final bank balance minus the opening bank
+  balance for the whole displayed window. Its question-mark disclosure states
+  the exact window and explains that it can include historical and projected
+  months. The calculation and missing-exchange-rate warning are preserved.
+
+Question-mark help follows the shared [tooltip contract](../frontend.md#question-mark-help):
+hover or keyboard focus opens one readable box; pointer exit, outside click and
+Escape dismiss it. Touch toggles it, and native details remain the no-JavaScript
+fallback. Formulas and explanatory paragraphs are visually separated. The former best-month
+summary card is removed. A liquid investment becomes bank cash only through a
+recorded withdrawal; merely being redeemable does not create a future inflow.
+
 Reports retain server-rendered SVG/CSS and HTMX-enhanced filters with plain GET
 fallbacks. The approved report set is organized by source of truth:
 

@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Reusable dashboard indicator card (Final Design System §0/§7).
 
@@ -12,6 +13,8 @@ Usage (semantic tone — pass a value_class matching Final DS §2.2):
 Pass either a fully formatted `value`, or a numeric `amount` to use the
 request's `CURRENCY_SYMBOL`. `detail_value` and `detail_label` add an optional
 compact secondary line.
+`caption` identifies an optional period. `help_id` and `help_text` (or a trusted
+`help_template`) use the shared question-mark tooltip and no-JavaScript help.
 
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-N">
       {% include 'partials/stat_card.html' with label='...' value='...' %}
@@ -19,10 +22,16 @@ compact secondary line.
   </div>
 {% endcomment %}
 <div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
-    <p class="text-xs uppercase tracking-widest text-forest/70 dark:text-night-muted">{{ label }}</p>
+    <div class="flex items-start justify-between gap-2">
+        <p class="text-xs uppercase tracking-widest text-forest/70 dark:text-night-muted">{{ label }}</p>
+        {% if help_id %}
+            {% include 'partials/help_popover.html' with help_label=label %}
+        {% endif %}
+    </div>
     <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums {{ value_class|default:'text-forest dark:text-cream' }}">
         {% if amount is not None %}{{ CURRENCY_SYMBOL }} {{ amount|floatformat:2 }}{% else %}{{ value }}{% endif %}
     </p>
+    {% if caption %}<p class="mt-2 text-xs text-forest/70 dark:text-night-muted">{{ caption }}</p>{% endif %}
     {% if detail_value is not None %}
         <p class="mt-2 text-xs text-forest/60 dark:text-cream/60">
             <span class="font-medium tabular-nums">{{ CURRENCY_SYMBOL }} {{ detail_value|floatformat:2 }}</span> {{ detail_label }}

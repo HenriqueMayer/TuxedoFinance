@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-05 04:11+0000\n"
+"POT-Creation-Date: 2026-09-07 22:07+0000\n"
 "PO-Revision-Date: 2026-08-12 04:00+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -789,6 +789,9 @@ msgstr "Preço por unidade existente. Somente para ativos baseados em unidades."
 msgid "Required when an opening balance or opening position is provided."
 msgstr "Obrigatório quando um saldo ou uma posição inicial for informada."
 
+msgid "Choose how this asset is valued"
+msgstr "Escolha como este ativo é valorizado"
+
 msgid "You already have an asset with this code."
 msgstr "Você já tem um ativo com este código."
 
@@ -1456,12 +1459,6 @@ msgstr "Editar categoria"
 
 msgid "New Category"
 msgstr "Nova categoria"
-
-msgid "Search parent categories"
-msgstr "Buscar categorias principais"
-
-msgid "Type a category name"
-msgstr "Digite o nome da categoria"
 
 msgid "Import Categories"
 msgstr "Importar categorias"
@@ -2279,6 +2276,31 @@ msgstr "Finance"
 msgid "All rights reserved."
 msgstr "Todos os direitos reservados."
 
+msgid "Type to search"
+msgstr "Digite para pesquisar"
+
+msgid "No matching options"
+msgstr "Nenhuma opção encontrada"
+
+msgid "No option selected."
+msgstr "Nenhuma opção selecionada."
+
+msgid "Selected:"
+msgstr "Selecionado:"
+
+msgid "Clear selection"
+msgstr "Limpar seleção"
+
+msgid ""
+"Type to search. Use ↑/↓ to navigate, Enter to select, Escape to close and "
+"Tab to continue."
+msgstr "Digite para pesquisar. Use ↑/↓ para navegar, Enter para selecionar, Escape para fechar e Tab para continuar."
+
+msgid ""
+"Type to filter. Use Tab to reach the checkboxes and Space to select or "
+"deselect. Filtering keeps your selections."
+msgstr "Digite para filtrar. Use Tab para acessar as caixas e Espaço para marcar ou desmarcar. A filtragem mantém suas seleções."
+
 msgid "Language"
 msgstr "Idioma"
 
@@ -2668,21 +2690,6 @@ msgstr ""
 msgid "Edit Transaction"
 msgstr "Editar transação"
 
-msgid "Search category"
-msgstr "Pesquisar categoria"
-
-msgid "Type to filter categories"
-msgstr "Digite para filtrar as categorias"
-
-msgid "Clear category selection"
-msgstr "Limpar seleção de categoria"
-
-msgid "Selected category:"
-msgstr "Categoria selecionada:"
-
-msgid "No category selected."
-msgstr "Nenhuma categoria selecionada."
-
 msgid "Bank account:"
 msgstr "Conta bancária:"
 
@@ -2732,9 +2739,6 @@ msgstr "Tipo de transação"
 
 msgid "Selected"
 msgstr "Selecionado"
-
-msgid "View transactions"
-msgstr "Ver transações"
 
 msgid ""
 "Counts follow your search and dates, before category and recurrence filters."
@@ -2928,6 +2932,24 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+#~ msgid "Search parent categories"
+#~ msgstr "Buscar categorias principais"
+
+#~ msgid "Type a category name"
+#~ msgstr "Digite o nome da categoria"
+
+#~ msgid "Search category"
+#~ msgstr "Pesquisar categoria"
+
+#~ msgid "Type to filter categories"
+#~ msgstr "Digite para filtrar as categorias"
+
+#~ msgid "Selected category:"
+#~ msgstr "Categoria selecionada:"
+
+#~ msgid "View transactions"
+#~ msgstr "Ver transações"
 
 #~ msgid "Every income, expense, and investment you have recorded."
 #~ msgstr "Todas as receitas, despesas e investimentos que você registrou."
@@ -3623,3 +3645,38 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "Compare CLT and PJ"
 #~ msgstr "Comparar CLT e PJ"
+
+msgid "Projected (month)"
+msgstr "Projetado (mês)"
+
+msgid "Monthly inflows minus outflows: income + recorded withdrawals - expenses - investment deposits. This is the month's result, without adding the opening balance. Card expenses follow their statement month."
+msgstr "Entradas menos saídas do mês: receitas + resgates registrados - despesas - aportes. É o resultado do mês, sem somar o saldo inicial. Despesas de cartão seguem o mês da fatura."
+
+#, python-format
+msgid "Change in bank balances across the entire chart window, from %(start)s to %(end)s: final balance minus opening balance. Includes historical and projected months; it is not the change from today. Totals are incomplete when exchange rates are missing."
+msgstr "Variação dos saldos bancários no período completo do gráfico, de %(start)s a %(end)s: saldo final menos saldo inicial. Inclui meses históricos e projetados; não é a variação a partir de hoje. Os totais ficam incompletos quando faltam cotações."
+
+msgid "Result for the indicated month, without adding the opening balance."
+msgstr "Resultado do mês indicado, sem somar o saldo inicial."
+
+msgid "Income + recorded withdrawals"
+msgstr "Receitas + resgates registrados"
+
+msgid "− expenses − investment deposits"
+msgstr "− despesas − aportes"
+
+msgid "Card expenses follow their statement month."
+msgstr "Despesas de cartão seguem o mês da fatura."
+
+#, python-format
+msgid "Entire chart window: %(start)s to %(end)s."
+msgstr "Período completo do gráfico: %(start)s a %(end)s."
+
+msgid "Final bank balance − opening bank balance"
+msgstr "Saldo bancário final − saldo bancário inicial"
+
+msgid "Includes historical and projected months, rather than only the change from today."
+msgstr "Inclui meses históricos e projetados, e não apenas a variação a partir de hoje."
+
+msgid "Totals are incomplete when exchange rates are missing."
+msgstr "Os totais ficam incompletos quando faltam cotações."

@@ -885,6 +885,39 @@ class DashboardPageContractTests(DashboardFixture):
         expected = f'{date(*first, 1):%b %Y} &ndash; {date(*last, 1):%b %Y}'
         self.assertContains(response, expected)
 
+    @patch('dashboard.services.timezone.localdate', return_value=date(2026, 9, 7))
+    def test_report_cards_separate_live_cash_monthly_result_and_window_change(self, localdate):
+        self.transaction(
+            amount='500.00', transaction_type=Transaction.TransactionType.INCOME,
+            date=date(2026, 9, 5),
+        )
+        self.transaction(amount='200.00', date=date(2026, 9, 20))
+        self.transaction(
+            amount='123.00', transaction_type=Transaction.TransactionType.INCOME,
+            date=date(2026, 10, 5),
+        )
+        response = self.client.get(reverse('dashboard:reports'))
+        evolution = response.context['evolution']
+        self.assertEqual(evolution['balance_today'], Decimal('1500.00'))
+        self.assertEqual(evolution['current_month']['balance'], Decimal('300.00'))
+        self.assertEqual(evolution['net_change'], Decimal('423.00'))
+        self.assertContains(response, 'Projected (month)')
+        self.assertContains(response, 'September 2026')
+        self.assertContains(response, 'R$ 300,00')
+        self.assertContains(response, 'Apr 2026 to Mar 2027')
+        self.assertNotContains(response, 'Best month')
+        self.assertNotContains(response, 'Projected (end of window)')
+
+        shifted = self.client.get(
+            reverse('dashboard:reports'), {'charts_offset': 1}, HTTP_HX_REQUEST='true'
+        )
+        self.assertEqual(shifted.context['evolution']['current_month']['balance'], Decimal('123.00'))
+        self.assertEqual(shifted.context['evolution']['balance_today'], Decimal('1500.00'))
+        self.assertContains(shifted, 'Balance now')
+        self.assertNotContains(shifted, 'Balance at ')
+        self.assertContains(shifted, 'October 2026')
+        self.assertContains(shifted, 'May 2026 to Apr 2027')
+
     def test_report_charts_have_foreground_mouse_and_keyboard_tooltips(self):
         self.transaction(amount='123.45')
 

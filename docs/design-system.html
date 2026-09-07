@@ -544,7 +544,20 @@
     <div class="px-6 sm:px-10">
         <span class="text-caramel-ink dark:text-caramel-light uppercase tracking-widest text-xs font-medium block mb-4">Section 4</span>
         <h2 class="font-sans text-4xl tracking-tight font-semibold">Forms.</h2>
-        <p class="mt-4 text-base text-forest/70 dark:text-night-muted leading-relaxed font-normal max-w-2xl">Same field contract as the app (label, help text, errors). Inputs keep generous rounding with forest borders and caramel focus; labels become small caps eyebrows. Disabled/read-only variants do not exist in the application.</p>
+        <p class="mt-4 text-base text-forest/70 dark:text-night-muted leading-relaxed font-normal max-w-2xl">Same field contract as the app (label, help text, errors). Inputs keep generous rounding with forest borders and caramel focus; labels become small caps eyebrows. Disabled controls preserve their native semantics.</p>
+    </div>
+
+    <div class="mx-6 sm:mx-10 rounded-xl border border-forest/20 p-5 space-y-3 dark:border-cream/20">
+        <h3 class="text-lg font-semibold">Mandatory keyboard and conditional-choice contract</h3>
+        <p>Tab / Shift+Tab move between controls. Record searches use ↑/↓ and Enter; Escape cancels. Checkboxes use Space; advanced summaries use Enter or Space.</p>
+        <p>Reaching or opening a record search brings its input and results into view without moving focus. Long lists scroll internally and fit below the sticky header, including on short mobile screens.</p>
+        <p>New conditional choices start empty. Reveal credit-card details only after a card is confirmed; retain edited values and server errors. Use the shared component for all record selectors.</p>
+        <div role="listbox" aria-label="Example category results" class="max-w-md rounded-xl border border-forest/30 p-1 dark:border-cream/30">
+            <div role="option" aria-selected="false" class="rounded-lg px-3 py-2">Food &gt; Aplicativo Comida</div>
+            <div role="option" aria-selected="true" class="rounded-lg px-3 py-2 bg-forest text-cream dark:bg-cream dark:text-night">Transport &gt; Aplicativo Transporte</div>
+        </div>
+        <p class="text-sm">Example after pressing Down twice: the active option has the same contrast in keyboard and pointer interaction.</p>
+        <a class="underline" href="frontend.md#keyboard-and-choice-contract">Implementation and review requirements</a>
     </div>
 
     <div class="px-6 sm:px-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -909,11 +922,16 @@
 
             <div class="space-y-6">
                 <div class="rounded-3xl bg-white p-6 sm:p-8 text-forest dark:bg-night-raised/40">
-                    <p class="mb-5 text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-night-muted">6.4 &mdash; Tooltips (native title + chart pattern)</p>
+                    <p class="mb-5 text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-night-muted">6.4 &mdash; Question-mark help and chart tooltips</p>
+                    <p class="mb-4 text-sm text-forest/70 dark:text-night-muted">All question-mark icons use the <a href="frontend.md#question-mark-help" class="underline">shared help contract</a>: hover or keyboard focus opens one box; leaving the icon and text, clicking outside or Escape closes it. Mouse clicks never pin help. Touch toggles; no JavaScript retains native disclosure.</p>
+                    <div class="mb-5 max-w-sm rounded-2xl border border-forest/15 bg-white p-4 text-left text-sm font-normal leading-6 tracking-normal text-forest shadow-xl dark:border-cream/15 dark:bg-night dark:text-cream">
+                        <strong class="block font-semibold">Projected (month)</strong>
+                        <p class="mt-3">Result for the indicated month, without adding the opening balance.</p>
+                        <p class="mt-3 rounded-lg bg-forest/5 px-3 py-2 font-medium dark:bg-cream/5">Income + recorded withdrawals<br>− expenses − investment deposits</p>
+                        <p class="mt-3">Card expenses follow their statement month.</p>
+                    </div>
+                    <p class="mb-5 text-xs text-forest/70 dark:text-night-muted">Open-help visual reference: 352 px preferred width, 12 px viewport gutter, 14/24 px text and 16 px padding. Use the shared floating container; never size help from its icon. Separate paragraphs and formulas. Reuse partials/help_popover.html and static/js/help-popovers.js.</p>
                     <div class="flex flex-wrap items-center gap-4">
-                        <button type="button" title="Project links" class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream dark:border-cream/30">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9a3.75 3.75 0 1 1 6.544 2.5c-.916 1.023-2.272 1.48-2.272 3M12 18h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                        </button>
                         <span class="group relative inline-block cursor-default rounded-full bg-caramel px-4 py-1.5 text-xs font-semibold text-forest-deep">Hover me
                             <span class="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-forest dark:bg-night-surface px-3 py-1.5 text-xs text-cream opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-cream dark:text-night">Aug 2026 &middot; $ 1,720.00</span>
                         </span>

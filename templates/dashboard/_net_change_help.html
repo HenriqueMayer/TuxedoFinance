@@ -1,0 +1,5 @@
+{% load i18n %}
+<span class="help-paragraph">{% blocktranslate with start=window_start end=window_end.date|date:'M Y' %}Entire chart window: {{ start }} to {{ end }}.{% endblocktranslate %}</span>
+<span class="help-formula">{% translate "Final bank balance − opening bank balance" %}</span>
+<span class="help-paragraph">{% translate "Includes historical and projected months, rather than only the change from today." %}</span>
+<span class="help-paragraph">{% translate "Totals are incomplete when exchange rates are missing." %}</span>

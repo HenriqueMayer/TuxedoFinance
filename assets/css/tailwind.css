@@ -48,3 +48,54 @@
     outline-offset: 3px;
   }
 }
+
+@layer base {
+  :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid theme('colors.caramel.ink');
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .help-popover { position: relative; display: inline-flex; flex-shrink: 0; }
+  .help-trigger {
+    @apply flex h-6 w-6 cursor-help list-none items-center justify-center rounded-full text-current hover:bg-caramel/15 dark:hover:bg-cream/10;
+  }
+  .help-trigger[hidden] { display: none; }
+  .help-trigger::-webkit-details-marker { display: none; }
+  .help-trigger svg { width: 1rem; height: 1rem; }
+  .help-content, .help-fallback-content {
+    @apply rounded-2xl border border-forest/15 bg-white p-4 text-left text-sm font-normal normal-case leading-6 tracking-normal text-forest shadow-xl dark:border-cream/15 dark:bg-night dark:text-cream;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .help-content {
+    position: fixed;
+    z-index: 70;
+    width: min(22rem, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .help-title { display: block; font-weight: 600; }
+  .help-paragraph, .help-formula { display: block; margin-top: 0.75rem; }
+  .help-formula {
+    @apply rounded-lg bg-forest/5 px-3 py-2 font-medium dark:bg-cream/5;
+  }
+  .help-fallback-content {
+    position: absolute;
+    right: 0;
+    top: 2rem;
+    z-index: 70;
+    width: min(22rem, calc(100vw - 5rem));
+  }
+  .search-choice-results { position: relative; }
+  .search-choice-option {
+    @apply flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-forest dark:text-cream;
+  }
+  .search-choice-option:hover,
+  .search-choice-option[aria-selected="true"] {
+    @apply bg-forest text-cream dark:bg-cream dark:text-night;
+  }
+}
