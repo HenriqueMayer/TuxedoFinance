@@ -361,7 +361,7 @@ are unsupported. Rollback requires restoring the entire pre-release application
 and its matching database backup; mixing old and new code/database versions is
 not supported.
 
-## 15. Docker installation (Unreleased, issue #18)
+## 15. Docker installation (v0.3.0, issue #18)
 
 Provide a single-instance Docker/Compose installation with a persistent SQLite
 volume and signing key, a non-root Gunicorn runtime, and static assets with

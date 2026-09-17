@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/version-0.2.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.2.0">
+  <img src="https://img.shields.io/badge/version-0.3.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.3.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="English and Brazilian Portuguese interface">
@@ -53,12 +53,15 @@ in an owner-controlled SQLite database.
 ### Docker
 
 Requires Docker Engine 28+ (or a current Docker Desktop) and Compose v2+.
-Docker support is under `Unreleased`; the existing v0.2.0 release has no
-published image. From a checkout containing these files:
+Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.3.0/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.3.0/docker.env.example)
+from the [v0.3.0 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.3.0)
+into a new installation directory. Open a terminal there and run these commands.
+No repository clone, host Python, uv or Node.js is required:
 
 ```bash
-docker build -t tuxedo-finance:local .
-image=tuxedo-finance:local
+image=ghcr.io/henriquemayer/tuxedofinance:v0.3.0
+docker pull "$image"
 (
   umask 077
   set -o noclobber
@@ -70,9 +73,9 @@ docker compose --env-file .env.docker up -d --wait
 
 Open [Tuxedo Finance](http://127.0.0.1:8000/). Docker keeps SQLite in a named
 volume and uses a persistent signing key. The setup command refuses to replace
-an existing `.env.docker`. Follow the [Docker guide](docs/docker.md) for released
-images without cloning, configuration, updates and backup/restore. Only releases
-that include Docker installation assets provide the no-clone path.
+an existing `.env.docker`. Keep the directory name and configuration across
+updates. Follow the [Docker guide](docs/docker.md) for source builds,
+configuration, updates and backup/restore.
 
 ### Python and uv
 
@@ -191,6 +194,7 @@ dependencies and Chromium, run:
 
 ```bash
 npm run test:e2e
+docker build -t tuxedo-finance:local .
 npm run test:e2e -- --docker-image tuxedo-finance:local
 npm run test:preview
 ```

@@ -7,10 +7,11 @@ The default address is <http://127.0.0.1:8000/>.
 
 ## Availability
 
-Docker packaging is new under `Unreleased`. The existing v0.2.0 release does
-not include a published container. Use a local build until a newer release
-provides `compose.yaml`, `docker.env.example` and a verified GHCR image.
-The release workflow tests Linux amd64 and arm64 separately before publishing.
+Docker distribution starts with v0.3.0. Each supported stable release provides
+`compose.yaml`, `docker.env.example` and a versioned GHCR image. The release
+workflow tests Linux amd64 and arm64 separately before publishing. The older
+v0.2.0 release has no container image. Wait for the Docker release workflow to
+finish and the installation assets to appear before installing a new release.
 
 ## Build from a checkout
 
@@ -30,14 +31,14 @@ docker compose --env-file .env.docker -f compose.yaml -f compose.build.yaml up -
 
 ## Install a released image without cloning
 
-Open the [releases page](https://github.com/HenriqueMayer/TuxedoFinance/releases)
-and select a release that includes Docker support. Download its `compose.yaml`
-and `docker.env.example` into a new installation directory. Read the exact
-`TUXEDO_IMAGE` value from that release's example and assign it below, replacing
-`vX.Y.Z` with that release tag. Run commands from this directory.
+Open the [v0.3.0 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.3.0).
+Download its [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.3.0/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.3.0/docker.env.example)
+into a new installation directory. Run commands from this directory. For another
+supported release, use the exact `TUXEDO_IMAGE` from that release's example.
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:vX.Y.Z
+image=ghcr.io/henriquemayer/tuxedofinance:v0.3.0
 docker pull "$image"
 ```
 

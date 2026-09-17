@@ -74,9 +74,9 @@ two different versions under the same release identity.
 
 ## Container releases
 
-Docker support starts with the first release containing `Dockerfile` and the
-Docker workflow; v0.2.0 has no published container. The feature branch adds an
-`Unreleased` entry; do not tag an existing version again to distribute new code.
+Docker distribution starts with v0.3.0; v0.2.0 has no published container.
+Feature branches add `Unreleased` entries; do not tag an existing version again
+to distribute new code.
 
 On a published stable GitHub Release, `.github/workflows/docker.yml` checks out
 its tag, validates its version and membership in main, and builds/tests amd64
