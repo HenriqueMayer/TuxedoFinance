@@ -14,7 +14,7 @@ Any such change must be called out in the changelog and in the release notes.
 
 The canonical application version is `[project].version` in the root
 [`pyproject.toml`](../pyproject.toml). The corresponding project entry in
-`uv.lock`, the README version badge and the changelog are validated against it
+`uv.lock`, both README version badges and the changelog are validated against it
 by `scripts/check_version.py`.
 
 `package.json` is a private manifest for Tailwind and Playwright development
@@ -77,3 +77,35 @@ CI validates every pull request and pushes to `main` or `develop`. It also runs
 for `v*` tags; tagged builds fail when the tag differs from `pyproject.toml` or
 when the matching dated changelog section is missing. This prevents publishing
 two different versions under the same release identity.
+
+## Container releases
+
+Docker support starts with the first release containing `Dockerfile` and the
+Docker workflow; v0.2.0 has no published container. The feature branch adds an
+`Unreleased` entry; do not tag an existing version again to distribute new code.
+
+On a published stable GitHub Release, `.github/workflows/docker.yml` checks out
+its tag, validates its version and membership in main, and builds/tests amd64
+and arm64 on native runners. It publishes those exact tested images to GHCR,
+then assembles the version manifest and attaches `compose.yaml` and
+`docker.env.example` to the release. OCI labels record version and source
+revision. Pull requests validate images without publishing. Prereleases are
+validated but not published by this workflow.
+
+Supported image references are `ghcr.io/henriquemayer/tuxedofinance:vX.Y.Z` or a
+recorded digest. No moving `latest` tag is maintained, so publishing an older
+release cannot silently change an installation's selected version.
+
+Before the first release, enable GitHub Actions and package creation for the
+repository. The publishing job uses its GITHUB_TOKEN with package-write and
+release-asset-write permissions. Ensure the GHCR package is public (package
+settings -> visibility) and inherits the repository's Actions access. The
+workflow explicitly verifies anonymous pulls of both architectures; a private
+package causes that step to fail. Correct visibility/access and rerun the
+failed publication before advertising the image.
+
+For the first release, rehearse the no-clone quick start from only its downloaded
+assets on a clean installation. Verify anonymous pulling, signup, both languages,
+assets, retained data after recreation, backup and restore. Link issue #18 to
+the delivering PR and release only once this verification succeeds. A local
+image build or merged packaging PR alone does not establish registry availability.

@@ -5,6 +5,10 @@ SQLite database. The database is runtime data, is ignored by Git, and must not
 be copied into source control or a public issue. Each installation owner chooses
 the location, retention period, and encryption policy for backups.
 
+For Docker installations, use the [Docker operations guide](docker.md) for
+volume-aware backup, restore and updates. Keep the Compose project identity and
+signing key across container recreation.
+
 ## Updating dependencies
 
 Dependencies are resolved from `pyproject.toml` and locked in `uv.lock`.

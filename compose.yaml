@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+services:
+  web:
+    image: ${TUXEDO_IMAGE:?Set TUXEDO_IMAGE to a released image or local build tag}
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?Generate a persistent SECRET_KEY before starting}
+      DEBUG: "False"
+      HTTPS: ${HTTPS:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      ALLOW_SIGNUPS: ${ALLOW_SIGNUPS:-True}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      TUXEDO_DATA_DIR: /data
+      TUXEDO_ENV_FILE: /dev/null
+    ports:
+      - "127.0.0.1:${TUXEDO_PORT:-8000}:8000"
+    volumes:
+      - data:/data
+    restart: unless-stopped
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  data:

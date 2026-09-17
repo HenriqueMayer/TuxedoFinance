@@ -2,6 +2,9 @@
 
 Technical and product documentation for the current Tuxedo Finance release.
 
+[Docker installation and operations](docker.md) covers local images, published
+releases, persistent volumes and isolated restore rehearsals.
+
 ## Where to start
 
 | Doc | Covers |

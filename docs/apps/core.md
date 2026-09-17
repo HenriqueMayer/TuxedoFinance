@@ -18,7 +18,7 @@ priority over `.env`, including in CI.
 | `core/formats/en/formats.py` | Locale number-format override driven by the selected reporting currency (FR16). |
 | `core/formats/pt_BR/formats.py` | Portuguese locale counterpart that preserves the same currency-driven number format. |
 | `core/tests.py` | Language cookie, navbar, HTMX and language/currency-independence tests. |
-| `core/wsgi.py` | Standard Django WSGI entrypoint, retained for future deployment packaging. |
+| `core/wsgi.py` | Django WSGI entrypoint used by Gunicorn in the Docker image. |
 | `core/asgi.py` | Standard ASGI entrypoint; unused in this project (no async views, no channels) but kept as Django scaffolding. |
 
 ## Local SQLite database
@@ -122,3 +122,11 @@ preference; core provides registry and formatting primitives. Historical
 conversion evidence belongs to transfers and investments in the
 current implementation; `core` only provides currency metadata and formatting
 primitives.
+
+## Collected static assets
+
+`STATIC_ROOT` is `staticfiles/`, separate from committed `static/`. WhiteNoise
+serves collected, compressed assets with `DEBUG=False` and preserves the existing
+versioned asset URLs. It runs after SecurityMiddleware and CSP middleware so
+static responses retain those headers. Docker collects assets during its build;
+normal native `runserver` continues to serve development assets.

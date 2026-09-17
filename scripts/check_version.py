@@ -43,9 +43,10 @@ def main() -> None:
             "run `uv lock`"
         )
 
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    if f'alt="Version {version}"' not in readme:
-        fail("README version badge does not match pyproject.toml")
+    for filename in ("README.md", "README.pt-BR.md"):
+        readme = (ROOT / filename).read_text(encoding="utf-8")
+        if f'alt="Version {version}"' not in readme:
+            fail(f"{filename} version badge does not match pyproject.toml")
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     release_heading = re.compile(

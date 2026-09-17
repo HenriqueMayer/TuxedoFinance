@@ -7,6 +7,16 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Docker and Compose packaging with Gunicorn, compressed static assets,
+  persistent SQLite volumes and a non-root runtime; documented local builds,
+  versioned release images, configuration, updates and backup/restore (#18).
+- Isolated native and Docker browser executors, container lifecycle/restore
+  checks, and a release workflow that validates amd64/arm64 images before GHCR
+  publication. Published images become available with the first Docker release.
+- Brazilian Portuguese installation and project documentation in README.pt-BR.md.
+
 ## [0.2.0] - 2026-09-03
 
 ### Added

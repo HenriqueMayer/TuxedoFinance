@@ -54,3 +54,7 @@ RELEASE_PLAN.md
 roadmap_brand.md
 ROADMAP.md
 SPRINT_BRAND.md
+
+# Collected static files and Docker installation configuration
+/staticfiles/
+.env.docker

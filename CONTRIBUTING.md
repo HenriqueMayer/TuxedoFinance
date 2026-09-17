@@ -23,9 +23,10 @@ license notices.
 ## Test strategy and CI
 
 The supported path is Python 3.12, `uv`, Django's test runner, SQLite and the
-frontend tools pinned by npm. The single CI job reproduces that local workflow
-from both lockfiles; it does not test
-other databases or SaaS deployment matrices. It runs Django
+frontend tools pinned by npm. The application CI job reproduces that local workflow
+from both lockfiles. A separate Docker workflow checks the supported single-instance
+SQLite image on Linux amd64 and arm64; other databases and SaaS deployment
+matrices remain outside the supported path. It runs Django
 checks, missing-migration checks, translation compilation, the full suite with
 branch coverage, Ruff, locked Python and npm dependency audits, generated-asset
 consistency and focused Chromium smoke tests. Browser failures upload screenshots,
@@ -51,3 +52,33 @@ commands.
 Do not remove or weaken the copyright or license notices in this repository.
 Where practical, new distributable source files should include the concise
 identifier `SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0`.
+
+## Isolated application and container checks
+
+Use an empty environment file and temporary data directory for Django checks:
+
+```bash
+(
+  check_dir=$(mktemp -d)
+  trap 'rm -rf -- "$check_dir"' EXIT
+  export TUXEDO_DATA_DIR="$check_dir" TUXEDO_ENV_FILE=/dev/null
+  export SECRET_KEY=local-check-only DEBUG=True HTTPS=False ALLOW_SIGNUPS=True
+  uv run python manage.py check &&
+  uv run python manage.py makemigrations --check --dry-run &&
+  uv run coverage run --branch manage.py test &&
+  uv run coverage report --show-missing --fail-under=70
+)
+uv run python -m unittest discover -s tests/tooling
+npm run test:e2e
+docker build -t tuxedo-finance:test .
+uv run python scripts/docker_smoke.py --image tuxedo-finance:test
+npm run test:e2e -- --docker-image tuxedo-finance:test
+git diff --check
+```
+
+`npm run test:e2e` owns its database and loopback server. The Docker option owns
+its Compose project and named volume as well. Both ignore inherited installation
+settings and `E2E_BASE_URL`; do not replace these runners with a suite targeting
+a personal installation. Logs and browser failure artifacts are retained under
+`test-results/`. Install Chromium with `npx playwright install chromium` first.
+See [Docker operations](docs/docker.md) for container validation and delivery.

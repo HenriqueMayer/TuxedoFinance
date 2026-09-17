@@ -4,7 +4,7 @@
   "scripts": {
     "build:css": "tailwindcss -c tailwind.config.js -i assets/css/tailwind.css -o static/css/app.css --minify",
     "preview:capture": "bash .github/preview/capture_preview.sh",
-    "test:e2e": "playwright test",
+    "test:e2e": "uv run python scripts/run_e2e.py",
     "test:preview": "playwright test --config=.github/preview/playwright.config.js"
   },
   "devDependencies": {

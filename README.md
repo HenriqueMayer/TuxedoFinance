@@ -45,14 +45,41 @@ owner's control.
 > The preview uses synthetic data and runs as a static tour. There is no login,
 > public backend, or persistence, and nothing is saved.
 
+[English](README.md) · [Português brasileiro](README.pt-BR.md)
+
 ## 🚀 Quick start
+
+### Docker
+
+Docker support is under `Unreleased`; the existing v0.2.0 release has no
+published image. From a checkout containing these files:
+
+```bash
+docker build -t tuxedo-finance:local .
+image=tuxedo-finance:local
+(
+  umask 077
+  set -o noclobber
+  docker run --rm --entrypoint python -e TUXEDO_IMAGE="$image" "$image" -c \
+    'import os,secrets; print("TUXEDO_IMAGE="+os.environ["TUXEDO_IMAGE"]); print("SECRET_KEY="+secrets.token_urlsafe(64))' > .env.docker
+)
+docker compose --env-file .env.docker up -d --wait
+```
+
+Open [Tuxedo Finance](http://127.0.0.1:8000/). Docker keeps SQLite in a named
+volume and uses a persistent signing key. The setup command refuses to replace
+an existing `.env.docker`. Follow the [Docker guide](docs/docker.md) for released
+images without cloning, configuration, updates and backup/restore. Only releases
+that include Docker installation assets provide the no-clone path.
+
+### Python and uv
 
 Requires Python 3.12 and [`uv`](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```bash
 git clone https://github.com/HenriqueMayer/TuxedoFinance.git
 cd TuxedoFinance
-uv sync
+uv sync --locked
 printf 'SECRET_KEY=%s\n' "$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" > .env
 uv run python manage.py migrate
 uv run python manage.py runserver
@@ -174,29 +201,19 @@ npm audit --audit-level=high
 npm run build:css
 ```
 
-For browser smoke tests, start the app on port 8765 in one terminal and run the
-suite from another.
-
-Terminal 1:
-
-```bash
-uv run python manage.py runserver 127.0.0.1:8765
-```
-
-Terminal 2:
+The browser executor creates its own temporary database and loopback server:
 
 ```bash
 npx playwright install chromium
 npm run test:e2e
+npm run test:e2e -- --docker-image tuxedo-finance:local
 npm run test:preview
 ```
 
-The browser suite expects the application at `http://127.0.0.1:8765` by default;
-set `E2E_BASE_URL` to use another local address. The CI workflow also verifies
-the compiled CSS and vendored HTMX against their pinned sources, checks migrations
-and translations, enforces the documented coverage floor, runs Ruff, and audits
-the locked Python runtime and npm development dependencies. See
-[`CONTRIBUTING.md`](CONTRIBUTING.md) for the complete development workflow.
+The Docker variant also owns and removes its temporary volume. Both ignore an
+existing `E2E_BASE_URL` and never target the owner's database. See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for isolated Django checks, CI and the
+complete development workflow.
 
 To regenerate the committed interface-tour images from disposable synthetic
 data, run `npm run preview:capture`. The command uses a guarded temporary
@@ -214,7 +231,7 @@ database and never writes to the installation owner's `db.sqlite3`.
 
 ## 🔐 Data ownership
 
-Each clone is an independent installation. Financial records remain in its
+Each installation has an independent database. Financial records remain in its
 local SQLite database; they are not included in the repository. The installation
 owner is responsible for access permissions, backups, retention, and restore
 testing. Before upgrades or risky maintenance, stop writes and follow the
