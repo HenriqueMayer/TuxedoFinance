@@ -7,6 +7,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-17
+
 ### Fixed
 
 - Banking list/detail routes redirect anonymous visitors to login before
@@ -34,8 +36,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
   persistent SQLite volumes and a non-root runtime; documented local builds,
   versioned release images, configuration, updates and backup/restore (#18).
 - Isolated Docker browser and lifecycle checks, plus a release workflow that
-  validates amd64/arm64 images before publishing to GHCR. Published images
-  become available with the first Docker release.
+  validates amd64/arm64 images before publishing to GHCR with matching
+  installation assets for the no-clone setup.
 
 - Shared keyboard-search controls for record selectors, searchable multi-select
   checkboxes, and a mandatory form contract for contributors and agents.
@@ -143,6 +145,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.1.0
