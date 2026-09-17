@@ -47,7 +47,8 @@ class BankListView(LoginRequiredMixin, ListView):
     context_object_name = 'banks'
 
     def dispatch(self, request, *args, **kwargs):
-        sync_user_ledger(request.user)
+        if request.user.is_authenticated:
+            sync_user_ledger(request.user)
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -94,7 +95,8 @@ class BankDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'bank'
 
     def dispatch(self, request, *args, **kwargs):
-        sync_user_ledger(request.user)
+        if request.user.is_authenticated:
+            sync_user_ledger(request.user)
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):

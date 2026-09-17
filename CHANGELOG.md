@@ -9,6 +9,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Banking list/detail routes redirect anonymous visitors to login before
+  synchronizing the ledger. Docker health checks support allowed subdomains,
+  and container backup instructions export private data outside the checkout.
+
 - Unified question-mark help across Reports and Sandbox: hover opens one
   readable box, leaving or clicking outside closes it, and mouse clicks never
   pin it. Structured formulas, keyboard/touch support and the mandatory help
@@ -25,6 +29,13 @@ and project versions follow [Semantic Versioning](https://semver.org/).
   English/Portuguese navigation when the tour is opened locally with `file://`.
 
 ### Added
+
+- Docker and Compose packaging with Gunicorn, compressed static assets,
+  persistent SQLite volumes and a non-root runtime; documented local builds,
+  versioned release images, configuration, updates and backup/restore (#18).
+- Isolated Docker browser and lifecycle checks, plus a release workflow that
+  validates amd64/arm64 images before publishing to GHCR. Published images
+  become available with the first Docker release.
 
 - Shared keyboard-search controls for record selectors, searchable multi-select
   checkboxes, and a mandatory form contract for contributors and agents.

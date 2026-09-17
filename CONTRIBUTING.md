@@ -159,6 +159,25 @@ users and financial records, so never point that direct command at personal data
 a separate operation, `npm run preview:capture`, documented in
 [preview maintenance](.github/preview/README.md).
 
+## Docker validation
+
+The Docker workflow validates the single-instance SQLite image on Linux amd64
+and arm64. It builds from the locked dependencies and runs lifecycle,
+backup/restore and browser checks before publishing stable releases.
+
+```bash
+docker build -t tuxedo-finance:test .
+uv run python scripts/docker_smoke.py --image tuxedo-finance:test
+npm run test:e2e -- --docker-image tuxedo-finance:test
+```
+
+Both Docker runners own their Compose project, ephemeral key, loopback port and
+named volume. They discard inherited installation/Compose settings and remove
+only their own resources. Logs remain under `test-results/`. Never target the
+installation owner's database, server or volume. Docker Engine 28+ or a current
+Docker Desktop and Compose v2+ are the supported installation baseline.
+See [Docker operations](docs/docker.md) for configuration and release delivery.
+
 ## Before proposing a change
 
 Run the applicable checks above and `git diff --check`. Review the diff for

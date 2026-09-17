@@ -552,6 +552,16 @@ class LoyaltyPurchaseFundingTests(TestCase):
 
 @override_settings(ROOT_URLCONF=__name__)
 class BankingViewTests(TestCase):
+    def test_anonymous_bank_pages_redirect_before_querying_the_ledger(self):
+        self.client.logout()
+        for url in (reverse('banking:list'), reverse('banking:detail', args=[1])):
+            with self.subTest(url=url), self.assertNumQueries(0):
+                response = self.client.get(url)
+                self.assertRedirects(
+                    response, f"{reverse('accounts:login')}?next={url}",
+                    fetch_redirect_response=False,
+                )
+
     def setUp(self):
         self.user = User.objects.create_user('views', password='test')
         self.other = User.objects.create_user('views-other', password='test')

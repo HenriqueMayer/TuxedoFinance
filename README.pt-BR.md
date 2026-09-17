@@ -50,6 +50,33 @@ um banco SQLite sob controle do responsável pela instalação.
 
 ## 🚀 Instalação inicial
 
+### Docker
+
+Requer Docker Engine 28+ (ou Docker Desktop atualizado) e Compose v2+.
+O suporte a Docker está em `Unreleased`; a versão v0.2.0 existente não tem
+imagem publicada. Em um checkout que contenha estes arquivos:
+
+```bash
+docker build -t tuxedo-finance:local .
+image=tuxedo-finance:local
+(
+  umask 077
+  set -o noclobber
+  docker run --rm --entrypoint python -e TUXEDO_IMAGE="$image" "$image" -c \
+    'import os,secrets; print("TUXEDO_IMAGE="+os.environ["TUXEDO_IMAGE"]); print("SECRET_KEY="+secrets.token_urlsafe(64))' > .env.docker
+)
+docker compose --env-file .env.docker up -d --wait
+```
+
+Abra o [Tuxedo Finance](http://127.0.0.1:8000/). O Docker mantém o SQLite em um
+volume nomeado e usa uma chave de assinatura persistente. O comando de
+configuração recusa substituir um `.env.docker` existente. Consulte o
+[guia de Docker](docs/docker.md), em inglês, para usar imagens publicadas sem
+clone, configurar, atualizar e fazer backup/restauração. A instalação sem clone
+fica disponível nas releases que incluam os arquivos de instalação Docker.
+
+### Python e uv
+
 Requer Python 3.12 e [uv](https://docs.astral.sh/uv/getting-started/installation/).
 Execute estes comandos para uma nova instalação:
 
@@ -166,6 +193,7 @@ dependências de desenvolvimento e o Chromium, execute:
 
 ```bash
 npm run test:e2e
+npm run test:e2e -- --docker-image tuxedo-finance:local
 npm run test:preview
 ```
 

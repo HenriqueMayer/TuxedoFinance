@@ -14,7 +14,7 @@ model and explicit banking and ledger domain concepts.
 | Authentication | Native `django.contrib.auth` |
 | Dependency management | `uv` |
 | Views | Class-based views plus focused function views for imports, exports, and bulk actions |
-| Supported runtime | Django development server (`runserver`) |
+| Supported runtime | Native `runserver`; Docker with Gunicorn and WhiteNoise |
 | Localization | Django gettext (`en`, `pt-br`) |
 
 Public registration is a deployment-level policy, not a separate account model:
@@ -22,6 +22,10 @@ Public registration is a deployment-level policy, not a separate account model:
 accounts signup view enforces it on every request, while public templates merely
 mirror the state by showing or hiding signup calls to action. Existing login
 flows are independent of this switch.
+
+Docker uses one non-root web container with a local named SQLite volume and
+loopback-only port publication by default. Static assets are collected at build
+time; migrations run before the single server starts. See [Docker operations](docker.md).
 
 ## Domain apps
 

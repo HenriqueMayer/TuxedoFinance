@@ -6,6 +6,7 @@ SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
 from __future__ import annotations
 
+import argparse
 import os
 from pathlib import Path
 import secrets
@@ -18,6 +19,11 @@ import tempfile
 import time
 from urllib.error import URLError
 from urllib.request import ProxyHandler, build_opener
+
+if __package__:
+    from .docker_smoke import Installation, isolated_environment
+else:
+    from docker_smoke import Installation, isolated_environment
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -70,6 +76,31 @@ def wait_for_server(server, url, timeout=30):
     raise RuntimeError('The isolated Django server did not become ready within 30 seconds.')
 
 
+def run_docker(image, command):
+    """Run the same browser suite against an owned, disposable container."""
+    previous = {}
+    try:
+        with Installation(image) as app:
+            process = None
+            try:
+                app.start()
+                env = isolated_environment()
+                env['E2E_BASE_URL'] = app.url
+                process = subprocess.Popen(command, cwd=ROOT, env=env, start_new_session=True)
+                result = process.wait()
+                return result if result >= 0 else 128 - result
+            finally:
+                previous = {
+                    sig: signal.signal(sig, signal.SIG_IGN)
+                    for sig in (signal.SIGINT, signal.SIGTERM)
+                }
+                if process is not None:
+                    stop(process)
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
+
+
 def run(args):
     if os.name != 'posix':
         raise RuntimeError('The isolated runner requires Linux, macOS, or WSL.')
@@ -77,6 +108,14 @@ def run(args):
     cli = ROOT / 'node_modules/@playwright/test/cli.js'
     if not node or not cli.is_file():
         raise RuntimeError('Install Node.js and run `npm ci` before browser tests.')
+
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--docker-image')
+    options, args = parser.parse_known_args(args)
+    if args[:1] == ['--']:
+        args = args[1:]
+    if options.docker_image:
+        return run_docker(options.docker_image, [node, str(cli), 'test', *args])
 
     with tempfile.TemporaryDirectory(prefix='tuxedo-e2e-') as directory:
         data_dir = Path(directory)
@@ -87,7 +126,7 @@ def run(args):
             port = address.getsockname()[1]
         url = f'http://127.0.0.1:{port}'
         env = dict(
-            os.environ,
+            isolated_environment(),
             DJANGO_SETTINGS_MODULE='core.settings',
             TUXEDO_ENV_FILE=str(env_file),
             TUXEDO_DATA_DIR=directory,
@@ -154,6 +193,9 @@ def main():
         return result if result >= 0 else 128 - result
     except Interrupted as exc:
         return 128 + exc.signum
+    except subprocess.CalledProcessError as exc:
+        print((exc.stdout or b'').decode(), (exc.stderr or b'').decode(), file=sys.stderr)
+        return exc.returncode
     except (OSError, RuntimeError) as exc:
         print(f'Browser tests failed: {exc}', file=sys.stderr)
         return 1

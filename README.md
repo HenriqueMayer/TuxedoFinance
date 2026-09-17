@@ -50,6 +50,32 @@ in an owner-controlled SQLite database.
 
 ## 🚀 Quick start
 
+### Docker
+
+Requires Docker Engine 28+ (or a current Docker Desktop) and Compose v2+.
+Docker support is under `Unreleased`; the existing v0.2.0 release has no
+published image. From a checkout containing these files:
+
+```bash
+docker build -t tuxedo-finance:local .
+image=tuxedo-finance:local
+(
+  umask 077
+  set -o noclobber
+  docker run --rm --entrypoint python -e TUXEDO_IMAGE="$image" "$image" -c \
+    'import os,secrets; print("TUXEDO_IMAGE="+os.environ["TUXEDO_IMAGE"]); print("SECRET_KEY="+secrets.token_urlsafe(64))' > .env.docker
+)
+docker compose --env-file .env.docker up -d --wait
+```
+
+Open [Tuxedo Finance](http://127.0.0.1:8000/). Docker keeps SQLite in a named
+volume and uses a persistent signing key. The setup command refuses to replace
+an existing `.env.docker`. Follow the [Docker guide](docs/docker.md) for released
+images without cloning, configuration, updates and backup/restore. Only releases
+that include Docker installation assets provide the no-clone path.
+
+### Python and uv
+
 Requires Python 3.12 and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 Run these commands for a new installation:
 
@@ -165,6 +191,7 @@ dependencies and Chromium, run:
 
 ```bash
 npm run test:e2e
+npm run test:e2e -- --docker-image tuxedo-finance:local
 npm run test:preview
 ```
 

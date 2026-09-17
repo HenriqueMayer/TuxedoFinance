@@ -5,6 +5,9 @@ changes listed in the changelog. Technical guides are maintained in English;
 the root README is available in [English](../README.md) and
 [Português (Brasil)](../README.pt-BR.md).
 
+[Docker installation and operations](docker.md) covers local images, published
+releases, persistent volumes and isolated restore rehearsals.
+
 ## Where to start
 
 | Doc | Covers |

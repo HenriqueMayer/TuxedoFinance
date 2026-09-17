@@ -31,6 +31,10 @@ for subsequent starts. Enable `HTTPS` only behind a correctly configured TLS
 endpoint. The supported local startup command is `uv run python manage.py
 runserver`; production deployment packaging is outside the current scope.
 
+For Docker installations, use the [Docker operations guide](docker.md) for
+volume-aware backup, restore and updates. Keep the Compose project identity and
+signing key across container recreation.
+
 ## Updating dependencies
 
 The application version is `[project].version` in `pyproject.toml`, with the

@@ -360,3 +360,17 @@ fresh SQLite database and newly generated initial migrations. Legacy data shapes
 are unsupported. Rollback requires restoring the entire pre-release application
 and its matching database backup; mixing old and new code/database versions is
 not supported.
+
+## 15. Docker installation (Unreleased, issue #18)
+
+Provide a single-instance Docker/Compose installation with a persistent SQLite
+volume and signing key, a non-root Gunicorn runtime, and static assets with
+`DEBUG=False`. Preserve native Python/uv installation and existing financial
+semantics. Default network access remains local to the Docker host.
+
+The delivery includes build-from-source support, isolated lifecycle/browser
+checks, bilingual quick starts and backup/restore/update instructions. Release
+images must pass native amd64 and arm64 tests before publication. The no-clone
+installation is complete only after a release supplies configuration assets and
+an anonymously pullable versioned GHCR image. This does not introduce SaaS,
+replicas, a different database, automatic updates or legacy-schema conversion.

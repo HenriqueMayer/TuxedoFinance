@@ -18,6 +18,8 @@ env/
 db.sqlite3-journal
 db.sqlite3-shm
 db.sqlite3-wal
+# Guard backups from the documented Docker workflow against accidental commits.
+backup-*.sqlite3*
 # Root-anchored so it matches Django's MEDIA_ROOT without also excluding
 # `docs/media/`.
 /media/
@@ -53,3 +55,7 @@ RELEASE_PLAN.md
 roadmap_brand.md
 ROADMAP.md
 SPRINT_BRAND.md
+
+# Collected static files and Docker installation configuration
+/staticfiles/
+.env.docker

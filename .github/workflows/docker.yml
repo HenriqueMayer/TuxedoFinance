@@ -1,0 +1,127 @@
+name: Docker
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.event_name == 'release' && 'release' || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Linux ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Check release identity
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          GITHUB_REF_TYPE=tag GITHUB_REF_NAME="$RELEASE_TAG" uv run python scripts/check_version.py
+          git merge-base --is-ancestor HEAD origin/main
+      - name: Build locked image
+        run: |
+          version=$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          docker build --build-arg VERSION="$version" --build-arg REVISION="$(git rev-parse HEAD)" --tag tuxedo-finance:test .
+      - name: Test lifecycle and restore
+        run: uv run python scripts/docker_smoke.py --image tuxedo-finance:test
+      - name: Install browser dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Test browser against isolated container
+        run: npm run test:e2e -- --docker-image tuxedo-finance:test
+      - name: Save tested release image
+        if: github.event_name == 'release' && !github.event.release.prerelease
+        run: docker save tuxedo-finance:test | gzip > "$RUNNER_TEMP/image.tar.gz"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: github.event_name == 'release' && !github.event.release.prerelease
+        with:
+          name: image-${{ matrix.arch }}
+          path: ${{ runner.temp }}/image.tar.gz
+          retention-days: 2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: docker-failure-${{ matrix.arch }}
+          path: |
+            test-results/
+            playwright-report/
+
+  publish:
+    name: Publish tested stable release
+    needs: validate
+    if: github.event_name == 'release' && !github.event.release.prerelease
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: image-*
+          path: ${{ runner.temp }}/images
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish exact tested images and manifest
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          for arch in amd64 arm64; do
+            gzip -dc "$RUNNER_TEMP/images/image-$arch/image.tar.gz" | docker load
+            docker tag tuxedo-finance:test "$image:$RELEASE_TAG-$arch"
+            docker push "$image:$RELEASE_TAG-$arch"
+          done
+          docker buildx imagetools create --tag "$image:$RELEASE_TAG" \
+            "$image:$RELEASE_TAG-amd64" "$image:$RELEASE_TAG-arm64"
+          # A versioned image is the supported interface; no moving latest alias.
+          mkdir "$RUNNER_TEMP/anonymous-docker"
+          for arch in amd64 arm64; do
+            docker --config "$RUNNER_TEMP/anonymous-docker" pull --platform "linux/$arch" "$image:$RELEASE_TAG"
+          done
+      - name: Attach matching installation files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          source = Path('.env.docker.example').read_text()
+          source = source.replace('REPLACE_WITH_RELEASE_TAG', os.environ['RELEASE_TAG'])
+          source = source.replace('ghcr.io/henriquemayer/tuxedofinance', 'ghcr.io/' + os.environ['GITHUB_REPOSITORY'].lower())
+          Path('docker.env.example').write_text(source)
+          PY
+          gh release upload "$RELEASE_TAG" compose.yaml docker.env.example --clobber
