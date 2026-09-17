@@ -1,4 +1,6 @@
 const { test, expect } = require('@playwright/test');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const browserErrors = new WeakMap();
 
@@ -73,26 +75,56 @@ test('English and Portuguese tours use localized pages and image sets', async ({
     await expectInternalLinks(page);
 
     await page.getByRole('link', { name: 'PT', exact: true }).click();
-    await expect(page).toHaveURL(/\/pt-br\/$/);
+    await expect(page).toHaveURL(/\/pt-br\/index\.html$/);
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Conheça suas finanças');
     await expectScreenshots(page, 'pt-br');
     await expectInternalLinks(page);
 
     await page.getByRole('link', { name: 'EN', exact: true }).click();
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/index\.html$/);
+});
+
+test('local HTML files support language navigation without JavaScript', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    try {
+        const englishURL = pathToFileURL(path.resolve(__dirname, '../../preview/index.html')).href;
+        const portugueseURL = pathToFileURL(path.resolve(__dirname, '../../preview/pt-br/index.html')).href;
+        await page.goto(englishURL);
+        await page.getByRole('link', { name: 'PT', exact: true }).click();
+        await expect(page).toHaveURL(portugueseURL);
+        await expect(page.getByRole('heading', { level: 1 })).toContainText('Conheça suas finanças');
+        await page.getByRole('link', { name: 'PT', exact: true }).click();
+        await expect(page).toHaveURL(portugueseURL);
+        await page.getByRole('link', { name: 'EN', exact: true }).click();
+        await expect(page).toHaveURL(englishURL);
+        await expect(page.getByRole('heading', { level: 1 })).toContainText('Meet your finances');
+    } finally {
+        await context.close();
+    }
 });
 
 test('theme toggle persists the selected preview theme', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/');
-    const before = await page.locator('html').getAttribute('data-theme');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(250, 248, 243)');
+    await expect(page.locator('.screenshot-link').first()).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     await page.getByRole('button', { name: 'Toggle light and dark theme' }).click();
-    const after = await page.locator('html').getAttribute('data-theme');
-    expect(after).not.toBe(before);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
+    await expect(page.locator('.screenshot-link').first()).toHaveCSS('background-color', 'rgb(27, 27, 27)');
+    await page.locator('.theme-toggle').hover();
+    await expect(page.locator('.theme-toggle')).toHaveCSS('background-color', 'rgb(38, 38, 38)');
     await expect(page.getByRole('button', { name: 'Toggle light and dark theme' }))
-        .toHaveAttribute('aria-pressed', String(after === 'dark'));
+        .toHaveAttribute('aria-pressed', 'true');
     await page.reload();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', after);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await page.getByRole('link', { name: 'PT', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(16, 16, 16)');
+    await page.getByRole('button', { name: 'Alternar entre os temas claro e escuro' }).click();
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(250, 248, 243)');
 });
 
 test('expanded screenshots close accessibly and restore focus', async ({ page }) => {

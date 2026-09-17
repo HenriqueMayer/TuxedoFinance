@@ -121,7 +121,8 @@ assert Path('/data/db.sqlite3').stat().st_mode & 0o077 == 0
                 assert response.read()
         request = urllib.request.Request(app.url, headers={'Accept-Language': 'pt-br'})
         with opener.open(request, timeout=10) as response:
-            assert 'Entenda seu fluxo de caixa' in response.read().decode()
+            assert response.headers['Content-Language'] == 'pt-br'
+            assert 'Criar conta' in response.read().decode()
         app.django("""
 from django.contrib.auth import get_user_model
 from banking.models import Bank, BankAccount
@@ -141,7 +142,14 @@ assert BankAccount.objects.get(user__username='docker-persistence').opening_bala
             env_file.write_text(env_file.read_text().replace(
                 f'TUXEDO_IMAGE={previous_image}\n', f'TUXEDO_IMAGE={image}\n',
             ))
+        # A valid Django wildcard must not make the HTTP health probe fail.
+        env_file = Path(app.directory.name) / '.env'
+        with env_file.open('a') as config:
+            config.write('ALLOWED_HOSTS=.example.test\n')
         app.start(recreate=True)
+        request = urllib.request.Request(app.url, headers={'Host': 'finance.example.test'})
+        with opener.open(request, timeout=10) as response:
+            assert response.status == 200
         app.django(check_record)
         app.compose('stop', 'web')
         app.compose('run', '--rm', '-T', 'web', 'python', 'scripts/sqlite_backup.py',
@@ -149,8 +157,9 @@ assert BankAccount.objects.get(user__username='docker-persistence').opening_bala
         duplicate = app.compose('run', '--rm', '-T', 'web', 'python', 'scripts/sqlite_backup.py',
                                 '/data/db.sqlite3', '/data/rehearsal.sqlite3', check=False)
         assert duplicate.returncode != 0
-        snapshot = app.compose('run', '--rm', '-T', 'web', 'python', '-c',
-                               "import sys; sys.stdout.buffer.write(open('/data/rehearsal.sqlite3','rb').read())").stdout
+        exported = Path(app.directory.name) / 'rehearsal.sqlite3'
+        app.compose('cp', 'web:/data/rehearsal.sqlite3', str(exported))
+        snapshot = exported.read_bytes()
         with Installation(image) as restored:
             restored.compose('run', '--rm', '-T', 'web', 'python',
                              'scripts/sqlite_backup.py', '-', '/data/db.sqlite3', input=snapshot)

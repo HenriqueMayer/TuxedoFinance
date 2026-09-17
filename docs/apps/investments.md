@@ -67,8 +67,9 @@ existed immediately before the operation. The form previews the previous
 balance, calculated yield and resulting balance before saving. Operations on the
 same date use their registration order; no bank movement is created.
 
-> **Coming soon:** automatic monthly and annual yield calculations. Yield is
-> still entered manually; the total-balance option only derives its value.
+Automatic monthly and annual yield calculations are not implemented. Yield
+is entered manually; the total-balance option derives the operation amount
+from the supplied balance without introducing automatic accrual.
 
 ## Valuation
 
@@ -106,3 +107,9 @@ The operation history is a separate `#investment-movements` island below the
 charts. Filtering, clearing filters and changing pages replace only that island
 and return the viewport to its heading. Native GET actions append the same
 section anchor, so the user keeps the portfolio context when HTMX is unavailable.
+
+## Form keyboard behavior
+
+Record selectors use the shared keyboard-search component. Values and funding wait for the asset and operation type; monetary yields require an explicit input mode. New asset valuation choices begin empty, and opening-position products wait for an opening balance or quantity. Existing operations and invalid POSTs preserve their values and visible errors.
+
+Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).

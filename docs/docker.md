@@ -1,8 +1,8 @@
 # Docker installation and operations
 
 Tuxedo Finance runs as one non-root Linux container with Gunicorn, WhiteNoise
-and an owner-managed SQLite volume. Docker Engine/Docker Desktop and Compose v2
-or later are required. No host Python, uv or Node.js installation is needed.
+and an owner-managed SQLite volume. Docker Engine 28+ (or a current Docker
+Desktop) and Compose v2+ are required. No host Python, uv or Node.js installation is needed.
 The default address is <http://127.0.0.1:8000/>.
 
 ## Availability
@@ -87,8 +87,9 @@ mounted. The image uses UID/GID `10001:10001`. Named volumes are initialized wit
 the right ownership; existing bind mounts need deliberate ownership setup and
 are not the quick-start path. SQLite's database, WAL and shared-memory files
 must remain together on local storage. Use one web service, without replicas or
-network filesystems. An incompatible database/migration or unwritable volume
-stops startup instead of resetting data.
+network filesystems. Failed migrations or an unwritable volume stop startup
+instead of resetting data. Django does not reject every schema from a newer
+version; follow the backup and restore procedure before changing image versions.
 
 ## Routine commands
 
@@ -112,17 +113,21 @@ Stop all database writers, including any management commands. Record the image
 reference and migration state. Choose a new backup filename each time:
 
 ```bash
-docker compose --env-file .env.docker exec -T web python manage.py showmigrations > migrations.txt
+backup_dir="$HOME/tuxedo-finance-backups"
+mkdir -p "$backup_dir"
+chmod 700 "$backup_dir"
+backup_name="backup-$(date +%Y%m%d-%H%M%S).sqlite3"
+docker compose --env-file .env.docker exec -T web python manage.py showmigrations > "$backup_dir/$backup_name.migrations.txt"
 docker compose --env-file .env.docker stop web
-docker compose --env-file .env.docker run --rm -T web python scripts/sqlite_backup.py /data/db.sqlite3 /data/backup-YYYYMMDD.sqlite3
-docker compose --env-file .env.docker cp web:/data/backup-YYYYMMDD.sqlite3 ./backup-YYYYMMDD.sqlite3
-chmod 600 backup-YYYYMMDD.sqlite3
+docker compose --env-file .env.docker run --rm -T web python scripts/sqlite_backup.py /data/db.sqlite3 "/data/$backup_name"
+docker compose --env-file .env.docker cp "web:/data/$backup_name" "$backup_dir/$backup_name"
+chmod 600 "$backup_dir/$backup_name"
 docker compose --env-file .env.docker up -d --wait
 ```
 
 The helper uses SQLite's backup API, checks integrity and refuses to overwrite
-an existing destination. Move the host copy to protected storage outside this
-installation and keep a copy on another device. Do not commit backups or copy
+an existing destination. The host copy is stored outside the checkout; keep an
+additional copy on another device. Do not commit backups or copy
 only a live database file while ignoring WAL. A copy inside `/data` alone does
 not protect against volume loss. Retain `.env.docker` securely alongside the
 backup metadata, without publishing its key.
@@ -135,7 +140,8 @@ project/volume; retain the original installation as a rollback source. The name
 a database; the helper refuses to overwrite it.
 
 ```bash
-docker compose --project-name tuxedo-restore --env-file .env.docker run --rm -T web python scripts/sqlite_backup.py - /data/db.sqlite3 < backup-YYYYMMDD.sqlite3
+backup_file="$HOME/tuxedo-finance-backups/backup-YYYYMMDD-HHMMSS.sqlite3"
+docker compose --project-name tuxedo-restore --env-file .env.docker run --rm -T web python scripts/sqlite_backup.py - /data/db.sqlite3 < "$backup_file"
 TUXEDO_PORT=8001 docker compose --project-name tuxedo-restore --env-file .env.docker up -d --wait
 docker compose --project-name tuxedo-restore --env-file .env.docker exec web python manage.py check
 docker compose --project-name tuxedo-restore --env-file .env.docker exec web python manage.py showmigrations
@@ -164,7 +170,10 @@ Pre-release legacy schemas still have no automatic conversion path.
 
 ## LAN and TLS
 
-The default port is reachable only from the Docker host. Remote access requires
+On the supported Docker versions, the default port is reachable only from the
+Docker host. Engine versions older than 28 can expose localhost-published ports
+to other hosts on the same network; see [Docker's port-publishing warning](https://docs.docker.com/engine/network/port-publishing/).
+Remote access requires
 an explicit Compose port override, matching allowed hosts and access controls.
 For TLS, use a trusted reverse proxy, forward the original Host and overwrite
 `X-Forwarded-Proto` correctly before enabling `HTTPS=True`. Keep direct access

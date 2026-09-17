@@ -4,10 +4,10 @@
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% blocktranslate with label=entity_label|title %}Delete {{ label }}{% endblocktranslate %}</h1>
-    <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest">
+    <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
         <p class="text-sm text-forest/80 dark:text-cream/80">{% blocktranslate %}Are you sure you want to delete <strong>{{ entity }}</strong>? This action cannot be undone.{% endblocktranslate %}</p>
         {% if delete_warning %}<p class="text-sm text-caramel-ink dark:text-caramel-light">{{ delete_warning }}</p>{% endif %}
-        <p class="text-sm text-forest/70 dark:text-cream/70">{% translate "Items used by investment operations are protected and will not be deleted." %}</p>
+        <p class="text-sm text-forest/70 dark:text-night-muted">{% translate "Items used by investment operations are protected and will not be deleted." %}</p>
         <form method="post" hx-boost="false" class="flex items-center gap-3">{% csrf_token %}<button type="submit" class="inline-flex items-center rounded-full bg-expense/10 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30">{% translate "Delete" %}</button><a href="{% url 'investments:settings' %}" class="inline-flex items-center rounded-full border border-forest/30 dark:border-cream/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90">{% translate "Cancel" %}</a></form>
     </div>
 </div>

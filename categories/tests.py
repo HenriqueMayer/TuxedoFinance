@@ -155,9 +155,9 @@ class CategoryClassificationTests(TestCase):
 
         response = self.client.get(reverse('categories:create'))
 
-        self.assertContains(response, 'id="parent-category-search"')
-        self.assertContains(response, 'aria-controls="id_parent_category"')
-        self.assertContains(response, 'Search parent categories')
+        self.assertContains(response, 'data-search-id="parent-category-search"')
+        self.assertContains(response, 'id="id_parent_category"')
+        self.assertContains(response, 'data-search-select')
 
 
 class CategoryDeleteAllTests(TestCase):

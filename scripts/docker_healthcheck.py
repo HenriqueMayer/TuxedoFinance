@@ -6,9 +6,10 @@ import os
 
 
 def main():
-    host = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')[0].strip()
-    if not host or host.startswith('.') or host == '*':
-        host = 'localhost'
+    hosts = [value.strip() for value in os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')]
+    host = next((value for value in hosts if value), 'localhost')
+    # Django's leading-dot wildcard also accepts the domain without the dot.
+    host = 'localhost' if host == '*' else host.removeprefix('.')
     headers = {'Host': host}
     if os.environ.get('HTTPS') == 'True':
         headers['X-Forwarded-Proto'] = 'https'

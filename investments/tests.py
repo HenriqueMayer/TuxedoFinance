@@ -660,7 +660,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertContains(response, 'Balance: BRL 1.653,10')
         self.assertContains(
             response,
-            'class="mt-1 text-xs text-forest/70 dark:text-cream/70"',
+            'class="mt-1 text-xs text-forest/70 dark:text-night-muted"',
         )
         self.assertNotContains(response, '1.00000000 units')
 

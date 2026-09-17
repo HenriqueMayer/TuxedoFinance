@@ -12,7 +12,8 @@ is expressed through owned banking accounts, cards, invoices, and movements.
   authenticated user's base currency while native amounts remain unchanged.
 - Selection of PIX, debit card, credit card, or direct account as the settlement
   path. Own transfers are recorded separately in Banking.
-- Atomic delegation to `banking` posting services.
+- Atomic synchronization of derived `BankMovement` and `CardInvoice` rows
+  through this app's `sync_user_ledger` service.
 
 `INVESTMENT` is removed from `TransactionType`. Investment deposits and
 withdrawals belong to the investments workflow and create banking movements
@@ -24,8 +25,9 @@ without becoming income or expense.
 |---|---|---|
 | External PIX received | `INCOME` | Immediate account credit. |
 | External PIX sent | `EXPENSE` | Immediate account debit. |
-| Debit card/direct account | `INCOME` or `EXPENSE` | Immediate movement. |
-| Credit card | Usually `EXPENSE` | Added to `CardInvoice`; no purchase-date account movement. |
+| Direct account | `INCOME` or `EXPENSE` | Effective-date movement. |
+| Debit card | `EXPENSE` | Effective-date movement. |
+| Credit card | `EXPENSE` | Added to `CardInvoice`; no purchase-date account movement. |
 | Own-account transfer | Banking transfer | Paired debit/credit movements; excluded from income/expense. |
 
 PIX is therefore a settlement capability, not a transaction type. A PIX to or
@@ -49,7 +51,10 @@ the server rejects incompatible direct submissions. Recurrence and notes are
 kept under optional advanced options. Category selection is enhanced as an
 accessible, accent-insensitive search over the category and parent name; it
 immediately excludes categories explicitly classified for the other transaction
-type. Its native select remains the no-JavaScript fallback. Unclassified legacy
+type. Reaching a record search with Tab or opening its results scrolls just enough
+to show the input and list below the sticky header, while preserving keyboard
+focus. This also applies to the credit-card selector revealed by the payment
+channel. Its native select remains the no-JavaScript fallback. Unclassified legacy
 categories intentionally remain available for both types. Choices are limited to
 the user's banks, accounts, cards and categories. Validation enforces:
 
@@ -60,18 +65,49 @@ the user's banks, accounts, cards and categories. Validation enforces:
 - installments only for credit cards and assigned across invoices without
   creating account movements for individual installments.
 
-Future recurrences are projections until posted. When an immediate recurrence
-becomes effective it creates one transaction occurrence and one movement; a
-credit recurrence creates one invoice item. Projection rows never alter the
-ledger by themselves.
+Synchronization derives recurrence and installment amounts from the original
+transaction without inserting new `Transaction` rows. It creates or updates
+movements and invoices through a projection horizon, normally twelve months
+beyond today. Future-effective rows may exist in the database, but balance
+queries exclude them until their effective date. See
+[request-time synchronization](../architecture.md#request-time-synchronization).
 
 ## Listing and reporting semantics
 
-Search covers title, notes, category, bank, account and card labels. Filters
-distinguish exact event date, billed month, transaction type and banking
-instrument. The billed-month filter follows the month in which money is charged:
-it shifts credit-card purchases according to the card cycle and includes each
-applicable occurrence of fixed and installment transactions.
+The list opens on the full history. Search covers title, notes, category, bank,
+account and card labels. Search and billed month remain visible; exact event
+date is under **More filters**, automatically expanded when a date is applied.
+Ordering lives beside the results. All controls work through ordinary GET
+requests, including without JavaScript. Enhanced filtering, card/recurrence
+selection, sorting and pagination preserve viewport position and keyboard focus
+through the [shared navigation contract](../frontend.md#preserve-the-users-location).
+
+**All**, **Income** and **Expenses** use compact cards in a single horizontal
+row, with each label and count side by side. They count records matching search, billed
+month and exact date, before category and recurrence refinements. A fixed
+transaction or installment plan counts once, not once per occurrence. Cards do
+not total monetary amounts.
+
+Category choices contain only owned categories with records matching the search,
+dates, type and recurrence. Parent names appear as `Parent › Child`; selecting a
+category matches that exact category, not its descendants. Recurrence shortcuts
+are All, Fixed (`is_fixed=True`), Installments (`is_fixed=False`, `installments>1`)
+and One-off (`is_fixed=False`, `installments=1`). Income hides Installments and
+clears an incompatible installment selection.
+
+The list accepts `category=<id>` and `recurrence=fixed|installment|oneoff` alongside
+`q`, `month=YYYY-MM`, `date=YYYY-MM-DD`, `type=INCOME|EXPENSE` and the existing
+`sort` values. Invalid, unavailable or incompatible selections are ignored and
+are not carried into navigation. Changing type or recurrence clears category;
+filter changes reset pagination. Search, dates and category use **Apply filters**.
+Sorting and pagination preserve applied filters. Empty installations invite the
+first transaction; empty filtered results offer filter recovery.
+
+Billed month uses `Transaction.amount_for_month`: credit purchases follow their
+statement cycle, while fixed and installment records appear in every applicable
+month. Fixed includes ended recurrences when no month is selected. Month-based
+filtering calculates eligibility once and reuses it for counts, categories and
+results; without a month, filtering and aggregation stay in SQL.
 
 Authenticated users may export all their transactions or the active billed
 month as UTF-8 CSV. Full exports download as `transactions.csv`; a monthly
@@ -83,6 +119,12 @@ For monthly exports, `amount` is the amount charged in that month while
 Own transfers are visibly neutral and never receive income/expense colors or
 category totals.
 
-Transactions are editable and deletable by their owner. The related banking
-service keeps ledger and invoice data coherent; audit-grade reversals are out
+Transactions are editable and deletable by their owner. The transaction synchronization
+service keeps banking movements and invoices coherent; audit-grade reversals are out
 of scope.
+
+## Form keyboard behavior
+
+Categories now wait for the transaction type and use the shared searchable choice. Down/Up visibly navigate; Enter confirms; Escape/Tab cancel unconfirmed search text. Credit-card details wait for a specific card; recurrence dates wait for the checkbox. Advanced options are operable with Enter/Space.
+
+Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).

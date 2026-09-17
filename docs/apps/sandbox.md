@@ -1,8 +1,11 @@
 # Salary sandbox
 
 The authenticated `/sandbox/` page is a small, non-persistent salary and
-monthly-budget estimator. It does not read or write transactions, accounts,
-investments, user preferences, or scenario data in the authenticated session.
+monthly-budget estimator. Its calculation path does not read or write
+transactions, bank accounts, investments, user preferences, or scenario data in
+the authenticated session. Shared template context still resolves presentation
+preferences through `core.context_processors.currency`; a missing preference
+may be initialized there. Scenario inputs and results remain request-local.
 
 ## Calculation modes
 
@@ -38,11 +41,18 @@ Up to 20 rows from each list are accepted per request.
 ## Interaction and privacy
 
 Every input and calculated metric has short bilingual help. Hover or keyboard
-focus previews help beside its icon, while click keeps it open. Outside click,
-a second click, or Escape dismisses it. Positioning is viewport-bound, including
-inside scrolling tables.
+focus opens the shared [question-mark help](../frontend.md#question-mark-help).
+Mouse clicks never pin it; leaving the icon and text, clicking outside or Escape
+dismisses it. Touch uses tap to toggle. Positioning is viewport-bound, including
+inside scrolling tables. The native no-JavaScript fallback retains the same copy.
 
 Inputs are submitted by POST and never placed in the URL. HTMX replaces only
 `#sandbox-workspace`; a regular form POST is the complete fallback. The app has
 no models or migrations, and no salary, deduction, or expense is retained after
 the request.
+
+## Form keyboard behavior
+
+Automatic CLT is opt-in on a new scenario. Its optional details appear after the checkbox is selected; transport cost appears only after the transport voucher is enabled. Switching modes clears inactive values, and invalid submissions expose errors inside advanced details. Without JavaScript both modes retain their native controls.
+
+Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).

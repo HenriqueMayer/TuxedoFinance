@@ -24,25 +24,18 @@ Release tags use the same version prefixed with `v`, for example `v0.2.0`.
 
 ## Preparing a release
 
-1. Choose the next version from the changes accumulated in `develop`.
+1. Choose the next version from the changes accumulated in `main` and prepare
+   the release changes on a branch based on the current `main`.
 2. Update `[project].version` in `pyproject.toml`.
 3. Run `uv lock` so the editable project entry in `uv.lock` matches.
 4. Move the relevant entries from `Unreleased` to a dated version section in
    [`CHANGELOG.md`](../CHANGELOG.md).
-5. Run the version validator and the complete project checks:
+5. Run `uv run python scripts/check_version.py` and the complete
+   [development checks](../CONTRIBUTING.md), including isolated browser tests
+   and static-preview tests. Verify equivalent content and version badges in
+   both READMEs before preparing the release.
 
-   ```bash
-   uv run python scripts/check_version.py
-   uv run python manage.py check
-   uv run python manage.py makemigrations --check --dry-run
-   uv run python manage.py test
-   npm ci
-   npm audit --audit-level=high
-   npm run test:e2e
-   npm run test:preview
-   ```
-
-6. Open the release pull request from `develop` to `main` and wait for CI.
+6. Open the release pull request to `main` and wait for CI.
 7. After the release commit is on `main`, create and push the annotated tag:
 
    ```bash
@@ -55,8 +48,9 @@ Release tags use the same version prefixed with `v`, for example `v0.2.0`.
 
 8. Create the GitHub release from that tag using the matching changelog section.
 
-Feature branches continue to target `develop`. They normally add notes under
-`Unreleased` but do not create tags themselves.
+Feature branches target `main` directly. They normally add notes under
+`Unreleased` but do not create tags themselves. There is no intermediate
+integration branch.
 
 ## Maintaining the changelog
 
@@ -73,7 +67,7 @@ dated version section, update the comparison links at the bottom of
 
 ## Automated guarantees
 
-CI validates every pull request and pushes to `main` or `develop`. It also runs
+CI validates every pull request and pushes to `main`. It also runs
 for `v*` tags; tagged builds fail when the tag differs from `pyproject.toml` or
 when the matching dated changelog section is missing. This prevents publishing
 two different versions under the same release identity.

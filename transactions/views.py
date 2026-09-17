@@ -5,15 +5,17 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction as db_transaction
-from django.db.models import Q
-from django.http import HttpResponse
-from django.urls import reverse_lazy
+from django.db.models import Count, Q
+from django.http import HttpResponse, QueryDict
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
+from django.utils.translation import pgettext
 from django.views import View
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from banking.models import BankAccount
+from categories.models import Category
 from transactions.forms import TransactionForm
 from transactions.models import Transaction
 from transactions.services import sync_user_ledger
@@ -37,25 +39,12 @@ def _filter_transactions_by_billed_month(queryset, raw_month):
 
 
 class TransactionListView(LoginRequiredMixin, ListView):
-    """Paginated list of the logged-in user's transactions (FR06, FR12, FR17).
+    """Progressive GET filters over owned economic events.
 
-    `select_related` avoids N+1 queries when rendering each row's category
-    and banking instrument (NFR10).
-
-    Optional filtering (PRD 8.1.5, zero-JS): `?q=` searches the text fields,
-    `?month=YYYY-MM` filters by the month the money actually moves (see
-    `_filter_by_billed_month`), `?date=YYYY-MM-DD` matches the exact
-    `transaction_date`, and `?type=INCOME|EXPENSE|INVESTMENT` filters by
-    `transaction_type`. All are plain GET params read straight from a
-    `<form method="get">` in the template — invalid/unknown values are
-    silently ignored rather than raising a 400, and the filters combine with
-    AND when more than one is set.
-
-    `?sort=newest|oldest|updated|highest|lowest` reorders the list. The amount
-    sorts use the stored full positive `amount` shown as the row's headline,
-    not a signed cash-flow value or one installment's monthly contribution.
-    Every ordering ends with a unique primary-key tie-breaker so pagination is
-    deterministic. An unknown value falls back to `newest`.
+    Type-card counts precede category/recurrence refinement. A billed-month
+    request folds amount_for_month once; otherwise aggregation and filtering
+    remain in SQL. Ordering always has a unique tie-breaker, and amount sorting
+    uses the stored full native amount, as displayed in the existing rows.
     """
 
     model = Transaction
@@ -102,78 +91,119 @@ class TransactionListView(LoginRequiredMixin, ListView):
                 | Q(credit_card__account__bank__name__icontains=search)
             )
 
-        transaction_type = self.request.GET.get('type')
-        if transaction_type in Transaction.TransactionType.values:
-            queryset = queryset.filter(transaction_type=transaction_type)
-
-        transaction_date = self._selected_transaction_date()
-        if transaction_date is not None:
-            queryset = queryset.filter(date=transaction_date)
-
-        queryset = queryset.order_by(*self.SORT_OPTIONS[self._selected_sort()])
-
-        # Month last: it is the one filter that may fall back to a Python
-        # fold, so everything expressible as SQL runs first and narrows the
-        # rows that fold has to walk. It also has to run after `order_by`,
-        # since the fold below is a plain Python list that keeps whatever
-        # order the queryset already had.
-        return self._filter_by_billed_month(queryset)
-
-    def _filter_by_billed_month(self, queryset):
-        """Narrow `queryset` to the rows that actually charge in `?month=`.
-
-        The month asked for is the month the **money moves**, not the month of
-        the purchase — the same question the dashboard answers, so the two
-        screens can never disagree about which month a transaction belongs to.
-        Two consequences, both of which the plain `transaction_date` filter
-        this replaces got wrong:
-
-          - a credit card purchase made on or after the card's best purchase
-            day is listed under the month its bill is paid — 26 July on a card
-            opening on the 24th is an August row, not a July one; and
-          - a fixed transaction or an open installment plan is listed under
-            **every** month it charges, not only the month it was recorded in.
-            A subscription started in July shows under August, September, and
-            every month after, which is exactly what makes it fixed.
-
-        `Transaction.amount_for_month` owns both rules and neither survives
-        translation to a SQL predicate: the billing shift compares the
-        purchase day against the card's own `best_purchase_day`, and a fixed
-        transaction recurs without bound. So the rows are folded in Python and
-        a **list** comes back — `ListView` paginates one exactly like a
-        queryset. That is the same trade `dashboard.services` makes for the
-        same reason (NFR10): still a single round-trip, over one user's
-        transactions already narrowed by the filters above.
-
-        An absent or malformed value returns the queryset untouched and lazy,
-        so an unfiltered list behaves exactly as it did before.
-        """
-        month = self.request.GET.get('month')
-        if not month:
-            return queryset
-
-        return _filter_transactions_by_billed_month(queryset, month)
-
-    def _selected_transaction_date(self):
-        """Parse an exact ISO `?date=`, ignoring malformed values."""
-        raw = self.request.GET.get('date', '').strip()
-        if not raw:
-            return None
+        self.filters = QueryDict(mutable=True)
+        if search:
+            self.filters['q'] = search
+        raw_date = self.request.GET.get('date', '').strip()
         try:
-            parsed = date.fromisoformat(raw)
+            selected_date = date.fromisoformat(raw_date)
         except ValueError:
-            return None
-        return parsed if parsed.isoformat() == raw else None
+            selected_date = None
+        if selected_date and selected_date.isoformat() == raw_date:
+            self.filters['date'] = raw_date
+            queryset = queryset.filter(date=selected_date)
+
+        # Normalize the list's month independently of the unchanged CSV API.
+        raw_month = self.request.GET.get('month', '').strip()
+        try:
+            selected_month = date.fromisoformat(raw_month + '-01')
+        except ValueError:
+            selected_month = None
+        if selected_month and selected_month.isoformat()[:7] == raw_month:
+            self.filters['month'] = raw_month
+        self.filters['sort'] = self._selected_sort()
+        queryset = queryset.order_by(*self.SORT_OPTIONS[self.filters['sort']])
+        rows = _filter_transactions_by_billed_month(queryset, self.filters.get('month', ''))
+        monthly = isinstance(rows, list)
+        if monthly:
+            counts = {kind: 0 for kind in Transaction.TransactionType.values}
+            for item in rows:
+                counts[item.transaction_type] += 1
+        else:
+            counts = dict(rows.order_by().values('transaction_type').annotate(
+                count=Count('pk'),
+            ).values_list('transaction_type', 'count'))
+        self.type_counts = counts
+        self.has_transactions = bool(sum(counts.values())) or Transaction.objects.filter(
+            user=self.request.user,
+        ).exists()
+
+        kind = self.request.GET.get('type', '')
+        if kind in Transaction.TransactionType.values:
+            self.filters['type'] = kind
+            rows = ([item for item in rows if item.transaction_type == kind]
+                    if monthly else rows.filter(transaction_type=kind))
+        recurrence = self.request.GET.get('recurrence', '')
+        predicates = {
+            'fixed': Q(is_fixed=True),
+            'installment': Q(is_fixed=False, installments__gt=1),
+            'oneoff': Q(is_fixed=False, installments=1),
+        }
+        if recurrence in predicates and not (kind == 'INCOME' and recurrence == 'installment'):
+            self.filters['recurrence'] = recurrence
+            if monthly:
+                rows = [item for item in rows if (
+                    'fixed' if item.is_fixed else
+                    'installment' if item.is_installment_plan else 'oneoff'
+                ) == recurrence]
+            else:
+                rows = rows.filter(predicates[recurrence])
+
+        category_ids = ({item.category_id for item in rows} if monthly else
+                        rows.order_by().values('category_id'))
+        self.category_choices = list(Category.objects.filter(
+            user=self.request.user, pk__in=category_ids,
+        ).select_related('parent_category'))
+        category = self.request.GET.get('category', '')
+        if category in {str(item.pk) for item in self.category_choices}:
+            self.filters['category'] = category
+            rows = ([item for item in rows if str(item.category_id) == category]
+                    if monthly else rows.filter(category_id=category))
+        return rows
+
+    def _filter_url(self, **changes):
+        params = self.filters.copy()
+        for key, value in changes.items():
+            if value:
+                params[key] = value
+            else:
+                params.pop(key, None)
+        return reverse('transactions:list') + '?' + params.urlencode()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['transaction_type_choices'] = Transaction.TransactionType.choices
-        context['search_query'] = self.request.GET.get('q', '').strip()
-        context['selected_month'] = self.request.GET.get('month', '')
-        selected_date = self._selected_transaction_date()
-        context['selected_date'] = selected_date.isoformat() if selected_date else ''
-        context['selected_type'] = self.request.GET.get('type', '')
-        context['selected_sort'] = self._selected_sort()
+        kind = self.filters.get('type', '')
+        recurrence = self.filters.get('recurrence', '')
+        context.update({
+            'filter_params': self.filters,
+            'search_query': self.filters.get('q', ''),
+            'selected_month': self.filters.get('month', ''),
+            'selected_date': self.filters.get('date', ''),
+            'selected_type': kind,
+            'selected_sort': self.filters['sort'],
+            'selected_category': self.filters.get('category', ''),
+            'selected_recurrence': recurrence,
+            'category_choices': self.category_choices,
+            'has_transactions': self.has_transactions,
+            'has_filters': any(key != 'sort' for key in self.filters) or self.filters['sort'] != 'newest',
+            'type_cards': [{
+                'label': label,
+                'value': value,
+                'selected': kind == value,
+                'count': self.type_counts.get(value, 0) if value else sum(self.type_counts.values()),
+                'url': self._filter_url(type=value, category=None, recurrence=(
+                    None if value == 'INCOME' and recurrence == 'installment' else recurrence
+                )),
+            } for value, label in [('', _('All')), ('INCOME', pgettext('transaction type filter', 'Income')), ('EXPENSE', _('Expenses'))]],
+            'recurrence_links': [{
+                'label': label,
+                'selected': recurrence == value,
+                'url': self._filter_url(recurrence=value, category=None),
+            } for value, label in [('', _('All')), ('fixed', pgettext('transaction recurrence filter', 'Fixed')),
+                                  ('installment', pgettext('transaction recurrence filter', 'Installments')),
+                                  ('oneoff', pgettext('transaction recurrence filter', 'One-off'))]
+               if not (kind == 'INCOME' and value == 'installment')],
+        })
         return context
 
 

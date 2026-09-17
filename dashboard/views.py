@@ -100,6 +100,7 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         sync_user_ledger(self.request.user)
         year, month = _selected_month(self.request, _is_projectable)
         context.update(get_dashboard_summary(self.request.user, year, month))
+        context['selected_month_param'] = f'{year:04d}-{month:02d}'
         previous_year, previous_month = add_months(year, month, -1)
         next_year, next_month = add_months(year, month, 1)
         context['previous_month_param'] = f'{previous_year:04d}-{previous_month:02d}'

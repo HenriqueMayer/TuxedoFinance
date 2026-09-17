@@ -92,7 +92,7 @@ HTMX progressive enhancement.
 | FR21 | Investment cash endpoints | Deposit requires exactly one source bank account or loyalty program; withdrawal requires a destination bank account. Related ledger entries post atomically. |
 | FR22 | Internal yield | Yield changes the investment position only and creates no bank income/movement until withdrawn. |
 | FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth using the user's base currency, with historical snapshots and clearly labeled current valuations. |
-| FR24 | Forecasts | Recurrences and future invoices may be projected but do not alter the posted ledger before settlement. |
+| FR24 | Forecasts | Recurrences and future invoices may create future-effective derived rows, but these do not alter realized cash before their effective date. |
 | FR25 | Breaking delivery | Use a clean migration reset with no compatibility or automatic legacy import. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
@@ -178,8 +178,10 @@ reserved for explicitly labeled current-value simulations elsewhere.
 
 ### 5.7 Salary sandbox
 
-- The sandbox is authenticated but isolated from transactions, banking,
-  investments, user preferences, and other persisted financial records.
+- The sandbox calculation is isolated from transactions, banking, investments,
+  user preferences, and other persisted financial records. Shared page context
+  may resolve or initialize presentation preferences; scenario calculations
+  do not consume or modify them.
 - Automatic mode uses a versioned, source-attributed 2026 CLT rule set; manual
   mode applies only the deductions supplied in the current request.
 - Both modes can feed a monthly plan with fixed costs, reserve and investment
@@ -254,9 +256,21 @@ and progressively enhance same-origin links, but all filters and navigation
 retain plain GET fallbacks. Every total states its
 currency/valuation date and whether it is actual or projected.
 
+The Reports summary keeps live bank cash, the identified anchor month's inflows
+minus outflows, and net bank-balance change over the complete displayed window.
+Monthly result includes recorded investment deposits and withdrawals without
+adding the opening balance. A keyboard-accessible question-mark disclosure
+explains the full-window dates and incomplete totals when exchange rates are
+missing. Do not show the former best-month summary card.
+
 ## 10. Frontend Requirements
 
-- Preserve the current light/dark design language, accessible semantic colors,
+- Question-mark icons follow the [shared help contract](frontend.md#question-mark-help):
+  one readable tooltip opens on hover or keyboard focus and closes on pointer
+  exit, outside click or Escape. Mouse clicks never pin it. Preserve touch and
+  no-JavaScript access, structured translated copy and viewport-safe placement.
+- Preserve the cream/forest light palette and use neutral black/graphite dark
+  foundations with accessible semantic colors,
   Inter-only typography, reusable partials and mobile-first behavior. Normal
   text maintains WCAG AA contrast and user-facing labels never render below
   12px.
@@ -277,6 +291,14 @@ currency/valuation date and whether it is actual or projected.
   is created. From that point onward, categories and all other user-entered or
   persisted domain data are displayed verbatim and are not translated
   automatically.
+- Every form and record filter must follow the
+  [mandatory keyboard and choice contract](frontend.md#keyboard-and-choice-contract).
+  Record choices use shared searchable controls with arrows/Enter and explicit
+  confirmation. Short choices remain native; Tab, Space and advanced-section
+  activation must work throughout. Reaching or opening a search keeps the input
+  and results visible below the sticky header without moving focus; long results
+  scroll internally and adapt to the available viewport. Creation choices begin empty and conditional
+  checkboxes unchecked; preserve edits, invalid submissions and shortcut context.
 - Progressive disclosure applies to every conditional form, filter, picker,
   menu and categorized flow: show only the branch relevant to the current
   selection, clear stale inactive values after deliberate changes, preserve

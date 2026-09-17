@@ -18,6 +18,8 @@ env/
 db.sqlite3-journal
 db.sqlite3-shm
 db.sqlite3-wal
+# Guard backups from the documented Docker workflow against accidental commits.
+backup-*.sqlite3*
 # Root-anchored so it matches Django's MEDIA_ROOT without also excluding
 # `docs/media/`.
 /media/
@@ -48,7 +50,6 @@ docs/media/*.mp4
 # Other (development-only documents, intentionally kept out of the public repo)
 .codex
 .opencode
-AGENTS.md
 project_review.md
 RELEASE_PLAN.md
 roadmap_brand.md

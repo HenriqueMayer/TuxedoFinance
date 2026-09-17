@@ -16,7 +16,7 @@ the shared partials/form_field.html renderer (PRD §9.4).
         {% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %}
     </h1>
 
-    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-forest" novalidate>
+    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -29,58 +29,18 @@ the shared partials/form_field.html renderer (PRD §9.4).
 
         {% include 'partials/form_field.html' with field=form.name %}
         {% include 'partials/form_field.html' with field=form.transaction_type %}
-        <div class="space-y-1.5">
-            <label for="parent-category-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/70">
-                {% translate "Search parent categories" %}
-            </label>
-            <input type="search"
-                   id="parent-category-search"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-cream/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40"
-                   placeholder="{% translate 'Type a category name' %}"
-                   autocomplete="off"
-                   aria-controls="{{ form.parent_category.id_for_label }}">
-        </div>
         {% include 'partials/form_field.html' with field=form.parent_category %}
 
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                 {% translate "Save" %}
             </button>
             <a href="{% url 'categories:list' %}"
-               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-forest-deep">
+               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                  {% translate "Cancel" %}
             </a>
         </div>
     </form>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    (() => {
-        const search = document.getElementById('parent-category-search');
-        const select = document.getElementById('{{ form.parent_category.id_for_label }}');
-        if (!search || !select) return;
-
-        const options = Array.from(select.options, option => option.cloneNode(true));
-        const normalize = value => value
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLocaleLowerCase();
-
-        search.addEventListener('input', () => {
-            const query = normalize(search.value.trim());
-            const selectedValue = select.value;
-            const matches = options.filter(option =>
-                option.value === '' || normalize(option.textContent).includes(query)
-            );
-
-            select.replaceChildren(...matches.map(option => option.cloneNode(true)));
-            if (matches.some(option => option.value === selectedValue)) {
-                select.value = selectedValue;
-            }
-        });
-    })();
-</script>
 {% endblock %}

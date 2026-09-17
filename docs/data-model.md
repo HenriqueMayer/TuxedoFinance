@@ -71,7 +71,8 @@ transaction selects exactly one payment instrument.
 `Transaction` does not have a foreign key to `CardInvoice` or `BankMovement`.
 The idempotent ledger synchronization service derives immediate movements and
 card-invoice totals from the transaction's channel, instrument, date and
-recurrence fields. The generated movement's `source_key` preserves that source
+recurrence fields. It also pre-creates future-effective rows; realized cash
+queries include only movements effective through the requested date. The generated movement's `source_key` preserves that source
 identity without creating a model relationship.
 
 ## Posting and data flow

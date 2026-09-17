@@ -33,7 +33,7 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
 {% url 'banking:list' as banking_url %}
 {% url 'investments:list' as investments_url %}
 {% url 'accounts:settings' as settings_url %}
-<header class="sticky top-0 z-40 border-b border-forest/10 dark:border-cream/10 bg-cream/90 dark:bg-forest-deep/90 backdrop-blur">
+<header class="sticky top-0 z-40 border-b border-forest/10 dark:border-cream/10 bg-cream/90 dark:bg-night/90 backdrop-blur">
     <nav class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between gap-4">
             <!-- Brand block -->
@@ -48,27 +48,27 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
             <!-- Desktop links -->
             <div class="hidden items-center gap-7 xl:flex">
                 <a href="{{ dashboard_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == dashboard_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == dashboard_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
                      {% translate 'Dashboard' %}
                 </a>
                 <a href="{{ reports_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == reports_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == reports_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
                      {% translate 'Reports' %}
                 </a>
                 <a href="{{ transactions_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == transactions_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == transactions_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
                      {% translate 'Transactions' %}
                 </a>
                 <a href="{{ categories_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == categories_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == categories_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
                      {% translate 'Categories' %}
                 </a>
                 <a href="{{ banking_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'banking' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'banking' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
                      {% translate 'Banks' %}
                 </a>
                 <a href="{{ investments_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'investments' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-cream/70{% endif %}">
+                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'investments' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
                      {% translate 'Investments' %}
                 </a>
                 <a href="{{ settings_url }}"
@@ -88,11 +88,11 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
                 {% include 'partials/project_menu.html' %}
                 {% include 'partials/language_selector.html' with selector_id='desktop' %}
                 {% include 'partials/theme_toggle.html' with legacy_theme_id=True %}
-                <span class="hidden lg:inline text-sm text-forest/70 dark:text-cream/70 font-normal">{{ request.user.username }}</span>
+                <span class="hidden lg:inline text-sm text-forest/70 dark:text-night-muted font-normal">{{ request.user.username }}</span>
                 <form method="post" action="{% url 'accounts:logout' %}" hx-boost="false">
                     {% csrf_token %}
                     <button type="submit"
-                            class="rounded-full border border-forest/30 px-5 py-2 text-xs uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-forest">
+                            class="rounded-full border border-forest/30 px-5 py-2 text-xs uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                          {% translate 'Log out' %}
                     </button>
                 </form>
@@ -114,7 +114,7 @@ LogoutView rejects GET requests, so it must never be a plain <a href>.
 </header>
 
 <!-- Mobile fullscreen overlay menu (Final Design System §0) -->
-<div id="mobile-menu" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title" class="fixed inset-0 bg-forest-deep z-50 transform translate-x-full transition-transform duration-500 ease-in-out flex flex-col justify-center items-center" aria-hidden="true" inert>
+<div id="mobile-menu" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title" class="fixed inset-0 bg-forest-deep dark:bg-night z-50 transform translate-x-full transition-transform duration-500 ease-in-out flex flex-col justify-center items-center" aria-hidden="true" inert>
     <h2 id="mobile-menu-title" class="sr-only">{% translate 'Navigation menu' %}</h2>
     <button type="button" id="close-menu-btn" aria-controls="mobile-menu" aria-expanded="false"
             class="absolute top-6 right-6 p-2 text-cream transition-colors hover:text-caramel-light">

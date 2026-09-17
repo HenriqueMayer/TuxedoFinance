@@ -3,6 +3,25 @@
     'use strict';
 
     var preservedIslandView = null;
+    var preservedPageViews = new WeakMap();
+
+    // A query/filter change is an update to the current page. Only navigation
+    // to a different path should inherit the shell's show:window:top behavior.
+    document.addEventListener('htmx:beforeSwap', function (event) {
+        var detail = event.detail;
+        if (detail.target !== document.body || !detail.shouldSwap || detail.isError) return;
+        var destination = new URL(detail.xhr.responseURL, window.location.href);
+        if (destination.origin !== window.location.origin ||
+            destination.pathname !== window.location.pathname) return;
+
+        var active = document.activeElement;
+        preservedPageViews.set(detail.xhr, {
+            top: window.scrollY,
+            left: window.scrollX,
+            focusId: active && active.id ? active.id : null,
+        });
+        detail.swapOverride = 'innerHTML show:none';
+    });
 
     function isPreservedIsland(target) {
         return target && (
@@ -42,7 +61,16 @@
     document.addEventListener('htmx:afterSwap', function (event) {
         if (event.detail.target === document.body) {
             finishNavigation();
+            var pageView = preservedPageViews.get(event.detail.xhr);
+            preservedPageViews.delete(event.detail.xhr);
             window.requestAnimationFrame(function () {
+                if (pageView) {
+                    var control = pageView.focusId && document.getElementById(pageView.focusId);
+                    if (control) control.focus({preventScroll: true});
+                    // The browser clamps this only if the new document is shorter.
+                    window.scrollTo({left: pageView.left, top: pageView.top, behavior: 'instant'});
+                    return;
+                }
                 var heading = document.querySelector('main h1');
                 if (!heading) return;
                 heading.setAttribute('tabindex', '-1');

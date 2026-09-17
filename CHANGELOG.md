@@ -7,15 +7,71 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Banking list/detail routes redirect anonymous visitors to login before
+  synchronizing the ledger. Docker health checks support allowed subdomains,
+  and container backup instructions export private data outside the checkout.
+
+- Unified question-mark help across Reports and Sandbox: hover opens one
+  readable box, leaving or clicking outside closes it, and mouse clicks never
+  pin it. Structured formulas, keyboard/touch support and the mandatory help
+  design contract replace the narrow, persistent report disclosures.
+
+- Searchable form choices now bring their input and results into view when
+  reached by keyboard, including credit cards near the bottom of a transaction
+  form. Long lists keep the active option visible and adapt to short viewports.
+
+- Searchable choices now visibly highlight arrow-key navigation, reopen after
+  Escape, and confirm only with an explicit selection without submitting the form.
+
+- Static preview language links now target HTML files explicitly, allowing
+  English/Portuguese navigation when the tour is opened locally with `file://`.
+
 ### Added
 
 - Docker and Compose packaging with Gunicorn, compressed static assets,
   persistent SQLite volumes and a non-root runtime; documented local builds,
   versioned release images, configuration, updates and backup/restore (#18).
-- Isolated native and Docker browser executors, container lifecycle/restore
-  checks, and a release workflow that validates amd64/arm64 images before GHCR
-  publication. Published images become available with the first Docker release.
-- Brazilian Portuguese installation and project documentation in README.pt-BR.md.
+- Isolated Docker browser and lifecycle checks, plus a release workflow that
+  validates amd64/arm64 images before publishing to GHCR. Published images
+  become available with the first Docker release.
+
+- Shared keyboard-search controls for record selectors, searchable multi-select
+  checkboxes, and a mandatory form contract for contributors and agents.
+
+- Portuguese README with reciprocal language links and version validation for
+  both English and Portuguese editions.
+
+### Changed
+
+- Reports now show live bank cash, the identified month's projected inflows
+  minus outflows, and the existing full-window net change with an accessible
+  period explanation. Removed the best-month card.
+
+- Conditional creation choices now wait for explicit selection across transaction,
+  investment, banking and sandbox forms. Card details wait for a card, CLT starts
+  unchecked, and error recovery plus native no-JavaScript controls are preserved.
+
+- Static interface tour now matches the black/graphite dark theme, with all 12
+  synthetic screenshots refreshed from the current application and bilingual
+  captions aligned with monthly dashboard activity and transaction navigation.
+
+- Transactions now use counted type cards, contextual category choices and
+  recurrence shortcuts, with progressive date filters and no-JavaScript
+  navigation (FIN-10). Type cards are compact and stay on one line; same-page
+  HTMX updates retain viewport and keyboard focus instead of jumping to the top.
+
+- Public homepage now uses factual bilingual copy, access links, six feature
+  rows, and a full horizontal cat photograph in a translucent double frame, without sample balances or promotional cards (FIN-9).
+- Dark-mode foundations now use neutral black and graphite throughout the
+  application, with readable controls and unchanged light/financial palettes (FIN-9).
+- Removed the promotional slogan from the shared footer.
+- Contained salary-table accessibility labels within their scroll area and
+  allowed the public navigation to wrap for no-JavaScript language controls.
+
+- `npm run test:e2e` now manages a disposable local Django server and database;
+  local development and CI share the same isolated browser-test workflow.
 
 ## [0.2.0] - 2026-09-03
 

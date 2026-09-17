@@ -23,7 +23,7 @@
             document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         })();
     </script>
-    <link rel="stylesheet" href="assets/preview.css">
+    <link rel="stylesheet" href="assets/preview.css?v=2">
     <script src="assets/preview.js" defer></script>
 </head>
 <body>
@@ -40,8 +40,8 @@
             </nav>
             <div class="header-actions">
                 <div class="language-switch" aria-label="Language">
-                    <a href="./" lang="en" aria-current="page">EN</a>
-                    <a href="pt-br/" lang="pt-BR" hreflang="pt-BR">PT</a>
+                    <a href="index.html" lang="en" aria-current="page">EN</a>
+                    <a href="pt-br/index.html" lang="pt-BR" hreflang="pt-BR">PT</a>
                 </div>
                 <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme" aria-pressed="false">
                     <span class="sun" aria-hidden="true">☀</span>
@@ -71,21 +71,21 @@
 
         <section class="tour-section" id="dashboard">
             <div class="section-heading">
-                <div><span class="section-number">01 / Dashboard</span><h2>Cash today and the month ahead.</h2></div>
-                <p class="section-copy">Current Balance represents realized account cash. The month cards keep income, expenses and investments separate, while Projected shows the expected closing balance.</p>
+                <div><span class="section-number">01 / Dashboard</span><h2>Monthly activity and current accounts.</h2></div>
+                <p class="section-copy">The selected month separates recorded activity from what is planned, keeping income, expenses, investment deposits and withdrawals distinct. Current account balances and upcoming invoices remain independent of the selected month.</p>
             </div>
             <div class="screenshot-grid">
                 <figure>
                     <a class="screenshot-link" href="images/en/dashboard-light.png" data-lightbox>
-                        <img src="images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance dashboard in the light theme with current balance, monthly totals, bank accounts and scheduled card invoices" fetchpriority="high" decoding="async">
+                        <img src="images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance dashboard in the light theme with monthly activity, planned amounts, expense categories, bank accounts and upcoming card invoices" fetchpriority="high" decoding="async">
                     </a>
-                    <figcaption>Light theme — current cash, monthly activity and projected close.</figcaption>
+                    <figcaption>Light theme — monthly activity, planned amounts and current accounts.</figcaption>
                 </figure>
                 <figure>
                     <a class="screenshot-link" href="images/en/dashboard-dark.png" data-lightbox>
                         <img src="images/en/dashboard-dark.png" width="1440" height="1000" alt="Tuxedo Finance dashboard showing the same synthetic financial summary in the dark theme" loading="lazy" decoding="async">
                     </a>
-                    <figcaption>Dark theme — the same financial meanings with accessible companion colors.</figcaption>
+                    <figcaption>Dark theme — black and graphite surfaces with distinct financial colors.</figcaption>
                 </figure>
             </div>
         </section>
@@ -112,7 +112,7 @@
                 <a class="screenshot-link" href="images/en/transactions-light.png" data-lightbox>
                     <img src="images/en/transactions-light.png" width="1440" height="1000" alt="Transaction list with search filters and synthetic income, fixed expenses, card installments and PIX payments" loading="lazy" decoding="async">
                 </a>
-                <figcaption>Search, ordering, month filters and CSV export support both quick checks and detailed review.</figcaption>
+                <figcaption>Counted transaction types, recurrence shortcuts, contextual categories and date filters complement search, ordering and CSV export.</figcaption>
             </figure>
         </section>
 

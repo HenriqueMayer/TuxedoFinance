@@ -8,7 +8,7 @@
     {% if result.mode == 'clt' %}
         {% with clt=result.clt %}
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            <article class="rounded-3xl bg-forest p-6 text-cream shadow-sm sm:p-8">
+            <article class="rounded-3xl bg-forest dark:bg-night-surface p-6 text-cream shadow-sm sm:p-8">
                 <p class="text-xs font-medium uppercase tracking-widest text-caramel-light">{% translate "Monthly result" %}</p>
                 <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                     {% translate "Net in an ordinary month" as ordinary_net_label %}{% translate "Amount received in a regular month after INSS, IRRF and the informed payroll deductions." as ordinary_net_help %}
@@ -27,7 +27,7 @@
                     <div><dt class="text-cream/60">{% include 'sandbox/_metric_label.html' with metric_id='clt-deductions-help' metric_label=deductions_label metric_help=deductions_help %}</dt><dd class="mt-1 tabular-nums">− {{ CURRENCY_SYMBOL }} {{ clt.ordinary.deductions|floatformat:2 }}</dd></div>
                 </dl>
             </article>
-            <article class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest sm:p-8">
+            <article class="rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface sm:p-8">
                 {% translate "Annual projection" as annual_label %}{% translate "Projected annual cash received with the automatic CLT rules." as annual_help %}
                 <div class="text-caramel-ink dark:text-caramel-light">{% include 'sandbox/_metric_label.html' with metric_id='clt-annual-help' metric_label=annual_label metric_help=annual_help %}</div>
                 <p class="mt-3 text-3xl font-semibold tabular-nums text-forest dark:text-cream">{{ CURRENCY_SYMBOL }} {{ clt.annual_net|floatformat:2 }}</p>
@@ -45,7 +45,7 @@
     {% else %}
         {% with manual=result.manual %}
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            <article class="rounded-3xl bg-forest p-6 text-cream shadow-sm sm:p-8">
+            <article class="rounded-3xl bg-forest dark:bg-night-surface p-6 text-cream shadow-sm sm:p-8">
                 <p class="text-xs font-medium uppercase tracking-widest text-caramel-light">{% translate "Monthly result" %}</p>
                 <div class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                     {% translate "Monthly net" as manual_net_label %}{% translate "Gross salary minus all manually entered deductions and taxes." as manual_net_help %}
@@ -62,7 +62,7 @@
                     </table>
                 </div>
             </article>
-            <article class="rounded-3xl bg-white p-6 shadow-sm dark:bg-forest sm:p-8">
+            <article class="rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface sm:p-8">
                 {% translate "Simple annual projection" as manual_annual_label %}{% translate "The current monthly result repeated for twelve months, without automatic benefits or extra payments." as manual_annual_help %}
                 <div class="text-caramel-ink dark:text-caramel-light">{% include 'sandbox/_metric_label.html' with metric_id='manual-annual-help' metric_label=manual_annual_label metric_help=manual_annual_help %}</div>
                 <p class="mt-3 text-3xl font-semibold tabular-nums text-forest dark:text-cream">{{ CURRENCY_SYMBOL }} {{ manual.annual_net|floatformat:2 }}</p>
@@ -77,7 +77,7 @@
         {% endwith %}
     {% endif %}
 
-    <article class="rounded-3xl border border-forest/10 bg-cream-dark/40 p-6 dark:border-cream/10 dark:bg-forest-deep/50 sm:p-8">
+    <article class="rounded-3xl border border-forest/10 bg-cream-dark/40 p-6 dark:border-cream/10 dark:bg-night/50 sm:p-8">
         <h3 class="font-sans text-xl font-semibold text-forest dark:text-cream">{% translate "Monthly plan with current inputs" %}</h3>
         <div class="mt-5 overflow-x-auto"><table class="w-full min-w-[34rem] text-sm"><thead><tr class="border-b border-forest/10 text-left text-xs uppercase tracking-widest text-forest/60 dark:border-cream/10 dark:text-cream/60"><th class="px-3 py-3">{% translate "Category" %}</th><th class="px-3 py-3 text-right">{% translate "Monthly amount" %}</th></tr></thead><tbody class="divide-y divide-forest/10 dark:divide-cream/10">
             {% if result.mode == 'clt' %}

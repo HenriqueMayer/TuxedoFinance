@@ -4,16 +4,29 @@ The dashboard composes banking cash, categorized cash flow, card liabilities
 and investments. It owns no model and never treats raw transaction amounts as an
 account ledger.
 
+Before composing either dashboard or reports, the views call
+`sync_user_ledger`. Query helpers are read-only, but the complete request can
+write derived movements and invoices. See the
+[synchronization boundary](../architecture.md#request-time-synchronization).
+
 ## Overview
 
 The main screen presents:
 
-- available balance by bank account;
-- consolidated available balance in the authenticated user's base currency;
-- monthly income and expenses, excluding own transfers and investment cash legs;
-- open credit-card invoices and upcoming due dates;
-- investment value and net worth;
-- a forward outlook from recurring transactions and scheduled invoice payments.
+- a live available-cash total and compact native balances by bank account;
+- selected-month opening, balance change and closing balance;
+- income, expenses, investment deposits and withdrawals for the selected month;
+- a top-six categorized-expense breakdown;
+- compact open-invoice previews and upcoming due dates;
+- a six-month outlook from recurring transactions and scheduled invoice payments.
+
+For the current month, performance is split at the local current date. One-off
+transactions use their recorded date, fixed recurrences keep their configured
+day (clamped to the target month's last day), and installments remain known
+obligations from their original purchase. Investment and loyalty events use
+their own event date. The portion after the cutoff is shown as planned. Past
+months are complete; future months are entirely planned. Category totals follow
+the same current/past/future rule.
 
 Per-user base currency is implemented through `UserPreference`. Historical
 investment operations consume their persisted FX evidence; account balances,
@@ -34,7 +47,35 @@ Investment deposits and withdrawals move cash between banking and the portfolio
 without becoming income/expense. Yield affects investment value internally; it
 does not increase available bank balance.
 
+The dashboard keeps economic performance distinct from cash settlement. Income,
+expenses and the selected month's projected closing describe activity assigned
+to the month. Available cash and the current month's through-today cash change
+come from posted account movements. Card purchases therefore stay in their
+statement month while actual account cash changes when the invoice is settled.
+The live account and open-invoice panels always describe today, even while
+another month is selected.
+
 ## Reports
+
+The summary has three cards:
+
+- **Balance now:** bank cash through today, even when browsing another chart
+  window. Investments are not included in this available bank balance.
+- **Projected (month):** the anchor month's inflows minus outflows, using
+  `income + recorded withdrawals - expenses - investment deposits`. The card
+  identifies that month and does not add an opening balance. Card expenses retain
+  their statement-month attribution, consistent with the monthly flow chart.
+- **Net change (12 months):** the final bank balance minus the opening bank
+  balance for the whole displayed window. Its question-mark disclosure states
+  the exact window and explains that it can include historical and projected
+  months. The calculation and missing-exchange-rate warning are preserved.
+
+Question-mark help follows the shared [tooltip contract](../frontend.md#question-mark-help):
+hover or keyboard focus opens one readable box; pointer exit, outside click and
+Escape dismiss it. Touch toggles it, and native details remain the no-JavaScript
+fallback. Formulas and explanatory paragraphs are visually separated. The former best-month
+summary card is removed. A liquid investment becomes bank cash only through a
+recorded withdrawal; merely being redeemable does not create a future inflow.
 
 Reports retain server-rendered SVG/CSS and HTMX-enhanced filters with plain GET
 fallbacks. The approved report set is organized by source of truth:
