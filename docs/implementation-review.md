@@ -221,3 +221,8 @@ v0.3.0 and backup/recovery. Its first native CI attempt had an intermittent
 touch-help assertion failure; the unchanged full job passed on the second
 attempt, and the affected test passed 10 additional local repetitions. No test
 assertions were removed or relaxed.
+
+The release PR exposed a separate timing race in the bank viewport assertion:
+it sampled the position after focus restoration but before HTMX's final settle
+and animation-frame restoration. The assertion now polls for completion while
+retaining the same less-than-four-pixel tolerance and keyboard interaction.
