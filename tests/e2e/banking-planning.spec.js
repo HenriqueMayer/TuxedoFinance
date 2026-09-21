@@ -32,7 +32,9 @@ for (const dark of [false, true]) {
         await expect(row.getByRole('button', { name: 'Use Monthly account in planning', exact: true })).toBeFocused();
         await expect(row.locator('td').nth(1)).toContainText('5.000,00');
         await expect(row.locator('td').nth(3)).toContainText('0,00');
-        expect(Math.abs(await page.evaluate(() => window.scrollY) - top)).toBeLessThan(4);
+        // Focus is restored after swap; viewport restoration also runs after
+        // HTMX settles attributes and the browser performs its final reflow.
+        await expect.poll(async () => Math.abs(await page.evaluate(() => window.scrollY) - top)).toBeLessThan(4);
         await expect(page.locator('#planning-availability')).toContainText('BRL 0,00');
         await page.keyboard.press('Space');
         await expect(row.getByRole('button', { name: 'Set aside Monthly account', exact: true })).toBeFocused();

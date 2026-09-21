@@ -106,13 +106,17 @@ test('Portuguese planning help fits mobile and toggles with touch', async ({ bro
         await trigger.tap();
         const tooltip = await readableHelp(page, '#yield-simulation-help');
         await expect(tooltip).toContainText('Meses completos');
-        await page.screenshot({ path: testInfo.outputPath('planning-help-mobile-pt.png'), fullPage: true });
         await trigger.tap();
         await expect(tooltip).toBeHidden();
         await trigger.tap();
         await page.touchscreen.tap(2, 2);
         await expect(tooltip).toBeHidden();
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        // Capture the actual mobile viewport after the touch sequence. A
+        // full-page capture can resize the viewport and reposition fixed help.
+        await trigger.tap();
+        await readableHelp(page, '#yield-simulation-help');
+        await page.screenshot({ path: testInfo.outputPath('planning-help-mobile-pt.png') });
     } finally {
         await context.close();
     }
