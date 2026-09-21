@@ -1,7 +1,9 @@
 # Planning evolution — implementation review
 
 This review records the work on `feat/finance-planning-evolution` on 2026-09-20.
-It describes the current checkout under **Unreleased**, not a published image.
+It records pre-release validation of the changes included in **v0.4.0**.
+Release publication and image availability are tracked by the
+[release workflow](versioning.md#container-releases).
 No personal database was migrated, reset or populated during validation.
 [FIN-11](https://hmayer.atlassian.net/browse/FIN-11) and
 [FIN-12](https://hmayer.atlassian.net/browse/FIN-12) were updated with scope,
@@ -40,8 +42,8 @@ Snapshot capacity is explicitly bounded at 2,000 obligations, without truncation
 a regression covers a normal native POST with more than 1,000 form fields.
 
 Old schema-reset instructions now describe their historical pre-release context.
-Supported installations retain the migration chain. Documentation separates
-published v0.3.0 installation instructions from current unreleased features.
+Supported installations retain the migration chain. Before release, documentation distinguished published v0.3.0 installation
+instructions from unreleased features; the v0.4.0 READMEs select the new release.
 The visual catalogue loads the application's compiled CSS, removing a duplicate
 Tailwind runtime/token definition and obsolete workspace recipes.
 Both READMEs omit empty tutorial placeholders and link installation/update
@@ -205,3 +207,17 @@ return is assumed by the investment simulator.
 Operational reference contracts: [Django date widgets](https://docs.djangoproject.com/en/6.0/ref/forms/widgets/#dateinput),
 [OWASP CSV injection limitations](https://community.owasp.org/attacks/CSV_Injection),
 and [Compose recreation and wait semantics](https://docs.docker.com/reference/cli/docker/compose/up/).
+
+## Release preparation validation
+
+The complete final feature checkout passed 279 Django tests (91% combined
+coverage), 14 tooling tests, all 86 native browser tests and 5 preview tests.
+Python and npm dependency audits reported no known vulnerabilities. Version,
+migration drift, Ruff and whitespace checks passed.
+
+[PR #21](https://github.com/HenriqueMayer/TuxedoFinance/pull/21) passed native
+amd64 and arm64 Docker validation, including all browser cases, upgrade from
+v0.3.0 and backup/recovery. Its first native CI attempt had an intermittent
+touch-help assertion failure; the unchanged full job passed on the second
+attempt, and the affected test passed 10 additional local repetitions. No test
+assertions were removed or relaxed.
