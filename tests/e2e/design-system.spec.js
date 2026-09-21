@@ -205,6 +205,9 @@ test('monetary yield previews a final balance and stores only the calculated yie
     await page.getByRole('radio', { name: 'Use the final balance' }).check();
     await page.getByRole('spinbutton', { name: 'New investment balance' }).fill('1200');
     await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page).toHaveURL(/\/investments\/operations\/$/);
+    await expect(page.locator('#investment-movements')).toContainText('200,00');
+    await page.getByRole('navigation', { name: 'Investment sections' }).getByRole('link', { name: 'Portfolio', exact: true }).click();
     await expect(page.getByRole('cell', { name: 'BRL 1.200,00', exact: true }).first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

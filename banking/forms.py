@@ -43,14 +43,23 @@ class OwnedModelForm(forms.ModelForm):
 class BankForm(OwnedModelForm):
     class Meta:
         model = Bank
-        fields = ('name',)
-        labels = {'name': _('Name')}
+        fields = ('name', 'color')
+        labels = {'name': _('Name'), 'color': _('Marker color')}
+        widgets = {'color': forms.TextInput(attrs={'type': 'color', 'list': 'bank-color-palette'})}
+
+    def clean_color(self):
+        return (self.cleaned_data.get('color') or self.instance.color or '#B88D57').upper()
 
     def clean_name(self):
         name = self.cleaned_data['name'].strip()
         if self.user and self._duplicate(Bank.objects.filter(user=self.user, name=name)):
             raise forms.ValidationError(_('You already have a bank with this name.'))
         return name
+
+
+class BankColorForm(BankForm):
+    class Meta(BankForm.Meta):
+        fields = ('color',)
 
 
 class BankAccountForm(OwnedModelForm):

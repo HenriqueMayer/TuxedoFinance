@@ -16,6 +16,7 @@ from banking.forms import (
     BankAccountForm,
     BankTransferForm,
     BankForm,
+    BankColorForm,
     CreditCardForm,
     DebitCardForm,
     ExchangeRateForm,
@@ -237,6 +238,11 @@ class BankUpdateView(OwnedFormMixin, UpdateView):
 
     def get_cancel_url(self):
         return reverse('banking:detail', args=[self.object.pk])
+
+
+class BankColorUpdateView(BankUpdateView):
+    form_class = BankColorForm
+    form_title = _('Marker color')
 
 
 class RelatedFormMixin(OwnedFormMixin):

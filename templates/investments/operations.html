@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Investment operations' %} - Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-7">
+    <header class="workspace-header">
+        <h1 class="page-title">{% translate 'Investment operations' %}</h1>
+        <a href="{% url 'investments:create' %}" class="action-primary">{% translate 'New operation' %}</a>
+    </header>
+    {% include 'investments/_sections.html' %}
+    {% include 'investments/_investment_movements.html' %}
+</div>
+{% endblock %}

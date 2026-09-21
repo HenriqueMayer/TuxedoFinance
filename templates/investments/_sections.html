@@ -2,6 +2,7 @@
 <nav class="section-nav" aria-label="{% translate 'Investment sections' %}">
     <a href="{% url 'investments:list' %}" {% if selected_section == 'portfolio' %}aria-current="page"{% endif %}>{% translate 'Portfolio' %}</a>
     <a href="{% url 'investments:list' %}?section=cash" {% if selected_section == 'cash' %}aria-current="page"{% endif %}>{% translate 'Remunerated cash' %}</a>
-    <a href="{% url 'sandbox:simulation' %}">{% translate 'Simulate returns' %}</a>
+    <a href="{% url 'investments:operations' %}" {% if selected_section == 'operations' %}aria-current="page"{% endif %}>{% translate 'Operations' %}</a>
     <a href="{% url 'investments:settings' %}" {% if request.resolver_match.url_name == 'settings' %}aria-current="page"{% endif %}>{% translate 'Products and assets' %}</a>
+    <a data-workspace-shortcut href="{% url 'sandbox:simulation' %}">{% translate 'Simulate returns' %}</a>
 </nav>

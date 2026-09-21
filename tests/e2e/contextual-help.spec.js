@@ -89,6 +89,8 @@ for (const dark of [false, true]) {
         await expect(page).toHaveURL(/charts_offset=1/);
         await checkHelp(page, 'Balance evolution', 'report-balance-help');
         await expect(page.getByRole('button', { name: 'Explain Balance evolution', exact: true })).toHaveCount(1);
+        await checkHelp(page, 'Income and expenses by account or card', 'report-instruments-help');
+        await expect(page.locator('#report-instruments-help')).toContainText('Hold Ctrl over a bar');
 
         await page.goto('/investments/');
         await checkHelp(page, 'Portfolio', 'investments-portfolio-help');
@@ -127,6 +129,7 @@ test('contextual help remains available without JavaScript and on touch', async 
         for (const [path, label, text] of [
             ['/dashboard/', 'Month performance', 'available cash changes'],
             ['/dashboard/reports/', 'Balance evolution', 'close of each month'],
+            ['/dashboard/reports/', 'Income and expenses by account or card', 'Hold Ctrl over a bar'],
             ['/investments/', 'Portfolio', 'not a live market valuation'],
             ['/investments/settings/', 'Investment Settings', 'Banks, accounts, loyalty programs'],
         ]) {

@@ -7,6 +7,27 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-21
+
+### Added
+
+- Dedicated investment Operations tab with search, purpose/type/record filters and pagination; portfolio charts precede a contextual history link.
+- Custom bank colors with suggested swatches, a corner marker and a color-only edit action beside the bank title.
+- One-step previous-screen recovery for contextual page links and cross-area shortcuts, preserving unsent fields, filters, focus and scroll within the current browser tab.
+- Direct chart selection: drag time ranges, Shift-click individual bars or slices, read donut sums in the center and clear selections with outside click or Escape.
+- Read-only chart composition on Ctrl-hover or keyboard focus, with touch-hold access and user-scoped categories, accounts, products and assets.
+
+### Changed
+
+- Keep Simulate returns last in investment navigation; primary navigation and section tabs clear previous-screen recovery.
+- Show opening balance, closing balance and net change for selected cumulative-balance periods; preserve exact monetary cents in selection totals.
+- Keep chart selection and composition independent from financial writes, with shared keyboard, touch and no-JavaScript navigation behavior.
+- Refresh the bilingual installation instructions and static interface preview for this release.
+
+### Removed
+
+- Manual chart range selectors, instrument click drilldowns and the redundant "Where the money goes" chart.
+
 ## [0.4.0] - 2026-09-20
 
 ### Added
@@ -174,7 +195,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.1.0...v0.2.0

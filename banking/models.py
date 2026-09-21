@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Case, DecimalField, F, Sum, Value, When
 from django.db.models.functions import Coalesce
@@ -41,6 +41,7 @@ class Bank(TimestampedModel):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='banks'
     )
     name = models.CharField(max_length=100)
+    color = models.CharField(max_length=7, default='#B88D57', blank=True, validators=[RegexValidator(r'^#[0-9a-fA-F]{6}$', _('Enter a color in #RRGGBB format.'))])
 
     class Meta:
         ordering = ['name']

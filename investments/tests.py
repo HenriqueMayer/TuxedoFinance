@@ -503,7 +503,7 @@ class MonetaryYieldTests(InvestmentFixtureMixin, TestCase):
 
         response = self.client.post(reverse('investments:create'), self.yield_data())
 
-        self.assertRedirects(response, reverse('investments:list'))
+        self.assertRedirects(response, reverse('investments:operations'))
         operation = Investment.objects.get(asset=self.savings)
         self.assertEqual(operation.amount, Decimal('200.00'))
         self.assertIsNone(operation.bank_movement)
@@ -638,7 +638,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
             'reason': 'Allocation',
             'notes': '',
         })
-        self.assertRedirects(response, reverse('investments:list'))
+        self.assertRedirects(response, reverse('investments:operations'))
         operation = Investment.objects.get()
         self.assertEqual(operation.bank_movement.amount, Decimal('101.00'))
 
@@ -668,7 +668,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
             'reason': 'Initial contribution',
             'notes': '',
         })
-        self.assertRedirects(response, reverse('investments:list'))
+        self.assertRedirects(response, reverse('investments:operations'))
         operation = Investment.objects.get(asset=savings)
         self.assertIsNone(operation.quantity)
         self.assertEqual(operation.amount, Decimal('1653.10'))
@@ -676,7 +676,9 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         response = self.client.get(reverse('investments:list'))
         self.assertContains(response, 'BRL 1.653,10')
         self.assertEqual(response.context['portfolio_groups'][0]['products'][0]['assets'][0]['balance'], Decimal('1653.10'))
-        self.assertContains(response, 'Initial contribution')
+        operations = self.client.get(reverse('investments:operations'))
+        self.assertContains(operations, 'Initial contribution')
+        self.assertNotContains(response, 'Initial contribution')
         self.assertNotContains(response, '1.00000000 units')
 
     def test_update_and_delete_views_replace_and_cleanup_ledger(self):
@@ -714,13 +716,13 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
             'reason': '',
             'notes': '',
         })
-        self.assertRedirects(response, reverse('investments:list'))
+        self.assertRedirects(response, reverse('investments:operations'))
         movement = BankMovement.objects.get(pk=movement_id)
         self.assertEqual(movement.direction, BankMovement.Direction.CREDIT)
         self.assertEqual(movement.amount, Decimal('51.00'))
 
         response = self.client.post(reverse('investments:delete', args=[operation.pk]))
-        self.assertRedirects(response, reverse('investments:list'))
+        self.assertRedirects(response, reverse('investments:operations'))
         self.assertFalse(BankMovement.objects.filter(pk=movement_id).exists())
 
     def test_grouping_filters_and_htmx_chart_contract(self):
@@ -729,7 +731,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         operation.save()
         group = get_portfolio_groups(self.user)[0]['products'][0]['assets'][0]
         self.assertEqual(group['quantity'], Decimal('2.50000000'))
-        response = self.client.get(reverse('investments:list'), {
+        response = self.client.get(reverse('investments:operations'), {
             'bank': self.bank.pk, 'product': self.product.pk,
             'asset': self.asset.pk, 'q': 'Coupon',
         })
@@ -769,7 +771,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
                     content.index(f'data-chart-layer="{interactions}"'),
                 )
 
-    def test_operations_are_adjacent_to_positions_before_historical_charts(self):
+    def test_charts_precede_the_link_to_separate_operations(self):
         operation = self.operation()
         operation.full_clean()
         operation.save()
@@ -777,14 +779,13 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         response = self.client.get(reverse('investments:list'))
         content = response.content.decode()
 
+        self.assertNotContains(response, 'id="investment-search"')
+        self.assertNotContains(response, reverse('investments:update', args=[operation.pk]))
         self.assertLess(
-            content.index('id="investment-search"'),
-            content.index(reverse('investments:update', args=[operation.pk])),
-        )
-        self.assertLess(
-            content.index(reverse('investments:update', args=[operation.pk])),
             content.index('id="investments-charts"'),
+            content.index('id="investment-operations-link"'),
         )
+        self.assertContains(response, reverse('investments:operations') + '?section=portfolio')
 
     def test_movement_pagination_uses_a_position_preserving_htmx_island(self):
         for index in range(11):
@@ -792,14 +793,14 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
             operation.full_clean()
             operation.save()
 
-        response = self.client.get(reverse('investments:list'))
+        response = self.client.get(reverse('investments:operations'))
         self.assertContains(response, 'id="investment-movements"')
         self.assertContains(response, 'hx-target="#investment-movements"')
         self.assertContains(response, 'data-scroll-target="investment-movements"')
         self.assertContains(response, '?page=2#investment-movements')
 
         htmx = self.client.get(
-            reverse('investments:list'),
+            reverse('investments:operations'),
             {'page': '2'},
             HTTP_HX_REQUEST='true',
             HTTP_HX_TARGET='investment-movements',

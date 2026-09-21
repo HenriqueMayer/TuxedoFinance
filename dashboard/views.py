@@ -1,4 +1,7 @@
 from datetime import date
+from calendar import monthrange
+
+from dashboard.selection import selection_data, attach_details
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
@@ -16,14 +19,10 @@ from dashboard.services import (
     EVOLUTION_MONTHS,
     EVOLUTION_PAST_MONTHS,
     OUTLOOK_MONTHS,
-    _expenses_by_category,
-    _transactions,
     add_months,
     get_account_evolution,
     get_dashboard_summary,
-    get_expenses_by_category_for_instrument,
     get_expenses_by_recurrence,
-    get_income_by_category_for_account,
     get_instrument_activity,
 )
 from transactions.services import sync_user_ledger
@@ -112,6 +111,12 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         sync_user_ledger(self.request.user)
         year, month = _selected_month(self.request, _is_projectable)
         context.update(get_dashboard_summary(self.request.user, year, month))
+        context['category_selection'] = selection_data(context['expense_categories'], [('total', _('Expenses'))], label='name')
+        today = timezone.localdate()
+        cutoff = min(today, date(year, month, monthrange(year, month)[1])) if (year, month) <= (today.year, today.month) else None
+        attach_details(context['category_selection'], self.request.user, 'categories',
+            context['expense_categories'], ['expenses'], period=f'{year:04d}-{month:02d}',
+            cutoff=cutoff.isoformat() if cutoff else None)
         context['selected_month_param'] = f'{year:04d}-{month:02d}'
         previous_year, previous_month = add_months(year, month, -1)
         next_year, next_month = add_months(year, month, 1)
@@ -138,18 +143,6 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         return _parse_month_or_all(
             self.request, 'installment_month', _is_representable
         )
-
-    def _selected_instrument(self, breakdown, param_name):
-        key = self.request.GET.get(param_name, '').strip()
-        return next(
-            (row for row in breakdown['instruments'] if row['key'] == key), None
-        )
-
-    def _drilldown_window(self, value, year, month):
-        if value == 'ALL':
-            today = timezone.localdate()
-            return today.year, today.month, date_format(today, 'F Y'), 'current month'
-        return year, month, date_format(date(year, month, 1), 'F Y'), 'selected month'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -223,61 +216,6 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         context['instrument_activity'] = activity
         context['instrument_chart'] = self._instrument_chart(activity)
 
-        selected_expense = self._selected_instrument(
-            activity, 'expense_instrument'
-        )
-        selected_income = self._selected_instrument(
-            activity, 'income_account'
-        )
-        if selected_expense and not selected_expense['expense_total']:
-            selected_expense = None
-        if selected_income and not selected_income['income_total']:
-            selected_income = None
-        context['selected_expense_instrument'] = selected_expense
-        context['selected_income_account'] = selected_income
-        year, month, label, window = self._drilldown_window(
-            period_value, period_year, period_month
-        )
-        context['instrument_categories_label'] = label
-        context['instrument_categories_window'] = window
-        context['expense_instrument_categories'] = (
-            get_expenses_by_category_for_instrument(
-                self.request.user, selected_expense['key'], year, month
-            )
-            if selected_expense
-            else []
-        )
-        context['income_account_categories'] = (
-            get_income_by_category_for_account(
-                self.request.user, selected_income['key'], year, month
-            )
-            if selected_income
-            else []
-        )
-
-        category_value, category_year, category_month = _parse_month_or_all(
-            self.request, 'category_month', _is_representable
-        )
-        context['category_month_param'] = category_value
-        if category_value == 'ALL':
-            context['expenses_by_category'] = evolution['expenses_by_category']
-            context['category_window_label'] = _('All time')
-        else:
-            rows, category_missing = _expenses_by_category(
-                self.request.user,
-                _transactions(self.request.user),
-                category_year,
-                category_month,
-                1,
-            )
-            context['expenses_by_category'] = rows
-            context['category_window_label'] = date_format(
-                date(category_year, category_month, 1), 'F Y'
-            )
-            evolution['missing_currencies'] = sorted(
-                set(evolution['missing_currencies']) | set(category_missing)
-            )
-
         installment_value, year, month = self.get_installment_month()
         context['installment_month_param'] = installment_value
         if installment_value == 'ALL':
@@ -294,6 +232,22 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             if any(row['draw'] for row in recurrence['slices'])
             else None
         )
+        context['cashflow_selection'] = selection_data(months, [
+            ('income', _('Income')), ('withdrawals', _('Withdrawals')),
+            ('expenses', _('Expenses')), ('investments', _('Investments')),
+        ], chart=context['cashflow_chart'])
+        context['recurrence_selection'] = selection_data(
+            [row for row in recurrence['slices'] if row['draw']], [('value', _('Expenses'))], label='name')
+        context['instrument_selection'] = selection_data(activity['instruments'], [
+            ('expense_total', _('Expenses')), ('income_total', _('Income')),
+        ], label='label', chart=context['instrument_chart'])
+        context['balance_selection'] = selection_data(months, [('closing_balance', _('Balance'))], mode='change', opening=evolution['opening_balance'], chart=context['balance_chart'])
+        attach_details(context['balance_selection'], self.request.user, 'ledger', months, ['balance'])
+        attach_details(context['cashflow_selection'], self.request.user, 'cashflow', months, ['income', 'withdrawals', 'expenses', 'investments'])
+        attach_details(context['instrument_selection'], self.request.user, 'instruments', activity['instruments'], ['expenses', 'income'], period=period_value)
+        attach_details(context['recurrence_selection'], self.request.user, 'recurrence', [row for row in recurrence['slices'] if row['draw']], ['expenses'], period=installment_value)
+        context['recurrence_selection']['mode'] = 'donut'
+        context['instrument_selection']['mode'] = 'items'
         context['missing_currencies'] = sorted(
             set(evolution['missing_currencies'])
             | set(activity['missing_currencies'])

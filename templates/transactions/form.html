@@ -182,6 +182,10 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             if (!fixed.checked && clearStale) fixedUntil.value = '';
         }
 
+        transactionType.form.addEventListener('tuxedo:restore', () => {
+            updateAvailableChannels(false);
+            updateFixedFields(false);
+        });
         updateAvailableChannels(false);
         updateFixedFields(false);
         channel.addEventListener('change', () => updatePaymentFields(true));

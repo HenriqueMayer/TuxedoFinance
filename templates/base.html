@@ -83,6 +83,9 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <script src="{% asset 'js/mobile-menu.js' %}" defer></script>
     <script src="{% asset 'js/nav-disclosures.js' %}" defer></script>
     <script src="{% asset 'js/navigation.js' %}" defer></script>
+    <script src="{% asset 'js/previous-workspace.js' %}" defer></script>
+    <script src="{% asset 'js/chart-selection.js' %}" defer></script>
+    <script src="{% asset 'js/bank-colors.js' %}" defer></script>
 </head>
 <body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
     {% if request.user.is_authenticated %}
@@ -91,7 +94,11 @@ class. The generated asset avoids browser-side recompilation during navigation.
         {% include 'partials/navbar_public.html' %}
     {% endif %}
 
-    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+    <main {% if request.user.is_authenticated %}data-workspace-user="{{ request.user.pk }}" data-workspace-format="{{ USER_DATE_FORMAT }}"{% endif %} class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+        {% if request.user.is_authenticated %}
+        <a data-previous-workspace hidden class="quiet-action mb-4" href="#">&larr; {% translate 'Resume previous screen' %}: <span></span></a>
+        <p data-workspace-restored hidden class="subtle-copy mb-4" role="status">{% translate 'Previous screen restored. Unsaved fields have not been submitted; recalculate simulations to update their results.' %}</p>
+        {% endif %}
         {% include 'partials/messages.html' %}
         {% include 'partials/section_navigation.html' %}
         {% block content %}{% endblock %}

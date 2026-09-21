@@ -7,6 +7,26 @@
 @tailwind utilities;
 
 @layer components {
+  .chart-composition { @apply fixed z-50 rounded-2xl border border-forest/20 bg-white p-5 text-forest shadow-xl dark:border-cream/20 dark:bg-night-surface dark:text-cream; width: min(32rem, calc(100vw - 24px)); max-height: min(26rem, calc(100vh - 90px)); overflow: auto; }
+  .chart-composition[hidden] { display: none; }
+  [data-chart-selection] [data-legend-item][data-chart-selected] { @apply rounded-lg bg-caramel/10 outline outline-2 outline-caramel; }
+  [data-chart-selection] [data-legend-item]:focus-visible { @apply rounded-lg outline outline-2 outline-caramel; }
+  [data-selection-surface] g[data-chart-selected] > rect:first-child { @apply fill-caramel/20 stroke-caramel; stroke-width: 2; }
+
+  .bank-panel { position: relative; }
+  .bank-bookmark { position: absolute; top: 0; left: 0; width: 9px; height: 54px; border-radius: 20px 0 6px 0; background: var(--bank-color); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .10); }
+  .bank-color-link { @apply inline-flex h-11 w-8 shrink-0 items-center justify-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel; }
+  .bank-marker { width: 13px; height: 27px; background: var(--bank-color); clip-path: polygon(0 0,100% 0,100% 100%,50% 80%,0 100%); }
+  input[type="color"] { min-height: 3.5rem; cursor: pointer; }
+
+  [data-chart-selection] [hidden] { display: none; }
+  [data-selection-surface] { user-select: none; }
+  [data-selection-surface] li[data-chart-selected] { @apply rounded-lg bg-caramel/10 outline outline-2 outline-caramel; }
+  [data-selection-surface] g[data-chart-selected] > path:first-child { @apply stroke-caramel; stroke-width: 3; }
+  [data-selection-surface] li:focus-visible { @apply rounded-lg outline outline-2 outline-caramel; }
+
+  [data-previous-workspace][hidden], [data-workspace-restored][hidden], [data-balance-range] [hidden] { display: none; }
+  [data-range-chart] { user-select: none; }
   .surface-panel { @apply min-w-0 rounded-2xl border border-forest/10 bg-white p-5 dark:border-cream/10 dark:bg-night-surface sm:p-6; box-shadow: 0 2px 3px -2px rgb(26 46 38 / .06); }
   .metric-panel { @apply flex min-w-0 flex-col gap-2 rounded-2xl border border-forest/10 bg-white p-5 dark:border-cream/10 dark:bg-night-surface; }
   .page-title { @apply text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-[2rem]; }
@@ -183,4 +203,7 @@
   .search-choice-option[aria-selected="true"] {
     @apply bg-forest text-cream dark:bg-cream dark:text-night;
   }
+}
+@layer components {
+  .bank-color-swatch { @apply h-9 w-9 rounded-full border border-forest/20 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-caramel dark:border-cream/30; }
 }

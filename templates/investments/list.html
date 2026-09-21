@@ -76,7 +76,13 @@
         <a href="{% url 'investments:create_product' %}" class="action-link">{% translate 'New product' %}</a>
     {% endfor %}
     </section>
-    {% include 'investments/_investment_movements.html' %}
     {% if has_investments and selected_section != 'cash' %}{% include 'investments/_investments_charts.html' %}{% endif %}
+    <a id="investment-operations-link" href="{% url 'investments:operations' %}?section={{ selected_section }}" class="surface-panel panel-heading group">
+        <span class="space-y-1">
+            <span class="section-title block group-hover:underline">{% translate 'Investment operations' %}</span>
+            <span class="subtle-copy block">{% translate 'Review deposits, withdrawals and yields.' %}</span>
+        </span>
+        <span aria-hidden="true" class="text-2xl">&rarr;</span>
+    </a>
 </div>
 {% endblock %}

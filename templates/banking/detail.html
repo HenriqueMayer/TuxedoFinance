@@ -8,7 +8,7 @@
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <a href="{% url 'banking:list' %}" class="text-sm text-forest/60 hover:text-caramel-ink dark:text-night-muted dark:hover:text-caramel-light">{% translate "Banks" %}</a>
-            <h1 class="page-title mt-2">{{ bank.name }}</h1>
+            <div class="mt-2 flex items-center gap-3"><a class="bank-color-link" style="--bank-color: {{ bank.color|default:'#B88D57' }}" href="{% url 'banking:color' bank.pk %}" aria-label="{% translate 'Change marker color' %}"><span class="bank-marker" aria-hidden="true"></span></a><h1 class="page-title">{{ bank.name }}</h1></div>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{% url 'banking:update' bank.pk %}" class="quiet-action">{% translate "Edit bank" %}</a>

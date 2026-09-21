@@ -25,9 +25,10 @@
                 {% translate "Leave a cell empty to use the monthly default above. Zero explicitly replaces that default." as individual_months_help %}
                 {% include 'partials/help_popover.html' with help_id='individual-months-help' help_label=_('Change individual months') help_text=individual_months_help %}
             </div>
-            <div class="mt-3 overflow-x-auto"><table class="data-table planning-sheet"><thead><tr><th>{% translate "Month" %}</th><th class="number">{% translate "Contribution override" %}</th><th class="number">{% translate "Withdrawal override" %}</th></tr></thead><tbody>
-                {% for row in override_rows %}<tr><th scope="row">{{ row.number }}</th><td><input type="text" inputmode="decimal" name="contribution_{{ row.index }}" value="{{ row.contribution }}" aria-label="{% blocktranslate with month=row.number %}Month {{ month }} contribution{% endblocktranslate %}" class="planning-sheet-input"></td><td><input type="text" inputmode="decimal" name="withdrawal_{{ row.index }}" value="{{ row.withdrawal }}" aria-label="{% blocktranslate with month=row.number %}Month {{ month }} withdrawal{% endblocktranslate %}" class="planning-sheet-input"></td></tr>{% endfor %}
+            <div class="mt-3 overflow-x-auto"><table class="data-table planning-sheet"><thead><tr><th>{% translate "Month" %}</th><th class="number">{% translate "Contribution override" %}</th><th class="number">{% translate "Withdrawal override" %}</th></tr></thead><tbody data-yield-rows>
+                {% for row in override_rows %}{% include 'sandbox/_override_row.html' with row=row index=row.index number=row.number %}{% endfor %}
             </tbody></table></div>
+            <template id="yield-override-template">{% include 'sandbox/_override_row.html' with index='__index__' number='__number__' %}</template>
         </details>
         <div class="flex flex-wrap gap-3 items-center"><button type="submit" name="action" value="calculate" class="action-primary">{% translate "Calculate" %}</button><span class="subtle-copy" data-live-message aria-live="polite"></span></div>
         <span hidden data-live-updating>{% translate "Updating simulation…" %}</span><span hidden data-live-updated>{% translate "Simulation updated." %}</span><span hidden data-live-failed>{% translate "Automatic calculation unavailable. Use Calculate." %}</span>

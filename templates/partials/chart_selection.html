@@ -1,0 +1,11 @@
+{% load i18n %}
+<div data-selection-controls class="mt-4" data-currency="{{ CURRENCY_CODE }}" data-details-loading="{% translate 'Loading composition…' %}" data-details-empty="{% translate 'No categorized entries in this selection.' %}" data-details-error="{% translate 'Composition unavailable. Refresh the page and try again.' %}" data-details-missing="{% translate 'Missing exchange rates' %}" data-total-label="{% translate 'Selected total' %}" data-selected-label="{% translate 'Selected' %}">
+    {{ selection|json_script }}
+    <div data-selection-summary hidden role="status" aria-live="polite" class="rounded-2xl border border-caramel/40 bg-caramel/10 p-4">
+        <p data-selection-period class="font-medium"></p><dl data-selection-values class="mt-3 flex flex-wrap gap-x-8 gap-y-3"></dl>
+    </div>
+    <span hidden data-selection-change>{% translate 'Net change in selected period' %}</span>
+    <span hidden data-selection-opening>{% translate 'Balance before first month' %}</span>
+    <span hidden data-selection-closing>{% translate 'Balance at end of last month' %}</span>
+    <span class="sr-only" data-chart-instructions>{% translate 'Drag to select a period. Shift-click adds or removes an item. Hold Ctrl over a point to inspect its composition. Keyboard: Enter or Space selects, Shift adds, Ctrl opens composition, Escape clears. Touch: tap to select, hold to inspect.' %}</span>
+</div>
