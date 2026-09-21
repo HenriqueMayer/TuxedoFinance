@@ -226,3 +226,6 @@ The release PR exposed a separate timing race in the bank viewport assertion:
 it sampled the position after focus restoration but before HTMX's final settle
 and animation-frame restoration. The assertion now polls for completion while
 retaining the same less-than-four-pixel tolerance and keyboard interaction.
+The mobile help test now captures the actual viewport after completing its
+touch sequence, avoiding full-page screenshot viewport changes between taps.
+It retains the open/close, outside-tap, content and viewport-bound assertions.
