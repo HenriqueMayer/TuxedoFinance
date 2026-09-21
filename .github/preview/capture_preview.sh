@@ -25,6 +25,9 @@ else
 fi
 
 export TUXEDO_DATA_DIR="$data_dir"
+export TUXEDO_ENV_FILE=/dev/null
+export DEBUG=True HTTPS=False ALLOW_SIGNUPS=False
+export ALLOWED_HOSTS=127.0.0.1,localhost
 export PREVIEW_CAPTURE=1
 export SECRET_KEY
 SECRET_KEY=$(uv run python -c 'import secrets; print(secrets.token_urlsafe(48))')
@@ -53,7 +56,7 @@ curl --fail --silent "$PREVIEW_BASE_URL/" >/dev/null
 node .github/preview/capture_preview.js
 
 for language in en pt-br; do
-    for name in dashboard-light reports-light transactions-light banking-light investments-light dashboard-dark; do
+    for name in dashboard-light reports-light transactions-light banking-light investments-light planning-light dashboard-dark; do
         image="$image_stage/$language/$name.png"
         [[ -s "$image" ]] || { echo "Missing capture: $image" >&2; exit 1; }
         dimensions=$(file "$image")

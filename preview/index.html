@@ -23,7 +23,7 @@
             document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         })();
     </script>
-    <link rel="stylesheet" href="assets/preview.css?v=2">
+    <link rel="stylesheet" href="assets/preview.css?v=3">
     <script src="assets/preview.js" defer></script>
 </head>
 <body>
@@ -37,6 +37,7 @@
                 <a href="#transactions">Transactions</a>
                 <a href="#banking">Banking</a>
                 <a href="#investments">Investments</a>
+                <a href="#planning">Planning</a>
             </nav>
             <div class="header-actions">
                 <div class="language-switch" aria-label="Language">
@@ -56,7 +57,7 @@
             <div>
                 <p class="eyebrow">Interface preview</p>
                 <h1>Meet your finances beyond the spreadsheet.</h1>
-                <p class="hero-copy">Explore the real Tuxedo Finance interface before installing it. This guided tour covers cash flow, projections, reports, daily transactions, banking and investments.</p>
+                <p class="hero-copy">Explore the real Tuxedo Finance interface before installing it. This guided tour covers cash flow, reports, daily transactions, banking, investments and planning.</p>
                 <div class="hero-actions">
                     <a class="button button-primary" href="#dashboard">Start the tour</a>
                     <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance">View repository</a>
@@ -77,7 +78,7 @@
             <div class="screenshot-grid">
                 <figure>
                     <a class="screenshot-link" href="images/en/dashboard-light.png" data-lightbox>
-                        <img src="images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance dashboard in the light theme with monthly activity, planned amounts, expense categories, bank accounts and upcoming card invoices" fetchpriority="high" decoding="async">
+                        <img src="images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance dashboard in the light theme with funds available for planning and monthly income, expenses and investment activity" fetchpriority="high" decoding="async">
                     </a>
                     <figcaption>Light theme — monthly activity, planned amounts and current accounts.</figcaption>
                 </figure>
@@ -97,7 +98,7 @@
             </div>
             <figure>
                 <a class="screenshot-link" href="images/en/reports-light.png" data-lightbox>
-                    <img src="images/en/reports-light.png" width="1440" height="1000" alt="Tuxedo Finance reports page with summary cards and financial charts based on synthetic data" loading="lazy" decoding="async">
+                    <img src="images/en/reports-light.png" width="1440" height="1000" alt="Tuxedo Finance reports page with summary values and a balance evolution chart based on synthetic data" loading="lazy" decoding="async">
                 </a>
                 <figcaption>Reports remain responsive, keyboard-readable and grouped around meaningful financial questions.</figcaption>
             </figure>
@@ -119,26 +120,39 @@
         <section class="tour-section" id="banking">
             <div class="section-heading">
                 <div><span class="section-number">04 / Banking</span><h2>Accounts, cards and currencies in context.</h2></div>
-                <p class="section-copy">Banks group currency-specific accounts, native balances, debit and credit cards, statement cycles, transfers, loyalty and exchange rates.</p>
+                <p class="section-copy">See what is available for the month across accounts and remunerated cash. Reserve part of an account or exclude its positive balance from planning while keeping its actual balance visible.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="images/en/banking-light.png" data-lightbox>
-                    <img src="images/en/banking-light.png" width="1440" height="1000" alt="Banking overview with two fictional banks, BRL and USD accounts, cards and loyalty program" loading="lazy" decoding="async">
+                    <img src="images/en/banking-light.png" width="1440" height="1000" alt="Banking overview with synthetic available cash, a BRL account with a partial reservation, an excluded USD account and a monthly cash pot" loading="lazy" decoding="async">
                 </a>
-                <figcaption>Native account values remain visible even when consolidated reporting uses another currency.</figcaption>
+                <figcaption>This example reserves BRL 2,000 and excludes the USD account. Bills remain in the plan, and the monthly cash pot includes only recorded yields.</figcaption>
             </figure>
         </section>
 
         <section class="tour-section" id="investments">
             <div class="section-heading">
-                <div><span class="section-number">05 / Investments</span><h2>A separate ledger for position flows.</h2></div>
-                <p class="section-copy">Manual deposits, withdrawals and yields preserve quantities, unit prices, fees, cash endpoints and historical conversion evidence.</p>
+                <div><span class="section-number">05 / Investments</span><h2>Investments and monthly cash have different roles.</h2></div>
+                <p class="section-copy">Keep portfolio positions separate from remunerated cash set aside to pay the month. Deposits, withdrawals and actual yields retain their history, quantities, fees and cash accounts.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="images/en/investments-light.png" data-lightbox>
-                    <img src="images/en/investments-light.png" width="1440" height="1000" alt="Investments overview with a synthetic reserve fund, global equity ETF, position totals and flow charts" loading="lazy" decoding="async">
+                    <img src="images/en/investments-light.png" width="1440" height="1000" alt="Investments workspace with a synthetic equity position, portfolio totals and separate access to remunerated cash" loading="lazy" decoding="async">
                 </a>
                 <figcaption>The totals describe recorded acquisition and value flows, not live market quotations.</figcaption>
+            </figure>
+        </section>
+
+        <section class="tour-section" id="planning">
+            <div class="section-heading">
+                <div><span class="section-number">06 / Planning</span><h2>Try a scenario before making it real.</h2></div>
+                <p class="section-copy">Estimate a monthly budget from future installments and recurring expenses, or simulate balance growth with contributions, withdrawals and an effective rate. Save named drafts explicitly, reopen and compare them without changing financial records.</p>
+            </div>
+            <figure>
+                <a class="screenshot-link" href="images/en/planning-light.png" data-lightbox>
+                    <img src="images/en/planning-light.png" width="1440" height="1000" alt="Planning yield simulator with an initial BRL 10,000, monthly contributions of BRL 500 and a hypothetical monthly rate of 0.8 percent" loading="lazy" decoding="async">
+                </a>
+                <figcaption>The simulator recalculates as you edit. Contributions and withdrawals occur at month-end, and per-month overrides support different scenarios.</figcaption>
             </figure>
         </section>
     </main>

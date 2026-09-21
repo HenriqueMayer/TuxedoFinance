@@ -54,11 +54,13 @@
         if (!label) input.setAttribute('aria-label', name);
         const help = document.createElement('p');
         help.id = `${input.id}-help`;
-        help.className = 'text-xs text-forest/70 dark:text-night-muted';
+        help.className = 'search-choice-help';
         help.textContent = multiple ? strings.multipleHelp : strings.help;
         const status = document.createElement('p');
         status.id = `${input.id}-selection`;
-        status.className = 'text-sm text-forest/70 dark:text-night-muted';
+        // A single choice already shows its value in the input. Keep its live
+        // announcement accessible without repeating it under every field.
+        status.className = multiple ? 'text-sm text-forest/70 dark:text-night-muted' : 'sr-only';
         status.setAttribute('aria-live', 'polite');
         const list = document.createElement('div');
         list.id = `${input.id}-results`;
@@ -74,7 +76,7 @@
         input.setAttribute('aria-controls', list.id);
         const clear = document.createElement('button');
         clear.type = 'button';
-        clear.className = 'text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light';
+        clear.className = 'min-h-8 rounded text-xs font-medium text-caramel-ink hover:underline dark:text-caramel-light';
         clear.textContent = strings.clear;
         clear.setAttribute('aria-label', `${strings.clear}: ${name}`);
         root.append(input, help, status, list, clear);

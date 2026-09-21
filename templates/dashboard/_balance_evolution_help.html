@@ -1,0 +1,7 @@
+{% load i18n %}
+<span class="help-paragraph">
+    {% translate "Your balance at the close of each month. Everything after" %}
+    {% now 'F Y' %}
+    {% translate "is projected from your fixed transactions and open installment plans." %}
+</span>
+<span class="help-paragraph">{% translate "Activity by statement month; bank closing balances follow payment due dates." %}</span>

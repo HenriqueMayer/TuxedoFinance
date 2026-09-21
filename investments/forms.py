@@ -4,6 +4,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from core.dates import configure_date_fields
+
 from banking.models import Bank, BankAccount, LoyaltyProgram
 from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import (
@@ -102,6 +104,7 @@ class InvestmentForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        configure_date_fields(self, user)
         self.yield_preview = None
         if user is not None:
             self.instance.user = user
@@ -219,16 +222,23 @@ class InvestmentForm(forms.ModelForm):
 class InvestmentProductForm(forms.ModelForm):
     class Meta:
         model = InvestmentProduct
-        fields = ('bank', 'name')
-        labels = {'bank': _('Bank'), 'name': _('Name')}
+        fields = ('bank', 'name', 'purpose')
+        labels = {'bank': _('Bank'), 'name': _('Name'), 'purpose': _('Purpose')}
+        help_texts = {
+            'purpose': _('Monthly cash pots remain available for bills. Moving money to or from them is an internal transfer.'),
+        }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
         self.instance.user = user
         self.fields['bank'].queryset = Bank.objects.filter(user=user)
+        self.fields['purpose'].required = False
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+
+    def clean_purpose(self):
+        return self.cleaned_data.get('purpose') or InvestmentProduct.Purpose.INVESTMENT
 
     def clean(self):
         data = super().clean()

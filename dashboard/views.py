@@ -13,6 +13,7 @@ from dashboard.charts import (
     build_line_chart,
 )
 from dashboard.services import (
+    EVOLUTION_MONTHS,
     EVOLUTION_PAST_MONTHS,
     OUTLOOK_MONTHS,
     _expenses_by_category,
@@ -48,7 +49,10 @@ def _is_representable(year, month):
 def _is_projectable(year, month):
     earliest_year, _ = add_months(year, month, -1)
     latest_year, _ = add_months(year, month, OUTLOOK_MONTHS - 1)
-    return date.min.year <= earliest_year and latest_year <= date.max.year
+    today = timezone.localdate()
+    max_year, max_month = add_months(today.year, today.month, 12 - OUTLOOK_MONTHS)
+    return (date.min.year <= earliest_year and latest_year <= date.max.year
+            and (year, month) <= (max_year, max_month))
 
 
 def _month_choices():
@@ -85,11 +89,19 @@ def _parse_charts_offset(request, in_range):
 
 
 def _is_offset_window_safe(year, month):
-    earliest_year, _ = add_months(year, month, -EVOLUTION_PAST_MONTHS)
-    latest_year, _ = add_months(
-        year, month, ALL_TIME_MONTHS - EVOLUTION_PAST_MONTHS - 1
+    earliest_year, _ = add_months(year, month, -EVOLUTION_PAST_MONTHS - 1)
+    latest_year, latest_month = add_months(
+        year, month, EVOLUTION_MONTHS - EVOLUTION_PAST_MONTHS - 1
     )
-    return date.min.year <= earliest_year and latest_year <= date.max.year
+    today = timezone.localdate()
+    # The ledger horizon ends on today's day next year, so its last calendar
+    # month is only partial. Display at most the preceding complete month.
+    max_year, max_month = add_months(today.year, today.month, 11)
+    return (
+        date.min.year <= earliest_year
+        and latest_year <= date.max.year
+        and (latest_year, latest_month) <= (max_year, max_month)
+    )
 
 
 class DashboardIndexView(LoginRequiredMixin, TemplateView):
@@ -105,6 +117,8 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         next_year, next_month = add_months(year, month, 1)
         context['previous_month_param'] = f'{previous_year:04d}-{previous_month:02d}'
         context['next_month_param'] = f'{next_year:04d}-{next_month:02d}'
+        context['has_previous_month'] = _is_projectable(previous_year, previous_month)
+        context['has_next_month'] = _is_projectable(next_year, next_month)
         return context
 
 
@@ -149,6 +163,12 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
                 'charts_offset': offset,
                 'previous_offset_param': offset - 1,
                 'next_offset_param': offset + 1,
+                'has_previous_window': _is_offset_window_safe(
+                    *add_months(evolution['anchor_year'], evolution['anchor_month'], -1)
+                ),
+                'has_next_window': _is_offset_window_safe(
+                    *add_months(evolution['anchor_year'], evolution['anchor_month'], 1)
+                ),
                 'balance_chart': build_line_chart(
                     months, [float(row['closing_balance']) for row in months]
                 ),

@@ -45,6 +45,83 @@ def account_balance(account, as_of=None):
     return account.opening_balance + movement_total
 
 
+def account_balances(user, as_of=None):
+    """Read all native balances with one grouped movement query."""
+    as_of = as_of or timezone.localdate()
+    amount_field = DecimalField(max_digits=20, decimal_places=2)
+    movements = BankMovement.objects.filter(user=user, effective_date__lte=as_of)
+    totals = dict(movements.order_by().values('account_id').annotate(
+        total=Sum(Case(
+            When(direction=BankMovement.Direction.CREDIT, then=F('amount')),
+            default=-F('amount'), output_field=amount_field,
+        ))
+    ).values_list('account_id', 'total'))
+    return [
+        {'account': account, 'balance': account.opening_balance + totals.get(account.pk, ZERO)}
+        for account in BankAccount.objects.filter(user=user).select_related('bank')
+    ]
+
+
+def get_planning_availability(user, as_of=None):
+    """Cash usable for planning, without changing balances or hiding deficits.
+
+    Row amounts are native currency; aggregate amounts are in the user's base
+    currency. Missing conversions remain None in rows and are flagged explicitly.
+    The caller owns ledger synchronization; this calculation never writes it.
+    """
+    from accounts.models import UserPreference
+    from investments.services import get_monthly_cash_positions
+
+    as_of = as_of or timezone.localdate()
+    base = UserPreference.objects.filter(user=user).values_list('base_currency', flat=True).first() or 'BRL'
+    missing = set()
+    rates = {}
+
+    def in_base(amount, currency):
+        if currency not in rates:
+            try:
+                rates[currency] = convert(user, Decimal('1'), currency, base, as_of)
+            except MissingExchangeRate:
+                rates[currency] = None
+                missing.add(currency)
+        return None if rates[currency] is None else (amount * rates[currency]).quantize(Decimal('0.01'))
+
+    result = {
+        'as_of': as_of, 'base_currency': base, 'account_rows': [], 'cash_pots': [],
+        'bank_total': ZERO, 'pot_total': ZERO, 'reserved_total': ZERO,
+        'available_total': ZERO, 'reserve_shortfall': ZERO,
+    }
+    for row in account_balances(user, as_of):
+        account, balance = row['account'], row['balance']
+        positive = max(balance, ZERO)
+        reserved = min(account.reserved_amount, positive) if account.planning_enabled else positive
+        shortfall = max(account.reserved_amount - positive, ZERO) if account.planning_enabled else ZERO
+        row.update(currency=account.currency, reserved=reserved, available=balance-reserved, shortfall=shortfall)
+        for key, total_key in (
+            ('balance', 'bank_total'), ('reserved', 'reserved_total'),
+            ('shortfall', 'reserve_shortfall'),
+        ):
+            value = in_base(row[key], account.currency)
+            row[f'converted_{key}'] = value
+            if value is not None:
+                result[total_key] += value
+        row['converted_available'] = (
+            None if row['converted_balance'] is None
+            else row['converted_balance'] - row['converted_reserved']
+        )
+        if row['converted_available'] is not None:
+            result['available_total'] += row['converted_available']
+        result['account_rows'].append(row)
+    for row in get_monthly_cash_positions(user, as_of):
+        row['base_balance'] = in_base(row['balance'], row['currency'])
+        if row['base_balance'] is not None:
+            result['pot_total'] += row['base_balance']
+            result['available_total'] += row['base_balance']
+        result['cash_pots'].append(row)
+    result['missing_currencies'] = sorted(missing)
+    return result
+
+
 def create_movement(
     *, user, account, direction, kind, amount, effective_date,
     description='', source_key='', **links

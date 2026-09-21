@@ -13,7 +13,7 @@ from django.utils.translation import gettext as _
 from banking.models import BankMovement, LoyaltyEntry, LoyaltyProgram
 from banking.services import MissingExchangeRate, convert, create_movement, latest_exchange_rate
 from accounts.models import UserPreference
-from investments.models import Asset, Investment
+from investments.models import Asset, Investment, InvestmentProduct
 
 
 ZERO = Decimal('0.00')
@@ -307,9 +307,37 @@ def available_quantity(operation):
     return total
 
 
-def get_portfolio_groups(user):
+def get_monthly_cash_positions(user, as_of=None):
+    """Native monetary balances by product and asset, including openings once."""
+    as_of = as_of or timezone.localdate()
+    rows = {}
+
+    def position(product, asset):
+        return rows.setdefault((product.pk, asset.pk), {
+            'product': product, 'asset': asset, 'currency': asset.currency, 'balance': ZERO,
+        })
+
+    for asset in Asset.objects.filter(
+        user=user, valuation_mode=Asset.ValuationMode.MONETARY,
+        opening_product__purpose=InvestmentProduct.Purpose.MONTHLY_CASH,
+        opening_product__user=user,
+    ).select_related('opening_product__bank'):
+        position(asset.opening_product, asset)['balance'] += asset.opening_balance
+    for operation in Investment.objects.filter(
+        user=user, product__purpose=InvestmentProduct.Purpose.MONTHLY_CASH,
+        product__user=user, asset__user=user,
+        asset__valuation_mode=Asset.ValuationMode.MONETARY, date__lte=as_of,
+    ).select_related('product__bank', 'asset'):
+        position(operation.product, operation.asset)['balance'] += operation.signed_value
+    return sorted(rows.values(), key=lambda row: (
+        row['product'].bank.name, row['product'].name, row['asset'].name,
+    ))
+
+
+def get_portfolio_groups(user, as_of=None, purpose=None):
     """Group positions without adding quantities or values across assets."""
-    operations = Investment.objects.filter(user=user).select_related(
+    as_of = as_of or timezone.localdate()
+    operations = Investment.objects.filter(user=user, date__lte=as_of).select_related(
         'product__bank', 'asset'
     )
     banks = {}
@@ -323,10 +351,13 @@ def get_portfolio_groups(user):
             opening_quantity__gt=ZERO,
         )
     ).select_related('opening_product__bank')
+    if purpose is not None:
+        operations = operations.filter(product__purpose=purpose)
+        opening_assets = opening_assets.filter(opening_product__purpose=purpose)
 
     def asset_row(product, asset, opening_balance=ZERO, opening_quantity=ZERO):
         bank_bucket = banks.setdefault(product.bank_id, {'id': product.bank_id, 'name': product.bank.name, 'products': {}})
-        product_bucket = bank_bucket['products'].setdefault(product.pk, {'id': product.pk, 'name': product.name, 'yield_mode': product.yield_mode, 'assets': {}})
+        product_bucket = bank_bucket['products'].setdefault(product.pk, {'id': product.pk, 'name': product.name, 'purpose': product.purpose, 'yield_mode': product.yield_mode, 'assets': {}})
         return product_bucket['assets'].setdefault(asset.pk, {
             'id': asset.pk, 'name': asset.name, 'code': asset.code, 'currency': asset.currency,
             'valuation_mode': asset.valuation_mode, 'quantity': opening_quantity, 'balance': opening_balance,
@@ -361,7 +392,8 @@ def get_portfolio_groups(user):
     return result
 
 
-def get_asset_positions(user):
+def get_asset_positions(user, as_of=None):
+    as_of = as_of or timezone.localdate()
     positions = {
         asset.pk: {
             'asset': asset,
@@ -370,7 +402,7 @@ def get_asset_positions(user):
         }
         for asset in Asset.objects.filter(user=user)
     }
-    for operation in Investment.objects.filter(user=user).select_related('asset'):
+    for operation in Investment.objects.filter(user=user, date__lte=as_of).select_related('asset'):
         row = positions.setdefault(
             operation.asset_id,
             {
@@ -421,13 +453,26 @@ def historical_value_in_base(user, operation, base_currency, on_date=None):
         return None
 
 
-def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12, offset=0):
-    operations = list(Investment.objects.filter(user=user).select_related('asset'))
+def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12, offset=0, purpose=None):
+    operations_query = Investment.objects.filter(user=user).select_related('asset')
+    opening_assets = Asset.objects.filter(user=user)
+    if purpose is not None:
+        operations_query = operations_query.filter(product__purpose=purpose)
+        opening_assets = opening_assets.filter(opening_product__purpose=purpose)
+    operations = list(operations_query)
     missing = set()
     rows = []
     running = ZERO
     window = _months_window(months, offset)
     start = date(*window[0], 1)
+    for asset in opening_assets:
+        opening = asset.opening_balance + opening_unit_value(asset)
+        if not opening:
+            continue
+        try:
+            running += convert(user, opening, asset.currency, base_currency, as_of=start)
+        except MissingExchangeRate:
+            missing.add(asset.currency)
     for operation in operations:
         if operation.date < start:
             value = historical_value_in_base(user, operation, base_currency)
@@ -448,8 +493,10 @@ def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12
     return rows, sorted(missing)
 
 
-def get_monthly_flow_in_base(user, base_currency, currencies=None, months=12, offset=0):
-    operations = list(Investment.objects.filter(user=user).select_related('asset'))
+def get_monthly_flow_in_base(user, base_currency, currencies=None, months=12, offset=0, purpose=InvestmentProduct.Purpose.INVESTMENT):
+    operations = list(Investment.objects.filter(
+        user=user, product__purpose=purpose,
+    ).select_related('asset'))
     missing = set()
     rows = []
     for year, month in _months_window(months, offset):

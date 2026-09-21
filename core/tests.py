@@ -10,6 +10,7 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import UserPreference
+from core.assets import asset_url
 
 User = get_user_model()
 
@@ -115,15 +116,15 @@ class LanguageSelectionTests(TestCase):
         )
         self.assertContains(response, 'Problems / Suggestions')
         self.assertContains(response, 'Roadmap')
-        self.assertContains(response, '/static/js/project-menu.js?v=4')
+        self.assertContains(response, asset_url('js/project-menu.js'))
         self.assertContains(
             response,
             'A personal Tuxedo assistant to ask questions, review your finances, and plan.',
         )
-        self.assertContains(response, 'Improvements to investment tracking and analysis.')
+        self.assertContains(response, 'Market quotes and historical prices with source and valuation date.')
         self.assertContains(
             response,
-            'Automatic monthly and annual investment yield calculations.',
+            'An integrated assistant for portfolio research and planning.',
         )
 
 
@@ -148,30 +149,28 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(translated, 'Próximas implementações')
         self.assertContains(
             translated,
-            'Um assistente pessoal Tuxedo para tirar dúvidas, revisar suas finanças e planejar.',
+            'Um assistente integrado para pesquisa de carteira e planejamento.',
         )
         self.assertContains(
             translated,
-            'Melhorias no acompanhamento e na análise de investimentos.',
-        )
-        self.assertContains(
-            translated,
-            'Cálculos automáticos de rendimento mensal e anual dos investimentos.',
+            'Cotações e histórico de preços com fonte e data de avaliação.',
         )
 
     @override_settings(DEBUG=False)
     def test_precompiled_tailwind_is_used_without_the_play_cdn(self):
         response = self.client.get(reverse('pages:landing'))
 
-        self.assertContains(response, '/static/css/app.css?v=14')
+        self.assertContains(response, asset_url('css/app.css'))
         self.assertNotContains(response, 'https://cdn.tailwindcss.com')
         self.assertNotContains(response, 'unpkg.com')
         self.assertNotContains(response, 'css/output.css')
-        self.assertContains(response, '/static/js/vendor/htmx.min.js?v=2.0.10')
+        self.assertContains(response, asset_url('js/vendor/htmx.min.js'))
         self.assertContains(response, 'hx-boost="true"')
         self.assertContains(response, 'hx-request=\'{"noHeaders":true}\'')
         self.assertContains(response, 'hx-boost="false"')
-        self.assertContains(response, '/static/js/navigation.js?v=3')
+        self.assertContains(response, asset_url('js/navigation.js'))
+        self.assertContains(response, asset_url('js/runtime-assets.js'))
+        self.assertContains(response, 'name="tuxedo-assets"')
 
     def test_authenticated_nav_has_desktop_and_mobile_selectors(self):
         user = User.objects.create_user('language', password='test')
@@ -183,9 +182,9 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, 'id="language-select-mobile"')
         self.assertEqual(response.content.count(b'data-theme-toggle'), 2)
         self.assertEqual(response.content.count(b'id="theme-toggle"'), 1)
-        self.assertContains(response, '/static/js/theme.js?v=3')
-        self.assertContains(response, '/static/js/project-menu.js?v=4')
-        self.assertContains(response, '/static/js/mobile-menu.js?v=3')
+        self.assertContains(response, asset_url('js/theme.js'))
+        self.assertContains(response, asset_url('js/project-menu.js'))
+        self.assertContains(response, asset_url('js/mobile-menu.js'))
         self.assertContains(response, 'role="dialog"')
         self.assertContains(response, 'aria-modal="true"')
         self.assertContains(

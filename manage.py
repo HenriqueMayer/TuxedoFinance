@@ -6,6 +6,13 @@ import sys
 
 def main():
     """Run administrative tasks."""
+    # Protect new runtime files, without making built assets or generated source
+    # unreadable to the image's separate non-root service user.
+    if len(sys.argv) > 1 and sys.argv[1] in {
+        'migrate', 'runserver', 'shell', 'dbshell', 'createsuperuser',
+        'changepassword', 'loaddata', 'dumpdata', 'flush',
+    }:
+        os.umask(0o077)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
     try:
         from django.core.management import execute_from_command_line

@@ -21,6 +21,7 @@ const screens = [
     ['transactions-light.png', '/transactions/'],
     ['banking-light.png', '/banking/'],
     ['investments-light.png', '/investments/'],
+    ['planning-light.png', '/sandbox/simulation/'],
 ];
 
 const screenshotOptions = {
@@ -31,13 +32,15 @@ const screenshotOptions = {
 
 async function settle(page) {
     await page.waitForLoadState('networkidle');
+    // Keep hover navigation and contextual help closed in the public tour.
+    await page.mouse.move(4, 80);
     await page.evaluate(async () => {
         if (document.fonts && document.fonts.ready) await document.fonts.ready;
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
         window.scrollTo(0, 0);
     });
-    await page.waitForTimeout(80);
+    await page.waitForTimeout(180);
     if (await page.evaluate(() => window.scrollX !== 0 || window.scrollY !== 0)) {
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.waitForTimeout(80);
@@ -94,6 +97,16 @@ async function captureProfile(browser, profile) {
 
     for (const [filename, route] of screens) {
         await page.goto(`${baseURL}${route}`);
+        if (route === '/sandbox/simulation/') {
+            await page.locator('#id_initial_balance').fill('10000');
+            await page.locator('#id_rate').fill('0.8');
+            await page.locator('#id_months').fill('12');
+            await page.locator('#id_contribution').fill('500');
+            await page.locator('#id_withdrawal').fill('0');
+            // Native Calculate remains authoritative; no draft or ledger is saved.
+            await page.locator('button[name="action"][value="calculate"]').click();
+            await page.locator('#simulation-result tbody tr').first().waitFor();
+        }
         await settle(page);
         await page.screenshot({
             path: path.join(outputDirectory, filename),

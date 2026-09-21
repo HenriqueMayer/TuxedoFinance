@@ -67,6 +67,11 @@ class BankAccount(TimestampedModel):
         max_digits=16, decimal_places=2, default=ZERO
     )
     pix_enabled = models.BooleanField(default=True)
+    planning_enabled = models.BooleanField(default=True)
+    reserved_amount = models.DecimalField(
+        max_digits=16, decimal_places=2, default=ZERO, validators=[NON_NEGATIVE],
+        help_text=_('Money to keep outside monthly planning, in this account currency.'),
+    )
 
     class Meta:
         ordering = ['bank__name', 'name', 'currency']
@@ -74,7 +79,11 @@ class BankAccount(TimestampedModel):
             models.UniqueConstraint(
                 fields=['bank', 'name', 'currency'],
                 name='banking_unique_account_bank_name_currency',
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(reserved_amount__gte=0),
+                name='banking_account_reserved_amount_gte_zero',
+            ),
         ]
 
     def __str__(self):

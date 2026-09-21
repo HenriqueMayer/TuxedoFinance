@@ -182,7 +182,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "django", specifier = ">=6.0.8,<6.1" },
-    { name = "gunicorn", marker = "sys_platform != 'win32'", specifier = ">=23,<26" },
+    { name = "gunicorn", marker = "sys_platform != 'win32'", specifier = ">=25.3,<26" },
     { name = "python-dotenv", specifier = ">=1.1,<2" },
     { name = "whitenoise", specifier = ">=6.12,<7" },
 ]

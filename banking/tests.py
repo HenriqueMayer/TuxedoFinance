@@ -7,6 +7,7 @@ from django.db import IntegrityError
 from django.test import TestCase, override_settings
 from django.urls import include, path, reverse
 from django.utils import timezone
+from django.utils.html import strip_tags
 
 from core.urls import urlpatterns as core_urlpatterns
 
@@ -572,11 +573,11 @@ class BankingViewTests(TestCase):
     def test_list_and_detail_render_native_balance_and_hide_other_owner(self):
         response = self.client.get(reverse('banking:list'))
         self.assertContains(response, 'Nubank')
-        self.assertContains(response, 'BRL 50,00')
+        self.assertIn('BRL 50,00', ' '.join(strip_tags(response.content.decode()).split()))
         self.assertNotContains(response, 'Secret Bank')
         detail = self.client.get(reverse('banking:detail', args=[self.account.bank_id]))
         self.assertContains(detail, 'Add debit card')
-        self.assertContains(detail, 'BRL 50,00')
+        self.assertIn('BRL 50,00', ' '.join(strip_tags(detail.content.decode()).split()))
         self.assertEqual(
             self.client.get(reverse('banking:detail', args=[self.foreign.bank_id])).status_code,
             404,

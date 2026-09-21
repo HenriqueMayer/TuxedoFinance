@@ -19,8 +19,8 @@ test.afterEach(async ({ page }) => {
 async function createAccount(page, testInfo) {
     const username = `e2e-${testInfo.workerIndex}-${Date.now()}`;
     await page.goto('/accounts/signup/');
-    await page.getByLabel('Username').fill(username);
-    await page.getByLabel('Email').fill(`${username}@example.test`);
+    await page.getByLabel(/^\s*Username/).fill(username);
+    await page.getByLabel(/^\s*Email/).fill(`${username}@example.test`);
     await page.locator('#id_password1').fill('Tuxedo-E2E-2026!');
     await page.locator('#id_password2').fill('Tuxedo-E2E-2026!');
     await page.getByRole('button', { name: 'Sign up' }).click();
@@ -31,23 +31,25 @@ async function createMonetaryInvestment(page, testInfo) {
     await createAccount(page, testInfo);
 
     await page.goto('/banking/create/');
-    await page.getByLabel('Name').fill('Investment bank');
+    await page.getByLabel(/^\s*Name/).fill('Investment bank');
     await page.getByRole('button', { name: 'Save' }).click();
 
     await page.goto('/investments/products/create/');
     await selectChoice(page.locator('#id_bank-search'), { label: 'Investment bank' });
-    await page.getByLabel('Name').fill('Savings');
+    await page.getByLabel(/^\s*Name/).fill('Savings');
     await page.getByRole('button', { name: 'Save' }).click();
 
     await page.goto('/investments/assets/create/');
-    await page.getByLabel('Name').fill('Savings pot');
-    await page.getByLabel('Code').fill('POT');
-    await page.getByLabel('Asset class').selectOption('LIQUIDITY');
-    await page.getByLabel('Currency').selectOption('BRL');
-    await page.getByLabel('How this asset is valued').selectOption('MONETARY');
+    await page.getByLabel(/^\s*Name/).fill('Savings pot');
+    await page.getByLabel(/^\s*Code/).fill('POT');
+    await page.getByLabel(/^\s*Asset class/).selectOption('LIQUIDITY');
+    await page.getByLabel(/^\s*Currency/).selectOption('BRL');
+    await page.getByLabel(/^\s*How this asset is valued/).selectOption('MONETARY');
     await page.getByRole('spinbutton', { name: /^Opening balance/ }).fill('1000');
     await selectChoice(page.locator('#id_opening_product-search'), { label: 'Investment bank - Savings' });
     await page.getByRole('button', { name: 'Save' }).click();
+    // Confirm the fixture was persisted before leaving the asset form.
+    await expect(page).toHaveURL(/\/investments\/settings\/$/);
 }
 
 test('landing keeps concise translated copy and local frontend dependencies', async ({ page }) => {
@@ -70,7 +72,8 @@ test('category CSV is downloaded without replacing the page', async ({ page }, t
     await page.goto('/categories/');
 
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('link', { name: 'Export CSV' }).click();
+    await page.locator('main').getByText('More options', { exact: true }).click();
+    await page.getByRole('link', { name: 'Export CSV for reimport', exact: true }).click();
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toBe('categories.csv');
@@ -84,7 +87,8 @@ test('authenticated navigation remains usable at tablet widths', async ({ page }
     await page.reload();
 
     await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeVisible();
-    await expect(page.locator('nav').getByRole('link', { name: 'Reports' })).toBeHidden();
+    await expect(page.locator('body > header').getByRole('link', { name: 'Overview', exact: true })).toBeHidden();
+    await expect(page.locator('main nav').getByRole('link', { name: 'Reports', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -121,11 +125,11 @@ test('loyalty entry reveals only the fields for the selected entry type', async 
     await createAccount(page, testInfo);
     await page.goto('/banking/loyalty-entries/create/');
 
-    const kind = page.getByLabel('Kind');
+    const kind = page.getByLabel(/^\s*Kind/);
     const invoice = page.locator('#id_invoice-search');
     const fundingAccount = page.locator('#id_funding_account-search');
     const fundingCreditCard = page.locator('#id_funding_credit_card-search');
-    const cashAmount = page.getByLabel('Amount paid');
+    const cashAmount = page.getByLabel(/^\s*Amount paid/);
 
     await expect(invoice).toBeHidden();
     await expect(fundingAccount).toBeHidden();
@@ -163,7 +167,7 @@ test('mobile navigation traps focus and restores it on Escape', async ({ page },
     const dialog = page.getByRole('dialog', { name: 'Navigation menu' });
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveAttribute('aria-modal', 'true');
-    await expect(page.locator('header')).toHaveAttribute('inert', '');
+    await expect(page.locator('body > header')).toHaveAttribute('inert', '');
     await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
 
     for (let index = 0; index < 14; index += 1) {
@@ -174,7 +178,7 @@ test('mobile navigation traps focus and restores it on Escape', async ({ page },
     await page.keyboard.press('Escape');
     await expect(menu).toHaveAttribute('aria-hidden', 'true');
     await expect(openButton).toBeFocused();
-    await expect(page.locator('header')).not.toHaveAttribute('inert', '');
+    await expect(page.locator('body > header')).not.toHaveAttribute('inert', '');
 });
 
 test('monetary yield previews a final balance and stores only the calculated yield', async ({ page }, testInfo) => {
@@ -183,8 +187,8 @@ test('monetary yield previews a final balance and stores only the calculated yie
 
     await selectChoice(page.locator('#id_product-search'), { label: 'Investment bank - Savings' });
     await selectChoice(page.getByRole('combobox', { name: /^Asset/ }), { label: 'Savings pot (POT)' });
-    await page.getByLabel('Type').selectOption('YIELD');
-    await page.getByLabel('Date').fill('2026-09-02');
+    await page.getByLabel(/^\s*Type/).selectOption('YIELD');
+    await page.getByLabel(/^\s*Date/).fill('2026-09-02');
     await page.getByRole('radio', { name: 'Use the final balance' }).check();
     await page.getByRole('spinbutton', { name: 'New investment balance' }).fill('1200');
 
@@ -192,16 +196,16 @@ test('monetary yield previews a final balance and stores only the calculated yie
     await expect(preview.getByText('Previous balance')).toBeVisible();
     await expect(preview.getByText('Calculated yield')).toBeVisible();
     await expect(preview).toContainText('200,00');
-    await expect(page.getByLabel('Investment amount')).toBeHidden();
+    await expect(page.getByLabel(/^\s*Investment amount/)).toBeHidden();
 
     await page.getByRole('radio', { name: 'Enter the yield amount' }).check();
-    await expect(page.getByLabel('Investment amount')).toBeVisible();
-    await expect(page.getByLabel('New investment balance')).toBeHidden();
+    await expect(page.getByLabel(/^\s*Investment amount/)).toBeVisible();
+    await expect(page.getByLabel(/^\s*New investment balance/)).toBeHidden();
 
     await page.getByRole('radio', { name: 'Use the final balance' }).check();
     await page.getByRole('spinbutton', { name: 'New investment balance' }).fill('1200');
     await page.getByRole('button', { name: 'Save' }).click();
-    await expect(page.getByText('Balance: BRL 1.200,00')).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'BRL 1.200,00', exact: true }).first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -211,16 +215,16 @@ test('monetary yield keeps server errors visible and clears stale inactive value
 
     const product = page.locator('#id_product-search');
     const asset = page.getByRole('combobox', { name: /^Asset/ });
-    const kind = page.getByLabel('Type');
+    const kind = page.getByLabel(/^\s*Type/);
     const amountMode = page.getByRole('radio', { name: 'Enter the yield amount' });
     const endingMode = page.getByRole('radio', { name: 'Use the final balance' });
-    const amount = page.getByLabel('Investment amount');
-    const endingBalance = page.getByLabel('New investment balance');
+    const amount = page.getByLabel(/^\s*Investment amount/);
+    const endingBalance = page.getByLabel(/^\s*New investment balance/);
 
     await selectChoice(product, { label: 'Investment bank - Savings' });
     await selectChoice(asset, { label: 'Savings pot (POT)' });
     await kind.selectOption('YIELD');
-    await page.getByLabel('Date').fill('2026-09-02');
+    await page.getByLabel(/^\s*Date/).fill('2026-09-02');
     await amountMode.check();
     await amount.fill('200');
 
@@ -378,7 +382,7 @@ test('report cards explain the month and chart window by keyboard and without Ja
     await expect(summary).toContainText('Balance now');
     await expect(summary).toContainText('Projected (month)');
     await expect(summary).not.toContainText('Best month');
-    const netHelp = summary.getByLabel('Explain Net change (12 months)');
+    const netHelp = summary.getByRole('button', { name: 'Explain Net change (12 months)', exact: true });
     const panel = page.locator('#report-window-help');
     await netHelp.hover();
     await expect(panel).toBeVisible();
@@ -392,7 +396,7 @@ test('report cards explain the month and chart window by keyboard and without Ja
     await netHelp.hover();
     await page.getByRole('heading', { name: 'Reports', exact: true }).click();
     await expect(panel).toBeHidden();
-    const monthHelp = summary.getByLabel('Explain Projected (month)');
+    const monthHelp = summary.getByRole('button', { name: 'Explain Projected (month)', exact: true });
     await monthHelp.hover();
     await expect(page.locator('#report-month-help')).toBeVisible();
     await netHelp.hover();
@@ -424,10 +428,11 @@ test('report cards explain the month and chart window by keyboard and without Ja
     await page.evaluate(() => document.documentElement.classList.add('dark'));
     await page.screenshot({ path: testInfo.outputPath('report-cards-dark.png') });
 
+    await page.getByLabel('Account options', { exact: true }).click();
     await page.locator('#language-select-desktop').selectOption('pt-br');
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(summary).toContainText('Projetado (mês)');
-    await summary.getByLabel('Explicar Variação líquida (12 meses)').press('Enter');
+    await summary.getByRole('button', { name: 'Explicar Variação líquida (12 meses)', exact: true }).press('Enter');
     const translatedPanel = page.locator('#report-window-help');
     await expect(translatedPanel).toContainText('Período completo do gráfico');
     const box = await translatedPanel.boundingBox();

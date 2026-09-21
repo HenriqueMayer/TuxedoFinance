@@ -1,25 +1,28 @@
 {% extends 'base.html' %}
-{% load i18n static %}
+{% load i18n assets %}
 
 {% block title %}{% translate "Sandbox" %} — Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
+<div class="planning-workspace space-y-7">
+    {% include 'sandbox/_navigation.html' %}
     <header>
-        <p class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Planning tool" %}</p>
-        <h1 class="mt-2 font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Salary Sandbox" %}</h1>
-        <p class="mt-2 max-w-3xl text-sm leading-6 text-forest/70 dark:text-night-muted">{% translate "Estimate your take-home pay and organize a monthly spending plan without saving any data." %}</p>
-        <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-forest/60 dark:text-cream/60">
+        <div class="flex items-center gap-3">
+            <h1 class="page-title">{% translate "Salary Sandbox" %}</h1>
+            {% include 'partials/help_popover.html' with help_id='salary-sandbox-help' help_label=_('Salary Sandbox') help_template='sandbox/_salary_help.html' %}
+        </div>
+        <dl class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-forest/60 dark:text-night-muted">
             <div class="flex gap-1"><dt>{% translate "Competence" %}:</dt><dd>{{ rules.year|stringformat:"d" }}</dd></div>
-            <div class="flex gap-1"><dt>{% translate "Rules reviewed" %}:</dt><dd>{{ rules.reviewed_on|date:"d/m/Y" }}</dd></div>
+            <div class="flex gap-1"><dt>{% translate "Rules reviewed" %}:</dt><dd>{{ rules.reviewed_on|date:USER_DATE_FORMAT }}</dd></div>
             <div class="flex gap-1"><dt>{% translate "Currency" %}:</dt><dd>BRL</dd></div>
         </dl>
     </header>
 
+    {% include 'sandbox/_availability.html' %}
     {% include 'sandbox/_workspace.html' %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/sandbox.js' %}?v=5" defer></script>
+<script src="{% asset 'js/sandbox.js' %}" defer></script>
 {% endblock %}

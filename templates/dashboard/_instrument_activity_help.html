@@ -1,0 +1,9 @@
+{% load i18n %}
+<span class="help-paragraph">
+    {% if instrument_month_param == 'ALL' %}
+        {% translate "Money moved across your accounts and cards over all months." %}
+    {% else %}
+        {% blocktranslate with window=instrument_window_label %}Money moved across your accounts and cards in <span class="font-medium text-forest/70 dark:text-night-muted">{{ window }}</span>.{% endblocktranslate %}
+    {% endif %}
+</span>
+<span class="help-paragraph">{% translate "Click a bar to see its categories." %}</span>

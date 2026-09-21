@@ -2,11 +2,11 @@
 {% url 'investments:list' as list_url %}
 <section id="investment-movements"
          hx-request='{"noHeaders":false}'
-         class="scroll-mt-24 space-y-6 outline-none"
+         class="surface-panel scroll-mt-24 space-y-5 outline-none"
          tabindex="-1"
          aria-labelledby="investment-movements-title">
     <h2 id="investment-movements-title"
-        class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">
+        class="section-title">
         {% translate "Investment operations" %}
     </h2>
 
@@ -17,9 +17,10 @@
           hx-swap="outerHTML"
           hx-push-url="true"
           data-scroll-target="investment-movements"
-          class="grid gap-3 rounded-3xl bg-cream p-5 sm:grid-cols-2 lg:grid-cols-6 dark:bg-night-surface">
+          class="grid gap-3 border-y border-forest/15 py-5 sm:grid-cols-2 lg:grid-cols-6 dark:border-cream/15">
+        <input type="hidden" name="section" value="{{ selected_section|default:'portfolio' }}">
         <div class="space-y-1.5 lg:col-span-2">
-            <label for="investment-search" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
+            <label for="investment-search" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Search investments" %}
             </label>
             <input id="investment-search" type="search" name="q" value="{{ search_query }}"
@@ -27,7 +28,7 @@
                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest placeholder:text-forest/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream dark:placeholder:text-night-muted">
         </div>
         <div class="space-y-1.5">
-            <label for="investment-kind" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
+            <label for="investment-kind" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Operation type" %}
             </label>
             <select id="investment-kind" name="kind"
@@ -39,7 +40,7 @@
             </select>
         </div>
         <div class="space-y-1.5">
-            <label for="investment-bank" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
+            <label for="investment-bank" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Bank" %}
             </label>
             <select data-search-select id="investment-bank" name="bank"
@@ -51,7 +52,7 @@
             </select>
         </div>
         <div class="space-y-1.5">
-            <label for="investment-product" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
+            <label for="investment-product" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Investment product" %}
             </label>
             <select data-search-select id="investment-product" name="product"
@@ -63,7 +64,7 @@
             </select>
         </div>
         <div class="space-y-1.5">
-            <label for="investment-asset" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">
+            <label for="investment-asset" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Asset" %}
             </label>
             <select data-search-select id="investment-asset" name="asset"
@@ -77,17 +78,17 @@
         <div class="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-6">
             <button type="submit"
                     data-scroll-target="investment-movements"
-                    class="rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface dark:text-cream/90 dark:hover:bg-cream dark:hover:text-night">
+                    class="quiet-action">
                 {% translate 'Filter' %}
             </button>
             {% if search_query or selected_kind or selected_bank or selected_product or selected_asset %}
-                <a href="{{ list_url }}#investment-movements"
-                   hx-get="{{ list_url }}"
+                <a href="{{ list_url }}?section={{ selected_section|default:'portfolio' }}#investment-movements"
+                   hx-get="{{ list_url }}?section={{ selected_section|default:'portfolio' }}"
                    hx-target="#investment-movements"
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    data-scroll-target="investment-movements"
-                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 transition hover:text-forest focus:outline-none focus:ring-2 focus:ring-caramel dark:text-night-muted dark:hover:text-cream">
+                   class="quiet-action">
                     {% translate "Clear filters" %}
                 </a>
             {% endif %}
@@ -95,13 +96,13 @@
     </form>
 
     {% if investments %}
-        <div class="rounded-3xl bg-cream p-2 dark:bg-night-surface">
+        <div>
             <ul class="divide-y divide-forest/10 dark:divide-cream/10">
                 {% for investment in investments %}
-                    <li class="flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
+                    <li class="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <div class="flex gap-2">
-                                <strong class="font-sans text-lg">{{ investment.asset.code }}</strong>
+                                <strong class="text-base font-semibold">{{ investment.asset.code }}</strong>
                                 <span class="text-sm">{{ investment.get_kind_display }}</span>
                             </div>
                             <p class="text-xs text-forest/70 dark:text-night-muted">{{ investment.product.bank.name }} / {{ investment.product.name }} - {{ investment.date|date:USER_DATE_FORMAT }}</p>
@@ -110,8 +111,8 @@
                                     {% translate "Value:" %} {% include "partials/money.html" with currency=investment.currency amount=investment.amount %};
                                     {% translate "Fees:" %} {% include "partials/money.html" with currency=investment.currency amount=investment.fees %}
                                 {% else %}
-                                    {{ investment.quantity|floatformat:8 }} {% translate "units at" %}
-                                    {% include "partials/money.html" with currency=investment.currency amount=investment.unit_price %} =
+                                    {{ investment.quantity.normalize }} {% translate "units at" %}
+                                    <span class="tabular-nums">{{ investment.currency }} {{ investment.unit_price.normalize }}</span> =
                                     {% include "partials/money.html" with currency=investment.currency amount=investment.gross_value %};
                                     {% translate "Fees:" %} {% include "partials/money.html" with currency=investment.currency amount=investment.fees %}
                                 {% endif %}
@@ -135,11 +136,11 @@
                         </div>
                         <div class="flex gap-3">
                             <a href="{% url 'investments:update' investment.pk %}"
-                               class="rounded-full border border-forest/30 px-4 py-2 text-xs font-medium uppercase tracking-widest">
+                               class="quiet-action">
                                 {% translate 'Edit' %}
                             </a>
                             <a href="{% url 'investments:delete' investment.pk %}"
-                               class="rounded-full bg-expense/10 px-4 py-2 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30">
+                               class="quiet-action text-expense dark:text-expense-light">
                                 {% translate 'Delete' %}
                             </a>
                         </div>
@@ -148,7 +149,7 @@
             </ul>
         </div>
     {% else %}
-        <p class="rounded-3xl bg-white p-6 text-sm font-normal text-forest/70 shadow-sm dark:bg-night-surface dark:text-night-muted">
+        <p class="subtle-copy py-4">
             {% translate 'No matching operations.' %}
         </p>
     {% endif %}
@@ -163,7 +164,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    data-scroll-target="investment-movements"
-                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface dark:text-cream/90 dark:hover:bg-cream dark:hover:text-night">
+                   class="quiet-action">
                     {% translate 'Previous' %}
                 </a>
             {% else %}
@@ -182,7 +183,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    data-scroll-target="investment-movements"
-                   class="inline-flex items-center gap-2 rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface dark:text-cream/90 dark:hover:bg-cream dark:hover:text-night">
+                   class="quiet-action">
                     {% translate 'Next' %}
                 </a>
             {% else %}

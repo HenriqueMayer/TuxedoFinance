@@ -1,0 +1,34 @@
+{% load i18n %}
+<li data-category-group="{{ group.category.pk }}">
+    <div class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0">
+            <p id="category-name-{{ group.category.pk }}" class="text-base font-medium">
+                <span {% if group.children %}data-category-label{% endif %}>{% if group.category.parent_category %}<span aria-hidden="true" class="mr-2 text-caramel-ink dark:text-caramel-light">↳</span>{% endif %}{{ group.category.name }}</span>
+                {% if group.children %}
+                    <button id="category-toggle-{{ group.category.pk }}" type="button" hidden data-category-toggle aria-expanded="true" aria-controls="category-children-{{ group.category.pk }}" class="category-disclosure">
+                        {% include 'partials/chevron_down.html' %}<span>{{ group.category.name }}</span>
+                    </button>
+                {% endif %}
+            </p>
+            <p class="subtle-copy mt-1">{% if group.category.transaction_type %}{{ group.category.get_transaction_type_display }}{% else %}{% translate 'Unclassified' %}{% endif %} · {% blocktranslate count count=group.category.usage_count %}{{ count }} transaction{% plural %}{{ count }} transactions{% endblocktranslate %}</p>
+            {% if group.category.parent_category %}
+                <p class="subtle-copy">{% blocktranslate with parent_name=group.category.parent_category.name %}Subcategory of {{ parent_name }}{% endblocktranslate %}</p>
+            {% endif %}
+        </div>
+        <div class="flex shrink-0 flex-wrap items-center gap-3">
+            {% if not group.category.parent_category %}<a href="{% url 'categories:create' %}?parent={{ group.category.pk }}" class="quiet-action">{% translate 'Add subcategory' %}</a>{% endif %}
+            <a href="{% url 'categories:update' group.category.pk %}" class="quiet-action">{% translate 'Edit' %}</a>
+            <details class="secondary-actions compact-menu">
+                <summary aria-label="{% translate 'More options' %}: {{ group.category.name }}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'More options' %}: {{ group.category.name }}</span></summary>
+                <div class="secondary-actions-panel"><a href="{% url 'categories:delete' group.category.pk %}" class="text-expense dark:text-expense-light">{% translate 'Delete' %}</a></div>
+            </details>
+        </div>
+    </div>
+    {% if group.children %}
+        <ul id="category-children-{{ group.category.pk }}" aria-labelledby="category-name-{{ group.category.pk }}" class="ml-3 divide-y divide-forest/10 border-t border-forest/10 pl-3 dark:divide-cream/10 dark:border-cream/10">
+            {% for child_group in group.children %}
+                {% include 'categories/_category_group.html' with group=child_group only %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+</li>

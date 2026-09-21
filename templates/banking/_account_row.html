@@ -1,0 +1,17 @@
+{% load i18n %}
+<tr id="account-row-{{ row.account.pk }}" role="row" data-preserve-view>
+    <td role="cell"><a href="{% url 'banking:detail' row.account.bank_id %}#account-row-{{ row.account.pk }}" class="font-medium underline-offset-4 hover:underline">{{ row.account.name }}</a><p class="subtle-copy mt-1">{{ row.currency }}</p></td>
+    <td role="cell" data-label="{% translate 'Balance' %}" class="number whitespace-nowrap"><span class="account-currency">{{ row.currency }}</span> {{ row.balance|floatformat:2 }}</td>
+    <td role="cell" data-label="{% translate 'Set aside' %}" class="number whitespace-nowrap"><span class="account-currency">{{ row.currency }}</span> {{ row.reserved|floatformat:2 }}{% if row.shortfall %}<p class="mt-1 whitespace-normal text-xs text-expense dark:text-expense-light">{% blocktranslate with amount=row.shortfall|floatformat:2 %}Uncovered: {{ amount }}{% endblocktranslate %}</p>{% endif %}</td>
+    <td role="cell" data-label="{% translate 'Available' %}" class="number whitespace-nowrap"><span class="account-currency">{{ row.currency }}</span> <strong class="font-semibold">{{ row.available|floatformat:2 }}</strong>
+        <form class="flex justify-start md:justify-end" method="post" action="{% url 'banking:account_planning' row.account.pk %}" hx-post="{% url 'banking:account_planning' row.account.pk %}" hx-target="#account-row-{{ row.account.pk }}" hx-swap="outerHTML show:none" hx-request='{"noHeaders":false}' hx-boost="false">
+                {% csrf_token %}<input type="hidden" name="return_to" value="{{ return_to|default:'detail' }}"><input type="hidden" name="enabled" value="{% if row.account.planning_enabled %}0{% else %}1{% endif %}">
+                <button id="planning-toggle-{{ row.account.pk }}" type="submit" class="planning-visibility" aria-label="{% if row.account.planning_enabled %}{% blocktranslate with account=row.account.name %}Set aside {{ account }}{% endblocktranslate %}{% else %}{% blocktranslate with account=row.account.name %}Use {{ account }} in planning{% endblocktranslate %}{% endif %}"><svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>{% if not row.account.planning_enabled %}<path d="m3 3 18 18"/>{% endif %}</svg><span>{% if row.account.planning_enabled %}{% translate 'Included' %}{% else %}{% translate 'Set aside' %}{% endif %}</span></button>
+        </form>
+    </td>
+    <td role="cell">
+        <div class="flex flex-wrap items-center justify-end gap-x-2">
+            <a href="{% url 'banking:account_update' row.account.pk %}" class="quiet-action" aria-label="{% blocktranslate with account=row.account.name %}Edit {{ account }} and reserve{% endblocktranslate %}">{% translate 'Edit / reserve' %}</a>
+        </div>
+    </td>
+</tr>

@@ -6,6 +6,85 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .surface-panel { @apply min-w-0 rounded-2xl border border-forest/10 bg-white p-5 dark:border-cream/10 dark:bg-night-surface sm:p-6; box-shadow: 0 2px 3px -2px rgb(26 46 38 / .06); }
+  .metric-panel { @apply flex min-w-0 flex-col gap-2 rounded-2xl border border-forest/10 bg-white p-5 dark:border-cream/10 dark:bg-night-surface; }
+  .page-title { @apply text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-[2rem]; }
+  .section-title { @apply text-lg font-semibold leading-snug tracking-tight sm:text-xl; }
+  .field-label, .metric-label { @apply block text-sm font-medium leading-5 text-forest/80 dark:text-cream/80; }
+  .search-choice-help { @apply sr-only; }
+  .panel-heading { @apply flex flex-wrap items-center justify-between gap-4; }
+  .chart-canvas { @apply mx-auto block w-full; max-height: 22rem; }
+  .label-with-help { @apply flex flex-wrap items-center gap-2; }
+  .primary-link { @apply whitespace-nowrap py-2 text-sm font-medium text-forest/70 transition-colors hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted dark:hover:text-caramel-light; }
+  .primary-link[aria-current="page"] { @apply font-semibold text-forest dark:text-cream; }
+  .nav-disclosure { @apply relative flex shrink-0 items-center rounded-xl transition-colors hover:bg-forest/5 dark:hover:bg-cream/5; }
+  .nav-disclosure:has(> a[aria-current="page"]) { @apply bg-forest/5 dark:bg-cream/10; }
+  .nav-disclosure > .primary-link { @apply flex min-h-11 items-center py-0 pl-3 pr-1; }
+  .nav-disclosure-toggle { @apply flex h-11 w-7 cursor-pointer list-none items-center justify-center rounded-lg text-forest/50 transition-colors hover:text-forest focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream/60 dark:hover:text-cream; }
+  .nav-disclosure-toggle::marker { content: ''; }
+  .nav-disclosure-toggle::-webkit-details-marker { display: none; }
+  .nav-disclosure-toggle svg { @apply h-3.5 w-3.5 transition-transform; }
+  [data-nav-menu][open] > .nav-disclosure-toggle svg { transform: rotate(180deg); }
+  .nav-disclosure-panel { @apply absolute left-0 top-full z-50 mt-2 w-60 space-y-0.5 rounded-2xl border border-forest/10 bg-white p-2 text-sm dark:border-cream/15 dark:bg-night-raised; box-shadow: 0 16px 40px -12px rgb(26 46 38 / .2), 0 2px 6px rgb(26 46 38 / .04); max-width: calc(100vw - 2rem); }
+  .nav-disclosure-panel > a { @apply flex min-h-11 items-center rounded-lg px-3 py-2 text-left font-normal text-forest transition-colors hover:bg-forest/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream dark:hover:bg-cream/10; }
+  .mobile-navigation-links .nav-disclosure { @apply block w-full; }
+  .mobile-navigation-links .nav-disclosure > a { @apply inline-flex py-3 pl-3 pr-12; }
+  .mobile-navigation-links .nav-disclosure-toggle { @apply absolute right-1 top-0 h-12 w-11; }
+  .mobile-navigation-links .nav-disclosure-panel { @apply static mt-0 w-full border-0 bg-transparent px-3 pb-3 shadow-none dark:bg-transparent; }
+  .mobile-navigation-links .nav-disclosure-panel > a { @apply text-base; }
+  .section-nav { @apply flex flex-wrap gap-x-6 gap-y-2 border-b border-forest/15 dark:border-cream/15; }
+  .section-nav a { @apply border-b-2 border-transparent px-1 py-3 text-sm text-forest/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted; }
+  .section-nav a[aria-current="page"] { @apply border-caramel font-medium text-forest dark:text-cream; }
+  .workspace-header { @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between; }
+  .action-link { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-forest/25 px-3 py-2 text-sm font-medium transition-colors hover:bg-forest/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:border-cream/25 dark:hover:bg-cream/10; }
+  .action-primary { @apply action-link border-transparent bg-caramel text-forest-deep hover:bg-caramel-light; }
+  .quiet-action { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-forest/70 transition-colors hover:bg-forest/5 hover:text-forest focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream/70 dark:hover:bg-cream/10 dark:hover:text-cream; }
+  .secondary-actions { @apply relative; }
+  .secondary-actions > summary { @apply action-link cursor-pointer list-none; }
+  .secondary-actions > summary::marker { content: ''; }
+  .secondary-actions > summary::-webkit-details-marker { display: none; }
+  .secondary-actions.compact-menu > summary { @apply min-h-11 min-w-11 rounded-lg border-transparent px-2 py-2 text-lg hover:bg-forest/5 dark:hover:bg-cream/10; }
+  .secondary-actions-panel { @apply absolute right-0 z-30 mt-2 w-64 space-y-1 rounded-xl border border-forest/15 bg-white p-2 shadow-lg dark:border-cream/20 dark:bg-night-raised; max-width: calc(100vw - 2rem); }
+  .secondary-actions-panel > a, .secondary-actions-panel > form > button { @apply block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:hover:bg-night; }
+  .data-table { @apply w-full border-collapse text-left text-sm; }
+  .data-table th { @apply border-b border-forest/15 px-3 py-3 text-xs font-medium text-forest/70 dark:border-cream/15 dark:text-night-muted; }
+  .data-table td { @apply border-b border-forest/10 px-3 py-4 align-top dark:border-cream/10; }
+  .data-table .number { @apply text-right tabular-nums; }
+  .account-table { @apply table-fixed; min-width: 880px; }
+  .account-table td { @apply align-middle; }
+  .account-table tbody tr:last-child td { @apply border-b-0; }
+  .account-table tbody tr { @apply transition-colors hover:bg-forest/[0.02] dark:hover:bg-cream/[0.02]; }
+  .account-currency { @apply text-xs font-medium text-forest/70 dark:text-cream/50; }
+  .planning-visibility { @apply inline-flex min-h-11 items-center gap-1.5 rounded-lg text-xs text-forest/70 transition-colors hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream/60 dark:hover:text-caramel-light; }
+  .planning-sheet { @apply w-full border-collapse text-left text-sm tabular-nums; }
+  .planning-sheet th { @apply border-b border-forest/15 px-3 py-3 text-xs font-medium normal-case tracking-normal text-forest/70 dark:border-cream/15 dark:text-night-muted; }
+  .planning-sheet td { @apply h-12 border-b border-forest/10 px-3 py-2 align-middle dark:border-cream/10; }
+  .planning-sheet tbody tr { @apply transition-colors hover:bg-forest/[0.02] dark:hover:bg-cream/[0.02]; }
+  .planning-sheet .number { @apply text-right tabular-nums; }
+  .planning-sheet-input { @apply h-10 w-full min-w-0 rounded-lg border border-forest/15 bg-white px-3 py-2 text-right text-sm tabular-nums focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/25 dark:border-cream/20 dark:bg-night; }
+  .subtle-copy { @apply text-sm text-forest/70 dark:text-night-muted; }
+  .category-disclosure { @apply -my-2 inline-flex min-h-11 items-center gap-2 rounded-lg py-2 text-left font-medium hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-caramel dark:hover:text-caramel-light; }
+  .category-disclosure svg { @apply shrink-0 text-forest/70 dark:text-night-muted; }
+  .category-disclosure[aria-expanded="false"] svg { transform: rotate(-90deg); }
+  [data-category-tree] [hidden] { display: none; }
+  @media (max-width: 767px) {
+    .account-table { @apply block min-w-0; }
+    .account-table colgroup { display: none; }
+    .account-table thead { @apply sr-only; }
+    .account-table tbody { @apply block; }
+    .account-table tbody tr { @apply grid grid-cols-3 gap-x-3 gap-y-4 border-b border-forest/10 py-5 dark:border-cream/10; }
+    .account-table tbody tr:last-child { @apply border-b-0 pb-0; }
+    .account-table td { @apply block border-0 p-0 text-left; }
+    .account-table td:first-child, .account-table td:last-child { grid-column: 1 / -1; }
+    .account-table td[data-label]::before { content: attr(data-label); @apply mb-1.5 block text-xs font-normal text-forest/70 dark:text-night-muted; }
+    .account-table td .account-currency { @apply hidden; }
+    .account-table td:last-child > div { @apply justify-start; }
+    .account-table td:last-child .quiet-action { @apply px-0; }
+    .account-table td:last-child > div { column-gap: 1.5rem; }
+  }
+}
+
 @layer base {
   html {
     background-color: #FAF8F3;
@@ -84,11 +163,17 @@
     @apply rounded-lg bg-forest/5 px-3 py-2 font-medium dark:bg-cream/5;
   }
   .help-fallback-content {
-    position: absolute;
-    right: 0;
-    top: 2rem;
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
     z-index: 70;
-    width: min(22rem, calc(100vw - 5rem));
+    width: auto;
+    max-width: 22rem;
+    max-height: calc(100dvh - 2rem);
+    margin-inline: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .search-choice-results { position: relative; }
   .search-choice-option {

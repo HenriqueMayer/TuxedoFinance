@@ -15,14 +15,15 @@ releases, persistent volumes and isolated restore rehearsals.
 | [Contributing](../CONTRIBUTING.md) | Canonical developer setup, checks, translations, browser isolation, and documentation conventions. |
 | [Interface preview](https://henriquemayer.github.io/TuxedoFinance/) | Bilingual static tour of the application using synthetic financial data. |
 | [Preview maintenance](../.github/preview/README.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
-| [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and clean-reset delivery. |
+| [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and release compatibility. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
-| [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and reset contract. |
+| [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and migration compatibility. |
 | [frontend.md](frontend.md) | Server-rendered design system, viewport/focus preservation, mandatory keyboard/searchable-choice form contract, progressive disclosure and banking UI structure. |
 | [design-system.html](design-system.html) | Canonical visual tokens and component catalog. |
 | [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
 | [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |
 | [coverage-baseline.md](coverage-baseline.md) | Dated measurements, 70% combined line/branch floor, and report artifacts. |
+| [implementation-review.md](implementation-review.md) | Planning evolution review, financial corrections, validation evidence and deployment boundaries. |
 
 ## Per-app reference
 
@@ -38,8 +39,8 @@ releases, persistent volumes and isolated restore rehearsals.
   investments and net-worth read models.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
   banks/accounts for provider and cash endpoints.
-- [apps/sandbox.md](apps/sandbox.md) — authenticated, non-persistent salary and
-  monthly-budget planning.
+- [apps/sandbox.md](apps/sandbox.md) — private planning drafts, salary/budget
+  scenarios, commitment snapshots and contribution/yield simulations.
 
 ## Repository layout
 
@@ -63,10 +64,11 @@ and preview use the same locked frontend toolchain.
 
 ## Documentation status
 
-These documents describe the current `0.2.x` code and relevant unreleased
-changes. Its schema has no automatic upgrade path from pre-release legacy databases; those installations
-must start with a newly migrated SQLite database and recreate or manually import
-their records.
+These documents describe `0.3.0` and the changes under `Unreleased`. Supported
+released installations use the committed incremental migrations and preserve
+existing records. The historical clean reset applied only to pre-release legacy
+schemas; it is not an instruction to reset a released installation. See
+[Docker updates](docker.md#update) before upgrading.
 
 The repository does not include a runtime demo database, shared account, fixed
 credential, or data-population management command. The developer-only preview

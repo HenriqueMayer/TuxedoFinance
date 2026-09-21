@@ -1,0 +1,8 @@
+{% load i18n %}
+<div class="overflow-x-auto" role="region" aria-label="{% blocktranslate with bank=bank.name %}Accounts at {{ bank }}{% endblocktranslate %}" tabindex="0">
+    <table class="data-table account-table" role="table">
+        <colgroup><col class="w-[28%]"><col class="w-[18%]"><col class="w-[18%]"><col class="w-[18%]"><col class="w-[18%]"></colgroup>
+        <thead><tr role="row"><th scope="col">{% translate 'Account' %}</th><th scope="col" class="number">{% translate 'Balance' %}</th><th scope="col" class="number">{% translate 'Set aside' %}</th><th scope="col" class="number">{% translate 'Available' %}</th><th scope="col"><span class="sr-only">{% translate 'Actions' %}</span></th></tr></thead>
+        <tbody>{% for row in bank.planning_rows %}{% include 'banking/_account_row.html' %}{% empty %}<tr><td colspan="5" class="subtle-copy">{% translate 'No accounts yet.' %}</td></tr>{% endfor %}</tbody>
+    </table>
+</div>

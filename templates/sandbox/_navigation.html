@@ -1,0 +1,6 @@
+{% load i18n %}
+<nav class="section-nav" aria-label="{% translate 'Planning sections' %}">
+    <a href="{% url 'sandbox:index' %}" {% if kind == 'budget' %}aria-current="page"{% endif %}>{% translate "Monthly plan" %}</a>
+    <a href="{% url 'sandbox:simulation' %}" {% if kind == 'yield' %}aria-current="page"{% endif %}>{% translate "Yield simulation" %}</a>
+    <a href="{% url 'sandbox:drafts' %}">{% translate "Saved drafts" %}</a>
+</nav>

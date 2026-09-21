@@ -24,7 +24,6 @@ from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import (
     TIMESERIES_MONTHS,
     cleanup_investment_ledger,
-    get_asset_positions,
     get_monthly_flow_in_base,
     get_portfolio_groups,
     get_total_in_base_timeseries,
@@ -61,15 +60,27 @@ class InvestmentListView(LoginRequiredMixin, ListView):
     context_object_name = 'investments'
     paginate_by = 10
 
+    def get_section(self):
+        return 'cash' if self.request.GET.get('section') == 'cash' else 'portfolio'
+
+    def get_purpose(self):
+        return (
+            InvestmentProduct.Purpose.MONTHLY_CASH if self.get_section() == 'cash'
+            else InvestmentProduct.Purpose.INVESTMENT
+        )
+
     def get_template_names(self):
         if self.request.headers.get('HX-Request') == 'true':
             if self.request.headers.get('HX-Target') == 'investment-movements':
                 return ['investments/_investment_movements.html']
-            return ['investments/_investments_charts.html']
+            if self.request.headers.get('HX-Target') == 'investments-charts':
+                return ['investments/_investments_charts.html']
         return [self.template_name]
 
     def get_queryset(self):
-        queryset = Investment.objects.filter(user=self.request.user).select_related(
+        queryset = Investment.objects.filter(
+            user=self.request.user, product__purpose=self.get_purpose(),
+        ).select_related(
             'product__bank', 'asset', 'source_account', 'source_program',
             'destination_account'
         )
@@ -102,26 +113,17 @@ class InvestmentListView(LoginRequiredMixin, ListView):
         base = UserPreference.for_user(user).base_currency
         total = Decimal('0.00')
         missing = set()
-        for position in get_asset_positions(user):
-            try:
-                total += convert(
-                    user,
-                    position['value_flow'],
-                    position['asset'].currency,
-                    base,
-                )
-            except MissingExchangeRate:
-                missing.add(position['asset'].currency)
+        purpose = self.get_purpose()
 
         total_offset = _parse_offset(self.request, 'total_offset')
         flow_offset = _parse_offset(self.request, 'flow_offset')
         total_rows, total_missing = get_total_in_base_timeseries(
-            user, base, months=TIMESERIES_MONTHS, offset=total_offset
+            user, base, months=TIMESERIES_MONTHS, offset=total_offset, purpose=purpose,
         )
         flow_rows, flow_missing = get_monthly_flow_in_base(
-            user, base, months=TIMESERIES_MONTHS, offset=flow_offset
+            user, base, months=TIMESERIES_MONTHS, offset=flow_offset, purpose=purpose,
         )
-        portfolio_groups = get_portfolio_groups(user)
+        portfolio_groups = get_portfolio_groups(user, purpose=purpose)
         portfolio_missing = set()
         for bank in portfolio_groups:
             for product in bank['products']:
@@ -130,11 +132,13 @@ class InvestmentListView(LoginRequiredMixin, ListView):
                         asset['base_balance'] = convert(
                             user, asset['balance'], asset['currency'], base
                         )
+                        total += asset['base_balance']
                     except MissingExchangeRate:
                         asset['base_balance'] = None
                         portfolio_missing.add(asset['currency'])
         today = timezone.localdate()
         context.update({
+            'selected_section': self.get_section(),
             'portfolio_groups': portfolio_groups,
             'simulated_total': total.quantize(Decimal('0.01')),
             'missing_rate_currencies': sorted(
@@ -144,13 +148,13 @@ class InvestmentListView(LoginRequiredMixin, ListView):
             'kind_choices': Investment.Kind.choices,
             'selected_kind': self.request.GET.get('kind', '').upper(),
             'bank_choices': Bank.objects.filter(user=user),
-            'product_choices': InvestmentProduct.objects.filter(user=user).select_related('bank'),
+            'product_choices': InvestmentProduct.objects.filter(user=user, purpose=purpose).select_related('bank'),
             'asset_choices': Asset.objects.filter(user=user),
             'selected_bank': self.request.GET.get('bank', ''),
             'selected_product': self.request.GET.get('product', ''),
             'selected_asset': self.request.GET.get('asset', ''),
             'search_query': self.request.GET.get('q', '').strip(),
-            'has_investments': Investment.objects.filter(user=user).exists(),
+            'has_investments': Investment.objects.filter(user=user, product__purpose=purpose).exists(),
             'chart_total': build_line_chart(total_rows, [float(row['total']) for row in total_rows]),
             'chart_flow': build_bar_chart(flow_rows, [
                 {'name': _('Deposits'), 'tone': 'income', 'values': [float(row['deposits']) for row in flow_rows]},
@@ -182,6 +186,12 @@ class InvestmentFormMixin(LoginRequiredMixin):
     form_class = InvestmentForm
     template_name = 'investments/form.html'
     success_url = reverse_lazy('investments:list')
+
+    def get_success_url(self):
+        url = str(self.success_url)
+        if self.object.product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH:
+            return f'{url}?section=cash'
+        return url
 
     def get_queryset(self):
         return Investment.objects.filter(user=self.request.user)
@@ -350,13 +360,16 @@ class SetupDeleteView(LoginRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['entity_label'] = self.entity_label
+        if isinstance(self.object, Asset):
+            context['delete_warning'] = self.object.deletion_block_reason
         return context
 
     def form_valid(self, form):
         try:
-            response = super().form_valid(form)
+            with transaction.atomic():
+                response = super().form_valid(form)
         except ProtectedError:
-            messages.error(self.request, _('This item is used by investment operations.'))
+            messages.error(self.request, _('This item has an opening position or investment history and cannot be deleted.'))
             return redirect('investments:settings')
         messages.success(
             self.request,
@@ -385,6 +398,12 @@ class InvestmentDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'investments/confirm_delete.html'
     context_object_name = 'investment'
     success_url = reverse_lazy('investments:list')
+
+    def get_success_url(self):
+        url = str(self.success_url)
+        if self.object.product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH:
+            return f'{url}?section=cash'
+        return url
 
     def get_queryset(self):
         return Investment.objects.filter(user=self.request.user)

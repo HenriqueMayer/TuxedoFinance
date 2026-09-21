@@ -1,0 +1,29 @@
+{% load i18n %}
+<div class="nav-disclosure relative flex items-center" data-nav-item="{{ area }}">
+    <a href="{{ link_url }}" class="primary-link {{ extra_class }}"{% if area == 'overview' and request.resolver_match.namespace == 'dashboard' or area == 'activity' and request.resolver_match.namespace == 'transactions' or area == 'activity' and request.resolver_match.namespace == 'categories' or area == 'banks' and request.resolver_match.namespace == 'banking' or area == 'investments' and request.resolver_match.namespace == 'investments' or area == 'planning' and request.resolver_match.namespace == 'sandbox' %} aria-current="page"{% endif %}>{{ link_label }}</a>
+    <details data-nav-menu>
+        <summary id="nav-{{ nav_variant|default:'desktop' }}-{{ area }}-toggle" tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="{{ link_label }}: {% translate 'More options' %}" aria-controls="nav-{{ nav_variant|default:'desktop' }}-{{ area }}-panel">{% include 'partials/chevron_down.html' %}</summary>
+        <div id="nav-{{ nav_variant|default:'desktop' }}-{{ area }}-panel" class="nav-disclosure-panel">
+            {% if area == 'overview' %}
+                <a class="{{ extra_class }}" href="{% url 'dashboard:index' %}">{% translate 'Dashboard' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'dashboard:reports' %}">{% translate 'Reports' %}</a>
+            {% elif area == 'activity' %}
+                <a class="{{ extra_class }}" href="{% url 'transactions:list' %}">{% translate 'Transactions' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'categories:list' %}">{% translate 'Categories' %}</a>
+            {% elif area == 'banks' %}
+                <a class="{{ extra_class }}" href="{% url 'banking:list' %}">{% translate 'Bank balances' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'banking:transfer_create' %}">{% translate 'Transfer' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'banking:exchange_rates' %}">{% translate 'Exchange rates' %}</a>
+            {% elif area == 'investments' %}
+                <a class="{{ extra_class }}" href="{% url 'investments:list' %}">{% translate 'Portfolio' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'investments:list' %}?section=cash">{% translate 'Remunerated cash' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'sandbox:simulation' %}">{% translate 'Simulate returns' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'investments:settings' %}">{% translate 'Products and assets' %}</a>
+            {% elif area == 'planning' %}
+                <a class="{{ extra_class }}" href="{% url 'sandbox:index' %}">{% translate 'Monthly plan' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'sandbox:simulation' %}">{% translate 'Yield simulation' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'sandbox:drafts' %}">{% translate 'Saved drafts' %}</a>
+            {% endif %}
+        </div>
+    </details>
+</div>

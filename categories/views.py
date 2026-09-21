@@ -1,12 +1,14 @@
 import csv
 import io
+from collections import defaultdict
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import IntegrityError, transaction
-from django.db.models import ProtectedError
+from django.db.models import Case, Count, IntegerField, ProtectedError, Q, Value, When
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -17,6 +19,7 @@ from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from categories.forms import CategoryForm, CategoryImportForm
 from categories.models import Category
+from core.csv import export_row
 
 
 class CategoryListView(LoginRequiredMixin, ListView):
@@ -33,7 +36,11 @@ class CategoryListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = Category.objects.filter(user=self.request.user).select_related(
             'parent_category'
-        )
+        ).annotate(
+            usage_count=Count('transactions', filter=Q(transactions__user=self.request.user)),
+            group_name=Coalesce('parent_category__name', 'name'),
+            hierarchy_order=Case(When(parent_category__isnull=True, then=Value(0)), default=Value(1), output_field=IntegerField()),
+        ).order_by('group_name', 'hierarchy_order', 'name')
 
         search = self.request.GET.get('q', '').strip()
         if search:
@@ -43,13 +50,45 @@ class CategoryListView(LoginRequiredMixin, ListView):
         if level:
             queryset = queryset.filter(parent_category__isnull=level == 'top')
 
+        selected_type = self.request.GET.get('type', '')
+        if selected_type in Category.TransactionType.values:
+            queryset = queryset.filter(transaction_type=selected_type)
+        elif selected_type == 'unclassified':
+            queryset = queryset.filter(Q(transaction_type__isnull=True) | Q(transaction_type=''))
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '').strip()
         context['selected_level'] = self._selected_level()
+        context['selected_type'] = self.request.GET.get('type', '')
         context['has_categories'] = Category.objects.filter(user=self.request.user).exists()
+        # Group only visible results: a matching child whose parent was filtered
+        # out must remain visible. Walk iteratively so legacy cycles cannot lose
+        # records or cause infinite recursion while constructing the forest.
+        categories = list(context['categories'])
+        visible_ids = {category.pk for category in categories}
+        children = defaultdict(list)
+        roots = []
+        for category in categories:
+            if category.parent_category_id in visible_ids:
+                children[category.parent_category_id].append(category)
+            else:
+                roots.append(category)
+        groups, visited = [], set()
+        for category in [*roots, *categories]:
+            pending = [(category, groups)]
+            while pending:
+                current, siblings = pending.pop()
+                if current.pk in visited:
+                    continue
+                visited.add(current.pk)
+                group = {'category': current, 'children': []}
+                siblings.append(group)
+                pending.extend((child, group['children']) for child in reversed(children[current.pk]))
+        context['category_groups'] = groups
+        context['has_category_groups'] = any(group['children'] for group in groups)
         return context
 
 
@@ -68,6 +107,15 @@ class CategoryFormMixin(LoginRequiredMixin):
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def get_initial(self):
+        initial = super().get_initial()
+        parent_id = self.request.GET.get('parent', '')
+        if parent_id.isdigit() and not getattr(self, 'object', None):
+            parent = Category.objects.filter(pk=parent_id, user=self.request.user, parent_category__isnull=True).first()
+            if parent is not None:
+                initial.update(parent_category=parent.pk, transaction_type=parent.transaction_type)
+        return initial
 
     def form_valid(self, form):
         """Last line of defence for the unique-name constraint.
@@ -170,18 +218,20 @@ def delete_all_categories(request):
 
 @login_required
 def export_categories(request):
+    spreadsheet = request.GET.get('format') == 'spreadsheet'
     response = HttpResponse(content_type='text/csv; charset=utf-8')
-    response['Content-Disposition'] = 'attachment; filename="categories.csv"'
+    filename = 'categories-spreadsheet.csv' if spreadsheet else 'categories.csv'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     response.write('\ufeff')
     writer = csv.writer(response)
     writer.writerow(('name', 'transaction_type', 'parent_category'))
     categories = Category.objects.filter(user=request.user).select_related('parent_category')
     for category in categories:
-        writer.writerow((
+        writer.writerow(export_row((
             category.name,
             category.transaction_type or '',
             category.parent_category.name if category.parent_category else '',
-        ))
+        ), spreadsheet=spreadsheet))
     return response
 
 

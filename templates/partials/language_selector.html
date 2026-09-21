@@ -9,5 +9,5 @@
         <option class="bg-white text-forest dark:bg-night-surface dark:text-cream" value="en"{% if LANGUAGE_CODE == 'en' %} selected{% endif %}>EN</option>
         <option class="bg-white text-forest dark:bg-night-surface dark:text-cream" value="pt-br"{% if LANGUAGE_CODE == 'pt-br' %} selected{% endif %}>PT</option>
     </select>
-    <noscript><button type="submit" class="ml-1 text-xs underline">{% translate 'Apply' %}</button></noscript>
+    {% if native_submit %}<button type="submit" class="ml-1 text-xs underline">{% translate 'Apply' %}</button>{% else %}<noscript><button type="submit" class="ml-1 text-xs underline">{% translate 'Apply' %}</button></noscript>{% endif %}
 </form>

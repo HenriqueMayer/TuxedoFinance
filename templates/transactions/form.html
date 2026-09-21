@@ -49,7 +49,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             </div>
             <p id="credit-card-account" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
         </div>
-        {% include 'partials/preferred_date_field.html' with field=form.date %}
+        {% include 'partials/form_field.html' with field=form.date %}
 
         <details class="rounded-xl ring-1 ring-forest/10 dark:ring-cream/10"{% if form.is_fixed.value or form.fixed_until.errors or form.notes.errors or form.is_fixed.errors %} open{% endif %}>
             <summary class="cursor-pointer px-4 py-3 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/80">{% translate "Advanced options" %}</summary>
@@ -57,12 +57,11 @@ through the shared partials/form_field.html renderer (PRD §9.4).
                 <div class="flex items-center gap-3 rounded-xl bg-cream-dark p-4 dark:bg-night">
                     {{ form.is_fixed }}
                     <div>
-                        <label for="{{ form.is_fixed.id_for_label }}" class="block text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{{ form.is_fixed.label }}</label>
-                        {% if form.is_fixed.help_text %}<p id="{{ form.is_fixed.id_for_label }}-help" class="text-sm text-forest/70 dark:text-night-muted">{{ form.is_fixed.help_text }}</p>{% endif %}
+                        {% include 'partials/field_label.html' with field=form.is_fixed %}
                         {% for error in form.is_fixed.errors %}<p id="{{ form.is_fixed.id_for_label }}-error-{{ forloop.counter }}" role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
                     </div>
                 </div>
-                <div id="fixed-until-fields" data-has-errors="{{ form.fixed_until.errors|yesno:'true,false' }}">{% include 'partials/preferred_date_field.html' with field=form.fixed_until %}</div>
+                <div id="fixed-until-fields" data-has-errors="{{ form.fixed_until.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fixed_until %}</div>
                 {% include 'partials/form_field.html' with field=form.notes %}
             </div>
         </details>
@@ -83,46 +82,6 @@ through the shared partials/form_field.html renderer (PRD §9.4).
 
 {% block extra_js %}
 <script>
-    document.querySelectorAll('[data-preferred-date-field]').forEach(group => {
-        const visible = group.querySelector('input:not([data-native-date-picker])');
-        const picker = group.querySelector('[data-native-date-picker]');
-        const openPicker = group.querySelector('[data-open-date-picker]');
-        const order = group.dataset.dateOrder;
-        if (!visible || !picker || !openPicker) return;
-
-        const toIso = value => {
-            const parts = value.split('/');
-            if (parts.length !== 3) return '';
-            const [first, second, year] = parts;
-            const month = order === 'MDY' ? first : second;
-            const day = order === 'MDY' ? second : first;
-            return /^\d{2}$/.test(day) && /^\d{2}$/.test(month) && /^\d{4}$/.test(year)
-                ? `${year}-${month}-${day}` : '';
-        };
-        const fromIso = value => {
-            const [year, month, day] = value.split('-');
-            return order === 'MDY' ? `${month}/${day}/${year}` : `${day}/${month}/${year}`;
-        };
-
-        openPicker.hidden = false;
-        picker.value = toIso(visible.value);
-        openPicker.addEventListener('click', () => {
-            if (typeof picker.showPicker === 'function') picker.showPicker();
-            else picker.click();
-        });
-        picker.addEventListener('change', () => {
-            if (!picker.value) return;
-            visible.value = fromIso(picker.value);
-            visible.dispatchEvent(new Event('change', {bubbles: true}));
-        });
-        visible.addEventListener('input', () => {
-            const digits = visible.value.replace(/\D/g, '').slice(0, 8);
-            visible.value = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)]
-                .filter(Boolean).join('/');
-            picker.value = toIso(visible.value);
-        });
-    });
-
     (function () {
         const category = document.getElementById('{{ form.category.id_for_label }}');
         const channel = document.getElementById('{{ form.payment_channel.id_for_label }}');

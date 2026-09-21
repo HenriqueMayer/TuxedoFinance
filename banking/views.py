@@ -1,9 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Case, DecimalField, F, Prefetch, Q, Sum, When
 from django.db.models.deletion import ProtectedError
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponseBadRequest
+from django.views.decorators.http import require_POST
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -37,8 +40,51 @@ from banking.services import (
     create_reward_redemption,
     create_transfer,
     sync_loyalty_entry_funding,
+    get_planning_availability,
 )
 from transactions.services import sync_user_ledger
+
+
+def _programs(user):
+    return LoyaltyProgram.objects.filter(user=user).annotate(
+        displayed_balance=Sum(
+            Case(When(entries__direction='CREDIT', then=F('entries__amount')),
+                 default=-F('entries__amount'), output_field=DecimalField()),
+            default=0,
+        )
+    )
+
+
+def _decorate_banks(banks, availability):
+    rows = {row['account'].pk: row for row in availability['account_rows']}
+    for bank in banks:
+        bank.planning_rows = []
+        for account in bank.accounts.all():
+            row = dict(rows[account.pk])
+            row['account'] = account
+            bank.planning_rows.append(row)
+        bank.cash_pots = [row for row in availability['cash_pots'] if row['product'].bank_id == bank.pk]
+
+
+@login_required
+@require_POST
+def account_planning(request, pk):
+    account = get_object_or_404(BankAccount, pk=pk, user=request.user)
+    enabled = request.POST.get('enabled')
+    if enabled not in {'0', '1'}:
+        return HttpResponseBadRequest('Invalid planning selection.')
+    account.planning_enabled = enabled == '1'
+    account.save(update_fields=['planning_enabled', 'updated_at'])
+    if request.headers.get('HX-Target') == f'account-row-{account.pk}':
+        availability = get_planning_availability(request.user)
+        row = next(row for row in availability['account_rows'] if row['account'].pk == account.pk)
+        return render(request, 'banking/_planning_response.html', {
+            'row': row, 'availability': availability,
+            'return_to': request.POST.get('return_to', 'detail'),
+        })
+    messages.success(request, _('Planning availability updated. The account balance is unchanged.'))
+    url = reverse('banking:list') if request.POST.get('return_to') == 'list' else reverse('banking:detail', args=[account.bank_id])
+    return redirect(f'{url}#account-row-{account.pk}')
 
 
 class BankListView(LoginRequiredMixin, ListView):
@@ -67,7 +113,7 @@ class BankListView(LoginRequiredMixin, ListView):
             Prefetch('accounts', queryset=accounts),
             Prefetch(
                 'loyalty_programs',
-                queryset=LoyaltyProgram.objects.filter(user=self.request.user),
+                queryset=_programs(self.request.user),
             ),
         )
         if search:
@@ -83,9 +129,9 @@ class BankListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '').strip()
-        context['independent_programs'] = LoyaltyProgram.objects.filter(
-            user=self.request.user, bank__isnull=True
-        ).prefetch_related('cards')
+        context['independent_programs'] = _programs(self.request.user).filter(bank__isnull=True).prefetch_related('cards')
+        context['availability'] = get_planning_availability(self.request.user)
+        _decorate_banks(context['banks'], context['availability'])
         return context
 
 
@@ -114,7 +160,7 @@ class BankDetailView(LoginRequiredMixin, DetailView):
             Prefetch('accounts', queryset=accounts),
             Prefetch(
                 'loyalty_programs',
-                queryset=LoyaltyProgram.objects.filter(user=self.request.user).prefetch_related(
+                queryset=_programs(self.request.user).prefetch_related(
                     'cards'
                 ),
             ),
@@ -122,13 +168,15 @@ class BankDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        account_ids = self.object.accounts.values_list('pk', flat=True)
+        account_ids = [account.pk for account in self.object.accounts.all()]
+        context['availability'] = get_planning_availability(self.request.user)
+        _decorate_banks([self.object], context['availability'])
         context['movements'] = BankMovement.objects.filter(
             user=self.request.user, account_id__in=account_ids
         ).select_related('account').order_by('-effective_date', '-created_at')[:20]
         context['invoices'] = CardInvoice.objects.filter(
             user=self.request.user, card__account_id__in=account_ids
-        ).select_related('card').order_by('-reference_month')[:12]
+        ).select_related('card__account').order_by('-reference_month')[:12]
         return context
 
 

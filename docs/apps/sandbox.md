@@ -1,58 +1,109 @@
-# Salary sandbox
+# Planning and saved scenarios
 
-The authenticated `/sandbox/` page is a small, non-persistent salary and
-monthly-budget estimator. Its calculation path does not read or write
-transactions, bank accounts, investments, user preferences, or scenario data in
-the authenticated session. Shared template context still resolves presentation
-preferences through `core.context_processors.currency`; a missing preference
-may be initialized there. Scenario inputs and results remain request-local.
+The authenticated `/sandbox/` workspace contains the salary calculator, monthly
+planning, future commitments and the hypothetical investment simulator. Existing
+URLs remain valid. Calculations read financial sources without synchronizing or
+posting ledger entries. Only an explicit save, duplicate or delete changes the
+user's `ScenarioDraft` records.
 
-## Calculation modes
+## Salary and monthly budget
 
-The user enters one gross monthly salary and chooses between two modes:
+The user enters one gross monthly salary and chooses between:
 
-- **Automatic CLT:** applies the versioned 2026 employee INSS and IRRF rules,
-  chooses the most favorable monthly IRRF deduction, and projects vacation
-  with one-third, 13th salary, FGTS, annual net income, and normalized monthly
-  net income.
-- **Manual:** subtracts user-defined monthly deductions or taxes entered as a
-  fixed BRL amount or as a percentage of gross salary. Its annual projection
-  repeats the resulting month twelve times and does not infer benefits, extra
-  payments, or tax rules.
+- **Automatic CLT:** the versioned 2026 employee INSS and IRRF rules, including
+  the most favorable monthly IRRF deduction, vacation with one-third, 13th salary,
+  FGTS, annual net income and normalized monthly net income.
+- **Manual:** deductions entered as BRL amounts or percentages of gross salary.
+  Annual projection repeats the resulting month twelve times; it does not infer
+  benefits, extra payments or tax rules.
 
 The automatic catalog was reviewed on 2026-09-02 against the official
 [INSS contribution table](https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal),
 [2026 Receita Federal tables](https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026),
 and [FGTS rules](https://www.fgts.gov.br/Paginas/sobre-o-fgts/regras.aspx).
-The review date and source URLs are versioned with the values in
-`sandbox/tax_rules/y2026.py`. Runtime calculation never searches the internet.
+Values, sources and the review date are versioned in `sandbox/tax_rules/y2026.py`.
+Runtime calculation never searches the internet.
 
-## Monthly plan
+The monthly budget has two expense bases. **Free estimate** uses fixed costs in
+BRL or as a percentage of take-home pay. **Recorded commitments** replaces that
+aggregate with the selected month's captured obligations; it does not add them
+again to the fixed-cost percentage. Additional expense rows represent extra
+hypotheses. Emergency reserve and investment targets remain percentages.
+Negative remainders stay visible.
 
-Both modes feed the same monthly plan. Fixed costs accept either BRL or a
-percentage of net income. Emergency reserve and investment targets use
-percentages. Additional expenses can be entered in BRL or as percentages. The
-result keeps negative remainders visible instead of hiding a deficit.
+Manual payroll deductions and additional expenses are separate lists, with a
+maximum of 20 rows each. Invalid or excessive input is rejected explicitly and
+retained for correction. Add/remove controls also work through ordinary POSTs
+without JavaScript.
 
-Manual deductions and monthly-plan expenses are separate lists: deductions
-produce take-home pay, while expenses explain how that take-home pay is used.
-Up to 20 rows from each list are accepted per request.
+Salary planning uses BRL. The separate real-resources section uses the user's
+base reporting currency and the shared Banking availability service. Hypothetical
+salary is never added to a bank balance that may already contain it. Reserves,
+excluded accounts and redeemable cash pots therefore have the same meaning in
+Banks, Overview and Planning.
 
-## Interaction and privacy
+## Future commitments
 
-Every input and calculated metric has short bilingual help. Hover or keyboard
-focus opens the shared [question-mark help](../frontend.md#question-mark-help).
-Mouse clicks never pin it; leaving the icon and text, clicking outside or Escape
-dismisses it. Touch uses tap to toggle. Positioning is viewport-bound, including
-inside scrolling tables. The native no-JavaScript fallback retains the same copy.
+Capture builds a read-only 12-month snapshot from the selected month. It expands
+one-off expenses, recurring expenses, installments, points purchases and redemption
+IOF by payment date. Card items follow invoice due dates; invoice totals are not
+added a second time. Rows identify source, installment, instrument, native currency
+and amount. Conversion to BRL is frozen at capture, with missing exchange rates
+explicitly incomplete. A user may exclude a row or supply a hypothetical BRL
+amount without editing its source.
 
-Inputs are submitted by POST and never placed in the URL. HTMX replaces only
-`#sandbox-workspace`; a regular form POST is the complete fallback. The app has
-no models or migrations, and no salary, deduction, or expense is retained after
-the request.
+Refreshing requires a preview and explicit Apply action. Stable source/occurrence
+identifiers retain manual amounts and exclusions when dates or amounts change.
+Removed sources remain marked until the user excludes them. Capturing or reviewing
+changes does not silently replace a saved draft. The signed snapshot is bound to
+its owner; recalculating cannot accept another user's snapshot.
 
-## Form keyboard behavior
+A snapshot holds at most 2,000 obligations across its 12 months. Capturing or
+merging beyond that limit returns a visible error and keeps the previous snapshot;
+it never silently truncates obligations. The finite request field limit of 10,000
+supports every editable row without JavaScript. Django's default 2.5 MB request
+body limit remains in effect.
 
-Automatic CLT is opt-in on a new scenario. Its optional details appear after the checkbox is selected; transport cost appears only after the transport voucher is enabled. Switching modes clears inactive values, and invalid submissions expose errors inside advanced details. Without JavaScript both modes retain their native controls.
+## Drafts and privacy
 
-Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+`ScenarioDraft` stores owner, name, kind, input payload and created/updated times.
+Payloads include schema/calculation versions, original input format, tax-rule year,
+completion state and an optional dated commitment snapshot. Valid values have a
+canonical representation; invalid input remains recoverable. Incomplete drafts
+are allowed but never display a projected total as if calculation succeeded.
+
+Save, open, duplicate, delete and compare up to three drafts through `/sandbox/drafts/`.
+All lookups are owner-scoped. Inputs use POST rather than query strings. There is
+no autosave: live calculation only refreshes results. As elsewhere in the app,
+shared presentation context may initialize missing user preferences; it does not
+create financial records.
+
+## Investment simulation
+
+The simulator accepts currency, opening balance, first month, duration (1–120 full
+months), an effective monthly or annual rate and recurring contributions and
+withdrawals. A table allows per-month overrides; an empty cell uses the default,
+and zero explicitly overrides it.
+
+For each month, yield is calculated on its opening balance and rounded to cents.
+Contributions and withdrawals occur at month end, so a contribution earns from
+the following month. Annual rates use Decimal compound equivalence,
+`monthly = (1 + annual / 100) ** (1 / 12) - 1`. Results show opening and closing
+balances, contributions, withdrawals and estimated yield. Non-finite values,
+unsupported amounts and withdrawals exceeding available funds are rejected.
+Taxes, inflation, CDI and real market returns are not inferred.
+
+JavaScript recalculates only the result region, preserving the active input and
+viewport. The Calculate button remains a complete no-JavaScript path. Simulations
+never create investment operations, bank movements or categorized transactions.
+Market prices, price histories, agent integration and free-form formulas remain
+[roadmap work](../product-requirements.md).
+
+## Interaction contracts
+
+Forms reuse shared fields, native short choices and help popovers. Dates follow
+the user's DMY/MDY preference; month inputs explicitly use `YYYY-MM`, independently
+of that preference. ISO dates remain the storage and technical contract.
+Follow the [form and keyboard contract](../frontend.md#keyboard-and-choice-contract),
+[question-mark help contract](../frontend.md#question-mark-help), and
+[viewport-preservation contract](../frontend.md#preserve-the-users-location).

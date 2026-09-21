@@ -7,6 +7,33 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Individual category-group disclosures and Collapse all / Expand all controls, initially expanded and preserving filtered child results.
+- Remunerated cash products, partial account reservations and explicit planning participation, preserving complete balances and liabilities.
+- Named private planning drafts, reviewed snapshots of upcoming commitments and monthly investment-yield simulations.
+- Five-area navigation, grouped bank/account and portfolio tables, and category hierarchy/type/usage controls.
+- Explicit spreadsheet-oriented CSV exports and predecessor-image Docker upgrade rehearsals.
+
+### Fixed
+
+- Keep navigation labels and SVG carets aligned, restore clear surface and metric groups, and adapt bank tables and planning sheets to narrow screens.
+- Version CSS and JavaScript by content and recover stale HTMX tabs on their next GET, without replaying POSTs or discarding invalid form responses.
+- Protect investment assets with opening positions or operation history from individual and bulk deletion (FIN-11).
+- Apply the saved date-format preference across the application through one shared date control (FIN-12).
+- Base bank projections on actual cash settlement; preserve opening investment positions in historical series.
+- Report invalid planning rows instead of silently dropping them; retain complete no-JavaScript entry paths.
+- Stop forecast navigation before incomplete future months and retain scroll/focus through HTMX chart updates.
+- Aggregate bank and loyalty balances without a query for every displayed row.
+- Clarify supported release upgrades versus the historical pre-release schema reset, and create native environment files privately without overwriting a signing key.
+- Disable the unused Gunicorn control socket so container startup does not depend on an unavailable home directory.
+
+### Changed
+
+- Restore grouped cards for financial workspaces, reveal navigation options on hover and move explanatory copy into shared contextual help beside headings and field labels.
+- Share compiled application styles with the canonical visual catalogue and refresh the bilingual preview with 14 synthetic screenshots, including Planning.
+
+
 ## [0.3.0] - 2026-09-17
 
 ### Fixed

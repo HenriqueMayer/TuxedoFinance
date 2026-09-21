@@ -23,7 +23,7 @@
             document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         })();
     </script>
-    <link rel="stylesheet" href="../assets/preview.css?v=2">
+    <link rel="stylesheet" href="../assets/preview.css?v=3">
     <script src="../assets/preview.js" defer></script>
 </head>
 <body>
@@ -37,6 +37,7 @@
                 <a href="#transactions">Transações</a>
                 <a href="#banking">Bancos</a>
                 <a href="#investments">Investimentos</a>
+                <a href="#planning">Planejamento</a>
             </nav>
             <div class="header-actions">
                 <div class="language-switch" aria-label="Idioma">
@@ -56,7 +57,7 @@
             <div>
                 <p class="eyebrow">Prévia da interface</p>
                 <h1>Conheça suas finanças além da planilha.</h1>
-                <p class="hero-copy">Explore a interface real do Tuxedo Finance antes de instalar. Este tour apresenta fluxo de caixa, projeções, relatórios, transações cotidianas, bancos e investimentos.</p>
+                <p class="hero-copy">Explore a interface real do Tuxedo Finance antes de instalar. Este tour apresenta fluxo de caixa, relatórios, transações cotidianas, bancos, investimentos e planejamento.</p>
                 <div class="hero-actions">
                     <a class="button button-primary" href="#dashboard">Iniciar o tour</a>
                     <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance">Ver repositório</a>
@@ -77,7 +78,7 @@
             <div class="screenshot-grid">
                 <figure>
                     <a class="screenshot-link" href="../images/pt-br/dashboard-light.png" data-lightbox>
-                        <img src="../images/pt-br/dashboard-light.png" width="1440" height="1000" alt="Dashboard do Tuxedo Finance no tema claro com atividade mensal, valores planejados, categorias de despesas, contas bancárias e próximas faturas" fetchpriority="high" decoding="async">
+                        <img src="../images/pt-br/dashboard-light.png" width="1440" height="1000" alt="Dashboard do Tuxedo Finance no tema claro com recursos disponíveis para planejamento, receitas, despesas e movimentações de investimentos do mês" fetchpriority="high" decoding="async">
                     </a>
                     <figcaption>Tema claro — atividade mensal, valores planejados e contas atuais.</figcaption>
                 </figure>
@@ -97,7 +98,7 @@
             </div>
             <figure>
                 <a class="screenshot-link" href="../images/pt-br/reports-light.png" data-lightbox>
-                    <img src="../images/pt-br/reports-light.png" width="1440" height="1000" alt="Página de relatórios do Tuxedo Finance com cartões de resumo e gráficos financeiros baseados em dados sintéticos" loading="lazy" decoding="async">
+                    <img src="../images/pt-br/reports-light.png" width="1440" height="1000" alt="Página de relatórios do Tuxedo Finance com valores resumidos e gráfico de evolução do saldo baseados em dados sintéticos" loading="lazy" decoding="async">
                 </a>
                 <figcaption>Os relatórios permanecem responsivos, acessíveis por teclado e organizados por perguntas financeiras relevantes.</figcaption>
             </figure>
@@ -119,26 +120,39 @@
         <section class="tour-section" id="banking">
             <div class="section-heading">
                 <div><span class="section-number">04 / Bancos</span><h2>Contas, cartões e moedas em contexto.</h2></div>
-                <p class="section-copy">Bancos agrupam contas por moeda, saldos nativos, cartões, ciclos de fatura, transferências, fidelidade e taxas de câmbio.</p>
+                <p class="section-copy">Veja o valor disponível para o mês entre contas e caixa remunerado. Reserve parte de uma conta ou exclua seu saldo positivo do planejamento, mantendo o saldo real visível.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="../images/pt-br/banking-light.png" data-lightbox>
-                    <img src="../images/pt-br/banking-light.png" width="1440" height="1000" alt="Visão de bancos com duas instituições fictícias, contas BRL e USD, cartões e programa de fidelidade" loading="lazy" decoding="async">
+                    <img src="../images/pt-br/banking-light.png" width="1440" height="1000" alt="Visão de bancos com caixa disponível sintético, conta BRL com reserva parcial, conta USD excluída e cofrinho do mês" loading="lazy" decoding="async">
                 </a>
-                <figcaption>Os valores nativos continuam visíveis mesmo quando os relatórios consolidados utilizam outra moeda.</figcaption>
+                <figcaption>Este exemplo reserva BRL 2.000 e exclui a conta USD. As contas a pagar continuam no plano, e o cofrinho do mês inclui apenas rendimentos registrados.</figcaption>
             </figure>
         </section>
 
         <section class="tour-section" id="investments">
             <div class="section-heading">
-                <div><span class="section-number">05 / Investimentos</span><h2>Um ledger separado para os fluxos da posição.</h2></div>
-                <p class="section-copy">Aportes, retiradas e rendimentos manuais preservam quantidades, preços unitários, taxas, contas de caixa e evidências históricas de conversão.</p>
+                <div><span class="section-number">05 / Investimentos</span><h2>Investimentos e caixa do mês têm papéis diferentes.</h2></div>
+                <p class="section-copy">Separe as posições da carteira do caixa remunerado reservado para pagar o mês. Aportes, retiradas e rendimentos reais preservam histórico, quantidades, taxas e contas de origem e destino.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="../images/pt-br/investments-light.png" data-lightbox>
-                    <img src="../images/pt-br/investments-light.png" width="1440" height="1000" alt="Visão de investimentos com fundo de reserva e ETF global sintéticos, totais de posição e gráficos de fluxo" loading="lazy" decoding="async">
+                    <img src="../images/pt-br/investments-light.png" width="1440" height="1000" alt="Área de investimentos com posição em ações sintética, totais da carteira e acesso separado ao caixa remunerado" loading="lazy" decoding="async">
                 </a>
                 <figcaption>Os totais descrevem aquisições e fluxos de valor registrados, não cotações de mercado em tempo real.</figcaption>
+            </figure>
+        </section>
+
+        <section class="tour-section" id="planning">
+            <div class="section-heading">
+                <div><span class="section-number">06 / Planejamento</span><h2>Experimente um cenário antes de realizá-lo.</h2></div>
+                <p class="section-copy">Estime o orçamento mensal com parcelas futuras e despesas recorrentes ou simule a evolução do saldo com aportes, retiradas e uma taxa efetiva. Salve rascunhos com nome, reabra e compare cenários sem alterar os registros financeiros.</p>
+            </div>
+            <figure>
+                <a class="screenshot-link" href="../images/pt-br/planning-light.png" data-lightbox>
+                    <img src="../images/pt-br/planning-light.png" width="1440" height="1000" alt="Simulador de rendimento do Planejamento com saldo inicial de BRL 10.000, aportes mensais de BRL 500 e taxa mensal hipotética de 0,8 por cento" loading="lazy" decoding="async">
+                </a>
+                <figcaption>O simulador recalcula conforme você edita. Aportes e retiradas ocorrem no fim do mês, com ajustes por mês para testar diferentes cenários.</figcaption>
             </figure>
         </section>
     </main>

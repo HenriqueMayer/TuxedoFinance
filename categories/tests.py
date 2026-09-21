@@ -85,6 +85,34 @@ class CategoryListFilterTests(TestCase):
         self.assertEqual(self.response_names(response), ['Food Delivery'])
         self.assertEqual(response.context['search_query'], 'DELIVERY')
 
+    def test_disclosure_groups_keep_matching_children_visible_without_their_parent(self):
+        response = self.client.get(reverse('categories:list'))
+        groups = response.context['category_groups']
+        groceries = next(group for group in groups if group['category'] == self.groceries)
+        self.assertEqual([group['category'] for group in groceries['children']], [self.delivery])
+        self.assertContains(response, f'aria-controls="category-children-{self.groceries.pk}"')
+        self.assertContains(response, 'aria-expanded="true"')
+
+        filtered = self.client.get(reverse('categories:list'), {'q': 'Delivery'})
+        self.assertEqual([group['category'] for group in filtered.context['category_groups']], [self.delivery])
+        self.assertFalse(filtered.context['has_category_groups'])
+        self.assertContains(filtered, 'Food Delivery')
+        self.assertNotContains(filtered, 'Private Delivery')
+
+    def test_disclosure_tree_supports_nested_categories_and_renders_legacy_cycles_once(self):
+        grandchild = Category.objects.create(user=self.user, name='Weekend Delivery', parent_category=self.delivery)
+        response = self.client.get(reverse('categories:list'))
+        groceries = next(group for group in response.context['category_groups'] if group['category'] == self.groceries)
+        self.assertEqual(groceries['children'][0]['children'][0]['category'], grandchild)
+
+        # Existing/imported relationships can contain cycles. Rendering should
+        # still expose every owned record once, without recursive graph traversal.
+        self.groceries.parent_category = grandchild
+        self.groceries.save(update_fields=['parent_category'])
+        response = self.client.get(reverse('categories:list'))
+        for category in (self.groceries, self.delivery, grandchild, self.salary):
+            self.assertContains(response, f'data-category-group="{category.pk}"', count=1)
+
     def test_level_filters_top_level_and_subcategories(self):
         top_response = self.client.get(reverse('categories:list'), {'level': 'top'})
         sub_response = self.client.get(reverse('categories:list'), {'level': 'sub'})
@@ -106,7 +134,7 @@ class CategoryListFilterTests(TestCase):
 
         self.assertEqual(
             self.response_names(response),
-            ['Food Delivery', 'Groceries', 'Salary'],
+            ['Groceries', 'Food Delivery', 'Salary'],
         )
         self.assertEqual(response.context['selected_level'], '')
 
@@ -120,6 +148,23 @@ class CategoryListFilterTests(TestCase):
         self.assertContains(response, 'Clear filters')
         self.assertContains(response, 'value="missing"')
         self.assertContains(response, 'value="top" selected')
+
+    def test_type_filter_combines_with_hierarchy_and_preserves_unclassified(self):
+        self.salary.transaction_type = Category.TransactionType.INCOME
+        self.salary.save(update_fields=['transaction_type'])
+        response = self.client.get(reverse('categories:list'), {'type': 'INCOME', 'level': 'top'})
+        self.assertEqual(self.response_names(response), ['Salary'])
+        response = self.client.get(reverse('categories:list'), {'type': 'unclassified'})
+        self.assertEqual(self.response_names(response), ['Groceries', 'Food Delivery'])
+
+    def test_subcategory_shortcut_accepts_only_an_owned_top_level_parent(self):
+        response = self.client.get(reverse('categories:create'), {'parent': self.groceries.pk})
+        self.assertEqual(response.context['form'].initial['parent_category'], self.groceries.pk)
+        foreign = Category.objects.get(user=self.other_user)
+        for parent in (foreign, self.delivery):
+            with self.subTest(parent=parent.pk):
+                response = self.client.get(reverse('categories:create'), {'parent': parent.pk})
+                self.assertNotIn('parent_category', response.context['form'].initial)
 
 
 class CategoryClassificationTests(TestCase):

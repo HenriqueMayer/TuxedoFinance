@@ -27,9 +27,15 @@ whitespace. Use an absolute path for an external data directory or environment
 file. Changing the data directory does not move an existing database.
 
 Generate a signing key during initial setup as shown in the README; retain it
-for subsequent starts. Enable `HTTPS` only behind a correctly configured TLS
-endpoint. The supported local startup command is `uv run python manage.py
-runserver`; production deployment packaging is outside the current scope.
+for subsequent starts. `scripts/init_local.py` creates `.env` exclusively with
+mode `0600` and never replaces an existing file or symlink. Native runtime and migration
+commands use an owner-only umask for new databases and sidecars; existing file
+permissions are unchanged. Protect existing configuration/database files and
+their containing directory before sharing access to the host.
+Enable `HTTPS` only behind a correctly configured TLS
+endpoint. Native local installations use `uv run python manage.py runserver`;
+the supported Docker package uses Gunicorn and WhiteNoise. Public hosting and
+reverse-proxy provisioning remain outside the supported local configuration.
 
 For Docker installations, use the [Docker operations guide](docker.md) for
 volume-aware backup, restore and updates. Keep the Compose project identity and
@@ -142,9 +148,10 @@ print('Restored database integrity: ok')
 PY
 ```
 
-Use code and lockfiles compatible with the backup's schema. Apply migrations
-only when the release documents an upgrade path; the legacy reset described in
-[data-model.md](data-model.md#breaking-release) is not an automatic conversion.
+Use code and lockfiles compatible with the backup's schema. Apply the committed incremental migrations for a supported release upgrade;
+never regenerate initial migrations or reset a released installation. The
+[historical pre-release reset](data-model.md#breaking-release) concerned only
+unsupported legacy schemas.
 Then run `manage.py check`, inspect `showmigrations`, and start the application.
 Verify representative balances, transactions, invoices, and investments before
 resuming normal writes.
@@ -155,9 +162,3 @@ Rehearse on a separate temporary installation with its own `TUXEDO_DATA_DIR`.
 Record the date, exact code revision and lockfile, source migration state,
 backup and restore results, integrity check, and representative record checks.
 Never use the active installation as the rehearsal destination.
-
-A historical rehearsal recorded on **2026-08-13** used a clean temporary SQLite
-database with 29 migration steps and a marker row. Backup, restore, and integrity
-checks passed without overwriting an owner's database. The record identified
-the code only as the then-current working tree; it does not establish
-compatibility with later revisions or with an owner's existing data.

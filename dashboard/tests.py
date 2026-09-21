@@ -341,7 +341,7 @@ class LedgerBalanceTests(DashboardFixture):
         self.assertGreater(invoice.due_date, today)
         self.assertEqual(get_dashboard_summary(self.user)['current_balance'], Decimal('1000.00'))
 
-    def test_projected_balance_includes_card_expense_in_statement_month(self):
+    def test_projected_cash_waits_for_card_due_date_while_performance_uses_statement_month(self):
         today = timezone.localdate()
         card = CreditCard.objects.create(
             user=self.user,
@@ -362,8 +362,9 @@ class LedgerBalanceTests(DashboardFixture):
         summary = get_dashboard_summary(self.user)
 
         self.assertEqual(summary['current_balance'], Decimal('1000.00'))
-        self.assertEqual(summary['projected_balance'], Decimal('880.00'))
-        self.assertEqual(summary['balance_month'], Decimal('-120.00'))
+        self.assertEqual(summary['projected_balance'], Decimal('1000.00'))
+        self.assertEqual(summary['balance_month'], Decimal('0.00'))
+        self.assertEqual(summary['expense_month'], Decimal('120.00'))
 
     def test_future_month_current_balance_starts_from_previous_projected_close(self):
         today = timezone.localdate()
@@ -776,7 +777,7 @@ class DashboardPageContractTests(DashboardFixture):
 
         response = self.client.get(reverse('dashboard:index'))
 
-        self.assertContains(response, 'Desempenho mensal')
+        self.assertContains(response, 'Desempenho do mês')
         self.assertContains(response, 'Despesas por categoria')
         self.assertContains(response, 'Perspectiva de seis meses')
         self.assertNotContains(response, 'Posição dos saldos')
@@ -786,7 +787,7 @@ class DashboardPageContractTests(DashboardFixture):
 
         response = self.client.get(reverse('dashboard:index'))
 
-        self.assertContains(response, 'Monthly performance')
+        self.assertContains(response, 'Month performance')
         self.assertNotContains(response, 'Available cash today')
         self.assertNotContains(
             response,

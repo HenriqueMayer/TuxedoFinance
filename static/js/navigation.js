@@ -2,7 +2,7 @@
 (function () {
     'use strict';
 
-    var preservedIslandView = null;
+    var preservedIslandViews = new WeakMap();
     var preservedPageViews = new WeakMap();
 
     // A query/filter change is an update to the current page. Only navigation
@@ -18,6 +18,7 @@
         preservedPageViews.set(detail.xhr, {
             top: window.scrollY,
             left: window.scrollX,
+            path: window.location.pathname,
             focusId: active && active.id ? active.id : null,
         });
         detail.swapOverride = 'innerHTML show:none';
@@ -27,7 +28,8 @@
         return target && (
             target.id === 'reports-charts' ||
             target.id === 'investments-charts' ||
-            target.id === 'investment-movements'
+            target.id === 'investment-movements' ||
+            target.hasAttribute('data-preserve-view')
         );
     }
 
@@ -40,6 +42,37 @@
         document.body.removeAttribute('aria-busy');
     }
 
+    function restorePageView(view) {
+        window.requestAnimationFrame(function () {
+            if (view.cancelled || window.location.pathname !== view.path) return;
+            var active = document.activeElement;
+            if (view.focusId && (active === document.body || active.id === view.focusId)) {
+                var control = document.getElementById(view.focusId);
+                if (control) control.focus({preventScroll: true});
+            }
+            // The browser clamps this only if the new document is shorter.
+            window.scrollTo({left: view.left, top: view.top, behavior: 'instant'});
+        });
+    }
+
+    function restoreIslandView(view) {
+        window.requestAnimationFrame(function () {
+            var target = document.getElementById(view.targetId);
+            if (view.cancelled || window.location.pathname !== view.path ||
+                !view.parent.isConnected || !target || target.parentElement !== view.parent) return;
+            if (view.scrollTarget) {
+                scrollToAnchor(view.scrollTarget);
+            } else {
+                window.scrollTo({left: view.left, top: view.top, behavior: 'instant'});
+            }
+            var active = document.activeElement;
+            if (view.focusId && (active === document.body || active.id === view.focusId)) {
+                var field = document.getElementById(view.focusId);
+                if (field) field.focus({preventScroll: true});
+            }
+        });
+    }
+
     document.addEventListener('htmx:beforeRequest', function (event) {
         if (event.detail.target === document.body) {
             document.body.setAttribute('aria-busy', 'true');
@@ -49,28 +82,28 @@
 
         var active = document.activeElement;
         var trigger = event.detail.elt;
-        preservedIslandView = {
+        preservedIslandViews.set(event.detail.xhr, {
             top: window.scrollY,
+            left: window.scrollX,
+            path: window.location.pathname,
+            targetId: event.detail.target.id,
+            parent: event.detail.target.parentElement,
             focusId: active && active.id ? active.id : null,
             scrollTarget: trigger && trigger.dataset
                 ? trigger.dataset.scrollTarget
                 : null,
-        };
+        });
     });
 
     document.addEventListener('htmx:afterSwap', function (event) {
         if (event.detail.target === document.body) {
             finishNavigation();
             var pageView = preservedPageViews.get(event.detail.xhr);
-            preservedPageViews.delete(event.detail.xhr);
+            if (pageView) {
+                restorePageView(pageView);
+                return;
+            }
             window.requestAnimationFrame(function () {
-                if (pageView) {
-                    var control = pageView.focusId && document.getElementById(pageView.focusId);
-                    if (control) control.focus({preventScroll: true});
-                    // The browser clamps this only if the new document is shorter.
-                    window.scrollTo({left: pageView.left, top: pageView.top, behavior: 'instant'});
-                    return;
-                }
                 var heading = document.querySelector('main h1');
                 if (!heading) return;
                 heading.setAttribute('tabindex', '-1');
@@ -81,25 +114,37 @@
             });
             return;
         }
-        if (!isPreservedIsland(event.detail.target) || !preservedIslandView) return;
-
-        var view = preservedIslandView;
-        preservedIslandView = null;
-        window.requestAnimationFrame(function () {
-            if (view.scrollTarget) {
-                scrollToAnchor(view.scrollTarget);
-            } else {
-                window.scrollTo(0, view.top);
-            }
-            if (view.focusId) {
-                var field = document.getElementById(view.focusId);
-                if (field) field.focus({preventScroll: true});
-            }
-        });
+        var view = preservedIslandViews.get(event.detail.xhr);
+        if (view) restoreIslandView(view);
     });
 
-    ['htmx:responseError', 'htmx:sendError', 'htmx:timeout'].forEach(function (name) {
-        document.addEventListener(name, finishNavigation);
+    document.addEventListener('htmx:afterSettle', function (event) {
+        var pageView = preservedPageViews.get(event.detail.xhr);
+        if (pageView) {
+            // Body swaps settle attributes too; their reflow can anchor the
+            // viewport away from the position restored immediately after swap.
+            preservedPageViews.delete(event.detail.xhr);
+            restorePageView(pageView);
+            return;
+        }
+        var view = preservedIslandViews.get(event.detail.xhr);
+        if (!view) return;
+        // HTMX settles class/style attributes after swapping. That last reflow
+        // can trigger browser scroll anchoring even after the early restore.
+        preservedIslandViews.delete(event.detail.xhr);
+        restoreIslandView(view);
+    });
+
+    ['htmx:responseError', 'htmx:sendError', 'htmx:timeout', 'htmx:sendAbort'].forEach(function (name) {
+        document.addEventListener(name, function (event) {
+            var view = preservedIslandViews.get(event.detail.xhr);
+            if (view) view.cancelled = true;
+            var pageView = preservedPageViews.get(event.detail.xhr);
+            if (pageView) pageView.cancelled = true;
+            preservedIslandViews.delete(event.detail.xhr);
+            preservedPageViews.delete(event.detail.xhr);
+            finishNavigation();
+        });
     });
 
     document.addEventListener('htmx:beforeHistorySave', finishNavigation);

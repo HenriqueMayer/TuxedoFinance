@@ -35,15 +35,15 @@ the chart-by-chart conventions this page inherits.
 {% block content %}
 {% url 'transactions:create' as create_url %}
 <div class="space-y-8">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Reports" %}</h1>
-            <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
-                 {% translate "How your account has moved over the last months - and where it is heading." %}
-            </p>
+    <div class="workspace-header">
+        <div class="label-with-help">
+            {% translate "Reports" as reports_label %}
+            {% translate "How your account has moved over the last months - and where it is heading." as reports_help %}
+            <h1 class="page-title">{{ reports_label }}</h1>
+            {% include 'partials/help_popover.html' with help_id='reports-overview-help' help_label=reports_label help_text=reports_help %}
         </div>
         <a href="{% url 'dashboard:index' %}"
-           class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
+           class="quiet-action">
              {% translate "Back to dashboard" %}
         </a>
     </div>

@@ -56,9 +56,11 @@ asset amounts and the applied FX snapshot when conversion is available. Missing
 rates preserve native data and mark conversion incomplete. The operation and
 its required bank or points ledger entry are posted atomically.
 
-Yield is internal: it changes the portfolio position/value and appears in
-investment performance, but does not create bank income or available cash. Cash
-exists only after an explicit withdrawal to a destination account.
+Yield is internal: it changes the product's position/value without creating a
+bank movement. Remunerated cash contributes to planning availability while held
+in the pot; paying a bill from a bank account still requires an explicit
+withdrawal to that account. Long-term investment holdings stay outside planning
+availability.
 
 For monetary assets, such as savings pots, a yield can be entered either as the
 yield amount or as the new total balance. When the total balance is entered, the
@@ -113,3 +115,28 @@ section anchor, so the user keeps the portfolio context when HTMX is unavailable
 Record selectors use the shared keyboard-search component. Values and funding wait for the asset and operation type; monetary yields require an explicit input mode. New asset valuation choices begin empty, and opening-position products wait for an opening balance or quantity. Existing operations and invalid POSTs preserve their values and visible errors.
 
 Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+
+## Purpose and cash planning
+
+Products have purpose `INVESTMENT` (the additive migration default) or
+`MONTHLY_CASH` (Remunerated cash). Monetary positions in the latter contribute
+to planning availability and are shown separately from the investment portfolio.
+A monetary asset may occur in different products: purpose belongs to the product,
+and the authoritative position is the product/asset pair. A cash product cannot
+hold unit-priced assets, including opening positions and historical operations.
+Reclassification changes analysis, not the underlying operations or bank ledger.
+
+Deposits and withdrawals between an included account and a cash pot are internal
+to combined planning resources. They still change the individual bank balance.
+Record actual yield as an ordinary yield operation, using an amount or ending
+balance. It changes only the pot until redeemed. Historical investment value is
+not a live market valuation; the UI labels this distinction explicitly.
+
+Asset deletion is blocked by any nonzero opening-position component or any
+operation history, including a fully withdrawn position. The shared deletion
+policy covers instance, QuerySet and Admin deletion and rolls back mixed batches.
+Products remain protected by operation and opening-position references.
+
+The Simulate returns tab opens Planning's isolated monthly simulator. Saved
+scenarios and their hypothetical yield never post investment or bank movements.
+Market quotes, price histories and agent integration remain roadmap work.

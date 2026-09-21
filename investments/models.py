@@ -30,6 +30,10 @@ CURRENCY_CHOICES = [
 
 
 class InvestmentProduct(models.Model):
+    class Purpose(models.TextChoices):
+        INVESTMENT = 'INVESTMENT', _('Investment')
+        MONTHLY_CASH = 'MONTHLY_CASH', _('Remunerated cash')
+
     class YieldMode(models.TextChoices):
         MANUAL = 'MANUAL', _('Manual')
         MONTHLY = 'MONTHLY', _('Monthly rate (Coming soon)')
@@ -46,6 +50,9 @@ class InvestmentProduct(models.Model):
         related_name='investment_products',
     )
     name = models.CharField(max_length=150)
+    purpose = models.CharField(
+        max_length=20, choices=Purpose.choices, default=Purpose.INVESTMENT,
+    )
     yield_mode = models.CharField(
         max_length=20,
         choices=YieldMode.choices,
@@ -69,6 +76,11 @@ class InvestmentProduct(models.Model):
     def clean(self):
         if self.bank_id and self.user_id and self.bank.user_id != self.user_id:
             raise ValidationError({'bank': _('The bank must belong to the product owner.')})
+        if self.pk and self.purpose == self.Purpose.MONTHLY_CASH and (
+            self.operations.exclude(asset__valuation_mode=Asset.ValuationMode.MONETARY).exists()
+            or self.opening_balance_assets.exclude(valuation_mode=Asset.ValuationMode.MONETARY).exists()
+        ):
+            raise ValidationError({'purpose': _('Monthly cash pots can only hold monetary assets.')})
 
 
 class Asset(models.Model):
@@ -127,6 +139,20 @@ class Asset(models.Model):
     def __str__(self):
         return f'{self.name} ({self.code})'
 
+    @property
+    def has_opening_position(self):
+        return any(value != ZERO for value in (
+            self.opening_balance, self.opening_quantity, self.opening_unit_price,
+        ))
+
+    @property
+    def deletion_block_reason(self):
+        if self.has_opening_position:
+            return _('This asset has an opening position and cannot be deleted.')
+        if self.pk and self.operations.exists():
+            return _('This asset has investment history and cannot be deleted.')
+        return ''
+
     def clean(self):
         errors = {}
         if self.valuation_mode == self.ValuationMode.UNITS:
@@ -152,6 +178,13 @@ class Asset(models.Model):
             errors['opening_unit_price'] = _('Only unit-based assets can have an opening unit price.')
         if self.opening_product_id and self.user_id and self.opening_product.user_id != self.user_id:
             errors['opening_product'] = _('The opening product must belong to the asset owner.')
+        if (self.opening_product_id
+                and self.opening_product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH
+                and self.valuation_mode != self.ValuationMode.MONETARY):
+            errors['opening_product'] = _('Monthly cash pots can only hold monetary assets.')
+        if (self.pk and self.valuation_mode != self.ValuationMode.MONETARY
+                and self.operations.filter(product__purpose=InvestmentProduct.Purpose.MONTHLY_CASH).exists()):
+            errors['valuation_mode'] = _('Monthly cash pots can only hold monetary assets.')
         if errors:
             raise ValidationError(errors)
 
@@ -338,6 +371,10 @@ class Investment(models.Model):
                 errors[field] = _('This selection must belong to the operation owner.')
         if self.product_id and self.user_id and self.product.bank.user_id != self.user_id:
             errors['product'] = _('The product bank must belong to the operation owner.')
+        if (self.product_id and self.asset_id
+                and self.product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH
+                and self.asset.valuation_mode != Asset.ValuationMode.MONETARY):
+            errors['asset'] = _('Monthly cash pots can only hold monetary assets.')
 
         if self.asset_id and self.asset.valuation_mode == Asset.ValuationMode.MONETARY:
             if self.amount is None or self.amount <= 0:

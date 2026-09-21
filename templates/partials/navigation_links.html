@@ -1,0 +1,11 @@
+{% load i18n %}
+{% translate 'Overview' as overview_label %}{% url 'dashboard:index' as overview_url %}
+{% include 'partials/navigation_item.html' with area='overview' link_label=overview_label link_url=overview_url %}
+{% translate 'Activity' as activity_label %}{% url 'transactions:list' as activity_url %}
+{% include 'partials/navigation_item.html' with area='activity' link_label=activity_label link_url=activity_url %}
+{% translate 'Banks' as banks_label %}{% url 'banking:list' as banks_url %}
+{% include 'partials/navigation_item.html' with area='banks' link_label=banks_label link_url=banks_url %}
+{% translate 'Investments' as investments_label %}{% url 'investments:list' as investments_url %}
+{% include 'partials/navigation_item.html' with area='investments' link_label=investments_label link_url=investments_url %}
+{% translate 'Planning' as planning_label %}{% url 'sandbox:index' as planning_url %}
+{% include 'partials/navigation_item.html' with area='planning' link_label=planning_label link_url=planning_url %}

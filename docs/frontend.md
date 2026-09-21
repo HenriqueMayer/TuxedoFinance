@@ -15,8 +15,14 @@ at runtime. Frontend tooling is pinned in `package.json`/`package-lock.json` for
 development and CI. Follow the [frontend build workflow](../CONTRIBUTING.md#frontend-and-translations)
 after changing Tailwind classes or tokens.
 
-Bump the `?v=` query string in `base.html` whenever the generated stylesheet
-changes so long-lived browser caches cannot retain the previous design.
+Load CSS and JavaScript with `{% asset 'css/app.css' %}` (from the `assets`
+template library). Its content digest versions the bytes served by source
+finders in development and by WhiteNoise's collected tree in production.
+`base.html` carries the document's asset revision. The runtime sends that revision
+on HTMX requests, including requests that suppress HTMX's own headers. When a
+GET would combine old assets with new markup, middleware requests one full
+navigation to the intended URL. Legacy tabs also recover on their next GET.
+POSTs and invalid form responses are never replayed or discarded by this guard.
 
 Same-origin links inherit `hx-boost` from the page shell. HTMX keeps the current
 document visible while it requests the next server-rendered page, then replaces
@@ -63,12 +69,19 @@ navigation, rather than as an in-place update.
 
 ## Visual language
 
+The canonical catalogue and application load the same compiled stylesheet.
+Tailwind scans templates, app form classes and the catalogue; rebuild CSS after
+changes instead of copying tokens or relying on a JavaScript CSS CDN.
+
 The interface follows the Tuxedo Finance design language documented in
 `design-system.html`: cream and forest light foundations, neutral black and
 graphite dark foundations, caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
-throughout. Light cards use white surfaces and soft shadows; dark cards use flat
-graphite surfaces over the near-black page background. Body copy starts at
-16/24px, supporting copy at 14/20px, and compact labels never fall below 12px.
+throughout. Workspaces group related information in restrained surface cards,
+metric cards, semantic tables and ruled sections. Avoid nested cards and use
+spacing to distinguish the contents of one group. Page titles use 28px on mobile
+and 32px on desktop; section titles use 18px and 20px. Body copy starts at
+16/24px, labels and supporting copy at 14/20px, and compact table labels never
+fall below 12px. Bound chart heights preserve readable proportions on wide screens.
 
 | Role | Semantic treatment |
 |---|---|
@@ -90,8 +103,8 @@ The navigation brand combines `tuxedo-mark-256.png` with a two-line uppercase
 wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. It always
 links to the public landing page, including for authenticated users. Primary
 actions are solid caramel pills with forest-deep text; `caramel-ink` carries
-brand links over light surfaces. Outline actions invert to forest/cream on
-hover. Titles, labels, controls and tabular monetary figures all use Inter.
+brand links over light surfaces. Shared outline and quiet actions use subtle
+neutral hover surfaces. Titles, labels, controls and tabular monetary figures all use Inter.
 Secondary text uses forest/70 in light mode and neutral night-muted in dark mode.
 
 ## Dark foundation tokens
@@ -114,7 +127,7 @@ horizontal cat photograph in a translucent double rounded frame with a subtle
 caramel glow. Its 4:3 mobile / 16:10 larger frame preserves the image's native
 ratio; padded hover zoom respects reduced motion. It has no promotional feature
 cards or example balances.
-Functional cards remain available in authenticated screens. See
+Authenticated workspaces follow the shared composition below. See
 [pages](apps/pages.md) for the composition and authentication behavior.
 
 ## Root layout and navigation
@@ -124,19 +137,20 @@ authenticated navbar, messages, content block and footer. The authenticated
 navigation becomes:
 
 ```text
-Dashboard | Reports | Transactions | Categories | Banks | Investments
+Overview | Activity | Banks | Investments | Planning
 ```
 
 `Banks` remains active for nested bank, account, card, invoice, movement and
 loyalty routes. The authenticated desktop navigation starts at the `xl`
 breakpoint so tablet and narrow-laptop widths do not compress or overflow the
 full link set. Below that breakpoint, the mobile navigation is a full-screen
-forest-deep modal in light mode and near-black modal in dark mode, with the same
+cream modal in light mode and near-black modal in dark mode, with the same
 links and ordering as desktop. It slides in,
 locks page scrolling, makes background content inert, contains keyboard focus,
 closes on Escape and restores focus to its trigger.
 
-`partials/language_selector.html` is included once in each active navbar. It
+`partials/language_selector.html` appears in account options on desktop and the
+mobile menu, with an explicit native fallback when JavaScript is disabled. It
 posts the current path and `en` or `pt-br` to Django's
 `/i18n/set_language/`; JavaScript submits on change and the `noscript` Apply
 button preserves the server-rendered fallback. The choice is stored in Django's
@@ -181,15 +195,14 @@ other current valuations show their valuation date and rate source.
 
 ## Banking information architecture
 
-`/banking/` starts with bank cards. Each bank expands into accounts showing
-account name, native currency, opening balance, posted balance, PIX status and
-linked cards. The account detail is organized in this order:
+`/banking/` starts with the shared availability summary, explicitly covering all
+banks. Accounts appear in tables grouped by institution, with native balance,
+set-aside funds, availability and a reversible planning toggle. Linked cash pots
+appear under their bank and link to the separate investment workspace.
 
-1. Available balance and native currency.
-2. Primary actions: new transaction and own transfer.
-3. PIX capability and debit/credit cards.
-4. Movement ledger with date, direction, kind, related event and running balance.
-5. Credit invoices and due/overdue status.
+Bank details reuse these account rows, then disclose account capabilities and
+cards. Invoices and dated movements remain visible below. Transfer and account
+actions stay contextual; loyalty and exchange-rate setup use secondary options.
 
 Opening balance is clearly labeled as the ledger starting point, not an income
 transaction. Personal records remain editable; audit-grade reversal controls
@@ -220,6 +233,13 @@ match. Focus remains on the search input; `aria-activedescendant`,
 stops at the ends. Home/End and text-editing shortcuts retain native editing
 behavior. Mouse/touch selection and the explicitly labeled clear button perform
 the same committed change.
+
+Search instructions and single-choice selection announcements remain available
+through `aria-describedby` and live text without repeating paragraphs beneath
+every picker. Do not introduce focus-dependent in-flow instructions: removing
+their height on blur can move a Save button or radio between pointerdown and
+pointerup, cancelling the user's action. Verify direct clicks after committing a
+choice as well as keyboard submission.
 
 When a user focuses, filters or opens a searchable choice, scroll only as far as
 needed to show the input and results below the sticky header. Keep focus on the
@@ -343,10 +363,10 @@ render translated fragments in the active request language.
 
 ## Dashboard
 
-Stat cards separate concepts instead of collapsing them into one balance:
+Metric cards separate concepts instead of collapsing them into one balance:
 
 - available cash, selected-month balance change, and projected closing balance;
-- income, expenses, investments, and withdrawals as separate performance cards;
+- income, expenses, investments, and withdrawals as separate performance metrics;
 - current-month values through today with the remaining plan shown underneath;
 - complete values for past months and explicitly planned values for future months.
 
@@ -355,13 +375,13 @@ purchases belong to the statement month but affect cash only when the invoice is
 settled. Own transfers may appear in activity but are visually neutral and
 absent from income/expense charts. Projected figures are labeled and never
 presented as posted cash. A compact top-six category breakdown follows the same
-month-to-date, completed-month, or planned-month context as the cards. Live bank
+month-to-date, completed-month, or planned-month context as the metrics. Live bank
 accounts and upcoming invoices are limited to five rows each and link to Banking
 for the complete lists.
 
 ## Reports and charts
 
-The Reports summary uses three cards: live bank cash, the identified anchor
+The Reports summary uses three metrics: live bank cash, the identified anchor
 month's inflows minus outflows, and bank-balance change across the full chart
 window. Monthly result excludes the opening balance and includes recorded
 investment deposits/withdrawals separately from consumer income/expense. The
@@ -391,6 +411,8 @@ with a preferred width of **352 px**, a **12 px** viewport gutter and an **8 px*
 gap from the icon. Its width must never inherit the icon or label width. Reposition
 above the icon when needed, constrain height in short viewports, and allow internal
 scrolling. Reposition on resize/scroll without moving the page or stealing focus.
+Without JavaScript, the native disclosure opens a bounded panel at the bottom
+of the viewport so labels near either edge cannot push its explanation offscreen.
 
 Use 14 px text, 24 px line height, normal capitalization, left alignment and 16 px
 padding. Give the explanation a short title and separated paragraphs; put formulas
@@ -446,7 +468,8 @@ performance, not bank income.
 
 All pages remain mobile-first. Wide ledgers, invoice item tables and charts use
 internal horizontal scrolling rather than forcing body overflow. Bank/account
-hierarchies collapse to stacked cards on small screens. Labels, status text,
+hierarchies retain grouped rows on small screens, with internal table scrolling
+when columns cannot fit legibly. Labels, status text,
 focus rings, keyboard navigation and confirmation screens remain available
 without relying on hover, color or JavaScript.
 
@@ -470,3 +493,42 @@ that isolated site. `npm run preview:capture` regenerates its screenshots using
 only disposable synthetic records in a guarded temporary database. The capture
 and test configuration is documented in
 [`../.github/preview/README.md`](../.github/preview/README.md).
+
+## Planning workspaces and shared presentation
+
+The primary navigation is **Overview / Activity / Banks / Investments / Planning**.
+Overview contains Dashboard and Reports; Activity contains Transactions and
+Categories. Existing domain URLs remain stable. Account settings and language
+live in the account-options disclosure; the mobile menu has the same destinations.
+A native navigation fallback remains available without JavaScript.
+Desktop primary links retain their direct destinations and reveal section
+options on hover. A separate native disclosure arrow supports keyboard and
+touch; Escape and outside interaction dismiss the menu. Only navigation/action
+menus use hover disclosure, never content accordions.
+
+Use `surface-panel`, `metric-panel`, `label-with-help`, `workspace-header`, `section-nav`, `action-link`, `action-primary`,
+`secondary-actions`, `data-table`, and `subtle-copy` from the compiled stylesheet.
+Group banks, charts, input stages and results in distinct surface cards. Use
+compact metric cards for comparable summaries and divided rows inside each
+group. Avoid nested bank/product/asset cards. Explanatory copy belongs in the
+shared question-mark help beside its heading or label; errors, missing FX,
+incomplete values and decisions requiring user action remain visible.
+`form_field.html` renders ordinary field help beside the label automatically;
+`field_help_text` and `field_help_template` supply contextual overrides without
+duplicating the help below the field. Keep the existing palette, Inter typography, shared help, fields,
+searchable choices, and accessible focus tokens. Record a reusable composition
+in `design-system.html` before introducing a competing per-page pattern.
+
+Complete calendar dates use `core.dates.configure_date_fields` and
+`partials/preferred_date_field.html`, dispatched by the normal form-field
+partial. The shared script initializes after full loads and HTMX swaps without
+moving focus or rewriting every keystroke. The user's DMY/MDY setting controls
+visible date fields and complete dates throughout the application. Native
+calendar helpers, storage, existing CSV formats, and URL parameters use ISO;
+month-only labels remain localized month/year labels. An invalid bound value is
+retained for recovery. Calendar dates are not converted through JavaScript
+`Date` objects or time zones.
+
+HTMX regions with `data-preserve-view` use the common navigation handler to
+restore focus and scroll. Account participation updates also replace the
+availability summary out of band, so the row and aggregate remain consistent.
