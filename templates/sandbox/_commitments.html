@@ -1,0 +1,36 @@
+{% load i18n %}
+<section class="mt-5 space-y-4" aria-labelledby="commitments-title">
+    <div class="flex flex-wrap items-baseline justify-between gap-3">
+        <div class="flex items-center gap-3"><h3 id="commitments-title" class="section-title">{% translate "Future commitments" %}</h3>
+            {% include 'partials/help_popover.html' with help_id='future-commitments-help' help_label=_('Future commitments') help_template='sandbox/_commitments_help.html' %}
+        </div>
+        <button type="submit" name="action" value="refresh" id="commitments-refresh" class="action-link">{% if snapshot %}{% translate "Review refresh" %}{% else %}{% translate "Capture commitments" %}{% endif %}</button>
+    </div>
+    {% if refresh_preview %}
+    <div class="border-l-4 border-caramel pl-4" role="region" aria-label="{% translate 'Review commitment refresh' %}">
+        <input type="hidden" name="preview_token" value="{{ preview_token }}">
+        <h4 class="font-semibold">{% translate "Review commitment refresh" %}</h4>
+        <p class="subtle-copy">{% translate "Manual amounts and exclusions will be preserved. Removed sources remain marked until you exclude them. Apply changes only when this snapshot is ready." %}</p>
+        <div class="overflow-x-auto"><table class="data-table planning-sheet"><thead><tr><th>{% translate "Commitment" %}</th><th>{% translate "Payment date" %}</th><th>{% translate "New source amount (BRL)" %}</th><th>{% translate "Change" %}</th></tr></thead><tbody>
+        {% for row in refresh_preview.rows %}<tr><td>{{ row.label }}</td><td>{{ row.due_date|date:USER_DATE_FORMAT }}</td><td>{{ row.amount|default_if_none:'—' }}</td><td>{% if row.source_removed %}{% translate "Source removed; scenario retained" %}{% elif row.new %}{% translate "New" %}{% elif row.changed %}{% translate "Updated" %}{% else %}{% translate "Unchanged" %}{% endif %}{% if row.override %} · {% translate "Manual amount retained" %}{% endif %}</td></tr>{% empty %}<tr><td colspan="4">{% translate "No commitments in this period." %}</td></tr>{% endfor %}
+        </tbody></table></div>
+        <div class="mt-3 flex gap-3"><button type="submit" name="action" value="apply_refresh" class="action-primary">{% translate "Apply snapshot" %}</button><button type="submit" name="action" value="cancel_refresh" class="action-link">{% translate "Keep previous snapshot" %}</button></div>
+    </div>
+    {% endif %}
+    {% if snapshot %}
+        <p class="subtle-copy">{% translate "Snapshot captured" %}: {{ snapshot_captured|date:USER_DATE_FORMAT }}</p>
+        {% for group in commitment_months %}
+        <details class="border-b border-forest/10 py-2 dark:border-cream/10" {% if forloop.first %}open{% endif %}>
+            <summary class="cursor-pointer">{{ group.month|date:'M Y' }} — BRL {% if group.total is None %}{% translate "Incomplete" %}{% else %}{{ group.total|floatformat:2 }}{% endif %}</summary>
+            <div class="overflow-x-auto"><table class="data-table planning-sheet"><thead><tr><th>{% translate "Use" %}</th><th>{% translate "Commitment" %}</th><th>{% translate "Payment date" %}</th><th>{% translate "Source amount" %}</th><th>{% translate "Scenario amount (BRL)" %}</th></tr></thead><tbody>
+                {% for row in group.rows %}<tr>
+                <td><input type="hidden" name="commitment_present_{{ row.index }}" value="1"><input type="checkbox" name="commitment_include_{{ row.index }}" {% if row.included %}checked{% endif %} aria-label="{% blocktranslate with label=row.label %}Include {{ label }}{% endblocktranslate %}" class="accent-caramel"></td>
+                <th scope="row">{{ row.label }} {% if row.installment %}<span class="subtle-copy">{{ row.installment }}</span>{% endif %}<p class="subtle-copy">{{ row.instrument }}</p>{% if row.source_removed %}<p class="text-expense dark:text-expense-light">{% translate "Source removed; scenario retained" %}</p>{% endif %}</th>
+                <td>{{ row.due_date|date:USER_DATE_FORMAT }}</td><td>{{ row.currency }} {{ row.native_amount }}{% if row.amount is None %}<p class="text-expense dark:text-expense-light">{% translate "Missing exchange rate" %}</p>{% endif %}</td>
+                <td><input type="text" inputmode="decimal" name="commitment_amount_{{ row.index }}" value="{{ row.override }}" placeholder="{{ row.amount|default_if_none:'—' }}" aria-label="{% blocktranslate with label=row.label %}Scenario amount for {{ label }}{% endblocktranslate %}" class="planning-sheet-input"></td>
+                </tr>{% empty %}<tr><td colspan="5">{% translate "No commitments in this month." %}</td></tr>{% endfor %}
+            </tbody></table></div>
+        </details>
+        {% endfor %}
+    {% endif %}
+</section>

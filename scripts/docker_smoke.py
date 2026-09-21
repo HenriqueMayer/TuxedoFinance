@@ -14,6 +14,11 @@ import tempfile
 import urllib.request
 import uuid
 
+if __package__:
+    from .docker_fixture import CHECK_DEFAULTS, SEED, snapshot_code
+else:
+    from docker_fixture import CHECK_DEFAULTS, SEED, snapshot_code
+
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -85,6 +90,19 @@ class Installation:
             self.directory.cleanup()
 
 
+def snapshot(app, fields=None):
+    output = app.django(snapshot_code(fields)).decode()
+    return json.loads(output.split('TUXEDO_SNAPSHOT=', 1)[1])
+
+
+def assert_snapshot(app, baseline):
+    current = snapshot(app, baseline['fields'])
+    for model, records in baseline['records'].items():
+        assert current['records'][model] == records, f'Upgrade/restore changed existing {model} data'
+    assert current['balances'] == baseline['balances'], 'Upgrade/restore changed native account balances'
+    assert current['points'] == baseline['points'], 'Upgrade/restore changed loyalty balances'
+
+
 def verify(image, previous_image=None):
     with Installation(previous_image or image) as app:
         print('Checking configuration failures and command overrides.', flush=True)
@@ -123,18 +141,16 @@ assert Path('/data/db.sqlite3').stat().st_mode & 0o077 == 0
         with opener.open(request, timeout=10) as response:
             assert response.headers['Content-Language'] == 'pt-br'
             assert 'Criar conta' in response.read().decode()
-        app.django("""
-from django.contrib.auth import get_user_model
-from banking.models import Bank, BankAccount
-user = get_user_model().objects.create_user(username='docker-persistence')
-bank = Bank.objects.create(user=user, name='Disposable bank')
-BankAccount.objects.create(user=user, bank=bank, name='Rehearsal', currency='BRL', opening_balance='123.45')
-""")
-        check_record = """
-from decimal import Decimal
-from banking.models import BankAccount
-assert BankAccount.objects.get(user__username='docker-persistence').opening_balance == Decimal('123.45')
-"""
+        app.django(SEED)
+        baseline = snapshot(app)
+        pre_upgrade_backup = None
+        if previous_image:
+            app.compose('stop', 'web')
+            app.compose('run', '--rm', '-T', 'web', 'python', 'scripts/sqlite_backup.py',
+                        '/data/db.sqlite3', '/data/pre-upgrade.sqlite3')
+            pre_upgrade_file = Path(app.directory.name) / 'pre-upgrade.sqlite3'
+            app.compose('cp', 'web:/data/pre-upgrade.sqlite3', str(pre_upgrade_file))
+            pre_upgrade_backup = pre_upgrade_file.read_bytes()
         print('Checking recreation, backup, restore and idempotent migrations.', flush=True)
         # Upgrade the same disposable volume to the candidate image when supplied.
         if previous_image:
@@ -147,10 +163,13 @@ assert BankAccount.objects.get(user__username='docker-persistence').opening_bala
         with env_file.open('a') as config:
             config.write('ALLOWED_HOSTS=.example.test\n')
         app.start(recreate=True)
+        logs = app.compose('logs', '--no-color').stdout.decode()
+        assert 'Control server error' not in logs, 'Gunicorn control socket must be disabled in the non-root runtime'
         request = urllib.request.Request(app.url, headers={'Host': 'finance.example.test'})
         with opener.open(request, timeout=10) as response:
             assert response.status == 200
-        app.django(check_record)
+        assert_snapshot(app, baseline)
+        app.django(CHECK_DEFAULTS)
         app.compose('stop', 'web')
         app.compose('run', '--rm', '-T', 'web', 'python', 'scripts/sqlite_backup.py',
                     '/data/db.sqlite3', '/data/rehearsal.sqlite3')
@@ -159,13 +178,21 @@ assert BankAccount.objects.get(user__username='docker-persistence').opening_bala
         assert duplicate.returncode != 0
         exported = Path(app.directory.name) / 'rehearsal.sqlite3'
         app.compose('cp', 'web:/data/rehearsal.sqlite3', str(exported))
-        snapshot = exported.read_bytes()
+        backup_bytes = exported.read_bytes()
         with Installation(image) as restored:
             restored.compose('run', '--rm', '-T', 'web', 'python',
-                             'scripts/sqlite_backup.py', '-', '/data/db.sqlite3', input=snapshot)
+                             'scripts/sqlite_backup.py', '-', '/data/db.sqlite3', input=backup_bytes)
             restored.start()
-            restored.django(check_record)
+            assert_snapshot(restored, baseline)
+            restored.django(CHECK_DEFAULTS)
             restored.compose('exec', '-T', 'web', 'python', 'manage.py', 'migrate', '--check')
+        if pre_upgrade_backup is not None:
+            # Recovery must use the previous image AND its pre-migration backup.
+            with Installation(previous_image) as recovered:
+                recovered.compose('run', '--rm', '-T', 'web', 'python',
+                                  'scripts/sqlite_backup.py', '-', '/data/db.sqlite3', input=pre_upgrade_backup)
+                recovered.start()
+                assert_snapshot(recovered, baseline)
         container = app.compose('ps', '-aq', 'web').stdout.decode().strip()
         state = json.loads(subprocess.check_output(['docker', 'inspect', container]))[0]['State']
         assert state['ExitCode'] == 0, state

@@ -1,6 +1,6 @@
 {% if field %}
     <div class="space-y-2 pt-6">
-        <div class="flex items-center justify-between gap-2">
+        <div class="label-with-help">
             <div class="flex items-center gap-3">{{ field }}<label for="{{ field.id_for_label }}" class="text-sm text-forest dark:text-cream">{{ field.label }}</label></div>
             {% if field.help_text %}{% include 'partials/help_popover.html' with help_id=field.id_for_label|add:'-help' help_label=field.label help_text=field.help_text %}{% endif %}
         </div>

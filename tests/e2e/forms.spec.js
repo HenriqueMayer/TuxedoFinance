@@ -42,10 +42,15 @@ async function tabTo(page, locator) {
 test('category keyboard choice has visible active state, cancellation and no implicit submit', async ({ page }, testInfo) => {
     await fixture(page, testInfo);
     await expect(page.locator('#category-fields')).toBeHidden();
-    await page.getByLabel('Transaction type').selectOption('EXPENSE');
+    await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
     const search = page.locator('#category-search');
+    // Keyboard instructions remain accessible without changing the form's
+    // geometry on blur and moving a clicked button before pointerup.
+    await expect(search).toHaveAccessibleDescription(/Type to search/);
+    await expect(page.locator('#category-search-help')).toHaveCSS('position', 'absolute');
     const options = search.locator('..').getByRole('option');
     await search.fill('aplicati');
+    await expect(page.locator('#category-search-help')).toHaveCSS('position', 'absolute');
     await expect(options).toHaveCount(2);
     await search.press('ArrowDown');
     await expect(options.nth(0)).toHaveAttribute('aria-selected', 'true');
@@ -80,7 +85,7 @@ test('category keyboard choice has visible active state, cancellation and no imp
     await search.locator('..').getByRole('button').click();
     await expect(page.locator('#id_category')).toHaveValue('');
     await selectChoice(search, { label: 'Aplicativo Comida' });
-    await page.getByLabel('Transaction type').selectOption('INCOME');
+    await page.getByLabel(/^\s*Transaction type/).selectOption('INCOME');
     await expect(search).toHaveValue('');
     await search.fill('aplicati');
     await expect(options).toHaveCount(0);
@@ -101,9 +106,9 @@ for (const viewport of [
         }
         await page.reload();
         await page.evaluate(dark => document.documentElement.classList.toggle('dark', dark), viewport.dark);
-        await page.getByLabel('Transaction type').selectOption('EXPENSE');
+        await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
         await selectChoice(page.locator('#category-search'), { label: 'Aplicativo Comida' });
-        const channel = page.getByLabel('Payment channel');
+        const channel = page.getByLabel(/^\s*Payment channel/);
         await channel.focus();
         // Begin with the controlling field at the bottom, as in a long form.
         await channel.evaluate(element => window.scrollBy(0,
@@ -145,7 +150,7 @@ for (const viewport of [
         await expect.poll(fullyVisible).toBe(true);
         await page.keyboard.press('Enter');
         await expect(search).toHaveValue(/Keyboard card A/);
-        await expect(page.getByLabel('Installments')).toBeVisible();
+        await expect(page.getByLabel(/^\s*Installments/)).toBeVisible();
         await expect(search).toBeFocused();
 
         await page.keyboard.type('no-matching-card');
@@ -171,36 +176,42 @@ test('a recurring credit transaction can be completed with keyboard only', async
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    await tabTo(page, page.getByLabel('Payment channel'));
+    await tabTo(page, page.getByLabel(/^\s*Payment channel/));
     await page.keyboard.press('c');
     await page.keyboard.press('Tab');
     await expect(page.locator('#id_credit_card-search')).toBeFocused();
-    await expect(page.getByLabel('Installments')).toBeHidden();
+    await expect(page.getByLabel(/^\s*Installments/)).toBeHidden();
     await page.keyboard.type('Keyboard card A');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    await expect(page.getByLabel('Installments')).toBeVisible();
-    await tabTo(page, page.getByLabel('Transaction date'));
+    await expect(page.getByLabel(/^\s*Installments/)).toBeVisible();
+    await tabTo(page, page.getByLabel(/^\s*Transaction date/));
     await page.keyboard.type('07/09/2026');
     const advanced = page.locator('summary').filter({ hasText: 'Advanced options' });
     await tabTo(page, advanced);
     await page.keyboard.press('Enter');
     await page.keyboard.press('Tab');
-    await expect(page.getByLabel('Fixed / recurring transaction')).toBeFocused();
-    await expect(page.getByLabel('Repeat until')).toBeHidden();
+    await expect(page.getByLabel(/^\s*Fixed \/ recurring transaction/)).toBeFocused();
+    await expect(page.getByLabel(/^\s*Repeat until/)).toBeHidden();
     await page.keyboard.press('Space');
     await page.keyboard.press('Tab');
-    await expect(page.getByLabel('Repeat until')).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Explain Fixed / recurring transaction', exact: true })).toBeFocused();
+    await expect(page.locator('#id_is_fixed-help')).toBeVisible();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Explain Repeat until', exact: true })).toBeFocused();
+    await expect(page.locator('#id_fixed_until-help')).toBeVisible();
+    await page.keyboard.press('Tab');
+    await expect(page.getByLabel(/^\s*Repeat until/)).toBeFocused();
     await page.keyboard.type('07/12/2026');
-    await tabTo(page, page.getByLabel('Notes'));
+    await tabTo(page, page.getByLabel(/^\s*Notes/));
     await page.keyboard.type('Entirely by keyboard');
     await tabTo(page, page.getByRole('button', { name: 'Save', exact: true }));
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/transactions\/$/);
     await expect(page.getByText('Keyboard recurring', { exact: true })).toBeVisible();
     await page.getByRole('link', { name: /Edit/ }).first().click();
-    await expect(page.getByLabel('Installments')).toBeVisible();
-    await expect(page.getByLabel('Repeat until')).toHaveValue('07/12/2026');
+    await expect(page.getByLabel(/^\s*Installments/)).toBeVisible();
+    await expect(page.getByLabel(/^\s*Repeat until/)).toHaveValue('07/12/2026');
 });
 
 test('multi-select search keeps checked values and keyboard focus while filtering', async ({ page }, testInfo) => {
@@ -229,19 +240,19 @@ test('conditional branches preserve server errors, clear inactive values and ski
     await fixture(page, testInfo);
     await page.locator('#id_title').fill('Invalid payment');
     await page.locator('#id_amount').fill('50');
-    await page.getByLabel('Transaction type').selectOption('EXPENSE');
+    await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
     await selectChoice(page.locator('#category-search'), { label: 'Aplicativo Comida' });
-    await page.getByLabel('Payment channel').selectOption('CREDIT_CARD');
+    await page.getByLabel(/^\s*Payment channel/).selectOption('CREDIT_CARD');
     await selectChoice(page.locator('#id_credit_card-search'), { label: 'Keyboard card A - Keyboard bank > Keyboard account (BRL)' });
-    await page.getByLabel('Installments').fill('0');
-    await page.getByLabel('Transaction date').fill('07/09/2026');
+    await page.getByLabel(/^\s*Installments/).fill('0');
+    await page.getByLabel(/^\s*Transaction date/).fill('07/09/2026');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.locator('#id_installments-error-1')).toBeVisible();
-    await page.getByLabel('Payment channel').selectOption('PIX');
+    await page.getByLabel(/^\s*Payment channel/).selectOption('PIX');
     await expect(page.locator('#credit-card-fields')).toBeHidden();
     await expect(page.locator('#id_installments')).toHaveValue('1');
     await expect(page.locator('#id_installments-error-1')).toHaveCount(0);
-    await page.getByLabel('Payment channel').focus();
+    await page.getByLabel(/^\s*Payment channel/).focus();
     await page.keyboard.press('Tab');
     await expect(page.locator('#id_bank_account-search')).toBeFocused();
     await expect(page.locator('#id_credit_card')).toHaveValue('');
@@ -250,19 +261,19 @@ test('conditional branches preserve server errors, clear inactive values and ski
 test('IOF, loyalty purchases and transport voucher wait for their controlling choices', async ({ page }, testInfo) => {
     const { account } = await fixture(page, testInfo);
     await page.goto('/banking/loyalty-entries/create/');
-    await page.getByLabel('Kind').selectOption('PURCHASE');
-    await expect(page.getByLabel('Amount paid')).toBeHidden();
+    await page.getByLabel(/^\s*Kind/).selectOption('PURCHASE');
+    await expect(page.getByLabel(/^\s*Amount paid/)).toBeHidden();
     await selectChoice(page.locator('#id_funding_account-search'), account);
-    await expect(page.getByLabel('Amount paid')).toBeVisible();
-    await page.getByLabel('Amount paid').fill('25');
-    await page.getByLabel('Kind').selectOption('ADJUSTMENT');
-    await expect(page.getByLabel('Amount paid')).toBeHidden();
+    await expect(page.getByLabel(/^\s*Amount paid/)).toBeVisible();
+    await page.getByLabel(/^\s*Amount paid/).fill('25');
+    await page.getByLabel(/^\s*Kind/).selectOption('ADJUSTMENT');
+    await expect(page.getByLabel(/^\s*Amount paid/)).toBeHidden();
     await expect(page.locator('#id_cash_amount')).toHaveValue('');
     await page.goto('/banking/rewards/redeem/');
     await expect(page.locator('#id_iof_account-search')).toBeHidden();
-    await page.getByLabel('Iof amount').fill('1');
+    await page.getByLabel(/^\s*Iof amount/).fill('1');
     await selectChoice(page.locator('#id_iof_account-search'), account);
-    await page.getByLabel('Iof amount').fill('0');
+    await page.getByLabel(/^\s*Iof amount/).fill('0');
     await expect(page.locator('#id_iof_account-search')).toBeHidden();
     await expect(page.locator('#id_iof_account')).toHaveValue('');
     await page.goto('/sandbox/');
@@ -304,14 +315,14 @@ test('native forms and conditional fields remain usable without JavaScript', asy
     try {
         const { account } = await fixture(page, testInfo);
         await expect(page.locator('#id_category')).toBeVisible();
-        await expect(page.getByLabel('Installments')).toBeVisible();
+        await expect(page.getByLabel(/^\s*Installments/)).toBeVisible();
         await page.locator('#id_title').fill('Native transaction');
         await page.locator('#id_amount').fill('10');
-        await page.getByLabel('Transaction type').selectOption('EXPENSE');
+        await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
         await page.getByLabel('Category', { exact: false }).selectOption({ label: 'Aplicativo Comida' });
-        await page.getByLabel('Payment channel').selectOption('ACCOUNT');
+        await page.getByLabel(/^\s*Payment channel/).selectOption('ACCOUNT');
         await page.locator('#id_bank_account').selectOption(account);
-        await page.getByLabel('Transaction date').fill('07/09/2026');
+        await page.getByLabel(/^\s*Transaction date/).fill('07/09/2026');
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await expect(page).toHaveURL(/transactions\/$/);
         await page.goto('/sandbox/');
@@ -326,15 +337,15 @@ test('investment choices wait for asset, operation and source and clear abandone
     const { bank, account } = await fixture(page, testInfo);
     await post(page, '/investments/products/create/', { bank, name: 'Portfolio' });
     await page.goto('/investments/assets/create/');
-    await expect(page.getByLabel('How this asset is valued')).toHaveValue('');
+    await expect(page.getByLabel(/^\s*How this asset is valued/)).toHaveValue('');
     await expect(page.locator('#monetary-opening-fields')).toBeHidden();
     await expect(page.locator('#unit-opening-fields')).toBeHidden();
-    await page.getByLabel('How this asset is valued').selectOption('MONETARY');
+    await page.getByLabel(/^\s*How this asset is valued/).selectOption('MONETARY');
     await expect(page.locator('#monetary-opening-fields')).toBeVisible();
     await page.locator('#id_opening_balance').fill('20');
     await expect(page.locator('#opening-product-fields')).toBeVisible();
     await selectChoice(page.locator('#id_opening_product-search'), { label: 'Keyboard bank - Portfolio' });
-    await page.getByLabel('How this asset is valued').selectOption('UNITS');
+    await page.getByLabel(/^\s*How this asset is valued/).selectOption('UNITS');
     await expect(page.locator('#id_opening_balance')).toHaveValue('0');
     await expect(page.locator('#id_opening_product')).toHaveValue('');
     await expect(page.locator('#opening-product-fields')).toBeHidden();
@@ -346,7 +357,7 @@ test('investment choices wait for asset, operation and source and clear abandone
     await selectChoice(page.locator('#id_asset-search'), { label: 'Cash pot (POT)' });
     await expect(page.locator('#money-fields')).toBeHidden();
     await expect(page.locator('#funding-section')).toBeHidden();
-    await page.getByLabel('Type').selectOption('YIELD');
+    await page.getByLabel(/^\s*Type/).selectOption('YIELD');
     await expect(page.locator('#monetary-yield-fields')).toBeVisible();
     await expect(page.locator('#regular-amount-field')).toBeHidden();
     await expect(page.locator('#ending-balance-field')).toBeHidden();
@@ -354,7 +365,7 @@ test('investment choices wait for asset, operation and source and clear abandone
     await page.locator('#id_amount').fill('10');
     await selectChoice(page.locator('#id_asset-search'), { label: 'Shares (STK)' });
     await expect(page.locator('#id_amount')).toHaveValue('');
-    await page.getByLabel('Type').selectOption('DEPOSIT');
+    await page.getByLabel(/^\s*Type/).selectOption('DEPOSIT');
     await expect(page.locator('#unit-fields')).toBeVisible();
     await expect(page.locator('#cash-fields')).toBeHidden();
     await selectChoice(page.locator('#id_source_account-search'), account);
@@ -362,7 +373,7 @@ test('investment choices wait for asset, operation and source and clear abandone
     await selectChoice(page.locator('#id_source_account-search'), '');
     await expect(page.locator('#cash-fields')).toBeHidden();
     await expect(page.locator('#id_cash_amount')).toHaveValue('');
-    await page.getByLabel('Type').selectOption('WITHDRAWAL');
+    await page.getByLabel(/^\s*Type/).selectOption('WITHDRAWAL');
     await expect(page.locator('#cash-fields')).toBeHidden();
     await selectChoice(page.locator('#id_destination_account-search'), account);
     await expect(page.locator('#cash-fields')).toBeVisible();

@@ -10,7 +10,7 @@ the published Pages artifact.
 |---|---|
 | `capture_preview.sh` | Creates isolated temporary storage, starts Django locally, validates all captures and cleans up. |
 | `seed_preview_data.py` | Populates two disposable, localized profiles with synthetic financial data. |
-| `capture_preview.js` | Signs in to the temporary profiles and captures the 12 versioned screenshots. |
+| `capture_preview.js` | Signs in to the temporary profiles and captures the 14 versioned screenshots. |
 | `playwright.config.js` | Serves and validates the static English and Portuguese tours. |
 
 The files that GitHub Pages publishes remain in `preview/`. Preview browser
@@ -23,6 +23,9 @@ surface `#1B1B1B`, raised/hover surface `#262626`, and muted text `#B8B8B8`.
 Caramel actions and the financial colors in application screenshots retain
 their meanings. Keep both language editions and their captions in sync with the
 current dashboard and transaction navigation when refreshing captures.
+The synthetic profiles also demonstrate a BRL 2,000 account reserve, an excluded
+USD account, and a monthly cash pot. The Planning capture calculates a hypothetical
+yield scenario without saving a draft or creating financial operations.
 
 ## Commands
 

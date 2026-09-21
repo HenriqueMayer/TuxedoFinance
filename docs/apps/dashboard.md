@@ -47,10 +47,10 @@ Investment deposits and withdrawals move cash between banking and the portfolio
 without becoming income/expense. Yield affects investment value internally; it
 does not increase available bank balance.
 
-The dashboard keeps economic performance distinct from cash settlement. Income,
-expenses and the selected month's projected closing describe activity assigned
-to the month. Available cash and the current month's through-today cash change
-come from posted account movements. Card purchases therefore stay in their
+The dashboard keeps economic performance distinct from cash settlement. Income
+and expenses describe activity assigned to the statement month. Projected closing
+balances, available cash and the current month's through-today cash change
+come from dated account movements. Card purchases therefore stay in their
 statement month while actual account cash changes when the invoice is settled.
 The live account and open-invoice panels always describe today, even while
 another month is selected.
@@ -92,6 +92,16 @@ fallbacks. The approved report set is organized by source of truth:
 Charts must label actual versus projected values. Forecasts may include future
 recurrences and invoices but must not post them or alter today's ledger.
 
+The twelve-month evolution window contains five months before its anchor and
+six after it. Its anchor can move at most five months beyond the current month,
+so the displayed window ends eleven months from now. The dashboard's six-month
+outlook can start at most six months ahead and shares that same final month.
+The ledger synchronizes through today's day twelve months ahead, which does not
+cover that last calendar month's late payments. Neither screen therefore shows
+that partial month as a complete closing-balance forecast. Forward controls stop
+at the boundary; out-of-range GET parameters return to the current window. Past
+windows remain available while their opening balance date is representable.
+
 ## No-double-counting checks
 
 - Never subtract a credit purchase from available cash before invoice payment.
@@ -101,3 +111,18 @@ recurrences and invoices but must not post them or alter today's ledger.
 - Do not silently treat unlike currencies as equal. Historical transfer and
   investment totals use persisted FX snapshots; missing conversion is explicitly
   incomplete elsewhere.
+
+## Resources versus activity
+
+Planning availability comes from the shared Banking read model: included bank
+balances plus monetary cash pots, minus set-aside funds. It remains a current
+snapshot regardless of the selected performance month. Missing exchange rates
+make the displayed consolidated total explicitly incomplete.
+
+Income and expense performance retain statement-month attribution. Bank closing
+balance projections follow effective movement dates, including invoice due dates
+and the actual bank cash legs of investments. Points-funded deposits create no
+bank cash outflow. Cash-pot movements are not investment-contribution metrics.
+The selected future month is bounded so the six-month outlook stays inside the
+existing twelve-month synchronization horizon; the UI disables forward navigation
+at that limit.

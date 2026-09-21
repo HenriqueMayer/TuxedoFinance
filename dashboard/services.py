@@ -8,15 +8,12 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from banking.models import (
-    BankAccount,
-    BankMovement,
     CardInvoice,
     LoyaltyEntry,
     RewardRedemption,
 )
-from banking.services import MissingExchangeRate, convert
-from investments.models import Investment
-from investments.services import historical_value_in_base
+from banking.services import MissingExchangeRate, account_balances, convert, get_planning_availability
+from investments.models import Investment, InvestmentProduct
 from transactions.models import Transaction
 from accounts.models import UserPreference
 
@@ -66,20 +63,21 @@ def _convert_or_missing(user, amount, currency, as_of, missing):
 
 def get_ledger_snapshot(user, as_of):
     """Return native account balances and the safely converted consolidation."""
-    accounts = BankAccount.objects.filter(user=user).select_related('bank')
     rows = []
     total = ZERO
     missing = set()
-    for account in accounts:
-        native = account.opening_balance
-        movements = BankMovement.objects.filter(
-            user=user, account=account, effective_date__lte=as_of
-        ).only('direction', 'amount', 'source_key')
-        for movement in movements:
-            native += movement.signed_amount
-        converted = _convert_or_missing(
-            user, native, account.currency, as_of, missing
-        )
+    base = UserPreference.for_user(user).base_currency
+    rates = {}
+    for row in account_balances(user, as_of):
+        account, native = row['account'], row['balance']
+        if account.currency not in rates:
+            try:
+                rates[account.currency] = convert(user, Decimal('1'), account.currency, base, as_of)
+            except MissingExchangeRate:
+                rates[account.currency] = None
+                missing.add(account.currency)
+        rate = rates[account.currency]
+        converted = None if rate is None else native * rate
         if converted is not None:
             total += converted
         rows.append(
@@ -99,25 +97,18 @@ def get_ledger_snapshot(user, as_of):
     }
 
 
-def _investment_value(user, operation, base_currency, missing):
-    value = historical_value_in_base(
-        user, operation, base_currency,
-        on_date=operation.date,
-    )
-    if value is None:
-        missing.add(operation.asset.currency)
-    return value
-
-
 def _investment_cash_flows(user, window, cutoff=None):
     wanted = set(window)
     investments = ZERO
     withdrawals = ZERO
     missing = set()
-    base_currency = UserPreference.for_user(user).base_currency
+    first = date(*min(window), 1)
+    last = _month_end(*max(window))
     operations = Investment.objects.filter(
         user=user,
+        product__purpose=InvestmentProduct.Purpose.INVESTMENT,
         kind__in=(Investment.Kind.DEPOSIT, Investment.Kind.WITHDRAWAL),
+        date__gte=first, date__lte=min(last, cutoff) if cutoff else last,
     ).select_related('asset', 'source_account', 'destination_account')
     for operation in operations:
         if (operation.date.year, operation.date.month) not in wanted:
@@ -125,7 +116,12 @@ def _investment_cash_flows(user, window, cutoff=None):
         if cutoff is not None and operation.date > cutoff:
             continue
         if operation.kind == Investment.Kind.DEPOSIT:
-            value = _investment_value(user, operation, base_currency, missing)
+            if not operation.cash_amount or not operation.source_account_id:
+                continue
+            value = _convert_or_missing(
+                user, operation.cash_amount, operation.source_account.currency,
+                operation.date, missing,
+            )
             if value is not None:
                 investments += value
             continue
@@ -323,50 +319,25 @@ def get_dashboard_summary(user, year=None, month=None):
         cutoff=category_cutoff,
     )
 
-    selected_offset = (year - today.year) * 12 + month - today.month
-    path_months = max(0, selected_offset) + OUTLOOK_MONTHS
-    projected_path = {}
-    rolling_projected = current_period_start['total']
-    for offset in range(path_months + 1):
-        path_year, path_month = add_months(today.year, today.month, offset)
-        path_totals = _monthly_totals(user, transactions, path_year, path_month)
-        rolling_projected += path_totals['balance']
-        projected_path[(path_year, path_month)] = rolling_projected
-
     previous_year, previous_month = add_months(year, month, -1)
-    if selected_offset >= 0:
-        period_start_total = (
-            current_period_start['total']
-            if selected_offset == 0
-            else projected_path[(previous_year, previous_month)]
-        )
-        projected_total = projected_path[(year, month)]
-    else:
-        period_start = get_ledger_snapshot(
-            user, _month_end(previous_year, previous_month)
-        )
-        period_close = get_ledger_snapshot(user, _month_end(year, month))
-        period_start_total = period_start['total']
-        projected_total = period_close['total']
+    period_start = get_ledger_snapshot(user, _month_end(previous_year, previous_month))
+    period_close = get_ledger_snapshot(user, _month_end(year, month))
+    period_start_total = period_start['total']
+    projected_total = period_close['total']
 
     outlook = []
     missing = set(current['missing_currencies'])
     missing.update(current_period_start['missing_currencies'])
-    if selected_offset < 0:
-        missing.update(period_start['missing_currencies'])
-        missing.update(period_close['missing_currencies'])
+    missing.update(period_start['missing_currencies'])
+    missing.update(period_close['missing_currencies'])
     missing.update(category_missing)
     for offset in range(OUTLOOK_MONTHS):
         row_year, row_month = add_months(year, month, offset)
         totals = _monthly_totals(user, transactions, row_year, row_month)
         missing.update(totals['missing_currencies'])
-        row_offset = (row_year - today.year) * 12 + row_month - today.month
-        if row_offset >= 0:
-            row_projected = projected_path[(row_year, row_month)]
-        else:
-            snapshot = get_ledger_snapshot(user, _month_end(row_year, row_month))
-            missing.update(snapshot['missing_currencies'])
-            row_projected = snapshot['total']
+        snapshot = get_ledger_snapshot(user, _month_end(row_year, row_month))
+        missing.update(snapshot['missing_currencies'])
+        row_projected = snapshot['total']
         outlook.append(
             {
                 'year': row_year,
@@ -404,6 +375,7 @@ def get_dashboard_summary(user, year=None, month=None):
         'is_current_month': is_current_month,
         'is_future_month': is_future_month,
         'current_balance': current['total'],
+        'planning_availability': get_planning_availability(user, today),
         'period_opening_balance': period_start_total,
         'period_closing_balance': projected_total,
         'cash_change_through_cutoff': cash_change_through_cutoff,

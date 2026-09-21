@@ -2,8 +2,8 @@
 
 **Status:** Approved current baseline
 
-**Current release:** 0.2.x
-**Legacy migration policy:** Breaking, clean migration reset
+**Current release:** 0.3.0, plus documented Unreleased changes
+**Migration policy:** Preserve released installations through incremental migrations
 **Product:** Django personal finance tracker
 
 ## 1. Overview
@@ -13,9 +13,10 @@ release adds banks, currency-specific accounts, an authoritative movement
 ledger, PIX, debit and credit cards, card invoices and loyalty points.
 Per-user multicurrency preferences and retained historical conversion evidence
 are implemented. Investments remain separate while sharing banks and bank
-accounts for providers and cash settlement. An authenticated, non-persistent
-salary sandbox estimates automatic CLT or manually adjusted take-home pay and
-turns it into an isolated monthly spending plan.
+accounts for providers and cash settlement. The authenticated planning workspace
+combines salary estimates, monthly budgets, explicitly saved drafts, optional
+snapshots of future commitments and contribution/yield simulations. Monthly cash
+pots and optional account reserves make money available for planning explicit.
 
 The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
@@ -31,7 +32,7 @@ HTMX progressive enhancement.
 | G4 | Multicurrency reporting | Preserve currency-specific account data with per-user reporting and historical FX evidence. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
 | G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
-| G7 | Support isolated planning | Salary and monthly-budget scenarios are calculated without reading or writing financial records. |
+| G7 | Support isolated planning | Save private named scenarios and explicitly import commitment snapshots without posting or changing financial records. |
 
 ## 3. Scope
 
@@ -51,8 +52,10 @@ HTMX progressive enhancement.
 - Monetary investment yields entered directly or derived from a new total
   balance, with a non-persistent preview before saving.
 - Dashboard/read models updated for cash, invoices, investments and net worth.
-- Authenticated salary planning with automatic 2026 CLT rules, manual
-  deductions, and a non-persistent monthly budget.
+- Authenticated salary planning with automatic 2026 CLT rules, manual deductions,
+  named drafts, 12-month commitment snapshots and contribution/yield simulations.
+- Distinguish monthly cash pots from investments; exclude positive account funds
+  or reserve a fixed native amount for planning while preserving wealth and debts.
 
 ### Out of scope
 
@@ -93,11 +96,11 @@ HTMX progressive enhancement.
 | FR22 | Internal yield | Yield changes the investment position only and creates no bank income/movement until withdrawn. |
 | FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth using the user's base currency, with historical snapshots and clearly labeled current valuations. |
 | FR24 | Forecasts | Recurrences and future invoices may create future-effective derived rows, but these do not alter realized cash before their effective date. |
-| FR25 | Breaking delivery | Use a clean migration reset with no compatibility or automatic legacy import. |
+| FR25 | Release compatibility | Preserve existing released data through incremental migrations; the historical pre-release reset is not a normal update procedure. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
 | FR28 | Local database ownership | The repository does not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. |
-| FR29 | Salary sandbox | Authenticated users can estimate automatic CLT or manually adjusted take-home pay and allocate a monthly plan without reading or persisting application financial data or scenario inputs. |
+| FR29 | Planning sandbox | Users estimate salary, allocate a monthly plan, explicitly save incomplete named drafts and import read-only commitment snapshots. Simulations never post financial movements. |
 
 ## 5. Domain Rules
 
@@ -176,18 +179,20 @@ reserved for explicitly labeled current-value simulations elsewhere.
 - Public navigation reflects the same setting, but authorization is enforced in
   the server-side signup view rather than by link visibility alone.
 
-### 5.7 Salary sandbox
+### 5.7 Planning sandbox
 
-- The sandbox calculation is isolated from transactions, banking, investments,
-  user preferences, and other persisted financial records. Shared page context
-  may resolve or initialize presentation preferences; scenario calculations
-  do not consume or modify them.
-- Automatic mode uses a versioned, source-attributed 2026 CLT rule set; manual
-  mode applies only the deductions supplied in the current request.
-- Both modes can feed a monthly plan with fixed costs, reserve and investment
-  targets, and up to 20 additional expense rows.
-- Scenario inputs are submitted by POST and are not stored in models, URLs, or
-  the authenticated session.
+- Salary calculations use versioned, source-attributed CLT rules or explicitly
+  entered manual deductions. Partial inputs may be saved as a named private draft;
+  missing inputs are not interpreted as zero or a valid completed simulation.
+- Scenarios are saved only through an explicit action, never by autosave or a
+  background request. They do not create or modify financial ledger entries.
+- Importing commitments captures a dated, owner-scoped 12-month snapshot of
+  one-off, recurring and installment events. Payment dates drive cash needs;
+  competence is explanatory. Card purchases and invoice settlement are counted
+  once. Refresh is explicit, so reopening a draft cannot silently change it.
+- Monthly contribution/yield simulations accept editable amounts and rates and
+  display their assumptions. Market quotes, history feeds and agent integration
+  remain roadmap work.
 
 ## 6. Data Structure
 
@@ -207,7 +212,7 @@ banking/       # banks, accounts, ledger, PIX, cards, invoices, loyalty, FX
 transactions/  # economic events and recurrence
 dashboard/     # read models and reports
 investments/   # products, assets, position operations and valuation
-sandbox/       # non-persistent salary and monthly-budget planning
+sandbox/       # private planning drafts and isolated simulations
 ```
 
 Navigation and financial relationships use the current banking concepts.
@@ -216,11 +221,16 @@ Navigation and financial relationships use the current banking concepts.
 
 ```mermaid
 flowchart TD
-    Login --> Dashboard
-    Dashboard --> Banking
-    Dashboard --> Transactions
-    Dashboard --> Investments
-    Dashboard --> SalarySandbox[Salary sandbox]
+    Login --> Overview
+    Overview --> Reports
+    Overview --> Banking[Banks]
+    Overview --> Transactions[Activity]
+    Overview --> Investments
+    Overview --> Planning
+    Transactions --> Categories
+    Planning --> SalarySandbox[Salary and monthly budget]
+    Planning --> Simulation[Yield simulation]
+    Planning --> Drafts[Named drafts]
     Banking --> Bank
     Bank --> Account
     Account --> PIX
@@ -245,10 +255,11 @@ The dashboard separates cash, economic activity, liabilities and positions:
 
 | Component | Source |
 |---|---|
-| Available cash | Opening balances + posted bank movements. |
+| Bank cash | Opening balances + posted bank movements. |
+| Planning availability | Bank cash + remunerated cash - account reserves/exclusions; deficits stay included. |
 | Income/expense | Categorized transactions; no transfers/investment cash legs. |
 | Card payable | Open invoice item totals less payments. |
-| Investment value | Investment quantities and historical/current valuation. |
+| Investment value | Opening positions and recorded operations; historical FX evidence, not live market quotes. |
 | Net worth | Converted cash + investments - card payable. |
 
 Reports remain responsive, server-rendered SVG/CSS. HTMX may swap chart islands
@@ -336,30 +347,27 @@ missing. Do not show the former best-month summary card.
       retain stable URLs, and do not alter currency separators or user data.
 - [x] Fresh migrations install successfully on an empty SQLite database.
 - [x] The root SQLite database is ignored by Git and a clean clone becomes usable after migrations.
-- [x] Legacy database use is blocked/documented; no partial in-place migration is implied.
+- [x] Unsupported pre-release legacy schemas are distinguished from supported release upgrades.
 - [x] Monetary yields can derive the stored yield from a new total balance without creating a bank movement.
-- [x] The authenticated salary sandbox supports automatic CLT and manual modes without persisting scenario data.
+- [x] The authenticated planning workspace supports salary estimates, explicit private drafts and isolated simulations.
 
-## 13. Delivery Plan
+## 13. Release validation
 
-1. Remove legacy migration artifacts and databases from the release workspace.
-2. Add `banking` models and services in dependency order: bank/account/rates,
-   movements/transfers, cards/invoices, loyalty.
-3. Rebuild transactions against banking settlement paths.
-4. Rebuild investments against `Bank`, accounts, classified assets and quantity pricing.
-5. Rebuild dashboard read models and reports from the new sources of truth.
-6. Replace navigation/templates and verify responsive/no-JS behavior.
-7. Generate fresh migrations, migrate an empty database, seed only approved defaults,
-   and run reconciliation/isolation/regression tests.
+Each release retains committed migrations and preserves existing financial
+records. Validate fresh installation, upgrade from the supported previous
+release, owner isolation, reconciliation, and backup/restore on disposable data.
+New financial behavior requires focused tests and bilingual, keyboard-accessible
+interfaces. Run the checks in `CONTRIBUTING.md` before release.
 
-## 14. Breaking Release Procedure
+## 14. Historical pre-release reset
 
-This release intentionally has no in-place schema migration. Before deployment,
-operators may export legacy data for manual reference. Deployment then uses a
-fresh SQLite database and newly generated initial migrations. Legacy data shapes
-are unsupported. Rollback requires restoring the entire pre-release application
-and its matching database backup; mixing old and new code/database versions is
-not supported.
+The original banking redesign intentionally replaced an unsupported pre-release
+schema. That completed delivery had no automatic legacy-data conversion. It is
+historical context, not a standing requirement to regenerate initial migrations
+or create an empty database. Published installations, including v0.3.0 Docker
+volumes, retain their records through incremental migrations. Recovery uses the
+matching application image and database backup; reverting an image alone does
+not undo schema changes.
 
 ## 15. Docker installation (v0.3.0, issue #18)
 

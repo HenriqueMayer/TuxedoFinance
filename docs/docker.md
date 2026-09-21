@@ -4,6 +4,8 @@ Tuxedo Finance runs as one non-root Linux container with Gunicorn, WhiteNoise
 and an owner-managed SQLite volume. Docker Engine 28+ (or a current Docker
 Desktop) and Compose v2+ are required. No host Python, uv or Node.js installation is needed.
 The default address is <http://127.0.0.1:8000/>.
+The unused Gunicorn control socket is disabled; runtime administration uses
+the documented Compose commands.
 
 ## Availability
 
@@ -155,19 +157,68 @@ installation. Never rehearse restoration over the active database.
 
 ## Update
 
-Back up and read the release's migration notes first. Stop the web service,
-change only `TUXEDO_IMAGE` in `.env.docker` to the selected release, then run:
+Run the update from the existing installation directory, using its original
+Compose project name. An ordinary update preserves records through incremental
+migrations; never create an empty database or run `down --volumes`.
+
+1. Read the selected release's migration notes. Compare its `compose.yaml` and
+   `docker.env.example` with your configuration for required changes. Do not
+   replace `.env.docker` with an example or regenerate its signing key.
+2. Record the current image with `docker compose --env-file .env.docker config
+   --images`, then follow [Backup](#backup). Retain the old Compose configuration,
+   image reference and signing key with that verified backup.
+3. Follow [Restore rehearsal](#restore-rehearsal-and-recovery) using a new project
+   and volume. Test the candidate image there first; verify login, balances,
+   transactions, installments, invoices and opening investment positions.
+4. Stop all writers to the original installation and take a final backup before
+   changing the image. This includes any records added during the rehearsal.
+   Keep writers stopped until the candidate is ready. Then change `TUXEDO_IMAGE`
+   in `.env.docker` to the exact candidate version or digest. Apply only required,
+   reviewed Compose changes while preserving the same volume and project identity.
+
+For step 3, after restoring the backup in the unused `tuxedo-restore` project,
+select the candidate image only for that rehearsal. Replace `vX.Y.Z` with the
+release being tested:
+
+```bash
+candidate_image=ghcr.io/henriquemayer/tuxedofinance:vX.Y.Z
+docker pull "$candidate_image"
+TUXEDO_IMAGE="$candidate_image" TUXEDO_PORT=8001 docker compose --project-name tuxedo-restore --env-file .env.docker up -d --wait
+```
+
+This leaves the original `.env.docker` and volume unchanged. After the rehearsal
+passes, stop the original service and capture the final recovery point for step 4.
+Stop any separately running management commands as well:
+
+```bash
+backup_dir="$HOME/tuxedo-finance-backups"
+mkdir -p "$backup_dir"
+chmod 700 "$backup_dir"
+backup_name="pre-update-$(date +%Y%m%d-%H%M%S).sqlite3"
+docker compose --env-file .env.docker exec -T web python manage.py showmigrations > "$backup_dir/$backup_name.migrations.txt"
+docker compose --env-file .env.docker stop web
+docker compose --env-file .env.docker run --rm -T web python scripts/sqlite_backup.py /data/db.sqlite3 "/data/$backup_name"
+docker compose --env-file .env.docker cp "web:/data/$backup_name" "$backup_dir/$backup_name"
+chmod 600 "$backup_dir/$backup_name"
+```
+
+Retain this final backup with the previous image reference and signing key.
+After selecting the new image, run:
 
 ```bash
 docker compose --env-file .env.docker pull
 docker compose --env-file .env.docker up -d --wait
 docker compose --env-file .env.docker logs --tail=100 web
+docker compose --env-file .env.docker exec web python manage.py migrate --check
 ```
 
-Keep the same volume, Compose project name and signing key. Test the candidate
-image against a restored copy before upgrading valuable data. Returning to an
-older image does not undo migrations; recovery may require its matching backup.
-Pre-release legacy schemas still have no automatic conversion path.
+Startup applies migrations before reporting healthy. Verify representative
+records in the application before resuming use. If the candidate fails, inspect
+the logs and retain the volume; do not clear data or retry against an empty
+installation. Recover with the previous image and its **pre-update backup in a
+new volume**, using the restore procedure. Returning to an older image alone
+does not undo migrations. The historical clean-reset policy concerned only
+unsupported pre-release schemas, not an update from v0.3.0.
 
 ## LAN and TLS
 
@@ -186,6 +237,8 @@ multi-instance deployment are not provided by this configuration.
 ```bash
 docker build -t tuxedo-finance:test .
 uv run python scripts/docker_smoke.py --image tuxedo-finance:test
+docker pull ghcr.io/henriquemayer/tuxedofinance:v0.3.0
+uv run python scripts/docker_smoke.py --image tuxedo-finance:test --previous-image ghcr.io/henriquemayer/tuxedofinance:v0.3.0
 npm run test:e2e -- --docker-image tuxedo-finance:test
 ```
 
@@ -195,6 +248,11 @@ remove only their own resources. They never consume the developer's `.env`,
 The lifecycle runner checks non-root operation, configuration failures, assets,
 translations, financial-record persistence, repeated startup, backup/restore,
 shutdown and health checks. The browser runner exercises the real container.
+CI also rehearses an upgrade from v0.3.0 with synthetic owners, accounts in
+different currencies, preferences, dated transactions, installments, fixed
+commitments, invoices, transfers, FX evidence, loyalty balances and monetary/unit
+opening positions. It compares every existing field before and after the upgrade
+and restore, and verifies conservative defaults for new planning settings.
 
 See [versioning.md](versioning.md#container-releases) for release publication
 and first-publication access verification.

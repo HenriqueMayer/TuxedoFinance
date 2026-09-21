@@ -1,0 +1,7 @@
+{% load i18n %}
+{% if bank.cash_pots %}
+<div class="mt-5 border-l-2 border-caramel pl-4">
+    <h3 class="text-sm font-semibold">{% translate 'Cash pots to redeem' %}</h3>
+    <ul class="mt-2 divide-y divide-forest/10 dark:divide-cream/10">{% for pot in bank.cash_pots %}<li class="flex flex-wrap items-baseline justify-between gap-3 py-2"><a href="{% url 'investments:list' %}?section=cash" class="text-sm underline-offset-4 hover:underline">{{ pot.product.name }} / {{ pot.asset.name }}</a><span class="tabular-nums">{{ pot.currency }} {{ pot.balance|floatformat:2 }}</span></li>{% endfor %}</ul>
+</div>
+{% endif %}

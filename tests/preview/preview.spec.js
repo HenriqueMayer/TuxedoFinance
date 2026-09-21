@@ -19,8 +19,8 @@ test.afterEach(async ({ page }) => {
 
 async function expectScreenshots(page, language) {
     const screenshots = page.locator('[data-lightbox] img');
-    await expect(screenshots).toHaveCount(6);
-    for (let index = 0; index < 6; index += 1) {
+    await expect(screenshots).toHaveCount(7);
+    for (let index = 0; index < 7; index += 1) {
         const image = screenshots.nth(index);
         await image.scrollIntoViewIfNeeded();
         await expect.poll(() => image.evaluate(element => (
@@ -151,11 +151,13 @@ test('expanded screenshots close accessibly and restore focus', async ({ page })
 });
 
 test('mobile tour remains readable without horizontal overflow', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/pt-br/');
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await expect(page.getByRole('navigation', { name: 'Seções da prévia' })).toBeHidden();
-    await expect(page.getByRole('link', { name: 'Iniciar o tour' })).toBeVisible();
+    for (const width of [1024, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        await page.goto('/pt-br/');
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        await expect(page.getByRole('navigation', { name: 'Seções da prévia' })).toBeHidden();
+        await expect(page.getByRole('link', { name: 'Iniciar o tour' })).toBeVisible();
+    }
     await expectScreenshots(page, 'pt-br');
 });

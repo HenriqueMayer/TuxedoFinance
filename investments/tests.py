@@ -601,8 +601,25 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         asset = response.context['portfolio_groups'][0]['products'][0]['assets'][0]
         self.assertEqual(asset['quantity'], Decimal('0.25000000'))
         self.assertEqual(asset['base_balance'], Decimal('15000.0000000000000000'))
-        self.assertContains(response, '0,25000000 units')
+        self.assertContains(response, '0,25 units')
         self.assertContains(response, 'BRL 15.000,00')
+
+    def test_unit_position_display_preserves_smallest_supported_quantity(self):
+        Asset.objects.create(
+            user=self.user,
+            name='Fractional asset',
+            code='TINY',
+            asset_class=Asset.AssetClass.CRYPTO,
+            currency=BASE,
+            valuation_mode=Asset.ValuationMode.UNITS,
+            opening_quantity=Decimal('0.00000001'),
+            opening_unit_price=Decimal('60000.00000000'),
+            opening_product=self.product,
+        )
+
+        response = self.client.get(reverse('investments:list'))
+
+        self.assertContains(response, '0,00000001 units')
 
     def test_create_view_saves_and_synchronizes_atomically(self):
         response = self.client.post(reverse('investments:create'), {
@@ -657,11 +674,9 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(operation.amount, Decimal('1653.10'))
         self.assertEqual(operation.bank_movement.amount, Decimal('1653.10'))
         response = self.client.get(reverse('investments:list'))
-        self.assertContains(response, 'Balance: BRL 1.653,10')
-        self.assertContains(
-            response,
-            'class="mt-1 text-xs text-forest/70 dark:text-night-muted"',
-        )
+        self.assertContains(response, 'BRL 1.653,10')
+        self.assertEqual(response.context['portfolio_groups'][0]['products'][0]['assets'][0]['balance'], Decimal('1653.10'))
+        self.assertContains(response, 'Initial contribution')
         self.assertNotContains(response, '1.00000000 units')
 
     def test_update_and_delete_views_replace_and_cleanup_ledger(self):
@@ -720,7 +735,8 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         })
         self.assertContains(response, 'Coupon')
         htmx = self.client.get(
-            reverse('investments:list'), {'flow_offset': '-1'}, HTTP_HX_REQUEST='true'
+            reverse('investments:list'), {'flow_offset': '-1'}, HTTP_HX_REQUEST='true',
+            HTTP_HX_TARGET='investments-charts',
         )
         self.assertEqual(htmx.status_code, 200)
         self.assertContains(htmx, 'id="investments-charts"')
@@ -753,7 +769,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
                     content.index(f'data-chart-layer="{interactions}"'),
                 )
 
-    def test_charts_appear_before_operation_filters_and_movements(self):
+    def test_operations_are_adjacent_to_positions_before_historical_charts(self):
         operation = self.operation()
         operation.full_clean()
         operation.save()
@@ -762,12 +778,12 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         content = response.content.decode()
 
         self.assertLess(
-            content.index('id="investments-charts"'),
-            content.index('id="investment-search"'),
-        )
-        self.assertLess(
             content.index('id="investment-search"'),
             content.index(reverse('investments:update', args=[operation.pk])),
+        )
+        self.assertLess(
+            content.index(reverse('investments:update', args=[operation.pk])),
+            content.index('id="investments-charts"'),
         )
 
     def test_movement_pagination_uses_a_position_preserving_htmx_island(self):
@@ -841,8 +857,8 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(missing, [])
         self.assertTrue(any(row['total'] == Decimal('500.00') for row in rows))
 
-    def test_settings_links_to_banking_without_broken_rate_route(self):
+    def test_settings_keeps_bank_navigation_without_an_investment_exchange_rate_route(self):
         response = self.client.get(reverse('investments:settings'))
         self.assertContains(response, reverse('banking:list'))
-        self.assertContains(response, reverse('banking:exchange_rates'))
+        self.assertContains(response, reverse('investments:list'))
         self.assertNotContains(response, 'investments/settings/exchange-rates')

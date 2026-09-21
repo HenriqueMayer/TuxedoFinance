@@ -21,8 +21,9 @@ reported through a localized message.
 ## Listing and classification
 
 The category list combines a trimmed, case-insensitive `q` name search with an
-optional `level` filter (`top` or `sub`). Missing or invalid levels do not narrow
-the queryset. Filtering uses ordinary GET requests and has no pagination.
+optional `level` filter (`top` or `sub`) and `type` filter (`INCOME`, `EXPENSE`
+or `unclassified`). Missing or invalid filters do not narrow the queryset.
+Filtering uses ordinary GET requests and has no pagination.
 
 A category may be classified as income or expense. Unclassified categories
 remain available for either transaction type. Existing incompatible transactions
@@ -79,3 +80,28 @@ filter, use arrows to highlight and Enter to confirm. Escape/Tab restore the
 committed choice. The native select remains available without JavaScript, with
 ownership and hierarchy validation on the server. Follow the
 [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+
+## Hierarchy and secondary actions
+
+The list groups a top-level category with its children, shows its income/expense
+classification and direct transaction count, and supports name, level and type
+filters. Unclassified categories retain their existing compatibility with both
+income and expenses. Add subcategory supplies an owned parent as explicit form
+context. Existing category names are never changed by translation or filtering.
+
+Groups start expanded. Clicking a parent name (or activating its disclosure with
+Enter/Space) hides only its descendants; its Edit, Add subcategory and secondary
+actions stay available. Collapse all / Expand all affect every displayed group,
+including nested ones. A fresh page load starts expanded; browser history restores
+the state of the previous page without storing a user preference.
+
+Grouping uses the already-filtered, user-scoped results without extra per-category
+queries. A matching child whose parent is filtered out remains a visible result.
+The forest builder visits each record once, including legacy cyclic relationships.
+Without JavaScript, all categories and actions remain visible and the enhancement
+controls stay hidden. Filtering and editing still work through native navigation.
+
+Import, export and Delete all are secondary options. Default CSV export preserves
+the import contract. `?format=spreadsheet` selects the separately named spreadsheet
+variant, which neutralizes formula-like text and is not intended for faithful
+reimport. Imports do not strip prefixes from names automatically.

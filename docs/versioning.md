@@ -20,7 +20,7 @@ by `scripts/check_version.py`.
 `package.json` is a private manifest for Tailwind and Playwright development
 tools. It does not carry a second application version.
 
-Release tags use the same version prefixed with `v`, for example `v0.2.0`.
+Release tags use the same version prefixed with `v`, for example `v0.3.0`.
 
 ## Preparing a release
 

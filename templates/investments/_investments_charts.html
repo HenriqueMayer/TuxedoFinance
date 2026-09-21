@@ -6,22 +6,25 @@
     {# {{ CURRENCY_SYMBOL }}, FX rate-at-time. Mirrors the Reports       #}
     {# chart-1 visual contract (neutral zero-line, investment stroke). #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-night">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <section class="space-y-4 surface-panel">
+        <div class="panel-heading items-start">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
-                <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate 'Investment evolution' %}</h2>
-                <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
-                    {% blocktranslate %}Your cumulative portfolio total in {{ CURRENCY_SYMBOL }} at the close of each month, converted through the exchange rate that was current at the time. Currencies with no rate set are excluded — see the warning on the “Simulated total” card above.{% endblocktranslate %}
-                </p>
+                <div class="label-with-help">
+                    {% translate 'Investment evolution' as chart_label %}
+                    <h2 class="section-title">{{ chart_label }}</h2>
+                    {% translate 'Recorded portfolio value at each month end, including opening positions held before recorded operations. Historical operations use their saved exchange-rate evidence. Missing conversions are reported in the total above.' as chart_help %}
+                    {% include 'partials/help_popover.html' with help_id='investment-evolution-help' help_label=chart_label help_text=chart_help %}
+                </div>
             </div>
-            <div class="flex shrink-0 items-center gap-3">
+            <div class="flex min-w-0 flex-col gap-2 sm:items-end">
+                <div class="flex items-center gap-3">
                 <a href="{% querystring total_offset=total_previous_offset_param %}"
                    hx-get="{% querystring total_offset=total_previous_offset_param %}"
                    hx-target="#investments-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Previous window' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &larr;
                 </a>
                 <div>
@@ -40,16 +43,17 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Next window' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &rarr;
                 </a>
+                </div>
                 {% if not is_total_anchored_today %}
                     <a href="{% querystring total_offset=0 %}"
                        hx-get="{% querystring total_offset=0 %}"
                        hx-target="#investments-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="quiet-action">
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
@@ -59,7 +63,7 @@
         <div class="overflow-x-auto">
             {% localize off %}
             <svg viewBox="0 0 {{ chart_total.width }} {{ chart_total.height }}"
-                 class="h-auto w-full min-w-[44rem]" role="img"
+                 class="chart-canvas min-w-[44rem]" role="img"
                   aria-label="{% translate 'Line chart of the cumulative investment total in base currency over the last 12 months' %}">
                 <defs>
                     <linearGradient id="investments-area" x1="0" y1="0" x2="0" y2="1">
@@ -137,22 +141,24 @@
     {# Chart 2 — monthly flow (grouped bars): deposits, yields, withdrawals #}
     {# per month, both in {{ CURRENCY_SYMBOL }}, per-entry FX.          #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 rounded-3xl bg-cream p-6 dark:bg-night">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <section class="space-y-4 surface-panel">
+        <div class="panel-heading items-start">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
-                <h2 class="font-sans text-2xl font-semibold tracking-tight text-forest dark:text-cream">{% translate 'Monthly flow' %}</h2>
-                <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
-                    {% blocktranslate %}What you deposited, earned, and withdrew each month — both in {{ CURRENCY_SYMBOL }}, converted at the rate that was current on each entry’s date.{% endblocktranslate %}
-                </p>
+                <div class="label-with-help">
+                    {% translate 'Monthly flow' as chart_label %}
+                    <h2 class="section-title">{{ chart_label }}</h2>
+                    {% include 'partials/help_popover.html' with help_id='investment-flow-help' help_label=chart_label help_template='investments/_flow_help.html' %}
+                </div>
             </div>
-            <div class="flex shrink-0 flex-wrap items-center gap-3">
+            <div class="flex min-w-0 flex-col gap-2 sm:items-end">
+                <div class="flex items-center gap-3">
                 <a href="{% querystring flow_offset=flow_previous_offset_param %}"
                    hx-get="{% querystring flow_offset=flow_previous_offset_param %}"
                    hx-target="#investments-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Previous window' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &larr;
                 </a>
                 <div>
@@ -171,20 +177,25 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Next window' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &rarr;
                 </a>
+                </div>
                 {% if not is_flow_anchored_today %}
                     <a href="{% querystring flow_offset=0 %}"
                        hx-get="{% querystring flow_offset=0 %}"
                        hx-target="#investments-charts"
                        hx-swap="outerHTML"
                        hx-push-url="true"
-                       class="rounded text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                       class="quiet-action">
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
-                <ul class="flex flex-wrap items-center gap-4">
+
+            </div>
+        </div>
+
+        <ul class="flex flex-wrap items-center gap-4">
                     {% for entry in chart_flow.legend %}
                         <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-night-muted">
                             <span class="h-2.5 w-2.5 rounded-sm
@@ -195,13 +206,11 @@
                         </li>
                     {% endfor %}
                 </ul>
-            </div>
-        </div>
 
         <div class="overflow-x-auto">
             {% localize off %}
             <svg viewBox="0 0 {{ chart_flow.width }} {{ chart_flow.height }}"
-                 class="h-auto w-full min-w-[44rem]" role="img"
+                 class="chart-canvas min-w-[44rem]" role="img"
                    aria-label="{% translate 'Grouped bar chart of deposits, yields, and withdrawals per month in base currency' %}">
                 {% for line in chart_flow.grid %}
                     <line x1="{{ chart_flow.plot_left }}" y1="{{ line.y }}"

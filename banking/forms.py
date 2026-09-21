@@ -1,6 +1,8 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from core.dates import configure_date_fields
+
 from banking.models import (
     Bank,
     BankAccount,
@@ -26,6 +28,7 @@ class OwnedModelForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        configure_date_fields(self, user)
         if user is not None:
             self.instance.user = user
         for field in self.fields.values():
@@ -53,12 +56,18 @@ class BankForm(OwnedModelForm):
 class BankAccountForm(OwnedModelForm):
     class Meta:
         model = BankAccount
-        fields = ('bank', 'name', 'currency', 'opening_balance', 'pix_enabled')
+        fields = (
+            'bank', 'name', 'currency', 'opening_balance', 'pix_enabled',
+            'planning_enabled', 'reserved_amount',
+        )
         widgets = {
             'opening_balance': forms.NumberInput(attrs={'step': '0.01'}),
+            'reserved_amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
         }
         help_texts = {
             'opening_balance': _('Balance immediately before the first ledger movement.'),
+            'planning_enabled': _('Include this account in monthly planning. Negative balances remain visible.'),
+            'reserved_amount': _('Keep this amount outside planning. The account balance and history do not change.'),
         }
         labels = {
             'bank': _('Bank'),
@@ -66,12 +75,18 @@ class BankAccountForm(OwnedModelForm):
             'currency': _('Currency'),
             'opening_balance': _('Opening balance'),
             'pix_enabled': _('Pix enabled'),
+            'planning_enabled': _('Use in monthly planning'),
+            'reserved_amount': _('Reserved amount'),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['reserved_amount'].required = False
         if self.user is not None:
             self.fields['bank'].queryset = Bank.objects.filter(user=self.user)
+
+    def clean_reserved_amount(self):
+        return self.cleaned_data.get('reserved_amount') or 0
 
     def clean(self):
         cleaned = super().clean()

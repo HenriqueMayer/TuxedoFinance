@@ -3,11 +3,80 @@
 {% block title %}{% translate 'Investments' %} - Tuxedo Finance{% endblock %}
 {% block content %}
 {% url 'investments:list' as list_url %}
-<div class="space-y-6">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate 'Investments' %}</h1><p class="mt-1 text-sm text-forest/70 dark:text-night-muted">{% translate 'Asset quantities and value flows, with cash authority in Banking.' %}</p></div><div class="flex gap-3"><a href="{% url 'investments:settings' %}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate 'Settings' %}</a><a href="{% url 'investments:create' %}" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep">{% translate 'New operation' %}</a></div></header>
-    <section class="rounded-3xl bg-investment/10 p-6 ring-1 ring-investment/30 dark:bg-investment-light/10 dark:ring-investment-light/30"><p class="text-xs font-medium uppercase tracking-widest text-investment dark:text-investment-light">{% blocktranslate %}Acquisition/value flow converted to {{ base_currency }}{% endblocktranslate %}</p><p class="mt-2 text-2xl font-bold tabular-nums text-investment dark:text-investment-light">{{ CURRENCY_SYMBOL }} {{ simulated_total|floatformat:2 }}</p><p class="mt-2 text-xs font-normal text-forest/70 dark:text-night-muted">{% translate 'This is historical operation value, not a live market valuation.' %}</p>{% if missing_rate_currencies %}<p class="mt-2 text-sm text-expense dark:text-expense-light">{% blocktranslate with currencies=missing_rate_currencies|join:', ' %}Excluded without a Banking exchange rate: {{ currencies }}.{% endblocktranslate %}</p>{% endif %}</section>
-    <section class="space-y-4">{% for bank in portfolio_groups %}<div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface"><h2 class="text-xl font-semibold">{{ bank.name }}</h2><div class="mt-4 grid gap-4 md:grid-cols-2">{% for product in bank.products %}<div class="rounded-xl p-4 ring-1 ring-forest/10 dark:ring-cream/10"><h3 class="font-semibold">{{ product.name }}</h3>{% for asset in product.assets %}<div class="mt-3 rounded-lg bg-cream p-3 dark:bg-night"><div class="flex justify-between gap-3"><span>{{ asset.name }} ({{ asset.code }})</span><strong class="tabular-nums">{% if asset.valuation_mode == 'MONETARY' %}{% blocktranslate with balance=asset.balance|floatformat:2 currency=asset.currency %}Balance: {{ currency }} {{ balance }}{% endblocktranslate %}{% else %}{% blocktranslate with quantity=asset.quantity|floatformat:8 %}{{ quantity }} units{% endblocktranslate %}{% if asset.base_balance is not None %} &middot; {% blocktranslate with currency=base_currency value=asset.base_balance|floatformat:2 %}{{ currency }} {{ value }}{% endblocktranslate %}{% endif %}{% endif %}</strong></div><p class="mt-1 text-xs text-forest/70 dark:text-night-muted">{% blocktranslate with deposits=asset.deposits|floatformat:2 yields=asset.yields|floatformat:2 withdrawals=asset.withdrawals|floatformat:2 currency=asset.currency %}Deposits {{ deposits }} / Yields {{ yields }} / Withdrawals {{ withdrawals }} {{ currency }}{% endblocktranslate %}</p></div>{% endfor %}</div>{% endfor %}</div></div>{% empty %}<div class="rounded-3xl bg-white p-6 text-sm font-normal text-forest/70 shadow-sm dark:bg-night-surface dark:text-night-muted">{% translate 'Create a bank in Banking, then add a product and asset.' %}</div>{% endfor %}</section>
-    {% if has_investments %}{% include 'investments/_investments_charts.html' %}{% endif %}
+<div class="space-y-7">
+    <header class="workspace-header">
+        <div class="label-with-help">
+            {% translate 'Investments' as investments_label %}
+            {% translate 'Long-term positions and the cash you keep earning until bills are due.' as investments_help %}
+            <h1 class="page-title">{{ investments_label }}</h1>
+            {% include 'partials/help_popover.html' with help_id='investments-overview-help' help_label=investments_label help_text=investments_help %}
+        </div>
+        <a href="{% url 'investments:create' %}" class="action-primary">{% translate 'New operation' %}</a>
+    </header>
+    {% include 'investments/_sections.html' %}
+    <section class="panel-heading border-b border-forest/10 pb-6 dark:border-cream/10">
+        <div class="label-with-help">
+            {% if selected_section == 'cash' %}
+                {% translate 'Remunerated cash' as portfolio_label %}
+                {% translate 'Included in planning availability. Record actual yields here; redeem to an account before paying.' as portfolio_help %}
+            {% else %}
+                {% translate 'Portfolio' as portfolio_label %}
+                {% translate 'This is historical operation value, not a live market valuation.' as portfolio_help %}
+            {% endif %}
+            <h2 class="section-title">{{ portfolio_label }}</h2>
+            {% include 'partials/help_popover.html' with help_id='investments-portfolio-help' help_label=portfolio_label help_text=portfolio_help %}
+        </div>
+        <div class="text-right">
+            <p class="text-3xl font-semibold tracking-tight tabular-nums">{{ base_currency }} {{ simulated_total|floatformat:2 }}</p>
+            {% if selected_section != 'cash' %}<p class="subtle-copy mt-1">{% translate 'Historical value' %}</p>{% endif %}
+        </div>
+        {% if missing_rate_currencies %}<p class="w-full text-sm text-expense dark:text-expense-light">{% blocktranslate with currencies=missing_rate_currencies|join:', ' %}Incomplete total: exchange rates are missing for {{ currencies }}.{% endblocktranslate %}</p>{% endif %}
+    </section>
+    <section class="space-y-8" aria-label="{% translate 'Positions' %}">
+    {% for bank in portfolio_groups %}
+        <div class="surface-panel"><h2 class="section-title">{{ bank.name }}</h2>
+        {% for product in bank.products %}
+            <div class="panel-heading mt-4 border-b border-forest/10 pb-1 dark:border-cream/10">
+                <h3 class="text-base font-medium text-forest/80 dark:text-cream/80">{{ product.name }}</h3>
+                <a href="{% url 'investments:update_product' product.id %}" class="quiet-action">{% translate 'Edit' %}</a>
+            </div>
+            <div class="hidden overflow-x-auto sm:block" tabindex="0" role="region" aria-label="{{ product.name }}"><table class="data-table min-w-[42rem] table-fixed">
+                <colgroup><col class="w-[28%]"><col class="w-[27%]"><col class="w-[15%]"><col class="w-[15%]"><col class="w-[15%]"></colgroup>
+                <thead><tr><th scope="col">{% translate 'Asset' %}</th><th scope="col" class="number">{% translate 'Position' %}</th><th scope="col" class="number">{% translate 'Deposits' %}</th><th scope="col" class="number">{% translate 'Yields' %}</th><th scope="col" class="number">{% translate 'Withdrawals' %}</th></tr></thead>
+                <tbody>{% for asset in product.assets %}<tr><td><span class="font-medium">{{ asset.name }}</span><p class="subtle-copy mt-1">{{ asset.code }} · {{ asset.currency }}</p></td><td class="number font-semibold">{% if asset.valuation_mode == 'MONETARY' %}{{ asset.currency }} {{ asset.balance|floatformat:2 }}{% else %}{% blocktranslate with quantity=asset.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% if asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% endif %}</td><td class="number">{{ asset.currency }} {{ asset.deposits|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+            <ul class="divide-y divide-forest/10 sm:hidden dark:divide-cream/10">
+                {% for asset in product.assets %}
+                    <li class="space-y-4 py-4">
+                        <div class="flex flex-wrap items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium">{{ asset.name }}</p>
+                                <p class="subtle-copy mt-1">{{ asset.code }} · {{ asset.currency }}</p>
+                            </div>
+                            <div class="shrink-0 text-right text-sm font-semibold tabular-nums">
+                                {% if asset.valuation_mode == 'MONETARY' %}
+                                    {{ asset.currency }} {{ asset.balance|floatformat:2 }}
+                                {% else %}
+                                    {% blocktranslate with quantity=asset.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}
+                                    {% if asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <dl class="grid grid-cols-3 gap-2 text-xs">
+                            <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Deposits' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.deposits|floatformat:2 }}</dd></div>
+                            <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Yields' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</dd></div>
+                            <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Withdrawals' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</dd></div>
+                        </dl>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}</div>
+    {% empty %}
+        <p class="subtle-copy py-6">{% if selected_section == 'cash' %}{% translate 'Choose Remunerated cash as the purpose of a monetary product to include its balance here.' %}{% else %}{% translate 'Create a bank in Banking, then add a product and asset.' %}{% endif %}</p>
+        <a href="{% url 'investments:create_product' %}" class="action-link">{% translate 'New product' %}</a>
+    {% endfor %}
+    </section>
     {% include 'investments/_investment_movements.html' %}
+    {% if has_investments and selected_section != 'cash' %}{% include 'investments/_investments_charts.html' %}{% endif %}
 </div>
 {% endblock %}

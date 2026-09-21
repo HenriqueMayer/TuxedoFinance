@@ -38,7 +38,7 @@ banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
 transactions/  # categorized economic events and recurrence schedules
 dashboard/     # ledger, cash-flow, invoice and net-worth read models
 investments/   # products, assets, position operations and valuation
-sandbox/       # non-persistent compensation and budget simulations
+sandbox/       # private planning drafts and isolated simulations
 ```
 
 `banking/` owns every settlement instrument and the account ledger. `Bank` is
@@ -158,7 +158,7 @@ The route namespaces remain domain-based:
 | `/categories/` | `categories` | category CRUD |
 | `/banking/` | `banking` | banks, accounts, ledger, PIX, cards, invoices, loyalty |
 | `/investments/` | `investments` | portfolio, products, assets, operations, rates |
-| `/sandbox/` | `sandbox` | authenticated, non-persistent salary planning |
+| `/sandbox/` | `sandbox` | authenticated planning workspace and explicit draft persistence |
 | `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
 
 All authenticated CBVs constrain root querysets to `request.user`; forms also
@@ -184,12 +184,12 @@ categories are never translated automatically. Currency is a separate axis:
 parallel `core.formats.en` and
 `core.formats.pt_BR` modules both resolve separators from currency metadata.
 
-## Delivery and reset
+## Delivery and compatibility
 
 Settings, middleware, authentication, precompiled Tailwind delivery and the
 server-rendered request flow remain deliberately small and local-first. The
 browser receives a versioned static stylesheet and never compiles utility
 classes during navigation.
-The current schema is intentionally incompatible with legacy financial data;
-there is no dual-write or automatic conversion. See
-[data-model.md](data-model.md#breaking-release).
+Released installations use incremental migrations that preserve their records.
+The original pre-release clean reset is historical and does not apply to ordinary
+updates. See [release compatibility](data-model.md#release-compatibility).

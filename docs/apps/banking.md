@@ -114,14 +114,35 @@ remain on live/current conversion until a future roadmap item extends coverage.
 - Exactly one settlement path applies to an event: immediate account movement or
   deferred invoice settlement, never both.
 
-## Breaking replacement
+## Supported upgrades
 
-This schema has no compatibility adapter, automatic conversion, or dual-write
-period for legacy financial data. Refer to the data model's breaking-release
-section before attempting an upgrade.
+The schema replacement described in early development notes predates supported
+releases. Released installations use the existing migration chain; never delete
+or regenerate migrations to upgrade. Follow the [Docker upgrade guide](../docker.md)
+for backups, version selection and restoration.
 
 ## Form keyboard behavior
 
 Banks, accounts, cards, programs and invoices use shared searchable choices. Multiple eligible cards use searchable checkboxes with Tab/Space and retain selection when filtered. Purchased-points amounts wait for a funding source; IOF sources wait for a positive amount. A deliberate source change clears the incompatible alternative.
 
 Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+
+## Monthly planning availability
+
+`BankAccount.planning_enabled` defaults to true and `reserved_amount` defaults
+to zero. Reservations use the account's native currency and persist until the
+owner changes them; they do not create movements or reset each month. An included
+account reserves `min(reserved_amount, max(balance, 0))`. An excluded account
+sets aside its positive balance. Negative balances remain visible in planning,
+and excluded funding never removes an invoice or other obligation.
+
+`banking.services.get_planning_availability(user, as_of=None)` returns bank
+balances, monetary cash pots, set-aside amounts, availability, reserve shortfall
+and missing currencies. Positions are calculated by product and asset, with
+opening positions counted once. The date cutoff excludes future movements and
+operations. This is a funding snapshot before upcoming bills, not a second
+ledger or an amount that can be spent without redeeming a cash pot.
+
+Bank lists and detail tables consume grouped balances instead of calling an
+aggregate for each account. The planning toggle uses an owned, CSRF-protected
+POST; the same change works with a normal form submission without JavaScript.

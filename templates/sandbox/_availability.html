@@ -1,0 +1,18 @@
+{% load i18n %}
+<section class="surface-panel bg-forest/5 dark:bg-night-surface" aria-labelledby="planning-availability-title">
+<div class="panel-heading">
+    <div class="label-with-help">
+        <h2 id="planning-availability-title" class="section-title">{% translate "Actual funds available for planning" %}</h2>
+        {% translate "Bank cash and cash pots, after account exclusions and reserved amounts. This is separate from the hypothetical salary and yields below; liabilities remain in your commitments." as funding_help %}
+        {% include 'partials/help_popover.html' with help_id='planning-availability-help' help_label=_('Actual funds available for planning') help_text=funding_help %}
+    </div>
+    <p class="text-2xl font-semibold tabular-nums">{{ availability.base_currency }} {{ availability.available_total|floatformat:2 }}</p>
+</div>
+<dl class="mt-4 flex flex-wrap gap-x-7 gap-y-2 text-sm">
+    <div class="flex flex-wrap gap-x-2"><dt class="subtle-copy">{% translate "Bank cash" %}</dt><dd class="tabular-nums">{{ availability.base_currency }} {{ availability.bank_total|floatformat:2 }}</dd></div>
+    <div class="flex flex-wrap gap-x-2"><dt class="subtle-copy">{% translate "Cash pots" %}</dt><dd class="tabular-nums">{{ availability.base_currency }} {{ availability.pot_total|floatformat:2 }}</dd></div>
+    <div class="flex flex-wrap gap-x-2"><dt class="subtle-copy">{% translate "Reserved" %}</dt><dd class="tabular-nums">{{ availability.base_currency }} {{ availability.reserved_total|floatformat:2 }}</dd></div>
+</dl>
+{% if availability.reserve_shortfall %}<p class="mt-2 text-expense dark:text-expense-light">{% translate "Some reserves exceed the current positive balance." %}</p>{% endif %}
+{% if availability.missing_currencies %}<p class="mt-2 text-expense dark:text-expense-light">{% translate "Incomplete conversion:" %} {{ availability.missing_currencies|join:', ' }}</p>{% endif %}
+</section>

@@ -1,4 +1,4 @@
-{% load i18n static %}
+{% load i18n static assets %}
 <!DOCTYPE html>
 {% comment %}
 Tuxedo Finance base layout — Final Design System (docs/design-system.html).
@@ -20,8 +20,8 @@ Partials included here:
 Design tokens (Final Design System §2): Haven & Hound palette with derived
 tokens for dark theme and financial semantics, driven by a `.dark` class on
 <html>. Light page `bg-cream` (#FAF8F3), text `text-forest` (#1A2E26); dark
-page `bg-night` (#101010), text `dark:text-cream`. Cards are white
-rounded-3xl in light and flat graphite (#1B1B1B) surfaces in dark. Semantic
+page `bg-night` (#101010), text `dark:text-cream`. Workspaces use grouped surface cards, metric cards and tables. Disclosures and
+controls use neutral surfaces in both themes. Semantic
 mapping is defined through explicit financial tokens. Primary actions are
 caramel pills. Headings, body text, labels and tabular monetary figures all
 use Inter at readable weights and sizes.
@@ -41,6 +41,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="tuxedo-assets" content="{% asset_revision %}">
     <title>{% block title %}Tuxedo Finance{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{% static 'brand/favicon.ico' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'brand/favicon-32.png' %}">
@@ -66,19 +67,22 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=14">
+    <link rel="stylesheet" href="{% asset 'css/app.css' %}">
 
     {% comment %}The locally vendored HTMX progressively enhances same-origin links so the current
     document stays visible until the next server-rendered page is ready. Forms
     explicitly opt out and preserve their native POST/validation flow. All
     navigation still works when JavaScript is unavailable.{% endcomment %}
-    <script src="{% static 'js/vendor/htmx.min.js' %}?v=2.0.10" defer></script>
-    <script src="{% static 'js/forms.js' %}?v=2"></script>
-    <script src="{% static 'js/help-popovers.js' %}?v=1" defer></script>
-    <script src="{% static 'js/theme.js' %}?v=3" defer></script>
-    <script src="{% static 'js/project-menu.js' %}?v=4" defer></script>
-    <script src="{% static 'js/mobile-menu.js' %}?v=3" defer></script>
-    <script src="{% static 'js/navigation.js' %}?v=3" defer></script>
+    <script src="{% asset 'js/vendor/htmx.min.js' %}" defer></script>
+    <script src="{% asset 'js/runtime-assets.js' %}" defer></script>
+    <script src="{% asset 'js/forms.js' %}"></script>
+    <script src="{% asset 'js/preferred-dates.js' %}" defer></script>
+    <script src="{% asset 'js/help-popovers.js' %}" defer></script>
+    <script src="{% asset 'js/theme.js' %}" defer></script>
+    <script src="{% asset 'js/project-menu.js' %}" defer></script>
+    <script src="{% asset 'js/mobile-menu.js' %}" defer></script>
+    <script src="{% asset 'js/nav-disclosures.js' %}" defer></script>
+    <script src="{% asset 'js/navigation.js' %}" defer></script>
 </head>
 <body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
     {% if request.user.is_authenticated %}
@@ -89,6 +93,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
 
     <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
         {% include 'partials/messages.html' %}
+        {% include 'partials/section_navigation.html' %}
         {% block content %}{% endblock %}
     </main>
 

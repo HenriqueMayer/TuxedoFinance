@@ -5,8 +5,8 @@ from investments.models import Asset, Investment, InvestmentProduct
 
 @admin.register(InvestmentProduct)
 class InvestmentProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'bank', 'yield_mode', 'user', 'created_at')
-    list_filter = ('user', 'yield_mode', 'bank')
+    list_display = ('name', 'bank', 'purpose', 'yield_mode', 'user', 'created_at')
+    list_filter = ('user', 'purpose', 'yield_mode', 'bank')
     search_fields = ('name', 'bank__name')
 
 
@@ -15,6 +15,11 @@ class AssetAdmin(admin.ModelAdmin):
     list_display = ('name', 'code', 'asset_class', 'currency', 'user')
     list_filter = ('user', 'asset_class', 'currency')
     search_fields = ('name', 'code')
+
+    def get_deleted_objects(self, objs, request):
+        deleted, counts, permissions, protected = super().get_deleted_objects(objs, request)
+        protected.extend(str(obj) for obj in objs if obj.has_opening_position)
+        return deleted, counts, permissions, protected
 
 
 @admin.register(Investment)

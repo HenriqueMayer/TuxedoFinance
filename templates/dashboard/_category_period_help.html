@@ -1,0 +1,6 @@
+{% load i18n %}
+<span class="help-paragraph">
+    {% if is_current_month %}{% blocktranslate with cutoff=period_cutoff|date:USER_DATE_FORMAT %}Categorized activity through {{ cutoff }}.{% endblocktranslate %}
+    {% elif is_future_month %}{% translate "Categorized activity planned for this month." %}
+    {% else %}{% translate "Categorized activity for the completed month." %}{% endif %}
+</span>

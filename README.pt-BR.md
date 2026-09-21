@@ -37,8 +37,8 @@ um banco SQLite sob controle do responsável pela instalação.
     </td>
     <td>
       <strong>Conheça o Tuxedo Finance antes de instalar.</strong><br>
-      Explore a apresentação bilíngue de Dashboard, Relatórios, Transações,
-      Bancos e Investimentos, com o Dashboard nos temas claro e escuro.<br><br>
+      Explore a apresentação bilíngue de Visão geral, Relatórios, Movimentações,
+      Bancos, Investimentos e Planejamento, com a Visão geral nos temas claro e escuro.<br><br>
       <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/"><strong>Abrir a prévia da interface →</strong></a>
     </td>
   </tr>
@@ -75,8 +75,10 @@ Abra o [Tuxedo Finance](http://127.0.0.1:8000/). O Docker mantém o SQLite em um
 volume nomeado e usa uma chave de assinatura persistente. O comando de
 configuração recusa substituir um `.env.docker` existente. Preserve o nome da
 pasta e a configuração nas atualizações. Consulte o [guia de Docker](docs/docker.md),
-em inglês, para compilar a imagem a partir do código, configurar, atualizar e
-fazer backup/restauração.
+em inglês, para compilar a imagem a partir do código, configurar e fazer backup/restauração.
+Para uma instalação Docker existente, siga o [procedimento de atualização](docs/docker.md#update):
+faça o backup, selecione a nova versão da imagem, baixe-a e recrie o serviço
+preservando a mesma chave e o volume.
 
 ### Python e uv
 
@@ -87,7 +89,7 @@ Execute estes comandos para uma nova instalação:
 git clone https://github.com/HenriqueMayer/TuxedoFinance.git
 cd TuxedoFinance
 uv sync --locked
-printf 'SECRET_KEY=%s\n' "$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" > .env
+uv run python scripts/init_local.py
 uv run python manage.py migrate
 uv run python manage.py runserver
 ```
@@ -97,7 +99,10 @@ um banco e uma conta antes de registrar a primeira transação.
 O Node.js é necessário apenas para as ferramentas de desenvolvimento; a
 aplicação utiliza os arquivos de frontend já compilados no repositório.
 
-Os arquivos gerados `.env` e `db.sqlite3` são privados e ignorados pelo Git.
+O assistente cria `.env` com permissões exclusivas do proprietário e preserva
+qualquer arquivo e chave existentes. Os comandos nativos de migração e servidor criam novos arquivos
+do banco com permissões exclusivas do proprietário. `.env` e `db.sqlite3` são
+ignorados pelo Git.
 Consulte o [guia de operações](docs/operations.md) para backup e restauração.
 Em uma instalação existente, preserve a chave e o banco de dados e reinicie com:
 
@@ -105,25 +110,20 @@ Em uma instalação existente, preserve a chave e o banco de dados e reinicie co
 uv run python manage.py runserver
 ```
 
-## 🎥 Tutoriais
-
-Estão previstos tutoriais nos dois idiomas:
-
-| Idioma | Tutorial |
-|---|---|
-| 🇧🇷 Português (Brasil) | TODO |
-| 🇺🇸 English | TODO |
-
 ## ✨ Funcionalidades
+
+Esta lista descreve o código atual, incluindo [mudanças ainda não lançadas](CHANGELOG.md#unreleased).
+O início rápido com Docker seleciona a versão publicada v0.3.0; as novidades de
+planejamento dependem da próxima versão e não chegam ao baixar novamente a mesma imagem v0.3.0.
 
 | Área | Recursos |
 |---|---|
 | 📊 **Dashboard** | Saldo atual, receitas e despesas mensais, investimentos, faturas abertas e saldo projetado para o fim do mês. |
-| 🧾 **Transações** | Receitas e despesas, categorias, formas de pagamento, recorrências fixas, parcelas, cards por tipo com contagens, filtros por categoria/recorrência e exportação CSV. |
-| 🏦 **Bancos** | Bancos, contas por moeda, PIX, cartões de débito e crédito, faturas, transferências entre contas próprias, programas de fidelidade e taxas de câmbio manuais. |
+| 🧾 **Transações** | Receitas e despesas, categorias, formas de pagamento, recorrências fixas, parcelas, contagens por tipo, filtros por categoria/recorrência e CSV fiel ou preparado para planilhas. |
+| 🏦 **Bancos** | Contas por moeda, cartões, faturas, transferências e fidelidade, com exclusão de contas e reservas parciais para o planejamento mensal. |
 | 📈 **Relatórios** | Gráficos SVG responsivos renderizados no servidor, resumos acessíveis e atualizações progressivas com HTMX. |
-| 💼 **Investimentos** | Aportes, resgates e rendimentos manuais, produtos, ativos, quantidades, preços unitários, taxas e registros históricos de conversão. |
-| 🧮 **Sandbox salarial** | Estimativas de salário líquido CLT ou com ajustes manuais e orçamento mensal, sem armazenar os dados do cenário. |
+| 💼 **Investimentos** | Finalidades separadas de investimento e caixa mensal, aportes/resgates/rendimentos manuais, posições iniciais, preços unitários e histórico de câmbio. |
+| 🧮 **Planejamento** | Sandbox salarial e de orçamento, rascunhos salvos explicitamente, retratos de compromissos futuros e simulações editáveis de aportes e rendimentos. |
 | 🌍 **Localização** | Inglês e português do Brasil, moeda de apresentação independente (BRL, USD, EUR, GBP, JPY, CHF) e preferência de formato de data. |
 | 🌗 **Interface** | Temas claro e escuro, navegação por teclado, campos condicionais, validação no servidor e formulários funcionais sem JavaScript. |
 
@@ -139,22 +139,6 @@ Estão previstos tutoriais nos dois idiomas:
 
 A interface segue o design system do Tuxedo Finance: bases visuais discretas,
 tipografia de alto contraste, ações em caramelo e cores com significado financeiro.
-
-| Token | Cor | Finalidade |
-|---|---:|---|
-| `cream` | `#FAF8F3` | Fundo claro |
-| `forest` | `#1A2E26` | Texto e superfícies de marca no tema claro |
-| `forest-deep` | `#101E18` | Contraste de marca no tema claro |
-| `night` | `#101010` | Fundo escuro |
-| `night-surface` | `#1B1B1B` | Painéis escuros |
-| `night-raised` | `#262626` | Superfícies elevadas e hover no tema escuro |
-| `caramel` | `#B88A59` | Marca e ações principais |
-| `income` | `#176B52` | Receitas e movimentações positivas |
-| `expense` | `#B42318` | Despesas, valores negativos e ações destrutivas |
-| `investment` | `#7C5C13` | Investimentos |
-| `installment` | `#6B4E8A` | Parcelamentos |
-| `fixed` | `#A65300` | Recorrências fixas |
-| `oneoff` | `#52605A` | Movimentações avulsas |
 
 O tema escuro usa bases neutras em preto e grafite com as variantes semânticas
 mais claras documentadas no catálogo, preservando o contraste e o significado
@@ -215,6 +199,7 @@ A documentação técnica é mantida em inglês.
 - [Frontend](docs/frontend.md) e [design system](docs/design-system.html) — convenções da interface e catálogo de componentes
 - [Operações](docs/operations.md) — configuração, dependências, backup e restauração
 - [Histórico de alterações](CHANGELOG.md) e [processo de release](docs/versioning.md) — mudanças e versionamento
+- [Segurança](SECURITY.md) — modelo de acesso suportado e relato privado de vulnerabilidades
 - [Coleções de categorias](docs/category-collections/) — exemplos em inglês e português prontos para importação
 
 ## 🔐 Controle dos dados

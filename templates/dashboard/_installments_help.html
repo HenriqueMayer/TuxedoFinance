@@ -1,0 +1,6 @@
+{% load i18n %}
+<span class="help-paragraph">
+    {% blocktranslate with currency=CURRENCY_SYMBOL %}Of every {{ currency }} you spend in{% endblocktranslate %}
+    {{ installment_window_label|lower }},
+    {% translate "this is how much comes from open installment plans, fixed recurrences, and one-off purchases." %}
+</span>

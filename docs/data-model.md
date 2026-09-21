@@ -337,9 +337,13 @@ income/expense.
   transfers and investment cash legs.
 - **Credit-card payable:** open invoice totals, shown separately from available
   cash until settlement.
-- **Net worth:** available bank balances plus investment valuation minus open
-  card invoices. Invoice purchases and invoice payment movements must not both
-  reduce the same component.
+- **Planning availability:** account cash after excluding positive funds or
+  capped native-currency reserves, plus eligible monthly cash-pot positions.
+  Negative account deficits and card commitments are never hidden.
+- **Net worth:** full bank balances plus all product positions (investments and
+  monthly cash pots), minus open card invoices. Planning exclusions and reserves
+  do not reduce wealth. Invoice purchases and invoice payment movements must not
+  both reduce the same component.
 
 ## Integrity
 
@@ -379,9 +383,38 @@ investments link a rate only when its numeric value exactly matches the retained
 snapshot. A missing or changed source reference does not invalidate the retained
 numeric evidence. Rolling these migrations back removes only that metadata.
 
+## Release compatibility
+
+### Planning settings and drafts
+
+`BankAccount.planning_enabled` defaults to true and `reserved_amount` to zero,
+preserving existing planning behavior. A reserve is denominated in the account's
+native currency and can exclude only its positive balance; negative deficits
+and card liabilities remain visible. These fields never rewrite balances,
+movements or net worth.
+
+`InvestmentProduct.purpose` defaults to `INVESTMENT`. `MONTHLY_CASH` products
+contain monetary positions intended for short-term liquidity. Positions are
+identified by product and asset, so reusing an asset in another product does not
+merge their purposes or opening balances. Reclassification does not post a
+financial operation.
+
+`ScenarioDraft` owns a name, kind and JSON payload under one user. Explicitly
+saved incomplete inputs remain distinct from zero. Complete dates are ISO and
+money uses decimal text; incomplete date input retains its original format.
+Optional commitment snapshots retain their capture context until an explicit
+refresh. Drafts are planning artifacts, not ledger sources.
+
+### Supported upgrades
+
+Supported released installations, including v0.3.0, upgrade through committed
+additive migrations. Preserve existing records, ownership, native amounts,
+opening positions and historical FX evidence. Back up and rehearse the upgrade
+before migrating an installation with valuable data.
+
 ## Breaking release
 
-This schema has no in-place upgrade from earlier releases. Back up/export data
-if needed, create a fresh database through migrations, and recreate or import
-records against the current schema. No automatic legacy-data conversion is
-approved.
+Historical note: the banking redesign replaced pre-release legacy schemas with
+a clean initial schema. Only those unsupported pre-release installations lack an
+automatic conversion path. This historical reset does not apply to upgrades from
+published releases and must never be repeated for an ordinary Docker update.

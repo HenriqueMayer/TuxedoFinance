@@ -70,6 +70,7 @@ MIDDLEWARE = [
     'django.middleware.csp.ContentSecurityPolicyMiddleware',
     # Keep security/CSP headers on responses served directly by WhiteNoise.
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'core.middleware.FrontendAssetsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -87,6 +88,7 @@ TEMPLATES = [
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
+            'libraries': {'assets': 'core.templatetags.assets'},
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -98,6 +100,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+
+# A reviewed 12-month plan can contain up to 2,000 obligations with three
+# native form controls each. Keep a finite parser bound; the request-body size
+# limit and the stricter planning snapshot limit remain in effect.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 
 # Database
@@ -168,7 +175,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-    # Preserve the existing versioned URLs while compressing collected assets.
+    # Template asset tags add content versions to these compressed asset URLs.
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
 }
 

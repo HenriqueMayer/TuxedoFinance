@@ -11,11 +11,11 @@ for (const theme of ['light', 'dark']) {
         });
         await page.goto('/accounts/login/');
         await expect(page.locator('html')).toHaveClass(theme === 'dark' ? /dark/ : /^(?!.*dark)/);
-        const username = page.getByLabel('Username');
+        const username = page.getByLabel(/^\s*Username/);
         await username.focus();
         await page.keyboard.type('nonexistent-runtime-user');
         await page.keyboard.press('Tab');
-        await expect(page.getByLabel('Password')).toBeFocused();
+        await expect(page.getByLabel(/^\s*Password/)).toBeFocused();
         await page.keyboard.type('invalid-password');
         const response = page.waitForResponse(r => r.request().method() === 'POST' && r.url().includes('/accounts/login/'));
         await page.keyboard.press('Enter');

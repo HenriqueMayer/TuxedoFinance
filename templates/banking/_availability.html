@@ -1,0 +1,16 @@
+{% load i18n %}
+<section id="planning-availability" {% if availability_oob %}hx-swap-oob="outerHTML"{% endif %} class="surface-panel" aria-label="{% translate 'Planning availability' %}">
+    <div class="grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+        <div>
+            <div class="label-with-help"><h2 class="metric-label">{% translate 'Available for planning' %}</h2>{% translate 'Available for planning' as availability_label %}{% include 'partials/help_popover.html' with help_id='bank-planning-help' help_label=availability_label help_template='banking/_availability_help.html' %}</div>
+            <p class="mt-2 text-3xl font-semibold tracking-tight tabular-nums"><span class="mr-1 text-base font-medium text-forest/70 dark:text-cream/50">{{ availability.base_currency }}</span> {{ availability.available_total|floatformat:2 }}{% if availability.missing_currencies %}*{% endif %}</p>
+        </div>
+        <dl class="grid gap-3 border-t border-forest/10 pt-5 sm:grid-cols-3 lg:border-l lg:border-t-0 lg:pl-7 lg:pt-0 dark:border-cream/10">
+            <div class="flex items-baseline justify-between gap-3 sm:block"><dt class="subtle-copy">{% translate 'Bank balances' %}</dt><dd class="mt-1.5 text-base font-medium tabular-nums"><span class="account-currency">{{ availability.base_currency }}</span> {{ availability.bank_total|floatformat:2 }}</dd></div>
+            <div class="flex items-baseline justify-between gap-3 sm:block"><dt class="subtle-copy">{% translate 'Cash pots to redeem' %}</dt><dd class="mt-1.5 text-base font-medium tabular-nums"><span class="account-currency">{{ availability.base_currency }}</span> {{ availability.pot_total|floatformat:2 }}</dd></div>
+            <div class="flex items-baseline justify-between gap-3 sm:block"><dt class="subtle-copy">{% translate 'Set aside' %}</dt><dd class="mt-1.5 text-base font-medium tabular-nums"><span class="account-currency">{{ availability.base_currency }}</span> {{ availability.reserved_total|floatformat:2 }}</dd></div>
+        </dl>
+    </div>
+    {% if availability.reserve_shortfall %}<p class="mt-2 text-sm text-expense dark:text-expense-light">{% blocktranslate with amount=availability.reserve_shortfall|floatformat:2 currency=availability.base_currency %}Reserve not yet covered: {{ currency }} {{ amount }}.{% endblocktranslate %}</p>{% endif %}
+    {% if availability.missing_currencies %}<p class="mt-2 text-sm text-expense dark:text-expense-light">{% blocktranslate with currencies=availability.missing_currencies|join:', ' %}Incomplete total: exchange rates are missing for {{ currencies }}.{% endblocktranslate %}</p>{% endif %}
+</section>

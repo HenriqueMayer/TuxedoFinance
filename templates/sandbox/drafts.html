@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Saved drafts" %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="planning-workspace space-y-7">
+{% include 'sandbox/_navigation.html' %}
+<header class="workspace-header"><div class="flex items-center gap-3"><h1 class="page-title">{% translate "Saved drafts" %}</h1>{% translate "Private scenarios saved explicitly. Choose up to three to compare their calculated results." as saved_drafts_help %}{% include 'partials/help_popover.html' with help_id='saved-drafts-help' help_label=_('Saved drafts') help_text=saved_drafts_help %}</div><div class="flex flex-wrap gap-2"><a class="action-link" href="{% url 'sandbox:index' %}">{% translate "Monthly plan" %}</a><a class="action-link" href="{% url 'sandbox:simulation' %}">{% translate "Yield simulation" %}</a></div></header>
+<form method="get" action="{% url 'sandbox:compare' %}">
+<div class="surface-panel overflow-x-auto"><table class="data-table planning-sheet"><thead><tr><th>{% translate "Compare" %}</th><th>{% translate "Name" %}</th><th>{% translate "Kind" %}</th><th>{% translate "Status" %}</th><th>{% translate "Updated" %}</th><th>{% translate "Actions" %}</th></tr></thead><tbody>
+{% for draft in drafts %}<tr><td><input type="checkbox" name="draft" value="{{ draft.pk }}" aria-label="{% blocktranslate with name=draft.name %}Compare {{ name }}{% endblocktranslate %}" class="h-4 w-4 accent-caramel"></td><th scope="row"><a class="block max-w-xs break-words text-sm font-medium text-forest dark:text-cream underline decoration-forest/20 underline-offset-4 dark:decoration-cream/20" href="{% url 'sandbox:draft_detail' draft.pk %}">{{ draft.name }}</a></th><td>{{ draft.get_kind_display }}</td><td>{% if draft.payload.complete %}{% translate "Ready to calculate" %}{% else %}<span class="text-caramel-ink dark:text-caramel-light">{% translate "Incomplete" %}</span>{% endif %}</td><td class="whitespace-nowrap">{{ draft.updated_at|date:USER_DATE_FORMAT }}</td><td><div class="flex gap-1"><button type="submit" form="duplicate-{{ draft.pk }}" class="quiet-action">{% translate "Duplicate" %}</button><a class="quiet-action" href="{% url 'sandbox:draft_delete' draft.pk %}">{% translate "Delete" %}</a></div></td></tr>{% empty %}<tr><td colspan="6" class="subtle-copy">{% translate "No saved drafts yet. Start a monthly plan or yield simulation." %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if drafts %}<button type="submit" class="action-primary mt-5">{% translate "Compare selected drafts" %}</button>{% endif %}
+</form>
+{% for draft in drafts %}<form method="post" id="duplicate-{{ draft.pk }}" action="{% url 'sandbox:draft_duplicate' draft.pk %}" hx-boost="false">{% csrf_token %}</form>{% endfor %}
+</div>
+{% endblock %}

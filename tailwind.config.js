@@ -9,6 +9,8 @@ module.exports = {
     './dashboard/**/*.py',
     './investments/**/*.py',
     './pages/**/*.py',
+    './sandbox/**/*.py',
+    './docs/design-system.html',
     './transactions/**/*.py',
     './static/js/**/*.js',
   ],

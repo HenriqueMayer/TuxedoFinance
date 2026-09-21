@@ -1,0 +1,28 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Compare drafts" %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="planning-workspace space-y-7">
+    {% include 'sandbox/_navigation.html' %}
+    <header class="workspace-header">
+        <div class="label-with-help"><h1 class="page-title">{% translate "Compare drafts" %}</h1>{% translate "Each result uses its saved inputs and commitment snapshot. Different currencies and scenario kinds are shown separately, never added together." as comparison_help %}{% include 'partials/help_popover.html' with help_id='compare-drafts-help' help_label=_('Compare drafts') help_text=comparison_help %}</div>
+        <a class="quiet-action" href="{% url 'sandbox:drafts' %}">{% translate "Back to saved drafts" %}</a>
+    </header>
+    <div class="surface-panel overflow-x-auto">
+        {% if scenarios %}
+        <table class="data-table planning-sheet">
+            <thead><tr><th scope="col">{% translate "Scenario" %}</th>{% for scenario in scenarios %}<th scope="col" class="min-w-[12rem]"><a class="block max-w-xs break-words text-sm font-medium text-forest dark:text-cream underline decoration-forest/20 underline-offset-4 dark:decoration-cream/20" href="{% url 'sandbox:draft_detail' scenario.draft.pk %}">{{ scenario.draft.name }}</a></th>{% endfor %}</tr></thead>
+            <tbody>
+                <tr><th scope="row">{% translate "Kind" %}</th>{% for scenario in scenarios %}<td>{{ scenario.draft.get_kind_display }}</td>{% endfor %}</tr>
+                <tr><th scope="row">{% translate "Currency" %}</th>{% for scenario in scenarios %}<td>{{ scenario.currency }}</td>{% endfor %}</tr>
+                <tr><th scope="row">{% translate "Starting month" %}</th>{% for scenario in scenarios %}<td>{{ scenario.month }}</td>{% endfor %}</tr>
+                <tr><th scope="row">{% translate "Months" %}</th>{% for scenario in scenarios %}<td>{{ scenario.months }}</td>{% endfor %}</tr>
+                <tr><th scope="row">{% translate "Gross monthly salary" %}</th>{% for scenario in scenarios %}<td>{% if scenario.draft.kind == 'budget' %}{% if scenario.result %}{{ scenario.initial|floatformat:2 }}{% else %}{{ scenario.initial|default:'—' }}{% endif %}{% else %}—{% endif %}</td>{% endfor %}</tr>
+                <tr><th scope="row">{% translate "Initial balance" %}</th>{% for scenario in scenarios %}<td>{% if scenario.draft.kind == 'yield' %}{% if scenario.result %}{{ scenario.initial|floatformat:2 }}{% else %}{{ scenario.initial|default:'—' }}{% endif %}{% else %}—{% endif %}</td>{% endfor %}</tr>
+                <tr><th scope="row">{% translate "Rate" %} (%)</th>{% for scenario in scenarios %}<td>{% if scenario.draft.kind == 'yield' %}{% if scenario.result %}{{ scenario.rate|floatformat:'-6' }}{% else %}{{ scenario.rate }}{% endif %}% · {% if scenario.rate_period == 'annual' %}{% translate "Annual" %}{% else %}{% translate "Monthly" %}{% endif %}{% else %}—{% endif %}</td>{% endfor %}</tr>
+                <tr><th scope="row">{% translate "Result" %}</th>{% for scenario in scenarios %}<td>{% if scenario.result %}{% if scenario.draft.kind == 'budget' %}<p class="subtle-copy">{% translate "Available after plan" %}</p><p class="mt-2 text-xl font-semibold tabular-nums whitespace-nowrap">{{ scenario.currency }} {{ scenario.result.budget.remaining|floatformat:2 }}</p>{% else %}<p class="subtle-copy">{% translate "Ending balance" %}</p><p class="mt-2 text-xl font-semibold tabular-nums whitespace-nowrap">{{ scenario.currency }} {{ scenario.result.ending|floatformat:2 }}</p><p class="mt-2 subtle-copy">{% translate "Simulated yield" %}: {{ scenario.currency }} {{ scenario.result.yield|floatformat:2 }}</p>{% endif %}{% else %}<p class="text-caramel-ink dark:text-caramel-light">{% translate "Incomplete — open this draft to review its inputs." %}</p>{% endif %}</td>{% endfor %}</tr>
+            </tbody>
+        </table>
+        {% else %}<p class="subtle-copy">{% translate "Select up to three saved drafts to compare." %}</p>{% endif %}
+    </div>
+</div>
+{% endblock %}

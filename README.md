@@ -37,8 +37,8 @@ in an owner-controlled SQLite database.
     </td>
     <td>
       <strong>See Tuxedo Finance before installing it.</strong><br>
-      Explore the bilingual tour across Dashboard, Reports, Transactions,
-      Banking, and Investments, with light and dark Dashboard views.<br><br>
+      Explore the bilingual tour across Overview, Reports, Activity,
+      Banks, Investments, and Planning, with light and dark Overview views.<br><br>
       <a href="https://henriquemayer.github.io/TuxedoFinance/"><strong>Open the interface preview →</strong></a>
     </td>
   </tr>
@@ -75,7 +75,9 @@ Open [Tuxedo Finance](http://127.0.0.1:8000/). Docker keeps SQLite in a named
 volume and uses a persistent signing key. The setup command refuses to replace
 an existing `.env.docker`. Keep the directory name and configuration across
 updates. Follow the [Docker guide](docs/docker.md) for source builds,
-configuration, updates and backup/restore.
+configuration and backup/restore. For an existing Docker installation, follow the
+[update procedure](docs/docker.md#update): back up, select the new image version,
+pull it and recreate the service while retaining the same key and volume.
 
 ### Python and uv
 
@@ -86,7 +88,7 @@ Run these commands for a new installation:
 git clone https://github.com/HenriqueMayer/TuxedoFinance.git
 cd TuxedoFinance
 uv sync --locked
-printf 'SECRET_KEY=%s\n' "$(uv run python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" > .env
+uv run python scripts/init_local.py
 uv run python manage.py migrate
 uv run python manage.py runserver
 ```
@@ -96,7 +98,9 @@ add a bank and one of its accounts before recording your first transaction.
 Node.js is needed only for development tools; the application serves compiled
 frontend assets included in the repository.
 
-The generated `.env` and `db.sqlite3` are private runtime files ignored by Git.
+The setup helper creates `.env` with owner-only permissions and preserves any
+existing file and signing key. Native migration and server commands create new database
+files with owner-only permissions. `.env` and `db.sqlite3` are ignored by Git.
 Follow the [operations guide](docs/operations.md) for backup and restore. For an
 existing installation, preserve its key and database and restart with:
 
@@ -104,25 +108,20 @@ existing installation, preserve its key and database and restart with:
 uv run python manage.py runserver
 ```
 
-## 🎥 Tutorials
-
-Walkthroughs are planned in both supported languages:
-
-| Language | Tutorial |
-|---|---|
-| 🇧🇷 Português (Brasil) | TODO |
-| 🇺🇸 English | TODO |
-
 ## ✨ Features
+
+This list describes the current checkout, including [Unreleased changes](CHANGELOG.md#unreleased).
+The Docker quick start selects published v0.3.0; new planning features require
+the next release and are not added by pulling the same v0.3.0 image again.
 
 | Area | Capabilities |
 |---|---|
 | 📊 **Dashboard** | Current cash, monthly income and expenses, investments, open card bills, and projected month-end balance. |
-| 🧾 **Transactions** | Income and expenses, categories, payment channels, fixed recurrences, installments, counted type cards, category/recurrence filters, and CSV export. |
-| 🏦 **Banking** | Banks, currency-specific accounts, PIX, debit and credit cards, invoices, own-account transfers, loyalty programs, and manual exchange rates. |
+| 🧾 **Transactions** | Income and expenses, categories, payment channels, fixed recurrences, installments, type counts, category/recurrence filters, and raw or spreadsheet CSV export. |
+| 🏦 **Banking** | Currency-specific accounts, cards, invoices, transfers and loyalty, with account exclusions and partial reserves for monthly planning. |
 | 📈 **Reports** | Responsive server-rendered SVG charts, accessible summaries, and progressive HTMX updates. |
-| 💼 **Investments** | Manual deposits, withdrawals, yields, products, assets, quantities, unit prices, fees, and historical conversion evidence. |
-| 🧮 **Salary Sandbox** | Automatic CLT or manually adjusted take-home estimates and a monthly spending plan without retaining scenario data. |
+| 💼 **Investments** | Separate investment and monthly-cash purposes, manual deposits/withdrawals/yields, opening positions, unit pricing and historical FX evidence. |
+| 🧮 **Planning** | Salary and monthly-budget sandbox, explicitly saved drafts, snapshots of future commitments, and editable contribution/yield simulations. |
 | 🌍 **Localization** | English and Brazilian Portuguese, independent reporting currency (BRL, USD, EUR, GBP, JPY, CHF), and date-format preferences. |
 | 🌗 **Interface** | Light and dark themes, keyboard navigation, conditional fields, server validation, and no-JavaScript form fallbacks. |
 
@@ -138,22 +137,6 @@ Walkthroughs are planned in both supported languages:
 
 The interface follows the Tuxedo Finance design system: calm foundations,
 high-contrast typography, caramel actions, and semantic financial colors.
-
-| Token | Color | Purpose |
-|---|---:|---|
-| `cream` | `#FAF8F3` | Light background |
-| `forest` | `#1A2E26` | Light-theme text and brand surfaces |
-| `forest-deep` | `#101E18` | Light-theme brand contrast |
-| `night` | `#101010` | Dark background |
-| `night-surface` | `#1B1B1B` | Dark panels |
-| `night-raised` | `#262626` | Dark elevated and hover surfaces |
-| `caramel` | `#B88A59` | Brand and primary actions |
-| `income` | `#176B52` | Income and positive account movement |
-| `expense` | `#B42318` | Expenses, negatives, and destructive actions |
-| `investment` | `#7C5C13` | Investment activity |
-| `installment` | `#6B4E8A` | Installment plans |
-| `fixed` | `#A65300` | Fixed recurrences |
-| `oneoff` | `#52605A` | One-off activity |
 
 The dark theme uses neutral black and graphite foundations with the lighter
 semantic companions documented in the canonical catalog, preserving contrast
@@ -213,6 +196,7 @@ Technical documentation is maintained in English.
 - [Frontend](docs/frontend.md) and [design system](docs/design-system.html) — interface conventions and component catalog
 - [Operations](docs/operations.md) — configuration, dependencies, backup, and restore
 - [Changelog](CHANGELOG.md) and [release workflow](docs/versioning.md) — changes and versioning
+- [Security](SECURITY.md) — supported access model and private vulnerability reporting
 - [Category collections](docs/category-collections/) — import-ready English and Portuguese examples
 
 ## 🔐 Data ownership

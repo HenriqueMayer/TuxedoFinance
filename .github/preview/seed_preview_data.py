@@ -62,10 +62,11 @@ COPY = {
         'credit': 'Demo rewards card',
         'loyalty': 'Demo Miles',
         'brokerage': 'Demo Brokerage',
-        'reserve': 'Reserve Fund',
+        'reserve': 'Monthly cash pot',
         'equity': 'Global Equity ETF',
         'transfer': 'Monthly savings allocation',
         'investment_reason': 'Long-term allocation',
+        'cash_reason': 'Earn yield while waiting for monthly bills',
         'yield_reason': 'Monthly yield',
     },
     'pt-br': {
@@ -91,10 +92,11 @@ COPY = {
         'credit': 'Cartão de recompensas',
         'loyalty': 'Milhas Demo',
         'brokerage': 'Corretora Demo',
-        'reserve': 'Fundo de Reserva',
+        'reserve': 'Cofrinho do mês',
         'equity': 'ETF Global de Ações',
         'transfer': 'Aporte mensal na reserva',
         'investment_reason': 'Alocação de longo prazo',
+        'cash_reason': 'Render enquanto aguarda as contas do mês',
         'yield_reason': 'Rendimento mensal',
     },
 }
@@ -199,6 +201,7 @@ def seed_profile(language: str, password: str) -> None:
             name=labels['checking'],
             currency='BRL',
             opening_balance=Decimal('4800.00'),
+            reserved_amount=Decimal('2000.00'),
         )
         savings = BankAccount.objects.create(
             user=user,
@@ -213,6 +216,7 @@ def seed_profile(language: str, password: str) -> None:
             name=labels['global'],
             currency='USD',
             opening_balance=Decimal('1500.00'),
+            planning_enabled=False,
         )
         debit = DebitCard.objects.create(
             user=user,
@@ -227,7 +231,10 @@ def seed_profile(language: str, password: str) -> None:
             due_day=5,
         )
 
-        for offset, rate in zip(range(-6, 1), ('4.95', '5.02', '5.08', '5.11', '5.07', '5.13', '5.15')):
+        for offset, rate in zip(range(-12, 1), (
+            '4.82', '4.87', '4.91', '4.88', '4.93', '4.96',
+            '4.95', '5.02', '5.08', '5.11', '5.07', '5.13', '5.15',
+        )):
             ExchangeRate.objects.create(
                 user=user,
                 from_currency='USD',
@@ -331,6 +338,7 @@ def seed_profile(language: str, password: str) -> None:
             user=user,
             bank=primary_bank,
             name=labels['reserve'],
+            purpose=InvestmentProduct.Purpose.MONTHLY_CASH,
         )
         equity = Asset.objects.create(
             user=user,
@@ -371,7 +379,7 @@ def seed_profile(language: str, password: str) -> None:
             kind=Investment.Kind.DEPOSIT,
             amount=Decimal('1200.00'), cash_amount=Decimal('1200.00'),
             source_account=checking, date=add_months(today, 0, 15),
-            reason=labels['investment_reason'],
+            reason=labels['cash_reason'],
         )
         make_investment(
             user=user, product=reserve_product, asset=reserve,

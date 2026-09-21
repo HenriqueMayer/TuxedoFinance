@@ -109,7 +109,10 @@ After changing Tailwind classes or tokens:
 npm run build:css
 ```
 
-Update the stylesheet's `?v=` value in the base template when its contents change.
+Use the shared `{% asset %}` template tag for CSS and JavaScript URLs; it versions
+the files by their delivered content. No manual `?v=` bump is needed. The shared
+runtime also refreshes an older HTMX document on its next GET when those assets
+change, without replaying POSTs or discarding validation errors.
 CI rebuilds CSS into a temporary file and compares it with the committed asset;
 it also verifies the pinned checksum of vendored HTMX.
 

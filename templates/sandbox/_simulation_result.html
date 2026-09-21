@@ -1,0 +1,22 @@
+{% load i18n %}
+<div id="simulation-result" class="surface-panel" data-preserve-view>
+    {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+    {% if result %}
+        <div class="panel-heading"><div class="label-with-help"><h2 class="section-title">{% translate "Projected result" %}</h2>
+            {% translate "Hypothetical values; no financial records were created." as projection_help %}
+            {% include 'partials/help_popover.html' with help_id='yield-result-help' help_label=_('Projected result') help_text=projection_help %}
+        </div><p class="subtle-copy tabular-nums">{% translate "Effective monthly rate" %}: {{ result.monthly_rate|floatformat:'-6' }}%</p></div>
+        <dl class="my-6 grid gap-x-8 gap-y-5 sm:grid-cols-2 xl:grid-cols-4">
+            <div><dt class="metric-label">{% translate "Ending balance" %}</dt><dd class="mt-2 text-3xl font-semibold tracking-tight tabular-nums">{{ simulation_currency }} {{ result.ending|floatformat:2 }}</dd></div>
+            <div><dt class="metric-label">{% translate "Simulated yield" %}</dt><dd class="mt-2 text-2xl tabular-nums text-investment dark:text-investment-light">{{ simulation_currency }} {{ result.yield|floatformat:2 }}</dd></div>
+            <div><dt class="metric-label">{% translate "Initial balance" %} + {% translate "Contributions" %}</dt><dd class="mt-2 text-2xl tabular-nums">{{ simulation_currency }} {{ result.capital|floatformat:2 }}</dd></div>
+            <div><dt class="metric-label">{% translate "Withdrawals" %}</dt><dd class="mt-2 text-2xl tabular-nums">{{ simulation_currency }} {{ result.withdrawals|floatformat:2 }}</dd></div>
+        </dl>
+        <div class="overflow-x-auto"><table class="data-table planning-sheet"><caption class="sr-only">{% translate "Monthly simulated balances and cash flows" %}</caption><thead><tr><th>{% translate "Month" %}</th><th class="number">{% translate "Opening" %}</th><th class="number">{% translate "Yield" %}</th><th class="number">{% translate "Contribution" %}</th><th class="number">{% translate "Withdrawal" %}</th><th class="number">{% translate "Closing" %}</th></tr></thead><tbody>
+        {% for row in result.rows %}<tr><th scope="row">{{ row.month|date:'M Y' }}</th><td class="number">{{ row.opening|floatformat:2 }}</td><td class="number">{{ row.yield|floatformat:2 }}</td><td class="number">{{ row.contribution|floatformat:2 }}</td><td class="number">{{ row.withdrawal|floatformat:2 }}</td><td class="number font-medium">{{ row.closing|floatformat:2 }}</td></tr>{% endfor %}
+        </tbody></table></div>
+    {% else %}
+        <p class="subtle-copy mt-4">{% translate "Complete the required inputs to calculate. Incomplete drafts have no projected result." %}</p>
+        {% if form.is_bound %}{% for field in form %}{% for error in field.errors %}<p class="text-expense dark:text-expense-light" role="alert">{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}{% endif %}
+    {% endif %}
+</div>

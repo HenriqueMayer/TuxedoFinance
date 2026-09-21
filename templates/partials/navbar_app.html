@@ -1,146 +1,46 @@
 {% load i18n static %}
-{% comment %}
-Authenticated navbar — Final Design System §0/§3 (Haven & Hound language).
-
-Included automatically by base.html for authenticated users — never include
-this directly in a page template.
-
-Brand block: tuxedo-mark-256.png chip in a rounded-xl frame + two-line
-wordmark (TUXEDO / FINANCE in caramel), linked to the public landing page.
-
-Active link state: caramel text + 1px caramel rule underneath (`after:`).
-Inactive: forest/70 (cream/70 on dark), hover crossfades to caramel.
-
-Icon buttons are circles; dropdown panels are white rounded-3xl cards.
-
-Mobile menu: fullscreen forest-deep modal that slides in from the right
-(500ms ease-in-out), wired by static/js/mobile-menu.js via #menu-btn,
-#close-menu-btn and the `.mobile-link` class. Body scroll and background focus
-are locked while the overlay is open; Tab is contained inside the dialog.
-
-Theme toggles use the `data-theme-toggle` attribute; static/js/theme.js wires
-each desktop/overlay click handler. The matching FOUC snippet in base.html
-sets the `.dark` class on <html> before paint.
-
-Log out is a POST <form> (CSRF token) styled as a pill button — Django's
-LogoutView rejects GET requests, so it must never be a plain <a href>.
-{% endcomment %}
-{% url 'dashboard:index' as dashboard_url %}
-{% url 'pages:landing' as landing_url %}
-{% url 'dashboard:reports' as reports_url %}
-{% url 'transactions:list' as transactions_url %}
-{% url 'categories:list' as categories_url %}
-{% url 'banking:list' as banking_url %}
-{% url 'investments:list' as investments_url %}
-{% url 'accounts:settings' as settings_url %}
-<header class="sticky top-0 z-40 border-b border-forest/10 dark:border-cream/10 bg-cream/90 dark:bg-night/90 backdrop-blur">
-    <nav class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between gap-4">
-            <!-- Brand block -->
-            <a href="{{ landing_url }}" class="flex shrink-0 items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-caramel/40 rounded-xl">
-                <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover ring-1 ring-forest/10 dark:ring-cream/20">
-                <span class="hidden sm:block text-left leading-tight">
-                    <span class="block text-sm tracking-[0.2em] uppercase font-medium">{% translate 'Tuxedo' %}</span>
-                    <span class="block text-xs tracking-[0.15em] uppercase text-caramel-ink dark:text-caramel-light mt-0.5">{% translate 'Finance' %}</span>
-                </span>
-            </a>
-
-            <!-- Desktop links -->
-            <div class="hidden items-center gap-7 xl:flex">
-                <a href="{{ dashboard_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == dashboard_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
-                     {% translate 'Dashboard' %}
-                </a>
-                <a href="{{ reports_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == reports_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
-                     {% translate 'Reports' %}
-                </a>
-                <a href="{{ transactions_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == transactions_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
-                     {% translate 'Transactions' %}
-                </a>
-                <a href="{{ categories_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.path == categories_url %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
-                     {% translate 'Categories' %}
-                </a>
-                <a href="{{ banking_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'banking' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
-                     {% translate 'Banks' %}
-                </a>
-                <a href="{{ investments_url }}"
-                   class="relative pb-1 text-xs uppercase tracking-widest font-medium transition-colors {% if request.resolver_match.namespace == 'investments' %}text-caramel-ink dark:text-caramel-light after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-full after:bg-caramel{% else %}text-forest/70 hover:text-caramel-ink dark:hover:text-caramel-light dark:text-night-muted{% endif %}">
-                     {% translate 'Investments' %}
-                </a>
-                <a href="{{ settings_url }}"
-                   aria-label="{% translate 'Settings' %}"
-                   title="{% translate 'Settings' %}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full border transition-colors {% if request.resolver_match.url_name == 'settings' and request.resolver_match.namespace == 'accounts' %}border-caramel/40 text-caramel-ink dark:text-caramel-light{% else %}border-forest/20 hover:bg-forest/5 dark:border-cream/20 dark:hover:bg-cream/10{% endif %}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.073.04.145.083.216.127.325.2.72.263 1.077.13l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.993a6.8 6.8 0 0 1 0 .255c-.008.38.137.753.43.994l1.003.827c.424.35.534.954.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.491l-1.217-.456c-.357-.133-.752-.07-1.077.13a6.8 6.8 0 0 1-.216.127c-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.8 6.8 0 0 1-.216-.127c-.325-.2-.72-.263-1.077-.13l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.241.438-.614.43-.994a6.8 6.8 0 0 1 0-.255c.008-.38-.137-.753-.43-.993l-1.003-.827a1.125 1.125 0 0 1-.26-1.431L4.856 6.38a1.125 1.125 0 0 1 1.37-.49l1.217.456c.357.133.752.07 1.077-.13.071-.044.143-.087.216-.127.332-.184.582-.496.645-.87l.213-1.281Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Z" />
-                    </svg>
-                    <span class="sr-only">{% translate 'Settings' %}</span>
-                </a>
-            </div>
-
-            <!-- User area (desktop) -->
-            <div class="hidden items-center gap-3 xl:flex">
-                {% include 'partials/project_menu.html' %}
-                {% include 'partials/language_selector.html' with selector_id='desktop' %}
-                {% include 'partials/theme_toggle.html' with legacy_theme_id=True %}
-                <span class="hidden lg:inline text-sm text-forest/70 dark:text-night-muted font-normal">{{ request.user.username }}</span>
-                <form method="post" action="{% url 'accounts:logout' %}" hx-boost="false">
-                    {% csrf_token %}
-                    <button type="submit"
-                            class="rounded-full border border-forest/30 px-5 py-2 text-xs uppercase tracking-widest font-medium transition-colors hover:bg-forest hover:text-cream dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
-                         {% translate 'Log out' %}
-                    </button>
-                </form>
-            </div>
-
-            <!-- Mobile actions -->
-            <div class="flex items-center gap-2 xl:hidden">
-                {% include 'partials/project_menu.html' %}
-                <button type="button" id="menu-btn" aria-controls="mobile-menu" aria-expanded="false"
-                        class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                    <span class="sr-only">{% translate 'Toggle menu' %}</span>
-                </button>
-            </div>
+<header class="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur dark:border-cream/10 dark:bg-night-surface/95">
+    <nav class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8" aria-label="{% translate 'Main navigation' %}">
+        <a href="{% url 'pages:landing' %}" class="flex shrink-0 items-center gap-3 group rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel">
+            <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover">
+            <span class="hidden text-left leading-tight sm:block"><span class="block text-sm font-medium tracking-[0.2em]">TUXEDO</span><span class="mt-0.5 block text-xs font-medium tracking-[0.15em] text-caramel-ink dark:text-caramel-light">FINANCE</span></span>
+        </a>
+        <div class="hidden min-w-0 items-center gap-1 xl:flex">{% include 'partials/navigation_links.html' with nav_variant='desktop' %}</div>
+        <div class="hidden items-center gap-2 xl:flex">
+            {% include 'partials/theme_toggle.html' with legacy_theme_id=True %}
+            <details class="secondary-actions">
+                <summary aria-label="{% translate 'Account options' %}"><span class="max-w-28 truncate">{{ request.user.username }}</span>{% include 'partials/chevron_down.html' %}</summary>
+                <div class="secondary-actions-panel">
+                    <a href="{% url 'accounts:settings' %}" aria-label="{% translate 'Settings' %}">{% translate 'Settings' %}</a>
+                    {% include 'partials/language_selector.html' with selector_id='desktop' %}
+                    <a href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">{% translate 'Project documentation' %}</a>
+                    <form method="post" action="{% url 'accounts:logout' %}" hx-boost="false">{% csrf_token %}<button type="submit">{% translate 'Log out' %}</button></form>
+                </div>
+            </details>
+            {% include 'partials/project_menu.html' %}
+        </div>
+        <div class="flex items-center gap-2 xl:hidden">
+            {% include 'partials/project_menu.html' %}
+            <button type="button" id="menu-btn" aria-controls="mobile-menu" aria-expanded="false" class="action-link">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" /></svg><span class="sr-only">{% translate 'Toggle menu' %}</span>
+            </button>
         </div>
     </nav>
+    <noscript><nav class="mobile-navigation-links flex flex-wrap items-center justify-center gap-4 border-t border-forest/10 p-3 xl:hidden" aria-label="{% translate 'Main navigation' %}">
+        {% include 'partials/navigation_links.html' with nav_variant='native' %}<a href="{% url 'accounts:settings' %}" class="primary-link">{% translate 'Settings' %}</a>
+        {% include 'partials/language_selector.html' with selector_id='mobile-native' native_submit=True %}
+        <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit" class="primary-link">{% translate 'Log out' %}</button></form>
+    </nav></noscript>
 </header>
-
-<!-- Mobile fullscreen overlay menu (Final Design System §0) -->
-<div id="mobile-menu" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title" class="fixed inset-0 bg-forest-deep dark:bg-night z-50 transform translate-x-full transition-transform duration-500 ease-in-out flex flex-col justify-center items-center" aria-hidden="true" inert>
-    <h2 id="mobile-menu-title" class="sr-only">{% translate 'Navigation menu' %}</h2>
-    <button type="button" id="close-menu-btn" aria-controls="mobile-menu" aria-expanded="false"
-            class="absolute top-6 right-6 p-2 text-cream transition-colors hover:text-caramel-light">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12" />
-        </svg>
-        <span class="sr-only">{% translate 'Close menu' %}</span>
-    </button>
-    <div class="flex flex-col items-center gap-7 text-cream">
-        <a href="{{ dashboard_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Dashboard' %}</a>
-        <a href="{{ reports_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Reports' %}</a>
-        <a href="{{ transactions_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Transactions' %}</a>
-        <a href="{{ categories_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Categories' %}</a>
-        <a href="{{ banking_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Banks' %}</a>
-        <a href="{{ investments_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Investments' %}</a>
-        <a href="{{ settings_url }}" class="font-sans text-3xl tracking-tight transition-colors hover:text-caramel-light mobile-link">{% translate 'Settings' %}</a>
-        <div class="mt-4 flex items-center gap-4">
-            {% include 'partials/language_selector.html' with selector_id='mobile' overlay=True %}
-            {% include 'partials/theme_toggle.html' with overlay=True %}
-        </div>
-        <form method="post" action="{% url 'accounts:logout' %}" hx-boost="false">
-            {% csrf_token %}
-            <button type="submit"
-                    class="mt-2 rounded-full border border-caramel-light px-8 py-3 text-xs font-medium uppercase tracking-widest text-caramel-light transition-colors hover:bg-caramel-light hover:text-forest-deep">
-                 {% translate 'Log out' %}
-            </button>
-        </form>
+<div id="mobile-menu" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title" class="fixed inset-0 z-50 flex translate-x-full flex-col overflow-y-auto bg-cream p-6 text-forest transition-transform duration-300 dark:bg-night dark:text-cream" aria-hidden="true" inert>
+    <div class="flex items-center justify-between">
+        <h2 id="mobile-menu-title" class="text-sm font-medium uppercase tracking-widest">{% translate 'Navigation menu' %}</h2>
+        <button type="button" id="close-menu-btn" aria-controls="mobile-menu" aria-expanded="false" class="action-link"><span aria-hidden="true">×</span><span class="sr-only">{% translate 'Close menu' %}</span></button>
+    </div>
+    <nav class="mobile-navigation-links my-6 flex flex-col items-start gap-2 text-lg" aria-label="{% translate 'Main navigation' %}">{% include 'partials/navigation_links.html' with extra_class='mobile-link' nav_variant='mobile' %}</nav>
+    <div class="mt-auto space-y-5 border-t border-forest/15 pt-6 dark:border-cream/15">
+        <a href="{% url 'accounts:settings' %}" class="action-link mobile-link">{% translate 'Settings' %}</a>
+        <div class="flex items-center gap-4">{% include 'partials/language_selector.html' with selector_id='mobile' %}{% include 'partials/theme_toggle.html' %}</div>
+        <form method="post" action="{% url 'accounts:logout' %}" hx-boost="false">{% csrf_token %}<button type="submit" class="action-link">{% translate 'Log out' %}</button></form>
     </div>
 </div>

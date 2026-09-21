@@ -7,6 +7,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction as db_transaction
 from django.db.models import Count, Q
 from django.http import HttpResponse, QueryDict
+from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
@@ -16,18 +17,21 @@ from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from banking.models import BankAccount
 from categories.models import Category
-from transactions.forms import TransactionForm
+from core.csv import export_row
+from transactions.forms import TransactionDateFilterForm, TransactionForm
 from transactions.models import Transaction
 from transactions.services import sync_user_ledger
 
 
 def _requested_billed_month(raw_month):
     """Return a valid ``(year, month)`` pair or ``None`` for no filter."""
-    year_part, _, month_part = raw_month.partition('-')
-    if not (year_part.isdigit() and month_part.isdigit()):
+    if len(raw_month) != 7:
         return None
-    year, month_number = int(year_part), int(month_part)
-    return (year, month_number) if 1 <= month_number <= 12 else None
+    try:
+        parsed = date.fromisoformat(raw_month + '-01')
+    except ValueError:
+        return None
+    return (parsed.year, parsed.month) if parsed.isoformat()[:7] == raw_month else None
 
 
 def _filter_transactions_by_billed_month(queryset, raw_month):
@@ -64,6 +68,16 @@ class TransactionListView(LoginRequiredMixin, ListView):
         sort = self.request.GET.get('sort')
         return sort if sort in self.SORT_OPTIONS else 'newest'
 
+    def get(self, request, *args, **kwargs):
+        self.date_filter_form = TransactionDateFilterForm(request.GET, user=request.user)
+        if self.date_filter_form.is_valid():
+            chosen = self.date_filter_form.cleaned_data['date']
+            if chosen and request.GET.get('date') != chosen.isoformat():
+                params = request.GET.copy()
+                params['date'] = chosen.isoformat()
+                return redirect(request.path + '?' + params.urlencode())
+        return super().get(request, *args, **kwargs)
+
     def get_queryset(self):
         queryset = Transaction.objects.filter(user=self.request.user).select_related(
             'category', 'bank_account__bank', 'debit_card__account__bank',
@@ -94,13 +108,9 @@ class TransactionListView(LoginRequiredMixin, ListView):
         self.filters = QueryDict(mutable=True)
         if search:
             self.filters['q'] = search
-        raw_date = self.request.GET.get('date', '').strip()
-        try:
-            selected_date = date.fromisoformat(raw_date)
-        except ValueError:
-            selected_date = None
-        if selected_date and selected_date.isoformat() == raw_date:
-            self.filters['date'] = raw_date
+        selected_date = self.date_filter_form.cleaned_data.get('date')
+        if selected_date:
+            self.filters['date'] = selected_date.isoformat()
             queryset = queryset.filter(date=selected_date)
 
         # Normalize the list's month independently of the unchanged CSV API.
@@ -179,6 +189,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
             'search_query': self.filters.get('q', ''),
             'selected_month': self.filters.get('month', ''),
             'selected_date': self.filters.get('date', ''),
+            'date_filter_form': self.date_filter_form,
             'selected_type': kind,
             'selected_sort': self.filters['sort'],
             'selected_category': self.filters.get('category', ''),
@@ -211,6 +222,7 @@ class TransactionExportView(LoginRequiredMixin, View):
     """Download the user's transactions, optionally for one billed month."""
 
     def get(self, request):
+        spreadsheet = request.GET.get('format') == 'spreadsheet'
         raw_month = request.GET.get('month', '')
         selected_month = _requested_billed_month(raw_month)
         transactions = Transaction.objects.filter(user=request.user).select_related(
@@ -222,6 +234,8 @@ class TransactionExportView(LoginRequiredMixin, View):
         filename = 'transactions.csv'
         if selected_month:
             filename = f'transactions-{selected_month[0]}-{selected_month[1]:02d}.csv'
+        if spreadsheet:
+            filename = filename.removesuffix('.csv') + '-spreadsheet.csv'
 
         response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -243,7 +257,7 @@ class TransactionExportView(LoginRequiredMixin, View):
             else:
                 billed_month = item.billed_month
                 amount = item.amount
-            writer.writerow((
+            writer.writerow(export_row((
                 item.date.isoformat(),
                 billed_month.isoformat() if billed_month else '',
                 item.title,
@@ -260,7 +274,7 @@ class TransactionExportView(LoginRequiredMixin, View):
                 str(item.is_fixed).lower(),
                 item.fixed_until.isoformat() if item.fixed_until else '',
                 item.notes,
-            ))
+            ), spreadsheet=spreadsheet))
         return response
 
 

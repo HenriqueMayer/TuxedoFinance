@@ -1,0 +1,8 @@
+{% load i18n %}
+<div class="flex flex-wrap items-end gap-3" data-draft-toolbar>
+    {% translate "You can save incomplete inputs. Drafts belong only to your account; calculating never saves automatically." as draft_help %}
+    <div class="min-w-0 flex-1 sm:max-w-sm">{% include 'partials/form_field.html' with field=name_form.draft_name field_help_text=draft_help %}</div>
+    <button type="submit" name="action" value="save" id="scenario-save" class="action-link">{% translate "Save draft" %}</button>
+    {% if draft %}<a class="quiet-action" href="{% url 'sandbox:draft_delete' draft.pk %}">{% translate "Delete draft" %}</a>{% endif %}
+    {% for error in name_form.non_field_errors %}<p role="alert">{{ error }}</p>{% endfor %}
+</div>

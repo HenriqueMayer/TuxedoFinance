@@ -1,6 +1,6 @@
 {% load i18n %}
 {% comment %}
-Reusable dashboard indicator card (Final Design System §0/§7).
+Reusable dashboard metric card (Final Design System §0/§7).
 
 Usage (neutral):
   {% include 'partials/stat_card.html' with label='Current Balance' value=CURRENCY_SYMBOL|add:' 0.00' %}
@@ -21,19 +21,19 @@ compact secondary line.
       ...
   </div>
 {% endcomment %}
-<div class="rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
+<div class="metric-panel">
     <div class="flex items-start justify-between gap-2">
-        <p class="text-xs uppercase tracking-widest text-forest/70 dark:text-night-muted">{{ label }}</p>
+        <p class="metric-label">{{ label }}</p>
         {% if help_id %}
             {% include 'partials/help_popover.html' with help_label=label %}
         {% endif %}
     </div>
-    <p class="mt-2 whitespace-nowrap text-2xl font-bold tabular-nums {{ value_class|default:'text-forest dark:text-cream' }}">
+    <p class="whitespace-nowrap text-xl font-semibold tabular-nums {{ value_class|default:'text-forest dark:text-cream' }}">
         {% if amount is not None %}{{ CURRENCY_SYMBOL }} {{ amount|floatformat:2 }}{% else %}{{ value }}{% endif %}
     </p>
-    {% if caption %}<p class="mt-2 text-xs text-forest/70 dark:text-night-muted">{{ caption }}</p>{% endif %}
+    {% if caption %}<p class="mt-2 w-full text-xs text-forest/70 dark:text-night-muted">{{ caption }}</p>{% endif %}
     {% if detail_value is not None %}
-        <p class="mt-2 text-xs text-forest/60 dark:text-cream/60">
+        <p class="mt-2 w-full text-xs text-forest/60 dark:text-cream/60">
             <span class="font-medium tabular-nums">{{ CURRENCY_SYMBOL }} {{ detail_value|floatformat:2 }}</span> {{ detail_label }}
         </p>
     {% endif %}

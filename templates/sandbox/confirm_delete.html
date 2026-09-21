@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate "Delete draft" %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-2xl space-y-6">
+<h1 class="text-3xl font-semibold">{% translate "Delete draft" %}</h1>
+<p>{% blocktranslate with name=draft.name %}Delete “{{ name }}”? Its saved scenario inputs and commitment snapshot will be removed. Financial records are unaffected.{% endblocktranslate %}</p>
+<form method="post" hx-boost="false">{% csrf_token %}<button type="submit" class="action-primary">{% translate "Delete draft" %}</button> <a class="action-link" href="{% url 'sandbox:draft_detail' draft.pk %}">{% translate "Cancel" %}</a></form>
+</div>{% endblock %}
