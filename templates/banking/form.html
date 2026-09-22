@@ -13,6 +13,7 @@
     </div>
     <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}
+        {% if form.color %}<datalist id="bank-color-palette"><option>#B88D57</option><option>#24594A</option><option>#E87524</option><option>#6E42A1</option><option>#3167B1</option><option>#B93B54</option><option>#159A98</option><option>#68727C</option><option>#1F2933</option><option>#E5B633</option></datalist>{% endif %}
         {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         {% if form_variant == 'loyalty_entry' %}
             {% include 'partials/form_field.html' with field=form.program %}
@@ -41,6 +42,7 @@
                     </div>
                 {% else %}
                     {% include 'partials/form_field.html' with field=field %}
+                    {% if field.name == 'color' %}<div data-bank-colors data-input-id="{{ field.id_for_label }}" data-color-label="{% translate 'Use color' %}" role="group" aria-label="{% translate 'Suggested colors' %}" class="flex flex-wrap gap-2"></div>{% endif %}
                 {% endif %}
             {% endfor %}
         {% endif %}
@@ -106,6 +108,10 @@
         kind.addEventListener('change', function () {
             updateKindFields(true);
             updatePurchaseSource(true);
+        });
+        kind.form.addEventListener('tuxedo:restore', () => {
+            updateKindFields(false);
+            updatePurchaseSource(false);
         });
         updateKindFields(false);
     })();

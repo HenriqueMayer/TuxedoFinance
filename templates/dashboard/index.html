@@ -89,9 +89,9 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
                     </a>
                 </div>
                 {% if expense_categories %}
-                    <ol class="mt-5 grid gap-x-10 gap-y-5 lg:grid-cols-2">
+                    <div data-chart-selection><ol data-selection-surface class="mt-5 grid gap-x-10 gap-y-5 lg:grid-cols-2">
                         {% for category in expense_categories %}
-                            <li>
+                            <li data-point="{{ forloop.counter0 }}" data-series="0">
                                 <div class="flex items-baseline justify-between gap-4 text-sm">
                                     <span class="min-w-0 truncate font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</span>
                                     <span class="shrink-0 tabular-nums text-forest/70 dark:text-night-muted">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }} &middot; {{ category.share|floatformat:1 }}%</span>
@@ -101,7 +101,7 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
                                 </div>
                             </li>
                         {% endfor %}
-                    </ol>
+                    </ol>{% include 'partials/chart_selection.html' with selection=category_selection %}</div>
                 {% else %}
                     <div class="mt-5 text-sm text-forest/70 dark:text-night-muted">
                         {% if is_future_month %}{% translate "No categorized expenses are planned for this month." %}

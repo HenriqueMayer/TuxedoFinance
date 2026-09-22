@@ -17,9 +17,9 @@ The page-level structure here is:
     with any of the report filters, so it would be wasted pixels to redraw
     on every chart click.
   - the partial, which is everything that depends on the URL params
-    (the four stat cards, the six charts, and the two drill-down panels).
+    (the summary values and charts).
 
-Every interactive control in the partial carries `hx-get` /
+Every period control in the partial carries `hx-get` /
 `hx-target="#reports-charts"` / `hx-push-url="true"` (and a plain
 `href` / `action` as the no-JS fallback). With HTMX loaded, the URL
 updates in place and the chart region swaps without a full reload; with

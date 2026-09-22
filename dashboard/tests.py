@@ -707,55 +707,19 @@ class InstrumentReportTests(DashboardFixture):
         self.assertEqual(breakdown['total'], Decimal('50.00'))
         self.assertTrue(all('Bank With Spaces >' in row['label'] for row in breakdown['instruments']))
 
-    def test_id_drilldown_handles_labels_with_spaces_and_htmx(self):
-        card = CreditCard.objects.create(
-            user=self.user,
-            account=self.account,
-            name='Blue Card With Spaces',
-            closing_day=31,
-            due_day=28,
-        )
-        self.transaction(
-            amount='25.00',
-            payment_channel=Transaction.PaymentChannel.CREDIT_CARD,
-            bank_account=None,
-            credit_card=card,
-        )
+    def test_instrument_composition_uses_signed_scope_without_click_navigation(self):
+        self.transaction(amount='25.00')
         response = self.client.get(reverse('dashboard:reports'))
+        self.assertNotContains(response, 'data-scroll-target="instrument-categories-expense"')
+        endpoint = response.context['instrument_selection']['points'][0]['details'][0]
+        composition = self.client.get(endpoint).json()
+        self.assertEqual(composition['rows'], [{'label': 'Groceries', 'cents': '2500'}])
 
-        self.assertContains(response, f'expense_instrument=cc%3A{card.pk}')
-        self.assertContains(response, 'Bank With Spaces &gt; Main Account / Blue Card With Spaces')
-        self.assertContains(response, 'Blue Card With Spaces')
-        self.assertContains(response, 'Bank With Spaces')
-        self.assertContains(response, 'data-scroll-target="instrument-categories-expense"')
-
-        drilldown = self.client.get(
-            reverse('dashboard:reports'),
-            {'expense_instrument': f'cc:{card.pk}'},
-            HTTP_HX_REQUEST='true',
-        )
-        self.assertNotContains(drilldown, '<html')
-        self.assertContains(drilldown, 'id="reports-charts"')
-        self.assertContains(drilldown, 'Categories in')
-        self.assertContains(drilldown, 'Groceries')
-
-    def test_income_bar_opens_income_categories(self):
-        self.transaction(
-            amount='125.00',
-            transaction_type=Transaction.TransactionType.INCOME,
-        )
+    def test_income_composition_is_separate_from_expenses(self):
+        self.transaction(amount='125.00', transaction_type=Transaction.TransactionType.INCOME)
         response = self.client.get(reverse('dashboard:reports'))
-
-        self.assertContains(response, f'income_account=account%3A{self.account.pk}')
-        self.assertContains(response, 'data-scroll-target="account-categories-income"')
-
-        drilldown = self.client.get(
-            reverse('dashboard:reports'),
-            {'income_account': f'account:{self.account.pk}'},
-            HTTP_HX_REQUEST='true',
-        )
-        self.assertContains(drilldown, 'received on')
-        self.assertContains(drilldown, 'Groceries')
+        endpoint = response.context['instrument_selection']['points'][0]['details'][1]
+        self.assertEqual(self.client.get(endpoint).json()['rows'], [{'label': 'Groceries', 'cents': '12500'}])
 
     def test_installment_shares_are_rounded_to_one_decimal(self):
         self.transaction(amount='542.00')
@@ -915,7 +879,8 @@ class DashboardPageContractTests(DashboardFixture):
         self.assertEqual(shifted.context['evolution']['current_month']['balance'], Decimal('123.00'))
         self.assertEqual(shifted.context['evolution']['balance_today'], Decimal('1500.00'))
         self.assertContains(shifted, 'Balance now')
-        self.assertNotContains(shifted, 'Balance at ')
+        summary = shifted.content.decode().split('id="report-summary"', 1)[1].split('<section', 1)[0]
+        self.assertNotIn('Balance at ', summary)
         self.assertContains(shifted, 'October 2026')
         self.assertContains(shifted, 'May 2026 to Apr 2027')
 

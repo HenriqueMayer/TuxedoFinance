@@ -6,7 +6,7 @@
     {# {{ CURRENCY_SYMBOL }}, FX rate-at-time. Mirrors the Reports       #}
     {# chart-1 visual contract (neutral zero-line, investment stroke). #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 surface-panel">
+    <section class="space-y-4 surface-panel" data-chart-selection>
         <div class="panel-heading items-start">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
                 <div class="label-with-help">
@@ -62,7 +62,7 @@
 
         <div class="overflow-x-auto">
             {% localize off %}
-            <svg viewBox="0 0 {{ chart_total.width }} {{ chart_total.height }}"
+            <svg data-selection-surface viewBox="0 0 {{ chart_total.width }} {{ chart_total.height }}"
                  class="chart-canvas min-w-[44rem]" role="img"
                   aria-label="{% translate 'Line chart of the cumulative investment total in base currency over the last 12 months' %}">
                 <defs>
@@ -110,7 +110,7 @@
 
                 <g data-chart-layer="investment-total-interactions">
                     {% for point in chart_total.points %}
-                        <g class="group outline-none" tabindex="0"
+                        <g class="group outline-none" tabindex="0" data-point="{{ forloop.counter0 }}" data-series="0"
                            aria-label="{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}">
                             <circle cx="{{ point.x }}" cy="{{ point.y }}" r="6" fill="transparent">
                                 <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
@@ -135,13 +135,14 @@
             </svg>
             {% endlocalize %}
         </div>
+    {% include 'partials/chart_selection.html' with selection=total_selection %}
     </section>
 
     {# ---------------------------------------------------------------- #}
     {# Chart 2 — monthly flow (grouped bars): deposits, yields, withdrawals #}
     {# per month, both in {{ CURRENCY_SYMBOL }}, per-entry FX.          #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 surface-panel">
+    <section class="space-y-4 surface-panel" data-chart-selection>
         <div class="panel-heading items-start">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
                 <div class="label-with-help">
@@ -209,7 +210,7 @@
 
         <div class="overflow-x-auto">
             {% localize off %}
-            <svg viewBox="0 0 {{ chart_flow.width }} {{ chart_flow.height }}"
+            <svg data-selection-surface viewBox="0 0 {{ chart_flow.width }} {{ chart_flow.height }}"
                  class="chart-canvas min-w-[44rem]" role="img"
                    aria-label="{% translate 'Grouped bar chart of deposits, yields, and withdrawals per month in base currency' %}">
                 {% for line in chart_flow.grid %}
@@ -244,7 +245,7 @@
                     {% for group in chart_flow.groups %}
                         {% for bar in group.bars %}
                             {% if bar.value %}
-                                <g class="group outline-none" tabindex="0"
+                                <g class="group outline-none" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}"
                                    aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
                                     <rect x="{{ bar.x }}" y="{{ bar.y }}"
                                           width="{{ bar.width }}" height="{{ bar.height }}" rx="2" fill="transparent">
@@ -275,5 +276,6 @@
             </svg>
             {% endlocalize %}
         </div>
+    {% include 'partials/chart_selection.html' with selection=flow_selection %}
     </section>
 </div>

@@ -1,5 +1,5 @@
 {% load i18n %}
-{% url 'investments:list' as list_url %}
+{% url 'investments:operations' as list_url %}
 <section id="investment-movements"
          hx-request='{"noHeaders":false}'
          class="surface-panel scroll-mt-24 space-y-5 outline-none"
@@ -7,7 +7,7 @@
          aria-labelledby="investment-movements-title">
     <h2 id="investment-movements-title"
         class="section-title">
-        {% translate "Investment operations" %}
+        {% translate "Operation history" %}
     </h2>
 
     <form method="get"
@@ -18,8 +18,15 @@
           hx-push-url="true"
           data-scroll-target="investment-movements"
           class="grid gap-3 border-y border-forest/15 py-5 sm:grid-cols-2 lg:grid-cols-6 dark:border-cream/15">
-        <input type="hidden" name="section" value="{{ selected_section|default:'portfolio' }}">
         <div class="space-y-1.5 lg:col-span-2">
+            <label for="investment-purpose" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate 'Purpose' %}</label>
+            <select id="investment-purpose" name="section" class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
+                <option value="">{% translate 'All purposes' %}</option>
+                <option value="portfolio" {% if selected_purpose == 'portfolio' %}selected{% endif %}>{% translate 'Portfolio' %}</option>
+                <option value="cash" {% if selected_purpose == 'cash' %}selected{% endif %}>{% translate 'Remunerated cash' %}</option>
+            </select>
+        </div>
+        <div class="space-y-1.5 lg:col-span-3">
             <label for="investment-search" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Search investments" %}
             </label>
@@ -39,7 +46,7 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 lg:col-span-2">
             <label for="investment-bank" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Bank" %}
             </label>
@@ -51,7 +58,7 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 lg:col-span-2">
             <label for="investment-product" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Investment product" %}
             </label>
@@ -63,7 +70,7 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 lg:col-span-2">
             <label for="investment-asset" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Asset" %}
             </label>
@@ -81,9 +88,9 @@
                     class="quiet-action">
                 {% translate 'Filter' %}
             </button>
-            {% if search_query or selected_kind or selected_bank or selected_product or selected_asset %}
-                <a href="{{ list_url }}?section={{ selected_section|default:'portfolio' }}#investment-movements"
-                   hx-get="{{ list_url }}?section={{ selected_section|default:'portfolio' }}"
+            {% if search_query or selected_kind or selected_bank or selected_product or selected_asset or selected_purpose %}
+                <a href="{{ list_url }}#investment-movements"
+                   hx-get="{{ list_url }}"
                    hx-target="#investment-movements"
                    hx-swap="outerHTML"
                    hx-push-url="true"

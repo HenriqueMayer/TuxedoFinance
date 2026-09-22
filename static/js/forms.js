@@ -292,6 +292,7 @@
         });
     }
     function refresh(scope = document) {
+        scope.querySelectorAll('[data-form-when]').forEach(group => disclosures.get(group)?.(false));
         scope.querySelectorAll('select[data-search-select]').forEach(select => pickers.get(select)?.refresh());
     }
     window.TuxedoForms = { init, setHidden, refresh };

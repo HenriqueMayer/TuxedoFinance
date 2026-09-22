@@ -1,7 +1,8 @@
 """SVG geometry for the report charts (FR16).
 
-The project is deliberately zero-JS, so the charts are plain server-rendered
-`<svg>` — no charting library, no `<canvas>`, no client-side data. These
+Charts remain server-rendered `<svg>` with a complete no-JavaScript path.
+Optional selection enhances these charts without a charting library
+or `<canvas>`. These
 helpers do the pixel arithmetic the Django Template Language cannot express
 and hand the template ready-to-render coordinates.
 

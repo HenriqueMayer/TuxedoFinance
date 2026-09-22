@@ -86,6 +86,10 @@ then assembles the version manifest and attaches `compose.yaml` and
 revision. Pull requests validate images without publishing. Prereleases are
 validated but not published by this workflow.
 
+For v0.5.0, upgrade rehearsals start from both v0.3.0 and v0.4.0. They verify
+financial records, additive migration defaults (including the bank marker),
+volume persistence, backups and restoration before publication.
+
 Supported image references are `ghcr.io/henriquemayer/tuxedofinance:vX.Y.Z` or a
 recorded digest. No moving `latest` tag is maintained, so publishing an older
 release cannot silently change an installation's selected version.

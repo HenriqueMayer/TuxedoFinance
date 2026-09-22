@@ -1,0 +1,2 @@
+{% load i18n %}
+<tr><th scope="row">{{ number }}</th><td><input type="text" inputmode="decimal" name="contribution_{{ index }}" value="{{ row.contribution }}" aria-label="{% blocktranslate with month=number %}Month {{ month }} contribution{% endblocktranslate %}" class="planning-sheet-input"></td><td><input type="text" inputmode="decimal" name="withdrawal_{{ index }}" value="{{ row.withdrawal }}" aria-label="{% blocktranslate with month=number %}Month {{ month }} withdrawal{% endblocktranslate %}" class="planning-sheet-input"></td></tr>

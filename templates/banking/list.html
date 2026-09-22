@@ -23,8 +23,8 @@
         {% if search_query %}<a href="{% url 'banking:list' %}" class="action-link">{% translate 'Clear' %}</a>{% endif %}
     </form>
     {% for bank in banks %}
-    <section aria-labelledby="bank-{{ bank.pk }}" class="surface-panel space-y-4">
-        <div class="panel-heading"><h2 id="bank-{{ bank.pk }}" class="section-title min-w-0 flex-1"><a href="{% url 'banking:detail' bank.pk %}" class="underline-offset-4 hover:underline">{{ bank.name }}</a></h2><a href="{% url 'banking:account_create' %}?bank={{ bank.pk }}" class="quiet-action shrink-0" aria-label="{% translate 'Add account' %}"><svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg><span class="hidden sm:inline">{% translate 'Add account' %}</span></a></div>
+    <section aria-labelledby="bank-{{ bank.pk }}" class="surface-panel bank-panel space-y-4">
+        <div class="panel-heading"><span class="bank-bookmark" style="--bank-color: {{ bank.color|default:'#B88D57' }}" aria-hidden="true"></span><h2 id="bank-{{ bank.pk }}" class="section-title min-w-0 flex-1"><a href="{% url 'banking:detail' bank.pk %}" class="underline-offset-4 hover:underline">{{ bank.name }}</a></h2><a href="{% url 'banking:account_create' %}?bank={{ bank.pk }}" class="quiet-action shrink-0" aria-label="{% translate 'Add account' %}"><svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg><span class="hidden sm:inline">{% translate 'Add account' %}</span></a></div>
         {% include 'banking/_account_table.html' with return_to='list' %}
         {% include 'banking/_cash_pots.html' %}
         {% if bank.loyalty_programs.all %}<p class="subtle-copy">{% translate 'Loyalty:' %} {% for program in bank.loyalty_programs.all %}<a class="underline" href="{% url 'banking:program_update' program.pk %}">{{ program.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}

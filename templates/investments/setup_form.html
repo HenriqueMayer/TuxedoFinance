@@ -90,6 +90,7 @@
         valuationMode.addEventListener('change', function () {
             updateOpeningFields(true);
         });
+        valuationMode.form.addEventListener('tuxedo:restore', () => updateOpeningFields(false));
         updateOpeningFields(false);
     })();
 </script>

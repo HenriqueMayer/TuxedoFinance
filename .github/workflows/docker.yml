@@ -47,10 +47,12 @@ jobs:
         run: |
           version=$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
           docker build --build-arg VERSION="$version" --build-arg REVISION="$(git rev-parse HEAD)" --tag tuxedo-finance:test .
-      - name: Test v0.3.0 upgrade, lifecycle and restore
+      - name: Test supported upgrades, lifecycle and restore
         run: |
-          docker pull ghcr.io/henriquemayer/tuxedofinance:v0.3.0
-          uv run python scripts/docker_smoke.py --image tuxedo-finance:test --previous-image ghcr.io/henriquemayer/tuxedofinance:v0.3.0
+          for previous in v0.3.0 v0.4.0; do
+            docker pull "ghcr.io/henriquemayer/tuxedofinance:$previous"
+            uv run python scripts/docker_smoke.py --image tuxedo-finance:test --previous-image "ghcr.io/henriquemayer/tuxedofinance:$previous"
+          done
       - name: Install browser dependencies
         run: |
           npm ci

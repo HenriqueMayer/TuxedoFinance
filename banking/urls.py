@@ -7,6 +7,7 @@ app_name = 'banking'
 
 urlpatterns = [
     path('', views.BankListView.as_view(), name='list'),
+    path('<int:pk>/color/', views.BankColorUpdateView.as_view(), name='color'),
     path('create/', views.BankCreateView.as_view(), name='create'),
     path('<int:pk>/', views.BankDetailView.as_view(), name='detail'),
     path('<int:pk>/edit/', views.BankUpdateView.as_view(), name='update'),

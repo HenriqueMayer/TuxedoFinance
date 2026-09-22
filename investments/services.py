@@ -481,6 +481,7 @@ def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12
             else:
                 running += value if operation.kind != Investment.Kind.WITHDRAWAL else -value
     for year, month in window:
+        opening_balance = running.quantize(CENTS)
         for operation in operations:
             if (operation.date.year, operation.date.month) != (year, month):
                 continue
@@ -489,7 +490,7 @@ def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12
                 missing.add(operation.asset.currency)
             else:
                 running += value if operation.kind != Investment.Kind.WITHDRAWAL else -value
-        rows.append({'date': date(year, month, 1), 'year': year, 'month': month, 'total': running.quantize(CENTS)})
+        rows.append({'date': date(year, month, 1), 'year': year, 'month': month, 'opening_balance': opening_balance, 'total': running.quantize(CENTS)})
     return rows, sorted(missing)
 
 

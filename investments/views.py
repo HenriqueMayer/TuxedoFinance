@@ -18,6 +18,7 @@ from django.views.generic import CreateView, DeleteView, ListView, TemplateView,
 
 from banking.models import Bank
 from banking.services import MissingExchangeRate, convert
+from dashboard.selection import selection_data, attach_details
 from dashboard.charts import build_bar_chart, build_line_chart
 from investments.forms import AssetForm, InvestmentForm, InvestmentProductForm
 from investments.models import Asset, Investment, InvestmentProduct
@@ -54,11 +55,8 @@ def _parse_offset(request, name):
         return 0
 
 
-class InvestmentListView(LoginRequiredMixin, ListView):
-    model = Investment
+class InvestmentListView(LoginRequiredMixin, TemplateView):
     template_name = 'investments/list.html'
-    context_object_name = 'investments'
-    paginate_by = 10
 
     def get_section(self):
         return 'cash' if self.request.GET.get('section') == 'cash' else 'portfolio'
@@ -69,43 +67,20 @@ class InvestmentListView(LoginRequiredMixin, ListView):
             else InvestmentProduct.Purpose.INVESTMENT
         )
 
+    def get(self, request, *args, **kwargs):
+        movement_request = request.headers.get('HX-Target') == 'investment-movements'
+        if movement_request or any(key in request.GET for key in ('page', 'q', 'kind', 'bank', 'product', 'asset')):
+            query = request.GET.copy()
+            if query.get('section') != 'cash':
+                query['section'] = 'portfolio'
+            return redirect(f"{reverse_lazy('investments:operations')}?{query.urlencode()}")
+        return super().get(request, *args, **kwargs)
+
     def get_template_names(self):
         if self.request.headers.get('HX-Request') == 'true':
-            if self.request.headers.get('HX-Target') == 'investment-movements':
-                return ['investments/_investment_movements.html']
             if self.request.headers.get('HX-Target') == 'investments-charts':
                 return ['investments/_investments_charts.html']
         return [self.template_name]
-
-    def get_queryset(self):
-        queryset = Investment.objects.filter(
-            user=self.request.user, product__purpose=self.get_purpose(),
-        ).select_related(
-            'product__bank', 'asset', 'source_account', 'source_program',
-            'destination_account'
-        )
-        kind = self.request.GET.get('kind', '').upper()
-        if kind in Investment.Kind.values:
-            queryset = queryset.filter(kind=kind)
-        bank = self.request.GET.get('bank', '')
-        product = self.request.GET.get('product', '')
-        asset = self.request.GET.get('asset', '')
-        if bank.isdigit():
-            queryset = queryset.filter(product__bank_id=bank)
-        if product.isdigit():
-            queryset = queryset.filter(product_id=product)
-        if asset.isdigit():
-            queryset = queryset.filter(asset_id=asset)
-        search = self.request.GET.get('q', '').strip()
-        if search:
-            queryset = queryset.filter(
-                Q(reason__icontains=search)
-                | Q(notes__icontains=search)
-                | Q(product__name__icontains=search)
-                | Q(asset__name__icontains=search)
-                | Q(asset__code__icontains=search)
-            )
-        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -145,15 +120,6 @@ class InvestmentListView(LoginRequiredMixin, ListView):
                 missing | set(total_missing) | set(flow_missing) | portfolio_missing
             ),
             'base_currency': base,
-            'kind_choices': Investment.Kind.choices,
-            'selected_kind': self.request.GET.get('kind', '').upper(),
-            'bank_choices': Bank.objects.filter(user=user),
-            'product_choices': InvestmentProduct.objects.filter(user=user, purpose=purpose).select_related('bank'),
-            'asset_choices': Asset.objects.filter(user=user),
-            'selected_bank': self.request.GET.get('bank', ''),
-            'selected_product': self.request.GET.get('product', ''),
-            'selected_asset': self.request.GET.get('asset', ''),
-            'search_query': self.request.GET.get('q', '').strip(),
             'has_investments': Investment.objects.filter(user=user, product__purpose=purpose).exists(),
             'chart_total': build_line_chart(total_rows, [float(row['total']) for row in total_rows]),
             'chart_flow': build_bar_chart(flow_rows, [
@@ -171,6 +137,13 @@ class InvestmentListView(LoginRequiredMixin, ListView):
             'flow_next_offset_param': flow_offset + 1,
             'is_flow_anchored_today': flow_offset == 0,
         })
+        context['total_selection'] = selection_data(total_rows, [('total', _('Total'))],
+            mode='change', opening=total_rows[0]['opening_balance'], chart=context['chart_total'])
+        context['flow_selection'] = selection_data(flow_rows, [
+            ('deposits', _('Deposits')), ('withdrawals', _('Withdrawals')), ('yields', _('Yields')),
+        ], chart=context['chart_flow'])
+        attach_details(context['total_selection'], user, 'portfolio', total_rows, ['total'], purpose=purpose, opening_date=total_rows[0]['date'].isoformat())
+        attach_details(context['flow_selection'], user, 'portfolio-flow', flow_rows, ['deposits', 'withdrawals', 'yields'], purpose=purpose)
         for prefix, offset, rows in (
             ('total', total_offset, total_rows), ('flow', flow_offset, flow_rows)
         ):
@@ -181,11 +154,82 @@ class InvestmentListView(LoginRequiredMixin, ListView):
         return context
 
 
+class InvestmentOperationsView(LoginRequiredMixin, ListView):
+    model = Investment
+    template_name = 'investments/operations.html'
+    context_object_name = 'investments'
+    paginate_by = 10
+
+    def get_purpose(self):
+        return {
+            'portfolio': InvestmentProduct.Purpose.INVESTMENT,
+            'cash': InvestmentProduct.Purpose.MONTHLY_CASH,
+        }.get(self.request.GET.get('section'))
+
+    def get_template_names(self):
+        if (self.request.headers.get('HX-Request') == 'true'
+                and self.request.headers.get('HX-Target') == 'investment-movements'):
+            return ['investments/_investment_movements.html']
+        return [self.template_name]
+
+    def get_queryset(self):
+        queryset = Investment.objects.filter(
+            user=self.request.user,
+        ).select_related(
+            'product__bank', 'asset', 'source_account', 'source_program',
+            'destination_account'
+        )
+        purpose = self.get_purpose()
+        if purpose:
+            queryset = queryset.filter(product__purpose=purpose)
+        kind = self.request.GET.get('kind', '').upper()
+        if kind in Investment.Kind.values:
+            queryset = queryset.filter(kind=kind)
+        bank = self.request.GET.get('bank', '')
+        product = self.request.GET.get('product', '')
+        asset = self.request.GET.get('asset', '')
+        if bank.isdigit():
+            queryset = queryset.filter(product__bank_id=bank)
+        if product.isdigit():
+            queryset = queryset.filter(product_id=product)
+        if asset.isdigit():
+            queryset = queryset.filter(asset_id=asset)
+        search = self.request.GET.get('q', '').strip()
+        if search:
+            queryset = queryset.filter(
+                Q(reason__icontains=search)
+                | Q(notes__icontains=search)
+                | Q(product__name__icontains=search)
+                | Q(asset__name__icontains=search)
+                | Q(asset__code__icontains=search)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        # Keep all owned products available when switching the purpose filter.
+        context.update({
+            'selected_section': 'operations',
+            'selected_purpose': self.request.GET.get('section', '') if self.get_purpose() else '',
+            'kind_choices': Investment.Kind.choices,
+            'selected_kind': self.request.GET.get('kind', '').upper(),
+            'bank_choices': Bank.objects.filter(user=user),
+            'product_choices': InvestmentProduct.objects.filter(user=user).select_related('bank'),
+            'asset_choices': Asset.objects.filter(user=user),
+            'selected_bank': self.request.GET.get('bank', ''),
+            'selected_product': self.request.GET.get('product', ''),
+            'selected_asset': self.request.GET.get('asset', ''),
+            'search_query': self.request.GET.get('q', '').strip(),
+        })
+        return context
+
+
 class InvestmentFormMixin(LoginRequiredMixin):
     model = Investment
     form_class = InvestmentForm
     template_name = 'investments/form.html'
-    success_url = reverse_lazy('investments:list')
+    success_url = reverse_lazy('investments:operations')
 
     def get_success_url(self):
         url = str(self.success_url)
@@ -397,7 +441,7 @@ class InvestmentDeleteView(LoginRequiredMixin, DeleteView):
     model = Investment
     template_name = 'investments/confirm_delete.html'
     context_object_name = 'investment'
-    success_url = reverse_lazy('investments:list')
+    success_url = reverse_lazy('investments:operations')
 
     def get_success_url(self):
         url = str(self.success_url)

@@ -453,7 +453,8 @@ renders transparent hit targets, hover/focus highlights and tooltip pills in a
 final `data-chart-layer="*-interactions"` layer. Tooltips must never be nested
 only beside their original mark in series order: later SVG elements would paint
 over them. Tooltip content remains `pointer-events-none`, while its transparent
-hit target retains the native `<title>`, keyboard focus and any chart link.
+hit target retains the native `<title>` and keyboard focus. Chart marks select
+values without navigating; period controls retain their native links or forms.
 
 Every chart states its reporting currency and actual versus projected period.
 The selected per-user base currency, snapshot status where supported, and
@@ -532,3 +533,52 @@ retained for recovery. Calendar dates are not converted through JavaScript
 HTMX regions with `data-preserve-view` use the common navigation handler to
 restore focus and scroll. Account participation updates also replace the
 availability summary out of band, so the row and aggregate remain consistent.
+
+## Previous-screen continuity and balance ranges
+
+Investment navigation keeps the cross-area simulation shortcut last. The Operations
+page owns operation search, purpose/type/record filters and pagination. Portfolio
+and remunerated-cash pages show positions; portfolio charts precede a contextual
+link to Operations. The same destination appears in section tabs and desktop/mobile
+navigation menus. Old movement-filter URLs redirect to the new page. Chart navigation
+and operation pagination keep separate HTMX regions. Operation forms return to the
+history after a successful save or deletion.
+
+The shared
+previous-screen control stores one previous workspace in sessionStorage for the
+current tab and authenticated user. It captures contextual same-origin links inside page content and explicitly marked
+cross-area shortcuts (`data-workspace-shortcut`), such as Simulate returns.
+Primary navigation and section tabs clear the return context. It records
+query parameters, named unsent fields, repeated salary/monthly simulation rows, disclosures, focus
+and scroll. Returning through the control restores values into freshly rendered
+server forms; it never replays submissions or emits input/change events.
+Passwords, uploaded files, hidden fields/CSRF tokens and account settings are
+excluded. Form submission, logout, user/preference/asset-revision changes clear
+the context. This is navigation recovery, not financial undo or a saved draft.
+Simulations must be recalculated after restoring edited inputs. Browser history
+remains separate. Storage-disabled and no-JavaScript clients keep native links.
+
+Charts use direct manipulation without manual range selectors. Drag either way
+on time series, or select endpoints with Enter/Space. Shift-click and Shift with
+Enter/Space toggle individual bars or slices. Instrument bars have no click
+navigation. The donut puts its selected sum in the center and restores the full
+total on outside click or Escape. Other charts retain the selection summary.
+Selection never writes financial records. Without JavaScript the original chart
+values and period navigation remain available.
+
+Hold Ctrl while hovering or focusing a mark to inspect its composition in a
+viewport-bounded, scrollable panel. Release Ctrl, leave the chart/panel or press
+Escape to dismiss it. On touch, tap selects and holding a mark opens its
+composition until dismissed. A shared read-only authenticated endpoint accepts
+signed, user-bound chart scopes; all queries are scoped to the current user.
+Category paths preserve parent and subcategory names. Transaction charts use the
+same competence window and series as the chart, while bank balances show their
+account composition and investments show products/assets. Details for all-period
+charts use their full twelve-month scope. Decimal amounts become integer cents;
+SVG coordinates never supply financial values.
+
+Bank colors use a validated six-digit hex value, a native color field and optional
+preset swatches. Existing banks receive the neutral caramel marker. The list uses
+a slim corner marker; the marker next to the detail title links to a color-only
+edit form. Native submissions work without JavaScript and updates enforce bank
+ownership. Color does not carry financial meaning.
