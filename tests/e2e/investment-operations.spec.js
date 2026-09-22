@@ -80,9 +80,19 @@ for (const theme of ['light', 'dark']) {
         const menu = page.getByRole('navigation', { name: 'Main navigation' }).locator('[data-nav-item="investments"]');
         await menu.locator(':scope > a').hover();
         await expect(menu.getByRole('link', { name: 'Operations', exact: true })).toBeVisible();
-        await menu.getByRole('link', { name: 'Operations', exact: true }).press('Enter');
+        // The menu reloads the same URL after Clear filters. A URL assertion
+        // alone can pass while the old tabs are still being replaced by HTMX.
+        await Promise.all([
+            page.waitForResponse(response => response.request().method() === 'GET'
+                && new URL(response.url()).pathname === '/investments/operations/'
+                && new URL(response.url()).search === ''),
+            menu.getByRole('link', { name: 'Operations', exact: true }).press('Enter'),
+        ]);
+        await expect(page.locator('body')).not.toHaveAttribute('aria-busy', 'true');
+        await expect(page.locator('body')).not.toHaveClass(/htmx-settling/);
         await expect(page).toHaveURL(/\/investments\/operations\/$/);
         await tabs.getByRole('link', { name: 'Remunerated cash', exact: true }).press('Enter');
+        await expect(page).toHaveURL(/\/investments\/\?section=cash$/);
         await page.locator('#investment-operations-link').press('Enter');
         await expect(page).toHaveURL(/operations\/\?section=cash$/);
         await expect(history).toContainText('Pot yield');
