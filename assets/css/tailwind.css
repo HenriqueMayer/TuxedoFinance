@@ -178,6 +178,16 @@
     overscroll-behavior: contain;
   }
   .help-title { display: block; font-weight: 600; }
+  .unavailable-action { @apply inline-flex; }
+  .unavailable-action-trigger { @apply min-h-11 cursor-not-allowed border-b-2 border-transparent px-1 py-3 text-left text-sm text-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-gray-400; }
+  .unavailable-action-trigger[hidden] { display: none; }
+  .action-notice { @apply rounded-lg border-gray-300 bg-gray-100 px-4 py-3 text-gray-700 dark:border-gray-600 dark:bg-night-raised dark:text-gray-200; }
+  .unavailable-action-native > [role="tooltip"] { display: none; }
+  .unavailable-action-native > summary { list-style: none; }
+  .unavailable-action-native > summary::-webkit-details-marker { display: none; }
+  .unavailable-action-native[open] > [role="tooltip"],
+  .unavailable-action-native:hover > [role="tooltip"],
+  .unavailable-action-native:focus-within > [role="tooltip"] { display: block; }
   .help-paragraph, .help-formula { display: block; margin-top: 0.75rem; }
   .help-formula {
     @apply rounded-lg bg-forest/5 px-3 py-2 font-medium dark:bg-cream/5;

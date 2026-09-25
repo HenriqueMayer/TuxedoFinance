@@ -104,6 +104,14 @@ Missing rates preserve native amounts and mark the conversion incomplete.
 Changing the preference never mutates native amounts. Other banking entities
 remain on live/current conversion until a future roadmap item extends coverage.
 
+The exchange-rate list provides create, edit and confirmed delete actions for
+the signed-in user's rates. Forms and cancellation return to that list. Editing
+or deleting a rate can change current valuations or leave a currency without a
+rate. Persisted transfer and investment FX snapshots retain their recorded
+amounts, currencies, rate and date; deletion clears only the optional source-rate
+reference. Currency pairs must differ, rates must be positive, and each pair/date
+must be unique per user.
+
 ## Integrity
 
 - Every queryset and relationship is scoped to the authenticated user.

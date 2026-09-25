@@ -11,7 +11,18 @@
     </div>
     {% if rates %}
         <ul class="divide-y divide-forest/10 rounded-3xl bg-white px-5 ring-1 ring-forest/10 dark:divide-cream/10 dark:bg-night-surface dark:ring-cream/10">
-            {% for rate in rates %}<li class="py-4"><span class="font-semibold">1 {{ rate.from_currency }} = {{ rate.rate }} {{ rate.to_currency }}</span><p class="text-sm text-forest/70 dark:text-night-muted">{{ rate.effective_date|date:USER_DATE_FORMAT }}{% if rate.notes %} - {{ rate.notes }}{% endif %}</p></li>{% endfor %}
+            {% for rate in rates %}
+                <li id="exchange-rate-{{ rate.pk }}" class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0 break-words">
+                        <span class="font-semibold">1 {{ rate.from_currency }} = {{ rate.rate }} {{ rate.to_currency }}</span>
+                        <p class="text-sm text-forest/70 dark:text-night-muted">{{ rate.effective_date|date:USER_DATE_FORMAT }}{% if rate.notes %} - {{ rate.notes }}{% endif %}</p>
+                    </div>
+                    <div class="flex shrink-0 gap-3">
+                        <a id="edit-exchange-rate-{{ rate.pk }}" href="{% url 'banking:exchange_rate_update' rate.pk %}" class="action-link">{% translate "Edit" %}</a>
+                        <a id="delete-exchange-rate-{{ rate.pk }}" href="{% url 'banking:exchange_rate_delete' rate.pk %}" class="action-link text-expense dark:text-expense-light">{% translate "Delete" %}</a>
+                    </div>
+                </li>
+            {% endfor %}
         </ul>
     {% else %}
         {% url 'banking:exchange_rate_create' as rate_create_url %}

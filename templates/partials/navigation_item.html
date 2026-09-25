@@ -18,8 +18,7 @@
                 <a class="{{ extra_class }}" href="{% url 'investments:list' %}">{% translate 'Portfolio' %}</a>
                 <a class="{{ extra_class }}" href="{% url 'investments:list' %}?section=cash">{% translate 'Remunerated cash' %}</a>
                 <a class="{{ extra_class }}" href="{% url 'investments:operations' %}">{% translate 'Operations' %}</a>
-                <a class="{{ extra_class }}" href="{% url 'investments:settings' %}">{% translate 'Products and assets' %}</a>
-                <a class="{{ extra_class }}" href="{% url 'sandbox:simulation' %}">{% translate 'Simulate returns' %}</a>
+                <a class="{{ extra_class }}" href="{% url 'investments:settings' %}">{% translate 'Configuration' %}</a>
             {% elif area == 'planning' %}
                 <a class="{{ extra_class }}" href="{% url 'sandbox:index' %}">{% translate 'Monthly plan' %}</a>
                 <a class="{{ extra_class }}" href="{% url 'sandbox:simulation' %}">{% translate 'Yield simulation' %}</a>

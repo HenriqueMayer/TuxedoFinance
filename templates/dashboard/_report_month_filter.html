@@ -1,0 +1,24 @@
+{% load i18n %}
+{# The installment month applies on change; a submit button remains available without JavaScript. #}
+<form method="get" action="{% url 'dashboard:reports' %}"
+      hx-get="{% url 'dashboard:reports' %}"
+      hx-trigger="change, submit"
+      hx-sync="#reports-charts:replace"
+      hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true"
+      class="flex flex-wrap items-end gap-3">
+    {% for key, value in request.GET.items %}
+        {% if key != filter_name %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endif %}
+    {% endfor %}
+    <div class="min-w-[12rem] space-y-1.5">
+        <label for="{{ filter_id }}" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate "Window" %}</label>
+        <select id="{{ filter_id }}" name="{{ filter_name }}"
+                class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+            {% for value, label in choices %}
+                <option value="{{ value }}" {% if selected_month == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <noscript><button type="submit" class="quiet-action">{% translate "Filter" %}</button></noscript>
+</form>

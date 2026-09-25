@@ -14,6 +14,9 @@
     }
     function group(menu) { return menu.closest('[data-nav-item]') || menu; }
     function summary(menu) { return menu.querySelector(':scope > summary'); }
+    // Option buttons open deliberately; only primary navigation links retain
+    // their documented hover preview. Crossing another trigger cannot switch menus.
+    function activationOnly(menu) { return menu.matches('.secondary-actions, [data-export-menu], [data-project-menu]'); }
     function helpPanels(menu) {
         return [...menu.querySelectorAll('[data-help-trigger][aria-controls]')]
             .map(trigger => document.getElementById(trigger.getAttribute('aria-controls')))
@@ -74,8 +77,14 @@
     document.addEventListener('pointerover', event => {
         if (event.pointerType === 'touch') return;
         const menu = menuFor(event.target);
-        if (!menu || contains(menu, event.relatedTarget)) return;
+        if (!menu) return;
+        const linkPreview = menu.matches('[data-nav-menu]') && !menu.open
+            && group(menu).querySelector(':scope > a')?.contains(event.target);
+        if (contains(menu, event.relatedTarget) && !linkPreview) return;
         state(menu).pointer = true;
+        // The primary link may preview its submenu; its disclosure button
+        // still requires activation like every other options control.
+        if (activationOnly(menu) || (menu.matches('[data-nav-menu]') && event.target.closest('summary'))) return;
         open(menu, true);
     });
     document.addEventListener('pointerout', event => {
@@ -83,6 +92,9 @@
         const menu = menuFor(event.target);
         if (!menu || contains(menu, event.relatedTarget)) return;
         state(menu).pointer = false;
+        // A clicked row menu stays available while the pointer crosses gaps.
+        // Its summary, outside interaction, Tab away or Escape will close it.
+        if (activationOnly(menu)) return;
         scheduleClose(menu);
     });
     document.addEventListener('pointerdown', event => {

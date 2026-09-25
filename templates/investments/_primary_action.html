@@ -1,0 +1,6 @@
+{% load i18n %}
+{% if setup_complete %}
+    <a href="{% url 'investments:create' %}" class="action-primary">{% translate 'New operation' %}</a>
+{% else %}
+    <a href="{% url 'investments:settings' %}" class="action-primary">{% translate 'Configure investments' %}</a>
+{% endif %}

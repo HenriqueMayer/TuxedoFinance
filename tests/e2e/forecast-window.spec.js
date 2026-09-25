@@ -35,6 +35,28 @@ for (const dark of [false, true]) {
         await expect(page).toHaveURL(/charts_offset=4/);
         await expect(page.locator('#report-cashflow-previous')).toBeFocused();
         await expect(next).toHaveAttribute('href', /charts_offset=5/);
+        for (const chart of ['cashflow', 'balance']) {
+            const reset = page.locator(`#report-${chart}-today`);
+            const shiftedWindow = await page.locator('#instrument-window').textContent();
+            await expect(page.getByRole('link', { name: 'Back to today', exact: true })).toHaveCount(2);
+            await reset.focus();
+            const beforeReset = await page.evaluate(() => window.scrollY);
+            await page.keyboard.press('Enter');
+            await expect(page).toHaveURL(/charts_offset=0/);
+            await expect(reset).toHaveText('Anchored on today');
+            await expect(reset).toBeFocused();
+            await expect(page.getByRole('link', { name: 'Back to today', exact: true })).toHaveCount(0);
+            await expect(page.locator('#instrument-window')).toHaveText(shiftedWindow);
+            expect(Math.abs(await page.evaluate(() => window.scrollY) - beforeReset)).toBeLessThan(4);
+            await page.locator(`#report-${chart}-previous`).press('Enter');
+            await expect(page).toHaveURL(/charts_offset=-1/);
+        }
+        await page.setViewportSize({ width: 390, height: 844 });
+        await expect(page.locator('#report-cashflow-today')).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        await page.locator('#report-cashflow-today').scrollIntoViewIfNeeded();
+        await page.screenshot({path: testInfo.outputPath(`shared-window-${dark ? 'dark' : 'light'}.png`)});
+
     });
 }
 
@@ -50,6 +72,10 @@ test('report forecast limit works without JavaScript', async ({ browser }, testI
         await expect(page.getByRole('link', { name: 'Next window', exact: true })).toHaveCount(0);
         await page.locator('#report-balance-previous').press('Enter');
         await expect(page).toHaveURL(/charts_offset=4/);
+        await expect(page.getByRole('link', { name: 'Back to today', exact: true })).toHaveCount(2);
+        await page.locator('#report-cashflow-today').press('Enter');
+        await expect(page).toHaveURL(/charts_offset=0/);
+        await expect(page.getByRole('link', { name: 'Back to today', exact: true })).toHaveCount(0);
     } finally {
         await context.close();
     }

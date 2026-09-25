@@ -7,6 +7,26 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-25
+
+### Added
+
+- Add exchange-rate editing and confirmed deletion, with user-scoped access and preserved historical conversion snapshots.
+
+### Changed
+
+- Guide initial investment setup before offering New operation, group configured products by bank, and retain a clear Configuration tab for later edits.
+- Disable the investment-area simulation shortcut with a gray notice directing users to Planning → Yield simulation.
+- Start account/card activity at the current month with independent previous/next month arrows, Current month and All time actions.
+- Use browser Back/Forward to restore recent workspace inputs, and confirm departure from edited forms or simulation results.
+
+### Fixed
+
+- Open Export CSV and other option buttons only after deliberate activation.
+- Share Back to today controls between balance evolution and monthly cash flow.
+- Apply the installment month filter immediately on selection, preserving keyboard focus, scroll and other report filters.
+- Open category and subcategory ellipsis menus only on explicit activation, keeping one row menu open and preventing accidental neighboring Delete menus on hover.
+
 ## [0.5.0] - 2026-09-21
 
 ### Added
@@ -195,7 +215,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.2.0...v0.3.0

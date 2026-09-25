@@ -198,21 +198,33 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             }
         )
 
+        # This chart has its own monthly cursor. Never derive it from the
+        # balance/cash-flow window; absent or obsolete filters mean this month.
+        today = timezone.localdate()
+        raw_period = self.request.GET.get('instrument_month', '').strip().upper()
         period_value, period_year, period_month = _parse_month_or_all(
-            self.request, 'instrument_month', _is_representable
+            self.request, 'instrument_month', _is_representable,
         )
-        context['instrument_month_param'] = period_value
-        context['instrument_window_label'] = (
-            _('All time')
-            if period_value == 'ALL'
-            else date_format(date(period_year, period_month, 1), 'F Y')
-        )
-        if period_value == 'ALL':
-            activity = get_instrument_activity(self.request.user, months=ALL_TIME_MONTHS)
+        if period_year is None:
+            period_year, period_month = today.year, today.month
+        current_param = f'{today.year:04d}-{today.month:02d}'
+        if raw_period == 'ALL':
+            instrument_window = [add_months(today.year, today.month, -step)
+                                 for step in range(ALL_TIME_MONTHS)]
+            window_label = _('All time')
         else:
-            activity = get_instrument_activity(
-                self.request.user, period_year, period_month
+            period_value = f'{period_year:04d}-{period_month:02d}'
+            instrument_window = [(period_year, period_month)]
+            window_label = date_format(date(period_year, period_month, 1), 'F Y')
+        context['instrument_month_param'] = period_value
+        context['instrument_window_label'] = window_label
+        context['instrument_current_month'] = current_param
+        for direction, step in [('previous', -1), ('next', 1)]:
+            year, month = add_months(period_year, period_month, step)
+            context[f'instrument_{direction}_month'] = (
+                f'{year:04d}-{month:02d}' if _is_representable(year, month) else None
             )
+        activity = get_instrument_activity(self.request.user, window=instrument_window)
         context['instrument_activity'] = activity
         context['instrument_chart'] = self._instrument_chart(activity)
 
@@ -244,7 +256,9 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         context['balance_selection'] = selection_data(months, [('closing_balance', _('Balance'))], mode='change', opening=evolution['opening_balance'], chart=context['balance_chart'])
         attach_details(context['balance_selection'], self.request.user, 'ledger', months, ['balance'])
         attach_details(context['cashflow_selection'], self.request.user, 'cashflow', months, ['income', 'withdrawals', 'expenses', 'investments'])
-        attach_details(context['instrument_selection'], self.request.user, 'instruments', activity['instruments'], ['expenses', 'income'], period=period_value)
+        attach_details(context['instrument_selection'], self.request.user, 'instruments',
+            activity['instruments'], ['expenses', 'income'],
+            periods=[f'{year:04d}-{month:02d}' for year, month in instrument_window])
         attach_details(context['recurrence_selection'], self.request.user, 'recurrence', [row for row in recurrence['slices'] if row['draw']], ['expenses'], period=installment_value)
         context['recurrence_selection']['mode'] = 'donut'
         context['instrument_selection']['mode'] = 'items'

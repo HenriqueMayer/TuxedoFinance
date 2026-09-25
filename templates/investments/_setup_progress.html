@@ -1,0 +1,25 @@
+{% load i18n %}
+<section id="investment-setup" class="surface-panel space-y-5" aria-labelledby="investment-setup-title">
+    <h2 id="investment-setup-title" class="section-title">{% translate 'Set up your investments' %}</h2>
+    <ol class="divide-y divide-forest/10 dark:divide-cream/10">
+        <li class="flex flex-wrap items-start justify-between gap-3 py-4">
+            <div class="min-w-0 flex-1"><h3 class="font-medium">{% translate '1. Bank' %}</h3><p class="subtle-copy mt-1">{% translate 'Register the institution that holds your investments in Banks.' %}</p></div>
+            <span class="subtle-copy">{% if has_bank %}{% translate 'Ready' %}{% else %}{% translate 'Pending' %}{% endif %}</span>
+        </li>
+        <li class="flex flex-wrap items-start justify-between gap-3 py-4">
+            <div class="min-w-0 flex-1"><h3 class="font-medium">{% translate '2. Product' %}</h3><p class="subtle-copy mt-1">{% translate 'Add a product at that bank and choose its purpose: portfolio or remunerated cash.' %}</p></div>
+            <span class="subtle-copy">{% if has_products %}{% translate 'Ready' %}{% else %}{% translate 'Pending' %}{% endif %}</span>
+        </li>
+        <li class="flex flex-wrap items-start justify-between gap-3 py-4">
+            <div class="min-w-0 flex-1"><h3 class="font-medium">{% translate '3. Asset' %}</h3><p class="subtle-copy mt-1">{% translate 'Add what you hold, with its currency and valuation method. You can also record an opening position.' %}</p></div>
+            <span class="subtle-copy">{% if has_assets %}{% translate 'Ready' %}{% else %}{% translate 'Pending' %}{% endif %}</span>
+        </li>
+    </ol>
+    {% if not has_bank %}
+        <a href="{% url 'banking:create' %}" class="action-primary">{% translate 'New bank' %}</a>
+    {% elif not has_products %}
+        <a href="{% url 'investments:create_product' %}" class="action-primary">{% translate 'New product' %}</a>
+    {% else %}
+        <a href="{% url 'investments:create_asset' %}" class="action-primary">{% translate 'New asset' %}</a>
+    {% endif %}
+</section>

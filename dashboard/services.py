@@ -541,10 +541,12 @@ def get_income_by_account(user, year=None, month=None, months=1):
     )
 
 
-def get_instrument_activity(user, year=None, month=None, months=1):
+def get_instrument_activity(user, year=None, month=None, months=1, *, window=None):
     """Return the largest accounts/cards ranked by all money moved."""
     transactions = _transactions(user)
-    if year is None or month is None:
+    if window is not None:
+        targets = list(window)
+    elif year is None or month is None:
         today = timezone.localdate()
         targets = [add_months(today.year, today.month, -step) for step in range(months)]
     else:

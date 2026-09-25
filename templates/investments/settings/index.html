@@ -3,7 +3,8 @@
 {% block title %}{% translate "Investment Settings" %} - Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="space-y-8">
-    <header>
+    <header class="workspace-header">
+        <div>
         <a href="{% url 'investments:list' %}" class="quiet-action">&larr; {% translate "Back to Investments" %}</a>
         <div class="label-with-help mt-2">
             {% translate "Investment Settings" as settings_label %}
@@ -11,26 +12,48 @@
             <h1 class="page-title">{{ settings_label }}</h1>
             {% include 'partials/help_popover.html' with help_id='investment-settings-help' help_label=settings_label help_text=settings_help %}
         </div>
-
+        <p class="subtle-copy mt-2">{% translate 'Organize where you invest and what you hold. Return here whenever you need to add or edit a product or asset.' %}</p>
+        </div>
+        {% if setup_complete %}{% include 'investments/_primary_action.html' %}{% endif %}
     </header>
     {% include 'investments/_sections.html' %}
-    <section class="surface-panel space-y-4">
+    {% if not setup_complete %}{% include 'investments/_setup_progress.html' %}{% endif %}
+    {% if has_bank %}
+    <section id="investment-products" class="surface-panel space-y-4">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div class="label-with-help">
             {% translate "Investment products" as catalog_label %}
             {% translate "Products held at a Banking bank." as catalog_help %}
             <h2 class="section-title">{{ catalog_label }}</h2>
             {% include 'partials/help_popover.html' with help_id='investment-products-help' help_label=catalog_label help_text=catalog_help %}
-        </div><a href="{% url 'investments:create_product' %}" class="action-primary">{% translate "New product" %}</a></div>
-        <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for product in products %}<li class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between"><div><strong class="text-base font-semibold">{{ product.name }}</strong><p class="mt-1 text-sm font-medium text-caramel-ink dark:text-caramel-light">{{ product.get_purpose_display }}</p><p class="text-sm text-forest/70 dark:text-night-muted">{% blocktranslate count count=product.operation_count with bank=product.bank.name %}{{ bank }} - {{ count }} operation{% plural %}{{ bank }} - {{ count }} operations{% endblocktranslate %}</p></div><div class="flex flex-wrap gap-3"><a class="quiet-action" href="{% url 'investments:update_product' product.pk %}">{% translate "Edit" %}</a><a class="quiet-action text-expense dark:text-expense-light" href="{% url 'investments:delete_product' product.pk %}">{% translate "Delete" %}</a></div></li>{% empty %}<li class="p-5 text-sm">{% translate "No products." %}</li>{% endfor %}</ul>
+        </div><a href="{% url 'investments:create_product' %}" class="action-link">{% translate "New product" %}</a></div>
+        <p class="subtle-copy">{% translate 'A product is where you invest at a bank, such as a brokerage account or savings pot.' %} <a href="{% url 'banking:list' %}" class="underline">{% translate 'Manage banks' %}</a></p>
+        {% regroup products by bank as bank_groups %}
+        {% for group in bank_groups %}
+            <div>
+                <h3 class="border-b border-forest/10 py-3 font-semibold dark:border-cream/10">{{ group.grouper.name }}</h3>
+                <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+                    {% for product in group.list %}
+                        <li class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div><strong class="text-base font-semibold">{{ product.name }}</strong><p class="mt-1 text-sm font-medium text-caramel-ink dark:text-caramel-light">{{ product.get_purpose_display }}</p><p class="subtle-copy">{% blocktranslate count count=product.operation_count %}{{ count }} operation{% plural %}{{ count }} operations{% endblocktranslate %}</p></div>
+                            <div class="flex flex-wrap gap-3"><a class="quiet-action" href="{% url 'investments:update_product' product.pk %}">{% translate "Edit" %}</a><a class="quiet-action text-expense dark:text-expense-light" href="{% url 'investments:delete_product' product.pk %}">{% translate "Delete" %}</a></div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% empty %}<p class="subtle-copy">{% translate "No products." %}</p>{% endfor %}
     </section>
-    <section class="surface-panel space-y-4">
+    {% endif %}
+    {% if has_products or has_assets %}
+    <section id="investment-assets" class="surface-panel space-y-4">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div class="label-with-help">
             {% translate "Assets" as catalog_label %}
             {% translate "Class and pricing currency are separate concepts." as catalog_help %}
             <h2 class="section-title">{{ catalog_label }}</h2>
             {% include 'partials/help_popover.html' with help_id='investment-assets-help' help_label=catalog_label help_text=catalog_help %}
-        </div><a href="{% url 'investments:create_asset' %}" class="action-primary">{% translate "New asset" %}</a></div>
+        </div><a href="{% url 'investments:create_asset' %}" class="action-link">{% translate "New asset" %}</a></div>
+        <p class="subtle-copy">{% translate 'An asset is what you hold, such as a bond, fund or share. Choose the product and asset when recording an operation.' %}</p>
         <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for asset in assets %}<li class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between"><div><strong class="text-base font-semibold">{{ asset.name }} ({{ asset.code }})</strong><p class="text-sm text-forest/70 dark:text-night-muted">{% blocktranslate count count=asset.operation_count with class=asset.get_asset_class_display currency=asset.currency %}{{ class }} / {{ currency }} - {{ count }} operation{% plural %}{{ class }} / {{ currency }} - {{ count }} operations{% endblocktranslate %}</p></div><div class="flex flex-wrap gap-3"><a class="quiet-action" href="{% url 'investments:update_asset' asset.pk %}">{% translate "Edit" %}</a>{% if asset.has_opening_position or asset.operation_count %}<span class="max-w-xs text-sm text-forest/70 dark:text-night-muted">{% if asset.has_opening_position %}{% translate 'Opening position protected' %}{% else %}{% translate 'Investment history protected' %}{% endif %}</span>{% else %}<a class="quiet-action text-expense dark:text-expense-light" href="{% url 'investments:delete_asset' asset.pk %}">{% translate "Delete" %}</a>{% endif %}</div></li>{% empty %}<li class="p-5 text-sm">{% translate "No assets." %}</li>{% endfor %}</ul>
     </section>
+    {% endif %}
 </div>
 {% endblock %}

@@ -41,3 +41,21 @@ Every new or changed question-mark help icon must follow the
 exit/outside click/Escape, and never pin mouse-clicked help. Preserve touch and
 no-JavaScript access. Use the shared readable width and structured copy; test
 real interactions, viewport bounds, both themes and HTMX initialization.
+
+## UI/UX decisions and compact action menus
+
+When changing interface behavior or domain presentation, document the decision
+in the relevant technical guide and add a focused code comment for non-obvious
+interaction rules. Update this contract when the rule applies across the app,
+and cover the behavior with an appropriate regression test.
+
+Option menus (including Export CSV, project links and account actions) open
+only through deliberate click, touch or keyboard activation. Primary navigation
+links may preview their destinations on hover.
+
+Row ellipsis menus (`details.compact-menu`) open only through deliberate
+activation: click, touch or keyboard. Never open or switch them on hover or
+focus alone. Keep one row menu open at a time, retain native `details` behavior
+without JavaScript, and preserve outside-click, Tab-away and Escape dismissal.
+Primary navigation and question-mark help have separate hover contracts.
+Follow the [compact row-action contract](docs/frontend.md#compact-row-action-menus).

@@ -227,22 +227,3 @@
     {% endif %}
 </div>
 {% endblock %}
-
-{% block extra_js %}
-<script>
-    if (!document.documentElement.dataset.exportMenuBound) {
-        document.documentElement.dataset.exportMenuBound = 'true';
-        document.addEventListener('click', event => {
-            document.querySelectorAll('details[data-export-menu][open]').forEach(menu => {
-                if (!menu.contains(event.target)) menu.open = false;
-            });
-        });
-        document.addEventListener('keydown', event => {
-            if (event.key !== 'Escape') return;
-            document.querySelectorAll('details[data-export-menu][open]').forEach(menu => {
-                menu.open = false;
-            });
-        });
-    }
-</script>
-{% endblock %}

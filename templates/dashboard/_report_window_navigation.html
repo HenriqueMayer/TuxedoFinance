@@ -1,0 +1,47 @@
+{% load i18n %}
+{# Shared window controls: reset stays below the arrows so their position is stable. #}
+<div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+    <div class="flex items-center gap-3">
+        {% if has_previous_window %}<a id="{{ navigation_id }}-previous" href="{% querystring charts_offset=previous_offset_param %}"
+       hx-get="{% querystring charts_offset=previous_offset_param %}"
+       hx-target="#reports-charts"
+       hx-swap="outerHTML"
+       hx-push-url="true"
+        aria-label="{% translate 'Previous window' %}"
+       class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+            &larr;
+        </a>{% endif %}
+        <div>
+            <p class="text-sm font-semibold text-forest dark:text-cream">
+                 {% with last_month=evolution.months|last %}
+                     {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ last_month.date|date:'M Y' }}
+                 {% endwith %}
+            </p>
+            {# The visible anchor label receives focus after the HTMX reset removes its link. #}
+            <p {% if evolution.is_anchored_today %}id="{{ navigation_id }}-today" tabindex="-1"{% endif %} class="text-xs text-forest/70 focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">
+                {% if evolution.is_anchored_today %}{% translate "Anchored on today" %}
+                {% elif charts_offset < 0 %}{% translate "Past window" %}
+                {% else %}{% translate "Future window" %}{% endif %}
+            </p>
+        </div>
+        {% if has_next_window %}<a id="{{ navigation_id }}-next" href="{% querystring charts_offset=next_offset_param %}"
+           hx-get="{% querystring charts_offset=next_offset_param %}"
+           hx-target="#reports-charts"
+           hx-swap="outerHTML"
+           hx-push-url="true"
+            aria-label="{% translate 'Next window' %}"
+           class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+            &rarr;
+        </a>{% else %}<span id="{{ navigation_id }}-next" tabindex="-1" class="subtle-copy inline-flex h-11 items-center">{% translate 'Forecast limit' %}</span>{% endif %}
+    </div>
+    {% if not evolution.is_anchored_today %}
+        <a id="{{ navigation_id }}-today" href="{% querystring charts_offset=0 %}"
+           hx-get="{% querystring charts_offset=0 %}"
+           hx-target="#reports-charts"
+           hx-swap="outerHTML"
+           hx-push-url="true"
+           class="quiet-action">
+             {% translate "Back to today" %}
+        </a>
+    {% endif %}
+</div>

@@ -24,8 +24,10 @@ for (const dark of [false, true]) {
         }, dark);
         const navigation = page.locator('header nav').first();
         for (const [area, label] of [['overview', 'Reports'], ['activity', 'Categories'],
-            ['banks', 'Exchange rates'], ['investments', 'Products and assets'], ['planning', 'Saved drafts']]) {
+            ['banks', 'Exchange rates'], ['investments', 'Configuration'], ['planning', 'Saved drafts']]) {
             const item = navigation.locator(`[data-nav-item="${area}"]`);
+            await item.locator('summary').hover();
+            await expect(item.locator('details')).not.toHaveAttribute('open', '');
             await item.locator(':scope > a').hover();
             await expect(item.locator('details')).toHaveAttribute('open', '');
             await expect(item.getByRole('link', { name: label, exact: true })).toBeVisible();
@@ -74,28 +76,34 @@ for (const dark of [false, true]) {
     });
 }
 
-test('options open on hover, retain portal help and leave content accordions explicit', async ({ page }, testInfo) => {
+test('option buttons require activation, retain portal help and leave content accordions explicit', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await createAccount(page, testInfo);
     const account = page.locator('body > header .secondary-actions');
     await account.locator('summary').hover();
-    await expect(account.getByRole('link', { name: 'Settings', exact: true })).toBeVisible();
+    await expect(account).not.toHaveAttribute('open', '');
     await account.locator('summary').click();
     await expect(account).toHaveAttribute('open', '');
     await page.locator('main h1').click();
     await expect(account).not.toHaveAttribute('open', '');
     const project = page.locator('header [data-project-menu]').filter({ visible: true });
     await project.locator(':scope > summary').hover();
+    await expect(project).not.toHaveAttribute('open', '');
+    await project.locator(':scope > summary').click();
     await expect(project).toHaveAttribute('open', '');
     const roadmap = project.locator('details');
     await roadmap.locator('summary').hover();
     await expect(roadmap).not.toHaveAttribute('open', '');
     await page.locator('main h1').hover();
+    await expect(project).toHaveAttribute('open', '');
+    await page.locator('main h1').click();
     await expect(project).not.toHaveAttribute('open', '');
 
     await page.goto('/categories/');
     const options = page.locator('main details.secondary-actions').first();
     await options.locator(':scope > summary').hover();
+    await expect(options).not.toHaveAttribute('open', '');
+    await options.locator(':scope > summary').click();
     await expect(options).toHaveAttribute('open', '');
     const help = options.locator('[data-help-trigger]').first();
     await expect(help).toBeVisible();
@@ -106,22 +114,10 @@ test('options open on hover, retain portal help and leave content accordions exp
     await expect(options).toHaveAttribute('open', '');
     await expect(tooltip).toBeVisible();
     await page.locator('main h1').hover();
+    await expect(options).toHaveAttribute('open', '');
+    await page.locator('main h1').click();
     await expect(options).not.toHaveAttribute('open', '');
     await expect(tooltip).toBeHidden();
-    await options.locator(':scope > summary').click();
-    await help.hover();
-    await expect(tooltip).toBeVisible();
-    await tooltip.click();
-    await expect(options).toHaveAttribute('open', '');
-    await expect(tooltip).toBeVisible();
-    await tooltip.dblclick();
-    expect(await page.evaluate(() => window.getSelection().toString().trim())).not.toBe('');
-    await expect(tooltip).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(tooltip).toBeHidden();
-    await expect(options).toHaveAttribute('open', '');
-    await page.keyboard.press('Escape');
-    await expect(options).not.toHaveAttribute('open', '');
     await page.goto('/transactions/create/');
     const advanced = page.locator('main details').first();
     await advanced.locator('summary').hover();
