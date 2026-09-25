@@ -18,7 +18,7 @@
         <div class="flex shrink-0 flex-wrap items-center gap-3">
             {% if not group.category.parent_category %}<a href="{% url 'categories:create' %}?parent={{ group.category.pk }}" class="quiet-action">{% translate 'Add subcategory' %}</a>{% endif %}
             <a href="{% url 'categories:update' group.category.pk %}" class="quiet-action">{% translate 'Edit' %}</a>
-            <details class="secondary-actions compact-menu">
+            <details class="secondary-actions compact-menu" name="category-row-actions">
                 <summary aria-label="{% translate 'More options' %}: {{ group.category.name }}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'More options' %}: {{ group.category.name }}</span></summary>
                 <div class="secondary-actions-panel"><a href="{% url 'categories:delete' group.category.pk %}" class="text-expense dark:text-expense-light">{% translate 'Delete' %}</a></div>
             </details>

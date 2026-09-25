@@ -1,0 +1,43 @@
+{% load i18n %}
+{# Keep monthly arrows independent of charts_offset and retain native links without JS. #}
+<div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+    <div class="flex items-center gap-3">
+        {% if instrument_previous_month %}
+            <a id="instrument-previous" href="{% querystring instrument_month=instrument_previous_month %}"
+               hx-get="{% querystring instrument_month=instrument_previous_month %}"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               aria-label="{% translate 'Previous month' %}"
+               class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">&larr;</a>
+        {% else %}
+            <span id="instrument-previous" tabindex="-1" aria-disabled="true" aria-label="{% translate 'Previous month' %}" class="flex h-11 w-11 items-center justify-center opacity-40">&larr;</span>
+        {% endif %}
+        <p id="instrument-window" class="min-w-[10rem] text-center text-sm font-semibold text-forest dark:text-cream">{{ instrument_window_label }}</p>
+        {% if instrument_next_month %}
+            <a id="instrument-next" href="{% querystring instrument_month=instrument_next_month %}"
+               hx-get="{% querystring instrument_month=instrument_next_month %}"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               aria-label="{% translate 'Next month' %}"
+               class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">&rarr;</a>
+        {% else %}
+            <span id="instrument-next" tabindex="-1" aria-disabled="true" aria-label="{% translate 'Next month' %}" class="flex h-11 w-11 items-center justify-center opacity-40">&rarr;</span>
+        {% endif %}
+    </div>
+    <div class="flex items-center gap-3">
+        {% if instrument_month_param == instrument_current_month %}
+            <span id="instrument-current" tabindex="-1" class="text-sm text-forest/70 focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">{% translate 'Current month' %}</span>
+        {% else %}
+            <a id="instrument-current" href="{% querystring instrument_month=instrument_current_month %}"
+               hx-get="{% querystring instrument_month=instrument_current_month %}"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               class="quiet-action">{% translate 'Current month' %}</a>
+        {% endif %}
+        {% if instrument_month_param == 'ALL' %}
+            <span id="instrument-all" tabindex="-1" class="text-sm text-forest/70 focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">{% translate 'All time' %}</span>
+        {% else %}
+            <a id="instrument-all" href="{% querystring instrument_month='ALL' %}"
+               hx-get="{% querystring instrument_month='ALL' %}"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               class="quiet-action">{% translate 'All time' %}</a>
+        {% endif %}
+    </div>
+</div>

@@ -385,6 +385,17 @@ class RewardRedemptionForm(OwnedModelForm):
 
 
 class ExchangeRateForm(OwnedModelForm):
+    def clean(self):
+        cleaned = super().clean()
+        pair_date = {field: cleaned.get(field) for field in (
+            'from_currency', 'to_currency', 'effective_date',
+        )}
+        if self.user and all(pair_date.values()) and self._duplicate(
+            ExchangeRate.objects.filter(user=self.user, **pair_date)
+        ):
+            raise forms.ValidationError(_('A record with these values already exists.'))
+        return cleaned
+
     class Meta:
         model = ExchangeRate
         fields = ('from_currency', 'to_currency', 'rate', 'effective_date', 'notes')

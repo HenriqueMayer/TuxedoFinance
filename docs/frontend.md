@@ -390,6 +390,29 @@ window-wide change keeps its existing calculation and missing-rate warning.
 `help_id` plus `help_text` or a trusted `help_template`. The full-window explanation follows HTMX changes
 to the displayed dates. Reports no longer show a best-month summary card.
 
+Balance evolution and Monthly cash flow reuse `_report_window_navigation.html`.
+Both expose Back to today when `charts_offset != 0`; keep that action below the
+arrows and period label so the arrow row does not move when it appears. Reset to
+`charts_offset=0`, retain unrelated query filters, and preserve scroll and a
+visible keyboard focus target through HTMX replacement. Native links must also
+work without JavaScript.
+
+Income and expenses by account or card is independent of `charts_offset`.
+It starts at the current month and uses previous/next month arrows to navigate
+past and future months. Do not replace this with a month dropdown or a shared
+multi-month window. Keep native links, stable control IDs, scroll and keyboard
+focus across HTMX updates. The Current month action resets only this chart;
+All time retains the existing trailing-twelve-month aggregation. In All time
+mode the arrows resume monthly navigation from the current month. Totals and
+signed composition details must always resolve to the same scope. Invalid or
+obsolete month parameters recover to the current month.
+
+The installment filter uses `_report_month_filter.html`: selecting a native
+option immediately refreshes the chart through HTMX, without an extra Filter
+click. Preserve other filters and keep its native submit button inside `noscript`.
+Test month boundaries, past/future navigation, All time and current-month return,
+invalid query recovery, focus and scroll preservation, and both themes.
+
 ### Question-mark help
 
 This contract is mandatory for every new or changed **?** help icon. Reuse
@@ -504,8 +527,32 @@ live in the account-options disclosure; the mobile menu has the same destination
 A native navigation fallback remains available without JavaScript.
 Desktop primary links retain their direct destinations and reveal section
 options on hover. A separate native disclosure arrow supports keyboard and
-touch; Escape and outside interaction dismiss the menu. Only navigation/action
-menus use hover disclosure, never content accordions.
+touch; Escape and outside interaction dismiss the menu. Option buttons, including
+Export CSV, account options, project links and row actions, open only by click,
+touch or keyboard activation. Hovering them never reveals their options.
+
+### Compact row-action menus
+
+Ellipsis controls use `details.secondary-actions.compact-menu`. Opening requires
+click, touch or keyboard activation; hovering or focusing a closed trigger alone
+must not open it. Once opened, crossing neighboring rows or moving through a gap
+toward an action must not open another row menu or close the chosen one. Use the
+same native `details` name within a row-menu group so only one can be open,
+including without JavaScript. The shared navigation runtime preserves summary
+toggle, outside-click, Tab-away and Escape dismissal, with focus returning to the
+trigger on Escape.
+
+Regression checks must move the real pointer across adjacent row triggers after
+opening one menu, then verify that its action still targets the original record.
+Cover click toggling, switching rows, keyboard, touch, HTMX and the native
+fallback. Changes to primary navigation or question-mark help must not silently
+change this activation-only contract.
+
+Record new UI/UX and domain-presentation decisions in their owning guide and use
+focused code comments for interaction rules whose purpose is not obvious. Add
+cross-cutting rules to `AGENTS.md` so future changes preserve them.
+
+### Shared workspace components
 
 Use `surface-panel`, `metric-panel`, `label-with-help`, `workspace-header`, `section-nav`, `action-link`, `action-primary`,
 `secondary-actions`, `data-table`, and `subtle-copy` from the compiled stylesheet.
@@ -536,7 +583,16 @@ availability summary out of band, so the row and aggregate remain consistent.
 
 ## Previous-screen continuity and balance ranges
 
-Investment navigation keeps the cross-area simulation shortcut last. The Operations
+Investment navigation keeps a gray Simulate returns notice last. It cannot
+navigate and explains that the simulator is available from Planning → Yield
+simulation. This text-triggered notice is visually distinct from question-mark
+help, but reuses the floating popover lifecycle for hover, keyboard, touch,
+viewport bounds and HTMX. Its `aria-disabled` button remains focusable so the
+reason is accessible; the native disclosure fallback also supports keyboard and touch.
+Configuration guides bank/product/asset registration and remains available for
+later edits. Missing prerequisites make Configure investments the primary
+action on portfolio and Operations pages; completed setup enables New operation.
+The Operations
 page owns operation search, purpose/type/record filters and pagination. Portfolio
 and remunerated-cash pages show positions; portfolio charts precede a contextual
 link to Operations. The same destination appears in section tabs and desktop/mobile
@@ -544,19 +600,30 @@ navigation menus. Old movement-filter URLs redirect to the new page. Chart navig
 and operation pagination keep separate HTMX regions. Operation forms return to the
 history after a successful save or deletion.
 
-The shared
-previous-screen control stores one previous workspace in sessionStorage for the
-current tab and authenticated user. It captures contextual same-origin links inside page content and explicitly marked
-cross-area shortcuts (`data-workspace-shortcut`), such as Simulate returns.
-Primary navigation and section tabs clear the return context. It records
-query parameters, named unsent fields, repeated salary/monthly simulation rows, disclosures, focus
-and scroll. Returning through the control restores values into freshly rendered
-server forms; it never replays submissions or emits input/change events.
+Browser Back/Forward restores workspace context from tab-local sessionStorage,
+scoped to the authenticated user and interface identity. Capture each visited
+workspace before navigation, including query parameters, unsent named fields,
+repeated simulation rows, disclosures, focus and scroll. History traversal
+restores into freshly rendered forms without replaying submissions or emitting
+input/change events. Do not render a separate Resume previous screen control.
+When HTMX replaces the page body, update the active workspace at `afterSwap`:
+the next link can be activated before `afterSettle`. Apply the saved fields on
+`historyRestore` even when the browser's URL already matches the tracked URL;
+the HTMX history cache can contain older form values.
 Passwords, uploaded files, hidden fields/CSRF tokens and account settings are
-excluded. Form submission, logout, user/preference/asset-revision changes clear
-the context. This is navigation recovery, not financial undo or a saved draft.
-Simulations must be recalculated after restoring edited inputs. Browser history
-remains separate. Storage-disabled and no-JavaScript clients keep native links.
+excluded. Keep only the current and immediately previous URL snapshots, and discard
+them when the user or interface identity changes. Native browser Back and HTMX history must
+both work; navigation without JavaScript retains the browser's own history.
+
+Confirm departure when a form has been edited or a simulation result is visible.
+For HTMX navigation and clicked links use the translated confirmation; for
+browser-owned navigation, refresh and tab close use `beforeunload` so the browser
+can display its native warning. Canceling a history traversal leaves the current
+page and its unsaved state intact. An explicit form submission does not prompt.
+Successful and invalid POSTs are handled by the server; do not preserve a
+submitted form as an unsent history snapshot. The restored inputs remain unsaved
+and simulations must be recalculated after restoring edited inputs. This is navigation recovery, not financial undo or a
+saved draft.
 
 Charts use direct manipulation without manual range selectors. Drag either way
 on time series, or select endpoints with Enter/Space. Shift-click and Shift with

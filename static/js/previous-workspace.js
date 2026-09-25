@@ -3,9 +3,15 @@
     'use strict';
     if (window.TuxedoPreviousWorkspace) return;
     window.TuxedoPreviousWorkspace = true;
-    const key = 'tuxedo.previous-workspace.v1';
+    const key = 'tuxedo.history-workspace.v2';
     let lastFocus = '';
     let restoring = false;
+    let currentUrl = location.pathname + location.search;
+    let baseline = '';
+    let pendingHistory = '';
+    let cancelHistoryReturn = false;
+    let submitting = false;
+    let approvedDestination = '';
     const main = () => document.querySelector('main[data-workspace-user]');
     const url = () => location.pathname + location.search;
     function read() {
@@ -43,12 +49,33 @@
             categories: Array.from(root.querySelectorAll('[data-category-toggle]'), node => [node.getAttribute('aria-controls'), node.getAttribute('aria-expanded')]),
         };
     }
-    function prepare(destination) {
-        if (restoring || destination === url()) return;
+    function formState() {
+        const snapshot = capture();
+        return snapshot && JSON.stringify({forms: snapshot.forms, rows: snapshot.rows, yieldRows: snapshot.yieldRows});
+    }
+    function simulationResult() {
+        return Boolean(main()?.querySelector('#scenario-result-title, #simulation-result .panel-heading'));
+    }
+    function changed() {
+        return Boolean(main() && (formState() !== baseline || simulationResult()));
+    }
+    function remember(source = currentUrl) {
+        const snapshot = capture();
+        if (!snapshot) return;
         const state = read();
-        const previous = state?.previous;
-        const resume = previous?.identity === identity() && previous.url === destination ? previous : null;
-        write({previous: capture(), resume, destination});
+        const entries = state?.identity === identity() ? state.entries || {} : {};
+        const order = state?.identity === identity() ? state.order || [] : [];
+        entries[source] = {...snapshot, url: source};
+        // Keep only the current and immediately previous history context in
+        // this tab, so an older unsent form does not linger in storage.
+        const recent = [...order.filter(item => item !== source), source].slice(-2);
+        Object.keys(entries).forEach(item => { if (!recent.includes(item)) delete entries[item]; });
+        write({identity: identity(), entries, order: recent});
+    }
+    function saved(destination) {
+        const state = read();
+        if (state && state.identity !== identity()) { write(null); return null; }
+        return state?.entries?.[destination] || null;
     }
     function restore(snapshot) {
         const root = main();
@@ -106,51 +133,128 @@
             restoring = false;
         });
     }
-    function init() {
-        const root = main();
-        const state = read();
-        if (!root || state?.previous?.identity !== identity()) { write(null); return; }
-        if (state.destination && state.destination !== url()) return;
-        if (state.destination) write({previous: state.previous, resume: state.resume});
-        const link = root.querySelector('[data-previous-workspace]');
-        if (state.previous.url !== url() && state.previous.url.startsWith('/') && !state.previous.url.startsWith('//')) {
-            link.href = state.previous.url;
-            link.querySelector('span').textContent = state.previous.title;
-            link.hidden = false;
+    function restoreHistory(destination) {
+        if (!main() || destination !== url()) return;
+        const snapshot = saved(destination);
+        if (snapshot) restore(snapshot);
+        pendingHistory = '';
+        currentUrl = destination;
+    }
+    function settled() {
+        if (!main()) { currentUrl = url(); return; }
+        baseline = formState();
+        if (pendingHistory === url()) restoreHistory(pendingHistory);
+        else currentUrl = url();
+        submitting = false;
+        approvedDestination = '';
+    }
+    function confirmDeparture(destination, historyTraversal = false) {
+        // Applying a filter on the same screen is not a departure. Browser
+        // Back still asks because it may replace unsent work on that screen.
+        if (!historyTraversal && destination.split('?')[0] === currentUrl.split('?')[0]) {
+            approvedDestination = destination;
+            return true;
         }
-        const snapshot = state.resume?.url === url() ? state.resume : state.previous.url === url() ? state.previous : null;
-        if (snapshot?.identity === identity()) {
-            write(state.previous.url === url() ? null : {previous: state.previous});
-            restore(snapshot);
-        }
+        if (!changed() || approvedDestination === destination) return true;
+        if (!window.confirm(main().dataset.leaveConfirm)) return false;
+        approvedDestination = destination;
+        return true;
+    }
+    function destinationFor(link) {
+        if (!link || link.target || link.hasAttribute('download')) return null;
+        const destination = new URL(link.href, location.href);
+        return destination.origin === location.origin && !destination.hash ? destination.pathname + destination.search : null;
     }
     document.addEventListener('focusin', event => {
         if (event.target.matches('main input[id], main select[id], main textarea[id]')) lastFocus = event.target.id;
     });
     document.addEventListener('click', event => {
         const link = event.target.closest('a[href]');
-        if (!link || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || link.target || link.hasAttribute('download')) return;
-        if (link.closest('nav') && !link.matches('[data-workspace-shortcut], [data-previous-workspace]')) {
-            write(null);
-            const root = main();
-            if (root) {
-                root.querySelector('[data-previous-workspace]').hidden = true;
-                root.querySelector('[data-workspace-restored]').hidden = true;
-            }
+        if (!link || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        const destination = destinationFor(link);
+        if (!destination || destination === currentUrl) return;
+        if (!confirmDeparture(destination)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
             return;
         }
-        // In-place filters and chart windows stay within the current workspace.
-        const target = link.closest('[hx-target]')?.getAttribute('hx-target');
-        if (window.htmx && link.hasAttribute('hx-get') && target && target !== 'body') return;
-        const destination = new URL(link.href, location.href);
-        if (destination.pathname === location.pathname && !link.matches('[data-previous-workspace]')) return;
-        if (destination.origin === location.origin && !destination.hash) prepare(destination.pathname + destination.search);
+        remember();
     }, true);
+    document.addEventListener('htmx:beforeRequest', event => {
+        if (event.detail.target !== document.body || !main()) return;
+        const path = event.detail.requestConfig?.path;
+        if (!path) return;
+        const destination = new URL(path, location.href);
+        const next = destination.pathname + destination.search;
+        if (next !== currentUrl && !confirmDeparture(next)) event.preventDefault();
+    }, true);
+    document.addEventListener('htmx:beforeSwap', event => {
+        if (event.detail.target !== document.body || !event.detail.shouldSwap || event.detail.isError) return;
+        if (!submitting && new URL(event.detail.xhr.responseURL, location.href).pathname !== location.pathname) remember();
+    });
+    document.addEventListener('htmx:afterSwap', event => {
+        // A newly visible page can receive another click before HTMX's settle
+        // delay ends. Treat it as the current workspace immediately.
+        if (event.detail.target === document.body) settled();
+    });
     document.addEventListener('submit', event => {
-        if (event.target.closest('main') || event.target.action.includes('/logout')) write(null);
+        if (event.target.closest('main') || event.target.action.includes('/logout')) {
+            submitting = true;
+            // A submitted POST is owned by the server, not an unsent draft to
+            // resurrect with Back. An invalid response renders its own errors.
+            if (event.target.method.toUpperCase() === 'POST') write(null);
+        }
     }, true);
-    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 0));
-    document.addEventListener('htmx:afterSettle', () => setTimeout(init, 0));
-    document.addEventListener('htmx:historyRestore', () => setTimeout(init, 0));
-    window.addEventListener('pageshow', () => setTimeout(init, 0));
+    window.addEventListener('beforeunload', event => {
+        if (submitting || approvedDestination) return;
+        if (!changed()) return;
+        event.preventDefault();
+        event.returnValue = '';
+    });
+    window.addEventListener('pagehide', () => { if (!submitting) remember(); });
+    // Capture-phase traversal runs before HTMX's popstate handler. If the user
+    // cancels, return the URL to its entry without replacing the current DOM.
+    window.addEventListener('popstate', event => {
+        if (cancelHistoryReturn) {
+            cancelHistoryReturn = false;
+            event.stopImmediatePropagation();
+            return;
+        }
+        const destination = url();
+        if (destination === currentUrl) return;
+        if (!confirmDeparture(destination, true)) {
+            event.stopImmediatePropagation();
+            cancelHistoryReturn = true;
+            history.go(1);
+            return;
+        }
+        remember();
+        pendingHistory = destination;
+    }, true);
+    document.addEventListener('htmx:afterSettle', event => {
+        if (event.detail.target === document.body || pendingHistory) settled();
+        else approvedDestination = '';
+    });
+    document.addEventListener('htmx:historyRestore', () => requestAnimationFrame(() => {
+        // Cached history can restore without a body settle event. Always apply
+        // the tab snapshot, including live values of dynamically added rows.
+        pendingHistory = url();
+        settled();
+    }));
+    document.addEventListener('DOMContentLoaded', () => {
+        currentUrl = url();
+        baseline = formState();
+        saved(currentUrl);
+    });
+    window.addEventListener('pageshow', event => {
+        currentUrl = url();
+        baseline = formState();
+        if (!event.persisted && performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+            setTimeout(() => restoreHistory(url()), 0);
+        }
+    });
+    if (document.readyState !== 'loading') {
+        currentUrl = url();
+        baseline = formState();
+    }
 })();

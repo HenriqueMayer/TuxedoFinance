@@ -94,9 +94,8 @@ class. The generated asset avoids browser-side recompilation during navigation.
         {% include 'partials/navbar_public.html' %}
     {% endif %}
 
-    <main {% if request.user.is_authenticated %}data-workspace-user="{{ request.user.pk }}" data-workspace-format="{{ USER_DATE_FORMAT }}"{% endif %} class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+    <main {% if request.user.is_authenticated %}data-workspace-user="{{ request.user.pk }}" data-workspace-format="{{ USER_DATE_FORMAT }}" data-leave-confirm="{% translate 'You have unsaved changes or a simulation result. Leave this page?' %}"{% endif %} class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
         {% if request.user.is_authenticated %}
-        <a data-previous-workspace hidden class="quiet-action mb-4" href="#">&larr; {% translate 'Resume previous screen' %}: <span></span></a>
         <p data-workspace-restored hidden class="subtle-copy mb-4" role="status">{% translate 'Previous screen restored. Unsaved fields have not been submitted; recalculate simulations to update their results.' %}</p>
         {% endif %}
         {% include 'partials/messages.html' %}

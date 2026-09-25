@@ -105,12 +105,14 @@ for (const theme of ['light','dark']) {
     });
 }
 
-test('primary navigation clears return context, simulation shortcut retains it',async({page},info)=>{
+test('browser Back retains contextual navigation through investment operations',async({page},info)=>{
     await seed(page,info);await page.goto('/dashboard/reports/');
     await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Investments',exact:true}).click();
-    await expect(page.locator('[data-previous-workspace]')).toBeHidden();
-    await page.getByRole('navigation',{name:'Investment sections'}).getByRole('link',{name:'Simulate returns'}).click();
-    await expect(page.locator('[data-previous-workspace]')).toBeVisible();
+    await page.locator('#investment-operations-link').click();
+    await expect(page).toHaveURL(/\/investments\/operations\//);
+    await expect(page.locator('[data-previous-workspace]')).toHaveCount(0);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/investments\/$/);
 });
 
 test('bank color palette, arbitrary color and marker edit preserve the bank',async({page},info)=>{

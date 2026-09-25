@@ -70,7 +70,7 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await page.keyboard.press('Enter');
     await expect(expenses).toHaveAttribute('aria-current', 'true');
     await page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ }).click();
-    await expect(page.getByRole('status')).toHaveText('1 transaction');
+    await expect(page.locator('#transaction-results-status')).toHaveText('1 transaction');
     await selectChoice(page.locator('#filter-category'), category);
     await page.getByRole('button', { name: 'Apply filters' }).click();
     await expect(page).toHaveURL(new RegExp(`category=${category}`));
@@ -80,7 +80,7 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await expect(page.getByText('No matching transactions')).toBeVisible();
     await page.goBack();
     await expect(page.locator('#filter-category')).toHaveValue(category);
-    await expect(page.getByRole('status')).toHaveText('1 transaction');
+    await expect(page.locator('#transaction-results-status')).toHaveText('1 transaction');
     await page.locator('#filter-month').fill('2026-02');
     await page.getByRole('button', { name: 'Apply filters' }).click();
     await expect(typeCards(page).getByRole('link', { name: /^All/ })).toContainText('1');
@@ -95,7 +95,7 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await expect(page.locator('#filter-category')).toHaveValue(category);
     await page.getByRole('link', { name: 'Clear filters', exact: true }).click();
     await expect(page).toHaveURL(/\/transactions\/$/);
-    await expect(page.getByRole('status')).toHaveText('3 transactions');
+    await expect(page.locator('#transaction-results-status')).toHaveText('3 transactions');
     expect(errors).toEqual([]);
 });
 
@@ -129,7 +129,7 @@ test('transaction filtering works without JavaScript on mobile', async ({ browse
         await page.getByRole('button', { name: 'Apply filters' }).click();
         await expect(page.getByText('No matching transactions')).toBeVisible();
         await page.getByRole('link', { name: 'Clear filters', exact: true }).first().click();
-        await expect(page.getByRole('status')).toHaveText('3 transactions');
+        await expect(page.locator('#transaction-results-status')).toHaveText('3 transactions');
         await assertFits(page);
     } finally {
         await context.close();
@@ -161,13 +161,13 @@ test(`transaction updates retain viewport and focus at ${width}px`, async ({ pag
     // Set an actual scroll offset even when the first control is already visible.
     await page.evaluate(() => window.scrollTo(0, 240));
     await keepsPosition(typeCards(page).getByRole('link', { name: /^Expenses/ }));
-    await expect(page.getByRole('status')).toHaveText('2 transactions');
+    await expect(page.locator('#transaction-results-status')).toHaveText('2 transactions');
     await keepsPosition(page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ }));
     await keepsPosition(page.getByRole('button', { name: 'Apply filters' }));
     await page.locator('#filter-sort').selectOption('oldest');
     await keepsPosition(page.getByRole('button', { name: 'Sort', exact: true }));
     await keepsPosition(page.getByRole('link', { name: 'Clear filters', exact: true }), false);
-    await expect(page.getByRole('status')).toHaveText('3 transactions');
+    await expect(page.locator('#transaction-results-status')).toHaveText('3 transactions');
     await page.locator('#filter-search').fill('No matching record');
     await keepsPosition(page.getByRole('button', { name: 'Apply filters' }));
     await expect(page.getByText('No matching transactions')).toBeVisible();

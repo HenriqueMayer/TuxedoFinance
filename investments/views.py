@@ -55,6 +55,18 @@ def _parse_offset(request, name):
         return 0
 
 
+def _investment_setup(user):
+    has_bank = Bank.objects.filter(user=user).exists()
+    has_products = InvestmentProduct.objects.filter(user=user, bank__user=user).exists()
+    has_assets = Asset.objects.filter(user=user).exists()
+    return {
+        'has_bank': has_bank,
+        'has_products': has_products,
+        'has_assets': has_assets,
+        'setup_complete': has_bank and has_products and has_assets,
+    }
+
+
 class InvestmentListView(LoginRequiredMixin, TemplateView):
     template_name = 'investments/list.html'
 
@@ -85,6 +97,7 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        context.update(_investment_setup(user))
         base = UserPreference.for_user(user).base_currency
         total = Decimal('0.00')
         missing = set()
@@ -208,6 +221,7 @@ class InvestmentOperationsView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        context.update(_investment_setup(user))
         # Keep all owned products available when switching the purpose filter.
         context.update({
             'selected_section': 'operations',
@@ -315,9 +329,10 @@ class InvestmentSettingsView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update(_investment_setup(self.request.user))
         context['products'] = InvestmentProduct.objects.filter(
             user=self.request.user, bank__user=self.request.user
-        ).select_related('bank').annotate(operation_count=Count('operations'))
+        ).select_related('bank').annotate(operation_count=Count('operations')).order_by('bank__name', 'bank_id', 'name')
         context['assets'] = Asset.objects.filter(user=self.request.user).annotate(
             operation_count=Count('operations')
         )

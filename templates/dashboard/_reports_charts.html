@@ -65,50 +65,7 @@ conventions this partial inherits.
                     {% include 'partials/help_popover.html' with help_id='report-balance-help' help_label=chart_label help_template='dashboard/_balance_evolution_help.html' %}
                 </div>
             </div>
-            <div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-                <div class="flex items-center gap-3">
-                    {% if has_previous_window %}<a id="report-balance-previous" href="{% querystring charts_offset=previous_offset_param %}"
-                   hx-get="{% querystring charts_offset=previous_offset_param %}"
-                   hx-target="#reports-charts"
-                   hx-swap="outerHTML"
-                   hx-push-url="true"
-                    aria-label="{% translate 'Previous window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
-                        &larr;
-                    </a>{% endif %}
-                    <div>
-                        <p class="text-sm font-semibold text-forest dark:text-cream">
-                             {% with last_month=evolution.months|last %}
-                                 {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ last_month.date|date:'M Y' }}
-                             {% endwith %}
-                        </p>
-                        <p class="text-xs text-forest/70 dark:text-night-muted">
-                            {% if evolution.is_anchored_today %}{% translate "Anchored on today" %}
-                            {% elif charts_offset < 0 %}{% translate "Past window" %}
-                            {% else %}{% translate "Future window" %}{% endif %}
-                        </p>
-                    </div>
-                    {% if has_next_window %}<a id="report-balance-next" href="{% querystring charts_offset=next_offset_param %}"
-                       hx-get="{% querystring charts_offset=next_offset_param %}"
-                       hx-target="#reports-charts"
-                       hx-swap="outerHTML"
-                       hx-push-url="true"
-                        aria-label="{% translate 'Next window' %}"
-                       class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
-                        &rarr;
-                    </a>{% else %}<span id="report-balance-next" tabindex="-1" class="subtle-copy inline-flex h-11 items-center">{% translate 'Forecast limit' %}</span>{% endif %}
-                </div>
-                {% if not evolution.is_anchored_today %}
-                    <a href="{% querystring charts_offset=0 %}"
-                       hx-get="{% querystring charts_offset=0 %}"
-                       hx-target="#reports-charts"
-                       hx-swap="outerHTML"
-                       hx-push-url="true"
-                       class="quiet-action">
-                         {% translate "Back to today" %}
-                    </a>
-                {% endif %}
-            </div>
+            {% include 'dashboard/_report_window_navigation.html' with navigation_id='report-balance' %}
         </div>
 
         <div class="overflow-x-auto">
@@ -210,39 +167,20 @@ conventions this partial inherits.
                     {% include 'partials/help_popover.html' with help_id='report-cashflow-help' help_label=chart_label help_text=chart_help %}
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                {% if has_previous_window %}<a id="report-cashflow-previous" href="{% querystring charts_offset=previous_offset_param %}"
-                   hx-get="{% querystring charts_offset=previous_offset_param %}"
-                   hx-target="#reports-charts"
-                   hx-swap="outerHTML"
-                   hx-push-url="true"
-                    aria-label="{% translate 'Previous window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
-                    &larr;
-                </a>{% endif %}
-                <ul class="flex flex-wrap items-center gap-4">
-                    {% for entry in cashflow_chart.legend %}
-                        <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-night-muted">
-                            <span class="h-2.5 w-2.5 rounded-sm
-                                {% if entry.tone == 'income' %}bg-income dark:bg-income-light
-                                {% elif entry.tone == 'expense' %}bg-expense dark:bg-expense-light
-                                {% elif entry.tone == 'withdrawal' %}bg-caramel dark:bg-caramel-light
-                                {% else %}bg-investment dark:bg-investment-light{% endif %}"></span>
-                            {{ entry.name }}
-                        </li>
-                    {% endfor %}
-                </ul>
-                {% if has_next_window %}<a id="report-cashflow-next" href="{% querystring charts_offset=next_offset_param %}"
-                   hx-get="{% querystring charts_offset=next_offset_param %}"
-                   hx-target="#reports-charts"
-                   hx-swap="outerHTML"
-                   hx-push-url="true"
-                    aria-label="{% translate 'Next window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
-                    &rarr;
-                </a>{% else %}<span id="report-cashflow-next" tabindex="-1" class="subtle-copy inline-flex h-11 items-center">{% translate 'Forecast limit' %}</span>{% endif %}
-            </div>
+            {% include 'dashboard/_report_window_navigation.html' with navigation_id='report-cashflow' %}
         </div>
+        <ul class="flex flex-wrap items-center gap-4">
+            {% for entry in cashflow_chart.legend %}
+                <li class="flex items-center gap-2 text-sm text-forest/70 dark:text-night-muted">
+                    <span class="h-2.5 w-2.5 rounded-sm
+                        {% if entry.tone == 'income' %}bg-income dark:bg-income-light
+                        {% elif entry.tone == 'expense' %}bg-expense dark:bg-expense-light
+                        {% elif entry.tone == 'withdrawal' %}bg-caramel dark:bg-caramel-light
+                        {% else %}bg-investment dark:bg-investment-light{% endif %}"></span>
+                    {{ entry.name }}
+                </li>
+            {% endfor %}
+        </ul>
 
         <div class="overflow-x-auto">
             {% localize off %}
@@ -331,32 +269,7 @@ conventions this partial inherits.
                     {% include 'partials/help_popover.html' with help_id='report-installments-help' help_label=chart_label help_template='dashboard/_installments_help.html' %}
                 </div>
             </div>
-            <form method="get"
-                  action="{% url 'dashboard:reports' %}"
-                  hx-get="{% url 'dashboard:reports' %}"
-                  hx-target="#reports-charts"
-                  hx-swap="outerHTML"
-                  hx-push-url="true"
-                  class="flex flex-wrap items-end gap-3">
-                {% for key, value in request.GET.items %}
-                    {% if key != 'installment_month' %}
-                        <input type="hidden" name="{{ key }}" value="{{ value }}">
-                    {% endif %}
-                {% endfor %}
-                <div class="min-w-[12rem] space-y-1.5">
-                    <label for="installment-month" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate "Window" %}</label>
-                    <select id="installment-month" name="installment_month"
-                            class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
-                        {% for value, label in month_choices %}
-                            <option value="{{ value }}" {% if installment_month_param == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button type="submit"
-                        class="quiet-action">
-                    {% translate "Filter" %}
-                </button>
-            </form>
+            {% include 'dashboard/_report_month_filter.html' with filter_id='installment-month' filter_name='installment_month' selected_month=installment_month_param choices=month_choices %}
         </div>
 
         {% if recurrence_chart %}
@@ -445,32 +358,7 @@ conventions this partial inherits.
                 </div>
 
             </div>
-            <form method="get"
-                  action="{% url 'dashboard:reports' %}"
-                  hx-get="{% url 'dashboard:reports' %}"
-                  hx-target="#reports-charts"
-                  hx-swap="outerHTML"
-                  hx-push-url="true"
-                  class="flex flex-wrap items-end gap-3">
-                {% for key, value in request.GET.items %}
-                    {% if key != 'instrument_month' and key != 'expense_instrument' and key != 'income_account' %}
-                        <input type="hidden" name="{{ key }}" value="{{ value }}">
-                    {% endif %}
-                {% endfor %}
-                <div class="min-w-[12rem] space-y-1.5">
-                    <label for="instrument-month" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate "Window" %}</label>
-                    <select id="instrument-month" name="instrument_month"
-                            class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
-                        {% for value, label in month_choices %}
-                            <option value="{{ value }}" {% if instrument_month_param == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button type="submit"
-                        class="quiet-action">
-                    {% translate "Filter" %}
-                </button>
-            </form>
+            {% include 'dashboard/_instrument_month_navigation.html' %}
         </div>
 
         {% if instrument_chart %}

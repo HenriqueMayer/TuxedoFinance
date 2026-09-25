@@ -102,7 +102,7 @@
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex flex-wrap items-center gap-3">
-            <p role="status" class="text-sm text-forest/70 dark:text-night-muted">{% blocktranslate count total=paginator.count %}{{ total }} transaction{% plural %}{{ total }} transactions{% endblocktranslate %}</p>
+            <p id="transaction-results-status" role="status" class="text-sm text-forest/70 dark:text-night-muted">{% blocktranslate count total=paginator.count %}{{ total }} transaction{% plural %}{{ total }} transactions{% endblocktranslate %}</p>
             {% if has_filters %}<a id="transaction-clear-filters" href="{{ list_url }}" class="rounded text-sm font-medium text-caramel-ink dark:text-caramel-light hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel">{% translate "Clear filters" %}</a>{% endif %}
         </div>
         <form method="get" action="{{ list_url }}" class="flex items-end gap-2">
@@ -226,23 +226,4 @@
         {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=create_url cta_label=empty_cta_label %}
     {% endif %}
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    if (!document.documentElement.dataset.exportMenuBound) {
-        document.documentElement.dataset.exportMenuBound = 'true';
-        document.addEventListener('click', event => {
-            document.querySelectorAll('details[data-export-menu][open]').forEach(menu => {
-                if (!menu.contains(event.target)) menu.open = false;
-            });
-        });
-        document.addEventListener('keydown', event => {
-            if (event.key !== 'Escape') return;
-            document.querySelectorAll('details[data-export-menu][open]').forEach(menu => {
-                menu.open = false;
-            });
-        });
-    }
-</script>
 {% endblock %}

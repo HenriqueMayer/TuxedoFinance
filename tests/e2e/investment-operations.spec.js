@@ -54,7 +54,7 @@ for (const theme of ['light', 'dark']) {
         await expect(page).toHaveURL(/operations\/\?section=portfolio$/);
         const tabs = page.getByRole('navigation', { name: 'Investment sections' });
         await expect(tabs.getByRole('link', { name: 'Operations', exact: true })).toHaveAttribute('aria-current', 'page');
-        await expect(tabs.getByRole('link').last()).toHaveText('Simulate returns');
+        await expect(tabs.getByRole('button', { name: 'Simulate returns' })).toHaveAttribute('aria-disabled', 'true');
         await expect(page.locator('#investments-charts')).toHaveCount(0);
         const history = page.locator('#investment-movements');
         await expect(history).toContainText('Page 1 of 2');

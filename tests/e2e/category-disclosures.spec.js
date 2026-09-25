@@ -60,6 +60,95 @@ async function screenshot(page, testInfo, name) {
     await page.screenshot({ path: testInfo.outputPath(name), fullPage: true });
 }
 
+for (const theme of ['light', 'dark']) {
+    test(`row ellipsis menus require activation across adjacent rows (${theme})`, async ({ page }, testInfo) => {
+        await page.setViewportSize({ width: 1440, height: 1000 });
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        const ids = await prepare(page, testInfo);
+        const first = page.locator('summary[aria-label="More options: Living costs"]');
+        const neighbor = page.locator('summary[aria-label="More options: Water"]');
+        const firstMenu = first.locator('..');
+        const neighborMenu = neighbor.locator('..');
+        const openMenus = page.locator('details.compact-menu[open]');
+        await first.hover();
+        await expect(openMenus).toHaveCount(0);
+        await first.focus();
+        await expect(openMenus).toHaveCount(0);
+        await first.click();
+        await expect(first).toHaveAttribute('aria-expanded', 'true');
+        // Reproduce the report: keep the clicked trigger focused, then cross a
+        // neighboring ellipsis on the way to the original Delete action.
+        await neighbor.hover();
+        await expect(first).toBeFocused();
+        await expect(openMenus).toHaveCount(1);
+        await expect(neighborMenu).not.toHaveAttribute('open', '');
+        await page.locator('main h1').hover();
+        await expect(firstMenu).toHaveAttribute('open', '');
+        const remove = firstMenu.getByRole('link', { name: 'Delete', exact: true });
+        await expect(remove).toHaveAttribute('href', `/categories/${ids.living}/delete/`);
+        await remove.hover();
+        await page.screenshot({ path: testInfo.outputPath(`row-actions-${theme}.png`) });
+        await remove.click();
+        await expect(page).toHaveURL(new RegExp(`/categories/${ids.living}/delete/$`));
+        await page.getByRole('link', { name: 'Cancel', exact: true }).click();
+        await expect(page).toHaveURL(/\/categories\/$/);
+        // Cancel belongs to a native form. Exercise HTMX separately through
+        // the list's real GET filter before checking the replacement menus.
+        await page.evaluate(() => { window.rowMenuNavigationMarker = true; });
+        await page.getByRole('button', { name: 'Filter', exact: true }).click();
+        await expect(page).toHaveURL(/q=/);
+        expect(await page.evaluate(() => window.rowMenuNavigationMarker)).toBe(true);
+        await neighbor.hover();
+        await expect(openMenus).toHaveCount(0);
+        await first.click();
+        await neighbor.click();
+        await expect(openMenus).toHaveCount(1);
+        await expect(firstMenu).not.toHaveAttribute('open', '');
+        await expect(neighborMenu).toHaveAttribute('open', '');
+        await neighbor.click();
+        await expect(openMenus).toHaveCount(0);
+        await neighbor.press('Enter');
+        await expect(neighborMenu).toHaveAttribute('open', '');
+        await page.keyboard.press('Tab');
+        await expect(neighborMenu.getByRole('link', { name: 'Delete', exact: true })).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(neighbor).toBeFocused();
+        await expect(openMenus).toHaveCount(0);
+        await page.keyboard.press('Space');
+        await page.keyboard.press('Tab');
+        await page.keyboard.press('Tab');
+        await expect(openMenus).toHaveCount(0);
+        await neighbor.click();
+        await page.locator('main h1').click();
+        await expect(openMenus).toHaveCount(0);
+    });
+}
+
+for (const javaScriptEnabled of [true, false]) {
+    test(`row menus keep one active record with ${javaScriptEnabled ? 'touch' : 'native keyboard'}`, async ({ browser }, testInfo) => {
+        const context = await browser.newContext({ javaScriptEnabled, hasTouch: true,
+            viewport: { width: javaScriptEnabled ? 390 : 1440, height: 1000 } });
+        const page = await context.newPage();
+        try {
+            await prepare(page, testInfo);
+            const first = page.locator('summary[aria-label="More options: Living costs"]');
+            const second = page.locator('summary[aria-label="More options: Water"]');
+            const openMenus = page.locator('details.compact-menu[open]');
+            const activate = async control => javaScriptEnabled ? control.tap() : control.press('Enter');
+            await first.hover();
+            await expect(openMenus).toHaveCount(0);
+            await activate(first);
+            await expect(first.locator('..')).toHaveAttribute('open', '');
+            await activate(second);
+            await expect(openMenus).toHaveCount(1);
+            await expect(first.locator('..')).not.toHaveAttribute('open', '');
+            await expect(second.locator('..')).toHaveAttribute('open', '');
+            await activate(second);
+            await expect(openMenus).toHaveCount(0);
+        } finally { await context.close(); }
+    });
+}
+
 for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
     test(`category groups support individual and global keyboard controls (${theme}, ${width}px)`, async ({ page }, testInfo) => {
         await page.setViewportSize({ width, height: 844 });

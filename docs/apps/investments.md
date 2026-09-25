@@ -137,6 +137,18 @@ operation history, including a fully withdrawn position. The shared deletion
 policy covers instance, QuerySet and Admin deletion and rolls back mixed batches.
 Products remain protected by operation and opening-position references.
 
-The Simulate returns tab opens Planning's isolated monthly simulator. Saved
-scenarios and their hypothetical yield never post investment or bank movements.
+The portfolio and Operations pages highlight Configure investments until the
+user has a bank, a product and an asset. Configuration lists the three setup
+steps, marks completed prerequisites and links to the next missing registration.
+Once ready, New operation becomes the primary action, even before the first
+operation. Products are grouped by bank and assets remain a separate editable
+catalog. Configuration stays in the investment navigation for later maintenance.
+
+Simulate returns is a gray, non-navigating item in investment sections. Its
+floating notice opens on hover, keyboard focus or touch and directs users to
+Planning → Yield simulation. The investment submenu has no simulation link;
+Planning retains the working destination. The notice uses a text trigger rather
+than a question-mark help icon, shares floating positioning/dismissal behavior,
+and has a native disclosure fallback for keyboard and touch. Saved scenarios and their hypothetical
+yield never post investment or bank movements.
 Market quotes, price histories and agent integration remain roadmap work.

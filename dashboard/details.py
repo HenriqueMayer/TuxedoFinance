@@ -23,7 +23,11 @@ from investments.services import historical_value_in_base, opening_unit_value
 
 def composition(user, query):
     period = query.get('period', 'ALL')
-    if period == 'ALL':
+    if query.get('periods'):
+        # Signed explicit months keep composition aligned with a shifted chart,
+        # including future periods; do not fall back to today's trailing year.
+        targets = [tuple(map(int, value.split('-'))) for value in query['periods']]
+    elif period == 'ALL':
         today = timezone.localdate()
         targets = [add_months(today.year, today.month, -step) for step in range(12)]
     else:

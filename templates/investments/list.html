@@ -11,7 +11,7 @@
             <h1 class="page-title">{{ investments_label }}</h1>
             {% include 'partials/help_popover.html' with help_id='investments-overview-help' help_label=investments_label help_text=investments_help %}
         </div>
-        <a href="{% url 'investments:create' %}" class="action-primary">{% translate 'New operation' %}</a>
+        {% include 'investments/_primary_action.html' %}
     </header>
     {% include 'investments/_sections.html' %}
     <section class="panel-heading border-b border-forest/10 pb-6 dark:border-cream/10">
@@ -72,8 +72,18 @@
             </ul>
         {% endfor %}</div>
     {% empty %}
-        <p class="subtle-copy py-6">{% if selected_section == 'cash' %}{% translate 'Choose Remunerated cash as the purpose of a monetary product to include its balance here.' %}{% else %}{% translate 'Create a bank in Banking, then add a product and asset.' %}{% endif %}</p>
-        <a href="{% url 'investments:create_product' %}" class="action-link">{% translate 'New product' %}</a>
+        <div class="surface-panel space-y-3">
+            {% if not setup_complete %}
+                <h2 class="section-title">{% translate 'Start by configuring your investments' %}</h2>
+                <p class="subtle-copy">{% translate 'Set up a bank, a product and an asset. Configuration shows what is ready and guides you through the next step.' %}</p>
+            {% elif selected_section == 'cash' %}
+                <p class="subtle-copy">{% translate 'Choose Remunerated cash as the purpose of a monetary product to include its balance here.' %}</p>
+                <a href="{% url 'investments:settings' %}" class="action-link">{% translate 'Configure investments' %}</a>
+            {% else %}
+                <h2 class="section-title">{% translate 'Ready for your first operation' %}</h2>
+                <p class="subtle-copy">{% translate 'Your products and assets are configured. Record a deposit, withdrawal or yield to see your positions here.' %}</p>
+            {% endif %}
+        </div>
     {% endfor %}
     </section>
     {% if has_investments and selected_section != 'cash' %}{% include 'investments/_investments_charts.html' %}{% endif %}

@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/version-0.5.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.5.0">
+  <img src="https://img.shields.io/badge/version-0.6.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.6.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="English and Brazilian Portuguese interface">

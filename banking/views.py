@@ -514,8 +514,34 @@ class ExchangeRateListView(LoginRequiredMixin, ListView):
         return ExchangeRate.objects.filter(user=self.request.user)
 
 
-class ExchangeRateCreateView(OwnedFormMixin, CreateView):
+class ExchangeRateFormMixin(OwnedFormMixin):
     model = ExchangeRate
     form_class = ExchangeRateForm
-    form_title = _('New exchange rate')
     success_url = reverse_lazy('banking:exchange_rates')
+
+    def get_cancel_url(self):
+        return reverse('banking:exchange_rates')
+
+
+class ExchangeRateCreateView(ExchangeRateFormMixin, CreateView):
+    form_title = _('New exchange rate')
+
+
+class ExchangeRateUpdateView(ExchangeRateFormMixin, UpdateView):
+    form_title = _('Edit exchange rate')
+
+
+class ExchangeRateDeleteView(OwnedDeleteView):
+    model = ExchangeRate
+
+    def get_success_url(self):
+        return reverse('banking:exchange_rates')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = self.get_success_url()
+        context['delete_message'] = _(
+            'This action cannot be undone. Current valuations may change or show missing rates. '
+            'Conversions already saved in transfers and investments will be preserved.'
+        )
+        return context

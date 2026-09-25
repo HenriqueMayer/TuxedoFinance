@@ -32,4 +32,6 @@ urlpatterns = [
     path('rewards/redeem/', views.RewardRedemptionCreateView.as_view(), name='redemption_create'),
     path('exchange-rates/', views.ExchangeRateListView.as_view(), name='exchange_rates'),
     path('exchange-rates/create/', views.ExchangeRateCreateView.as_view(), name='exchange_rate_create'),
+    path('exchange-rates/<int:pk>/edit/', views.ExchangeRateUpdateView.as_view(), name='exchange_rate_update'),
+    path('exchange-rates/<int:pk>/delete/', views.ExchangeRateDeleteView.as_view(), name='exchange_rate_delete'),
 ]
