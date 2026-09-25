@@ -192,6 +192,11 @@
         if (event.detail.target !== document.body || !event.detail.shouldSwap || event.detail.isError) return;
         if (!submitting && new URL(event.detail.xhr.responseURL, location.href).pathname !== location.pathname) remember();
     });
+    document.addEventListener('htmx:afterSwap', event => {
+        // A newly visible page can receive another click before HTMX's settle
+        // delay ends. Treat it as the current workspace immediately.
+        if (event.detail.target === document.body) settled();
+    });
     document.addEventListener('submit', event => {
         if (event.target.closest('main') || event.target.action.includes('/logout')) {
             submitting = true;
@@ -230,7 +235,12 @@
         if (event.detail.target === document.body || pendingHistory) settled();
         else approvedDestination = '';
     });
-    document.addEventListener('htmx:historyRestore', () => requestAnimationFrame(settled));
+    document.addEventListener('htmx:historyRestore', () => requestAnimationFrame(() => {
+        // Cached history can restore without a body settle event. Always apply
+        // the tab snapshot, including live values of dynamically added rows.
+        pendingHistory = url();
+        settled();
+    }));
     document.addEventListener('DOMContentLoaded', () => {
         currentUrl = url();
         baseline = formState();

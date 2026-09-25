@@ -606,6 +606,10 @@ workspace before navigation, including query parameters, unsent named fields,
 repeated simulation rows, disclosures, focus and scroll. History traversal
 restores into freshly rendered forms without replaying submissions or emitting
 input/change events. Do not render a separate Resume previous screen control.
+When HTMX replaces the page body, update the active workspace at `afterSwap`:
+the next link can be activated before `afterSettle`. Apply the saved fields on
+`historyRestore` even when the browser's URL already matches the tracked URL;
+the HTMX history cache can contain older form values.
 Passwords, uploaded files, hidden fields/CSRF tokens and account settings are
 excluded. Keep only the current and immediately previous URL snapshots, and discard
 them when the user or interface identity changes. Native browser Back and HTMX history must
