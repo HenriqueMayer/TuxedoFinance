@@ -20,12 +20,8 @@
             {% include 'partials/form_field.html' with field=form.date %}
             <p id="asset-mode-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
             <div id="money-fields" data-has-errors="{% if form.amount.errors or form.ending_balance.errors or form.yield_input_mode.errors %}true{% else %}false{% endif %}" class="space-y-5">
-                <div id="regular-amount-field"
-                     data-has-errors="{{ form.amount.errors|yesno:'true,false' }}">
-                    {% include 'partials/form_field.html' with field=form.amount %}
-                </div>
                 <div id="monetary-yield-fields"
-                     data-has-errors="{% if form.yield_input_mode.errors or form.ending_balance.errors %}true{% else %}false{% endif %}"
+                     data-has-errors="{{ form.yield_input_mode.errors|yesno:'true,false' }}"
                      class="space-y-5 rounded-xl bg-cream p-4 dark:bg-night">
                     <fieldset class="space-y-3" aria-describedby="{{ form.yield_input_mode.id_for_label }}-help">
                         <legend class="text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted">{{ form.yield_input_mode.label }}</legend>
@@ -40,37 +36,46 @@
                         <p id="{{ form.yield_input_mode.id_for_label }}-help" class="text-sm text-forest/70 dark:text-night-muted">{{ form.yield_input_mode.help_text }}</p>
                         {% for error in form.yield_input_mode.errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
                     </fieldset>
-                    <div id="ending-balance-field"
-                         data-has-errors="{{ form.ending_balance.errors|yesno:'true,false' }}">
-                        {% include 'partials/form_field.html' with field=form.ending_balance %}
-                    </div>
-                    <div id="yield-preview" class="rounded-lg border border-forest/10 bg-white p-4 text-sm dark:border-cream/10 dark:bg-night-surface" aria-live="polite" hx-post="{% url 'investments:yield_preview' %}" hx-trigger="input changed delay:250ms from:#id_ending_balance, input changed delay:250ms from:#id_amount, change from:#id_product, change from:#id_asset, change from:#id_kind, change from:#id_date, change from:input[name='yield_input_mode']" hx-target="this" hx-swap="innerHTML" hx-include="#investment-operation-form" hx-request='{"noHeaders":false}' hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-                        {% include 'investments/_yield_preview.html' with preview=form.yield_preview currency=form.instance.currency %}
-                    </div>
+                </div>
+                <div id="regular-amount-field"
+                     data-has-errors="{{ form.amount.errors|yesno:'true,false' }}">
+                    {% include 'partials/form_field.html' with field=form.amount %}
+                </div>
+                <div id="ending-balance-field"
+                     data-has-errors="{{ form.ending_balance.errors|yesno:'true,false' }}">
+                    {% include 'partials/form_field.html' with field=form.ending_balance %}
+                </div>
+                <div id="yield-preview" class="rounded-lg border border-forest/10 bg-white p-4 text-sm dark:border-cream/10 dark:bg-night-surface" aria-live="polite" hx-post="{% url 'investments:yield_preview' %}" hx-trigger="input changed delay:250ms from:#id_ending_balance, input changed delay:250ms from:#id_amount, change from:#id_product, change from:#id_asset, change from:#id_kind, change from:#id_date, change from:input[name='yield_input_mode']" hx-target="this" hx-swap="innerHTML" hx-include="#investment-operation-form" hx-request='{"noHeaders":false}' hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+                    {% include 'investments/_yield_preview.html' with preview=form.yield_preview currency=form.instance.currency %}
                 </div>
             </div>
             <div id="unit-fields" data-has-errors="{% if form.quantity.errors or form.unit_price.errors %}true{% else %}false{% endif %}" class="space-y-5">
                 {% include 'partials/form_field.html' with field=form.quantity %}
                 {% include 'partials/form_field.html' with field=form.unit_price %}
             </div>
-            <div id="operation-fees" data-has-errors="{{ form.fees.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fees %}</div>
         </section>
-        <section data-has-errors="{% if form.source_account.errors or form.source_program.errors or form.source_points.errors or form.cash_amount.errors or form.destination_account.errors %}true{% else %}false{% endif %}" id="funding-section" class="space-y-4 rounded-xl bg-cream p-4 dark:bg-night">
+        <section data-has-errors="{% if form.funding_source.errors or form.source_account.errors or form.source_program.errors or form.source_points.errors or form.cash_amount.errors or form.destination_account.errors %}true{% else %}false{% endif %}" id="funding-section" class="space-y-4 rounded-xl bg-cream p-4 dark:bg-night">
             <div>
                 <h2 class="text-xl font-semibold text-forest dark:text-cream">{% translate 'Funding or destination' %}</h2>
                 <p id="operation-kind-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
             </div>
-            <div id="deposit-fields" data-has-errors="{% if form.source_account.errors or form.source_program.errors %}true{% else %}false{% endif %}" class="space-y-5">
+            <div id="deposit-fields" data-has-errors="{{ form.funding_source.errors|yesno:'true,false' }}">
+                {% include 'partials/form_field.html' with field=form.funding_source %}
+            </div>
+            <div id="source-account-fields" data-has-errors="{{ form.source_account.errors|yesno:'true,false' }}">
                 {% include 'partials/form_field.html' with field=form.source_account %}
+            </div>
+            <div id="source-program-fields" data-has-errors="{{ form.source_program.errors|yesno:'true,false' }}">
                 {% include 'partials/form_field.html' with field=form.source_program %}
             </div>
             <div id="source-points-fields" data-has-errors="{{ form.source_points.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.source_points %}</div>
-            <div id="cash-fields" data-has-errors="{{ form.cash_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.cash_amount %}</div>
             <div id="withdrawal-fields" data-has-errors="{{ form.destination_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.destination_account %}</div>
+            <div id="cash-fields" data-has-errors="{{ form.cash_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.cash_amount %}</div>
         </section>
-        <details class="rounded-xl ring-1 ring-forest/10 dark:ring-cream/10"{% if form.reason.errors or form.notes.errors or form.reason.value or form.notes.value %} open{% endif %}>
+        <details class="rounded-xl ring-1 ring-forest/10 dark:ring-cream/10"{% if form.fees.errors or form.fees.value and form.fees.value != '0' and form.fees.value != '0.00' or form.reason.errors or form.notes.errors or form.reason.value or form.notes.value %} open{% endif %}>
             <summary class="cursor-pointer px-4 py-3 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/80">{% translate 'Advanced options' %}</summary>
             <div class="space-y-5 p-4 pt-1">
+                <div id="operation-fees" data-has-errors="{{ form.fees.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fees %}</div>
                 {% include 'partials/form_field.html' with field=form.reason %}
                 {% include 'partials/form_field.html' with field=form.notes %}
             </div>
@@ -94,6 +99,7 @@
         const unitPrice = document.getElementById('{{ form.unit_price.id_for_label }}');
         const endingBalance = document.getElementById('{{ form.ending_balance.id_for_label }}');
         const cashAmount = document.getElementById('{{ form.cash_amount.id_for_label }}');
+        const fundingSource = document.getElementById('{{ form.funding_source.id_for_label }}');
         const sourceAccount = document.getElementById('{{ form.source_account.id_for_label }}');
         const sourceProgram = document.getElementById('{{ form.source_program.id_for_label }}');
         const sourcePoints = document.getElementById('{{ form.source_points.id_for_label }}');
@@ -111,6 +117,8 @@
             units: document.getElementById('unit-fields'),
             fees: document.getElementById('operation-fees'),
             deposit: document.getElementById('deposit-fields'),
+            account: document.getElementById('source-account-fields'),
+            program: document.getElementById('source-program-fields'),
             points: document.getElementById('source-points-fields'),
             cash: document.getElementById('cash-fields'),
             withdrawal: document.getElementById('withdrawal-fields'),
@@ -150,13 +158,13 @@
                 if (!isYield) yieldInputModes.forEach(input => { input.checked = false; });
             }
             setHidden(groups.yield, !isYield, !clearStale);
+            setHidden(groups.endingBalance, !isYield || !usesEndingBalance, !clearStale);
             if (!isYield) {
                 setHidden(groups.amount, false, !clearStale);
                 if (yieldPreview) yieldPreview.hidden = true;
                 return;
             }
             setHidden(groups.amount, !selectedMode || usesEndingBalance, !clearStale);
-            setHidden(groups.endingBalance, !usesEndingBalance, !clearStale);
             if (yieldPreview) yieldPreview.hidden = !selectedMode;
             scheduleYieldPreview();
         }
@@ -188,12 +196,13 @@
             updateYieldFields(clearStale);
         }
 
-        function updateFundingFields(clearStale, preferredSource) {
+        function updateFundingFields(clearStale) {
             const value = asset.value ? kind.value : '';
             const isDeposit = value === 'DEPOSIT';
             const isWithdrawal = value === 'WITHDRAWAL';
             const isYield = value === 'YIELD';
             if (clearStale) {
+                if (!isDeposit) fundingSource.value = '';
                 if (!isDeposit) {
                     sourceAccount.value = '';
                     sourceProgram.value = '';
@@ -201,12 +210,12 @@
                 }
                 if (!isWithdrawal) destinationAccount.value = '';
                 if (isYield || !value) cashAmount.value = '';
-                if (isDeposit && preferredSource === 'account') {
+                if (isDeposit && fundingSource.value !== 'POINTS') {
                     sourceProgram.value = '';
                     sourcePoints.value = '';
-                } else if (isDeposit && preferredSource === 'program') {
+                }
+                if (isDeposit && fundingSource.value !== 'ACCOUNT') {
                     sourceAccount.value = '';
-                    cashAmount.value = '';
                 }
             }
             const option = asset.selectedOptions[0];
@@ -216,6 +225,8 @@
             if (clearStale && !needsCash && !hasPreservedProgramCash) cashAmount.value = '';
             if (clearStale && !(isDeposit && sourceProgram.value)) sourcePoints.value = '';
             setHidden(groups.deposit, !isDeposit, !clearStale);
+            setHidden(groups.account, !(isDeposit && fundingSource.value === 'ACCOUNT'), !clearStale);
+            setHidden(groups.program, !(isDeposit && fundingSource.value === 'POINTS'), !clearStale);
             setHidden(groups.withdrawal, !isWithdrawal, !clearStale);
             setHidden(groups.cash, !(needsCash || hasPreservedProgramCash), !clearStale);
             setHidden(groups.points, !(isDeposit && sourceProgram.value), !clearStale);
@@ -241,8 +252,14 @@
         });
         kind.addEventListener('change', () => updateFundingFields(true));
         kind.addEventListener('change', () => updateAssetFields(true));
-        sourceAccount.addEventListener('change', () => updateFundingFields(true, 'account'));
-        sourceProgram.addEventListener('change', () => updateFundingFields(true, 'program'));
+        fundingSource.addEventListener('change', () => {
+            // A deliberate source switch abandons its amounts, including legacy
+            // program cash. Initialization and error recovery never clear them.
+            cashAmount.value = '';
+            updateFundingFields(true);
+        });
+        sourceAccount.addEventListener('change', () => updateFundingFields(true));
+        sourceProgram.addEventListener('change', () => updateFundingFields(true));
         destinationAccount.addEventListener('change', () => updateFundingFields(true));
         yieldInputModes.forEach(input => input.addEventListener('change', () => updateYieldFields(true)));
         [product, asset, kind, document.getElementById('{{ form.date.id_for_label }}'), endingBalance, amount]

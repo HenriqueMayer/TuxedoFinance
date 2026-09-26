@@ -333,9 +333,12 @@ test('native forms and conditional fields remain usable without JavaScript', asy
     } finally { await context.close(); }
 });
 
-test('investment choices wait for asset, operation and source and clear abandoned branches', async ({ page }, testInfo) => {
+for (const theme of ['light', 'dark']) {
+test(`investment choices wait for asset, operation and source and clear abandoned branches (${theme})`, async ({ page }, testInfo) => {
+    await page.addInitScript(value => localStorage.setItem('theme', value), theme);
     const { bank, account } = await fixture(page, testInfo);
     await post(page, '/investments/products/create/', { bank, name: 'Portfolio' });
+    await post(page, '/banking/loyalty/create/', { bank, name: 'Investment rewards', unit_name: 'Points' });
     await page.goto('/investments/assets/create/');
     await expect(page.getByLabel(/^\s*How this asset is valued/)).toHaveValue('');
     await expect(page.locator('#monetary-opening-fields')).toBeHidden();
@@ -349,6 +352,12 @@ test('investment choices wait for asset, operation and source and clear abandone
     await expect(page.locator('#id_opening_balance')).toHaveValue('0');
     await expect(page.locator('#id_opening_product')).toHaveValue('');
     await expect(page.locator('#opening-product-fields')).toBeHidden();
+    await expect(page.locator('#opening-unit-price-fields')).toBeHidden();
+    await page.locator('#id_opening_quantity').fill('2');
+    await expect(page.locator('#opening-unit-price-fields')).toBeVisible();
+    await page.locator('#id_opening_unit_price').fill('30');
+    await page.locator('#id_opening_quantity').fill('0');
+    await expect(page.locator('#id_opening_unit_price')).toHaveValue('0');
     for (const [name, code, valuation_mode] of [['Cash pot', 'POT', 'MONETARY'], ['Shares', 'STK', 'UNITS']]) {
         await post(page, '/investments/assets/create/', { name, code, valuation_mode, asset_class: 'LIQUIDITY', currency: 'BRL',
             opening_balance: '0', opening_quantity: '0', opening_unit_price: '0' });
@@ -362,12 +371,39 @@ test('investment choices wait for asset, operation and source and clear abandone
     await expect(page.locator('#regular-amount-field')).toBeHidden();
     await expect(page.locator('#ending-balance-field')).toBeHidden();
     await page.getByRole('radio', { name: 'Enter the yield amount' }).check();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#regular-amount-field [data-help-trigger]')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#id_amount')).toBeFocused();
     await page.locator('#id_amount').fill('10');
     await selectChoice(page.locator('#id_asset-search'), { label: 'Shares (STK)' });
     await expect(page.locator('#id_amount')).toHaveValue('');
     await page.getByLabel(/^\s*Type/).selectOption('DEPOSIT');
     await expect(page.locator('#unit-fields')).toBeVisible();
     await expect(page.locator('#cash-fields')).toBeHidden();
+    await expect(page.locator('#source-account-fields')).toBeHidden();
+    await expect(page.locator('#source-program-fields')).toBeHidden();
+    await page.locator('#id_funding_source').focus();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#source-account-fields [data-help-trigger]')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#id_source_account-search')).toBeFocused();
+    await expect(page.locator('#source-program-fields')).toBeHidden();
+    await selectChoice(page.locator('#id_source_account-search'), account);
+    await page.locator('#id_cash_amount').fill('20');
+    await page.screenshot({ path: testInfo.outputPath(`investment-source-${theme}.png`), fullPage: true });
+    await page.locator('#id_funding_source').selectOption('POINTS');
+    await expect(page.locator('#id_source_account')).toHaveValue('');
+    await expect(page.locator('#id_cash_amount')).toHaveValue('');
+    await expect(page.locator('#source-program-fields')).toBeVisible();
+    await expect(page.locator('#source-points-fields')).toBeHidden();
+    await selectChoice(page.locator('#id_source_program'), { label: 'Investment rewards' });
+    await expect(page.locator('#source-points-fields')).toBeVisible();
+    await page.locator('#id_source_points').fill('15');
+    await page.locator('#id_funding_source').selectOption('ACCOUNT');
+    await expect(page.locator('#id_source_program')).toHaveValue('');
+    await expect(page.locator('#id_source_points')).toHaveValue('');
     await selectChoice(page.locator('#id_source_account-search'), account);
     await page.locator('#id_cash_amount').fill('20');
     await selectChoice(page.locator('#id_source_account-search'), '');
@@ -381,6 +417,56 @@ test('investment choices wait for asset, operation and source and clear abandone
     await expect(page.locator('#unit-fields')).toBeHidden();
     await expect(page.locator('#funding-section')).toBeHidden();
     await expect(page.locator('#id_destination_account')).toHaveValue('');
+    await selectChoice(page.locator('#id_product'), { label: 'Keyboard bank - Portfolio' });
+    await selectChoice(page.locator('#id_asset'), { label: 'Shares (STK)' });
+    await page.locator('#id_kind').selectOption('DEPOSIT');
+    await page.locator('#id_funding_source').selectOption('ACCOUNT');
+    await selectChoice(page.locator('#id_source_account'), account);
+    await page.locator('#id_quantity').fill('2');
+    await page.locator('#id_unit_price').fill('-1');
+    await page.locator('#id_date').fill('25/09/2026');
+    await page.locator('#id_cash_amount').fill('20');
+    await page.getByRole('button', { name: 'Save', exact: true }).press('Enter');
+    await expect(page.locator('#id_unit_price')).toHaveValue('-1');
+    await expect(page.locator('#unit-fields [role="alert"]')).not.toHaveCount(0);
+    await expect(page.locator('#id_funding_source')).toHaveValue('ACCOUNT');
+    await expect(page.locator('#id_source_account-search')).toBeVisible();
+    await expect(page.locator('#source-program-fields')).toBeHidden();
+    await page.locator('#id_unit_price').fill('10');
+    await page.getByRole('button', { name: 'Save', exact: true }).press('Enter');
+    await expect(page).toHaveURL(/\/investments\/operations\/$/);
+    await page.locator('#investment-movements').getByRole('link', { name: 'Edit', exact: true }).press('Enter');
+    await expect(page.locator('#id_funding_source')).toHaveValue('ACCOUNT');
+    await expect(page.locator('#id_cash_amount')).toHaveValue('20.00');
+    await expect(page.locator('#source-program-fields')).toBeHidden();
+});
+}
+
+test('investment funding submits and recovers errors without JavaScript', async ({ page, browser }, info) => {
+    const { bank, account } = await fixture(page, info);
+    await post(page, '/investments/products/create/', { bank, name: 'Native fund' });
+    await post(page, '/investments/assets/create/', { name: 'Native units', code: 'NATIVE', valuation_mode: 'UNITS',
+        asset_class: 'EQUITY', currency: 'BRL', opening_balance: '0', opening_quantity: '0', opening_unit_price: '0' });
+    const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false });
+    try {
+        const native = await context.newPage();
+        await native.goto('/investments/create/');
+        await native.locator('#id_product').selectOption({ label: 'Keyboard bank - Native fund' });
+        await native.locator('#id_asset').selectOption({ label: 'Native units (NATIVE)' });
+        await native.locator('#id_kind').selectOption('DEPOSIT');
+        await native.locator('#id_funding_source').selectOption('ACCOUNT');
+        await native.locator('#id_source_account').selectOption(account);
+        await native.locator('#id_quantity').fill('2');
+        await native.locator('#id_unit_price').fill('-1');
+        await native.locator('#id_date').fill('25/09/2026');
+        await native.locator('#id_cash_amount').fill('20');
+        await native.getByRole('button', { name: 'Save', exact: true }).press('Enter');
+        await expect(native.locator('#unit-fields [role="alert"]')).not.toHaveCount(0);
+        await expect(native.locator('#id_source_account')).toHaveValue(account);
+        await native.locator('#id_unit_price').fill('10');
+        await native.getByRole('button', { name: 'Save', exact: true }).press('Enter');
+        await expect(native).toHaveURL(/\/investments\/operations\/$/);
+    } finally { await context.close(); }
 });
 
 test('Portuguese mobile form keeps translated keyboard help and visible focus', async ({ page }, testInfo) => {

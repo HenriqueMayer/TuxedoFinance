@@ -35,6 +35,12 @@ class InvestmentSelect(forms.Select):
 
 
 class InvestmentForm(forms.ModelForm):
+    funding_source = forms.ChoiceField(
+        choices=(('', _('Choose a funding source')), ('ACCOUNT', _('Bank account')),
+                 ('POINTS', _('Loyalty program'))),
+        required=False,
+        label=_('Fund this deposit with'),
+    )
     yield_input_mode = forms.ChoiceField(
         choices=(
             (YIELD_INPUT_ENDING_BALANCE, _('Use the final balance')),
@@ -106,6 +112,18 @@ class InvestmentForm(forms.ModelForm):
         self.user = user
         configure_date_fields(self, user)
         self.yield_preview = None
+        # Old submissions and the native form can identify the source directly.
+        # The UI selector must not change the ledger's exactly-one-source rule.
+        if self.is_bound and not self.data.get('funding_source'):
+            self.data = self.data.copy()
+            self.data['funding_source'] = (
+                'ACCOUNT' if self.data.get('source_account') else
+                'POINTS' if self.data.get('source_program') else ''
+            )
+        elif not self.is_bound:
+            self.initial.setdefault('funding_source',
+                'ACCOUNT' if self.initial.get('source_account') else
+                'POINTS' if self.initial.get('source_program') else '')
         if user is not None:
             self.instance.user = user
             self.fields['product'].queryset = InvestmentProduct.objects.filter(
@@ -205,6 +223,14 @@ class InvestmentForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
+        if data.get('kind') == Investment.Kind.DEPOSIT:
+            source = data.get('funding_source')
+            if not source:
+                self.add_error('funding_source', _('Choose a funding source.'))
+            elif source == 'ACCOUNT' and not data.get('source_account'):
+                self.add_error('source_account', _('Choose the account funding this deposit.'))
+            elif source == 'POINTS' and not data.get('source_program'):
+                self.add_error('source_program', _('Choose the loyalty program funding this deposit.'))
         asset = data.get('asset')
         if asset and asset.valuation_mode == Asset.ValuationMode.MONETARY and data.get('kind') == Investment.Kind.YIELD:
             try:
