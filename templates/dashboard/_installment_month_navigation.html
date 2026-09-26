@@ -1,0 +1,43 @@
+{% load i18n %}
+{# Keep the installment cursor independent of every other report window. #}
+<div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+    <div class="flex items-center gap-3">
+        {% if installment_previous_month %}
+            <a id="installment-previous" href="{% querystring installment_month=installment_previous_month %}"
+               hx-get="{% querystring installment_month=installment_previous_month %}"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               aria-label="{% translate 'Previous month' %}"
+               class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">&larr;</a>
+        {% else %}
+            <span id="installment-previous" tabindex="-1" aria-disabled="true" aria-label="{% translate 'Previous month' %}" class="flex h-11 w-11 items-center justify-center opacity-40">&larr;</span>
+        {% endif %}
+        <p id="installment-window" class="min-w-[10rem] text-center text-sm font-semibold text-forest dark:text-cream">{{ installment_window_label }}</p>
+        {% if installment_next_month %}
+            <a id="installment-next" href="{% querystring installment_month=installment_next_month %}"
+               hx-get="{% querystring installment_month=installment_next_month %}"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               aria-label="{% translate 'Next month' %}"
+               class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">&rarr;</a>
+        {% else %}
+            <span id="installment-next" tabindex="-1" aria-disabled="true" aria-label="{% translate 'Next month' %}" class="flex h-11 w-11 items-center justify-center opacity-40">&rarr;</span>
+        {% endif %}
+    </div>
+    <div class="flex items-center gap-3">
+        {% if installment_month_param == installment_current_month %}
+            <span id="installment-current" tabindex="-1" class="text-sm text-forest/70 focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">{% translate 'Current month' %}</span>
+        {% else %}
+            <a id="installment-current" href="{% querystring installment_month=installment_current_month %}"
+               hx-get="{% querystring installment_month=installment_current_month %}"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               class="quiet-action">{% translate 'Current month' %}</a>
+        {% endif %}
+        {% if installment_month_param == 'ALL' %}
+            <span id="installment-all" tabindex="-1" class="text-sm text-forest/70 focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">{% translate 'All time' %}</span>
+        {% else %}
+            <a id="installment-all" href="{% querystring installment_month='ALL' %}"
+               hx-get="{% querystring installment_month='ALL' %}"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               class="quiet-action">{% translate 'All time' %}</a>
+        {% endif %}
+    </div>
+</div>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-26 00:57+0000\n"
+"POT-Creation-Date: 2026-09-26 22:49+0000\n"
 "PO-Revision-Date: 2026-09-20 16:15+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -435,8 +435,8 @@ msgstr "Crédito"
 msgid "Debit"
 msgstr "Débito"
 
-#: banking/models.py:331 categories/models.py:22 dashboard/views.py:172
-#: dashboard/views.py:248 dashboard/views.py:254 dashboard/views.py:286
+#: banking/models.py:331 categories/models.py:22 dashboard/views.py:163
+#: dashboard/views.py:251 dashboard/views.py:257 dashboard/views.py:289
 #: templates/categories/list.html:64
 #: templates/dashboard/_reports_charts.html:432
 #: templates/dashboard/_reports_charts.html:464
@@ -918,7 +918,7 @@ msgstr "Custos bancários"
 msgid "Installments"
 msgstr "Parcelas"
 
-#: dashboard/services.py:738 templates/transactions/list.html:146
+#: dashboard/services.py:738 templates/transactions/list.html:148
 msgid "Fixed"
 msgstr "Fixa"
 
@@ -926,14 +926,8 @@ msgstr "Fixa"
 msgid "One-off"
 msgstr "Avulsa"
 
-#: dashboard/views.py:59 dashboard/views.py:214 dashboard/views.py:237
-#: templates/dashboard/_instrument_month_navigation.html:35
-#: templates/dashboard/_instrument_month_navigation.html:40
-msgid "All time"
-msgstr "Todo o período"
-
-#: dashboard/views.py:114 dashboard/views.py:184 dashboard/views.py:249
-#: dashboard/views.py:252 dashboard/views.py:254 dashboard/views.py:281
+#: dashboard/views.py:105 dashboard/views.py:175 dashboard/views.py:252
+#: dashboard/views.py:255 dashboard/views.py:257 dashboard/views.py:284
 #: templates/dashboard/_reports_charts.html:417
 #: templates/dashboard/_reports_charts.html:458
 #: templates/dashboard/index.html:65 templates/dashboard/index.html:186
@@ -941,7 +935,7 @@ msgstr "Todo o período"
 msgid "Expenses"
 msgstr "Despesas"
 
-#: dashboard/views.py:178 dashboard/views.py:248 investments/views.py:140
+#: dashboard/views.py:169 dashboard/views.py:251 investments/views.py:140
 #: investments/views.py:156 templates/dashboard/index.html:65
 #: templates/dashboard/index.html:188 templates/investments/list.html:45
 #: templates/investments/list.html:68
@@ -949,7 +943,7 @@ msgstr "Despesas"
 msgid "Withdrawals"
 msgstr "Resgates"
 
-#: dashboard/views.py:190 dashboard/views.py:249 investments/apps.py:7
+#: dashboard/views.py:181 dashboard/views.py:252 investments/apps.py:7
 #: templates/dashboard/index.html:65 templates/dashboard/index.html:187
 #: templates/investments/list.html:3 templates/investments/list.html:9
 #: templates/pages/landing.html:48 templates/partials/navigation_links.html:8
@@ -957,7 +951,15 @@ msgstr "Resgates"
 msgid "Investments"
 msgstr "Investimentos"
 
-#: dashboard/views.py:256 templates/banking/_account_row.html:4
+#: dashboard/views.py:204 dashboard/views.py:240
+#: templates/dashboard/_installment_month_navigation.html:35
+#: templates/dashboard/_installment_month_navigation.html:40
+#: templates/dashboard/_instrument_month_navigation.html:35
+#: templates/dashboard/_instrument_month_navigation.html:40
+msgid "All time"
+msgstr "Todo o período"
+
+#: dashboard/views.py:259 templates/banking/_account_row.html:4
 #: templates/banking/_account_table.html:5
 msgid "Balance"
 msgstr "Saldo"
@@ -1009,7 +1011,7 @@ msgstr "Saldo total após o crédito do rendimento."
 msgid "Product destination"
 msgstr "Produto de destino"
 
-#: investments/forms.py:84 templates/investments/_investment_movements.html:75
+#: investments/forms.py:84 templates/investments/_investment_movements.html:77
 #: templates/investments/list.html:45
 msgid "Asset"
 msgstr "Ativo"
@@ -1513,11 +1515,11 @@ msgstr "Este item já existe."
 #: templates/banking/detail.html:41 templates/banking/detail.html:53
 #: templates/banking/exchange_rates.html:21
 #: templates/categories/_category_group.html:20
-#: templates/investments/_investment_movements.html:147
+#: templates/investments/_investment_movements.html:149
 #: templates/investments/list.html:41
 #: templates/investments/settings/index.html:37
 #: templates/investments/settings/index.html:54
-#: templates/transactions/list.html:180
+#: templates/transactions/list.html:182
 msgid "Edit"
 msgstr "Editar"
 
@@ -2104,13 +2106,13 @@ msgstr ""
 #: templates/banking/detail.html:53 templates/banking/exchange_rates.html:22
 #: templates/categories/_category_group.html:23
 #: templates/categories/confirm_delete.html:24
-#: templates/investments/_investment_movements.html:151
+#: templates/investments/_investment_movements.html:153
 #: templates/investments/confirm_delete.html:27
 #: templates/investments/settings/confirm_delete_entity.html:11
 #: templates/investments/settings/index.html:37
 #: templates/investments/settings/index.html:54 templates/sandbox/drafts.html:9
 #: templates/transactions/confirm_delete.html:24
-#: templates/transactions/list.html:184
+#: templates/transactions/list.html:186
 msgid "Delete"
 msgstr "Excluir"
 
@@ -2441,8 +2443,8 @@ msgid "Try a different name or level, or clear the filters to see everything."
 msgstr "Tente outro nome ou nível, ou limpe os filtros para ver tudo."
 
 #: templates/categories/list.html:17
-#: templates/investments/_investment_movements.html:99
-#: templates/transactions/list.html:107 templates/transactions/list.html:221
+#: templates/investments/_investment_movements.html:101
+#: templates/transactions/list.html:109 templates/transactions/list.html:223
 msgid "Clear filters"
 msgstr "Limpar filtros"
 
@@ -2508,8 +2510,7 @@ msgid "All types"
 msgstr "Todos os tipos"
 
 #: templates/categories/list.html:72
-#: templates/dashboard/_report_month_filter.html:23
-#: templates/investments/_investment_movements.html:89
+#: templates/investments/_investment_movements.html:91
 msgid "Filter"
 msgstr "Filtrar"
 
@@ -2559,6 +2560,29 @@ msgstr "Suas maiores categorias de despesas em"
 msgid "recurrences included."
 msgstr "incluindo recorrências."
 
+#: templates/dashboard/_installment_month_navigation.html:9
+#: templates/dashboard/_installment_month_navigation.html:12
+#: templates/dashboard/_instrument_month_navigation.html:9
+#: templates/dashboard/_instrument_month_navigation.html:12
+#: templates/dashboard/_month_navigation.html:5
+msgid "Previous month"
+msgstr "Mês anterior"
+
+#: templates/dashboard/_installment_month_navigation.html:19
+#: templates/dashboard/_installment_month_navigation.html:22
+#: templates/dashboard/_instrument_month_navigation.html:19
+#: templates/dashboard/_instrument_month_navigation.html:22
+#: templates/dashboard/_month_navigation.html:17
+msgid "Next month"
+msgstr "Próximo mês"
+
+#: templates/dashboard/_installment_month_navigation.html:27
+#: templates/dashboard/_installment_month_navigation.html:32
+#: templates/dashboard/_instrument_month_navigation.html:27
+#: templates/dashboard/_instrument_month_navigation.html:32
+msgid "Current month"
+msgstr "Mês atual"
+
 #: templates/dashboard/_installments_help.html:3
 #, python-format
 msgid "Of every %(currency)s you spend in"
@@ -2600,23 +2624,6 @@ msgstr ""
 #: templates/dashboard/_instrument_categories_help.html:6
 msgid "Top categories for the same window as the chart above."
 msgstr "Principais categorias do mesmo período do gráfico acima."
-
-#: templates/dashboard/_instrument_month_navigation.html:9
-#: templates/dashboard/_instrument_month_navigation.html:12
-#: templates/dashboard/_month_navigation.html:5
-msgid "Previous month"
-msgstr "Mês anterior"
-
-#: templates/dashboard/_instrument_month_navigation.html:19
-#: templates/dashboard/_instrument_month_navigation.html:22
-#: templates/dashboard/_month_navigation.html:17
-msgid "Next month"
-msgstr "Próximo mês"
-
-#: templates/dashboard/_instrument_month_navigation.html:27
-#: templates/dashboard/_instrument_month_navigation.html:32
-msgid "Current month"
-msgstr "Mês atual"
 
 #: templates/dashboard/_month_navigation.html:12
 #, python-format
@@ -2702,10 +2709,6 @@ msgstr ""
 "Receitas e despesas descrevem a atividade econômica; o caixa disponível muda "
 "quando movimentações de conta e faturas de cartão são liquidadas. Aportes e "
 "resgates de investimentos permanecem separados."
-
-#: templates/dashboard/_report_month_filter.html:15
-msgid "Window"
-msgstr "Período"
 
 #: templates/dashboard/_report_window_navigation.html:10
 #: templates/investments/_investments_charts.html:26
@@ -2856,7 +2859,7 @@ msgstr ""
 #: templates/dashboard/_reports_charts.html:487
 #: templates/dashboard/index.html:25 templates/transactions/form.html:11
 #: templates/transactions/form.html:16 templates/transactions/list.html:42
-#: templates/transactions/list.html:226
+#: templates/transactions/list.html:228
 msgid "New Transaction"
 msgstr "Nova transação"
 
@@ -3059,71 +3062,71 @@ msgstr "Tipo de operação"
 msgid "All banks"
 msgstr "Todos os bancos"
 
-#: templates/investments/_investment_movements.html:63
+#: templates/investments/_investment_movements.html:65
 msgid "Investment product"
 msgstr "Produto de investimento"
 
-#: templates/investments/_investment_movements.html:67
+#: templates/investments/_investment_movements.html:69
 msgid "All products"
 msgstr "Todos os produtos"
 
-#: templates/investments/_investment_movements.html:79
+#: templates/investments/_investment_movements.html:81
 msgid "All assets"
 msgstr "Todos os ativos"
 
-#: templates/investments/_investment_movements.html:118
+#: templates/investments/_investment_movements.html:120
 msgid "Value:"
 msgstr "Valor:"
 
-#: templates/investments/_investment_movements.html:119
-#: templates/investments/_investment_movements.html:124
+#: templates/investments/_investment_movements.html:121
+#: templates/investments/_investment_movements.html:126
 msgid "Fees:"
 msgstr "Taxas:"
 
-#: templates/investments/_investment_movements.html:121
+#: templates/investments/_investment_movements.html:123
 msgid "units at"
 msgstr "unidades a"
 
-#: templates/investments/_investment_movements.html:132
+#: templates/investments/_investment_movements.html:134
 #, python-format
 msgid "Funded by %(account)s:"
 msgstr "Financiado por %(account)s:"
 
-#: templates/investments/_investment_movements.html:135
+#: templates/investments/_investment_movements.html:137
 #, python-format
 msgid "Funded by %(program)s: %(points)s points"
 msgstr "Financiado por %(program)s: %(points)s pontos"
 
-#: templates/investments/_investment_movements.html:137
+#: templates/investments/_investment_movements.html:139
 #, python-format
 msgid "Paid to %(account)s:"
 msgstr "Pago em %(account)s:"
 
-#: templates/investments/_investment_movements.html:140
+#: templates/investments/_investment_movements.html:142
 msgid "Internal yield"
 msgstr "Rendimento interno"
 
-#: templates/investments/_investment_movements.html:160
+#: templates/investments/_investment_movements.html:162
 msgid "No matching operations."
 msgstr "Nenhuma operação encontrada."
 
-#: templates/investments/_investment_movements.html:165
-#: templates/transactions/list.html:194
+#: templates/investments/_investment_movements.html:167
+#: templates/transactions/list.html:196
 msgid "Pagination"
 msgstr "Paginação"
 
-#: templates/investments/_investment_movements.html:175
-#: templates/transactions/list.html:198
+#: templates/investments/_investment_movements.html:177
+#: templates/transactions/list.html:200
 msgid "Previous"
 msgstr "Anterior"
 
-#: templates/investments/_investment_movements.html:182
+#: templates/investments/_investment_movements.html:184
 #, python-format
 msgid "Page %(number)s of %(total)s"
 msgstr "Página %(number)s de %(total)s"
 
-#: templates/investments/_investment_movements.html:194
-#: templates/transactions/list.html:211
+#: templates/investments/_investment_movements.html:196
+#: templates/transactions/list.html:213
 msgid "Next"
 msgstr "Próxima"
 
@@ -3624,7 +3627,7 @@ msgid "Selected total"
 msgstr "Total selecionado"
 
 #: templates/partials/chart_selection.html:2
-#: templates/transactions/list.html:82 templates/transactions/list.html:91
+#: templates/transactions/list.html:84 templates/transactions/list.html:93
 msgid "Selected"
 msgstr "Selecionado"
 
@@ -4712,7 +4715,7 @@ msgstr ""
 "planilhas acrescenta um apóstrofo antes de textos que parecem fórmulas; não "
 "a use para reimportar sem alterar os dados."
 
-#: templates/transactions/list.html:28 templates/transactions/list.html:68
+#: templates/transactions/list.html:28 templates/transactions/list.html:70
 msgid "Billed month"
 msgstr "Mês da fatura"
 
@@ -4736,93 +4739,93 @@ msgstr "Título, observações, categoria, banco, conta ou cartão"
 msgid "All categories"
 msgstr "Todas as categorias"
 
-#: templates/transactions/list.html:74 templates/transactions/list.html:75
-#: templates/transactions/list.html:77 transactions/forms.py:53
+#: templates/transactions/list.html:76 templates/transactions/list.html:77
+#: templates/transactions/list.html:79 transactions/forms.py:53
 msgid "Transaction type"
 msgstr "Tipo de transação"
 
-#: templates/transactions/list.html:75
+#: templates/transactions/list.html:77
 msgid ""
 "Counts follow your search and dates, before category and recurrence filters."
 msgstr ""
 "As contagens consideram a busca e as datas, antes dos filtros de categoria e "
 "recorrência."
 
-#: templates/transactions/list.html:89
+#: templates/transactions/list.html:91
 msgid "Recurrence"
 msgstr "Recorrência"
 
-#: templates/transactions/list.html:95
+#: templates/transactions/list.html:97
 msgid "More filters"
 msgstr "Mais filtros"
 
-#: templates/transactions/list.html:100
+#: templates/transactions/list.html:102
 msgid "Apply filters"
 msgstr "Aplicar filtros"
 
-#: templates/transactions/list.html:106
+#: templates/transactions/list.html:108
 #, python-format
 msgid "%(total)s transaction"
 msgid_plural "%(total)s transactions"
 msgstr[0] "%(total)s transação"
 msgstr[1] "%(total)s transações"
 
-#: templates/transactions/list.html:112
+#: templates/transactions/list.html:114
 msgid "Sort by"
 msgstr "Ordenar por"
 
-#: templates/transactions/list.html:115
+#: templates/transactions/list.html:117
 msgid "Newest first"
 msgstr "Mais recentes primeiro"
 
-#: templates/transactions/list.html:116
+#: templates/transactions/list.html:118
 msgid "Oldest first"
 msgstr "Mais antigas primeiro"
 
-#: templates/transactions/list.html:117
+#: templates/transactions/list.html:119
 msgid "Last updated"
 msgstr "Última atualização"
 
-#: templates/transactions/list.html:118
+#: templates/transactions/list.html:120
 msgid "Highest amount"
 msgstr "Maior valor"
 
-#: templates/transactions/list.html:119
+#: templates/transactions/list.html:121
 msgid "Lowest amount"
 msgstr "Menor valor"
 
-#: templates/transactions/list.html:122
+#: templates/transactions/list.html:124
 msgid "Sort"
 msgstr "Ordenar"
 
-#: templates/transactions/list.html:144
+#: templates/transactions/list.html:146
 #, python-format
 msgid "Fixed &middot; until %(end_date)s"
 msgstr "Fixa &middot; até %(end_date)s"
 
-#: templates/transactions/list.html:173
+#: templates/transactions/list.html:175
 #, python-format
 msgid "%(installments)sx %(currency)s %(installment_amount)s / month"
 msgstr "%(installments)sx de %(currency)s %(installment_amount)s / mês"
 
-#: templates/transactions/list.html:205
+#: templates/transactions/list.html:207
 #, python-format
 msgid "Page %(page_number)s of %(total_pages)s"
 msgstr "Página %(page_number)s de %(total_pages)s"
 
-#: templates/transactions/list.html:219
+#: templates/transactions/list.html:221
 msgid "No matching transactions"
 msgstr "Nenhuma transação encontrada"
 
-#: templates/transactions/list.html:220
+#: templates/transactions/list.html:222
 msgid "Try different filters or clear them to see all your transactions."
 msgstr "Tente outros filtros ou limpe-os para ver todas as suas transações."
 
-#: templates/transactions/list.html:224
+#: templates/transactions/list.html:226
 msgid "No transactions yet"
 msgstr "Ainda não há transações"
 
-#: templates/transactions/list.html:225
+#: templates/transactions/list.html:227
 msgid "Record your first transaction to start tracking your cash flow."
 msgstr ""
 "Registre sua primeira transação para começar a acompanhar seu fluxo de caixa."
@@ -4982,6 +4985,9 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+#~ msgid "Window"
+#~ msgstr "Período"
 
 #~ msgid "Back to dashboard"
 #~ msgstr "Voltar ao Dashboard"

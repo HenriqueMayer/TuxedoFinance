@@ -153,9 +153,10 @@ closes on Escape and restores focus to its trigger.
 mobile menu, with an explicit native fallback when JavaScript is disabled. It
 posts the current path and `en` or `pt-br` to Django's
 `/i18n/set_language/`; JavaScript submits on change and the `noscript` Apply
-button preserves the server-rendered fallback. The choice is stored in Django's
-language cookie, not local storage or the user model, and URLs have no locale
-prefix.
+button preserves the server-rendered fallback. The choice is stored for one
+year in Django's language cookie, not local storage or the user model, and URLs
+have no locale prefix. The light/dark choice remains in local storage so both
+preferences survive later visits in the same browser.
 
 HTMX 2.0.10 is vendored at `static/js/vendor/htmx.min.js`; the application does
 not contact a JavaScript CDN at runtime. CI verifies the vendored file against
@@ -399,21 +400,19 @@ arrows and period label so the arrow row does not move when it appears. Reset to
 visible keyboard focus target through HTMX replacement. Native links must also
 work without JavaScript.
 
-Income and expenses by account or card is independent of `charts_offset`.
-It starts at the current month and uses previous/next month arrows to navigate
-past and future months. Do not replace this with a month dropdown or a shared
-multi-month window. Keep native links, stable control IDs, scroll and keyboard
-focus across HTMX updates. The Current month action resets only this chart;
-All time retains the existing trailing-twelve-month aggregation. In All time
-mode the arrows resume monthly navigation from the current month. Totals and
-signed composition details must always resolve to the same scope. Invalid or
-obsolete month parameters recover to the current month.
-
-The installment filter uses `_report_month_filter.html`: selecting a native
-option immediately refreshes the chart through HTMX, without an extra Filter
-click. Preserve other filters and keep its native submit button inside `noscript`.
-Test month boundaries, past/future navigation, All time and current-month return,
-invalid query recovery, focus and scroll preservation, and both themes.
+Income and expenses by account or card and How much is on installments each
+have an independent monthly cursor. Both start at the current month and use
+previous/next month arrows to navigate past and future months. Do not replace
+these controls with month dropdowns or a shared multi-month window. Keep native
+links, stable control IDs, scroll and keyboard focus across HTMX updates. Each
+Current month or All time action changes only its own chart; All time retains
+the existing trailing-twelve-month aggregation. In All time mode the arrows
+resume monthly navigation from the current month. Totals and composition details
+must always resolve to the same scope. Invalid or obsolete account/card months
+recover to the current month, while invalid installment months recover to All
+time. Test month boundaries, past/future navigation, All time and current-month
+return, invalid query recovery, focus and scroll preservation, no-JavaScript
+links, and both themes.
 
 ### Question-mark help
 

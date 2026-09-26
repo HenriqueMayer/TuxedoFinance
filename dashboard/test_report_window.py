@@ -28,6 +28,8 @@ class InstrumentMonthTests(DashboardFixture):
                     self.assertEqual(response.context['instrument_previous_month'], '2026-08')
                     self.assertEqual(response.context['instrument_next_month'], '2026-10')
                     self.assertEqual(response.context['installment_month_param'], '2026-08')
+                    self.assertEqual(response.context['installment_previous_month'], '2026-07')
+                    self.assertEqual(response.context['installment_next_month'], '2026-09')
                     for chart in ('balance', 'cashflow'):
                         self.assertContains(response, f'id="report-{chart}-today"')
                     self.assertContains(response, 'Back to today', count=2 if offset else 0)
@@ -89,3 +91,7 @@ class InstrumentMonthTests(DashboardFixture):
             response = self.client.get(reverse('dashboard:reports'), {'instrument_month': month})
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.context[f'instrument_{direction}_month'])
+
+            response = self.client.get(reverse('dashboard:reports'), {'installment_month': month})
+            self.assertEqual(response.status_code, 200)
+            self.assertIsNone(response.context[f'installment_{direction}_month'])
