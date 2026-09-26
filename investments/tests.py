@@ -446,9 +446,11 @@ class MonetaryYieldTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(ending_balance_response.status_code, 200)
         self.assertIn('ending_balance', ending_balance_response.context['form'].errors)
         ending_balance_html = ending_balance_response.content.decode()
+        # The mode selector and value fields are siblings in keyboard order;
+        # the monetary section is the parent that must preserve value errors.
         self.assertRegex(
             ending_balance_html,
-            r'id="monetary-yield-fields"\s+data-has-errors="true"',
+            r'id="money-fields"\s+data-has-errors="true"',
         )
         self.assertRegex(
             ending_balance_html,
