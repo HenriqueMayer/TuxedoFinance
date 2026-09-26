@@ -85,6 +85,19 @@ months), an effective monthly or annual rate and recurring contributions and
 withdrawals. A table allows per-month overrides; an empty cell uses the default,
 and zero explicitly overrides it.
 
+Inputs are grouped in reading and Tab order: starting point, rate and duration,
+then monthly movements. Individual-month overrides remain in a native disclosure,
+opened on saved overrides, validation errors or a native Update month rows action.
+With JavaScript, changing duration updates rows immediately. Temporarily excluded
+rows retain edits but are hidden and disabled; extending the duration restores them.
+The server still validates and calculates only the submitted duration.
+
+Results lead with totals; the monthly breakdown is an optional disclosure whose
+open state survives live recalculation. Saving is offered after the result in a
+separate disclosure, opened for an existing draft or naming errors. Calculation
+never requires a draft name. All three stages, overrides, calculation and saving
+remain usable without JavaScript.
+
 For each month, yield is calculated on its opening balance and rounded to cents.
 Contributions and withdrawals occur at month end, so a contribution earns from
 the following month. Annual rates use Decimal compound equivalence,

@@ -15,6 +15,41 @@ async function signup(page, testInfo) {
 }
 
 for (const theme of ['light', 'dark']) {
+    test(`yield month adjustments follow duration and retain edits (${theme})`, async ({ page }, info) => {
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        await signup(page, info);
+        await page.goto('/sandbox/simulation/');
+        await expect(page.locator('#id_draft_name')).toBeHidden();
+        await page.locator('#id_initial_balance').fill('100');
+        await page.locator('#id_rate').fill('1');
+        await page.locator('#id_months').fill('2');
+        await page.locator('#yield-month-overrides > summary').press('Enter');
+        await expect(page.getByRole('button', { name: 'Update month rows' })).toBeHidden();
+        await expect(page.locator('[data-yield-rows] > tr:visible')).toHaveCount(2);
+        await page.locator('[name="contribution_1"]').fill('200');
+        await expect(page.locator('#simulation-result')).toContainText('302,01');
+        await page.locator('#id_months').fill('1');
+        await expect(page.locator('[name="contribution_1"]')).toBeHidden();
+        await expect(page.locator('[name="contribution_1"]')).toBeDisabled();
+        await expect(page.locator('#simulation-result')).toContainText('101,00');
+        await page.locator('#id_months').fill('2');
+        await expect(page.locator('[name="contribution_1"]')).toHaveValue('200');
+        await expect(page.locator('#simulation-result')).toContainText('302,01');
+        await expect(page.locator('#yield-monthly-results table')).toBeHidden();
+        await page.locator('#yield-monthly-results > summary').press('Space');
+        await page.locator('#id_rate').fill('0');
+        await expect(page.locator('#simulation-result')).toContainText('300,00');
+        await expect(page.locator('#yield-monthly-results table')).toBeVisible();
+        await page.locator('[name="contribution_1"]').fill('invalid');
+        await expect(page.locator('#simulation-result [role="alert"]')).toContainText('Month 2');
+        await expect(page.locator('[name="contribution_1"]')).toBeFocused();
+        await page.locator('[name="contribution_1"]').fill('200');
+        await expect(page.locator('#simulation-result')).toContainText('300,00');
+        await page.setViewportSize({ width: 390, height: 740 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.screenshot({ path: info.outputPath(`simulation-mobile-${theme}.png`), fullPage: true });
+    });
     test(`yield simulation recalculates without moving keyboard focus in ${theme}`, async ({ page }, testInfo) => {
         await signup(page, testInfo);
         await page.goto('/sandbox/simulation/');
@@ -40,6 +75,7 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('#id_withdrawal')).toBeFocused();
         await page.locator('#id_withdrawal').fill('0');
         await expect(page.locator('#simulation-result')).toContainText('303,01');
+        await page.getByText('Save this scenario', { exact: true }).press('Enter');
         await page.locator('#id_draft_name').fill(`Yield ${theme}`);
         await page.getByRole('button', { name: 'Save draft', exact: true }).click();
         await expect(page).toHaveURL(/\/sandbox\/drafts\/\d+\/$/);
@@ -89,6 +125,30 @@ test('commitments use explicit review, preserve edits and save without losing lo
 
 test.describe('planning without JavaScript', () => {
     test.use({ javaScriptEnabled: false });
+    test('yield rows, invalid values and optional saving work through native forms', async ({ page }, info) => {
+        await signup(page, info);
+        await page.goto('/sandbox/simulation/');
+        await page.locator('#id_initial_balance').fill('100');
+        await page.locator('#id_rate').fill('0');
+        await page.locator('#id_months').fill('2');
+        await page.locator('#yield-month-overrides > summary').press('Enter');
+        await page.getByRole('button', { name: 'Update month rows' }).press('Enter');
+        await expect(page.locator('[data-yield-rows] > tr:visible')).toHaveCount(2);
+        await page.locator('[name="contribution_1"]').fill('invalid');
+        await page.getByRole('button', { name: 'Calculate', exact: true }).press('Enter');
+        await expect(page.locator('[name="contribution_1"]')).toBeVisible();
+        await expect(page.locator('[name="contribution_1"]')).toHaveValue('invalid');
+        await page.locator('[name="contribution_1"]').fill('50');
+        await page.getByRole('button', { name: 'Calculate', exact: true }).press('Enter');
+        await expect(page.locator('#simulation-result')).toContainText('150,00');
+        await page.getByText('Save this scenario', { exact: true }).press('Enter');
+        await page.getByRole('button', { name: 'Save draft', exact: true }).press('Enter');
+        await expect(page.locator('#id_draft_name')).toBeVisible();
+        await page.locator('#id_draft_name').fill('Native yield scenario');
+        await page.getByRole('button', { name: 'Save draft', exact: true }).press('Enter');
+        await expect(page).toHaveURL(/\/sandbox\/drafts\/\d+\/$/);
+        await expect(page.locator('[name="contribution_1"]')).toHaveValue('50.00');
+    });
     test('incomplete drafts and repeated rows support full native submission', async ({ page }, testInfo) => {
         await signup(page, testInfo);
         await page.goto('/sandbox/');

@@ -7,25 +7,37 @@
     <header class="flex items-center gap-3"><h1 class="page-title">{% translate "Yield simulation" %}</h1>{% include 'partials/help_popover.html' with help_id='yield-simulation-help' help_label=_('Yield simulation') help_template='sandbox/_yield_help.html' %}</header>
     <form method="post" action="{{ workspace_url }}" hx-boost="false" novalidate data-yield-simulation class="space-y-6">
         {% csrf_token %}
-        {% include 'sandbox/_draft_save.html' %}
         <div class="surface-panel space-y-6">
-        <div class="grid gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-4">
-            {% include 'partials/form_field.html' with field=form.initial_balance %}
-            {% include 'partials/form_field.html' with field=form.rate field_help_template='sandbox/_yield_help.html' %}
-            {% include 'partials/form_field.html' with field=form.rate_period %}
-            {% include 'partials/form_field.html' with field=form.months %}
-            {% include 'partials/form_field.html' with field=form.currency %}
-            {% include 'partials/form_field.html' with field=form.start_month %}
-            {% include 'partials/form_field.html' with field=form.contribution %}
-            {% include 'partials/form_field.html' with field=form.withdrawal %}
-        </div>
-        <details class="border-y border-forest/10 py-4 dark:border-cream/10" {% if form.non_field_errors %}open{% endif %}>
+        <fieldset class="space-y-4">
+            <legend class="section-title">{% translate "1. Starting point" %}</legend>
+            <div class="grid gap-x-6 gap-y-5 sm:grid-cols-3">
+                {% include 'partials/form_field.html' with field=form.initial_balance %}
+                {% include 'partials/form_field.html' with field=form.currency %}
+                {% include 'partials/form_field.html' with field=form.start_month %}
+            </div>
+        </fieldset>
+        <fieldset class="space-y-4 border-t border-forest/10 pt-5 dark:border-cream/10">
+            <legend class="section-title">{% translate "2. Rate and duration" %}</legend>
+            <div class="grid gap-x-6 gap-y-5 sm:grid-cols-3">
+                {% include 'partials/form_field.html' with field=form.rate field_help_template='sandbox/_yield_help.html' %}
+                {% include 'partials/form_field.html' with field=form.rate_period %}
+                {% include 'partials/form_field.html' with field=form.months %}
+            </div>
+        </fieldset>
+        <fieldset class="space-y-4 border-t border-forest/10 pt-5 dark:border-cream/10">
+            <legend class="section-title">{% translate "3. Monthly movements" %}</legend>
+            <div class="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                {% include 'partials/form_field.html' with field=form.contribution %}
+                {% include 'partials/form_field.html' with field=form.withdrawal %}
+            </div>
+        </fieldset>
+        <details id="yield-month-overrides" class="border-y border-forest/10 py-4 dark:border-cream/10" {% if overrides_open or form.non_field_errors %}open{% endif %}>
             <summary class="cursor-pointer font-medium">{% translate "Change individual months" %}</summary>
-            <div class="mt-3 flex items-center gap-3"><button type="submit" name="action" value="rows" class="quiet-action">{% translate "Update month rows" %}</button>
+            <div class="mt-3 flex items-center gap-3"><span data-update-yield-rows><button type="submit" name="action" value="rows" class="quiet-action">{% translate "Update month rows" %}</button></span>
                 {% translate "Leave a cell empty to use the monthly default above. Zero explicitly replaces that default." as individual_months_help %}
                 {% include 'partials/help_popover.html' with help_id='individual-months-help' help_label=_('Change individual months') help_text=individual_months_help %}
             </div>
-            <div class="mt-3 overflow-x-auto"><table class="data-table planning-sheet"><thead><tr><th>{% translate "Month" %}</th><th class="number">{% translate "Contribution override" %}</th><th class="number">{% translate "Withdrawal override" %}</th></tr></thead><tbody data-yield-rows>
+            <div class="mt-3 max-h-80 overflow-auto"><table class="data-table planning-sheet"><thead><tr><th>{% translate "Month" %}</th><th class="number">{% translate "Contribution override" %}</th><th class="number">{% translate "Withdrawal override" %}</th></tr></thead><tbody data-yield-rows>
                 {% for row in override_rows %}{% include 'sandbox/_override_row.html' with row=row index=row.index number=row.number %}{% endfor %}
             </tbody></table></div>
             <template id="yield-override-template">{% include 'sandbox/_override_row.html' with index='__index__' number='__number__' %}</template>
@@ -34,6 +46,10 @@
         <span hidden data-live-updating>{% translate "Updating simulation…" %}</span><span hidden data-live-updated>{% translate "Simulation updated." %}</span><span hidden data-live-failed>{% translate "Automatic calculation unavailable. Use Calculate." %}</span>
         </div>
         {% include 'sandbox/_simulation_result.html' %}
+        <details class="surface-panel" {% if draft or name_form.errors %}open{% endif %}>
+            <summary class="cursor-pointer font-medium">{% translate "Save this scenario" %}</summary>
+            <div class="mt-4">{% include 'sandbox/_draft_save.html' %}</div>
+        </details>
     </form>
 </div>
 {% endblock %}

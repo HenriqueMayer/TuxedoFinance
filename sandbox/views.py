@@ -284,6 +284,9 @@ def _workspace(request, kind='budget', draft=None):
         context['override_rows'] = [{'index': index, 'number': index + 1,
             'contribution': (data or {}).get(f'contribution_{index}', ''),
             'withdrawal': (data or {}).get(f'withdrawal_{index}', '')} for index in range(count)]
+        context['overrides_open'] = action == 'rows' or any(
+            row['contribution'] or row['withdrawal'] for row in context['override_rows']
+        )
         context['simulation_currency'] = (data or {}).get('currency', 'BRL')
         template = 'sandbox/_simulation_result.html' if posted and data.get('response_mode') == 'result' else 'sandbox/simulation.html'
     return render(request, template, context)

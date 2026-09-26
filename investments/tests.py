@@ -446,9 +446,11 @@ class MonetaryYieldTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(ending_balance_response.status_code, 200)
         self.assertIn('ending_balance', ending_balance_response.context['form'].errors)
         ending_balance_html = ending_balance_response.content.decode()
+        # The mode selector and value fields are siblings in keyboard order;
+        # the monetary section is the parent that must preserve value errors.
         self.assertRegex(
             ending_balance_html,
-            r'id="monetary-yield-fields"\s+data-has-errors="true"',
+            r'id="money-fields"\s+data-has-errors="true"',
         )
         self.assertRegex(
             ending_balance_html,
@@ -523,6 +525,29 @@ class MonetaryYieldTests(InvestmentFixtureMixin, TestCase):
 class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
     def setUp(self):
         self.client.force_login(self.user)
+
+    def test_funding_choice_preserves_edits_and_legacy_native_posts(self):
+        self.assertEqual(InvestmentForm(user=self.user).initial['funding_source'], '')
+        operation = self.operation(kind=Investment.Kind.DEPOSIT,
+            source_account=self.account, cash_amount=Decimal('100'))
+        operation.save()
+        self.assertEqual(InvestmentForm(instance=operation, user=self.user).initial['funding_source'], 'ACCOUNT')
+        data = {'product': self.product.pk, 'asset': self.asset.pk, 'kind': 'DEPOSIT',
+            'quantity': '1', 'unit_price': '100', 'cash_amount': '100', 'fees': '0',
+            'source_account': self.account.pk, 'date': '2026-09-25'}
+        form = InvestmentForm(data, user=self.user)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['funding_source'], 'ACCOUNT')
+        mismatched = InvestmentForm({**data, 'funding_source': 'POINTS'}, user=self.user)
+        self.assertFalse(mismatched.is_valid())
+        self.assertIn('source_program', mismatched.errors)
+        points = {**data, 'source_account': '', 'source_program': self.program.pk, 'source_points': '10'}
+        form = InvestmentForm(points, user=self.user)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['funding_source'], 'POINTS')
+        ambiguous = InvestmentForm({**points, 'source_account': self.account.pk}, user=self.user)
+        self.assertFalse(ambiguous.is_valid())
+        self.assertIn('source_account', ambiguous.errors)
 
     def test_form_is_user_scoped_and_has_no_title(self):
         other = User.objects.create_user('form-other')
@@ -743,6 +768,23 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(htmx.status_code, 200)
         self.assertContains(htmx, 'id="investments-charts"')
         self.assertNotContains(htmx, '<html')
+
+    def test_operation_filters_keep_large_identifiers_unlocalized(self):
+        bank = Bank.objects.create(pk=12345, user=self.user, name='Large bank')
+        product = InvestmentProduct.objects.create(pk=23456, user=self.user, bank=bank, name='Large product')
+        asset = Asset.objects.create(pk=34567, user=self.user, name='Large asset', code='LARGE',
+            asset_class=Asset.AssetClass.FIXED_INCOME, currency=BASE)
+        operation = self.operation(product=product, asset=asset)
+        operation.save()
+        for language in ('en', 'pt-br'):
+            with self.subTest(language=language):
+                self.client.cookies['django_language'] = language
+                response = self.client.get(reverse('investments:operations'), {
+                    'bank': str(bank.pk), 'product': str(product.pk), 'asset': str(asset.pk),
+                })
+                self.assertContains(response, '<option value="12345" selected>Large bank</option>')
+                self.assertContains(response, '<option value="23456" selected>Large bank / Large product</option>')
+                self.assertContains(response, '<option value="34567" selected>LARGE</option>')
 
     def test_charts_have_mouse_and_keyboard_tooltips(self):
         operation = self.operation(

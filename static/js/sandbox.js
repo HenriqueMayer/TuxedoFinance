@@ -78,9 +78,35 @@
     var timer;
     var controller;
     var generation = 0;
+    function syncYieldRows(form) {
+        var months = Number(form.elements.months.value);
+        if (!Number.isInteger(months) || months < 1 || months > 120) return;
+        var container = form.querySelector('[data-yield-rows]');
+        var template = form.querySelector('#yield-override-template');
+        while (container.children.length < months) {
+            var index = container.children.length;
+            container.insertAdjacentHTML('beforeend', template.innerHTML
+                .replaceAll('__index__', String(index)).replaceAll('__number__', String(index + 1)));
+        }
+        // Temporarily shortening the duration must not erase the user's edits.
+        // Inactive rows stay out of submission and keyboard navigation.
+        Array.from(container.children).forEach(function (row, index) {
+            row.hidden = index >= months;
+            row.querySelectorAll('input').forEach(input => { input.disabled = row.hidden; });
+        });
+        form.querySelector('[data-update-yield-rows]').hidden = true;
+    }
+    function initYieldForms() {
+        document.querySelectorAll('[data-yield-simulation]').forEach(syncYieldRows);
+    }
+    document.addEventListener('DOMContentLoaded', initYieldForms);
+    document.addEventListener('htmx:load', initYieldForms);
+    document.addEventListener('tuxedo:restore', initYieldForms);
+    initYieldForms();
     document.addEventListener('input', function (event) {
         var form = event.target.closest('[data-yield-simulation]');
         if (!form || event.target.name === 'draft_name') return;
+        if (event.target.name === 'months') syncYieldRows(form);
         clearTimeout(timer);
         if (controller) controller.abort();
         var current = ++generation;
@@ -98,6 +124,9 @@
                     var documentResult = new DOMParser().parseFromString(html, 'text/html');
                     var result = documentResult.getElementById('simulation-result');
                     if (!result) throw new Error('Missing result');
+                    var breakdown = form.querySelector('#yield-monthly-results');
+                    var nextBreakdown = result.querySelector('#yield-monthly-results');
+                    if (breakdown && nextBreakdown) nextBreakdown.open = breakdown.open;
                     window.TuxedoHelp?.close();
                     form.querySelector('#simulation-result').replaceWith(result);
                     window.TuxedoHelp?.init();

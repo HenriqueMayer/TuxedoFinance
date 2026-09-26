@@ -61,7 +61,7 @@ for (const theme of ['light', 'dark']) {
         await expect(page).toHaveURL(new RegExp(`installment_month=${previous}`));
         await expect(page.locator('#installment-month')).toBeFocused();
         await expect(page.locator('#installments [data-donut-total]')).toContainText(/10[,.]00/);
-        expect(Math.abs(await page.evaluate(() => window.scrollY) - installmentTop)).toBeLessThan(4);
+        await expect.poll(async () => Math.abs(await page.evaluate(() => window.scrollY) - installmentTop)).toBeLessThan(4);
 
         const instrument = page.locator('#instrument-activity');
         const bar = instrument.locator('[data-chart-layer="instrument-interactions"] [data-point]').first();
@@ -77,7 +77,9 @@ for (const theme of ['light', 'dark']) {
             await arrow.press('Enter');
             await expect(page).toHaveURL(new RegExp(`instrument_month=${month}`));
             await expect(arrow).toBeFocused();
-            expect(Math.abs(await page.evaluate(() => window.scrollY) - top)).toBeLessThan(4);
+            // Focus returns during the swap; viewport restoration finishes in
+            // animation frames after swap and settle. Assert the settled view.
+            await expect.poll(async () => Math.abs(await page.evaluate(() => window.scrollY) - top)).toBeLessThan(4);
             await expect(page).toHaveURL(/charts_offset=1/);
             await expect(page.locator('#installment-month')).toHaveValue(previous);
             await bar.press('Enter');

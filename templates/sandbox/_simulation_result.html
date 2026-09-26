@@ -12,9 +12,12 @@
             <div><dt class="metric-label">{% translate "Initial balance" %} + {% translate "Contributions" %}</dt><dd class="mt-2 text-2xl tabular-nums">{{ simulation_currency }} {{ result.capital|floatformat:2 }}</dd></div>
             <div><dt class="metric-label">{% translate "Withdrawals" %}</dt><dd class="mt-2 text-2xl tabular-nums">{{ simulation_currency }} {{ result.withdrawals|floatformat:2 }}</dd></div>
         </dl>
-        <div class="overflow-x-auto"><table class="data-table planning-sheet"><caption class="sr-only">{% translate "Monthly simulated balances and cash flows" %}</caption><thead><tr><th>{% translate "Month" %}</th><th class="number">{% translate "Opening" %}</th><th class="number">{% translate "Yield" %}</th><th class="number">{% translate "Contribution" %}</th><th class="number">{% translate "Withdrawal" %}</th><th class="number">{% translate "Closing" %}</th></tr></thead><tbody>
+        <details id="yield-monthly-results">
+        <summary class="cursor-pointer font-medium">{% translate "Monthly breakdown" %}</summary>
+        <div class="mt-4 max-h-96 overflow-auto"><table class="data-table planning-sheet"><caption class="sr-only">{% translate "Monthly simulated balances and cash flows" %}</caption><thead><tr><th>{% translate "Month" %}</th><th class="number">{% translate "Opening" %}</th><th class="number">{% translate "Yield" %}</th><th class="number">{% translate "Contribution" %}</th><th class="number">{% translate "Withdrawal" %}</th><th class="number">{% translate "Closing" %}</th></tr></thead><tbody>
         {% for row in result.rows %}<tr><th scope="row">{{ row.month|date:'M Y' }}</th><td class="number">{{ row.opening|floatformat:2 }}</td><td class="number">{{ row.yield|floatformat:2 }}</td><td class="number">{{ row.contribution|floatformat:2 }}</td><td class="number">{{ row.withdrawal|floatformat:2 }}</td><td class="number font-medium">{{ row.closing|floatformat:2 }}</td></tr>{% endfor %}
         </tbody></table></div>
+        </details>
     {% else %}
         <p class="subtle-copy mt-4">{% translate "Complete the required inputs to calculate. Incomplete drafts have no projected result." %}</p>
         {% if form.is_bound %}{% for field in form %}{% for error in field.errors %}<p class="text-expense dark:text-expense-light" role="alert">{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}{% endif %}

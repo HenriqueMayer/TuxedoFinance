@@ -114,6 +114,21 @@ section anchor, so the user keeps the portfolio context when HTMX is unavailable
 
 Record selectors use the shared keyboard-search component. Values and funding wait for the asset and operation type; monetary yields require an explicit input mode. New asset valuation choices begin empty, and opening-position products wait for an opening balance or quantity. Existing operations and invalid POSTs preserve their values and visible errors.
 
+Deposits first ask whether funding comes from an account or a loyalty program.
+Only that record selector is revealed; points wait for a selected program and
+unit-asset cash amounts wait for an account. Withdrawals put the destination
+before its cash amount. Switching source clears incompatible records and amounts.
+The presentation choice is inferred from existing operations and native/legacy
+submissions; server validation still requires exactly one valid funding source.
+Every error-bearing branch remains available after an invalid POST.
+Monetary yield input modes precede their value fields, so Tab proceeds from the
+chosen mode to the revealed amount or ending balance and its contextual help.
+
+Optional fees live in Advanced options, which opens for existing fees or errors.
+For opening unit positions, the unit price waits for a positive quantity and
+returns to zero when the quantity is deliberately cleared. Initialization and
+browser-history restoration preserve bound values and errors.
+
 Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
 
 ## Purpose and cash planning

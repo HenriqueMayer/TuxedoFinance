@@ -256,8 +256,10 @@ All Django `ModelChoiceField` and `ModelMultipleChoiceField` controls rendered b
 `partials/form_field.html` receive `data-search-select` through the `form_control`
 template tag. This covers categories, parent categories, banks, accounts, cards,
 assets, investment products, programs and invoices. Handwritten record filters
-must also carry that attribute and a stable unique ID. Short enumeration choices
-remain native selects. Disabled fields remain native and disabled.
+must also carry that attribute and a stable unique ID. Serialize record keys in
+option values without localization (for example, `pk|stringformat:'s'`); thousands
+separators belong in displayed amounts, never in submitted identifiers. Short
+enumeration choices remain native selects. Disabled fields remain native and disabled.
 
 `static/js/forms.js` progressively enhances these controls, using the original
 scoped options and preserving their names, values, metadata and `change` events.
@@ -606,6 +608,10 @@ workspace before navigation, including query parameters, unsent named fields,
 repeated simulation rows, disclosures, focus and scroll. History traversal
 restores into freshly rendered forms without replaying submissions or emitting
 input/change events. Do not render a separate Resume previous screen control.
+Do not add redundant page-level Back to links: shared navigation and section
+tabs identify destinations, and browser Back/Forward handles history. Keep form
+Cancel actions and date-reset controls such as Back to today; these serve their
+own explicit actions rather than duplicating page navigation.
 When HTMX replaces the page body, update the active workspace at `afterSwap`:
 the next link can be activated before `afterSettle`. Apply the saved fields on
 `historyRestore` even when the browser's URL already matches the tracked URL;

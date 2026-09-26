@@ -75,7 +75,9 @@ queries exclude them until their effective date. See
 ## Listing and reporting semantics
 
 The list opens on the full history. Search covers title, notes, category, bank,
-account and card labels. Search and billed month remain visible; exact event
+account and card labels. Free-text search and the exact category selector sit
+next to each other on wider screens and consecutively on mobile, in the same
+reading and keyboard order. Billed month follows them; exact event
 date is under **More filters**, automatically expanded when a date is applied.
 Ordering lives beside the results. All controls work through ordinary GET
 requests, including without JavaScript. Enhanced filtering, card/recurrence

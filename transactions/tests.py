@@ -532,6 +532,16 @@ class TransactionNavigationTests(TransactionFixture):
         self.assertNotContains(response, 'Private row')
         self.assertNotContains(response, '>Private</option>')
 
+    def test_category_filter_keeps_large_identifiers_unlocalized(self):
+        category = Category.objects.create(pk=12345, user=self.user, name='Large identifier')
+        transaction = self.make_transaction(category=category)
+        for language in ('en', 'pt-br'):
+            with self.subTest(language=language):
+                self.client.cookies['django_language'] = language
+                response = self.listing(category=str(category.pk))
+                self.assertEqual(list(response.context['transactions']), [transaction])
+                self.assertContains(response, '<option value="12345" selected>Large identifier</option>')
+
     def test_month_fold_drives_counts_categories_and_rows_once(self):
         from unittest.mock import patch
         original = Transaction.amount_for_month

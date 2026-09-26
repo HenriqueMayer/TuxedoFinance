@@ -53,8 +53,9 @@
             <select data-search-select id="investment-bank" name="bank"
                     class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All banks' %}</option>
+                {% comment %}Record identifiers are strings, independent of currency number formatting.{% endcomment %}
                 {% for bank in bank_choices %}
-                    <option value="{{ bank.pk }}" {% if selected_bank == bank.pk|stringformat:'s' %}selected{% endif %}>{{ bank.name }}</option>
+                    <option value="{{ bank.pk|stringformat:'s' }}" {% if selected_bank == bank.pk|stringformat:'s' %}selected{% endif %}>{{ bank.name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -66,7 +67,7 @@
                     class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All products' %}</option>
                 {% for product in product_choices %}
-                    <option value="{{ product.pk }}" {% if selected_product == product.pk|stringformat:'s' %}selected{% endif %}>{{ product.bank.name }} / {{ product.name }}</option>
+                    <option value="{{ product.pk|stringformat:'s' }}" {% if selected_product == product.pk|stringformat:'s' %}selected{% endif %}>{{ product.bank.name }} / {{ product.name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -78,7 +79,7 @@
                     class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All assets' %}</option>
                 {% for asset in asset_choices %}
-                    <option value="{{ asset.pk }}" {% if selected_asset == asset.pk|stringformat:'s' %}selected{% endif %}>{{ asset.code }}</option>
+                    <option value="{{ asset.pk|stringformat:'s' }}" {% if selected_asset == asset.pk|stringformat:'s' %}selected{% endif %}>{{ asset.code }}</option>
                 {% endfor %}
             </select>
         </div>

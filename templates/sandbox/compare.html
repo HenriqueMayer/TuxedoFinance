@@ -5,7 +5,6 @@
     {% include 'sandbox/_navigation.html' %}
     <header class="workspace-header">
         <div class="label-with-help"><h1 class="page-title">{% translate "Compare drafts" %}</h1>{% translate "Each result uses its saved inputs and commitment snapshot. Different currencies and scenario kinds are shown separately, never added together." as comparison_help %}{% include 'partials/help_popover.html' with help_id='compare-drafts-help' help_label=_('Compare drafts') help_text=comparison_help %}</div>
-        <a class="quiet-action" href="{% url 'sandbox:drafts' %}">{% translate "Back to saved drafts" %}</a>
     </header>
     <div class="surface-panel overflow-x-auto">
         {% if scenarios %}

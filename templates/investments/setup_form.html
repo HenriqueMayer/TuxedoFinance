@@ -6,8 +6,7 @@
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <div>
-        <a href="{% url 'investments:settings' %}" class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">&larr; {% translate 'Back to Settings' %}</a>
-        <h1 class="mt-2 font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{{ setup_title }}</h1>
+        <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{{ setup_title }}</h1>
         <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
             {{ setup_description }}
         </p>
@@ -32,7 +31,9 @@
                  class="space-y-5"
                  data-has-errors="{% if form.opening_quantity.errors or form.opening_unit_price.errors %}true{% else %}false{% endif %}">
                 {% include 'partials/form_field.html' with field=form.opening_quantity %}
-                {% include 'partials/form_field.html' with field=form.opening_unit_price %}
+                <div id="opening-unit-price-fields" data-has-errors="{{ form.opening_unit_price.errors|yesno:'true,false' }}">
+                    {% include 'partials/form_field.html' with field=form.opening_unit_price %}
+                </div>
             </div>
             <div id="opening-product-fields" data-has-errors="{{ form.opening_product.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_product %}</div>
         {% else %}
@@ -78,8 +79,13 @@
         }
 
         function updateOpeningProduct(clearStale) {
+            const hasUnits = valuationMode.value === 'UNITS' && Number(openingQuantity.value) > 0;
+            // A price is meaningful only for an existing quantity. Retain a
+            // bound error until the user deliberately changes the quantity.
+            setHidden(document.getElementById('opening-unit-price-fields'), !hasUnits, !clearStale);
+            if (!hasUnits && clearStale) openingUnitPrice.value = '0';
             const hasOpening = valuationMode.value === 'MONETARY' ? Number(openingBalance.value) > 0
-                : valuationMode.value === 'UNITS' && Number(openingQuantity.value) > 0;
+                : hasUnits;
             if (!hasOpening && clearStale) document.getElementById('{{ form.opening_product.id_for_label }}').value = '';
             setHidden(document.getElementById('opening-product-fields'), !hasOpening, !clearStale);
         }

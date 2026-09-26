@@ -11,11 +11,8 @@ of reloading the full document.
 
 The page-level structure here is:
 
-  - the `<h1>Reports</h1>` title and "Back to dashboard" button, which
-    are *outside* the swap region on purpose: clicking the back button
-    is a normal navigation away from the page, and the h1 doesn't change
-    with any of the report filters, so it would be wasted pixels to redraw
-    on every chart click.
+  - the `<h1>Reports</h1>` title, outside the swap region because it
+    does not change with report filters. Navigation uses the shared menus.
   - the partial, which is everything that depends on the URL params
     (the summary values and charts).
 
@@ -42,10 +39,6 @@ the chart-by-chart conventions this page inherits.
             <h1 class="page-title">{{ reports_label }}</h1>
             {% include 'partials/help_popover.html' with help_id='reports-overview-help' help_label=reports_label help_text=reports_help %}
         </div>
-        <a href="{% url 'dashboard:index' %}"
-           class="quiet-action">
-             {% translate "Back to dashboard" %}
-        </a>
     </div>
 
     {% include 'dashboard/_reports_charts.html' %}
