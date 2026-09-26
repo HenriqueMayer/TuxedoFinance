@@ -65,8 +65,12 @@ for (const theme of ['light', 'dark']) {
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({ path: info.outputPath('setup-configured-mobile.png'), fullPage: true });
         await page.getByRole('navigation', { name: 'Investment sections' }).getByRole('link', { name: 'Portfolio', exact: true }).press('Enter');
+        // Settings and portfolio share this action; wait for the destination
+        // before activating it so the first response cannot replace the form.
+        await expect(page).toHaveURL(/\/investments\/$/);
         await expect(primary).toHaveText('New operation');
         await primary.press('Enter');
+        await expect(page).toHaveURL(/\/investments\/create\/$/);
         await expect(page.locator('#id_product option').last()).toContainText('Brokerage');
     });
 

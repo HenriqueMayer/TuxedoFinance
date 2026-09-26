@@ -79,8 +79,12 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     const expenses = typeCards(page).getByRole('link', { name: /^Expenses/ });
     await expenses.focus();
     await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/type=EXPENSE/);
     await expect(expenses).toHaveAttribute('aria-current', 'true');
-    await page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ }).click();
+    const fixed = page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ });
+    await fixed.click();
+    await expect(page).toHaveURL(/recurrence=fixed/);
+    await expect(fixed).toHaveAttribute('aria-current', 'true');
     await expect(page.locator('#transaction-results-status')).toHaveText('1 transaction');
     await selectChoice(page.locator('#filter-category'), category);
     await page.getByRole('button', { name: 'Apply filters' }).click();
