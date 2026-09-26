@@ -65,6 +65,11 @@ test('landing keeps concise translated copy and local frontend dependencies', as
     await expect(page.getByText('Aplicação local para registrar receitas e despesas', { exact: false })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Funcionalidades' })).toBeVisible();
     await expect(page.getByText('A local application', { exact: false })).toHaveCount(0);
+    const languageCookie = (await page.context().cookies()).find(cookie => cookie.name === 'django_language');
+    expect(languageCookie.expires).toBeGreaterThan(Date.now() / 1000 + 300 * 24 * 60 * 60);
+    await page.locator('main').getByRole('link', { name: 'Entrar', exact: true }).click();
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'pt-br');
 });
 
 test('category CSV is downloaded without replacing the page', async ({ page }, testInfo) => {

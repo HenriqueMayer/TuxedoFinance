@@ -269,7 +269,7 @@ conventions this partial inherits.
                     {% include 'partials/help_popover.html' with help_id='report-installments-help' help_label=chart_label help_template='dashboard/_installments_help.html' %}
                 </div>
             </div>
-            {% include 'dashboard/_report_month_filter.html' with filter_id='installment-month' filter_name='installment_month' selected_month=installment_month_param choices=month_choices %}
+            {% include 'dashboard/_installment_month_navigation.html' %}
         </div>
 
         {% if recurrence_chart %}

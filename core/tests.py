@@ -135,7 +135,10 @@ class LanguageSelectionTests(TestCase):
         )
 
         self.assertRedirects(response, reverse('pages:landing'))
-        self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, 'pt-br')
+        language_cookie = response.cookies[settings.LANGUAGE_COOKIE_NAME]
+        self.assertEqual(language_cookie.value, 'pt-br')
+        self.assertEqual(language_cookie['max-age'], settings.LANGUAGE_COOKIE_AGE)
+        self.assertEqual(language_cookie['samesite'], settings.LANGUAGE_COOKIE_SAMESITE)
 
         translated = self.client.get(reverse('pages:landing'))
         self.assertContains(translated, '<html lang="pt-br"', html=False)

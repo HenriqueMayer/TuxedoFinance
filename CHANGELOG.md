@@ -9,6 +9,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Use the same previous/next, Current month and All time controls for installment and account/card report charts.
 - Place transaction search and the exact category filter together, with matching mobile and keyboard order.
 - Remove redundant page-level return links in favor of shared navigation and browser history.
 - Reveal investment funding records only after choosing account or points, keep optional fees under Advanced options, and ask for opening unit prices only after a quantity.
@@ -16,6 +17,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Keep the selected interface language for one year, alongside the already persistent light/dark theme choice.
 - Keep category, bank, investment product and asset filter identifiers usable above 999 in both interface languages.
 
 ## [0.6.1] - 2026-09-25

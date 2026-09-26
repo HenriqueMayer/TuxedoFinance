@@ -54,15 +54,6 @@ def _is_projectable(year, month):
             and (year, month) <= (max_year, max_month))
 
 
-def _month_choices():
-    today = timezone.localdate()
-    choices = [('ALL', _('All time'))]
-    for step in range(ALL_TIME_MONTHS):
-        year, month = add_months(today.year, today.month, -step)
-        choices.append((f'{year:04d}-{month:02d}', date_format(date(year, month, 1), 'F Y')))
-    return choices
-
-
 def _parse_month_or_all(request, param_name, in_range):
     raw = request.GET.get(param_name, '').strip().upper()
     if not raw or raw == 'ALL':
@@ -194,7 +185,6 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
                         },
                     ],
                 ),
-                'month_choices': _month_choices(),
             }
         )
 
@@ -230,6 +220,19 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
 
         installment_value, year, month = self.get_installment_month()
         context['installment_month_param'] = installment_value
+        context['installment_current_month'] = current_param
+        navigation_year, navigation_month = (
+            (year, month) if year is not None else (today.year, today.month)
+        )
+        for direction, step in [('previous', -1), ('next', 1)]:
+            adjacent_year, adjacent_month = add_months(
+                navigation_year, navigation_month, step
+            )
+            context[f'installment_{direction}_month'] = (
+                f'{adjacent_year:04d}-{adjacent_month:02d}'
+                if _is_representable(adjacent_year, adjacent_month)
+                else None
+            )
         if installment_value == 'ALL':
             recurrence = get_expenses_by_recurrence(
                 self.request.user, months=ALL_TIME_MONTHS
