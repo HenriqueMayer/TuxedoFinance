@@ -68,9 +68,7 @@ test('browser history restores repeated simulation rows and warns on leaving a r
     await page.goto('/sandbox/simulation/');
     await page.locator('#id_months').fill('24');
     await page.locator('summary').filter({hasText: 'Change individual months'}).click();
-    await page.getByRole('button', {name: 'Update month rows'}).click();
     await expect(page.locator('[name="contribution_23"]')).toHaveCount(1);
-    await page.locator('summary').filter({hasText: 'Change individual months'}).click();
     await page.locator('[name="contribution_23"]').fill('456.78');
     await page.locator('#id_initial_balance').fill('1000');
     await page.locator('#id_rate').fill('1');
