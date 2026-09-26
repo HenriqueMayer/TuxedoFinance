@@ -769,6 +769,23 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         self.assertContains(htmx, 'id="investments-charts"')
         self.assertNotContains(htmx, '<html')
 
+    def test_operation_filters_keep_large_identifiers_unlocalized(self):
+        bank = Bank.objects.create(pk=12345, user=self.user, name='Large bank')
+        product = InvestmentProduct.objects.create(pk=23456, user=self.user, bank=bank, name='Large product')
+        asset = Asset.objects.create(pk=34567, user=self.user, name='Large asset', code='LARGE',
+            asset_class=Asset.AssetClass.FIXED_INCOME, currency=BASE)
+        operation = self.operation(product=product, asset=asset)
+        operation.save()
+        for language in ('en', 'pt-br'):
+            with self.subTest(language=language):
+                self.client.cookies['django_language'] = language
+                response = self.client.get(reverse('investments:operations'), {
+                    'bank': str(bank.pk), 'product': str(product.pk), 'asset': str(asset.pk),
+                })
+                self.assertContains(response, '<option value="12345" selected>Large bank</option>')
+                self.assertContains(response, '<option value="23456" selected>Large bank / Large product</option>')
+                self.assertContains(response, '<option value="34567" selected>LARGE</option>')
+
     def test_charts_have_mouse_and_keyboard_tooltips(self):
         operation = self.operation(
             Investment.Kind.YIELD,

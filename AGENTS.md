@@ -11,6 +11,7 @@ Every new or changed form must follow the [shared form contract](docs/frontend.m
 - Use `partials/form_field.html` for ordinary Django fields. It automatically
   enhances model choices through `form_control`; do not implement another picker.
   Handwritten record selectors must use `data-search-select` and a stable ID.
+  Keep submitted record identifiers unlocalized, including values above 999.
 - Preserve native short choices, Tab/Shift+Tab, visible focus, Enter/Space
   activation, and the shared searchable-choice keyboard behavior.
 - When a user reaches or opens a searchable choice, keep its input and results

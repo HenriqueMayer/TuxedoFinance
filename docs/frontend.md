@@ -256,8 +256,10 @@ All Django `ModelChoiceField` and `ModelMultipleChoiceField` controls rendered b
 `partials/form_field.html` receive `data-search-select` through the `form_control`
 template tag. This covers categories, parent categories, banks, accounts, cards,
 assets, investment products, programs and invoices. Handwritten record filters
-must also carry that attribute and a stable unique ID. Short enumeration choices
-remain native selects. Disabled fields remain native and disabled.
+must also carry that attribute and a stable unique ID. Serialize record keys in
+option values without localization (for example, `pk|stringformat:'s'`); thousands
+separators belong in displayed amounts, never in submitted identifiers. Short
+enumeration choices remain native selects. Disabled fields remain native and disabled.
 
 `static/js/forms.js` progressively enhances these controls, using the original
 scoped options and preserving their names, values, metadata and `change` events.

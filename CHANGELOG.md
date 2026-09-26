@@ -14,6 +14,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Reveal investment funding records only after choosing account or points, keep optional fees under Advanced options, and ask for opening unit prices only after a quantity.
 - Group yield simulation inputs into three stages, update individual-month rows with duration, and make monthly results and draft saving optional disclosures.
 
+### Fixed
+
+- Keep category, bank, investment product and asset filter identifiers usable above 999 in both interface languages.
+
 ## [0.6.1] - 2026-09-25
 
 ### Fixed
