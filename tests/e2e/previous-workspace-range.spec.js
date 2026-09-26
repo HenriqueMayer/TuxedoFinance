@@ -24,6 +24,11 @@ for (const theme of ['light', 'dark']) {
         const title = page.locator('#id_title');
         await title.fill('Unsent transaction');
         await title.focus();
+        // A delayed HTMX settle must not turn the entered title into the
+        // baseline and let Cancel navigate without asking.
+        await page.evaluate(() => document.body.dispatchEvent(new CustomEvent('htmx:afterSettle', {
+            detail: {target: document.body},
+        })));
         await expect(page.locator('[data-previous-workspace]')).toHaveCount(0);
         page.once('dialog', dialog => dialog.dismiss());
         await page.getByRole('link', {name: 'Cancel', exact: true}).click();

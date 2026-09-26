@@ -232,8 +232,9 @@
         pendingHistory = destination;
     }, true);
     document.addEventListener('htmx:afterSettle', event => {
-        if (event.detail.target === document.body || pendingHistory) settled();
-        else approvedDestination = '';
+        // The baseline belongs to afterSwap. A user may edit the new page
+        // before HTMX settles; recapturing here would hide unsaved changes.
+        if (event.detail.target !== document.body) approvedDestination = '';
     });
     document.addEventListener('htmx:historyRestore', () => requestAnimationFrame(() => {
         // Cached history can restore without a body settle event. Always apply
