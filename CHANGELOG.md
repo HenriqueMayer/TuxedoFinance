@@ -7,6 +7,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-26
+
 ### Changed
 
 - Use the same previous/next, Current month and All time controls for installment and account/card report charts.
@@ -234,7 +236,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.4.0...v0.5.0
