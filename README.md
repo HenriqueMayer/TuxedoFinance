@@ -53,14 +53,14 @@ in an owner-controlled SQLite database.
 ### Docker
 
 Requires Docker Engine 28+ (or a current Docker Desktop) and Compose v2+.
-Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.5.0/compose.yaml)
-and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.5.0/docker.env.example)
-from the [v0.5.0 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.5.0)
+Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.6.1/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.6.1/docker.env.example)
+from the [v0.6.1 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.6.1)
 into a new installation directory. Open a terminal there and run these commands.
 No repository clone, host Python, uv or Node.js is required:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.5.0
+image=ghcr.io/henriquemayer/tuxedofinance:v0.6.1
 docker pull "$image"
 (
   umask 077

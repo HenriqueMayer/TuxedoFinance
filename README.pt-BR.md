@@ -53,14 +53,14 @@ um banco SQLite sob controle do responsável pela instalação.
 ### Docker
 
 Requer Docker Engine 28+ (ou Docker Desktop atualizado) e Compose v2+.
-Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.5.0/compose.yaml)
-e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.5.0/docker.env.example)
-da [release v0.5.0](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.5.0)
+Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.6.1/compose.yaml)
+e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.6.1/docker.env.example)
+da [release v0.6.1](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.6.1)
 para uma nova pasta de instalação. Abra um terminal nessa pasta e execute os comandos.
 Não é necessário clonar o repositório nem instalar Python, uv ou Node.js no computador:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.5.0
+image=ghcr.io/henriquemayer/tuxedofinance:v0.6.1
 docker pull "$image"
 (
   umask 077
