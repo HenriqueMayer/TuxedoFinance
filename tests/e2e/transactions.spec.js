@@ -58,12 +58,23 @@ async function assertFits(page) {
     const a = await apply.boundingBox();
     const b = await category.boundingBox();
     expect(a.y >= b.y + b.height - 1 || a.x >= b.x + b.width - 1).toBe(true);
+    const search = await page.locator('#filter-search').boundingBox();
+    if (page.viewportSize().width >= 640) {
+        expect(Math.abs(search.y - b.y)).toBeLessThanOrEqual(2);
+        expect(b.x).toBeGreaterThan(search.x);
+    } else {
+        expect(b.y).toBeGreaterThan(search.y);
+        expect(b.y).toBeLessThan((await page.locator('#filter-month').boundingBox()).y);
+    }
 }
 
 test('transaction navigation preserves GET state, keyboard selection and browser history', async ({ page }, testInfo) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     const category = await prepare(page, testInfo);
+    await page.locator('#filter-search').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#filter-category-search')).toBeFocused();
     await expect(typeCards(page).getByRole('link', { name: /^All/ })).toContainText('3');
     const expenses = typeCards(page).getByRole('link', { name: /^Expenses/ });
     await expenses.focus();

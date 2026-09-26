@@ -606,6 +606,10 @@ workspace before navigation, including query parameters, unsent named fields,
 repeated simulation rows, disclosures, focus and scroll. History traversal
 restores into freshly rendered forms without replaying submissions or emitting
 input/change events. Do not render a separate Resume previous screen control.
+Do not add redundant page-level Back to links: shared navigation and section
+tabs identify destinations, and browser Back/Forward handles history. Keep form
+Cancel actions and date-reset controls such as Back to today; these serve their
+own explicit actions rather than duplicating page navigation.
 When HTMX replaces the page body, update the active workspace at `afterSwap`:
 the next link can be activated before `afterSettle`. Apply the saved fields on
 `historyRestore` even when the browser's URL already matches the tracked URL;
