@@ -214,12 +214,14 @@ class BudgetRow:
     remaining: Decimal
 
 
-def build_budget(income: Decimal, budget: BudgetInput) -> BudgetRow:
+def build_budget(income: Decimal, budget: BudgetInput, *, custom_variable_base: Decimal | None = None) -> BudgetRow:
     percentage_base = max(income, ZERO)
     fixed = money(budget.fixed_bills + percentage_base * budget.fixed_percent)
     emergency = money(percentage_base * budget.emergency_percent)
     investments = money(percentage_base * budget.investments_percent)
-    custom = money(sum((item.monthly_amount for item in apply_variables(percentage_base, budget.custom_variables)), ZERO))
+    # Monthly salary plans retain their explicitly labelled gross-salary percentage base.
+    custom_base = percentage_base if custom_variable_base is None else max(custom_variable_base, ZERO)
+    custom = money(sum((item.monthly_amount for item in apply_variables(custom_base, budget.custom_variables)), ZERO))
     fixed_percent_equivalent = money(fixed / percentage_base * 100) if percentage_base else ZERO
     return BudgetRow(
         income=money(income),

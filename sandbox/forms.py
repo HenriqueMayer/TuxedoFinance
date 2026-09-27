@@ -44,7 +44,7 @@ class SalarySandboxForm(forms.Form):
         _('Gross monthly salary'),
         initial=None,
         min_value=Decimal('0.01'),
-        help_text=_('Monthly salary before subtracting the forecast and the fixed expenses added below.'),
+        help_text=_('Gross CLT salary. INSS and IRRF are calculated automatically before subtracting monthly expenses.'),
     )
 
     def __init__(self, *args, **kwargs):

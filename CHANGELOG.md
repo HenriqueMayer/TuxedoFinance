@@ -7,6 +7,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore automatic INSS and IRRF deductions in monthly planning, using ordinary CLT net salary for the available balance and retaining gross-based percentage expenses. Show the deduction breakdown and preserve legacy drafts until recalculation.
+
 ## [0.8.1] - 2026-09-27
 
 ### Fixed

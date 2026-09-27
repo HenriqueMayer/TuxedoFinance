@@ -31,12 +31,25 @@ Each row accepts either BRL or a percentage (0–100) of the gross monthly salar
 not of the remainder after other expenses. Percentages use Decimal arithmetic
 and each result is rounded to cents. The existing draft payload retains the
 selected unit and raw invalid input. The result subtracts the existing forecast
-and those added amounts from the gross salary. Negative remainders stay visible. Invalid rows are
+and those added amounts from the ordinary monthly CLT net salary. Negative remainders stay visible. Invalid rows are
 retained for correction, and add/remove controls work through ordinary POSTs
 without JavaScript.
 
-The salary plan no longer asks for payroll deduction modes, CLT details,
-allocation targets, reserves or investment allocations. It does not add the
+CLT deductions are automatic: progressive employee INSS up to its ceiling and
+IRRF with the more favorable legal/simplified deduction and the 2026 reduction.
+The result displays gross salary, INSS, IRRF and ordinary monthly net salary.
+The estimate assumes no dependents, pension or other payroll deductions; it does
+not add vacation pay, thirteenth salary or employer FGTS to a normal month.
+The UI explicitly identifies the 2026 rule set, also when projecting another year;
+it does not claim to have that other year's tax table. The source tables are
+[INSS](https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal)
+and [Receita Federal](https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026),
+verified on 2026-09-27.
+
+Budget drafts saved with calculation version 1 retain their gross-based result
+when opened or compared, with an explicit notice. A deliberate calculation uses
+CLT, and an explicit save records calculation version 2. Percentage expenses
+continue to use gross salary in both versions. The plan does not add the
 hypothetical salary to real bank balances.
 
 ## Drafts and privacy

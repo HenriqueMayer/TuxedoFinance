@@ -124,7 +124,7 @@ class SandboxViewTests(TestCase):
         self.assertNotContains(response, 'name="deduction_label"')
         self.assertNotContains(response, 'name="fixed_cost_value"')
 
-    def test_post_uses_gross_salary_and_added_fixed_expenses(self):
+    def test_post_uses_clt_net_salary_and_added_fixed_expenses(self):
         self.client.force_login(self.user)
         response = self.client.post(reverse('sandbox:index'), {
             'gross_salary': '6000',
@@ -137,8 +137,63 @@ class SandboxViewTests(TestCase):
         self.assertContains(response, 'Monthly estimate')
         self.assertContains(response, 'Rent')
         self.assertContains(response, 'Utilities')
-        self.assertEqual(response.context['result']['budget'].remaining, D('4250.00'))
+        self.assertEqual(response.context['result']['budget'].remaining, D('3223.39'))
         self.assertEqual(ScenarioDraft.objects.count(), 0)
+
+    def test_monthly_plan_applies_clt_bands_before_gross_based_percent_expenses(self):
+        self.client.force_login(self.user)
+        for gross, inss, irrf, net in [
+            ('1621', '121.58', '0.00', '1499.42'),
+            ('2902.84', '236.94', '0.00', '2665.90'),
+            ('4354.27', '411.11', '0.00', '3943.16'),
+            ('5000', '501.51', '0.00', '4498.49'),
+            ('6000', '641.51', '385.10', '4973.39'),
+            ('8000', '921.51', '1037.85', '6040.64'),
+            ('10000', '988.09', '1569.55', '7442.36'),
+        ]:
+            with self.subTest(gross=gross):
+                response = self.client.post(reverse('sandbox:index'), {
+                    'gross_salary': gross, 'planning_month': '2026-10',
+                    'variable_label': ['Reserve'], 'variable_type': ['percent'],
+                    'variable_value': ['10'],
+                })
+                result = response.context['result']
+                self.assertEqual(result['payroll'].inss, D(inss))
+                self.assertEqual(result['payroll'].irrf, D(irrf))
+                self.assertEqual(result['budget'].income, D(net))
+                self.assertEqual(result['budget'].custom_expenses, (D(gross) / 10).quantize(D('.01')))
+                self.assertEqual(result['budget'].remaining, D(net) - result['budget'].custom_expenses)
+                self.assertContains(response, 'Net in an ordinary month')
+
+    def test_legacy_gross_plan_is_preserved_until_recalculated(self):
+        self.client.force_login(self.user)
+        self.client.post(reverse('sandbox:index'), {
+            'action': 'save', 'draft_name': 'Legacy', 'gross_salary': '5000',
+            'planning_month': '2026-10',
+        })
+        draft = ScenarioDraft.objects.get()
+        draft.payload['calculation_version'] = 1
+        draft.save()
+        opened = self.client.get(reverse('sandbox:draft_detail', args=[draft.pk]))
+        self.assertEqual(opened.context['result']['budget'].income, D('5000'))
+        self.assertContains(opened, 'Saved plan without CLT deductions')
+        compared = self.client.get(reverse('sandbox:compare'), {'draft': draft.pk})
+        self.assertEqual(compared.context['scenarios'][0]['result']['budget'].income, D('5000'))
+        calculated = self.client.post(reverse('sandbox:draft_detail', args=[draft.pk]), {
+            'action': 'calculate', 'gross_salary': '5000', 'planning_month': '2026-10',
+        })
+        self.assertEqual(calculated.context['result']['budget'].income, D('4498.49'))
+        draft.refresh_from_db()
+        self.assertEqual(draft.payload['calculation_version'], 1)
+        self.client.post(reverse('sandbox:draft_detail', args=[draft.pk]), {
+            'action': 'save', 'draft_name': 'Updated', 'gross_salary': '5000',
+            'planning_month': '2026-10',
+        })
+        draft.refresh_from_db()
+        self.assertEqual(draft.payload['calculation_version'], 2)
+        compared = self.client.get(reverse('sandbox:compare'), {'draft': draft.pk})
+        self.assertEqual(compared.context['scenarios'][0]['result']['budget'].income, D('4498.49'))
+
 
     def test_fragment_post_replaces_only_one_workspace(self):
         self.client.force_login(self.user)
@@ -186,7 +241,7 @@ class SandboxViewTests(TestCase):
             'variable_value': ['100', '12.5'], 'action': 'save', 'draft_name': 'Mixed expenses',
         }, follow=True)
         self.assertEqual(response.context['result']['budget'].custom_expenses, D('254.32'))
-        self.assertEqual(response.context['result']['budget'].remaining, D('980.24'))
+        self.assertEqual(response.context['result']['budget'].remaining, D('887.65'))
         self.assertEqual(response.context['variable_rows'][1]['value_type'], 'percent')
         self.assertEqual(response.context['variable_rows'][1]['value'], '12.50')
 
@@ -233,6 +288,14 @@ class SandboxViewTests(TestCase):
         self.assertContains(response, 'Despesas fixas adicionais')
         self.assertContains(response, 'Salvar este plano (opcional)')
         self.assertNotContains(response, 'Calcular descontos CLT')
+        with override('pt-br'):
+            calculated = self.client.post(reverse('sandbox:index'), {
+                'gross_salary': '6000', 'planning_month': '2026-10',
+            })
+        self.assertContains(calculated, 'Líquido em um mês comum')
+        self.assertContains(calculated, 'R$ 4.973,39')
+        self.assertContains(calculated, 'regras tributárias de 2026')
+
 
 
 class PlanningDraftTests(TestCase):
@@ -436,6 +499,7 @@ class CommitmentProjectionTests(TestCase):
         draft = ScenarioDraft.objects.get()
         snapshot = commitment_snapshot(self.user, date(2026, 10, 1))
         snapshot.pop('month_basis')
+        draft.payload['calculation_version'] = 1
         draft.payload['snapshot'] = snapshot
         draft.save()
         opened = self.client.get(reverse('sandbox:draft_detail', args=[draft.pk]))
@@ -458,7 +522,7 @@ class CommitmentProjectionTests(TestCase):
         })
         self.assertEqual(response.context['result']['budget'].fixed_bills, D('33.33'))
         self.assertEqual(response.context['result']['budget'].custom_expenses, D('450.00'))
-        self.assertEqual(response.context['result']['budget'].remaining, D('4516.67'))
+        self.assertEqual(response.context['result']['budget'].remaining, D('4015.16'))
         self.assertEqual(ScenarioDraft.objects.count(), 0)
 
     def test_forecast_changes_with_the_selected_month(self):
@@ -484,7 +548,7 @@ class CommitmentProjectionTests(TestCase):
         self.purchase.save()
         reopened = self.client.get(reverse('sandbox:draft_detail', args=[draft.pk]))
         self.assertEqual(reopened.context['result']['budget'].fixed_bills, D('33.33'))
-        self.assertEqual(reopened.context['result']['budget'].remaining, D('4966.67'))
+        self.assertEqual(reopened.context['result']['budget'].remaining, D('4465.16'))
         self.assertTrue(reopened.context['draft_save_open'])
         compared = self.client.get(reverse('sandbox:compare'), {'draft': draft.pk})
         self.assertEqual(compared.context['scenarios'][0]['result']['budget'].fixed_bills, D('33.33'))

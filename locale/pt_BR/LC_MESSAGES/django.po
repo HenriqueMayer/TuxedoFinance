@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 14:57+0000\n"
+"POT-Creation-Date: 2026-09-27 18:11+0000\n"
 "PO-Revision-Date: 2026-09-20 16:15+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -345,7 +345,7 @@ msgstr "Moeda de origem"
 msgid "To currency"
 msgstr "Moeda de destino"
 
-#: banking/forms.py:410 templates/sandbox/compare.html:20
+#: banking/forms.py:410 templates/sandbox/compare.html:21
 msgid "Rate"
 msgstr "Taxa"
 
@@ -1028,7 +1028,6 @@ msgid "Total balance after the yield is credited."
 msgstr "Saldo total após o crédito do rendimento."
 
 #: investments/forms.py:91
-#| msgid "2. Product"
 msgid "Product"
 msgstr "Produto"
 
@@ -1652,11 +1651,11 @@ msgstr "Salário bruto mensal"
 
 #: sandbox/forms.py:47
 msgid ""
-"Monthly salary before subtracting the forecast and the fixed expenses added "
-"below."
+"Gross CLT salary. INSS and IRRF are calculated automatically before "
+"subtracting monthly expenses."
 msgstr ""
-"Salário mensal antes de subtrair a previsão e as despesas fixas adicionadas "
-"abaixo."
+"Salário bruto CLT. INSS e IRRF são calculados automaticamente antes de "
+"descontar as despesas mensais."
 
 #: sandbox/forms.py:71
 msgid "Enter the gross monthly salary."
@@ -1701,7 +1700,7 @@ msgid "Months"
 msgstr "Meses"
 
 #: sandbox/forms.py:153 templates/sandbox/_simulation_result.html:12
-#: templates/sandbox/compare.html:19
+#: templates/sandbox/compare.html:20
 msgid "Initial balance"
 msgstr "Saldo inicial"
 
@@ -1713,11 +1712,11 @@ msgstr "Taxa efetiva (%)"
 msgid "Rate period"
 msgstr "Período da taxa"
 
-#: sandbox/forms.py:155 templates/sandbox/compare.html:20
+#: sandbox/forms.py:155 templates/sandbox/compare.html:21
 msgid "Monthly"
 msgstr "Mensal"
 
-#: sandbox/forms.py:155 templates/sandbox/compare.html:20
+#: sandbox/forms.py:155 templates/sandbox/compare.html:21
 msgid "Annual"
 msgstr "Anual"
 
@@ -1810,22 +1809,22 @@ msgstr ""
 "A multa rescisória de 40% do FGTS é contingente e não está incluída nesta "
 "projeção."
 
-#: sandbox/views.py:166
+#: sandbox/views.py:172
 msgid "This draft is too large. Reduce the number or length of its inputs."
 msgstr ""
 "Este rascunho está muito grande. Reduza a quantidade ou o tamanho dos dados "
 "informados."
 
-#: sandbox/views.py:180
+#: sandbox/views.py:186
 msgid "Draft saved. Your financial records have not changed."
 msgstr "Rascunho salvo. Seus registros financeiros não mudaram."
 
-#: sandbox/views.py:278
+#: sandbox/views.py:286
 #, python-format
 msgid "Copy of %(name)s"
 msgstr "Cópia de %(name)s"
 
-#: sandbox/views.py:294
+#: sandbox/views.py:302
 msgid "Only the first three selected drafts are shown."
 msgstr "Somente os três primeiros rascunhos selecionados são exibidos."
 
@@ -3856,16 +3855,45 @@ msgstr "Disponível após as despesas"
 msgid "Gross salary"
 msgstr "Salário bruto"
 
-#: templates/sandbox/_scenario_result.html:20
+#: templates/sandbox/_scenario_result.html:21
+msgid "INSS"
+msgstr ""
+
+#: templates/sandbox/_scenario_result.html:25
+msgid "IRRF"
+msgstr ""
+
+#: templates/sandbox/_scenario_result.html:29 templates/sandbox/compare.html:19
+msgid "Net in an ordinary month"
+msgstr "Líquido em um mês comum"
+
+#: templates/sandbox/_scenario_result.html:34
 msgid "Existing forecast"
 msgstr "Previsão existente"
 
-#: templates/sandbox/_scenario_result.html:24
+#: templates/sandbox/_scenario_result.html:38
 #: templates/sandbox/_workspace.html:33
 msgid "Additional fixed expenses"
 msgstr "Despesas fixas adicionais"
 
-#: templates/sandbox/_scenario_result.html:31
+#: templates/sandbox/_scenario_result.html:45
+#, python-format
+msgid ""
+"CLT estimate using %(year)s tax rules, without dependents or other payroll "
+"deductions. FGTS, vacation pay and the thirteenth salary do not enter this "
+"monthly balance."
+msgstr ""
+"Estimativa CLT com as regras tributárias de %(year)s, sem dependentes ou "
+"outros descontos de folha. FGTS, férias e décimo terceiro não entram neste "
+"saldo mensal."
+
+#: templates/sandbox/_scenario_result.html:47 templates/sandbox/compare.html:19
+msgid ""
+"Saved plan without CLT deductions. Calculate again to apply INSS and IRRF."
+msgstr ""
+"Plano salvo sem descontos CLT. Calcule novamente para aplicar INSS e IRRF."
+
+#: templates/sandbox/_scenario_result.html:53
 msgid "Added expenses"
 msgstr "Despesas adicionadas"
 
@@ -3883,12 +3911,12 @@ msgid "Effective monthly rate"
 msgstr "Taxa mensal efetiva"
 
 #: templates/sandbox/_simulation_result.html:10
-#: templates/sandbox/compare.html:21
+#: templates/sandbox/compare.html:22
 msgid "Ending balance"
 msgstr "Saldo final"
 
 #: templates/sandbox/_simulation_result.html:11
-#: templates/sandbox/compare.html:21
+#: templates/sandbox/compare.html:22
 msgid "Simulated yield"
 msgstr "Rendimento simulado"
 
@@ -4034,19 +4062,19 @@ msgstr ""
 msgid "Scenario"
 msgstr "Cenário"
 
-#: templates/sandbox/compare.html:21
+#: templates/sandbox/compare.html:22
 msgid "Result"
 msgstr "Resultado"
 
-#: templates/sandbox/compare.html:21
+#: templates/sandbox/compare.html:22
 msgid "Available after plan"
 msgstr "Disponível após o plano"
 
-#: templates/sandbox/compare.html:21
+#: templates/sandbox/compare.html:22
 msgid "Incomplete — open this draft to review its inputs."
 msgstr "Incompleto — abra este rascunho para revisar os dados."
 
-#: templates/sandbox/compare.html:24
+#: templates/sandbox/compare.html:25
 msgid "Select up to three saved drafts to compare."
 msgstr "Selecione até três rascunhos salvos para comparar."
 
@@ -4562,6 +4590,13 @@ msgstr "Transação \"%(title)s\" atualizada."
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
 
+#~ msgid ""
+#~ "Monthly salary before subtracting the forecast and the fixed expenses "
+#~ "added below."
+#~ msgstr ""
+#~ "Salário mensal antes de subtrair a previsão e as despesas fixas "
+#~ "adicionadas abaixo."
+
 #~ msgid "Product destination"
 #~ msgstr "Produto de destino"
 
@@ -4874,9 +4909,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "Monthly result"
 #~ msgstr "Resultado mensal"
-
-#~ msgid "Net in an ordinary month"
-#~ msgstr "Líquido em um mês comum"
 
 #~ msgid ""
 #~ "Amount received in a regular month after INSS, IRRF and the informed "

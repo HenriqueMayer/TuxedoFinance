@@ -23,7 +23,7 @@ from sandbox.forms import (
 from sandbox.models import ScenarioDraft
 from sandbox.planning import commitment_snapshot, simulate_yield, snapshot_total
 from dashboard.services import add_months
-from sandbox.services import BudgetInput, apply_variables, build_budget
+from sandbox.services import BudgetInput, CltScenario, apply_variables, build_budget, calculate_clt
 from sandbox.tax_rules import get_tax_rules
 
 
@@ -67,7 +67,7 @@ def _expense_forecast(user, month, snapshot=None):
     return snapshot, {'month': month, 'total': total, 'count': len(rows), 'error': error}
 
 
-def _calculate_budget(form, forecast):
+def _calculate_budget(form, forecast, *, apply_clt=True):
     if not form.is_valid():
         return None
     data = form.cleaned_data
@@ -76,11 +76,16 @@ def _calculate_budget(form, forecast):
         return None
     variables = variables_from_data(form.data, 'variable')
     budget = BudgetInput(fixed_bills=forecast['total'], custom_variables=variables)
-    income = data['gross_salary']
+    gross = data['gross_salary']
+    payroll = calculate_clt(CltScenario(gross), get_tax_rules()).ordinary if apply_clt else None
+    income = payroll.net if payroll else gross
     return {
         'mode': 'simple',
-        'budget': build_budget(income, budget),
-        'variables': apply_variables(income, variables),
+        'budget': build_budget(income, budget, custom_variable_base=gross),
+        'gross': gross,
+        'payroll': payroll,
+        'tax_rule_year': get_tax_rules().year if payroll else None,
+        'variables': apply_variables(gross, variables),
         'forecast': forecast,
     }
 
@@ -170,7 +175,7 @@ def _save(request, data, kind, snapshot, draft, result):
     input_format = (draft.payload.get('input_format') if draft else None) or {
         'date_order': preference.date_format, 'month': 'YYYY-MM', 'decimal': '.',
     }
-    payload = {'schema_version': 1, 'calculation_version': 1, 'input_format': input_format,
+    payload = {'schema_version': 1, 'calculation_version': 2 if kind == 'budget' else 1, 'input_format': input_format,
                'inputs': inputs, 'snapshot': _canonical_snapshot(snapshot), 'complete': result is not None,
                'tax_rule_year': get_tax_rules().year}
     if draft is None:
@@ -219,7 +224,9 @@ def _workspace(request, kind='budget', draft=None):
         snapshot, forecast = _expense_forecast(request.user, month, saved_snapshot)
     result = None
     if data is not None and not action.startswith(('add_', 'remove_')) and action not in ('forecast', 'rows'):
-        result = _calculate_budget(form, forecast) if kind == 'budget' else _calculate_yield(form)
+        # Opening a legacy draft preserves its gross-based result; deliberate recalculation uses CLT.
+        apply_clt = posted or not draft or draft.payload.get('calculation_version', 1) >= 2
+        result = _calculate_budget(form, forecast, apply_clt=apply_clt) if kind == 'budget' else _calculate_yield(form)
     name_form = DraftNameForm(initial={'draft_name': draft.name if draft else ''})
     if posted and action == 'save':
         response, name_form = _save(request, data, kind, snapshot, draft, result)
@@ -310,7 +317,7 @@ def compare(request):
             _saved_snapshot, forecast = _expense_forecast(
                 request.user, month, deepcopy(draft.payload.get('snapshot')),
             )
-            result = _calculate_budget(form, forecast)
+            result = _calculate_budget(form, forecast, apply_clt=draft.payload.get('calculation_version', 1) >= 2)
         else:
             result = _calculate_yield(form)
         scenarios.append({'draft': draft, 'result': result,
