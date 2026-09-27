@@ -23,7 +23,7 @@ from sandbox.forms import (
 from sandbox.models import ScenarioDraft
 from sandbox.planning import commitment_snapshot, simulate_yield, snapshot_total
 from dashboard.services import add_months
-from sandbox.services import BudgetInput, CltScenario, apply_variables, build_budget, calculate_clt
+from sandbox.services import BudgetInput, CltScenario, apply_variables, build_budget, calculate_clt, payroll_brackets
 from sandbox.tax_rules import get_tax_rules
 
 
@@ -77,13 +77,23 @@ def _calculate_budget(form, forecast, *, apply_clt=True):
     variables = variables_from_data(form.data, 'variable')
     budget = BudgetInput(fixed_bills=forecast['total'], custom_variables=variables)
     gross = data['gross_salary']
-    payroll = calculate_clt(CltScenario(gross), get_tax_rules()).ordinary if apply_clt else None
+    rules = get_tax_rules()
+    scenario = CltScenario(
+        gross, dependents=data.get('clt_dependents') or 0,
+        pension=data.get('clt_pension') or Decimal('0'),
+        vt_enabled=bool(data.get('clt_transport')), vt_cost=data.get('clt_transport') or Decimal('0'),
+        food_employee=data.get('clt_food') or Decimal('0'),
+        health_employee=data.get('clt_health') or Decimal('0'),
+        other_deductions=data.get('clt_other') or Decimal('0'),
+    )
+    payroll = calculate_clt(scenario, rules).ordinary if apply_clt else None
     income = payroll.net if payroll else gross
     return {
         'mode': 'simple',
         'budget': build_budget(income, budget, custom_variable_base=gross),
         'gross': gross,
         'payroll': payroll,
+        'tax_bands': payroll_brackets(payroll, rules) if payroll else None,
         'tax_rule_year': get_tax_rules().year if payroll else None,
         'variables': apply_variables(gross, variables),
         'forecast': forecast,
@@ -239,6 +249,15 @@ def _workspace(request, kind='budget', draft=None):
                'workspace_url': request.path, 'CURRENCY_SYMBOL': 'R$',
                'draft_save_open': bool(draft or name_form.errors)}
     if kind == 'budget':
+        clt_names = [name for name in form.fields if name.startswith('clt_')]
+        context['clt_fields'] = [form[name] for name in clt_names]
+        settings_requested = (data or {}).get('clt_settings_open')
+        context['clt_settings_open'] = form.is_bound and (
+            any(form.errors.get(name) for name in clt_names)
+            or (settings_requested == '1' if settings_requested is not None
+                else any(form.cleaned_data.get(name) for name in clt_names))
+        )
+        context['tax_bands_open'] = action == 'tax_bands' or (data or {}).get('tax_bands_open') == '1'
         # Suggestions belong only to a new workspace, never to submitted or saved rows.
         context['variable_rows'] = (
             [{'label': _('Emergency reserve'), 'value_type': 'currency', 'value': '0.00'},

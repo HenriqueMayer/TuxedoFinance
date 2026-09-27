@@ -291,3 +291,70 @@ test.describe('new planning controls without JavaScript', () => {
         await expect(page.getByLabel('Fixed expense unit').first()).toHaveValue('percent');
     });
 });
+
+
+for (const theme of ['light', 'dark']) {
+    test(`tax brackets and optional CLT parameters use current inputs (${theme})`, async ({ page }, info) => {
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        await signup(page, info);
+        await page.goto('/sandbox/');
+        await expect(page.locator('#id_clt_dependents')).toBeHidden();
+        await page.locator('#id_gross_salary').fill('6000');
+        await page.locator('#budget-tax-bands').press('Enter');
+        await expect(page.locator('#irrf-brackets [aria-current="true"]')).toContainText('27,50%');
+        await expect(page.locator('#irrf-reduction [aria-current="true"]')).toContainText('Partial');
+        await page.locator('#clt-settings > summary').press('Space');
+        await page.locator('#id_clt_dependents').focus();
+        await page.keyboard.press('ControlOrMeta+A');
+        await page.keyboard.type('2');
+        await page.keyboard.press('Tab');
+        await expect(page.locator('#id_clt_pension')).toBeFocused();
+        await page.locator('#id_clt_pension').fill('500');
+        await page.locator('#id_clt_transport').fill('100');
+        await page.locator('#id_clt_food').fill('50');
+        await page.locator('#id_clt_health').fill('100');
+        await page.locator('#id_clt_other').fill('25');
+        await page.locator('#budget-tax-bands').press('Enter');
+        await expect(page.locator('#budget-tax-bands')).toBeFocused();
+        await expect(page.locator('#irrf-brackets [aria-current="true"]')).toContainText('22,50%');
+        await expect(page.locator('#clt-tax-brackets')).toContainText('4.479,31');
+        await expect(page.getByText('R$ 4.430,89', { exact: true }).first()).toBeVisible();
+        await page.locator('#id_clt_dependents').fill('2.5');
+        await page.locator('#budget-calculate').press('Enter');
+        await expect(page.locator('#clt-settings [role="alert"]')).toBeVisible();
+        await expect(page.locator('#id_clt_dependents')).toHaveValue('2.5');
+        await page.locator('#id_clt_dependents').fill('2');
+        await page.locator('#budget-tax-bands').press('Enter');
+        await page.setViewportSize({ width: 390, height: 740 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.screenshot({path: info.outputPath(`clt-brackets-${theme}.png`), fullPage: true});
+        await page.locator('#clt-settings > summary').press('Enter');
+        await expect(page.locator('#id_clt_dependents')).toBeHidden();
+        await page.locator('#budget-calculate').press('Enter');
+        await expect(page.locator('#id_clt_dependents')).toBeHidden();
+        await expect(page.locator('#irrf-brackets')).toBeVisible();
+        await page.locator('#id_gross_salary').fill('5000');
+        await page.locator('#budget-tax-bands').press('Enter');
+        await expect(page.locator('#irrf-reduction [aria-current="true"]')).toContainText('reduced to zero');
+    });
+}
+
+test.describe('CLT parameters without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+    test('native disclosures, tax consultation and draft parameters work', async ({ page }, info) => {
+        await signup(page, info);
+        await page.goto('/sandbox/');
+        await page.locator('#id_gross_salary').fill('6000');
+        await page.locator('#clt-settings > summary').press('Enter');
+        await page.locator('#id_clt_dependents').fill('2');
+        await page.locator('#id_clt_pension').fill('500');
+        await page.locator('#budget-tax-bands').press('Enter');
+        await expect(page.locator('#irrf-brackets [aria-current="true"]')).toContainText('22,50%');
+        await page.getByText('Save this plan (optional)', { exact: true }).press('Enter');
+        await page.locator('#id_draft_name').fill('CLT parameters');
+        await page.getByRole('button', { name: 'Save draft', exact: true }).press('Enter');
+        await expect(page).toHaveURL(/\/sandbox\/drafts\/\d+\/$/);
+        await expect(page.locator('#id_clt_dependents')).toHaveValue('2');
+        await expect(page.locator('#id_clt_pension')).toHaveValue('500.00');
+    });
+});

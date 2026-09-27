@@ -114,7 +114,7 @@ def _clt_period(
     deductions = ZERO
     if include_employee_deductions:
         transport = min(gross * D('0.06'), scenario.vt_cost) if scenario.vt_enabled else ZERO
-        deductions = money(transport + scenario.food_employee + scenario.health_employee + scenario.other_deductions)
+        deductions = money(scenario.pension + transport + scenario.food_employee + scenario.health_employee + scenario.other_deductions)
     return PayPeriod(
         gross=gross,
         inss=inss,
@@ -232,3 +232,30 @@ def build_budget(income: Decimal, budget: BudgetInput, *, custom_variable_base: 
         custom_expenses=custom,
         remaining=money(income - fixed - emergency - investments - custom),
     )
+
+
+def payroll_brackets(payroll: PayPeriod, rules: TaxRuleSet) -> dict:
+    """Describe the same bases used in payroll, without treating marginal rates as flat taxes."""
+    def rows(bands, base):
+        result = []
+        lower = ZERO
+        selected = next((i for i, band in enumerate(bands)
+                         if band.upper is None or base <= band.upper), len(bands) - 1)
+        for index, band in enumerate(bands):
+            result.append({'lower': lower, 'upper': band.upper, 'rate': band.rate * 100,
+                           'deduction': band.deduction, 'selected': index == selected})
+            if band.upper is not None:
+                lower = band.upper + CENT
+        return result
+
+    return {
+        'inss': rows(rules.employee_inss, payroll.gross),
+        'irrf': rows(rules.irrf, payroll.irrf_base),
+        'inss_ceiling': rules.employee_inss[-1].upper,
+        'above_ceiling': payroll.gross > rules.employee_inss[-1].upper,
+        'reduction': money(max(bracket_tax(payroll.irrf_base, rules.irrf) - payroll.irrf, ZERO)),
+        'reduction_band': 'zero' if payroll.gross <= rules.irrf_reduction_zero_limit else
+                          'partial' if payroll.gross <= rules.irrf_reduction_upper_limit else 'none',
+        'reduction_zero_limit': rules.irrf_reduction_zero_limit,
+        'reduction_upper_limit': rules.irrf_reduction_upper_limit,
+    }

@@ -44,8 +44,23 @@ without JavaScript.
 CLT deductions are automatic: progressive employee INSS up to its ceiling and
 IRRF with the more favorable legal/simplified deduction and the 2026 reduction.
 The result displays gross salary, INSS, IRRF and ordinary monthly net salary.
-The estimate assumes no dependents, pension or other payroll deductions; it does
-not add vacation pay, thirteenth salary or employer FGTS to a normal month.
+The optional Adjust CLT parameters disclosure accepts dependents, legally
+deductible alimony, transport cost (employee deduction capped at 6% of gross),
+food, health and other payroll deductions. All default to zero. Alimony reduces
+the legal IRRF base and is withheld from net pay exactly once. Food, health and
+other deductions only reduce take-home pay, not the monthly IRRF base.
+Parameters survive month changes, errors and explicit draft saving/comparison;
+invalid fields reopen the disclosure, including without JavaScript.
+
+Consult INSS and IRRF brackets submits the current inputs without saving a draft
+and reveals the tables beneath the result. The INSS highlight is the marginal
+gross-salary band (the last band also represents salaries above the ceiling);
+lower portions remain taxed progressively. The IRRF highlight uses the calculated
+taxable base after the more favorable deduction, not gross salary. A separate
+gross-income table explains the 2026 reduction and shows the applied reduction.
+Highlights use text as well as color, and official source links are included.
+The settings and bracket disclosures retain their state through HTMX updates.
+The plan does not add vacation pay, thirteenth salary or employer FGTS to a normal month.
 The UI explicitly identifies the 2026 rule set, also when projecting another year;
 it does not claim to have that other year's tax table. The source tables are
 [INSS](https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal)

@@ -1,0 +1,15 @@
+{% load i18n %}
+<div class="mt-3 overflow-x-auto">
+    <table class="data-table w-full" id="{{ table_id }}">
+        <thead><tr><th scope="col">{% translate "Calculation base (BRL)" %}</th><th scope="col">{% translate "Rate" %}</th>{% if show_deduction %}<th scope="col">{% translate "Deduction (BRL)" %}</th>{% endif %}</tr></thead>
+        <tbody>
+            {% for band in bands %}
+            <tr {% if band.selected %}class="bg-caramel/15 dark:bg-caramel/20" aria-current="true"{% endif %}>
+                <th scope="row">{% if band.upper != None %}{{ band.lower|floatformat:2 }} – {{ band.upper|floatformat:2 }}{% else %}{{ band.lower|floatformat:2 }}+{% endif %}{% if band.selected %}<span class="block font-semibold">{% translate "Your bracket" %}</span>{% endif %}</th>
+                <td>{{ band.rate|floatformat:'-2' }}%</td>
+                {% if show_deduction %}<td>{{ band.deduction|floatformat:2 }}</td>{% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

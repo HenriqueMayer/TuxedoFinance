@@ -1,0 +1,27 @@
+{% load i18n l10n %}
+<details id="clt-tax-brackets" data-state-field="tax_bands_open" class="mt-6 border-t border-forest/10 pt-5 dark:border-cream/10" {% if tax_bands_open %}open{% endif %}>
+    <summary class="cursor-pointer font-medium">{% blocktranslate with year=result.tax_rule_year|unlocalize %}Tax brackets — {{ year }}{% endblocktranslate %}</summary>
+    <p class="subtle-copy mt-3">{% translate "Highlighted rows use the calculated salary and payroll parameters. Use Consult INSS and IRRF brackets again after editing inputs to refresh the calculation." %}</p>
+    <h3 class="mt-5 font-semibold">{% translate "INSS" %}</h3>
+    <p class="subtle-copy mt-2">{% translate "Gross salary" %}: R$ {{ result.gross|floatformat:2 }}. {% translate "INSS is progressive: each rate applies only to the portion in that band, up to the contribution ceiling." %}</p>
+    {% if result.tax_bands.above_ceiling %}<p class="subtle-copy mt-2">{% translate "Salary above the INSS ceiling" %}: R$ {{ result.tax_bands.inss_ceiling|floatformat:2 }}.</p>{% endif %}
+    {% include 'sandbox/_tax_band_table.html' with bands=result.tax_bands.inss table_id='inss-brackets' %}
+
+    <h3 class="mt-5 font-semibold">{% translate "IRRF" %}</h3>
+    <p class="subtle-copy mt-2">{% translate "IRRF calculation base" %}: R$ {{ result.payroll.irrf_base|floatformat:2 }}. {% if result.payroll.irrf_method == 'legal' %}{% translate "Legal deductions applied." %}{% else %}{% translate "Simplified deduction applied." %}{% endif %} {% translate "The more favorable deduction is used. The IRRF bracket is based on this taxable amount, not directly on gross salary." %}</p>
+    {% include 'sandbox/_tax_band_table.html' with bands=result.tax_bands.irrf table_id='irrf-brackets' show_deduction=True %}
+
+    <h3 class="mt-5 font-semibold">{% translate "IRRF reduction by gross income" %}</h3>
+    <div class="mt-3 overflow-x-auto">
+        <table class="data-table w-full" id="irrf-reduction">
+            <thead><tr><th scope="col">{% translate "Gross monthly salary" %}</th><th scope="col">{% translate "Reduction" %}</th></tr></thead>
+            <tbody>
+                <tr {% if result.tax_bands.reduction_band == 'zero' %}class="bg-caramel/15 dark:bg-caramel/20" aria-current="true"{% endif %}><th scope="row">{% translate "Up to" %} R$ {{ result.tax_bands.reduction_zero_limit|floatformat:2 }} {% if result.tax_bands.reduction_band == 'zero' %}<span class="block font-semibold">{% translate "Your bracket" %}</span>{% endif %}</th><td>{% translate "Income tax reduced to zero." %}</td></tr>
+                <tr {% if result.tax_bands.reduction_band == 'partial' %}class="bg-caramel/15 dark:bg-caramel/20" aria-current="true"{% endif %}><th scope="row">{% translate "Above" %} R$ {{ result.tax_bands.reduction_zero_limit|floatformat:2 }} {% translate "up to" %} R$ {{ result.tax_bands.reduction_upper_limit|floatformat:2 }} {% if result.tax_bands.reduction_band == 'partial' %}<span class="block font-semibold">{% translate "Your bracket" %}</span>{% endif %}</th><td>{% translate "Partial income tax reduction." %}</td></tr>
+                <tr {% if result.tax_bands.reduction_band == 'none' %}class="bg-caramel/15 dark:bg-caramel/20" aria-current="true"{% endif %}><th scope="row">{% translate "Above" %} R$ {{ result.tax_bands.reduction_upper_limit|floatformat:2 }} {% if result.tax_bands.reduction_band == 'none' %}<span class="block font-semibold">{% translate "Your bracket" %}</span>{% endif %}</th><td>{% translate "No income tax reduction." %}</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="subtle-copy mt-3">{% translate "Reduction applied" %}: R$ {{ result.tax_bands.reduction|floatformat:2 }} · {% translate "IRRF" %}: R$ {{ result.payroll.irrf|floatformat:2 }}.</p>
+    <p class="subtle-copy mt-3">{% translate "Official sources" %}: <a class="underline" href="{{ rules.source_urls.0 }}" target="_blank" rel="noopener noreferrer">INSS</a> · <a class="underline" href="{{ rules.source_urls.1 }}" target="_blank" rel="noopener noreferrer">Receita Federal</a>.</p>
+</details>

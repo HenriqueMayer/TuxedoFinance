@@ -56,6 +56,14 @@
         if (submitter) form.requestSubmit(submitter);
     });
 
+    // Native disclosures keep their state through full-workspace HTMX replacements.
+    document.addEventListener('toggle', function (event) {
+        var details = event.target;
+        if (!details.matches('details[data-state-field]')) return;
+        var input = details.closest('form')?.elements[details.dataset.stateField];
+        if (input) input.value = details.open ? '1' : '0';
+    }, true);
+
     var timer;
     var controller;
     var generation = 0;

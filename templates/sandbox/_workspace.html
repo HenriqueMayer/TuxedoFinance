@@ -40,8 +40,19 @@
             </div>
         </section>
 
+        <input type="hidden" name="clt_settings_open" value="{% if clt_settings_open %}1{% else %}0{% endif %}">
+        <input type="hidden" name="tax_bands_open" value="{% if tax_bands_open %}1{% else %}0{% endif %}">
+        <details id="clt-settings" data-state-field="clt_settings_open" class="surface-panel" {% if clt_settings_open %}open{% endif %}>
+            <summary class="cursor-pointer font-medium">{% translate "Adjust CLT parameters" %}</summary>
+            <p class="subtle-copy mt-4">{% translate "Optional monthly payroll inputs. Alimony must qualify for the legal IRRF deduction and is also subtracted from net pay. Transport is capped at 6% of gross salary. Food, health and other deductions reduce net pay, not the monthly IRRF base. Do not repeat these amounts as additional expenses." %}</p>
+            <div class="mt-5 grid gap-5 md:grid-cols-2">
+                {% for field in clt_fields %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
+            </div>
+        </details>
+
         <div class="flex flex-wrap items-center gap-3">
             <button type="submit" name="action" value="calculate" id="budget-calculate" class="action-primary">{% translate "Calculate month" %}</button>
+            <button type="submit" name="action" value="tax_bands" id="budget-tax-bands" class="action-link">{% translate "Consult INSS and IRRF brackets" %}</button>
             <p class="subtle-copy">{% translate "The calculation does not change financial records and is not saved automatically." %}</p>
         </div>
 

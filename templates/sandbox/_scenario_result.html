@@ -29,6 +29,10 @@
             <dt class="text-forest/65 dark:text-cream/65">{% translate "Net in an ordinary month" %}</dt>
             <dd class="mt-1 text-lg font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ result.payroll.net|floatformat:2 }}</dd>
         </div>
+        <div>
+            <dt class="text-forest/65 dark:text-cream/65">{% translate "Other payroll deductions" %}</dt>
+            <dd class="mt-1 text-lg font-semibold tabular-nums">− {{ CURRENCY_SYMBOL }} {{ result.payroll.deductions|floatformat:2 }}</dd>
+        </div>
         {% endif %}
         <div>
             <dt class="text-forest/65 dark:text-cream/65">{% translate "Existing forecast" %}</dt>
@@ -42,11 +46,13 @@
 
     <p class="subtle-copy mt-4">
         {% if result.payroll %}
-            {% blocktranslate with year=result.tax_rule_year|unlocalize %}CLT estimate using {{ year }} tax rules, without dependents or other payroll deductions. FGTS, vacation pay and the thirteenth salary do not enter this monthly balance.{% endblocktranslate %}
+            {% blocktranslate with year=result.tax_rule_year|unlocalize %}CLT estimate using {{ year }} tax rules and the payroll parameters entered. FGTS, vacation pay and the thirteenth salary do not enter this monthly balance.{% endblocktranslate %}
         {% else %}
             {% translate "Saved plan without CLT deductions. Calculate again to apply INSS and IRRF." %}
         {% endif %}
     </p>
+
+    {% if result.payroll %}{% include 'sandbox/_tax_brackets.html' %}{% endif %}
 
     {% if result.variables %}
     <div class="mt-6 border-t border-forest/10 pt-5 dark:border-cream/10">

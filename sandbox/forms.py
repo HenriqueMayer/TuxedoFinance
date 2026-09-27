@@ -47,6 +47,13 @@ class SalarySandboxForm(forms.Form):
         help_text=_('Gross CLT salary. INSS and IRRF are calculated automatically before subtracting monthly expenses.'),
     )
 
+    clt_dependents = forms.IntegerField(label=_('Dependents for IRRF'), min_value=0, max_value=99, initial=0, required=False)
+    clt_pension = decimal_field(_('Deductible monthly alimony (BRL)'))
+    clt_transport = decimal_field(_('Monthly transport cost (BRL)'))
+    clt_food = decimal_field(_('Employee food benefit deduction (BRL)'))
+    clt_health = decimal_field(_('Employee health plan deduction (BRL)'))
+    clt_other = decimal_field(_('Other monthly payroll deductions (BRL)'))
+
     def __init__(self, *args, **kwargs):
         self.require_salary = kwargs.pop('require_salary', True)
         super().__init__(*args, **kwargs)

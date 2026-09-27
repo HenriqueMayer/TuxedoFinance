@@ -9,6 +9,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Add a monthly-plan tax bracket consultation with highlighted INSS, IRRF and reduction bands, plus optional CLT payroll parameters retained in drafts.
+
 - Start new monthly plans with editable Emergency reserve and Investment rows, both at zero, preserving submitted rows and existing drafts.
 
 ### Fixed

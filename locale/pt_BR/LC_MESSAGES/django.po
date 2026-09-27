@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 18:17+0000\n"
+"POT-Creation-Date: 2026-09-27 18:28+0000\n"
 "PO-Revision-Date: 2026-09-20 16:15+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -119,7 +119,7 @@ msgid "Bank"
 msgstr "Banco"
 
 #: banking/forms.py:84 investments/forms.py:312 investments/models.py:93
-#: sandbox/forms.py:150 templates/sandbox/compare.html:15
+#: sandbox/forms.py:157 templates/sandbox/compare.html:15
 msgid "Currency"
 msgstr "Moeda"
 
@@ -345,7 +345,8 @@ msgstr "Moeda de origem"
 msgid "To currency"
 msgstr "Moeda de destino"
 
-#: banking/forms.py:410 templates/sandbox/compare.html:21
+#: banking/forms.py:410 templates/sandbox/_tax_band_table.html:4
+#: templates/sandbox/compare.html:21
 msgid "Rate"
 msgstr "Taxa"
 
@@ -454,7 +455,7 @@ msgstr "Despesa"
 msgid "Transfer"
 msgstr "Transferência"
 
-#: banking/models.py:335 investments/models.py:34 sandbox/views.py:245
+#: banking/models.py:335 investments/models.py:34 sandbox/views.py:263
 msgid "Investment"
 msgstr "Investimento"
 
@@ -1645,7 +1646,8 @@ msgstr "Operação de investimento excluída."
 msgid "Planning month"
 msgstr "Mês do planejamento"
 
-#: sandbox/forms.py:44 templates/sandbox/compare.html:18
+#: sandbox/forms.py:44 templates/sandbox/_tax_brackets.html:17
+#: templates/sandbox/compare.html:18
 msgid "Gross monthly salary"
 msgstr "Salário bruto mensal"
 
@@ -1657,20 +1659,44 @@ msgstr ""
 "Salário bruto CLT. INSS e IRRF são calculados automaticamente antes de "
 "descontar as despesas mensais."
 
-#: sandbox/forms.py:71
+#: sandbox/forms.py:50
+msgid "Dependents for IRRF"
+msgstr "Dependentes para IRRF"
+
+#: sandbox/forms.py:51
+msgid "Deductible monthly alimony (BRL)"
+msgstr "Pensão alimentícia mensal dedutível (R$)"
+
+#: sandbox/forms.py:52
+msgid "Monthly transport cost (BRL)"
+msgstr "Custo mensal de vale-transporte (R$)"
+
+#: sandbox/forms.py:53
+msgid "Employee food benefit deduction (BRL)"
+msgstr "Desconto de alimentação do empregado (R$)"
+
+#: sandbox/forms.py:54
+msgid "Employee health plan deduction (BRL)"
+msgstr "Desconto de plano de saúde do empregado (R$)"
+
+#: sandbox/forms.py:55
+msgid "Other monthly payroll deductions (BRL)"
+msgstr "Outros descontos mensais em folha (R$)"
+
+#: sandbox/forms.py:78
 msgid "Enter the gross monthly salary."
 msgstr "Informe o salário bruto mensal."
 
-#: sandbox/forms.py:94
+#: sandbox/forms.py:101
 msgid "Enter at most 20 complete rows in each list."
 msgstr "Informe no máximo 20 linhas completas em cada lista."
 
-#: sandbox/forms.py:101
+#: sandbox/forms.py:108
 #, python-format
 msgid "Row %(row)s: enter a description and a valid nonnegative amount."
 msgstr "Linha %(row)s: informe uma descrição e um valor não negativo válido."
 
-#: sandbox/forms.py:103
+#: sandbox/forms.py:110
 #, python-format
 msgid ""
 "Row %(row)s: enter a description and a valid nonnegative amount or "
@@ -1679,56 +1705,56 @@ msgstr ""
 "Linha %(row)s: informe uma descrição e um valor não negativo ou percentual "
 "válido (0–100)."
 
-#: sandbox/forms.py:144
+#: sandbox/forms.py:151
 msgid "Enter a month as YYYY-MM, between 1901 and 9988."
 msgstr "Informe um mês no formato AAAA-MM, entre 1901 e 9988."
 
-#: sandbox/forms.py:148
+#: sandbox/forms.py:155
 msgid "Effective monthly rate (%)"
 msgstr "Taxa mensal efetiva (%)"
 
-#: sandbox/forms.py:149
+#: sandbox/forms.py:156
 msgid "Effective annual rate (%)"
 msgstr "Taxa anual efetiva (%)"
 
-#: sandbox/forms.py:151 templates/sandbox/compare.html:16
+#: sandbox/forms.py:158 templates/sandbox/compare.html:16
 msgid "Starting month"
 msgstr "Mês inicial"
 
-#: sandbox/forms.py:152 templates/sandbox/compare.html:17
+#: sandbox/forms.py:159 templates/sandbox/compare.html:17
 msgid "Months"
 msgstr "Meses"
 
-#: sandbox/forms.py:153 templates/sandbox/_simulation_result.html:12
+#: sandbox/forms.py:160 templates/sandbox/_simulation_result.html:12
 #: templates/sandbox/compare.html:20
 msgid "Initial balance"
 msgstr "Saldo inicial"
 
-#: sandbox/forms.py:154
+#: sandbox/forms.py:161
 msgid "Effective rate (%)"
 msgstr "Taxa efetiva (%)"
 
-#: sandbox/forms.py:155
+#: sandbox/forms.py:162
 msgid "Rate period"
 msgstr "Período da taxa"
 
-#: sandbox/forms.py:155 templates/sandbox/compare.html:21
+#: sandbox/forms.py:162 templates/sandbox/compare.html:21
 msgid "Monthly"
 msgstr "Mensal"
 
-#: sandbox/forms.py:155 templates/sandbox/compare.html:21
+#: sandbox/forms.py:162 templates/sandbox/compare.html:21
 msgid "Annual"
 msgstr "Anual"
 
-#: sandbox/forms.py:156
+#: sandbox/forms.py:163
 msgid "Monthly contribution"
 msgstr "Aporte mensal"
 
-#: sandbox/forms.py:157
+#: sandbox/forms.py:164
 msgid "Monthly withdrawal"
 msgstr "Resgate mensal"
 
-#: sandbox/forms.py:190
+#: sandbox/forms.py:197
 #, python-format
 msgid ""
 "Month %(month)s: enter a valid nonnegative amount with at most two decimal "
@@ -1737,7 +1763,7 @@ msgstr ""
 "Mês %(month)s: informe um valor não negativo válido, com no máximo duas "
 "casas decimais."
 
-#: sandbox/forms.py:199
+#: sandbox/forms.py:206
 msgid "Draft name"
 msgstr "Nome do rascunho"
 
@@ -1809,26 +1835,26 @@ msgstr ""
 "A multa rescisória de 40% do FGTS é contingente e não está incluída nesta "
 "projeção."
 
-#: sandbox/views.py:172
+#: sandbox/views.py:182
 msgid "This draft is too large. Reduce the number or length of its inputs."
 msgstr ""
 "Este rascunho está muito grande. Reduza a quantidade ou o tamanho dos dados "
 "informados."
 
-#: sandbox/views.py:186
+#: sandbox/views.py:196
 msgid "Draft saved. Your financial records have not changed."
 msgstr "Rascunho salvo. Seus registros financeiros não mudaram."
 
-#: sandbox/views.py:244
+#: sandbox/views.py:262
 msgid "Emergency reserve"
 msgstr "Reserva de emergência"
 
-#: sandbox/views.py:291
+#: sandbox/views.py:309
 #, python-format
 msgid "Copy of %(name)s"
 msgstr "Cópia de %(name)s"
 
-#: sandbox/views.py:307
+#: sandbox/views.py:325
 msgid "Only the first three selected drafts are shown."
 msgstr "Somente os três primeiros rascunhos selecionados são exibidos."
 
@@ -3856,48 +3882,50 @@ msgid "Available after expenses"
 msgstr "Disponível após as despesas"
 
 #: templates/sandbox/_scenario_result.html:16
+#: templates/sandbox/_tax_brackets.html:6
 msgid "Gross salary"
 msgstr "Salário bruto"
 
 #: templates/sandbox/_scenario_result.html:21
+#: templates/sandbox/_tax_brackets.html:5
 msgid "INSS"
-msgstr ""
+msgstr "INSS"
 
 #: templates/sandbox/_scenario_result.html:25
+#: templates/sandbox/_tax_brackets.html:10
+#: templates/sandbox/_tax_brackets.html:25
 msgid "IRRF"
-msgstr ""
+msgstr "IRRF"
 
 #: templates/sandbox/_scenario_result.html:29 templates/sandbox/compare.html:19
 msgid "Net in an ordinary month"
 msgstr "Líquido em um mês comum"
 
-#: templates/sandbox/_scenario_result.html:34
+#: templates/sandbox/_scenario_result.html:33
+msgid "Other payroll deductions"
+msgstr "Outros descontos em folha"
+
+#: templates/sandbox/_scenario_result.html:38
 msgid "Existing forecast"
 msgstr "Previsão existente"
 
-#: templates/sandbox/_scenario_result.html:38
+#: templates/sandbox/_scenario_result.html:42
 #: templates/sandbox/_workspace.html:33
 msgid "Additional fixed expenses"
 msgstr "Despesas fixas adicionais"
 
-#: templates/sandbox/_scenario_result.html:45
+#: templates/sandbox/_scenario_result.html:49
 #, python-format
-msgid ""
-"CLT estimate using %(year)s tax rules, without dependents or other payroll "
-"deductions. FGTS, vacation pay and the thirteenth salary do not enter this "
-"monthly balance."
-msgstr ""
-"Estimativa CLT com as regras tributárias de %(year)s, sem dependentes ou "
-"outros descontos de folha. FGTS, férias e décimo terceiro não entram neste "
-"saldo mensal."
+msgid "CLT estimate using %(year)s tax rules and the payroll parameters entered. FGTS, vacation pay and the thirteenth salary do not enter this monthly balance."
+msgstr "Estimativa CLT com as regras tributárias de %(year)s e os parâmetros de folha informados. FGTS, férias e décimo terceiro não entram neste saldo mensal."
 
-#: templates/sandbox/_scenario_result.html:47 templates/sandbox/compare.html:19
+#: templates/sandbox/_scenario_result.html:51 templates/sandbox/compare.html:19
 msgid ""
 "Saved plan without CLT deductions. Calculate again to apply INSS and IRRF."
 msgstr ""
 "Plano salvo sem descontos CLT. Calcule novamente para aplicar INSS e IRRF."
 
-#: templates/sandbox/_scenario_result.html:53
+#: templates/sandbox/_scenario_result.html:59
 msgid "Added expenses"
 msgstr "Despesas adicionadas"
 
@@ -3955,6 +3983,95 @@ msgid ""
 msgstr ""
 "Preencha os campos obrigatórios para calcular. Rascunhos incompletos não "
 "possuem resultado projetado."
+
+#: templates/sandbox/_tax_band_table.html:4
+msgid "Calculation base (BRL)"
+msgstr "Base de cálculo (R$)"
+
+#: templates/sandbox/_tax_band_table.html:4
+msgid "Deduction (BRL)"
+msgstr "Parcela a deduzir (R$)"
+
+#: templates/sandbox/_tax_band_table.html:8
+#: templates/sandbox/_tax_brackets.html:19
+#: templates/sandbox/_tax_brackets.html:20
+#: templates/sandbox/_tax_brackets.html:21
+msgid "Your bracket"
+msgstr "Sua faixa"
+
+#: templates/sandbox/_tax_brackets.html:3
+#, python-format
+msgid "Tax brackets — %(year)s"
+msgstr "Faixas de tributação — %(year)s"
+
+#: templates/sandbox/_tax_brackets.html:4
+msgid "Highlighted rows use the calculated salary and payroll parameters. Use Consult INSS and IRRF brackets again after editing inputs to refresh the calculation."
+msgstr "As linhas destacadas usam o salário e os parâmetros calculados. Após editar os valores, clique novamente em Consultar faixas de INSS e IRRF para atualizar o cálculo."
+
+#: templates/sandbox/_tax_brackets.html:6
+msgid "INSS is progressive: each rate applies only to the portion in that band, up to the contribution ceiling."
+msgstr "O INSS é progressivo: cada alíquota incide somente sobre a parcela daquela faixa, até o teto de contribuição."
+
+#: templates/sandbox/_tax_brackets.html:7
+msgid "Salary above the INSS ceiling"
+msgstr "Salário acima do teto do INSS"
+
+#: templates/sandbox/_tax_brackets.html:11
+msgid "IRRF calculation base"
+msgstr "Base de cálculo do IRRF"
+
+#: templates/sandbox/_tax_brackets.html:11
+msgid "Legal deductions applied."
+msgstr "Deduções legais aplicadas."
+
+#: templates/sandbox/_tax_brackets.html:11
+msgid "Simplified deduction applied."
+msgstr "Desconto simplificado aplicado."
+
+#: templates/sandbox/_tax_brackets.html:11
+msgid "The more favorable deduction is used. The IRRF bracket is based on this taxable amount, not directly on gross salary."
+msgstr "É usada a dedução mais vantajosa. A faixa do IRRF considera essa base tributável, e não diretamente o salário bruto."
+
+#: templates/sandbox/_tax_brackets.html:14
+msgid "IRRF reduction by gross income"
+msgstr "Redução do IRRF por rendimento bruto"
+
+#: templates/sandbox/_tax_brackets.html:17
+msgid "Reduction"
+msgstr "Redução"
+
+#: templates/sandbox/_tax_brackets.html:19
+msgid "Up to"
+msgstr "Até"
+
+#: templates/sandbox/_tax_brackets.html:19
+msgid "Income tax reduced to zero."
+msgstr "Imposto de renda reduzido a zero."
+
+#: templates/sandbox/_tax_brackets.html:20
+#: templates/sandbox/_tax_brackets.html:21
+msgid "Above"
+msgstr "Acima de"
+
+#: templates/sandbox/_tax_brackets.html:20
+msgid "up to"
+msgstr "até"
+
+#: templates/sandbox/_tax_brackets.html:20
+msgid "Partial income tax reduction."
+msgstr "Redução parcial do imposto de renda."
+
+#: templates/sandbox/_tax_brackets.html:21
+msgid "No income tax reduction."
+msgstr "Sem redução do imposto de renda."
+
+#: templates/sandbox/_tax_brackets.html:25
+msgid "Reduction applied"
+msgstr "Redução aplicada"
+
+#: templates/sandbox/_tax_brackets.html:26
+msgid "Official sources"
+msgstr "Fontes oficiais"
 
 #: templates/sandbox/_variable_row.html:4
 msgid "Description"
@@ -4014,18 +4131,31 @@ msgstr "Escolha R$ ou um percentual do salário bruto mensal."
 msgid "Add fixed expense"
 msgstr "Adicionar despesa fixa"
 
-#: templates/sandbox/_workspace.html:44
+#: templates/sandbox/_workspace.html:46
+msgid "Adjust CLT parameters"
+msgstr "Ajustar parâmetros CLT"
+
+#: templates/sandbox/_workspace.html:47
+#, python-format
+msgid "Optional monthly payroll inputs. Alimony must qualify for the legal IRRF deduction and is also subtracted from net pay. Transport is capped at 6%% of gross salary. Food, health and other deductions reduce net pay, not the monthly IRRF base. Do not repeat these amounts as additional expenses."
+msgstr "Parâmetros opcionais da folha mensal. A pensão deve atender aos requisitos de dedução legal do IRRF e também é descontada do líquido. O vale-transporte é limitado a 6%% do bruto. Alimentação, saúde e outros descontos reduzem o líquido, sem reduzir a base mensal do IRRF. Não repita esses valores nas despesas adicionais."
+
+#: templates/sandbox/_workspace.html:54
+msgid "Consult INSS and IRRF brackets"
+msgstr "Consultar faixas de INSS e IRRF"
+
+#: templates/sandbox/_workspace.html:55
 msgid "Calculate month"
 msgstr "Calcular mês"
 
-#: templates/sandbox/_workspace.html:45
+#: templates/sandbox/_workspace.html:56
 msgid ""
 "The calculation does not change financial records and is not saved "
 "automatically."
 msgstr ""
 "O cálculo não altera registros financeiros e não é salvo automaticamente."
 
-#: templates/sandbox/_workspace.html:51
+#: templates/sandbox/_workspace.html:62
 msgid "Save this plan (optional)"
 msgstr "Salvar este plano (opcional)"
 
@@ -4652,9 +4782,6 @@ msgstr "Transação \"%(title)s\" excluída."
 #~ "Usa as regras oficiais de INSS e IRRF de 2026 e inclui férias, 13º "
 #~ "salário e FGTS."
 
-#~ msgid "Dependents"
-#~ msgstr "Dependentes"
-
 #~ msgid ""
 #~ "Legal dependents considered when choosing the most favorable monthly IRRF "
 #~ "deduction."
@@ -4679,9 +4806,6 @@ msgstr "Transação \"%(title)s\" excluída."
 #~ "Limita o desconto em folha a 6% do salário ou ao custo real do "
 #~ "transporte, o que for menor."
 
-#~ msgid "Actual monthly transport cost"
-#~ msgstr "Custo real mensal de transporte"
-
 #~ msgid "Monthly public-transport cost supplied by the employer."
 #~ msgstr "Custo mensal do transporte público fornecido pelo empregador."
 
@@ -4696,9 +4820,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "Monthly plan fee or copayment deducted from payroll."
 #~ msgstr "Mensalidade ou coparticipação do plano descontada em folha."
-
-#~ msgid "Other payroll deductions"
-#~ msgstr "Outros descontos em folha"
 
 #~ msgid "Other recurring amounts deducted directly from the employee."
 #~ msgstr "Outros valores recorrentes descontados diretamente do trabalhador."
@@ -4871,9 +4992,6 @@ msgstr "Transação \"%(title)s\" excluída."
 #~ msgid "Deduction type"
 #~ msgstr "Tipo do desconto"
 
-#~ msgid "Deduction value"
-#~ msgstr "Valor do desconto"
-
 #~ msgid "Remove deduction"
 #~ msgstr "Remover desconto"
 
@@ -4907,9 +5025,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "Automatic CLT calculation"
 #~ msgstr "Cálculo automático CLT"
-
-#~ msgid "Manual calculation"
-#~ msgstr "Cálculo manual"
 
 #~ msgid "Monthly result"
 #~ msgstr "Resultado mensal"
@@ -4991,14 +5106,8 @@ msgstr "Transação \"%(title)s\" excluída."
 #~ msgstr ""
 #~ "Salário bruto menos todos os descontos e impostos informados manualmente."
 
-#~ msgid "Total deductions"
-#~ msgstr "Total de descontos"
-
 #~ msgid "Sum of fixed and percentage deductions entered for one month."
 #~ msgstr "Soma dos descontos fixos e percentuais informados para um mês."
-
-#~ msgid "Deduction"
-#~ msgstr "Desconto"
 
 #~ msgid "Entered"
 #~ msgstr "Informado"
@@ -5119,9 +5228,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "Monthly amount or percentage assigned to this expense."
 #~ msgstr "Valor mensal ou percentual atribuído a esta despesa."
-
-#~ msgid "Official CLT rule sources"
-#~ msgstr "Fontes oficiais das regras CLT"
 
 #~ msgid "Competence"
 #~ msgstr "Competência"
@@ -5252,9 +5358,6 @@ msgstr "Transação \"%(title)s\" excluída."
 #, python-format
 #~ msgid "A clear check of this month, %(username)s."
 #~ msgstr "Um panorama claro deste mês, %(username)s."
-
-#~ msgid "Your result"
-#~ msgstr "Seu resultado"
 
 #~ msgid "Step 1"
 #~ msgstr "Etapa 1"

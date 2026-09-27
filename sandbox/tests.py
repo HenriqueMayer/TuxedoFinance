@@ -221,6 +221,54 @@ class SandboxViewTests(TestCase):
         self.assertEqual(compared.context['scenarios'][0]['result']['budget'].income, D('4498.49'))
 
 
+    def test_tax_brackets_follow_current_inputs_and_adjusted_irrf_base(self):
+        self.client.force_login(self.user)
+        data = {'action': 'tax_bands', 'gross_salary': '6000', 'planning_month': '2026-10',
+                'clt_dependents': '2', 'clt_pension': '500', 'clt_transport': '100',
+                'clt_food': '50', 'clt_health': '100', 'clt_other': '25'}
+        response = self.client.post(reverse('sandbox:index'), data)
+        result = response.context['result']
+        self.assertTrue(response.context['tax_bands_open'])
+        self.assertTrue(response.context['clt_settings_open'])
+        self.assertEqual(result['payroll'].irrf_base, D('4479.31'))
+        self.assertEqual(result['payroll'].deductions, D('775'))
+        self.assertEqual(result['payroll'].net, D('4430.89'))
+        self.assertEqual([r['rate'] for r in result['tax_bands']['inss'] if r['selected']], [D('14')])
+        self.assertEqual([r['rate'] for r in result['tax_bands']['irrf'] if r['selected']], [D('22.5')])
+        self.assertEqual(result['tax_bands']['reduction_band'], 'partial')
+        self.assertContains(response, 'aria-current="true"', count=3)
+        self.assertEqual(ScenarioDraft.objects.count(), 0)
+        saved = self.client.post(reverse('sandbox:index'), {
+            **data, 'action': 'save', 'draft_name': 'Adjusted CLT',
+        }, follow=True)
+        self.assertEqual(saved.context['result']['payroll'].net, D('4430.89'))
+        self.assertEqual(saved.context['form']['clt_dependents'].value(), '2')
+        draft = ScenarioDraft.objects.get()
+        compared = self.client.get(reverse('sandbox:compare'), {'draft': draft.pk})
+        self.assertEqual(compared.context['scenarios'][0]['result']['payroll'].net, D('4430.89'))
+        moved = self.client.post(reverse('sandbox:index'), {**data, 'action': 'next_month'})
+        self.assertEqual(moved.context['form']['clt_pension'].value(), '500')
+        for name, value in [('clt_dependents', '-1'), ('clt_dependents', '1.5'),
+                            ('clt_health', 'NaN'), ('clt_pension', '-1')]:
+            with self.subTest(name=name, value=value):
+                invalid = self.client.post(reverse('sandbox:index'), {**data, name: value})
+                self.assertIsNone(invalid.context['result'])
+                self.assertTrue(invalid.context['clt_settings_open'])
+                self.assertEqual(invalid.context['form'][name].value(), value)
+
+    def test_tax_bracket_boundaries_ceiling_and_reduction(self):
+        from sandbox.services import payroll_brackets
+        rules = get_tax_rules()
+        for gross, rate, reduction in [('1621', '7.5', 'zero'), ('1621.01', '9', 'zero'),
+                                       ('5000', '14', 'zero'), ('5000.01', '14', 'partial'),
+                                       ('7350', '14', 'partial'), ('7350.01', '14', 'none'),
+                                       ('10000', '14', 'none')]:
+            with self.subTest(gross=gross):
+                brackets = payroll_brackets(calculate_clt(CltScenario(D(gross))).ordinary, rules)
+                self.assertEqual([r['rate'] for r in brackets['inss'] if r['selected']], [D(rate)])
+                self.assertEqual(brackets['reduction_band'], reduction)
+                self.assertEqual(brackets['above_ceiling'], D(gross) > D('8475.55'))
+
     def test_fragment_post_replaces_only_one_workspace(self):
         self.client.force_login(self.user)
         response = self.client.post(reverse('sandbox:index'), {
@@ -323,6 +371,16 @@ class SandboxViewTests(TestCase):
         self.assertContains(calculated, 'Líquido em um mês comum')
         self.assertContains(calculated, 'R$ 4.973,39')
         self.assertContains(calculated, 'regras tributárias de 2026')
+        with override('pt-br'):
+            tables = self.client.post(reverse('sandbox:index'), {
+                'action': 'tax_bands', 'gross_salary': '6000', 'planning_month': '2026-10',
+            })
+        self.assertContains(tables, 'Consultar faixas de INSS e IRRF')
+        self.assertContains(tables, 'Ajustar parâmetros CLT')
+        self.assertContains(tables, 'Sua faixa', count=3)
+        self.assertContains(tables, 'Redução parcial do imposto de renda.')
+        self.assertContains(tables, '6% do bruto')
+
 
 
 
