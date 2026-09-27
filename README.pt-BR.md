@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="Status da integração contínua"></a>
-  <img src="https://img.shields.io/badge/version-0.8.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.8.0">
+  <img src="https://img.shields.io/badge/version-0.8.1-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.8.1">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Interface em inglês e português do Brasil">
@@ -53,14 +53,14 @@ um banco SQLite sob controle do responsável pela instalação.
 ### Docker
 
 Requer Docker Engine 28+ (ou Docker Desktop atualizado) e Compose v2+.
-Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.0/compose.yaml)
-e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.0/docker.env.example)
-da [release v0.8.0](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.8.0)
+Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.1/compose.yaml)
+e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.1/docker.env.example)
+da [release v0.8.1](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.8.1)
 para uma nova pasta de instalação. Abra um terminal nessa pasta e execute os comandos.
 Não é necessário clonar o repositório nem instalar Python, uv ou Node.js no computador:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.8.0
+image=ghcr.io/henriquemayer/tuxedofinance:v0.8.1
 docker pull "$image"
 (
   umask 077
@@ -112,8 +112,8 @@ uv run python manage.py runserver
 
 ## ✨ Funcionalidades
 
-Estes recursos estão incluídos na [v0.8.0](CHANGELOG.md#080---2026-09-27).
-Esta versão adiciona gráficos dedicados de investimentos com filtro imediato, textos de operações mais claros, planejamento mensal simplificado com despesas em R$ ou percentual do salário bruto e controles aprimorados para simulação de rendimentos.
+Estes recursos estão incluídos na [v0.8.1](CHANGELOG.md#081---2026-09-27).
+Esta correção faz o planejamento mensal usar o mês de referência das despesas, alinhado aos Relatórios, preservando os valores dos rascunhos já salvos.
 Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 [procedimento de atualização](docs/docker.md#update) para recebê-los.
 

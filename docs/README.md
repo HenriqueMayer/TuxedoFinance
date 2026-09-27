@@ -64,7 +64,7 @@ and preview use the same locked frontend toolchain.
 
 ## Documentation status
 
-These documents describe `0.8.0` and the changes under `Unreleased`. Supported
+These documents describe `0.8.1` and the changes under `Unreleased`. Supported
 released installations use the committed incremental migrations and preserve
 existing records. The historical clean reset applied only to pre-release legacy
 schemas; it is not an instruction to reset a released installation. See
