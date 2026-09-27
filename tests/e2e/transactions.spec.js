@@ -102,6 +102,8 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await page.getByText('More filters', { exact: true }).click();
     await page.locator('#filter-date').fill('2026-01-15');
     await page.getByRole('button', { name: 'Apply filters' }).click();
+    // Sorting uses the applied filter state after the localized date redirect.
+    await expect(page).toHaveURL(/date=2026-01-15/);
     await expect(page.locator('#filter-date')).toBeVisible();
     await page.locator('#filter-sort').selectOption('oldest');
     await page.getByRole('button', { name: 'Sort', exact: true }).click();
