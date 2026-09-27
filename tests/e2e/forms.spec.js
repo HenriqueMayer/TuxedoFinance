@@ -318,7 +318,7 @@ test('native forms and conditional fields remain usable without JavaScript', asy
         await page.goto('/sandbox/');
         await expect(page.getByLabel('Gross monthly salary', { exact: true })).toBeVisible();
         await expect(page.getByLabel('Planning month', { exact: true })).toBeVisible();
-        await expect(page.getByLabel('Fixed expense description', { exact: true })).toBeVisible();
+        await expect(page.getByLabel('Fixed expense description', { exact: true }).first()).toBeVisible();
     } finally { await context.close(); }
 });
 

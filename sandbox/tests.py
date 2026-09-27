@@ -116,6 +116,10 @@ class SandboxViewTests(TestCase):
         self.assertContains(response, 'Salary Sandbox')
         self.assertContains(response, 'name="gross_salary"')
         self.assertContains(response, 'name="planning_month"')
+        self.assertEqual(response.context['variable_rows'], [
+            {'label': 'Emergency reserve', 'value_type': 'currency', 'value': '0.00'},
+            {'label': 'Investment', 'value_type': 'currency', 'value': '0.00'},
+        ])
         self.assertContains(response, 'type="month"')
         self.assertContains(response, 'Existing expense forecast')
         self.assertContains(response, 'Additional fixed expenses')
@@ -123,6 +127,28 @@ class SandboxViewTests(TestCase):
         self.assertNotContains(response, 'name="use_clt"')
         self.assertNotContains(response, 'name="deduction_label"')
         self.assertNotContains(response, 'name="fixed_cost_value"')
+
+    def test_removed_default_rows_stay_removed_across_month_changes_and_drafts(self):
+        self.client.force_login(self.user)
+        data = {'gross_salary': '5000', 'planning_month': '2026-10',
+                'variable_label': ['Emergency reserve', 'Investment'],
+                'variable_type': ['currency', 'currency'], 'variable_value': ['0.00', '0.00']}
+        response = self.client.post(reverse('sandbox:index'), {**data, 'action': 'remove_variable_0'})
+        self.assertEqual([row['label'] for row in response.context['variable_rows']], ['Investment'])
+        remaining = {**data, 'variable_label': ['Investment'],
+                     'variable_type': ['percent'], 'variable_value': ['10']}
+        response = self.client.post(reverse('sandbox:index'), {**remaining, 'action': 'next_month'})
+        self.assertEqual([row['label'] for row in response.context['variable_rows']], ['Investment'])
+        response = self.client.post(reverse('sandbox:index'), {
+            **remaining, 'action': 'save', 'draft_name': 'Investment only',
+        }, follow=True)
+        self.assertEqual([row['label'] for row in response.context['variable_rows']], ['Investment'])
+        self.assertEqual(response.context['result']['budget'].custom_expenses, D('500'))
+        response = self.client.post(reverse('sandbox:index'), {
+            **remaining, 'variable_value': ['invalid'], 'action': 'calculate',
+        })
+        self.assertEqual([row['label'] for row in response.context['variable_rows']], ['Investment'])
+        self.assertEqual(response.context['variable_rows'][0]['value'], 'invalid')
 
     def test_post_uses_clt_net_salary_and_added_fixed_expenses(self):
         self.client.force_login(self.user)
@@ -286,6 +312,8 @@ class SandboxViewTests(TestCase):
         self.assertContains(response, 'Sandbox de Salário')
         self.assertContains(response, 'Previsão de despesas existente')
         self.assertContains(response, 'Despesas fixas adicionais')
+        self.assertContains(response, 'value="Reserva de emergência"')
+        self.assertContains(response, 'value="Investimento"')
         self.assertContains(response, 'Salvar este plano (opcional)')
         self.assertNotContains(response, 'Calcular descontos CLT')
         with override('pt-br'):

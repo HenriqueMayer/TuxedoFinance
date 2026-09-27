@@ -26,6 +26,12 @@ A localized month/year caption makes the chosen period explicit. The forecast
 button is available only without JavaScript, where it provides the native refresh
 path. Forecast changes never save a draft.
 
+New plans start with editable Emergency reserve and Investment rows, both in
+BRL with a zero amount so they do not assume an allocation. They support the
+same currency/percentage choice and removal as other rows. Defaults appear only
+on the initial new-plan GET; month changes, invalid submissions and saved drafts
+preserve the user's rows without reintroducing removed suggestions.
+
 Up to 20 additional expenses may be added for amounts not already recorded.
 Each row accepts either BRL or a percentage (0–100) of the gross monthly salary,
 not of the remainder after other expenses. Percentages use Decimal arithmetic

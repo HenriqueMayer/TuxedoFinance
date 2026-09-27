@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 18:11+0000\n"
+"POT-Creation-Date: 2026-09-27 18:17+0000\n"
 "PO-Revision-Date: 2026-09-20 16:15+0000\n"
 "Last-Translator: OpenCode\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -454,7 +454,7 @@ msgstr "Despesa"
 msgid "Transfer"
 msgstr "Transferência"
 
-#: banking/models.py:335 investments/models.py:34
+#: banking/models.py:335 investments/models.py:34 sandbox/views.py:245
 msgid "Investment"
 msgstr "Investimento"
 
@@ -1819,12 +1819,16 @@ msgstr ""
 msgid "Draft saved. Your financial records have not changed."
 msgstr "Rascunho salvo. Seus registros financeiros não mudaram."
 
-#: sandbox/views.py:286
+#: sandbox/views.py:244
+msgid "Emergency reserve"
+msgstr "Reserva de emergência"
+
+#: sandbox/views.py:291
 #, python-format
 msgid "Copy of %(name)s"
 msgstr "Cópia de %(name)s"
 
-#: sandbox/views.py:302
+#: sandbox/views.py:307
 msgid "Only the first three selected drafts are shown."
 msgstr "Somente os três primeiros rascunhos selecionados são exibidos."
 
@@ -5042,9 +5046,6 @@ msgstr "Transação \"%(title)s\" excluída."
 #~ "percentage."
 #~ msgstr ""
 #~ "Valor mensal reservado para emergências conforme o percentual selecionado."
-
-#~ msgid "Emergency reserve"
-#~ msgstr "Reserva de emergência"
 
 #~ msgid ""
 #~ "Monthly amount allocated to investments according to the selected "

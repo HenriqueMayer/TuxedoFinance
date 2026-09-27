@@ -239,7 +239,12 @@ def _workspace(request, kind='budget', draft=None):
                'workspace_url': request.path, 'CURRENCY_SYMBOL': 'R$',
                'draft_save_open': bool(draft or name_form.errors)}
     if kind == 'budget':
-        context['variable_rows'] = variable_rows(data, 'variable', include_blank=True)
+        # Suggestions belong only to a new workspace, never to submitted or saved rows.
+        context['variable_rows'] = (
+            [{'label': _('Emergency reserve'), 'value_type': 'currency', 'value': '0.00'},
+             {'label': _('Investment'), 'value_type': 'currency', 'value': '0.00'}]
+            if data is None else variable_rows(data, 'variable', include_blank=True)
+        )
         template = 'sandbox/_workspace.html' if posted and data.get('response_mode') == 'fragment' else 'sandbox/index.html'
     else:
         try:

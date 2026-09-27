@@ -7,6 +7,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Start new monthly plans with editable Emergency reserve and Investment rows, both at zero, preserving submitted rows and existing drafts.
+
 ### Fixed
 
 - Restore automatic INSS and IRRF deductions in monthly planning, using ordinary CLT net salary for the available balance and retaining gross-based percentage expenses. Show the deduction breakdown and preserve legacy drafts until recalculation.
