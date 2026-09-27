@@ -39,7 +39,7 @@
         return { identity: identity(), url: url(), title: root.querySelector('h1')?.textContent.trim() || document.title,
             top: scrollY, left: scrollX, focus: lastFocus,
             forms: Array.from(root.querySelectorAll('form')).map(form => ({
-                action: form.getAttribute('action') || '',
+                action: form.getAttribute('action') || '', method: form.method.toLowerCase(),
                 fields: fields(form).map(field => ({name: field.name, type: field.type, value: field.value,
                     checked: field.checked, selected: field.multiple ? Array.from(field.selectedOptions, option => option.value) : null})),
             })),
@@ -51,7 +51,10 @@
     }
     function formState() {
         const snapshot = capture();
-        return snapshot && JSON.stringify({forms: snapshot.forms, rows: snapshot.rows, yieldRows: snapshot.yieldRows});
+        // GET filters are view state: retain them for Back/Forward, but only
+        // unsent POST fields (and simulation results) need a departure warning.
+        return snapshot && JSON.stringify({forms: snapshot.forms.filter(form => form.method === 'post'),
+            rows: snapshot.rows, yieldRows: snapshot.yieldRows});
     }
     function simulationResult() {
         return Boolean(main()?.querySelector('#scenario-result-title, #simulation-result .panel-heading'));
@@ -150,7 +153,7 @@
     }
     function confirmDeparture(destination, historyTraversal = false) {
         // Applying a filter on the same screen is not a departure. Browser
-        // Back still asks because it may replace unsent work on that screen.
+        // Back still checks for unsent work that it may replace on that screen.
         if (!historyTraversal && destination.split('?')[0] === currentUrl.split('?')[0]) {
             approvedDestination = destination;
             return true;

@@ -46,8 +46,10 @@ real interactions, viewport bounds, both themes and HTMX initialization.
 ## UI/UX decisions and compact action menus
 
 Use shared navigation, section tabs and browser Back/Forward for page navigation.
-Do not add redundant page-level "Back to" links. Keep form Cancel actions and
-date-reset controls, which have separate purposes.
+Do not add redundant page-level "Back to" links. Read-only GET filters and chart
+visualization changes must not trigger unsaved-operation departure warnings;
+preserve those warnings for edited POST forms and simulation results. Keep form
+Cancel actions and date-reset controls, which have separate purposes.
 
 When changing interface behavior or domain presentation, document the decision
 in the relevant technical guide and add a focused code comment for non-obvious

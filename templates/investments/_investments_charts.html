@@ -1,11 +1,11 @@
 {% load i18n l10n %}
 <div id="investments-charts" hx-request='{"noHeaders":false}' class="space-y-8" data-preserve-view>
     {% if selected_section == 'charts' %}
-    <form method="get" action="{% url 'investments:charts' %}" hx-get="{% url 'investments:charts' %}" hx-target="#investments-charts" hx-swap="outerHTML show:none" hx-push-url="true" class="flex flex-wrap items-end gap-4">
+    <form method="get" action="{% url 'investments:charts' %}" hx-get="{% url 'investments:charts' %}" hx-target="#investments-charts" hx-swap="outerHTML show:none" hx-push-url="true" hx-trigger="change, submit" class="flex flex-wrap items-end gap-4">
         {% include 'partials/form_field.html' with field=chart_filter.scope %}
         <input type="hidden" name="total_offset" value="{{ total_offset|stringformat:'d' }}">
         <input type="hidden" name="flow_offset" value="{{ flow_offset|stringformat:'d' }}">
-        <button class="action-link" type="submit">{% translate 'Filter' %}</button>
+        <noscript><button class="action-link" type="submit">{% translate 'Filter' %}</button></noscript>
     </form>
     {% endif %}
     {% if chart_missing_rate_currencies %}<p role="status" class="text-sm text-expense dark:text-expense-light">{% blocktranslate with currencies=chart_missing_rate_currencies|join:', ' %}Incomplete total: exchange rates are missing for {{ currencies }}.{% endblocktranslate %}</p>{% endif %}

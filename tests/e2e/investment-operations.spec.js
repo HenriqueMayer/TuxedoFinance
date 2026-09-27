@@ -128,8 +128,6 @@ for (const theme of ['light', 'dark']) {
         await expect(chart.locator('[data-selection-values]')).toContainText('1,015.00');
         await page.locator('#investment-chart-scope').focus();
         await page.keyboard.press('End');
-        await page.keyboard.press('Tab');
-        await page.keyboard.press('Enter');
         await expect(page).toHaveURL(/scope=cash/);
         await chart.locator('[data-point]').last().press('Enter');
         await expect(chart.locator('[data-selection-values]')).toContainText('5.00');
@@ -139,8 +137,6 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('#investment-chart-scope')).toHaveValue('cash');
         await page.locator('#investment-chart-scope').focus();
         await page.keyboard.press('ArrowUp');
-        await page.keyboard.press('Tab');
-        await page.keyboard.press('Enter');
         await expect(page).toHaveURL(/scope=portfolio/);
         await chart.locator('[data-point]').last().press('Enter');
         await expect(chart.locator('[data-selection-values]')).toContainText('1,010.00');
@@ -211,7 +207,6 @@ for (const theme of ['light', 'dark']) {
             await expect(page.getByRole('navigation', { name: 'Seções de investimentos' }).getByRole('link', { name: 'Gráficos' })).toHaveAttribute('aria-current', 'page');
             await expect(page.locator('#investment-chart-scope option:checked')).toHaveText('Geral');
             await page.locator('#investment-chart-scope').selectOption('cash');
-            await page.locator('#investments-charts button[type="submit"]').press('Enter');
             await expect(page).toHaveURL(/scope=cash/);
             await page.goBack();
             await expect(page.locator('#investment-chart-scope')).toHaveValue('');

@@ -623,7 +623,10 @@ excluded. Keep only the current and immediately previous URL snapshots, and disc
 them when the user or interface identity changes. Native browser Back and HTMX history must
 both work; navigation without JavaScript retains the browser's own history.
 
-Confirm departure when a form has been edited or a simulation result is visible.
+Confirm departure when a POST form has been edited or a simulation result is
+visible. GET filters and chart selections are read-only view state: preserve them
+for Back/Forward without treating them as unsaved operations. This applies to
+clicked navigation, history traversal and native refresh/tab-close warnings.
 For HTMX navigation and clicked links use the translated confirmation; for
 browser-owned navigation, refresh and tab close use `beforeunload` so the browser
 can display its native warning. Canceling a history traversal leaves the current

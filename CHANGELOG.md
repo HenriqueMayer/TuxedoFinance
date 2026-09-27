@@ -7,6 +7,11 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Apply the investment chart scope immediately on selection, retaining the native Filter action without JavaScript.
+- Exclude read-only GET filters and chart views from unsaved-operation departure warnings while retaining protection for edited POST forms and simulations.
+
 ### Added
 
 - Add an investment Charts tab with Overall, Portfolio and Remunerated cash scopes, historical position evolution and monthly flows.

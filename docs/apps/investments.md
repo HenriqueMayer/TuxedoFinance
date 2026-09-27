@@ -108,7 +108,9 @@ deposits, withdrawals and internal yields. Overall includes both purposes;
 opening positions remain visible even without operations. It does not include
 ordinary bank cash or imply market-price valuation.
 
-Filters preserve each chart's month window. HTMX updates only the chart region;
+Changing the scope immediately applies the filter while preserving each chart's
+month window, focus and scroll. The Filter button is the no-JavaScript fallback.
+HTMX updates only the chart region;
 ordinary GETs, browser history, keyboard selection and no-JavaScript filtering
 remain available. Missing FX warnings appear inside that same region so filtered
 or refreshed charts cannot silently lose their incomplete-conversion warning.
