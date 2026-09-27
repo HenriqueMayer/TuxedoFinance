@@ -22,6 +22,14 @@ INPUT_CLASSES = (
 )
 
 
+class InvestmentChartFilterForm(forms.Form):
+    scope = forms.ChoiceField(
+        label=_('Show positions'), required=False,
+        choices=(('', _('Overall')), ('portfolio', _('Portfolio')), ('cash', _('Remunerated cash'))),
+        widget=forms.Select(attrs={'class': INPUT_CLASSES, 'id': 'investment-chart-scope'}),
+    )
+
+
 class InvestmentSelect(forms.Select):
     """Expose scoped asset metadata to the progressive operation form."""
 
@@ -80,10 +88,10 @@ class InvestmentForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'rows': 4}),
         }
         labels = {
-            'product': _('Product destination'),
+            'product': _('Product'),
             'asset': _('Asset'),
             'kind': _('Type'),
-            'amount': _('Investment amount'),
+            'amount': _('Operation amount'),
             'quantity': _('Quantity (unit-based assets)'),
             'unit_price': _('Unit price (unit-based assets)'),
             'fees': _('Fees'),
@@ -97,7 +105,7 @@ class InvestmentForm(forms.ModelForm):
             'notes': _('Notes'),
         }
         help_texts = {
-            'amount': _('Required for monetary assets such as savings pots; it is also used for the bank movement.'),
+            'amount': _('Value of this operation in the asset currency. Yield changes only the position, without a bank movement.'),
             'quantity': _('Required only for assets valued by units and price.'),
             'unit_price': _('Required only for assets valued by units and price.'),
             'fees': _('Operation fees; this does not change gross value.'),
@@ -112,6 +120,18 @@ class InvestmentForm(forms.ModelForm):
         self.user = user
         configure_date_fields(self, user)
         self.yield_preview = None
+        self.operation_copy = {
+            'DEPOSIT': {'amount': _('Deposit amount'), 'quantity': _('Quantity acquired'),
+                        'unit_price': _('Purchase unit price'), 'cash_amount': _('Amount debited')},
+            'WITHDRAWAL': {'amount': _('Withdrawal amount'), 'quantity': _('Quantity withdrawn'),
+                           'unit_price': _('Sale unit price'), 'cash_amount': _('Amount received')},
+            'YIELD': {'amount': _('Yield amount'), 'quantity': _('Quantity earned'),
+                      'unit_price': _('Yield unit price'), 'cash_amount': _('Cash amount (unit-based assets)')},
+        }
+        kind = self.data.get('kind') if self.is_bound else self.initial.get('kind')
+        for name, label in self.operation_copy.get(kind, {}).items():
+            self.fields[name].label = label
+
         # Old submissions and the native form can identify the source directly.
         # The UI selector must not change the ledger's exactly-one-source rule.
         if self.is_bound and not self.data.get('funding_source'):

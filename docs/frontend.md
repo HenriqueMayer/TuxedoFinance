@@ -595,8 +595,9 @@ later edits. Missing prerequisites make Configure investments the primary
 action on portfolio and Operations pages; completed setup enables New operation.
 The Operations
 page owns operation search, purpose/type/record filters and pagination. Portfolio
-and remunerated-cash pages show positions; portfolio charts precede a contextual
-link to Operations. The same destination appears in section tabs and desktop/mobile
+and remunerated-cash pages show positions and a contextual link to Operations.
+The Charts tab filters historical positions and flows by Overall, Portfolio or
+Remunerated cash; scope and independent month windows survive GET/HTMX updates. The same destination appears in section tabs and desktop/mobile
 navigation menus. Old movement-filter URLs redirect to the new page. Chart navigation
 and operation pagination keep separate HTMX regions. Operation forms return to the
 history after a successful save or deletion.
@@ -622,7 +623,10 @@ excluded. Keep only the current and immediately previous URL snapshots, and disc
 them when the user or interface identity changes. Native browser Back and HTMX history must
 both work; navigation without JavaScript retains the browser's own history.
 
-Confirm departure when a form has been edited or a simulation result is visible.
+Confirm departure when a POST form has been edited or a simulation result is
+visible. GET filters and chart selections are read-only view state: preserve them
+for Back/Forward without treating them as unsaved operations. This applies to
+clicked navigation, history traversal and native refresh/tab-close warnings.
 For HTMX navigation and clicked links use the translated confirmation; for
 browser-owned navigation, refresh and tab close use `beforeunload` so the browser
 can display its native warning. Canceling a history traversal leaves the current
@@ -656,3 +660,19 @@ preset swatches. Existing banks receive the neutral caramel marker. The list use
 a slim corner marker; the marker next to the detail title links to a color-only
 edit form. Native submissions work without JavaScript and updates enforce bank
 ownership. Color does not carry financial meaning.
+
+
+### Planning parameter controls
+
+Planning month fields retain native keyboard entry and open the native picker
+from the entire field when `showPicker` is available. Monthly-plan arrows submit
+unsent form values along with the new month; localized month text identifies the
+selection. The forecast submit button remains as the no-JavaScript fallback and
+is hidden after enhancement, since changing the month already refreshes it.
+Additional expenses explicitly choose BRL or a percentage of gross salary.
+
+Yield simulation puts the rate period before the rate value and updates its label
+and help name together. Currency labels follow the currency selector. Duration
+shortcuts activate only on click, touch or keyboard, preserve focus, and use the
+same month field/override retention as manual entry. Live results never replace
+parameter fields. See the [planning guide](apps/sandbox.md) for calculation rules.

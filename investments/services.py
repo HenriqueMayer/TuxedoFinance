@@ -495,9 +495,10 @@ def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12
 
 
 def get_monthly_flow_in_base(user, base_currency, currencies=None, months=12, offset=0, purpose=InvestmentProduct.Purpose.INVESTMENT):
-    operations = list(Investment.objects.filter(
-        user=user, product__purpose=purpose,
-    ).select_related('asset'))
+    operations_query = Investment.objects.filter(user=user)
+    if purpose is not None:
+        operations_query = operations_query.filter(product__purpose=purpose)
+    operations = list(operations_query.select_related('asset'))
     missing = set()
     rows = []
     for year, month in _months_window(months, offset):

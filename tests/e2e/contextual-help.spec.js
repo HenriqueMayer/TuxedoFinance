@@ -94,6 +94,7 @@ for (const dark of [false, true]) {
 
         await page.goto('/investments/');
         await checkHelp(page, 'Portfolio', 'investments-portfolio-help');
+        await page.goto('/investments/charts/');
         await checkHelp(page, 'Investment evolution', 'investment-evolution-help');
         const evolution = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Investment evolution', exact: true }) });
         await evolution.getByRole('link', { name: 'Next window', exact: true }).click();
@@ -101,6 +102,7 @@ for (const dark of [false, true]) {
         await checkHelp(page, 'Monthly flow', 'investment-flow-help');
         await expect(page.getByRole('button', { name: 'Explain Monthly flow', exact: true })).toHaveCount(1);
         await page.setViewportSize({ width: 390, height: 740 });
+        await page.goto('/investments/');
         const positions = page.getByRole('region', { name: 'Positions', exact: true });
         await expect(positions.getByRole('table')).toBeHidden();
         const mobilePosition = positions.getByRole('listitem');
@@ -109,6 +111,7 @@ for (const dark of [false, true]) {
             await expect(mobilePosition.getByText(label, { exact: true })).toBeVisible();
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+        await page.goto('/investments/charts/');
         await page.getByRole('button', { name: 'Explain Investment evolution', exact: true }).press('Enter');
         const mobileBox = await page.locator('#investment-evolution-help').boundingBox();
         expect(mobileBox.x).toBeGreaterThanOrEqual(12);

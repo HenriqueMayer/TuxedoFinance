@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Investment charts' %} - Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-7">
+    <header class="workspace-header"><h1 class="page-title">{% translate 'Investments' %}</h1>{% include 'investments/_primary_action.html' %}</header>
+    {% include 'investments/_sections.html' %}
+    <p class="subtle-copy">{% translate 'Historical position values and recorded movements, not live market prices.' %}</p>
+    {% include 'investments/_investments_charts.html' %}
+</div>
+{% endblock %}

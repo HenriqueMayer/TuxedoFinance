@@ -211,10 +211,10 @@ test('monetary yield previews a final balance and stores only the calculated yie
     await expect(preview.getByText('Previous balance')).toBeVisible();
     await expect(preview.getByText('Calculated yield')).toBeVisible();
     await expect(preview).toContainText('200,00');
-    await expect(page.getByLabel(/^\s*Investment amount/)).toBeHidden();
+    await expect(page.locator('#id_amount')).toBeHidden();
 
     await page.getByRole('radio', { name: 'Enter the yield amount' }).check();
-    await expect(page.getByLabel(/^\s*Investment amount/)).toBeVisible();
+    await expect(page.locator('#id_amount')).toBeVisible();
     await expect(page.getByLabel(/^\s*New investment balance/)).toBeHidden();
 
     await page.getByRole('radio', { name: 'Use the final balance' }).check();
@@ -236,7 +236,7 @@ test('monetary yield keeps server errors visible and clears stale inactive value
     const kind = page.getByLabel(/^\s*Type/);
     const amountMode = page.getByRole('radio', { name: 'Enter the yield amount' });
     const endingMode = page.getByRole('radio', { name: 'Use the final balance' });
-    const amount = page.getByLabel(/^\s*Investment amount/);
+    const amount = page.locator('#id_amount');
     const endingBalance = page.getByLabel(/^\s*New investment balance/);
 
     await selectChoice(product, { label: 'Investment bank - Savings' });

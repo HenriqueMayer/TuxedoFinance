@@ -118,3 +118,45 @@ test('native page departure warns before discarding an edited form', async ({pag
     await page.goto('/dashboard/');
     await expect(page).toHaveURL(/\/dashboard\/$/);
 });
+
+for (const theme of ['light', 'dark']) {
+    test(`chart view changes navigate without departure warnings (${theme})`, async ({page}, info) => {
+        await signup(page, info);
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        const dialogs = [];
+        page.on('dialog', async dialog => { dialogs.push(dialog.type()); await dialog.dismiss(); });
+        await page.goto('/investments/charts/');
+        const scope = page.locator('#investment-chart-scope');
+        await expect(page.getByRole('button', {name: 'Filter', exact: true})).toHaveCount(0);
+        await scope.focus();
+        await page.evaluate(() => window.scrollTo(0, 120));
+        const top = await page.evaluate(() => window.scrollY);
+        await page.keyboard.press('End');
+        await expect(page).toHaveURL(/scope=cash/);
+        await expect(scope).toHaveValue('cash');
+        await expect(scope).toBeFocused();
+        await expect.poll(async () => Math.abs(await page.evaluate(() => window.scrollY) - top)).toBeLessThan(4);
+        await page.keyboard.press('ArrowUp');
+        await expect(page).toHaveURL(/scope=portfolio/);
+        await expect(scope).toBeFocused();
+        await page.goBack();
+        await expect(page).toHaveURL(/scope=cash/);
+        await expect(scope).toHaveValue('cash');
+        const chart = page.locator('[data-chart-selection]').first();
+        await chart.locator('[data-point]').last().press('Enter');
+        await expect(chart.locator('[data-selection-summary]')).toBeVisible();
+        await page.screenshot({path: info.outputPath(`chart-filter-${theme}.png`)});
+        // Native navigation also exercises beforeunload after a filtered chart.
+        await page.goto('/dashboard/reports/');
+        await page.locator('#report-balance-next').press('Enter');
+        await expect(page).toHaveURL(/charts_offset=1/);
+        const report = page.locator('[data-chart-selection]').first();
+        await report.locator('[data-point]').first().press('Enter');
+        await report.locator('[data-point]').last().press('Shift+Space');
+        await expect(report.locator('[data-selection-summary]')).toBeVisible();
+        await page.getByRole('navigation', {name: 'Main navigation'})
+            .getByRole('link', {name: 'Planning', exact: true}).click();
+        await expect(page).toHaveURL(/\/sandbox\/$/);
+        expect(dialogs).toEqual([]);
+    });
+}

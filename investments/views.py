@@ -20,7 +20,7 @@ from banking.models import Bank
 from banking.services import MissingExchangeRate, convert
 from dashboard.selection import selection_data, attach_details
 from dashboard.charts import build_bar_chart, build_line_chart
-from investments.forms import AssetForm, InvestmentForm, InvestmentProductForm
+from investments.forms import AssetForm, InvestmentForm, InvestmentProductForm, InvestmentChartFilterForm
 from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import (
     TIMESERIES_MONTHS,
@@ -132,8 +132,9 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
             'missing_rate_currencies': sorted(
                 missing | set(total_missing) | set(flow_missing) | portfolio_missing
             ),
+            'chart_missing_rate_currencies': sorted(set(total_missing) | set(flow_missing)),
             'base_currency': base,
-            'has_investments': Investment.objects.filter(user=user, product__purpose=purpose).exists(),
+            'has_investments': bool(portfolio_groups),
             'chart_total': build_line_chart(total_rows, [float(row['total']) for row in total_rows]),
             'chart_flow': build_bar_chart(flow_rows, [
                 {'name': _('Deposits'), 'tone': 'income', 'values': [float(row['deposits']) for row in flow_rows]},
@@ -164,6 +165,26 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
             context[f'{prefix}_anchor_date'] = date(year, month, 1)
             context[f'{prefix}_window_start_date'] = rows[0]['date']
             context[f'{prefix}_window_end_date'] = rows[-1]['date']
+        return context
+
+
+class InvestmentChartsView(InvestmentListView):
+    template_name = 'investments/charts.html'
+
+    def get(self, request, *args, **kwargs):
+        return TemplateView.get(self, request, *args, **kwargs)
+
+    def get_section(self):
+        return 'charts'
+
+    def get_purpose(self):
+        return {'portfolio': InvestmentProduct.Purpose.INVESTMENT,
+                'cash': InvestmentProduct.Purpose.MONTHLY_CASH}.get(self.request.GET.get('scope'))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['chart_scope'] = self.request.GET.get('scope', '') if self.get_purpose() else ''
+        context['chart_filter'] = InvestmentChartFilterForm(initial={'scope': context['chart_scope']})
         return context
 
 

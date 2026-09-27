@@ -11,17 +11,24 @@ user's `ScenarioDraft` records.
 The user enters a gross monthly salary and selects one month. The workspace reads
 that month's existing expense forecast from one-off, recurring, installment,
 points-purchase and redemption-IOF records, then shows the forecast in a single
-card. Changing the month refreshes the card; the explicit button provides the
-same path without JavaScript.
+card. Changing the month refreshes the card. Clicking anywhere on the native month
+field opens its picker when supported; previous/next buttons submit the entire
+form and cross year boundaries while retaining unsent salary and expense rows.
+A localized month/year caption makes the chosen period explicit. The forecast
+button is available only without JavaScript, where it provides the native refresh
+path. Forecast changes never save a draft.
 
-Up to 20 additional fixed BRL expenses may be added for amounts that are not
-already recorded. The result subtracts the existing forecast and those added
-amounts from the gross salary. Negative remainders stay visible. Invalid rows are
+Up to 20 additional expenses may be added for amounts not already recorded.
+Each row accepts either BRL or a percentage (0–100) of the gross monthly salary,
+not of the remainder after other expenses. Percentages use Decimal arithmetic
+and each result is rounded to cents. The existing draft payload retains the
+selected unit and raw invalid input. The result subtracts the existing forecast
+and those added amounts from the gross salary. Negative remainders stay visible. Invalid rows are
 retained for correction, and add/remove controls work through ordinary POSTs
 without JavaScript.
 
 The salary plan no longer asks for payroll deduction modes, CLT details,
-percentage targets, reserves or investment allocations. It does not add the
+allocation targets, reserves or investment allocations. It does not add the
 hypothetical salary to real bank balances.
 
 ## Drafts and privacy
@@ -47,7 +54,13 @@ withdrawals. A table allows per-month overrides; an empty cell uses the default,
 and zero explicitly overrides it.
 
 Inputs are grouped in reading and Tab order: starting point, rate and duration,
-then monthly movements. Individual-month overrides remain in a native disclosure,
+then monthly movements. The starting month uses the native month picker. The
+rate period precedes the rate, whose label specifies monthly or annual; changing
+it reinterprets the entered effective rate rather than converting it. Monetary
+labels reflect the selected currency. Optional keyboard-accessible duration
+shortcuts select 6, 12, 24 or 60 months, retain focus and reuse the same validated
+1–120 month field and live calculation. Native forms keep all parameters editable.
+Individual-month overrides remain in a native disclosure,
 opened on saved overrides, validation errors or a native Update month rows action.
 With JavaScript, changing duration updates rows immediately. Temporarily excluded
 rows retain edits but are hidden and disabled; extending the duration restores them.
@@ -76,8 +89,9 @@ Market prices, price histories, agent integration and free-form formulas remain
 ## Interaction contracts
 
 Forms reuse shared fields, native short choices and help popovers. Dates follow
-the user's DMY/MDY preference; month inputs explicitly use `YYYY-MM`, independently
-of that preference. ISO dates remain the storage and technical contract.
+the user's DMY/MDY preference; month controls display the browser's locale and
+submit `YYYY-MM`, independently of that preference. Invalid month text is
+rendered as a text field after a rejected submission, so it remains recoverable. ISO dates remain the storage and technical contract.
 Follow the [form and keyboard contract](../frontend.md#keyboard-and-choice-contract),
 [question-mark help contract](../frontend.md#question-mark-help), and
 [viewport-preservation contract](../frontend.md#preserve-the-users-location).

@@ -1,5 +1,14 @@
 {% load i18n l10n %}
-<div id="investments-charts" hx-request='{"noHeaders":false}' class="space-y-8">
+<div id="investments-charts" hx-request='{"noHeaders":false}' class="space-y-8" data-preserve-view>
+    {% if selected_section == 'charts' %}
+    <form method="get" action="{% url 'investments:charts' %}" hx-get="{% url 'investments:charts' %}" hx-target="#investments-charts" hx-swap="outerHTML show:none" hx-push-url="true" hx-trigger="change, submit" class="flex flex-wrap items-end gap-4">
+        {% include 'partials/form_field.html' with field=chart_filter.scope %}
+        <input type="hidden" name="total_offset" value="{{ total_offset|stringformat:'d' }}">
+        <input type="hidden" name="flow_offset" value="{{ flow_offset|stringformat:'d' }}">
+        <noscript><button class="action-link" type="submit">{% translate 'Filter' %}</button></noscript>
+    </form>
+    {% endif %}
+    {% if chart_missing_rate_currencies %}<p role="status" class="text-sm text-expense dark:text-expense-light">{% blocktranslate with currencies=chart_missing_rate_currencies|join:', ' %}Incomplete total: exchange rates are missing for {{ currencies }}.{% endblocktranslate %}</p>{% endif %}
 
     {# ---------------------------------------------------------------- #}
     {# Chart 1 — investment evolution (line), cumulative total in       #}
@@ -12,7 +21,7 @@
                 <div class="label-with-help">
                     {% translate 'Investment evolution' as chart_label %}
                     <h2 class="section-title">{{ chart_label }}</h2>
-                    {% translate 'Recorded portfolio value at each month end, including opening positions held before recorded operations. Historical operations use their saved exchange-rate evidence. Missing conversions are reported in the total above.' as chart_help %}
+                    {% translate 'Recorded portfolio value at each month end, including opening positions held before recorded operations. Historical operations use their saved exchange-rate evidence. Missing conversions are reported beside the charts.' as chart_help %}
                     {% include 'partials/help_popover.html' with help_id='investment-evolution-help' help_label=chart_label help_text=chart_help %}
                 </div>
             </div>

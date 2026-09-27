@@ -11,6 +11,17 @@
     }
 
     document.addEventListener('click', function (event) {
+        var monthInput = event.target.closest('input[type="month"]');
+        if (monthInput && monthInput.showPicker) {
+            // Expand the native picker's click target while retaining native keyboard entry.
+            try { monthInput.showPicker(); } catch (_) { /* Native input remains usable. */ }
+        }
+        var preset = event.target.closest('[data-months]');
+        if (preset) {
+            var simulation = preset.closest('form');
+            simulation.elements.months.value = preset.dataset.months;
+            simulation.elements.months.dispatchEvent(new Event('input', { bubbles: true }));
+        }
         var addButton = event.target.closest('[data-add-variable]');
         if (addButton) {
             event.preventDefault();
@@ -66,8 +77,31 @@
         });
         form.querySelector('[data-update-yield-rows]').hidden = true;
     }
+    function syncParameterLabels(form) {
+        var rateLabel = form.elements.rate_period.value === 'annual' ? form.dataset.annualRate : form.dataset.monthlyRate;
+        var rateWrapper = form.elements.rate.closest('.space-y-2');
+        rateWrapper.querySelector('label').firstChild.textContent = rateLabel + ' ';
+        rateWrapper.querySelectorAll('.help-title').forEach(title => { title.textContent = rateLabel; });
+        // The help describes both periods; its accessible label follows the chosen period.
+        rateWrapper.querySelectorAll('.help-trigger').forEach(trigger => {
+            trigger.setAttribute('aria-label', form.dataset.explain + ' ' + rateLabel);
+        });
+        form.querySelectorAll('[data-currency-field] label').forEach(function (label) {
+            if (!label.dataset.originalLabel) label.dataset.originalLabel = label.firstChild.textContent.trim();
+            label.firstChild.textContent = label.dataset.originalLabel + ' (' + form.elements.currency.value + ') ';
+        });
+        form.querySelectorAll('[data-months]').forEach(function (button) {
+            button.setAttribute('aria-pressed', String(button.dataset.months === form.elements.months.value));
+        });
+        form.querySelector('[data-duration-presets]').hidden = false;
+    }
     function initYieldForms() {
-        document.querySelectorAll('[data-yield-simulation]').forEach(syncYieldRows);
+        document.querySelectorAll('[data-yield-simulation]').forEach(function (form) {
+            syncYieldRows(form);
+            syncParameterLabels(form);
+        });
+        var forecast = document.getElementById('budget-forecast');
+        if (forecast) forecast.hidden = true;
     }
     document.addEventListener('DOMContentLoaded', initYieldForms);
     document.addEventListener('htmx:load', initYieldForms);
@@ -77,6 +111,7 @@
         var form = event.target.closest('[data-yield-simulation]');
         if (!form || event.target.name === 'draft_name') return;
         if (event.target.name === 'months') syncYieldRows(form);
+        syncParameterLabels(form);
         clearTimeout(timer);
         if (controller) controller.abort();
         var current = ++generation;

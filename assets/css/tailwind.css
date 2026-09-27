@@ -59,6 +59,8 @@
   .workspace-header { @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between; }
   .action-link { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-forest/25 px-3 py-2 text-sm font-medium transition-colors hover:bg-forest/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:border-cream/25 dark:hover:bg-cream/10; }
   .action-primary { @apply action-link border-transparent bg-caramel text-forest-deep hover:bg-caramel-light; }
+  #budget-forecast[hidden], [data-duration-presets][hidden] { display: none; }
+  [data-months][aria-pressed="true"] { @apply border-caramel bg-caramel/15; }
   .quiet-action { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-forest/70 transition-colors hover:bg-forest/5 hover:text-forest focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream/70 dark:hover:bg-cream/10 dark:hover:text-cream; }
   .secondary-actions { @apply relative; }
   .secondary-actions > summary { @apply action-link cursor-pointer list-none; }
