@@ -28,8 +28,8 @@ def add_months(month, offset):
     return date(year, index + 1, 1)
 
 
-def commitment_snapshot(user, start_month):
-    """Expand economic sources once, by payment date; never synchronize a ledger.
+def commitment_snapshot(user, start_month, *, month_basis="payment_date"):
+    """Expand economic sources once, by the requested month basis; never write a ledger.
 
     Amounts are a BRL planning snapshot at capture time. Missing FX is explicit;
     invoices are not added because their individual economic sources are here.
@@ -40,7 +40,7 @@ def commitment_snapshot(user, start_month):
     rates = {}
 
     def append(key, label, amount, currency, due, reference, instrument, kind, installment=''):
-        if not start_month <= due < end:
+        if not start_month <= (reference if month_basis == "reference_month" else due) < end:
             return
         _check_snapshot_capacity(rows)
         if currency not in rates:
@@ -109,7 +109,7 @@ def commitment_snapshot(user, start_month):
         append(f'iof:{item.pk}', _('Redemption IOF'), item.iof_amount, account.currency,
                due, reference, account.name, 'oneoff')
     return {'user_id': user.pk, 'start_month': start_month.strftime('%Y-%m'), 'currency': 'BRL',
-            'captured_at': timezone.now().isoformat(), 'rows': sorted(rows, key=lambda row: (row['payment_date'], row['key']))}
+            'month_basis': month_basis, 'captured_at': timezone.now().isoformat(), 'rows': sorted(rows, key=lambda row: (row['payment_date'], row['key']))}
 
 
 def merge_snapshot(previous, fresh):
@@ -136,7 +136,7 @@ def merge_snapshot(previous, fresh):
 def snapshot_total(snapshot, month):
     total = ZERO
     for row in snapshot.get('rows', []):
-        if row.get('included') and row['payment_date'].startswith(month):
+        if row.get('included') and row[snapshot.get('month_basis', 'payment_date')].startswith(month):
             raw = row.get('override') or row['amount']
             if raw is None:
                 raise ValidationError(_('A selected commitment has no exchange rate. Enter a BRL scenario amount or exclude it.'))

@@ -11,7 +11,15 @@ user's `ScenarioDraft` records.
 The user enters a gross monthly salary and selects one month. The workspace reads
 that month's existing expense forecast from one-off, recurring, installment,
 points-purchase and redemption-IOF records, then shows the forecast in a single
-card. Changing the month refreshes the card. Clicking anywhere on the native month
+card. New forecasts use the economic reference month, matching the Report:
+credit-card installments and recurring expenses belong to their statement month,
+even when the invoice is payable next month. Account expenses keep their own month.
+Invoice settlement is not counted again. Points purchases and redemption IOF
+remain included in planning. Amounts remain BRL snapshots at capture time.
+Existing saved drafts retain their captured payment-month basis until recalculated;
+opening or comparing a draft does not silently change its values.
+
+Changing the month refreshes the card. Clicking anywhere on the native month
 field opens its picker when supported; previous/next buttons submit the entire
 form and cross year boundaries while retaining unsent salary and expense rows.
 A localized month/year caption makes the chosen period explicit. The forecast

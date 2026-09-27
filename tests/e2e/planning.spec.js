@@ -96,6 +96,14 @@ test('salary plan uses the selected month forecast and saves only when requested
     const category = await page.locator('#id_category option').last().getAttribute('value');
     await post(page, '/transactions/create/', { title: 'Future rent', amount: '600', transaction_type: 'EXPENSE',
         category, payment_channel: 'ACCOUNT', bank_account: account, date: '2026-10-15', installments: '1' });
+    await post(page, '/banking/credit-cards/create/', {
+        account, name: 'Planning card', card_type: 'PHYSICAL', closing_day: '24', due_day: '1',
+    });
+    await page.goto('/transactions/create/');
+    const card = await page.locator('#id_credit_card option').last().getAttribute('value');
+    await post(page, '/transactions/create/', { title: 'September card expense', amount: '100',
+        transaction_type: 'EXPENSE', category, payment_channel: 'CREDIT_CARD', credit_card: card,
+        date: '2026-09-05', installments: '1' });
     await page.goto('/sandbox/');
     await expect(page.locator('#id_draft_name')).toBeHidden();
     await page.getByLabel('Gross monthly salary', { exact: true }).fill('5000');
@@ -103,6 +111,12 @@ test('salary plan uses the selected month forecast and saves only when requested
     await expect(page.getByRole('button', { name: 'Show month forecast', exact: true })).toBeHidden();
     const forecast = page.getByRole('article').filter({ hasText: 'Existing expense forecast' });
     await expect(forecast).toContainText('600,00');
+    await page.locator('#budget-previous-month').press('Enter');
+    await expect(forecast).toContainText('100,00');
+    await expect(page.locator('#id_planning_month')).toHaveValue('2026-09');
+    await page.locator('#budget-next-month').press('Space');
+    await expect(forecast).toContainText('600,00');
+    await expect(page.locator('#id_planning_month')).toHaveValue('2026-10');
     const firstExpense = page.locator('[data-variable-row]').first();
     await firstExpense.getByLabel('Fixed expense description').fill('Utilities');
     await firstExpense.getByLabel('Fixed expense monthly amount').fill('150');

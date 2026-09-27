@@ -54,9 +54,10 @@ def _row_action(data, action):
 
 
 def _expense_forecast(user, month, snapshot=None):
-    snapshot = snapshot or commitment_snapshot(user, month)
+    # New plans follow the Report statement month; saved legacy plans retain their captured basis.
+    snapshot = snapshot or commitment_snapshot(user, month, month_basis="reference_month")
     month_key = month.strftime('%Y-%m')
-    rows = [row for row in snapshot['rows'] if row['payment_date'].startswith(month_key)]
+    rows = [row for row in snapshot['rows'] if row[snapshot.get('month_basis', 'payment_date')].startswith(month_key)]
     try:
         total = snapshot_total(snapshot, month_key)
         error = None

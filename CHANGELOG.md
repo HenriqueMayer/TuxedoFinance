@@ -7,6 +7,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Use the expense reference month in new monthly plans, matching Reports instead of shifting card expenses to the invoice due month. Preserve captured values when opening or comparing existing drafts.
+
 ## [0.8.0] - 2026-09-27
 
 ### Fixed
