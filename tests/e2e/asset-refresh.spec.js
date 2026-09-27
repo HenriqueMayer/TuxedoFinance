@@ -83,6 +83,7 @@ test('a stale tab submits an invalid HTMX form once and retains errors and enter
     await signup(page, testInfo);
     await openOldDocument(page, '/sandbox/');
     await page.getByLabel('Gross monthly salary', { exact: true }).fill('-10');
+    await page.getByText('Save this plan (optional)', { exact: true }).click();
     await page.locator('#id_draft_name').fill('Keep this unfinished plan');
     const posts = [];
     const navigations = [];
@@ -92,7 +93,7 @@ test('a stale tab submits an invalid HTMX form once and retains errors and enter
     });
     const responsePromise = page.waitForResponse(response => response.request().method() === 'POST'
         && new URL(response.url()).pathname === '/sandbox/');
-    await page.getByRole('button', { name: 'Calculate', exact: true }).click();
+    await page.getByRole('button', { name: 'Calculate month', exact: true }).click();
     const response = await responsePromise;
     expect(response.request().headers()['x-tuxedo-assets']).toBe('previous-release');
     expect(response.headers()['hx-redirect']).toBeUndefined();

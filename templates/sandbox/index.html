@@ -11,14 +11,9 @@
             <h1 class="page-title">{% translate "Salary Sandbox" %}</h1>
             {% include 'partials/help_popover.html' with help_id='salary-sandbox-help' help_label=_('Salary Sandbox') help_template='sandbox/_salary_help.html' %}
         </div>
-        <dl class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-forest/60 dark:text-night-muted">
-            <div class="flex gap-1"><dt>{% translate "Competence" %}:</dt><dd>{{ rules.year|stringformat:"d" }}</dd></div>
-            <div class="flex gap-1"><dt>{% translate "Rules reviewed" %}:</dt><dd>{{ rules.reviewed_on|date:USER_DATE_FORMAT }}</dd></div>
-            <div class="flex gap-1"><dt>{% translate "Currency" %}:</dt><dd>BRL</dd></div>
-        </dl>
+        <p class="subtle-copy mt-2">{% translate "Compare one gross salary with the expenses expected for a selected month." %}</p>
     </header>
 
-    {% include 'sandbox/_availability.html' %}
     {% include 'sandbox/_workspace.html' %}
 </div>
 {% endblock %}

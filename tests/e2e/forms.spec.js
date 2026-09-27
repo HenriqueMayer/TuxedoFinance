@@ -258,7 +258,7 @@ test('conditional branches preserve server errors, clear inactive values and ski
     await expect(page.locator('#id_credit_card')).toHaveValue('');
 });
 
-test('IOF, loyalty purchases and transport voucher wait for their controlling choices', async ({ page }, testInfo) => {
+test('IOF and loyalty purchases wait for their controlling choices', async ({ page }, testInfo) => {
     const { account } = await fixture(page, testInfo);
     await page.goto('/banking/loyalty-entries/create/');
     await page.getByLabel(/^\s*Kind/).selectOption('PURCHASE');
@@ -276,16 +276,6 @@ test('IOF, loyalty purchases and transport voucher wait for their controlling ch
     await page.getByLabel(/^\s*Iof amount/).fill('0');
     await expect(page.locator('#id_iof_account-search')).toBeHidden();
     await expect(page.locator('#id_iof_account')).toHaveValue('');
-    await page.goto('/sandbox/');
-    await expect(page.getByLabel('Calculate CLT deductions automatically', { exact: true })).not.toBeChecked();
-    await page.getByLabel('Calculate CLT deductions automatically', { exact: true }).check();
-    await page.getByText('Optional CLT details', { exact: true }).press('Space');
-    await expect(page.getByLabel('Actual monthly transport cost', { exact: true })).toBeHidden();
-    await page.getByLabel('Receive transport voucher', { exact: true }).check();
-    await page.getByLabel('Actual monthly transport cost', { exact: true }).fill('200');
-    await page.getByLabel('Receive transport voucher', { exact: true }).uncheck();
-    await expect(page.locator('#id_vt_cost')).toHaveValue('');
-    await expect(page.getByLabel('Actual monthly transport cost', { exact: true })).toBeHidden();
 });
 
 test('pickers initialize once after HTMX navigation and keep native options scoped', async ({ page }, testInfo) => {
@@ -326,10 +316,9 @@ test('native forms and conditional fields remain usable without JavaScript', asy
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await expect(page).toHaveURL(/transactions\/$/);
         await page.goto('/sandbox/');
-        await expect(page.locator('[data-manual-options]')).toBeVisible();
-        await expect(page.locator('[data-clt-options]')).toBeVisible();
-        await page.getByText('Optional CLT details', { exact: true }).press('Enter');
-        await expect(page.getByLabel('Actual monthly transport cost', { exact: true })).toBeVisible();
+        await expect(page.getByLabel('Gross monthly salary', { exact: true })).toBeVisible();
+        await expect(page.getByLabel('Planning month', { exact: true })).toBeVisible();
+        await expect(page.getByLabel('Fixed expense description', { exact: true })).toBeVisible();
     } finally { await context.close(); }
 });
 

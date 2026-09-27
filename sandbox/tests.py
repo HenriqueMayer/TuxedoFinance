@@ -110,73 +110,46 @@ class SandboxViewTests(TestCase):
         response = self.client.get(reverse('sandbox:index'))
         self.assertRedirects(response, f'{reverse("accounts:login")}?next={reverse("sandbox:index")}')
 
-    def test_get_requires_opt_in_to_clt_and_keeps_native_fields_available(self):
+    def test_get_shows_the_simple_month_plan_and_optional_save(self):
         self.client.force_login(self.user)
         response = self.client.get(reverse('sandbox:index'))
         self.assertContains(response, 'Salary Sandbox')
         self.assertContains(response, 'name="gross_salary"')
-        self.assertContains(response, 'name="use_clt"')
-        self.assertContains(response, 'name="use_clt"', count=1)
-        self.assertContains(response, 'data-clt-options')
-        self.assertNotContains(response, 'data-manual-options hidden')
-        self.assertFalse(response.context['form']['use_clt'].value())
-        self.assertNotContains(response, 'PJ regime')
-        self.assertNotContains(response, 'comparison')
+        self.assertContains(response, 'name="planning_month"')
+        self.assertContains(response, 'type="month"')
+        self.assertContains(response, 'Existing expense forecast')
+        self.assertContains(response, 'Additional fixed expenses')
+        self.assertContains(response, 'Save this plan (optional)')
+        self.assertNotContains(response, 'name="use_clt"')
+        self.assertNotContains(response, 'name="deduction_label"')
+        self.assertNotContains(response, 'name="fixed_cost_value"')
 
-    def test_automatic_clt_post_renders_deductions_and_annual_projection(self):
+    def test_post_uses_gross_salary_and_added_fixed_expenses(self):
         self.client.force_login(self.user)
         response = self.client.post(reverse('sandbox:index'), {
             'gross_salary': '6000',
-            'use_clt': 'on',
-            'fixed_cost_type': 'percent',
-            'fixed_cost_value': '50',
+            'planning_month': '2026-10',
+            'variable_label': ['Rent', 'Utilities'],
+            'variable_type': ['currency', 'currency'],
+            'variable_value': ['1500', '250'],
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Automatic CLT calculation')
-        self.assertContains(response, 'Net 13th salary')
-        self.assertContains(response, 'Vacation net with one-third')
-        self.assertContains(response, 'FGTS')
-        self.assertContains(response, 'Net in an ordinary month')
-        self.assertNotContains(response, 'Manual calculation')
-        self.assertEqual(
-            response.context['result']['budget'].income,
-            response.context['result']['clt'].ordinary.net,
-        )
-
-    def test_manual_post_uses_entered_deductions_and_monthly_plan(self):
-        self.client.force_login(self.user)
-        response = self.client.post(reverse('sandbox:index'), {
-            'gross_salary': '6000',
-            'deduction_label': ['Tax', 'Health'],
-            'deduction_type': ['percent', 'currency'],
-            'deduction_value': ['10', '200'],
-            'fixed_cost_type': 'currency',
-            'fixed_cost_value': '1500',
-            'emergency_percent': '10',
-            'investments_percent': '20',
-            'variable_label': ['Leisure'],
-            'variable_type': ['currency'],
-            'variable_value': ['250'],
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Manual calculation')
-        self.assertContains(response, 'R$ 5.200,00')
-        self.assertContains(response, 'R$ 62.400,00')
-        self.assertContains(response, 'Tax')
-        self.assertContains(response, 'Health')
-        self.assertContains(response, 'Leisure')
-        self.assertEqual(response.context['result']['budget'].remaining, D('1890.00'))
+        self.assertContains(response, 'Monthly estimate')
+        self.assertContains(response, 'Rent')
+        self.assertContains(response, 'Utilities')
+        self.assertEqual(response.context['result']['budget'].remaining, D('4250.00'))
+        self.assertEqual(ScenarioDraft.objects.count(), 0)
 
     def test_fragment_post_replaces_only_one_workspace(self):
         self.client.force_login(self.user)
         response = self.client.post(reverse('sandbox:index'), {
             'gross_salary': '5000',
-            'use_clt': 'on',
+            'planning_month': '2026-10',
             'response_mode': 'fragment',
         })
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="sandbox-workspace"', count=1)
-        self.assertContains(response, 'Automatic CLT calculation')
+        self.assertContains(response, 'Monthly estimate')
         self.assertNotContains(response, '<html')
         self.assertNotContains(response, '<header')
 
@@ -184,26 +157,26 @@ class SandboxViewTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(reverse('sandbox:index'), {
             'gross_salary': '5000',
-            'use_clt': 'on',
+            'planning_month': '2026-10',
         })
         self.assertContains(response, 'aria-describedby="id_gross_salary-help"')
         self.assertContains(response, 'id="id_gross_salary-help"', count=1)
-        self.assertContains(response, 'aria-controls="clt-ordinary-net-help"', count=1)
         self.assertEqual(ScenarioDraft.objects.count(), 0)
 
-    def test_fixed_percentage_validation_is_conditional_on_unit(self):
-        percentage = SalarySandboxForm(data={
-            'gross_salary': '5000',
-            'fixed_cost_type': 'percent',
-            'fixed_cost_value': '101',
+    def test_forecast_action_does_not_require_salary(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse('sandbox:index'), {
+            'action': 'forecast', 'planning_month': '2026-10',
         })
-        currency = SalarySandboxForm(data={
-            'gross_salary': '5000',
-            'fixed_cost_type': 'currency',
-            'fixed_cost_value': '1500',
+        self.assertNotContains(response, 'Enter the gross monthly salary.')
+        self.assertEqual(response.context['forecast']['month'].isoformat(), '2026-10-01')
+
+    def test_added_expenses_reject_percentage_payloads(self):
+        form = SalarySandboxForm(data={
+            'gross_salary': '5000', 'planning_month': '2026-10',
+            'variable_label': ['Tax'], 'variable_type': ['percent'], 'variable_value': ['10'],
         })
-        self.assertFalse(percentage.is_valid())
-        self.assertTrue(currency.is_valid())
+        self.assertFalse(form.is_valid())
 
     def test_page_uses_the_pt_br_catalog(self):
         self.client.force_login(self.user)
@@ -211,9 +184,10 @@ class SandboxViewTests(TestCase):
         with override('pt-br'):
             response = self.client.get(reverse('sandbox:index'))
         self.assertContains(response, 'Sandbox de Salário')
-        self.assertContains(response, 'Calcular descontos CLT automaticamente')
-        self.assertContains(response, 'Descontos e impostos manuais')
-        self.assertNotContains(response, 'comparação')
+        self.assertContains(response, 'Previsão de despesas existente')
+        self.assertContains(response, 'Despesas fixas adicionais')
+        self.assertContains(response, 'Salvar este plano (opcional)')
+        self.assertNotContains(response, 'Calcular descontos CLT')
 
 
 class PlanningDraftTests(TestCase):
@@ -225,7 +199,7 @@ class PlanningDraftTests(TestCase):
     def test_explicit_incomplete_save_reopen_duplicate_compare_and_delete(self):
         response = self.client.post(reverse('sandbox:index'), {
             'action': 'save', 'draft_name': 'Incomplete month', 'gross_salary': '12.',
-            'planning_month': '2026-', 'expense_basis': 'free',
+            'planning_month': '2026-',
             'variable_label': ['Rent'], 'variable_type': ['currency'], 'variable_value': [''],
         })
         draft = ScenarioDraft.objects.get()
@@ -257,7 +231,7 @@ class PlanningDraftTests(TestCase):
         from accounts.models import UserPreference
         self.client.post(reverse('sandbox:index'), {
             'action': 'save', 'draft_name': 'Mixed', 'gross_salary': '05000.0',
-            'planning_month': '2026-', 'expense_basis': 'free',
+            'planning_month': '2026-',
             'variable_label': [' Rent ', 'Food'], 'variable_type': ['currency', 'currency'],
             'variable_value': ['0010,50', 'unfinished'],
         })
@@ -308,29 +282,24 @@ class PlanningDraftTests(TestCase):
         self.assertContains(response, 'value="Food"')
 
     def test_unbalanced_repeated_inputs_render_and_reopen_without_truncation(self):
-        data = {'gross_salary': '5000', 'planning_month': '2026-09', 'expense_basis': 'free',
+        data = {'gross_salary': '5000', 'planning_month': '2026-09',
                 'variable_label': [' Rent '], 'variable_type': ['currency'],
-                'variable_value': ['010.0', 'unfinished', '123.45'],
-                'deduction_label': ['Tax', 'Missing amount'], 'deduction_type': ['currency'],
-                'deduction_value': ['15']}
+                'variable_value': ['010.0', 'unfinished', '123.45']}
         response = self.client.post(reverse('sandbox:index'), data)
         self.assertIsNone(response.context['result'])
         self.assertContains(response, 'Enter at most 20 complete rows')
         self.assertEqual(len(response.context['variable_rows']), 3)
         self.assertContains(response, 'value="unfinished"')
         self.assertContains(response, 'value="123.45"')
-        self.assertContains(response, 'value="Missing amount"')
         data.update(action='save', draft_name='Unbalanced input')
         response = self.client.post(reverse('sandbox:index'), data)
         draft = ScenarioDraft.objects.get()
         self.assertFalse(draft.payload['complete'])
         self.assertEqual(draft.payload['inputs']['variable_label'], ['Rent'])
         self.assertEqual(draft.payload['inputs']['variable_value'], ['10.00', 'unfinished', '123.45'])
-        self.assertEqual(draft.payload['inputs']['deduction_label'], ['Tax', 'Missing amount'])
         opened = self.client.get(response.url)
         self.assertEqual(len(opened.context['variable_rows']), 3)
         self.assertContains(opened, 'value="unfinished"')
-        self.assertContains(opened, 'value="Missing amount"')
 
     def test_calculation_is_always_brl_despite_presentation_currency(self):
         from accounts.models import UserPreference
@@ -356,54 +325,6 @@ class CommitmentProjectionTests(TestCase):
             transaction_type='EXPENSE', category=self.category, payment_channel='CREDIT_CARD',
             credit_card=self.card, installments=3, date=date(2026, 8, 25))
 
-    def test_normal_recurring_volume_supports_real_encoded_post_over_one_thousand_fields(self):
-        from datetime import date
-        from urllib.parse import urlencode
-        from transactions.models import Transaction
-        from sandbox.planning import commitment_snapshot
-        from sandbox.views import _snapshot_token
-        Transaction.objects.bulk_create([
-            Transaction(user=self.user, title=f'Recurring {index}', amount=D('10'),
-                transaction_type='EXPENSE', category=self.category, payment_channel='ACCOUNT',
-                bank_account=self.account, is_fixed=True, date=date(2026, 10, 2))
-            for index in range(30)
-        ])
-        snapshot = commitment_snapshot(self.user, date(2026, 10, 1))
-        data = {'action': 'save', 'draft_name': 'Recurring obligations', 'gross_salary': '5000',
-                'planning_month': '2026-10', 'expense_basis': 'recorded',
-                'snapshot_token': _snapshot_token(snapshot)}
-        for index in range(len(snapshot['rows'])):
-            data.update({f'commitment_present_{index}': '1', f'commitment_include_{index}': 'on',
-                         f'commitment_amount_{index}': ''})
-        self.assertGreater(len(data), 1000)
-        response = self.client.post(reverse('sandbox:index'), urlencode(data),
-                                    content_type='application/x-www-form-urlencoded')
-        draft = ScenarioDraft.objects.get()
-        self.assertRedirects(response, reverse('sandbox:draft_detail', args=[draft.pk]))
-        self.assertTrue(draft.payload['complete'])
-        self.assertEqual(len(draft.payload['snapshot']['rows']), len(snapshot['rows']))
-
-    def test_capture_and_merge_limits_preserve_previous_snapshot_without_truncation(self):
-        from datetime import date
-        from unittest.mock import patch
-        from sandbox.planning import commitment_snapshot
-        from sandbox.views import _snapshot_token
-        previous = commitment_snapshot(self.user, date(2026, 10, 1))
-        data = {'action': 'refresh', 'gross_salary': '5000', 'planning_month': '2026-10',
-                'expense_basis': 'recorded', 'snapshot_token': _snapshot_token(previous)}
-        with patch('sandbox.planning.MAX_COMMITMENTS', 2):
-            response = self.client.post(reverse('sandbox:index'), data)
-        self.assertContains(response, 'A snapshot supports at most 2 commitments')
-        self.assertEqual(response.context['snapshot'], previous)
-        self.assertIsNone(response.context['refresh_preview'])
-        self.purchase.delete()
-        # Removed records retained in the scenario also count toward the limit.
-        with patch('sandbox.planning.MAX_COMMITMENTS', 2):
-            response = self.client.post(reverse('sandbox:index'), data)
-        self.assertContains(response, 'A snapshot supports at most 2 commitments')
-        self.assertEqual(response.context['snapshot'], previous)
-        self.assertIsNone(response.context['refresh_preview'])
-
     def test_payment_month_remainders_card_costs_and_no_invoice_duplication_or_writes(self):
         from datetime import date
         from banking.models import CardInvoice, LoyaltyEntry, LoyaltyProgram
@@ -421,49 +342,53 @@ class CommitmentProjectionTests(TestCase):
         self.assertEqual(self.user.bank_movements.count(), 0)
         self.assertEqual(CardInvoice.objects.get().amount, D('999'))
 
-    def test_refresh_keeps_overrides_exclusions_and_removed_sources(self):
-        from datetime import date
-        from sandbox.planning import commitment_snapshot, merge_snapshot
-        previous = commitment_snapshot(self.user, date(2026, 10, 1))
-        previous['rows'][0]['override'] = '25.00'
-        previous['rows'][1]['included'] = False
-        self.purchase.amount = D('120')
-        self.purchase.save()
-        refreshed = merge_snapshot(previous, commitment_snapshot(self.user, date(2026, 10, 1)))
-        self.assertEqual(refreshed['rows'][0]['override'], '25.00')
-        self.assertEqual(refreshed['rows'][0]['amount'], '40.00')
-        self.assertFalse(refreshed['rows'][1]['included'])
-        self.purchase.delete()
-        refreshed = merge_snapshot(refreshed, commitment_snapshot(self.user, date(2026, 10, 1)))
-        self.assertEqual(len(refreshed['rows']), 3)
-        self.assertTrue(all(row['source_removed'] for row in refreshed['rows']))
+    def test_selected_month_forecast_is_used_automatically(self):
+        response = self.client.post(reverse('sandbox:index'), {
+            'action': 'forecast', 'planning_month': '2026-10',
+        })
+        self.assertEqual(response.context['forecast']['total'], D('33.34'))
+        self.assertEqual(response.context['forecast']['count'], 1)
+        self.assertContains(response, 'R$ 33,34')
+        self.assertIsNone(response.context['result'])
 
-    def test_capture_review_explicit_save_and_stable_reopen(self):
         response = self.client.post(reverse('sandbox:index'), {
-            'action': 'refresh', 'planning_month': '2026-10', 'expense_basis': 'recorded', 'gross_salary': '5000',
+            'action': 'calculate', 'planning_month': '2026-10', 'gross_salary': '5000',
+            'variable_label': ['Rent'], 'variable_type': ['currency'], 'variable_value': ['450'],
         })
-        self.assertContains(response, 'Review commitment refresh')
-        self.assertIsNone(response.context['snapshot'])
-        preview_token = response.context['preview_token']
-        response = self.client.post(reverse('sandbox:index'), {
-            'action': 'apply_refresh', 'planning_month': '2026-10', 'expense_basis': 'recorded',
-            'gross_salary': '5000', 'preview_token': preview_token,
+        self.assertEqual(response.context['result']['budget'].fixed_bills, D('33.34'))
+        self.assertEqual(response.context['result']['budget'].custom_expenses, D('450.00'))
+        self.assertEqual(response.context['result']['budget'].remaining, D('4516.66'))
+        self.assertEqual(ScenarioDraft.objects.count(), 0)
+
+    def test_forecast_changes_with_the_selected_month(self):
+        october = self.client.post(reverse('sandbox:index'), {
+            'action': 'forecast', 'planning_month': '2026-10',
         })
-        token = response.context['snapshot_token']
+        december = self.client.post(reverse('sandbox:index'), {
+            'action': 'forecast', 'planning_month': '2026-12',
+        })
+        self.assertEqual(october.context['forecast']['total'], D('33.34'))
+        self.assertEqual(december.context['forecast']['total'], D('33.33'))
+
+    def test_optional_save_keeps_a_stable_forecast_snapshot(self):
         response = self.client.post(reverse('sandbox:index'), {
-            'action': 'save', 'draft_name': 'October', 'planning_month': '2026-10', 'expense_basis': 'recorded',
-            'gross_salary': '5000', 'fixed_cost_type': 'percent', 'fixed_cost_value': '50',
-            'snapshot_token': token,
+            'action': 'save', 'draft_name': 'October', 'planning_month': '2026-10',
+            'gross_salary': '5000',
         })
         draft = ScenarioDraft.objects.get()
+        self.assertRedirects(response, reverse('sandbox:draft_detail', args=[draft.pk]))
+        self.assertTrue(draft.payload['complete'])
+        self.assertTrue(draft.payload['snapshot']['rows'])
         self.purchase.amount = D('300')
         self.purchase.save()
-        response = self.client.get(reverse('sandbox:draft_detail', args=[draft.pk]))
-        self.assertEqual(response.context['result']['budget'].fixed_bills, D('33.34'))
-        self.assertEqual(response.context['result']['budget'].remaining, D('4966.66'))
-        self.assertEqual(self.user.bank_movements.count(), 0)
+        reopened = self.client.get(reverse('sandbox:draft_detail', args=[draft.pk]))
+        self.assertEqual(reopened.context['result']['budget'].fixed_bills, D('33.34'))
+        self.assertEqual(reopened.context['result']['budget'].remaining, D('4966.66'))
+        self.assertTrue(reopened.context['draft_save_open'])
+        compared = self.client.get(reverse('sandbox:compare'), {'draft': draft.pk})
+        self.assertEqual(compared.context['scenarios'][0]['result']['budget'].fixed_bills, D('33.34'))
 
-    def test_missing_fx_blocks_selected_commitment_until_overridden(self):
+    def test_missing_fx_marks_forecast_incomplete_and_blocks_calculation(self):
         from datetime import date
         from sandbox.planning import commitment_snapshot, snapshot_total
         self.account.currency = 'USD'
@@ -472,47 +397,13 @@ class CommitmentProjectionTests(TestCase):
         self.assertIsNone(snapshot['rows'][0]['amount'])
         with self.assertRaises(ValidationError):
             snapshot_total(snapshot, '2026-10')
-        snapshot['rows'][0]['override'] = '170.00'
-        self.assertEqual(snapshot_total(snapshot, '2026-10'), D('170.00'))
-
-    def test_date_or_billing_changes_keep_the_same_obligation_identity(self):
-        from datetime import date
-        from sandbox.planning import commitment_snapshot, merge_snapshot
-        previous = commitment_snapshot(self.user, date(2026, 9, 1))
-        previous['rows'][0]['override'] = '25.00'
-        previous['rows'][0]['included'] = False
-        self.purchase.billing_override = 0
-        self.purchase.save()
-        refreshed = merge_snapshot(previous, commitment_snapshot(self.user, date(2026, 9, 1)))
-        self.assertEqual(len(refreshed['rows']), 3)
-        self.assertEqual(refreshed['rows'][0]['override'], '25.00')
-        self.assertFalse(refreshed['rows'][0]['included'])
-        self.assertEqual(refreshed['rows'][0]['payment_date'], '2026-09-01')
-        self.purchase.installments = 1
-        self.purchase.save()
-        previous = commitment_snapshot(self.user, date(2026, 9, 1))
-        previous['rows'][0]['override'] = '75.00'
-        previous['rows'][0]['included'] = False
-        self.purchase.date = date(2026, 10, 5)
-        self.purchase.save()
-        refreshed = merge_snapshot(previous, commitment_snapshot(self.user, date(2026, 9, 1)))
-        self.assertEqual(len(refreshed['rows']), 1)
-        self.assertFalse(refreshed['rows'][0]['included'])
-        self.assertEqual(refreshed['rows'][0]['override'], '75.00')
-        self.assertEqual(refreshed['rows'][0]['payment_date'], '2026-11-01')
-
-    def test_foreign_snapshot_signature_is_not_accepted(self):
-        from datetime import date
-        from sandbox.planning import commitment_snapshot
-        from sandbox.views import _snapshot_token
-        token = _snapshot_token(commitment_snapshot(self.user, date(2026, 10, 1)))
-        other = User.objects.create_user('snapshot-other', password='test')
-        self.client.force_login(other)
         response = self.client.post(reverse('sandbox:index'), {
-            'action': 'save', 'draft_name': 'Foreign', 'snapshot_token': token, 'gross_salary': '5000',
+            'action': 'calculate', 'planning_month': '2026-10', 'gross_salary': '5000',
         })
-        self.assertContains(response, 'snapshot is invalid')
-        self.assertEqual(ScenarioDraft.objects.count(), 0)
+        self.assertIsNone(response.context['forecast']['total'])
+        self.assertIsNone(response.context['result'])
+        self.assertContains(response, 'Incomplete forecast')
+        self.assertContains(response, 'exchange rate')
 
 
 class YieldSimulationTests(TestCase):

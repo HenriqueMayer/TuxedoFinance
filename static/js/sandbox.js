@@ -4,28 +4,13 @@
     window.TuxedoSandbox = true;
 
     function indexRows() {
-        ['variable', 'deduction'].forEach(function (prefix) {
-            document.querySelectorAll('[data-' + prefix + '-row]').forEach(function (row, index) {
-                var button = row.querySelector('[data-remove-' + prefix + ']');
-                if (button) button.value = 'remove_' + prefix + '_' + index;
-            });
+        document.querySelectorAll('[data-variable-row]').forEach(function (row, index) {
+            var button = row.querySelector('[data-remove-variable]');
+            if (button) button.value = 'remove_variable_' + index;
         });
     }
 
     document.addEventListener('click', function (event) {
-        var clearButton = event.target.closest('[data-clear-planning]');
-        if (clearButton) {
-            event.preventDefault();
-            var form = clearButton.closest('form');
-            ['fixed_cost_value', 'emergency_percent', 'investments_percent'].forEach(function (name) {
-                var input = form && form.elements[name];
-                if (input) input.value = '';
-            });
-            var rows = form && form.querySelector('[data-variable-rows]');
-            if (rows) rows.replaceChildren();
-            return;
-        }
-
         var addButton = event.target.closest('[data-add-variable]');
         if (addButton) {
             event.preventDefault();
@@ -51,28 +36,13 @@
             return;
         }
 
-        var addDeductionButton = event.target.closest('[data-add-deduction]');
-        if (addDeductionButton) {
-            event.preventDefault();
-            var deductionWorkspace = addDeductionButton.closest('#sandbox-workspace');
-            var deductionTemplate = deductionWorkspace && deductionWorkspace.querySelector('#sandbox-deduction-template');
-            var deductionContainer = deductionWorkspace && deductionWorkspace.querySelector('[data-deduction-rows]');
-            if (deductionTemplate && deductionContainer) {
-                deductionContainer.insertAdjacentHTML('beforeend', deductionTemplate.innerHTML.trim());
-                var deductionLabels = deductionContainer.querySelectorAll('input[name="deduction_label"]');
-                indexRows();
-                deductionLabels[deductionLabels.length - 1].focus();
-            }
-            return;
-        }
+    });
 
-        var removeDeductionButton = event.target.closest('[data-remove-deduction]');
-        if (removeDeductionButton) {
-            event.preventDefault();
-            var deductionRow = removeDeductionButton.closest('[data-deduction-row]');
-            if (deductionRow) deductionRow.remove();
-            indexRows();
-        }
+    document.addEventListener('change', function (event) {
+        if (event.target.name !== 'planning_month') return;
+        var form = event.target.closest('form');
+        var submitter = form && form.querySelector('#budget-forecast');
+        if (submitter) form.requestSubmit(submitter);
     });
 
     var timer;

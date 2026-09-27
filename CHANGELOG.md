@@ -7,6 +7,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Simplify the salary sandbox to gross salary, a selected-month expense forecast and optional additional fixed expenses, with draft saving kept optional.
+
 ## [0.7.0] - 2026-09-26
 
 ### Changed

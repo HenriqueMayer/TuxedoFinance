@@ -64,15 +64,15 @@ for (const theme of ['light', 'dark']) {
         await expect(tooltip).toBeHidden();
 
         await page.locator('#id_gross_salary').fill('5000');
-        await page.getByRole('button', { name: 'Explain Future commitments', exact: true }).hover();
-        await readableHelp(page, '#future-commitments-help');
+        await page.getByRole('button', { name: 'Explain Plan the selected month', exact: true }).hover();
+        await readableHelp(page, '#salary-input-help');
         await page.locator('#budget-calculate').click();
         await expect(page.locator('#scenario-result-title')).toBeVisible();
-        await expect(page.locator('#future-commitments-help')).toHaveCount(1);
+        await expect(page.locator('#salary-input-help')).toHaveCount(1);
         await expect(page.locator('#sandbox-workspace noscript')).toHaveCount(0);
-        const refreshedHelp = page.getByRole('button', { name: 'Explain Future commitments', exact: true });
+        const refreshedHelp = page.getByRole('button', { name: 'Explain Plan the selected month', exact: true });
         await refreshedHelp.hover();
-        await readableHelp(page, '#future-commitments-help');
+        await readableHelp(page, '#salary-input-help');
         await expect(page.locator('[aria-labelledby="scenario-result-title"]')).toHaveClass(/surface-panel/);
         await page.screenshot({ path: testInfo.outputPath(`planning-panel-help-${theme}.png`), fullPage: true });
 

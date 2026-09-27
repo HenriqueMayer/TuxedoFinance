@@ -122,7 +122,7 @@ Existing Docker installations must select the new image version and follow the
 | 🏦 **Banking** | Currency-specific accounts, cards, invoices, transfers and loyalty, with account exclusions and partial reserves for monthly planning. |
 | 📈 **Reports** | Responsive server-rendered SVG charts, accessible summaries, and progressive HTMX updates. |
 | 💼 **Investments** | Separate investment and monthly-cash purposes, manual deposits/withdrawals/yields, opening positions, unit pricing and historical FX evidence. |
-| 🧮 **Planning** | Salary and monthly-budget sandbox, explicitly saved drafts, snapshots of future commitments, and editable contribution/yield simulations. |
+| 🧮 **Planning** | Gross-salary monthly planning with the existing expense forecast, optional fixed expenses and drafts, plus editable contribution/yield simulations. |
 | 🌍 **Localization** | English and Brazilian Portuguese, independent reporting currency (BRL, USD, EUR, GBP, JPY, CHF), and date-format preferences. |
 | 🌗 **Interface** | Light and dark themes, keyboard navigation, conditional fields, server validation, and no-JavaScript form fallbacks. |
 

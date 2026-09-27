@@ -70,6 +70,16 @@ test('landing keeps concise translated copy and local frontend dependencies', as
     await page.locator('main').getByRole('link', { name: 'Entrar', exact: true }).click();
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-br');
+    await page.goto('/');
+    const englishNavigation = page.waitForNavigation();
+    await page.locator('#language-select-public').selectOption('en');
+    await englishNavigation;
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.getByRole('link', { name: 'Log in', exact: true }).first()).toBeVisible();
+    const englishCookie = (await page.context().cookies()).find(cookie => cookie.name === 'django_language');
+    expect(englishCookie.value).toBe('en');
+    expect(englishCookie.expires).toBeGreaterThan(Date.now() / 1000 + 300 * 24 * 60 * 60);
 });
 
 test('category CSV is downloaded without replacing the page', async ({ page }, testInfo) => {
@@ -265,94 +275,38 @@ test('monetary yield keeps server errors visible and clears stale inactive value
     await expect(endingBalance).toBeHidden();
 });
 
-test('salary sandbox supports a complete manual calculation without comparisons', async ({ page }, testInfo) => {
+test('salary sandbox keeps the simplified calculation responsive and accessible', async ({ page }, testInfo) => {
     await createAccount(page, testInfo);
     await page.goto('/sandbox/');
 
     await expect(page.getByRole('heading', { name: 'Salary Sandbox' })).toBeVisible();
     await expect(page.getByLabel('Gross monthly salary', { exact: true })).toBeVisible();
-    const useClt = page.getByLabel('Calculate CLT deductions automatically', { exact: true });
-    await expect(useClt).not.toBeChecked();
-    await expect(page.locator('[data-clt-options]')).toBeHidden();
-    await expect(page.locator('[data-manual-options]')).toBeVisible();
-    await expect(page.getByText('PJ regime')).toHaveCount(0);
-    await expect(page.getByText('CLT and PJ side by side')).toHaveCount(0);
-
     await page.getByLabel('Gross monthly salary', { exact: true }).fill('6000');
-    await useClt.uncheck();
-    await expect(page.locator('[data-clt-options]')).toBeHidden();
-    await expect(page.locator('[data-manual-options]')).toBeVisible();
-
-    const deductions = page.locator('[data-deduction-row]');
-    await expect(deductions).toHaveCount(1);
-    await deductions.nth(0).locator('input[name="deduction_label"]').fill('Tax');
-    await deductions.nth(0).locator('select[name="deduction_type"]').selectOption('percent');
-    await deductions.nth(0).locator('input[name="deduction_value"]').fill('10');
-    await page.getByRole('button', { name: 'Add deduction' }).click();
-    await deductions.nth(1).locator('input[name="deduction_label"]').fill('Health');
-    await deductions.nth(1).locator('input[name="deduction_value"]').fill('200');
-
-    await page.getByLabel('Fixed costs unit', { exact: true }).selectOption('currency');
-    await page.getByLabel('Fixed costs target', { exact: true }).fill('1500');
-    await page.getByRole('button', { name: 'Add expense' }).click();
-    const expenses = page.locator('[data-variable-row]');
-    await expenses.locator('input[name="variable_label"]').fill('Leisure');
-    await expenses.locator('input[name="variable_value"]').fill('250');
+    const expense = page.locator('[data-variable-row]').first();
+    await expense.getByLabel('Fixed expense description').fill('Rent');
+    await expense.getByLabel('Fixed expense monthly amount').fill('1500');
 
     const grossHelp = page.getByRole('button', { name: 'Explain Gross monthly salary' });
     await grossHelp.hover();
-    const grossTooltip = page.getByRole('tooltip').filter({ hasText: 'before any automatic or manually entered deductions' });
+    const grossTooltip = page.getByRole('tooltip').filter({ hasText: 'before subtracting the forecast' });
     await expect(grossTooltip).toBeVisible();
     await grossHelp.click();
     await page.keyboard.press('Escape');
     await expect(grossTooltip).toBeHidden();
     await expect(grossHelp).toBeFocused();
 
-    await page.getByRole('button', { name: 'Calculate', exact: true }).click();
+    await page.getByRole('button', { name: 'Calculate month', exact: true }).click();
     await expect(page.locator('#sandbox-workspace')).toHaveCount(1);
-    await expect(page.getByRole('heading', { name: 'Manual calculation' })).toBeVisible();
-    await expect(page.getByRole('paragraph').filter({ hasText: 'R$ 5.200,00' })).toBeVisible();
-    await expect(page.getByText('R$ 62.400,00')).toBeVisible();
-    await expect(page.getByRole('row', { name: /Tax 10,00%/ })).toContainText('600,00');
-    const monthlyPlan = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Monthly plan with current inputs' }) });
-    await expect(monthlyPlan.getByRole('row', { name: /Fixed costs target/ })).toContainText('1.500,00');
-    await expect(monthlyPlan.getByRole('row', { name: /Fixed costs target/ })).toContainText('28,85%');
-    await expect(monthlyPlan.getByRole('row', { name: /Leisure/ })).toContainText('250,00');
-    await expect(page.getByText('comparison', { exact: false })).toHaveCount(0);
+    await expect(page.locator('#scenario-result-title')).toBeVisible();
+    await expect(page.getByText('R$ 4.500,00', { exact: true })).toBeVisible();
+    await expect(page.locator('#id_draft_name')).toBeHidden();
 
     await page.setViewportSize({ width: 390, height: 844 });
-    const budgetHelp = page.getByRole('button', { name: 'Explain Fixed costs target' }).last();
-    await budgetHelp.click();
-    const budgetTooltip = page.getByRole('tooltip').filter({ hasText: 'percentage of net income' });
-    await expect(budgetTooltip).toBeVisible();
-    const tooltipBox = await budgetTooltip.boundingBox();
-    expect(tooltipBox.x).toBeGreaterThanOrEqual(12);
-    expect(tooltipBox.x + tooltipBox.width).toBeLessThanOrEqual(378);
-});
-
-test('salary sandbox switches to automatic CLT and clears only plan estimates', async ({ page }, testInfo) => {
-    await createAccount(page, testInfo);
-    await page.goto('/sandbox/');
-    await page.getByLabel('Gross monthly salary', { exact: true }).fill('6000');
-
-    await page.getByRole('button', { name: 'Add expense' }).click();
-    await page.locator('input[name="variable_label"]').fill('Temporary');
-    await page.getByRole('button', { name: 'Clear estimates' }).click();
-    await expect(page.getByLabel('Fixed costs target', { exact: true })).toHaveValue('');
-    await expect(page.locator('[data-variable-row]')).toHaveCount(0);
-
-    await page.getByLabel('Calculate CLT deductions automatically', { exact: true }).check();
-    await page.getByLabel('Fixed costs target', { exact: true }).fill('50');
-    await page.getByRole('button', { name: 'Calculate', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Automatic CLT calculation' })).toBeVisible();
-    await expect(page.getByText('Net 13th salary', { exact: true }).filter({ visible: true })).toBeVisible();
-    await expect(page.getByText('Vacation net with one-third', { exact: true }).filter({ visible: true })).toBeVisible();
-    await expect(page.getByText('FGTS', { exact: true }).filter({ visible: true })).toBeVisible();
-    await expect(page.getByText('See comparison with PJ')).toHaveCount(0);
-    await expect(page.locator('#sandbox-workspace')).toHaveCount(1);
-
-    await page.getByRole('button', { name: 'Toggle color theme' }).click();
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
+    await page.getByRole('dialog', { name: 'Navigation menu' })
+        .getByRole('button', { name: 'Toggle color theme' }).click();
     await expect(page.locator('html')).toHaveClass(/dark/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test('reports keep the next-window control stable when returning to today becomes available', async ({ page }, testInfo) => {

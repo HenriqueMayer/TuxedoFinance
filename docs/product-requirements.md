@@ -14,8 +14,8 @@ ledger, PIX, debit and credit cards, card invoices and loyalty points.
 Per-user multicurrency preferences and retained historical conversion evidence
 are implemented. Investments remain separate while sharing banks and bank
 accounts for providers and cash settlement. The authenticated planning workspace
-combines salary estimates, monthly budgets, explicitly saved drafts, optional
-snapshots of future commitments and contribution/yield simulations. Monthly cash
+combines a gross-salary monthly plan, existing expense forecasts, optional
+private drafts and contribution/yield simulations. Monthly cash
 pots and optional account reserves make money available for planning explicit.
 
 The product remains a lean Django full-stack application: native authentication,
@@ -32,7 +32,7 @@ HTMX progressive enhancement.
 | G4 | Multicurrency reporting | Preserve currency-specific account data with per-user reporting and historical FX evidence. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
 | G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
-| G7 | Support isolated planning | Save private named scenarios and explicitly import commitment snapshots without posting or changing financial records. |
+| G7 | Support isolated planning | Compare gross salary with a selected month's existing expense forecast and optionally save private named scenarios without posting or changing financial records. |
 
 ## 3. Scope
 
@@ -52,8 +52,8 @@ HTMX progressive enhancement.
 - Monetary investment yields entered directly or derived from a new total
   balance, with a non-persistent preview before saving.
 - Dashboard/read models updated for cash, invoices, investments and net worth.
-- Authenticated salary planning with automatic 2026 CLT rules, manual deductions,
-  named drafts, 12-month commitment snapshots and contribution/yield simulations.
+- Authenticated salary planning with a selected-month expense forecast,
+  additional fixed expenses, optional named drafts and contribution/yield simulations.
 - Distinguish monthly cash pots from investments; exclude positive account funds
   or reserve a fixed native amount for planning while preserving wealth and debts.
 
@@ -100,7 +100,7 @@ HTMX progressive enhancement.
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
 | FR28 | Local database ownership | The repository does not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. |
-| FR29 | Planning sandbox | Users estimate salary, allocate a monthly plan, explicitly save incomplete named drafts and import read-only commitment snapshots. Simulations never post financial movements. |
+| FR29 | Planning sandbox | Users compare gross salary with the selected month's existing expense forecast, add missing fixed expenses and optionally save a named draft. Simulations never post financial movements. |
 
 ## 5. Domain Rules
 
@@ -181,15 +181,14 @@ reserved for explicitly labeled current-value simulations elsewhere.
 
 ### 5.7 Planning sandbox
 
-- Salary calculations use versioned, source-attributed CLT rules or explicitly
-  entered manual deductions. Partial inputs may be saved as a named private draft;
-  missing inputs are not interpreted as zero or a valid completed simulation.
+- Salary planning uses the entered gross salary, the selected month's existing
+  expense forecast and optional additional fixed BRL expenses. Missing inputs are
+  not interpreted as zero or a valid completed plan.
 - Scenarios are saved only through an explicit action, never by autosave or a
   background request. They do not create or modify financial ledger entries.
-- Importing commitments captures a dated, owner-scoped 12-month snapshot of
-  one-off, recurring and installment events. Payment dates drive cash needs;
-  competence is explanatory. Card purchases and invoice settlement are counted
-  once. Refresh is explicit, so reopening a draft cannot silently change it.
+- The month card reads one-off, recurring and installment expenses by payment
+  date. Card purchases and invoice settlement are counted once. A saved draft
+  retains the forecast used when it was saved.
 - Monthly contribution/yield simulations accept editable amounts and rates and
   display their assumptions. Market quotes, history feeds and agent integration
   remain roadmap work.

@@ -159,6 +159,18 @@ class LanguageSelectionTests(TestCase):
             'Cotações e histórico de preços com fonte e data de avaliação.',
         )
 
+        english_response = self.client.post(
+            reverse('set_language'),
+            {'language': 'en', 'next': reverse('pages:landing')},
+        )
+        english_cookie = english_response.cookies[settings.LANGUAGE_COOKIE_NAME]
+        self.assertEqual(english_cookie.value, 'en')
+        self.assertEqual(english_cookie['max-age'], settings.LANGUAGE_COOKIE_AGE)
+        self.assertEqual(english_cookie['samesite'], settings.LANGUAGE_COOKIE_SAMESITE)
+        english = self.client.get(reverse('pages:landing'))
+        self.assertContains(english, '<html lang="en"', html=False)
+        self.assertContains(english, 'Log in')
+
     @override_settings(DEBUG=False)
     def test_precompiled_tailwind_is_used_without_the_play_cdn(self):
         response = self.client.get(reverse('pages:landing'))

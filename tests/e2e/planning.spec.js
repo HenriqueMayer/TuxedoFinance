@@ -85,7 +85,7 @@ for (const theme of ['light', 'dark']) {
     });
 }
 
-test('commitments use explicit review, preserve edits and save without losing location', async ({ page }, testInfo) => {
+test('salary plan uses the selected month forecast and saves only when requested', async ({ page }, testInfo) => {
     await signup(page, testInfo);
     await post(page, '/banking/create/', { name: 'Planning bank' });
     await page.goto('/banking/accounts/create/');
@@ -97,27 +97,29 @@ test('commitments use explicit review, preserve edits and save without losing lo
     await post(page, '/transactions/create/', { title: 'Future rent', amount: '600', transaction_type: 'EXPENSE',
         category, payment_channel: 'ACCOUNT', bank_account: account, date: '2026-10-15', installments: '1' });
     await page.goto('/sandbox/');
+    await expect(page.locator('#id_draft_name')).toBeHidden();
     await page.getByLabel('Gross monthly salary', { exact: true }).fill('5000');
     await page.getByLabel('Planning month', { exact: true }).fill('2026-10');
-    await page.getByLabel('Expense basis', { exact: true }).selectOption('recorded');
-    await expect(page.getByLabel('Fixed costs target', { exact: true })).toBeHidden();
-    await page.getByRole('button', { name: 'Capture commitments', exact: true }).focus();
-    await page.keyboard.press('Enter');
-    await expect(page.getByRole('region', { name: 'Review commitment refresh' })).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Review commitment refresh' })).toContainText('Future rent');
-    await page.getByRole('button', { name: 'Apply snapshot', exact: true }).click();
-    await expect(page.getByRole('region', { name: 'Review commitment refresh' })).toHaveCount(0);
-    const amount = page.getByLabel('Scenario amount for Future rent', { exact: true });
-    await amount.fill('450');
-    await page.getByRole('button', { name: 'Review refresh', exact: true }).click();
-    await expect(page.getByRole('region', { name: 'Review commitment refresh' })).toContainText('Manual amount retained');
-    await page.getByRole('button', { name: 'Apply snapshot', exact: true }).click();
-    await expect(page.getByRole('region', { name: 'Review commitment refresh' })).toHaveCount(0);
-    await expect(amount).toHaveValue('450');
+    await page.getByRole('button', { name: 'Show month forecast', exact: true }).click();
+    const forecast = page.getByRole('article').filter({ hasText: 'Existing expense forecast' });
+    await expect(forecast).toContainText('600,00');
+    const firstExpense = page.locator('[data-variable-row]').first();
+    await firstExpense.getByLabel('Fixed expense description').fill('Utilities');
+    await firstExpense.getByLabel('Fixed expense monthly amount').fill('150');
+    await page.getByRole('button', { name: 'Add fixed expense' }).click();
+    const expenses = page.locator('[data-variable-row]');
+    await expect(expenses).toHaveCount(2);
+    await expenses.nth(1).getByLabel('Fixed expense description').fill('Transport');
+    await expenses.nth(1).getByLabel('Fixed expense monthly amount').fill('50');
+    await page.getByRole('button', { name: 'Calculate month', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'October 2026' })).toBeVisible();
+    await expect(page.getByText('R$ 4.200,00', { exact: true })).toBeVisible();
+    await page.getByText('Save this plan (optional)', { exact: true }).click();
     await page.locator('#id_draft_name').fill('October commitments');
     await page.getByRole('button', { name: 'Save draft', exact: true }).click();
     await expect(page).toHaveURL(/\/sandbox\/drafts\/\d+\/$/);
-    await expect(amount).toHaveValue('450.00');
+    await expect(page.getByLabel('Fixed expense monthly amount').first()).toHaveValue('150.00');
+    await expect(page.getByText('R$ 4.200,00', { exact: true })).toBeVisible();
     await page.setViewportSize({ width: 390, height: 700 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath('planning-commitments-mobile.png'), fullPage: true });
@@ -152,21 +154,20 @@ test.describe('planning without JavaScript', () => {
     test('incomplete drafts and repeated rows support full native submission', async ({ page }, testInfo) => {
         await signup(page, testInfo);
         await page.goto('/sandbox/');
+        await page.getByText('Save this plan (optional)', { exact: true }).press('Enter');
         await page.locator('#id_draft_name').fill('My incomplete plan');
-        await page.getByLabel('Planning month', { exact: true }).fill('2026-');
-        await page.locator('[data-add-variable]').click();
-        await page.getByLabel('Expense description', { exact: true }).fill('Rent');
-        await page.getByLabel('Expense value', { exact: true }).fill('invalid');
+        await page.getByLabel('Planning month', { exact: true }).fill('2026-10');
+        await page.getByLabel('Fixed expense description', { exact: true }).fill('Rent');
+        await page.getByLabel('Fixed expense monthly amount', { exact: true }).fill('invalid');
         await page.getByRole('button', { name: 'Save draft', exact: true }).click();
         await expect(page).toHaveURL(/\/sandbox\/drafts\/\d+\/$/);
-        await expect(page.getByLabel('Planning month', { exact: true })).toHaveValue('2026-');
-        await expect(page.getByLabel('Expense value', { exact: true })).toHaveValue('invalid');
-        await expect(page.getByRole('heading', { name: 'Manual calculation', exact: true })).toHaveCount(0);
-        await page.getByLabel('Planning month', { exact: true }).fill('2026-10');
+        await expect(page.getByLabel('Planning month', { exact: true })).toHaveValue('2026-10');
+        await expect(page.getByLabel('Fixed expense monthly amount', { exact: true })).toHaveValue('invalid');
+        await expect(page.locator('#scenario-result-title')).toHaveCount(0);
         await page.getByLabel('Gross monthly salary', { exact: true }).fill('5000');
-        await page.getByLabel('Expense value', { exact: true }).fill('1000');
-        await page.getByRole('button', { name: 'Calculate', exact: true }).click();
-        await expect(page.getByRole('heading', { name: 'Manual calculation', exact: true })).toBeVisible();
+        await page.getByLabel('Fixed expense monthly amount', { exact: true }).fill('1000');
+        await page.getByRole('button', { name: 'Calculate month', exact: true }).click();
+        await expect(page.locator('#scenario-result-title')).toBeVisible();
         await page.getByRole('button', { name: 'Save draft', exact: true }).click();
         await page.getByRole('link', { name: 'Saved drafts', exact: true }).click();
         await page.getByRole('button', { name: 'Duplicate', exact: true }).click();

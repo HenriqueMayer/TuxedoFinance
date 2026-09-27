@@ -1,80 +1,41 @@
 # Planning and saved scenarios
 
-The authenticated `/sandbox/` workspace contains the salary calculator, monthly
-planning, future commitments and the hypothetical investment simulator. Existing
+The authenticated `/sandbox/` workspace contains a simple monthly salary plan
+and the hypothetical investment simulator. Existing
 URLs remain valid. Calculations read financial sources without synchronizing or
 posting ledger entries. Only an explicit save, duplicate or delete changes the
 user's `ScenarioDraft` records.
 
 ## Salary and monthly budget
 
-The user enters one gross monthly salary and chooses between:
+The user enters a gross monthly salary and selects one month. The workspace reads
+that month's existing expense forecast from one-off, recurring, installment,
+points-purchase and redemption-IOF records, then shows the forecast in a single
+card. Changing the month refreshes the card; the explicit button provides the
+same path without JavaScript.
 
-- **Automatic CLT:** the versioned 2026 employee INSS and IRRF rules, including
-  the most favorable monthly IRRF deduction, vacation with one-third, 13th salary,
-  FGTS, annual net income and normalized monthly net income.
-- **Manual:** deductions entered as BRL amounts or percentages of gross salary.
-  Annual projection repeats the resulting month twelve times; it does not infer
-  benefits, extra payments or tax rules.
-
-The automatic catalog was reviewed on 2026-09-02 against the official
-[INSS contribution table](https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal),
-[2026 Receita Federal tables](https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026),
-and [FGTS rules](https://www.fgts.gov.br/Paginas/sobre-o-fgts/regras.aspx).
-Values, sources and the review date are versioned in `sandbox/tax_rules/y2026.py`.
-Runtime calculation never searches the internet.
-
-The monthly budget has two expense bases. **Free estimate** uses fixed costs in
-BRL or as a percentage of take-home pay. **Recorded commitments** replaces that
-aggregate with the selected month's captured obligations; it does not add them
-again to the fixed-cost percentage. Additional expense rows represent extra
-hypotheses. Emergency reserve and investment targets remain percentages.
-Negative remainders stay visible.
-
-Manual payroll deductions and additional expenses are separate lists, with a
-maximum of 20 rows each. Invalid or excessive input is rejected explicitly and
-retained for correction. Add/remove controls also work through ordinary POSTs
+Up to 20 additional fixed BRL expenses may be added for amounts that are not
+already recorded. The result subtracts the existing forecast and those added
+amounts from the gross salary. Negative remainders stay visible. Invalid rows are
+retained for correction, and add/remove controls work through ordinary POSTs
 without JavaScript.
 
-Salary planning uses BRL. The separate real-resources section uses the user's
-base reporting currency and the shared Banking availability service. Hypothetical
-salary is never added to a bank balance that may already contain it. Reserves,
-excluded accounts and redeemable cash pots therefore have the same meaning in
-Banks, Overview and Planning.
-
-## Future commitments
-
-Capture builds a read-only 12-month snapshot from the selected month. It expands
-one-off expenses, recurring expenses, installments, points purchases and redemption
-IOF by payment date. Card items follow invoice due dates; invoice totals are not
-added a second time. Rows identify source, installment, instrument, native currency
-and amount. Conversion to BRL is frozen at capture, with missing exchange rates
-explicitly incomplete. A user may exclude a row or supply a hypothetical BRL
-amount without editing its source.
-
-Refreshing requires a preview and explicit Apply action. Stable source/occurrence
-identifiers retain manual amounts and exclusions when dates or amounts change.
-Removed sources remain marked until the user excludes them. Capturing or reviewing
-changes does not silently replace a saved draft. The signed snapshot is bound to
-its owner; recalculating cannot accept another user's snapshot.
-
-A snapshot holds at most 2,000 obligations across its 12 months. Capturing or
-merging beyond that limit returns a visible error and keeps the previous snapshot;
-it never silently truncates obligations. The finite request field limit of 10,000
-supports every editable row without JavaScript. Django's default 2.5 MB request
-body limit remains in effect.
+The salary plan no longer asks for payroll deduction modes, CLT details,
+percentage targets, reserves or investment allocations. It does not add the
+hypothetical salary to real bank balances.
 
 ## Drafts and privacy
 
 `ScenarioDraft` stores owner, name, kind, input payload and created/updated times.
-Payloads include schema/calculation versions, original input format, tax-rule year,
-completion state and an optional dated commitment snapshot. Valid values have a
+Payloads include schema/calculation versions, original input format,
+completion state and an optional dated expense snapshot. Valid values have a
 canonical representation; invalid input remains recoverable. Incomplete drafts
 are allowed but never display a projected total as if calculation succeeded.
 
 Save, open, duplicate, delete and compare up to three drafts through `/sandbox/drafts/`.
 All lookups are owner-scoped. Inputs use POST rather than query strings. There is
-no autosave: live calculation only refreshes results. As elsewhere in the app,
+no autosave: calculating or changing the selected month never saves. Saving is
+kept in an explicitly optional disclosure. As elsewhere in the app,
 shared presentation context may initialize missing user preferences; it does not
 create financial records.
 

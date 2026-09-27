@@ -124,7 +124,7 @@ Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 | 🏦 **Bancos** | Contas por moeda, cartões, faturas, transferências e fidelidade, com exclusão de contas e reservas parciais para o planejamento mensal. |
 | 📈 **Relatórios** | Gráficos SVG responsivos renderizados no servidor, resumos acessíveis e atualizações progressivas com HTMX. |
 | 💼 **Investimentos** | Finalidades separadas de investimento e caixa mensal, aportes/resgates/rendimentos manuais, posições iniciais, preços unitários e histórico de câmbio. |
-| 🧮 **Planejamento** | Sandbox salarial e de orçamento, rascunhos salvos explicitamente, retratos de compromissos futuros e simulações editáveis de aportes e rendimentos. |
+| 🧮 **Planejamento** | Planejamento mensal com salário bruto, previsão de despesas existente, valores fixos e rascunhos opcionais, além de simulações editáveis de aportes e rendimentos. |
 | 🌍 **Localização** | Inglês e português do Brasil, moeda de apresentação independente (BRL, USD, EUR, GBP, JPY, CHF) e preferência de formato de data. |
 | 🌗 **Interface** | Temas claro e escuro, navegação por teclado, campos condicionais, validação no servidor e formulários funcionais sem JavaScript. |
 
