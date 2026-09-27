@@ -44,9 +44,7 @@ for (const theme of ['light', 'dark']) {
         await page.goto('/investments/');
         await expect(page.locator('#investment-movements')).toHaveCount(0);
         const link = page.locator('#investment-operations-link');
-        expect(await page.locator('#investments-charts').evaluate(chart => Boolean(
-            chart.compareDocumentPosition(document.querySelector('#investment-operations-link')) & Node.DOCUMENT_POSITION_FOLLOWING
-        ))).toBe(true);
+        await expect(page.locator('#investments-charts')).toHaveCount(0);
         await link.scrollIntoViewIfNeeded();
         await page.screenshot({ path: info.outputPath(`portfolio-charts-${theme}.png`) });
         await link.focus();
@@ -119,3 +117,144 @@ test('operations remain usable on mobile without JavaScript', async ({ page, bro
         await mobile.screenshot({ path: info.outputPath('operations-mobile-native.png'), fullPage: true });
     } finally { await context.close(); }
 });
+
+for (const theme of ['light', 'dark']) {
+    test(`investment chart scopes and contextual operation labels (${theme})`, async ({ page }, info) => {
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        await seed(page, info, 1);
+        await page.goto('/investments/charts/');
+        const chart = page.locator('[data-chart-selection]').first();
+        await chart.locator('[data-point]').last().press('Enter');
+        await expect(chart.locator('[data-selection-values]')).toContainText('1,015.00');
+        await page.locator('#investment-chart-scope').focus();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Tab');
+        await page.keyboard.press('Enter');
+        await expect(page).toHaveURL(/scope=cash/);
+        await chart.locator('[data-point]').last().press('Enter');
+        await expect(chart.locator('[data-selection-values]')).toContainText('5.00');
+        await chart.getByRole('link', { name: 'Next window' }).press('Enter');
+        await expect(page).toHaveURL(/scope=cash/);
+        await expect(page).toHaveURL(/total_offset=1/);
+        await expect(page.locator('#investment-chart-scope')).toHaveValue('cash');
+        await page.locator('#investment-chart-scope').focus();
+        await page.keyboard.press('ArrowUp');
+        await page.keyboard.press('Tab');
+        await page.keyboard.press('Enter');
+        await expect(page).toHaveURL(/scope=portfolio/);
+        await chart.locator('[data-point]').last().press('Enter');
+        await expect(chart.locator('[data-selection-values]')).toContainText('1,010.00');
+        await page.setViewportSize({ width: 390, height: 740 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.screenshot({ path: info.outputPath(`investment-charts-${theme}.png`), fullPage: true });
+        await page.goto('/investments/create/');
+        const { selectChoice } = require('./helpers/forms');
+        await selectChoice(page.locator('#id_product'), { label: 'Operations bank - Portfolio fund' });
+        await selectChoice(page.locator('#id_asset'), { label: 'Stored balance (BAL)' });
+        await page.locator('#id_kind').focus();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Tab');
+        await page.getByRole('radio', { name: 'Enter the yield amount' }).press('Space');
+        await expect(page.getByLabel('Yield amount', { exact: true })).toBeVisible();
+        await page.locator('#id_kind').focus();
+        await page.keyboard.press('ArrowUp');
+        await page.keyboard.press('Tab');
+        await expect(page.getByLabel('Withdrawal amount', { exact: true })).toBeVisible();
+        await expect(page.locator('#asset-mode-status')).toContainText('withdrawal amount');
+        const help = page.getByRole('button', { name: 'Explain Withdrawal amount', exact: true });
+        await help.hover();
+        await expect(page.locator('#id_amount-help')).toBeVisible();
+        await page.mouse.move(2, 2);
+        await expect(page.locator('#id_amount-help')).toBeHidden();
+        await help.focus();
+        await expect(page.locator('#id_amount-help')).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#id_amount-help')).toBeHidden();
+        await page.getByLabel('Withdrawal amount', { exact: true }).fill('0');
+        await page.getByRole('button', { name: 'Save', exact: true }).press('Enter');
+        await expect(page.locator('#id_amount-error-1')).toBeVisible();
+        await expect(page.getByLabel('Withdrawal amount', { exact: true })).toBeVisible();
+        await page.locator('#id_kind').focus();
+        await page.keyboard.press('ArrowUp');
+        await page.keyboard.press('Tab');
+        await expect(page.getByLabel('Deposit amount', { exact: true })).toBeVisible();
+        await expect(page.locator('#asset-mode-status')).toContainText('deposit amount');
+        await page.screenshot({ path: info.outputPath(`operation-copy-${theme}.png`), fullPage: true });
+    });
+}
+
+test('chart scopes retain native GET filtering without JavaScript', async ({ page, browser }, info) => {
+    await seed(page, info, 1);
+    const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false });
+    try {
+        const native = await context.newPage();
+        await native.goto('/investments/charts/');
+        await native.locator('#investment-chart-scope').selectOption('cash');
+        await native.getByRole('button', { name: 'Filter', exact: true }).press('Enter');
+        await expect(native.locator('#investment-chart-scope')).toHaveValue('cash');
+        const chart = native.locator('[data-chart-selection]').first();
+        await expect(chart.locator('[data-point]').last()).toHaveAttribute('aria-label', /5,00/);
+        await chart.getByRole('link', { name: 'Next window' }).press('Enter');
+        await expect(native).toHaveURL(/scope=cash/);
+    } finally { await context.close(); }
+});
+
+for (const theme of ['light', 'dark']) {
+    test(`Portuguese investment and planning controls (${theme})`, async ({ browser }, info) => {
+        const context = await browser.newContext({ locale: 'pt-BR', viewport: { width: 1280, height: 900 } });
+        const page = await context.newPage();
+        page.on('dialog', dialog => dialog.accept());
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        try {
+            await seed(page, info, 1);
+            await page.goto('/investments/charts/');
+            await expect(page.getByRole('navigation', { name: 'Seções de investimentos' }).getByRole('link', { name: 'Gráficos' })).toHaveAttribute('aria-current', 'page');
+            await expect(page.locator('#investment-chart-scope option:checked')).toHaveText('Geral');
+            await page.locator('#investment-chart-scope').selectOption('cash');
+            await page.locator('#investments-charts button[type="submit"]').press('Enter');
+            await expect(page).toHaveURL(/scope=cash/);
+            await page.goBack();
+            await expect(page.locator('#investment-chart-scope')).toHaveValue('');
+            await page.screenshot({ path: info.outputPath(`graficos-${theme}.png`), fullPage: true });
+            await page.goto('/investments/create/');
+            const { selectChoice } = require('./helpers/forms');
+            await selectChoice(page.locator('#id_asset'), { label: 'Stored balance (BAL)' });
+            await page.locator('#id_kind').selectOption('WITHDRAWAL');
+            await expect(page.getByLabel('Valor do resgate', { exact: true })).toBeVisible();
+            await expect(page.locator('#asset-mode-status')).toContainText('valor do resgate em BRL');
+            await page.goto('/sandbox/');
+            await page.locator('#id_gross_salary').fill('5000');
+            const month = page.locator('#id_planning_month');
+            await month.evaluate(input => {
+                const open = input.showPicker;
+                input.showPicker = function () { this.dataset.openedPicker = 'true'; return open.call(this); };
+            });
+            await month.click({ position: { x: 30, y: 20 } });
+            await expect(month).toHaveAttribute('data-opened-picker', 'true');
+            await page.keyboard.press('Escape');
+            await month.fill('2026-10');
+            await expect(page.locator('[data-planning-month]')).toHaveText('Outubro 2026');
+            await page.locator('[name="variable_label"]').fill('Reserva');
+            await page.locator('[name="variable_type"]').selectOption('percent');
+            await page.locator('[name="variable_value"]').fill('10');
+            await page.locator('#budget-calculate').press('Enter');
+            await expect(page.getByText('R$ 4.500,00', { exact: true })).toBeVisible();
+            await expect(page.locator('#budget-forecast')).toBeHidden();
+            await page.evaluate(() => window.scrollTo(0, 0));
+            await page.screenshot({ path: info.outputPath(`planejamento-${theme}.png`), fullPage: true });
+            await page.goto('/sandbox/simulation/');
+            await page.locator('#id_initial_balance').fill('1000');
+            await page.locator('#id_rate_period').selectOption('annual');
+            await page.locator('#id_rate').fill('12');
+            await page.getByRole('button', { name: '2 anos', exact: true }).press('Enter');
+            await expect(page.locator('label[for="id_rate"]')).toContainText('Taxa anual efetiva (%)');
+            await expect(page.locator('#simulation-result')).toContainText('1.254,40');
+            await page.locator('#id_rate_period').selectOption('monthly');
+            await expect(page.locator('label[for="id_rate"]')).toContainText('Taxa mensal efetiva (%)');
+            await page.locator('#id_rate').fill('1');
+            await expect(page.locator('#simulation-result')).toContainText('1.269,74');
+            await page.evaluate(() => window.scrollTo(0, 0));
+            await page.screenshot({ path: info.outputPath(`simulacao-${theme}.png`), fullPage: true });
+        } finally { await context.close(); }
+    });
+}

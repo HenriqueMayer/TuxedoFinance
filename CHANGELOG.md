@@ -7,8 +7,16 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add an investment Charts tab with Overall, Portfolio and Remunerated cash scopes, historical position evolution and monthly flows.
+- Allow additional monthly-plan expenses in BRL or a percentage of gross salary, including saved drafts.
+
 ### Changed
 
+- Match investment amount, quantity, unit-price and cash labels to deposits, withdrawals and yields.
+- Add previous/next planning-month controls and a full-field native picker, hiding the redundant forecast action when JavaScript is available.
+- Clarify yield simulation rate/currency parameters and add accessible duration shortcuts.
 - Simplify the salary sandbox to gross salary, a selected-month expense forecast and optional additional fixed expenses, with draft saving kept optional.
 
 ## [0.7.0] - 2026-09-26

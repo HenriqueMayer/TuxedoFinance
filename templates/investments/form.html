@@ -89,6 +89,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ form.operation_copy|json_script:"operation-copy" }}
 <script>
     (function () {
         const asset = document.getElementById('{{ form.asset.id_for_label }}');
@@ -124,6 +125,20 @@
             withdrawal: document.getElementById('withdrawal-fields'),
         };
         if (!asset || !kind) return;
+
+        const operationCopy = JSON.parse(document.getElementById('operation-copy').textContent);
+        function updateOperationCopy() {
+            Object.entries(operationCopy[kind.value] || {}).forEach(([name, label]) => {
+                const field = document.getElementById('id_' + name);
+                const wrapper = field.closest('.space-y-2');
+                wrapper.querySelector('label').firstChild.textContent = label + ' ';
+                // Keep tooltip headings and accessible names aligned with the field.
+                wrapper.querySelectorAll('.help-title').forEach(title => { title.textContent = label; });
+                wrapper.querySelectorAll('.help-trigger').forEach(trigger => {
+                    trigger.setAttribute('aria-label', '{% translate "Explain" %} ' + label);
+                });
+            });
+        }
 
         const previewPlaceholder = yieldPreview ? yieldPreview.innerHTML : '';
 
@@ -170,6 +185,7 @@
         }
 
         function updateAssetFields(clearStale) {
+            updateOperationCopy();
             const option = asset.selectedOptions[0];
             const mode = option && asset.value && kind.value ? option.dataset.valuationMode : '';
             const currency = option ? option.dataset.currency : '';
@@ -187,7 +203,9 @@
             if (mode === 'MONETARY') {
                 assetStatus.textContent = kind.value === 'YIELD'
                     ? '{% translate "Money asset: enter its new balance or the yield amount in" %} ' + currency + '.'
-                    : '{% translate "Money asset: enter the investment amount in" %} ' + currency + '.';
+                    : kind.value === 'WITHDRAWAL'
+                        ? '{% translate "Money asset: enter the withdrawal amount in" %} ' + currency + '.'
+                        : '{% translate "Money asset: enter the deposit amount in" %} ' + currency + '.';
             } else if (mode === 'UNITS') {
                 assetStatus.textContent = '{% translate "Unit-based asset: enter quantity and unit price in" %} ' + currency + '.';
             } else {

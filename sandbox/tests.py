@@ -171,12 +171,57 @@ class SandboxViewTests(TestCase):
         self.assertNotContains(response, 'Enter the gross monthly salary.')
         self.assertEqual(response.context['forecast']['month'].isoformat(), '2026-10-01')
 
-    def test_added_expenses_reject_percentage_payloads(self):
+    def test_added_expenses_accept_percentage_payloads(self):
         form = SalarySandboxForm(data={
             'gross_salary': '5000', 'planning_month': '2026-10',
             'variable_label': ['Tax'], 'variable_type': ['percent'], 'variable_value': ['10'],
         })
-        self.assertFalse(form.is_valid())
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_percentage_expenses_round_and_survive_draft_reopening(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse('sandbox:index'), {
+            'gross_salary': '1234.56', 'planning_month': '2026-10',
+            'variable_label': ['Rent', 'Savings'], 'variable_type': ['currency', 'percent'],
+            'variable_value': ['100', '12.5'], 'action': 'save', 'draft_name': 'Mixed expenses',
+        }, follow=True)
+        self.assertEqual(response.context['result']['budget'].custom_expenses, D('254.32'))
+        self.assertEqual(response.context['result']['budget'].remaining, D('980.24'))
+        self.assertEqual(response.context['variable_rows'][1]['value_type'], 'percent')
+        self.assertEqual(response.context['variable_rows'][1]['value'], '12.50')
+
+    def test_percentage_expenses_reject_out_of_range_and_preserve_input(self):
+        self.client.force_login(self.user)
+        for value in ('101', '-1', 'NaN', '1.001'):
+            with self.subTest(value=value):
+                response = self.client.post(reverse('sandbox:index'), {
+                    'gross_salary': '5000', 'planning_month': '2026-10',
+                    'variable_label': ['Tax'], 'variable_type': ['percent'], 'variable_value': [value],
+                })
+                self.assertIsNone(response.context['result'])
+                self.assertEqual(response.context['variable_rows'][0]['value'], value)
+                self.assertContains(response, '0–100')
+
+    def test_month_arrows_preserve_rows_and_cross_year_without_saving(self):
+        self.client.force_login(self.user)
+        for action, month, expected in (('next_month', '2026-12', '2027-01'),
+                                         ('previous_month', '2026-01', '2025-12')):
+            response = self.client.post(reverse('sandbox:index'), {
+                'action': action, 'planning_month': month, 'gross_salary': '5000',
+                'variable_label': ['Tax'], 'variable_type': ['percent'], 'variable_value': ['10'],
+            })
+            self.assertEqual(response.context['form']['planning_month'].value(), expected)
+            self.assertEqual(response.context['form']['gross_salary'].value(), '5000')
+            self.assertEqual(response.context['variable_rows'][0]['value_type'], 'percent')
+            self.assertEqual(ScenarioDraft.objects.count(), 0)
+
+    def test_invalid_month_text_remains_editable(self):
+        from sandbox.forms import YieldSimulationForm
+        for form_class, name in ((SalarySandboxForm, 'planning_month'), (YieldSimulationForm, 'start_month')):
+            with self.subTest(name=name):
+                form = form_class(data={name: 'invalid-month'})
+                self.assertIn('invalid-month', str(form[name]))
+                self.assertIn('type="text"', str(form[name]))
 
     def test_page_uses_the_pt_br_catalog(self):
         self.client.force_login(self.user)

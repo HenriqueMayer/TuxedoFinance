@@ -100,7 +100,7 @@ test('salary plan uses the selected month forecast and saves only when requested
     await expect(page.locator('#id_draft_name')).toBeHidden();
     await page.getByLabel('Gross monthly salary', { exact: true }).fill('5000');
     await page.getByLabel('Planning month', { exact: true }).fill('2026-10');
-    await page.getByRole('button', { name: 'Show month forecast', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Show month forecast', exact: true })).toBeHidden();
     const forecast = page.getByRole('article').filter({ hasText: 'Existing expense forecast' });
     await expect(forecast).toContainText('600,00');
     const firstExpense = page.locator('[data-variable-row]').first();
@@ -112,7 +112,7 @@ test('salary plan uses the selected month forecast and saves only when requested
     await expenses.nth(1).getByLabel('Fixed expense description').fill('Transport');
     await expenses.nth(1).getByLabel('Fixed expense monthly amount').fill('50');
     await page.getByRole('button', { name: 'Calculate month', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'October 2026' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'October 2026', level: 2 })).toBeVisible();
     await expect(page.getByText('R$ 4.200,00', { exact: true })).toBeVisible();
     await page.getByText('Save this plan (optional)', { exact: true }).click();
     await page.locator('#id_draft_name').fill('October commitments');
@@ -130,6 +130,7 @@ test.describe('planning without JavaScript', () => {
     test('yield rows, invalid values and optional saving work through native forms', async ({ page }, info) => {
         await signup(page, info);
         await page.goto('/sandbox/simulation/');
+        await expect(page.getByRole('button', { name: '2 years', exact: true })).toBeHidden();
         await page.locator('#id_initial_balance').fill('100');
         await page.locator('#id_rate').fill('0');
         await page.locator('#id_months').fill('2');
@@ -176,5 +177,82 @@ test.describe('planning without JavaScript', () => {
         for (const checkbox of await page.getByRole('checkbox').all()) await checkbox.check();
         await page.getByRole('button', { name: 'Compare selected drafts' }).click();
         await expect(page.getByRole('heading', { name: 'Compare drafts', exact: true })).toBeVisible();
+    });
+});
+
+for (const theme of ['light', 'dark']) {
+    test(`month arrows, percent expenses and simulation parameter controls (${theme})`, async ({ page }, info) => {
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        await signup(page, info);
+        await page.goto('/sandbox/');
+        await page.locator('#id_gross_salary').fill('5000');
+        await page.locator('#id_planning_month').fill('2026-12');
+        await expect(page.locator('[data-planning-month]')).toHaveText('December 2026');
+        await page.getByLabel('Fixed expense description', { exact: true }).fill('Reserve');
+        const unit = page.getByLabel('Fixed expense unit', { exact: true });
+        await unit.focus();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Tab');
+        await expect(page.getByLabel('Fixed expense monthly amount')).toBeFocused();
+        await page.keyboard.type('10');
+        await page.locator('#budget-next-month').press('Enter');
+        await expect(page.locator('#id_planning_month')).toHaveValue('2027-01');
+        await expect(page.locator('#budget-next-month')).toBeFocused();
+        await expect(page.getByLabel('Fixed expense unit')).toHaveValue('percent');
+        await page.locator('#budget-previous-month').press('Space');
+        await expect(page.locator('#id_planning_month')).toHaveValue('2026-12');
+        await page.locator('#budget-calculate').press('Enter');
+        await expect(page.getByText('R$ 4.500,00', { exact: true })).toBeVisible();
+        await page.getByLabel('Fixed expense monthly amount').fill('101');
+        await page.locator('#budget-calculate').press('Enter');
+        await expect(page.locator('[role="alert"]').first()).toContainText('0–100');
+        await expect(page.getByLabel('Fixed expense unit')).toHaveValue('percent');
+        await expect(page.getByLabel('Fixed expense monthly amount')).toHaveValue('101');
+        await page.getByLabel('Fixed expense monthly amount').fill('10');
+        await page.locator('#budget-calculate').press('Enter');
+        await page.setViewportSize({ width: 390, height: 740 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.screenshot({ path: info.outputPath(`monthly-controls-${theme}.png`), fullPage: true });
+        page.on('dialog', dialog => dialog.accept());
+        await page.goto('/sandbox/simulation/');
+        await page.locator('#id_initial_balance').fill('100');
+        await page.locator('#id_rate').fill('12');
+        await page.locator('#id_rate_period').focus();
+        await page.keyboard.press('End');
+        await page.keyboard.press('Tab');
+        await expect(page.getByRole('button', { name: 'Explain Effective annual rate (%)', exact: true })).toBeFocused();
+        await expect(page.locator('#id_rate-help')).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#id_rate-help')).toBeHidden();
+        await page.getByRole('button', { name: '2 years', exact: true }).press('Enter');
+        await expect(page.locator('#id_months')).toHaveValue('24');
+        await expect(page.locator('#simulation-result')).toContainText('125,42');
+        await expect(page.getByRole('button', { name: '2 years', exact: true })).toBeFocused();
+        await page.locator('#id_currency').focus();
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('Tab');
+        await expect(page.locator('[data-currency-field] label').first()).toContainText('USD');
+        await expect(page.locator('#id_start_month')).toHaveAttribute('type', 'month');
+        await page.screenshot({ path: info.outputPath(`simulation-controls-${theme}.png`), fullPage: true });
+    });
+}
+
+test.describe('new planning controls without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+    test('month arrows and percent expenses use native posts', async ({ page }, info) => {
+        await signup(page, info);
+        await page.goto('/sandbox/');
+        await page.locator('#id_gross_salary').fill('1000');
+        await page.locator('#id_planning_month').fill('2026-12');
+        await page.getByLabel('Fixed expense description').fill('Reserve');
+        await page.getByLabel('Fixed expense unit').selectOption('percent');
+        await page.getByLabel('Fixed expense monthly amount').fill('10');
+        await page.locator('#budget-next-month').press('Enter');
+        await expect(page.locator('#id_planning_month')).toHaveValue('2027-01');
+        await expect(page.locator('#budget-forecast')).toBeVisible();
+        await page.locator('#budget-calculate').press('Enter');
+        await expect(page.getByText('R$ 900,00', { exact: true })).toBeVisible();
+        await expect(page.getByLabel('Fixed expense unit')).toHaveValue('percent');
     });
 });

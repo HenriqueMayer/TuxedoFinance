@@ -22,6 +22,7 @@ from sandbox.forms import (
 )
 from sandbox.models import ScenarioDraft
 from sandbox.planning import commitment_snapshot, simulate_yield, snapshot_total
+from dashboard.services import add_months
 from sandbox.services import BudgetInput, apply_variables, build_budget
 from sandbox.tax_rules import get_tax_rules
 
@@ -72,7 +73,7 @@ def _calculate_budget(form, forecast):
     if forecast['total'] is None:
         form.add_error(None, forecast['error'])
         return None
-    variables = variables_from_data(form.data, 'variable', allow_percent=False)
+    variables = variables_from_data(form.data, 'variable')
     budget = BudgetInput(fixed_bills=forecast['total'], custom_variables=variables)
     income = data['gross_salary']
     return {
@@ -132,7 +133,7 @@ def _canonical_inputs(data, kind):
             for name, key in (('label', 'label'), ('type', 'value_type'), ('value', 'value')):
                 single.setlist(f'{prefix}_{name}', [row[key]])
             try:
-                values = variables_from_data(single, prefix, allow_percent=False)
+                values = variables_from_data(single, prefix)
             except ValidationError:
                 continue
             if values:
@@ -190,6 +191,16 @@ def _workspace(request, kind='budget', draft=None):
     data = request.POST if posted else _data_from_payload(draft.payload) if draft else None
     if posted:
         data = _row_action(data, action)
+        if kind == 'budget' and action in ('previous_month', 'next_month'):
+            data = data.copy()
+            # Move the month in the submitted form so unsaved salary/rows survive native and HTMX requests.
+            try:
+                month = parse_month(data.get('planning_month'))
+                year, number = add_months(month.year, month.month, -1 if action == 'previous_month' else 1)
+                data['planning_month'] = parse_month(f'{year:04d}-{number:02d}').strftime('%Y-%m')
+            except ValidationError:
+                pass
+            action = 'forecast'
     form_class = SalarySandboxForm if kind == 'budget' else YieldSimulationForm
     form_kwargs = {'data': data}
     if kind == 'budget':
@@ -290,6 +301,7 @@ def compare(request):
         data = _data_from_payload(draft.payload)
         form = (SalarySandboxForm if draft.kind == 'budget' else YieldSimulationForm)(data=data)
         if draft.kind == 'budget':
+            # Move the month in the submitted form so unsaved salary/rows survive native and HTMX requests.
             try:
                 month = parse_month(data.get('planning_month'))
             except ValidationError:

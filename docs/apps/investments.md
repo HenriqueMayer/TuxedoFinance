@@ -33,12 +33,15 @@ A monetary asset may have an `opening_balance` and its holding product: money al
 ## Operations
 
 Every operation records product, asset, kind, currency, date and optional notes.
-Monetary assets use an investment amount; unit-based assets use quantity and unit
+Monetary assets use an operation amount; unit-based assets use quantity and unit
 price. There is no `title`.
 
 The create/update form progressively reveals the valuation fields from the
-selected asset: monetary assets show only investment amount, while unit-based
-assets show quantity and unit price. The selected operation kind similarly
+selected asset: monetary assets show an amount labeled for the selected operation, while unit-based
+assets show quantity and unit price. Deposit, withdrawal and yield labels also describe acquired, withdrawn or earned
+quantities, their unit prices and the actual account debit/credit. Bound forms
+render the same labels on the server; client transitions update labels and help
+names without changing accounting semantics. The selected operation kind similarly
 reveals the applicable funding source or withdrawal destination. JavaScript
 only enhances disclosure; without it, all fields remain available and the same
 server-side ownership and financial validation remains authoritative.
@@ -98,17 +101,21 @@ and date without changing the unfiltered portfolio totals.
 
 ## Charts
 
-The existing server-rendered, responsive chart pattern remains. Charts cover
-position/value evolution, monthly deposits/withdrawals/internal yield, asset
-class allocation and native/base currency exposure. HTMX is progressive
-enhancement; every filter and navigation control retains a normal GET fallback.
-Points and non-zero bars expose the same value pill as Reports on mouse hover
-and keyboard focus, while the native SVG title remains available as a fallback.
+The dedicated Charts tab at `/investments/charts/` uses the existing responsive
+SVG charts and exact selection/composition data. Its Overall, Portfolio and
+Remunerated cash filter scopes both the historical position curve and monthly
+deposits, withdrawals and internal yields. Overall includes both purposes;
+opening positions remain visible even without operations. It does not include
+ordinary bank cash or imply market-price valuation.
 
-The operation history is a separate `#investment-movements` island below the
-charts. Filtering, clearing filters and changing pages replace only that island
-and return the viewport to its heading. Native GET actions append the same
-section anchor, so the user keeps the portfolio context when HTMX is unavailable.
+Filters preserve each chart's month window. HTMX updates only the chart region;
+ordinary GETs, browser history, keyboard selection and no-JavaScript filtering
+remain available. Missing FX warnings appear inside that same region so filtered
+or refreshed charts cannot silently lose their incomplete-conversion warning.
+
+Portfolio and Remunerated cash retain their position tables and contextual links
+to the separate Operations page. Operation search/filter/pagination updates only
+`#investment-movements`; charts use their own `#investments-charts` region.
 
 ## Form keyboard behavior
 

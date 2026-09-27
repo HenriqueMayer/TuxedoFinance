@@ -16,6 +16,11 @@
                 {% include 'sandbox/_form_field.html' with field=form.gross_salary %}
                 <div>
                     {% include 'partials/form_field.html' with field=form.planning_month %}
+                    <div class="mt-3 flex items-center justify-between gap-3">
+                        <button type="submit" name="action" value="previous_month" id="budget-previous-month" class="action-link h-11 w-11 p-0" aria-label="{% translate 'Previous month' %}">←</button>
+                        <span class="text-sm font-medium" data-planning-month>{{ forecast.month|date:'F Y' }}</span>
+                        <button type="submit" name="action" value="next_month" id="budget-next-month" class="action-link h-11 w-11 p-0" aria-label="{% translate 'Next month' %}">→</button>
+                    </div>
                     <button type="submit" name="action" value="forecast" id="budget-forecast" class="quiet-action mt-3">{% translate "Show month forecast" %}</button>
                 </div>
             </div>
@@ -26,7 +31,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h3 class="font-sans text-lg font-semibold text-forest dark:text-cream">{% translate "Additional fixed expenses" %}</h3>
-                        <p class="subtle-copy mt-1">{% translate "Add only amounts that are not already included in the forecast above." %}</p>
+                        <p class="subtle-copy mt-1">{% translate "Add only amounts that are not already included in the forecast above." %} {% translate "Choose R$ or a percentage of the gross monthly salary." %}</p>
                     </div>
                     <button type="submit" name="action" value="add_variable" id="budget-add-variable" data-add-variable class="quiet-action">+ {% translate "Add fixed expense" %}</button>
                 </div>

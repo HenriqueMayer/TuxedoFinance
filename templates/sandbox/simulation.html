@@ -5,13 +5,13 @@
 <div class="planning-workspace space-y-7">
     {% include 'sandbox/_navigation.html' %}
     <header class="flex items-center gap-3"><h1 class="page-title">{% translate "Yield simulation" %}</h1>{% include 'partials/help_popover.html' with help_id='yield-simulation-help' help_label=_('Yield simulation') help_template='sandbox/_yield_help.html' %}</header>
-    <form method="post" action="{{ workspace_url }}" hx-boost="false" novalidate data-yield-simulation class="space-y-6">
+    <form method="post" action="{{ workspace_url }}" hx-boost="false" novalidate data-yield-simulation data-explain="{% translate 'Explain' %}" data-monthly-rate="{{ form.monthly_rate_label }}" data-annual-rate="{{ form.annual_rate_label }}" class="space-y-6">
         {% csrf_token %}
         <div class="surface-panel space-y-6">
         <fieldset class="space-y-4">
             <legend class="section-title">{% translate "1. Starting point" %}</legend>
             <div class="grid gap-x-6 gap-y-5 sm:grid-cols-3">
-                {% include 'partials/form_field.html' with field=form.initial_balance %}
+                <div data-currency-field>{% include 'partials/form_field.html' with field=form.initial_balance %}</div>
                 {% include 'partials/form_field.html' with field=form.currency %}
                 {% include 'partials/form_field.html' with field=form.start_month %}
             </div>
@@ -19,16 +19,24 @@
         <fieldset class="space-y-4 border-t border-forest/10 pt-5 dark:border-cream/10">
             <legend class="section-title">{% translate "2. Rate and duration" %}</legend>
             <div class="grid gap-x-6 gap-y-5 sm:grid-cols-3">
-                {% include 'partials/form_field.html' with field=form.rate field_help_template='sandbox/_yield_help.html' %}
                 {% include 'partials/form_field.html' with field=form.rate_period %}
+                {% include 'partials/form_field.html' with field=form.rate field_help_template='sandbox/_yield_help.html' %}
                 {% include 'partials/form_field.html' with field=form.months %}
             </div>
         </fieldset>
+        <div data-duration-presets hidden class="flex flex-wrap items-center gap-3">
+            <span class="subtle-copy">{% translate 'Duration shortcuts' %}</span>
+            <button type="button" class="action-link" data-months="6">{% translate '6 months' %}</button>
+            <button type="button" class="action-link" data-months="12">{% translate '1 year' %}</button>
+            <button type="button" class="action-link" data-months="24">{% translate '2 years' %}</button>
+            <button type="button" class="action-link" data-months="60">{% translate '5 years' %}</button>
+        </div>
+        <p class="subtle-copy">{% translate 'Use an effective rate for the selected period. Contributions and withdrawals happen at month end.' %}</p>
         <fieldset class="space-y-4 border-t border-forest/10 pt-5 dark:border-cream/10">
             <legend class="section-title">{% translate "3. Monthly movements" %}</legend>
             <div class="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-                {% include 'partials/form_field.html' with field=form.contribution %}
-                {% include 'partials/form_field.html' with field=form.withdrawal %}
+                <div data-currency-field>{% include 'partials/form_field.html' with field=form.contribution %}</div>
+                <div data-currency-field>{% include 'partials/form_field.html' with field=form.withdrawal %}</div>
             </div>
         </fieldset>
         <details id="yield-month-overrides" class="border-y border-forest/10 py-4 dark:border-cream/10" {% if overrides_open or form.non_field_errors %}open{% endif %}>

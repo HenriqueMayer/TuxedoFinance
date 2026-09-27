@@ -38,7 +38,7 @@ class SalarySandboxForm(forms.Form):
     planning_month = forms.CharField(
         label=_('Planning month'),
         required=False,
-        widget=forms.TextInput(attrs={'type': 'month', 'placeholder': 'YYYY-MM', 'inputmode': 'numeric'}),
+        widget=forms.TextInput(attrs={'type': 'month', 'min': '1901-01', 'max': '9988-12', 'placeholder': 'YYYY-MM', 'inputmode': 'numeric'}),
     )
     gross_salary = decimal_field(
         _('Gross monthly salary'),
@@ -57,6 +57,9 @@ class SalarySandboxForm(forms.Form):
                 field.widget.attrs['aria-describedby'] = f'id_{name}-help'
             if self.is_bound and self.errors.get(name):
                 field.widget.attrs['aria-invalid'] = 'true'
+                if getattr(field.widget, 'input_type', None) == 'month':
+                    # Native month inputs discard invalid text; keep it editable after a rejected POST.
+                    field.widget = forms.TextInput(attrs=field.widget.attrs.copy())
                 if isinstance(field, (forms.DecimalField, forms.IntegerField)):
                     field.widget = forms.TextInput(attrs={**field.widget.attrs, 'inputmode': 'decimal'})
         if not self.is_bound:
@@ -71,7 +74,7 @@ class SalarySandboxForm(forms.Form):
         except ValidationError as error:
             self.add_error('planning_month', error)
         try:
-            variables_from_data(self.data, 'variable', allow_percent=False)
+            variables_from_data(self.data, 'variable')
         except ValidationError as error:
             self.add_error(None, error)
         return cleaned
@@ -142,8 +145,10 @@ def parse_month(value):
 
 
 class YieldSimulationForm(forms.Form):
+    monthly_rate_label = _('Effective monthly rate (%)')
+    annual_rate_label = _('Effective annual rate (%)')
     currency = forms.ChoiceField(label=_('Currency'), choices=[(code, code) for code in ('BRL', 'USD', 'EUR', 'GBP', 'JPY', 'CHF')], initial='BRL')
-    start_month = forms.CharField(label=_('Starting month'), widget=forms.TextInput(attrs={'placeholder': 'YYYY-MM', 'inputmode': 'numeric'}))
+    start_month = forms.CharField(label=_('Starting month'), widget=forms.TextInput(attrs={'type': 'month', 'min': '1901-01', 'max': '9988-12', 'placeholder': 'YYYY-MM', 'inputmode': 'numeric'}))
     months = forms.IntegerField(label=_('Months'), min_value=1, max_value=120, initial=12)
     initial_balance = forms.DecimalField(label=_('Initial balance'), max_digits=14, decimal_places=2, min_value=0)
     rate = forms.DecimalField(label=_('Effective rate (%)'), max_digits=9, decimal_places=6, min_value=Decimal('-99.999999'), max_value=Decimal('999.999999'))
@@ -154,12 +159,17 @@ class YieldSimulationForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial.setdefault('start_month', timezone.localdate().strftime('%Y-%m'))
+        period = self.data.get('rate_period') if self.is_bound else self.initial.get('rate_period', 'monthly')
+        self.fields['rate'].label = self.annual_rate_label if period == 'annual' else self.monthly_rate_label
         for name, field in self.fields.items():
             field.widget.attrs['class'] = INPUT_CLASSES
             if isinstance(field, forms.DecimalField):
                 field.widget = forms.TextInput(attrs={'class': INPUT_CLASSES, 'inputmode': 'decimal'})
             if self.is_bound and self.errors.get(name):
                 field.widget.attrs['aria-invalid'] = 'true'
+                if getattr(field.widget, 'input_type', None) == 'month':
+                    # Native month inputs discard invalid text; keep it editable after a rejected POST.
+                    field.widget = forms.TextInput(attrs=field.widget.attrs.copy())
                 if isinstance(field, forms.IntegerField):
                     field.widget = forms.TextInput(attrs={**field.widget.attrs, 'inputmode': 'numeric'})
 

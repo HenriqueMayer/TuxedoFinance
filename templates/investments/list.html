@@ -86,7 +86,6 @@
         </div>
     {% endfor %}
     </section>
-    {% if has_investments and selected_section != 'cash' %}{% include 'investments/_investments_charts.html' %}{% endif %}
     <a id="investment-operations-link" href="{% url 'investments:operations' %}?section={{ selected_section }}" class="surface-panel panel-heading group">
         <span class="space-y-1">
             <span class="section-title block group-hover:underline">{% translate 'Investment operations' %}</span>

@@ -92,7 +92,7 @@ for (const theme of ['light','dark']) {
         await page.mouse.move(to.x+to.width/2,to.y+to.height/2,{steps:8});await page.mouse.up();
         await expect(balance.locator('[data-selection-summary]')).toBeVisible();
         await page.getByRole('heading',{level:1}).click();await expect(balance.locator('[data-selection-summary]')).toBeHidden();
-        await page.goto('/investments/');
+        await page.goto('/investments/charts/');
         const total=page.locator('[data-chart-selection]').first(), marks=total.locator('[data-point]');
         await marks.first().press('Enter');await marks.last().press('Space');
         await expect(total.locator('[data-selection-values]')).toContainText('1,010.00');
