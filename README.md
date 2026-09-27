@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/version-0.7.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.7.0">
+  <img src="https://img.shields.io/badge/version-0.8.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.8.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="English and Brazilian Portuguese interface">
@@ -53,14 +53,14 @@ in an owner-controlled SQLite database.
 ### Docker
 
 Requires Docker Engine 28+ (or a current Docker Desktop) and Compose v2+.
-Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.7.0/compose.yaml)
-and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.7.0/docker.env.example)
-from the [v0.7.0 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.7.0)
+Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.0/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.0/docker.env.example)
+from the [v0.8.0 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.8.0)
 into a new installation directory. Open a terminal there and run these commands.
 No repository clone, host Python, uv or Node.js is required:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.7.0
+image=ghcr.io/henriquemayer/tuxedofinance:v0.8.0
 docker pull "$image"
 (
   umask 077
@@ -110,8 +110,8 @@ uv run python manage.py runserver
 
 ## ✨ Features
 
-These features are included in [v0.5.0](CHANGELOG.md#050---2026-09-21).
-This release adds an investment Operations tab, direct chart selection and composition inspection, customizable bank markers, and contextual previous-screen recovery.
+These features are included in [v0.8.0](CHANGELOG.md#080---2026-09-27).
+This release adds dedicated investment charts with immediate filtering, clearer operation labels, simpler monthly planning with expenses in BRL or a percentage of gross salary, and improved yield-simulation controls.
 Existing Docker installations must select the new image version and follow the
 [update procedure](docs/docker.md#update) to receive them.
 
@@ -121,8 +121,8 @@ Existing Docker installations must select the new image version and follow the
 | 🧾 **Transactions** | Income and expenses, categories, payment channels, fixed recurrences, installments, type counts, category/recurrence filters, and raw or spreadsheet CSV export. |
 | 🏦 **Banking** | Currency-specific accounts, cards, invoices, transfers and loyalty, with account exclusions and partial reserves for monthly planning. |
 | 📈 **Reports** | Responsive server-rendered SVG charts, accessible summaries, and progressive HTMX updates. |
-| 💼 **Investments** | Separate investment and monthly-cash purposes, manual deposits/withdrawals/yields, opening positions, unit pricing and historical FX evidence. |
-| 🧮 **Planning** | Gross-salary monthly planning with the existing expense forecast, optional fixed expenses and drafts, plus editable contribution/yield simulations. |
+| 💼 **Investments** | Separate investment and monthly-cash purposes, manual deposits/withdrawals/yields, opening positions, unit pricing, historical FX evidence and dedicated charts. |
+| 🧮 **Planning** | Gross-salary monthly planning with the existing expense forecast, optional expenses in BRL or a percentage of gross salary and saved drafts, plus editable contribution/yield simulations. |
 | 🌍 **Localization** | English and Brazilian Portuguese, independent reporting currency (BRL, USD, EUR, GBP, JPY, CHF), and date-format preferences. |
 | 🌗 **Interface** | Light and dark themes, keyboard navigation, conditional fields, server validation, and no-JavaScript form fallbacks. |
 

@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="Status da integração contínua"></a>
-  <img src="https://img.shields.io/badge/version-0.7.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.7.0">
+  <img src="https://img.shields.io/badge/version-0.8.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.8.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Interface em inglês e português do Brasil">
@@ -53,14 +53,14 @@ um banco SQLite sob controle do responsável pela instalação.
 ### Docker
 
 Requer Docker Engine 28+ (ou Docker Desktop atualizado) e Compose v2+.
-Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.7.0/compose.yaml)
-e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.7.0/docker.env.example)
-da [release v0.7.0](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.7.0)
+Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.0/compose.yaml)
+e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.0/docker.env.example)
+da [release v0.8.0](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.8.0)
 para uma nova pasta de instalação. Abra um terminal nessa pasta e execute os comandos.
 Não é necessário clonar o repositório nem instalar Python, uv ou Node.js no computador:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.7.0
+image=ghcr.io/henriquemayer/tuxedofinance:v0.8.0
 docker pull "$image"
 (
   umask 077
@@ -112,8 +112,8 @@ uv run python manage.py runserver
 
 ## ✨ Funcionalidades
 
-Estes recursos estão incluídos na [v0.5.0](CHANGELOG.md#050---2026-09-21).
-Esta versão adiciona a aba Operações em Investimentos, seleção direta e detalhamento nos gráficos, marcadores de banco personalizáveis e retorno à tela anterior por atalhos contextuais.
+Estes recursos estão incluídos na [v0.8.0](CHANGELOG.md#080---2026-09-27).
+Esta versão adiciona gráficos dedicados de investimentos com filtro imediato, textos de operações mais claros, planejamento mensal simplificado com despesas em R$ ou percentual do salário bruto e controles aprimorados para simulação de rendimentos.
 Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 [procedimento de atualização](docs/docker.md#update) para recebê-los.
 
@@ -123,8 +123,8 @@ Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 | 🧾 **Transações** | Receitas e despesas, categorias, formas de pagamento, recorrências fixas, parcelas, contagens por tipo, filtros por categoria/recorrência e CSV fiel ou preparado para planilhas. |
 | 🏦 **Bancos** | Contas por moeda, cartões, faturas, transferências e fidelidade, com exclusão de contas e reservas parciais para o planejamento mensal. |
 | 📈 **Relatórios** | Gráficos SVG responsivos renderizados no servidor, resumos acessíveis e atualizações progressivas com HTMX. |
-| 💼 **Investimentos** | Finalidades separadas de investimento e caixa mensal, aportes/resgates/rendimentos manuais, posições iniciais, preços unitários e histórico de câmbio. |
-| 🧮 **Planejamento** | Planejamento mensal com salário bruto, previsão de despesas existente, valores fixos e rascunhos opcionais, além de simulações editáveis de aportes e rendimentos. |
+| 💼 **Investimentos** | Finalidades separadas de investimento e caixa mensal, aportes/resgates/rendimentos manuais, posições iniciais, preços unitários, histórico de câmbio e gráficos dedicados. |
+| 🧮 **Planejamento** | Planejamento mensal com salário bruto, previsão de despesas existente, despesas opcionais em R$ ou percentual do salário bruto e rascunhos salvos, além de simulações editáveis de aportes e rendimentos. |
 | 🌍 **Localização** | Inglês e português do Brasil, moeda de apresentação independente (BRL, USD, EUR, GBP, JPY, CHF) e preferência de formato de data. |
 | 🌗 **Interface** | Temas claro e escuro, navegação por teclado, campos condicionais, validação no servidor e formulários funcionais sem JavaScript. |
 
