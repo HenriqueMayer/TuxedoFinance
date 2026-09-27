@@ -160,6 +160,10 @@ for (const theme of ['light', 'dark']) {
         const help = page.getByRole('button', { name: 'Explain Withdrawal amount', exact: true });
         await help.hover();
         await expect(page.locator('#id_amount-help')).toBeVisible();
+        await page.locator('#yield-preview').evaluate(target => {
+            document.dispatchEvent(new CustomEvent('htmx:beforeSwap', { detail: { target } }));
+        });
+        await expect(page.locator('#id_amount-help')).toBeVisible();
         await page.mouse.move(2, 2);
         await expect(page.locator('#id_amount-help')).toBeHidden();
         await help.focus();
@@ -229,11 +233,12 @@ for (const theme of ['light', 'dark']) {
             await page.keyboard.press('Escape');
             await month.fill('2026-10');
             await expect(page.locator('[data-planning-month]')).toHaveText('Outubro 2026');
-            await page.locator('[name="variable_label"]').fill('Reserva');
-            await page.locator('[name="variable_type"]').selectOption('percent');
-            await page.locator('[name="variable_value"]').fill('10');
+            const reserve = page.locator('[data-variable-row]').first();
+            await reserve.locator('[name="variable_label"]').fill('Reserva');
+            await reserve.locator('[name="variable_type"]').selectOption('percent');
+            await reserve.locator('[name="variable_value"]').fill('10');
             await page.locator('#budget-calculate').press('Enter');
-            await expect(page.getByText('R$ 4.500,00', { exact: true })).toBeVisible();
+            await expect(page.getByText('R$ 3.998,49', { exact: true })).toBeVisible();
             await expect(page.locator('#budget-forecast')).toBeHidden();
             await page.evaluate(() => window.scrollTo(0, 0));
             await page.screenshot({ path: info.outputPath(`planejamento-${theme}.png`), fullPage: true });

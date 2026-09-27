@@ -40,7 +40,8 @@ Every new or changed question-mark help icon must follow the
 [shared tooltip contract](docs/frontend.md#question-mark-help). Reuse
 `partials/help_popover.html`; open on hover or keyboard focus, dismiss on pointer
 exit/outside click/Escape, and never pin mouse-clicked help. Preserve touch and
-no-JavaScript access. Use the shared readable width and structured copy; test
+no-JavaScript access. Background updates outside the help owner must preserve
+open help. Use the shared readable width and structured copy; test
 real interactions, viewport bounds, both themes and HTMX initialization.
 
 ## UI/UX decisions and compact action menus

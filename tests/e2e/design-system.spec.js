@@ -288,7 +288,7 @@ test('salary sandbox keeps the simplified calculation responsive and accessible'
 
     const grossHelp = page.getByRole('button', { name: 'Explain Gross monthly salary' });
     await grossHelp.hover();
-    const grossTooltip = page.getByRole('tooltip').filter({ hasText: 'before subtracting the forecast' });
+    const grossTooltip = page.getByRole('tooltip').filter({ hasText: 'INSS and IRRF are calculated automatically' });
     await expect(grossTooltip).toBeVisible();
     await grossHelp.click();
     await page.keyboard.press('Escape');
@@ -298,7 +298,7 @@ test('salary sandbox keeps the simplified calculation responsive and accessible'
     await page.getByRole('button', { name: 'Calculate month', exact: true }).click();
     await expect(page.locator('#sandbox-workspace')).toHaveCount(1);
     await expect(page.locator('#scenario-result-title')).toBeVisible();
-    await expect(page.getByText('R$ 4.500,00', { exact: true })).toBeVisible();
+    await expect(page.getByText('R$ 3.473,39', { exact: true })).toBeVisible();
     await expect(page.locator('#id_draft_name')).toBeHidden();
 
     await page.setViewportSize({ width: 390, height: 844 });

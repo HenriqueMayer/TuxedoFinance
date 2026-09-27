@@ -427,7 +427,7 @@ do not add independent click-to-pin tooltips or use a native title as the only h
 | Mouse click | Never pin help. Clicking outside dismisses it immediately. Only one help box may be open. |
 | Keyboard | Tab focus opens help; Enter/Space can reopen it. Escape dismisses without moving focus; Tab away closes it. Pointer clicks must not leave a focus-driven tooltip stuck open. |
 | Touch | Tap toggles help. Another tap, an outside tap or another help icon dismisses the previous box. |
-| Navigation | HTMX swaps/history close floating help and initialize replacement controls once. No duplicate fallback controls or event handlers. |
+| Navigation | HTMX swaps close help only when replacing its owning region; unrelated background previews retain it. History saves close floating help. Replacement controls initialize once. No duplicate fallback controls or event handlers. |
 | No JavaScript | A native details/summary fallback exposes the same explanation by keyboard or touch. |
 
 Help is rendered above cards/charts in a floating container attached to the body,

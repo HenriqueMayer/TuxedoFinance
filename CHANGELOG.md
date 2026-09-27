@@ -7,6 +7,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-09-27
+
 ### Added
 
 - Add a monthly-plan tax bracket consultation with highlighted INSS, IRRF and reduction bands, plus optional CLT payroll parameters retained in drafts.
@@ -15,6 +17,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Keep contextual help open during unrelated background preview updates.
 - Restore automatic INSS and IRRF deductions in monthly planning, using ordinary CLT net salary for the available balance and retaining gross-based percentage expenses. Show the deduction breakdown and preserve legacy drafts until recalculation.
 
 ## [0.8.1] - 2026-09-27
@@ -271,7 +274,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.2...HEAD
+[0.8.2]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.6.1...v0.7.0

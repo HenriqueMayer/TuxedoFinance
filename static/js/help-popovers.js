@@ -135,7 +135,11 @@
     document.addEventListener('DOMContentLoaded', init);
     document.addEventListener('htmx:load', init);
     document.addEventListener('htmx:historyRestore', init);
-    document.addEventListener('htmx:beforeSwap', close);
+    document.addEventListener('htmx:beforeSwap', event => {
+        // Background previews must not dismiss help owned by another region.
+        const target = event.detail?.target;
+        if (active && target instanceof Element && target.contains(active.root)) close();
+    });
     document.addEventListener('htmx:beforeHistorySave', close);
     window.TuxedoHelp = { init, close };
 }());
