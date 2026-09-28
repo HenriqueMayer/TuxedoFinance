@@ -7,6 +7,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Point the Docker installation guide to the current README quick start instead of outdated release instructions.
+
 ## [0.8.2] - 2026-09-27
 
 ### Added
