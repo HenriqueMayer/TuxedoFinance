@@ -5,9 +5,14 @@ presentations and exploration. Run it explicitly against the installation where
 you want the records. Setup, migrations, server startup and ordinary signup do
 not run it. The generator does not read or copy another user's financial records.
 
-The command is available in the current source checkout. Use a release containing
-it before running it in a packaged installation; the published `v0.8.2` package
-does not include it.
+The command is available starting with v0.9.0 in source checkouts and published
+Docker images. For a Docker installation, run from its existing installation
+directory:
+
+```bash
+docker compose --env-file .env.docker exec web python manage.py insert_demo pt
+docker compose --env-file .env.docker exec web python manage.py insert_demo en
+```
 
 ## Create the accounts
 

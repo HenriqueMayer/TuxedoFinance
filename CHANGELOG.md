@@ -7,6 +7,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-28
+
 ### Added
 
 - Add an optional `insert_demo pt|en` command that creates separate demo accounts with localized synthetic financial history, future commitments and saved planning scenarios, random passwords and protection against replacing existing users.
@@ -282,7 +284,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.7.0...v0.8.0
