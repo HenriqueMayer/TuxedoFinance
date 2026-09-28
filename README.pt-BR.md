@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="Status da integração contínua"></a>
-  <img src="https://img.shields.io/badge/version-0.8.2-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.8.2">
+  <img src="https://img.shields.io/badge/version-0.9.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.9.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Interface em inglês e português do Brasil">
@@ -53,14 +53,14 @@ um banco SQLite sob controle do responsável pela instalação.
 ### Docker
 
 Requer Docker Engine 28+ (ou Docker Desktop atualizado) e Compose v2+.
-Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.2/compose.yaml)
-e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.2/docker.env.example)
-da [release v0.8.2](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.8.2)
+Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.9.0/compose.yaml)
+e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.9.0/docker.env.example)
+da [release v0.9.0](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.9.0)
 para uma nova pasta de instalação. Abra um terminal nessa pasta e execute os comandos.
 Não é necessário clonar o repositório nem instalar Python, uv ou Node.js no computador:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.8.2
+image=ghcr.io/henriquemayer/tuxedofinance:v0.9.0
 docker pull "$image"
 (
   umask 077
@@ -110,10 +110,27 @@ Em uma instalação existente, preserve a chave e o banco de dados e reinicie co
 uv run python manage.py runserver
 ```
 
+### Dados de demonstração opcionais
+
+Para apresentações, o código-fonte atual pode criar contas separadas em inglês e
+português com atividades financeiras fictícias ao longo de vários meses:
+
+```bash
+uv run python manage.py insert_demo pt
+uv run python manage.py insert_demo en
+```
+
+Cada comando exibe uma senha gerada aleatoriamente para `demo_pt` ou `demo_en`.
+A execução é opcional, recusa um nome de usuário existente e não copia nem
+altera registros pessoais. Consulte o [guia de dados de demonstração](docs/demo-data.md),
+em inglês, para opções de data, seleção de idioma e um roteiro de apresentação.
+O comando está disponível a partir da `v0.9.0`.
+
 ## ✨ Funcionalidades
 
-Estes recursos estão incluídos na [v0.8.2](CHANGELOG.md#082---2026-09-27).
-Este hotfix restaura os descontos CLT no plano mensal, adiciona consulta às faixas tributárias e parâmetros de folha editáveis, e inicia novos planos com Reserva de emergência e Investimento.
+Estes recursos estão incluídos na [v0.9.0](CHANGELOG.md#090---2026-09-28).
+Esta versão adiciona contas opcionais de demonstração em inglês e português,
+com histórico financeiro sintético e cenários de planejamento salvos.
 Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 [procedimento de atualização](docs/docker.md#update) para recebê-los.
 

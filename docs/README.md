@@ -14,6 +14,7 @@ releases, persistent volumes and isolated restore rehearsals.
 |---|---|
 | [Contributing](../CONTRIBUTING.md) | Canonical developer setup, checks, translations, browser isolation, and documentation conventions. |
 | [Interface preview](https://henriquemayer.github.io/TuxedoFinance/) | Bilingual static tour of the application using synthetic financial data. |
+| [demo-data.md](demo-data.md) | Explicit creation of separate English and Portuguese demo accounts, date options and a presentation walkthrough. |
 | [Preview maintenance](../.github/preview/README.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and release compatibility. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
@@ -70,12 +71,13 @@ existing records. The historical clean reset applied only to pre-release legacy
 schemas; it is not an instruction to reset a released installation. See
 [Docker updates](docker.md#update) before upgrading.
 
-The repository does not include a runtime demo database, shared account, fixed
-credential, or data-population management command. The developer-only preview
-capture command creates disposable synthetic records in a guarded temporary
-database, deletes that database after capture, and commits only screenshots.
-Normal new accounts receive only the approved default categories; all financial
-records are created by their owner.
+The repository does not include a runtime demo database, shared account or fixed
+credential. Normal new accounts receive only the approved default categories.
+The optional [`insert_demo` command](demo-data.md) creates a new, separate account
+with synthetic financial records only when explicitly run; it is not part of
+setup, migrations or signup. The developer-only preview capture command creates
+disposable synthetic records in a guarded temporary database, deletes that
+database after capture, and commits only screenshots.
 
 Dependency maintenance and local database operations are documented in
 [operations.md](operations.md). The database owner is responsible for choosing

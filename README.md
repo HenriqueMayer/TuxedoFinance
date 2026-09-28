@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/version-0.8.2-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.8.2">
+  <img src="https://img.shields.io/badge/version-0.9.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.9.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="English and Brazilian Portuguese interface">
@@ -53,14 +53,14 @@ in an owner-controlled SQLite database.
 ### Docker
 
 Requires Docker Engine 28+ (or a current Docker Desktop) and Compose v2+.
-Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.2/compose.yaml)
-and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.8.2/docker.env.example)
-from the [v0.8.2 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.8.2)
+Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.9.0/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.9.0/docker.env.example)
+from the [v0.9.0 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.9.0)
 into a new installation directory. Open a terminal there and run these commands.
 No repository clone, host Python, uv or Node.js is required:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.8.2
+image=ghcr.io/henriquemayer/tuxedofinance:v0.9.0
 docker pull "$image"
 (
   umask 077
@@ -108,10 +108,27 @@ existing installation, preserve its key and database and restart with:
 uv run python manage.py runserver
 ```
 
+### Optional demo data
+
+For presentations, the current source checkout can create separate English and
+Portuguese accounts with fictional financial activity across multiple months:
+
+```bash
+uv run python manage.py insert_demo pt
+uv run python manage.py insert_demo en
+```
+
+Each command prints a randomly generated password for `demo_pt` or `demo_en`.
+It runs only when requested, refuses an existing username and does not copy or
+change personal records. See the [demo data guide](docs/demo-data.md) for date
+options, language selection and a presentation walkthrough. The command is
+available starting with `v0.9.0`.
+
 ## ✨ Features
 
-These features are included in [v0.8.2](CHANGELOG.md#082---2026-09-27).
-This hotfix restores CLT payroll deductions in monthly plans, adds tax bracket consultation and editable payroll parameters, and starts new plans with Emergency reserve and Investment rows.
+These features are included in [v0.9.0](CHANGELOG.md#090---2026-09-28).
+This release adds optional English and Portuguese demonstration accounts with
+synthetic financial history and saved planning scenarios.
 Existing Docker installations must select the new image version and follow the
 [update procedure](docs/docker.md#update) to receive them.
 
