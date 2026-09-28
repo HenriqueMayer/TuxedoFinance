@@ -110,6 +110,22 @@ Em uma instalação existente, preserve a chave e o banco de dados e reinicie co
 uv run python manage.py runserver
 ```
 
+### Dados de demonstração opcionais
+
+Para apresentações, o código-fonte atual pode criar contas separadas em inglês e
+português com atividades financeiras fictícias ao longo de vários meses:
+
+```bash
+uv run python manage.py insert_demo pt
+uv run python manage.py insert_demo en
+```
+
+Cada comando exibe uma senha gerada aleatoriamente para `demo_pt` ou `demo_en`.
+A execução é opcional, recusa um nome de usuário existente e não copia nem
+altera registros pessoais. Consulte o [guia de dados de demonstração](docs/demo-data.md),
+em inglês, para opções de data, seleção de idioma e um roteiro de apresentação.
+Este comando não está incluído no pacote publicado da `v0.8.2`.
+
 ## ✨ Funcionalidades
 
 Estes recursos estão incluídos na [v0.8.2](CHANGELOG.md#082---2026-09-27).

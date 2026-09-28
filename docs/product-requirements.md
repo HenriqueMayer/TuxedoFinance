@@ -98,7 +98,7 @@ HTMX progressive enhancement.
 | FR24 | Forecasts | Recurrences and future invoices may create future-effective derived rows, but these do not alter realized cash before their effective date. |
 | FR25 | Release compatibility | Preserve existing released data through incremental migrations; the historical pre-release reset is not a normal update procedure. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
-| FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories; the repository ships no synthetic financial dataset, shared account, or fixed credential. |
+| FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories. Optional synthetic financial data requires the explicit `insert_demo` command and a new, separate account; no demo database, shared account or fixed credential is shipped. |
 | FR28 | Local database ownership | The repository does not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. |
 | FR29 | Planning sandbox | Users compare gross salary with the selected month's existing expense forecast, add missing fixed expenses and optionally save a named draft. Simulations never post financial movements. |
 

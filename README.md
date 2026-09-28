@@ -108,6 +108,22 @@ existing installation, preserve its key and database and restart with:
 uv run python manage.py runserver
 ```
 
+### Optional demo data
+
+For presentations, the current source checkout can create separate English and
+Portuguese accounts with fictional financial activity across multiple months:
+
+```bash
+uv run python manage.py insert_demo pt
+uv run python manage.py insert_demo en
+```
+
+Each command prints a randomly generated password for `demo_pt` or `demo_en`.
+It runs only when requested, refuses an existing username and does not copy or
+change personal records. See the [demo data guide](docs/demo-data.md) for date
+options, language selection and a presentation walkthrough. This command is
+not included in the published `v0.8.2` package.
+
 ## ✨ Features
 
 These features are included in [v0.8.2](CHANGELOG.md#082---2026-09-27).

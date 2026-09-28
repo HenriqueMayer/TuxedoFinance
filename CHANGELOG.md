@@ -7,6 +7,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add an optional `insert_demo pt|en` command that creates separate demo accounts with localized synthetic financial history, future commitments and saved planning scenarios, random passwords and protection against replacing existing users.
+
 ### Fixed
 
 - Point the Docker installation guide to the current README quick start instead of outdated release instructions.
