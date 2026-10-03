@@ -97,8 +97,33 @@ def snapshot(app, fields=None):
 
 def assert_snapshot(app, baseline):
     current = snapshot(app, baseline['fields'])
+    # The IOF migration adds derived rows while preserving every existing field.
+    # Only source-linked expenses and their categories may be added by an upgrade.
+    additions = {}
     for model, records in baseline['records'].items():
-        assert current['records'][model] == records, f'Upgrade/restore changed existing {model} data'
+        original_ids = {row['id'] for row in records}
+        retained = [row for row in current['records'][model] if row['id'] in original_ids]
+        assert retained == records, f'Upgrade/restore changed existing {model} data'
+        added = [row['id'] for row in current['records'][model] if row['id'] not in original_ids]
+        if added:
+            assert model in ('transactions.Transaction', 'categories.Category'), f'Unexpected new {model} data'
+            additions[model] = added
+    app.django(f'''
+from banking.models import RewardRedemption
+from transactions.models import Transaction
+additions = {additions!r}
+if any(field.name == 'reward_redemption' for field in Transaction._meta.fields):
+    generated = Transaction.objects.filter(reward_redemption__isnull=False)
+    assert not Transaction.objects.filter(pk__in=additions.get('transactions.Transaction', [])).exclude(pk__in=generated).exists()
+    assert set(additions.get('categories.Category', [])) <= set(generated.values_list('category_id', flat=True))
+    for source in RewardRedemption.objects.filter(iof_amount__gt=0):
+        item = generated.get(reward_redemption=source)
+        assert (item.user_id, item.amount, item.date, item.notes) == (source.user_id, source.iof_amount, source.date, source.notes)
+        assert (item.bank_account_id, item.credit_card_id) == (source.iof_account_id, source.iof_credit_card_id)
+        assert item.transaction_type == 'EXPENSE' and not item.is_fixed and item.installments == 1
+else:
+    assert not additions
+''')
     assert current['balances'] == baseline['balances'], 'Upgrade/restore changed native account balances'
     assert current['points'] == baseline['points'], 'Upgrade/restore changed loyalty balances'
 

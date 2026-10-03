@@ -29,6 +29,7 @@ urlpatterns = [
     path('loyalty-entries/create/', views.LoyaltyEntryCreateView.as_view(), name='entry_create'),
     path('loyalty-entries/<int:pk>/edit/', views.LoyaltyEntryUpdateView.as_view(), name='entry_update'),
     path('loyalty-entries/<int:pk>/delete/', views.LoyaltyEntryDeleteView.as_view(), name='entry_delete'),
+    path('rewards/<int:pk>/edit/', views.RewardRedemptionUpdateView.as_view(), name='redemption_update'),
     path('rewards/redeem/', views.RewardRedemptionCreateView.as_view(), name='redemption_create'),
     path('exchange-rates/', views.ExchangeRateListView.as_view(), name='exchange_rates'),
     path('exchange-rates/create/', views.ExchangeRateCreateView.as_view(), name='exchange_rate_create'),

@@ -47,6 +47,7 @@ erDiagram
     REWARD_REDEMPTION |o--o| LOYALTY_ENTRY : posts_points_debit
     REWARD_REDEMPTION |o--o| BANK_MOVEMENT : posts_reward_credit
     REWARD_REDEMPTION |o--o| BANK_MOVEMENT : posts_iof_debit
+    REWARD_REDEMPTION |o--o| TRANSACTION : derives_iof_expense
     BANK_ACCOUNT ||--o{ REWARD_REDEMPTION : receives_reward
     BANK_ACCOUNT |o--o{ REWARD_REDEMPTION : funds_iof
     CREDIT_CARD |o--o{ REWARD_REDEMPTION : funds_iof
@@ -186,13 +187,14 @@ movement.
 |---|---|
 | `user` | Owner. |
 | `title` | User-facing economic-event title. |
-| `amount` | Positive native amount in the selected settlement account/card currency. |
+| `amount` | Positive native amount in the selected settlement account/card currency (16 digits, 2 decimal places). |
 | `transaction_type` | `INCOME` or `EXPENSE`. |
 | `category` | Required income/expense category; the form displays a parent as `Parent > Category`. |
 | `date` | Purchase or economic-event date. |
 | `payment_channel` | `PIX`, `DEBIT_CARD`, `CREDIT_CARD`, or `ACCOUNT`. |
 | settlement links | Exactly one owned account, debit card or credit card, according to the channel. |
 | recurrence fields | Optional schedule used to project future events. |
+| `reward_redemption` | Optional unique source of a generated IOF expense; not editable through transaction forms. |
 | timestamps | `created_at`, `updated_at`. |
 
 An external PIX is a normal `INCOME` or `EXPENSE`; it creates its immediate
@@ -246,7 +248,12 @@ account or credit card. Its target currency comes from the target account. The
 posting service links it to the generated redemption `LoyaltyEntry`, reward
 credit movement and, for account-funded IOF, debit movement. If `iof_amount >
 0`, exactly one owned IOF account or credit card is required; zero IOF permits
-neither. Credit-card IOF is included by the invoice synchronization flow.
+neither. Every positive IOF creates a uniquely linked expense transaction. Its
+source is edited only from bank redemption history; direct transaction changes
+are blocked. Account IOF retains its immediate movement, while card IOF is
+included by the invoice synchronization flow. The additive transaction migration
+backfills existing IOF without reposting movements, and reports count the
+derived expense once. Zeroing IOF removes its expense and funding projection.
 
 ## Currency and historical conversion
 

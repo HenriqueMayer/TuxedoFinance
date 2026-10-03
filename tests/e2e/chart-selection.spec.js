@@ -50,9 +50,77 @@ async function seedExpenses(page) {
         await post(page, '/transactions/create/', {title:name,category,amount,transaction_type:'EXPENSE',
             payment_channel:'ACCOUNT',bank_account:account,date:today,installments:'1', ...(fixed?{is_fixed:'on',fixed_until:today}:{})});
     }
+    return {account,date:today};
 }
 
 for (const theme of ['light','dark']) {
+    test(`composition stays open across pointer travel and scrolls without moving the page (${theme})`,async({page},info)=>{
+        await page.addInitScript(value=>localStorage.setItem('theme',value),theme);
+        await seed(page,info);const {account,date}=await seedExpenses(page);
+        for(let i=0;i<22;i++)await post(page,'/categories/create/',{name:`Panel category ${String(i).padStart(2,'0')}`,transaction_type:'EXPENSE'});
+        await page.goto('/transactions/create/');
+        const categories=await page.locator('#id_category option').evaluateAll(options=>options.filter(option=>option.textContent.startsWith('Panel category')).map(option=>option.value));
+        for(const category of categories)await post(page,'/transactions/create/',{title:'Panel expense',category,amount:'1',transaction_type:'EXPENSE',payment_channel:'ACCOUNT',bank_account:account,date,installments:'1'});
+        await page.goto('/dashboard/reports/?instrument_month=ALL');
+        const bar=page.locator('#instrument-activity [data-chart-layer="instrument-interactions"] [data-point]').first();
+        const panel=page.getByRole('region',{name:'Composition details',exact:true});
+        await bar.hover();await page.keyboard.down('Control');
+        await expect(panel).toContainText('Panel category 21');await page.keyboard.up('Control');
+        await expect(bar).toHaveAttribute('aria-expanded','true');
+        // Move well outside both surfaces before returning: the old hover gap
+        // must not require a precise route from the bar to the floating panel.
+        await page.mouse.move(5,75);await expect(panel).toBeVisible();await panel.hover();
+        const top=await page.evaluate(()=>scrollY),scale=await page.evaluate(()=>visualViewport.scale);
+        await page.mouse.wheel(0,300);await expect.poll(()=>panel.evaluate(element=>element.scrollTop)).toBeGreaterThan(0);
+        await page.mouse.wheel(0,4000);
+        await expect.poll(()=>panel.evaluate(element=>Math.abs(element.scrollHeight-element.clientHeight-element.scrollTop))).toBeLessThan(2);
+        await page.mouse.wheel(0,300);
+        await expect.poll(async()=>Math.abs(await page.evaluate(()=>scrollY)-top)).toBeLessThan(2);
+        expect(await page.evaluate(()=>visualViewport.scale)).toBe(scale);
+        const box=await panel.boundingBox(),viewport=page.viewportSize();
+        expect(box.x).toBeGreaterThanOrEqual(12);expect(box.x+box.width).toBeLessThanOrEqual(viewport.width-12);
+        expect(box.y).toBeGreaterThanOrEqual(0);expect(box.y+box.height).toBeLessThanOrEqual(viewport.height-12);
+        await expect(panel.getByRole('button',{name:'Close composition'})).toBeInViewport();
+        await page.screenshot({path:info.outputPath(`composition-scroll-${theme}.png`)});
+        const controlsBox=await page.locator('#instrument-activity [data-selection-controls]').boundingBox();
+        await page.mouse.click(controlsBox.x+controlsBox.width-2,controlsBox.y+2);await expect(panel).toBeHidden();
+        // Another Ctrl closes the panel and stays closed during that key press.
+        await bar.focus();await page.keyboard.press('Control');await expect(panel).toBeFocused();
+        await page.keyboard.down('Control');await expect(panel).toBeHidden();await expect(bar).toBeFocused();
+        await bar.hover();await expect(panel).toBeHidden();await page.keyboard.up('Control');
+        await page.keyboard.press('Control');await expect(panel).toBeVisible();
+        await page.mouse.move(5,75);await page.mouse.wheel(0,100);await expect(panel).toBeHidden();
+        await bar.focus();await page.keyboard.press('Control');await expect(panel).toBeVisible();
+        await bar.focus();
+        await page.evaluate(()=>document.addEventListener('scrollend',()=>document.documentElement.dataset.compositionScrollSettled='true',{once:true}));
+        await page.keyboard.press('PageDown');await expect(panel).toBeHidden();
+        await expect(page.locator('html')).toHaveAttribute('data-composition-scroll-settled','true');
+        await bar.focus();await page.keyboard.down('Control');await page.keyboard.up('Control');await expect(panel).toBeFocused();
+        await page.keyboard.press('Home');await page.keyboard.press('PageDown');
+        await expect.poll(()=>panel.evaluate(element=>element.scrollTop)).toBeGreaterThan(0);
+        await page.keyboard.press('Tab');await expect(panel.getByRole('button',{name:'Close composition'})).toBeFocused();
+        await page.keyboard.press('Enter');await expect(panel).toBeHidden();await expect(bar).toBeFocused();
+        await page.keyboard.down('Control');await page.keyboard.up('Control');await expect(panel).toBeFocused();
+        await page.keyboard.press('Tab');await page.keyboard.press('Tab');
+        await expect(panel.getByRole('link').first()).toBeFocused();
+        await page.keyboard.press('Shift+Tab');await page.keyboard.press('Shift+Tab');await page.keyboard.press('Shift+Tab');await expect(panel).toBeHidden();
+        await bar.focus();await page.keyboard.down('Control');await page.keyboard.up('Control');
+        await page.keyboard.press('Escape');await expect(panel).toBeHidden();await expect(bar).toBeFocused();
+        await bar.hover();await page.keyboard.down('Control');await page.keyboard.up('Control');await expect(panel).toBeVisible();
+        const previousPanel=await bar.getAttribute('aria-controls');
+        await page.locator('#installment-previous').click();await expect(page.locator('.chart-composition:visible')).toHaveCount(0);
+        const replaced=page.locator('#instrument-activity [data-chart-layer="instrument-interactions"] [data-point]').first();
+        // Outside-click dismissal happens before the response; wait for the
+        // replacement chart's handlers before sending a new keyboard action.
+        await expect(replaced).toHaveAttribute('aria-controls',/^chart-composition-\d+$/);
+        await expect(replaced).not.toHaveAttribute('aria-controls',previousPanel);
+        // Settle restoration and native focus scrolling before opening: an
+        // outside scroll correctly dismisses a panel that is already open.
+        await expect(page.locator('#reports-charts')).not.toHaveClass(/htmx-settling/);
+        await replaced.scrollIntoViewIfNeeded();
+        await replaced.focus();await page.keyboard.down('Control');await page.keyboard.up('Control');await expect(panel).toBeFocused();
+    });
+
     test(`direct chart selection, Ctrl composition and outside clearing (${theme})`, async({page},info)=>{
         const errors=[];page.on('pageerror',error=>errors.push(error.message));
         await page.addInitScript(theme=>localStorage.setItem('theme',theme),theme);
@@ -74,6 +142,13 @@ for (const theme of ['light','dark']) {
         await donut.locator('[data-legend-item]').first().click();
         await donut.locator('[data-legend-item]').last().click({modifiers:['Shift']});
         await expect(donut.locator('[data-donut-total]')).toContainText('30.00');
+        await slices.first().focus();await page.keyboard.down('Control');await page.keyboard.up('Control');
+        const firstLegend=donut.locator('[data-legend-item]').first();
+        await firstLegend.focus();await page.keyboard.down('Control');await page.keyboard.up('Control');
+        await expect(firstLegend).toHaveAttribute('aria-expanded','false');
+        await page.keyboard.press('Control');
+        await expect(firstLegend).toHaveAttribute('aria-expanded','true');
+        await page.keyboard.press('Escape');await expect(firstLegend).toBeFocused();
         const instrument=page.locator('#instrument-activity');
         const bar=instrument.locator('[data-chart-layer="instrument-interactions"] [data-point]').first();
         await expect(instrument.locator('svg a')).toHaveCount(0);
@@ -83,7 +158,9 @@ for (const theme of ['light','dark']) {
         await bar.hover();await page.keyboard.down('Control');
         await expect(page.locator('.chart-composition:visible')).toContainText('Selection A');
         await expect(page.locator('.chart-composition:visible')).toContainText('Selection B');
-        await page.keyboard.up('Control');await expect(page.locator('.chart-composition:visible')).toHaveCount(0);
+        await page.keyboard.up('Control');await expect(page.locator('.chart-composition:visible')).toHaveCount(1);
+        await page.mouse.move(5,75);await expect(page.locator('.chart-composition:visible')).toHaveCount(1);
+        await page.getByRole('button',{name:'Close composition',exact:true}).click();await expect(page.locator('.chart-composition:visible')).toHaveCount(0);
         const balance=page.locator('[data-balance-range]');
         await balance.locator('[data-selection-surface]').scrollIntoViewIfNeeded();
         const points=balance.locator('[data-point]');
@@ -100,8 +177,64 @@ for (const theme of ['light','dark']) {
         await expect(page.locator('.chart-composition:visible')).toContainText('Savings > Saved balance');
         await expect(page.locator('.chart-composition:visible')).toContainText('1,010.00');
         await page.keyboard.up('Control');
+        await expect(page.getByRole('region',{name:'Composition details',exact:true})).toBeFocused();
+        await page.keyboard.press('Escape');await expect(marks.last()).toBeFocused();
         await page.screenshot({path:info.outputPath(`direct-${theme}.png`)});
         expect(errors).toEqual([]);
+    });
+}
+
+for(const [theme,language] of [['light','en'],['dark','pt-br']]){
+    test(`composition links open exact operations and retain report history (${theme}, ${language})`,async({page},info)=>{
+        await page.addInitScript(value=>localStorage.setItem('theme',value),theme);
+        await seed(page,info);const {account,date}=await seedExpenses(page);
+        await page.goto('/transactions/create/');
+        const category=await page.locator('#id_category option').filter({hasText:'Selection A'}).getAttribute('value');
+        for(const [title,amount,eventDate] of [['Lunch source','7',date],['Dinner source','8',date],['Outside selected month','300','2020-01-01']]){
+            await post(page,'/transactions/create/',{title,category,amount,transaction_type:'EXPENSE',payment_channel:'ACCOUNT',bank_account:account,date:eventDate,installments:'1'});
+        }
+        await page.context().addCookies([{name:'django_language',value:language,url:info.project.use.baseURL}]);
+        const month=date.slice(0,7),path=`/dashboard/reports/?instrument_month=${month}&installment_month=${month}`;
+        await page.goto(path);
+        const bar=page.locator('#instrument-activity [data-chart-layer="instrument-interactions"] [data-point]').first();
+        const panel=page.getByRole('region',{name:language==='en'?'Composition details':'Detalhes da composição',exact:true});
+        const open=async()=>{await bar.focus();await page.keyboard.press('Control');await expect(panel).toBeFocused();};
+        await open();
+        const panelCount=await page.locator('.chart-composition').count();
+        const group=panel.locator('details').filter({has:page.locator('summary').filter({hasText:'Selection A'})});
+        await expect(group).not.toHaveAttribute('open','');await expect(group.locator('a').first()).toBeHidden();
+        // Native Tab reaches close, then the grouped category; Enter reveals
+        // only contributing operations and Tab reaches its first hyperlink.
+        await page.keyboard.press('Tab');await page.keyboard.press('Tab');await expect(group.locator('summary')).toBeFocused();
+        await page.keyboard.press('Enter');await expect(group).toHaveAttribute('open','');
+        await expect(group).toContainText(/BRL 25[,.]00/);await expect(group.locator('a')).toHaveCount(3);
+        await expect(panel).not.toContainText('Outside selected month');
+        await page.keyboard.press('Tab');await expect(group.locator('a').first()).toBeFocused();
+        const fonts=await group.locator('summary').evaluate(element=>({body:getComputedStyle(document.body).fontFamily,row:getComputedStyle(element).fontFamily}));
+        expect(fonts.body).toContain('Inter');expect(fonts.row).toBe(fonts.body);
+        await panel.screenshot({path:info.outputPath(`composition-sources-${theme}.png`)});
+        const top=await page.evaluate(()=>scrollY);
+        const lunch=group.getByRole('link',{name:new RegExp('Lunch source')});
+        await lunch.click();await expect(page).toHaveURL(/\/transactions\/\d+\/edit\/$/);
+        await expect(page.locator('#id_title')).toHaveValue('Lunch source');await expect(page.locator('#id_amount')).toHaveValue('7.00');
+        await page.goBack();await expect(page).toHaveURL(new RegExp(`instrument_month=${month}&installment_month=${month}`));
+        await expect.poll(async()=>Math.abs(await page.evaluate(()=>scrollY)-top)).toBeLessThan(4);
+        await expect(page.locator('.chart-composition')).toHaveCount(panelCount);
+        await open();
+        // A single contribution needs no disclosure or extra action button.
+        await expect(panel.locator('a').filter({hasText:'Selection B'})).toHaveCount(1);
+        await panel.locator('a').filter({hasText:'Selection B'}).press('Enter');
+        await expect(page.locator('#id_title')).toHaveValue('Selection B');await expect(page.locator('#id_amount')).toHaveValue('20.00');
+        await page.goBack();await expect(page).toHaveURL(new RegExp(`instrument_month=${month}`));
+        await expect(page.locator('.chart-composition')).toHaveCount(panelCount);
+        await page.goto('/investments/charts/');
+        const total=page.locator('[data-chart-selection]').first(),mark=total.locator('[data-point]').last();
+        await mark.focus();await page.keyboard.press('Control');await expect(panel).toBeFocused();
+        const investmentGroup=panel.locator('details').filter({has:page.locator('summary').filter({hasText:'Savings > Saved balance'})});
+        await investmentGroup.locator('summary').press('Space');await expect(investmentGroup).toHaveAttribute('open','');
+        const yieldLink=investmentGroup.locator('a[href$="/edit/"]').filter({hasText:language==='en'?'Yield':'Rendimento'});
+        await yieldLink.press('Enter');await expect(page).toHaveURL(/\/investments\/\d+\/edit\/$/);
+        await expect(page.locator('#id_kind')).toHaveValue('YIELD');await expect(page.locator('#id_amount')).toHaveValue('10.00');
     });
 }
 
@@ -175,6 +308,7 @@ test('touch selection, held composition, and native bank colors remain usable on
         await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box.x+20,y:box.y+box.height/2}]});
         await expect(mobile.locator('.chart-composition:visible')).toContainText('Selection B');
         await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+        await expect(mobile.locator('.chart-composition:visible')).toContainText('Selection B');
         expect(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
         await mobile.getByRole('heading',{level:1}).tap();await expect(mobile.locator('.chart-composition:visible')).toHaveCount(0);
         await mobile.screenshot({path:info.outputPath('direct-mobile.png')});

@@ -53,7 +53,7 @@ jobs:
 
       - name: Verify compiled frontend assets
         run: |
-          npx tailwindcss -c tailwind.config.js -i assets/css/tailwind.css -o "$RUNNER_TEMP/app.css" --minify
+          npm run build:css -- "$RUNNER_TEMP/app.css"
           cmp "$RUNNER_TEMP/app.css" static/css/app.css
           actual_htmx_sri=$(python -c "import base64, hashlib, pathlib; data=pathlib.Path('static/js/vendor/htmx.min.js').read_bytes().rstrip(b'\\n'); print(base64.b64encode(hashlib.sha384(data).digest()).decode())")
           test "$actual_htmx_sri" = "H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V"

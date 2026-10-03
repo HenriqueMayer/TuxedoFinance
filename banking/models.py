@@ -651,7 +651,7 @@ class RewardRedemption(TimestampedModel):
 
     @property
     def has_pending_credit_card_iof(self):
-        """True until another app posts this IOF charge to the card invoice."""
+        """True when IOF settles through a card invoice instead of an immediate debit."""
         return self.iof_amount > ZERO and self.iof_credit_card_id is not None
 
     def clean(self):

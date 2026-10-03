@@ -8,7 +8,7 @@
        hx-swap="outerHTML"
        hx-push-url="true"
         aria-label="{% translate 'Previous window' %}"
-       class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+       class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
             &larr;
         </a>{% endif %}
         <div>
@@ -18,7 +18,7 @@
                  {% endwith %}
             </p>
             {# The visible anchor label receives focus after the HTMX reset removes its link. #}
-            <p {% if evolution.is_anchored_today %}id="{{ navigation_id }}-today" tabindex="-1"{% endif %} class="text-xs text-forest/70 focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">
+            <p {% if evolution.is_anchored_today %}id="{{ navigation_id }}-today" tabindex="-1"{% endif %} class="text-xs text-forest/70 focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">
                 {% if evolution.is_anchored_today %}{% translate "Anchored on today" %}
                 {% elif charts_offset < 0 %}{% translate "Past window" %}
                 {% else %}{% translate "Future window" %}{% endif %}
@@ -30,7 +30,7 @@
            hx-swap="outerHTML"
            hx-push-url="true"
             aria-label="{% translate 'Next window' %}"
-           class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+           class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
             &rarr;
         </a>{% else %}<span id="{{ navigation_id }}-next" tabindex="-1" class="subtle-copy inline-flex h-11 items-center">{% translate 'Forecast limit' %}</span>{% endif %}
     </div>

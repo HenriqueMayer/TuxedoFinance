@@ -713,13 +713,13 @@ class InstrumentReportTests(DashboardFixture):
         self.assertNotContains(response, 'data-scroll-target="instrument-categories-expense"')
         endpoint = response.context['instrument_selection']['points'][0]['details'][0]
         composition = self.client.get(endpoint).json()
-        self.assertEqual(composition['rows'], [{'label': 'Groceries', 'cents': '2500'}])
+        self.assertEqual([{key: row[key] for key in ('label', 'cents')} for row in composition['rows']], [{'label': 'Groceries', 'cents': '2500'}])
 
     def test_income_composition_is_separate_from_expenses(self):
         self.transaction(amount='125.00', transaction_type=Transaction.TransactionType.INCOME)
         response = self.client.get(reverse('dashboard:reports'))
         endpoint = response.context['instrument_selection']['points'][0]['details'][1]
-        self.assertEqual(self.client.get(endpoint).json()['rows'], [{'label': 'Groceries', 'cents': '12500'}])
+        self.assertEqual([{key: row[key] for key in ('label', 'cents')} for row in self.client.get(endpoint).json()['rows']], [{'label': 'Groceries', 'cents': '12500'}])
 
     def test_installment_shares_are_rounded_to_one_decimal(self):
         self.transaction(amount='542.00')

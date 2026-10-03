@@ -65,8 +65,19 @@ the user's banks, accounts, cards and categories. Validation enforces:
 - installments only for credit cards and assigned across invoices without
   creating account movements for individual installments.
 
+Positive reward-redemption IOF appears as a generated expense in its funding
+currency, with a unique `reward_redemption` link. Transaction lists mark it as
+**Managed by reward redemption** and link to bank redemption history. Direct
+edit/delete routes and admin actions reject that expense; its inline source form
+reconciles the charge and invoice. Generated titles display and search in the
+active language, including migrated sources. Billed-month filters, CSV and
+instrument/category reports include the expense normally. Account IOF retains
+its original redemption movement; card IOF joins the aggregate invoice once.
+
 Synchronization derives recurrence and installment amounts from the original
-transaction without inserting new `Transaction` rows. It creates or updates
+transaction without inserting recurrence or installment `Transaction` rows.
+An older positive IOF source missing its expense is materialized once before
+synchronization; the migration already backfills existing redemptions. It creates or updates
 movements and invoices through a projection horizon, normally twelve months
 beyond today. Future-effective rows may exist in the database, but balance
 queries exclude them until their effective date. See

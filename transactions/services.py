@@ -8,6 +8,7 @@ from django.utils.translation import gettext as _
 
 from banking.models import BankMovement, CardInvoice, LoyaltyEntry, RewardRedemption
 from transactions.models import Transaction
+from banking.services import sync_redemption_iof_transaction
 
 
 ZERO = Decimal('0.00')
@@ -34,6 +35,11 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
     """Idempotently project transactions into account movements and invoices."""
     through_date = through_date or timezone.localdate()
     horizon = _add_months(through_date, projection_months)
+    # Legacy sources and direct ORM imports gain the same derived expense.
+    for redemption in RewardRedemption.objects.filter(
+        user=user, iof_amount__gt=ZERO, iof_transaction__isnull=True,
+    ):
+        sync_redemption_iof_transaction(redemption)
     transactions = list(
         Transaction.objects.select_for_update()
         .filter(user=user)
@@ -45,7 +51,8 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
 
     desired_keys = set()
     for item in transactions:
-        if item.is_credit_card:
+        if item.is_credit_card or item.reward_redemption_id:
+            # Account IOF already owns an immediate redemption movement.
             continue
         occurrences = _month_range(item.date, horizon) if item.is_fixed else [item.date]
         for occurrence_month in occurrences:
@@ -90,11 +97,6 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
     ).delete()
 
     credit_transactions = [item for item in transactions if item.is_credit_card]
-    redemptions = list(
-        RewardRedemption.objects.filter(
-            user=user, iof_credit_card__isnull=False, iof_amount__gt=ZERO
-        ).select_related('iof_credit_card')
-    )
     loyalty_purchases = list(
         LoyaltyEntry.objects.filter(
             user=user,
@@ -104,10 +106,6 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
         ).select_related('funding_credit_card')
     )
     first_months = [item.billed_month for item in credit_transactions if item.billed_month]
-    first_months.extend(
-        redemption.iof_credit_card.statement_month(redemption.date)
-        for redemption in redemptions
-    )
     first_months.extend(
         entry.funding_credit_card.statement_month(entry.date)
         for entry in loyalty_purchases
@@ -122,13 +120,6 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
                     computed[(item.credit_card_id, reference_month)] = (
                         computed.get((item.credit_card_id, reference_month), ZERO) + amount
                     )
-            for redemption in redemptions:
-                card = redemption.iof_credit_card
-                if card.statement_month(redemption.date) == reference_month:
-                    computed[(card.pk, reference_month)] = (
-                        computed.get((card.pk, reference_month), ZERO)
-                        + redemption.iof_amount
-                    )
             for entry in loyalty_purchases:
                 card = entry.funding_credit_card
                 if card.statement_month(entry.date) == reference_month:
@@ -141,7 +132,6 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
         CardInvoice.objects.select_for_update().filter(user=user).select_related('card__account')
     )
     cards = {item.credit_card_id: item.credit_card for item in credit_transactions}
-    cards.update({item.iof_credit_card_id: item.iof_credit_card for item in redemptions})
     cards.update(
         {item.funding_credit_card_id: item.funding_credit_card for item in loyalty_purchases}
     )

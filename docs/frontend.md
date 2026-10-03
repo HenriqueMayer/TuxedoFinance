@@ -15,6 +15,17 @@ at runtime. Frontend tooling is pinned in `package.json`/`package-lock.json` for
 development and CI. Follow the [frontend build workflow](../CONTRIBUTING.md#frontend-and-translations)
 after changing Tailwind classes or tokens.
 
+The one-off build uses pinned Tailwind 4 and PostCSS through
+`scripts/build_css.mjs`, avoiding the CLI file-watcher dependency chain and its
+unpatched braces advisory (GHSA-vfj7-8cjw-p6xm). `npm audit --audit-level=high`
+remains mandatory. The existing JavaScript theme configuration remains explicit;
+compatibility tokens preserve Inter, the neutral palette, small shadows/radii,
+placeholder contrast and forced-colors keyboard outlines. The responsive section
+title keeps its previous line height. CSS is built for current browsers supporting
+cascade layers and modern color functions (Chrome 111+, Safari 16.4+, Firefox 128+).
+Run `npm run build:css -- /absolute/output.css` to check a temporary build without
+changing the committed asset. The build does not watch files or run in production.
+
 Load CSS and JavaScript with `{% asset 'css/app.css' %}` (from the `assets`
 template library). Its content digest versions the bytes served by source
 finders in development and by WhiteNoise's collected tree in production.
@@ -644,16 +655,48 @@ total on outside click or Escape. Other charts retain the selection summary.
 Selection never writes financial records. Without JavaScript the original chart
 values and period navigation remain available.
 
-Hold Ctrl while hovering or focusing a mark to inspect its composition in a
-viewport-bounded, scrollable panel. Release Ctrl, leave the chart/panel or press
-Escape to dismiss it. On touch, tap selects and holding a mark opens its
-composition until dismissed. A shared read-only authenticated endpoint accepts
+Press Ctrl while hovering or focusing a mark to open its composition in a
+viewport-bounded, scrollable panel, then release Ctrl before scrolling. Releasing
+the key or moving the pointer between the chart and panel leaves it open. The
+panel contains wheel/keyboard scrolling, including at its scroll boundaries.
+The prominent Close composition button, another Ctrl press, Escape, any click
+outside the panel (including chart controls), wheel/scroll outside the panel,
+another chart selection or a replacement of its owning chart dismisses it.
+The closing Ctrl press stays suppressed until key release, preventing a
+hovered mark from reopening the panel immediately. Opening a different composition
+closes the previous panel. Keyboard opening focuses the panel without scrolling
+the page. A queued native-focus scroll does not dismiss a panel opened after
+the position changed; subsequent outside scrolling still dismisses it. A new
+hover takes precedence over focus retained by a previous chart;
+moving keyboard focus resets that pointer context. Tab reaches the close button,
+row disclosures and operation links; leaving the panel dismisses it. Close,
+Escape and a second Ctrl return panel focus to its mark. An unrelated HTMX update leaves it open.
+On touch, tap selects and holding a mark opens its composition until dismissed.
+This interaction belongs to chart composition, independently of question-mark
+help and ordinary SVG value tooltips. A shared read-only authenticated endpoint accepts
 signed, user-bound chart scopes; all queries are scoped to the current user.
 Category paths preserve parent and subcategory names. Transaction charts use the
 same competence window and series as the chart, while bank balances show their
 account composition and investments show products/assets. Details for all-period
 charts use their full twelve-month scope. Decimal amounts become integer cents;
 SVG coordinates never supply financial values.
+
+Composition rows use a quiet arrow and a real same-tab hyperlink when exactly
+one source contributes. When several sources contribute, the native row
+`details` discloses their dated operation links and scoped amounts through
+click/touch or Enter/Space, without opening on hover. A recurring transaction
+appears once with its summed contribution across the selected months. Bank
+balances link to the account in bank details; opening investment positions link
+to the asset configuration; investment operations and ordinary transactions
+link to their existing editors. Generated IOF links to the source redemption,
+preserving its transaction edit lock. Links retain native modified-click behavior
+and shared browser Back/Forward. Opening an editor does not submit a financial
+change. Close the panel before navigation, remove cached panel copies on HTMX
+history restoration, and retain the report's period and scroll context.
+All links come from owned records in the same signed scope as the displayed
+amount; missing FX values never become an operation link. Fractional FX cents
+are allocated by remainder across displayed source amounts so they reconcile
+with the existing aggregate total.
 
 Bank colors use a validated six-digit hex value, a native color field and optional
 preset swatches. Existing banks receive the neutral caramel marker. The list uses

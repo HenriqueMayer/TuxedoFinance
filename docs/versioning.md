@@ -86,9 +86,11 @@ then assembles the version manifest and attaches `compose.yaml` and
 revision. Pull requests validate images without publishing. Prereleases are
 validated but not published by this workflow.
 
-For v0.5.0, upgrade rehearsals start from both v0.3.0 and v0.4.0. They verify
-financial records, additive migration defaults (including the bank marker),
-volume persistence, backups and restoration before publication.
+For v0.9.1, upgrade rehearsals start from v0.3.0, v0.4.0 and v0.9.0. They verify
+financial records, additive migration defaults, volume persistence, backups and
+restoration before publication. Fixtures include account- and card-funded reward
+redemption IOF. Existing records, balances and points must remain unchanged; only
+source-linked IOF expenses and their categories may be added by the migration.
 
 Supported image references are `ghcr.io/henriquemayer/tuxedofinance:vX.Y.Z` or a
 recorded digest. No moving `latest` tag is maintained, so publishing an older

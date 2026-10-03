@@ -277,69 +277,110 @@ def convert(user, amount, from_currency, to_currency, as_of=None):
     )
 
 
-@transaction.atomic
-def create_reward_redemption(
-    *, user, program, points, target_account, target_amount, date,
-    iof_amount=ZERO, iof_account=None, iof_credit_card=None, notes=''
-):
-    program = LoyaltyProgram.objects.select_for_update().get(pk=program.pk, user=user)
-    if program.balance < Decimal(points):
-        raise ValidationError({'points': gettext('The program does not have enough points.')})
-    redemption = RewardRedemption(
-        user=user,
-        program=program,
-        points=points,
-        target_account=target_account,
-        target_amount=target_amount,
-        iof_amount=iof_amount,
-        iof_account=iof_account,
-        iof_credit_card=iof_credit_card,
-        date=date,
-        notes=notes,
+def _iof_category(user):
+    from categories.models import Category
+
+    # IOF is the same acronym in both locales. Never reclassify an existing
+    # income category; reuse a compatible name or its first available suffix.
+    index = 1
+    while True:
+        name = 'IOF' if index == 1 else f'IOF ({index})'
+        category, _ = Category.objects.get_or_create(
+            user=user, name=name, defaults={'transaction_type': 'EXPENSE'},
+        )
+        if category.transaction_type != 'INCOME':
+            return category
+        index += 1
+
+
+def sync_redemption_iof_transaction(redemption):
+    """Maintain one read-only expense for the redemption's current IOF."""
+    from transactions.models import Transaction
+
+    item = Transaction.objects.filter(reward_redemption=redemption).first()
+    if not redemption.iof_amount:
+        if item:
+            item.delete()
+        return
+    if item is None:
+        item = Transaction(user=redemption.user, reward_redemption=redemption,
+                           category=_iof_category(redemption.user))
+    item.title = 'IOF on reward redemption'
+    item.amount = redemption.iof_amount
+    item.transaction_type = Transaction.TransactionType.EXPENSE
+    item.payment_channel = (
+        Transaction.PaymentChannel.CREDIT_CARD if redemption.iof_credit_card_id
+        else Transaction.PaymentChannel.ACCOUNT
     )
+    item.bank_account = redemption.iof_account
+    item.credit_card = redemption.iof_credit_card
+    item.date = redemption.date
+    item.notes = redemption.notes
+    item.full_clean()
+    item.save()
+
+
+@transaction.atomic
+def _save_reward_redemption(
+    *, user, program, points, target_account, target_amount, date,
+    iof_amount=ZERO, iof_account=None, iof_credit_card=None, notes='', redemption=None,
+):
+    original = None
+    if redemption is not None:
+        original = RewardRedemption.objects.select_for_update().get(pk=redemption.pk, user=user)
+    # An edit restores its original points before checking the new debit.
+    program = LoyaltyProgram.objects.select_for_update().get(pk=program.pk, user=user)
+    available = program.balance
+    if original and original.program_id == program.pk and original.loyalty_entry_id:
+        available += original.points
+    if available < Decimal(points):
+        raise ValidationError({'points': gettext('The program does not have enough points.')})
+    redemption = original or RewardRedemption(user=user)
+    for field, value in {
+        'program': program, 'points': points, 'target_account': target_account,
+        'target_amount': target_amount, 'date': date, 'iof_amount': iof_amount,
+        'iof_account': iof_account, 'iof_credit_card': iof_credit_card, 'notes': notes,
+    }.items():
+        setattr(redemption, field, value)
     redemption.full_clean()
     redemption.save()
-    entry = LoyaltyEntry(
-        user=user,
-        program=program,
-        direction=LoyaltyEntry.Direction.DEBIT,
-        kind=LoyaltyEntry.Kind.REDEMPTION,
-        amount=points,
-        date=date,
-        notes=notes,
-    )
+    entry = redemption.loyalty_entry or LoyaltyEntry(user=user)
+    for field, value in {
+        'program': program, 'direction': LoyaltyEntry.Direction.DEBIT,
+        'kind': LoyaltyEntry.Kind.REDEMPTION, 'amount': points, 'date': date, 'notes': notes,
+    }.items():
+        setattr(entry, field, value)
     entry.full_clean()
     entry.save()
-    reward_movement = create_movement(
-        user=user,
-        account=target_account,
-        direction=BankMovement.Direction.CREDIT,
-        kind=BankMovement.Kind.REWARD,
-        amount=target_amount,
-        effective_date=date,
-        description=notes,
-        source_key=f'reward-redemption:{redemption.pk}:reward',
+    reward_movement, _ = BankMovement.objects.update_or_create(
+        user=user, source_key=f'reward-redemption:{redemption.pk}:reward',
+        defaults={'account': target_account, 'direction': BankMovement.Direction.CREDIT,
+                  'kind': BankMovement.Kind.REWARD, 'amount': target_amount,
+                  'effective_date': date, 'description': notes},
     )
     iof_movement = None
+    old_iof_movement = redemption.iof_movement
     if iof_account is not None:
-        iof_movement = create_movement(
-            user=user,
-            account=iof_account,
-            direction=BankMovement.Direction.DEBIT,
-            kind=BankMovement.Kind.EXPENSE,
-            amount=iof_amount,
-            effective_date=date,
-            description=(
-                gettext('IOF on reward redemption: %(notes)s') % {'notes': notes}
-            ).strip(),
-            source_key=f'reward-redemption:{redemption.pk}:iof',
+        iof_movement, _ = BankMovement.objects.update_or_create(
+            user=user, source_key=f'reward-redemption:{redemption.pk}:iof',
+            defaults={'account': iof_account, 'direction': BankMovement.Direction.DEBIT,
+                      'kind': BankMovement.Kind.EXPENSE, 'amount': iof_amount,
+                      'effective_date': date,
+                      'description': gettext('IOF on reward redemption: %(notes)s') % {'notes': notes}},
         )
-    # Credit-card IOF intentionally has no movement yet. The persisted
-    # redemption exposes has_pending_credit_card_iof for invoice integration.
     redemption.loyalty_entry = entry
     redemption.reward_movement = reward_movement
     redemption.iof_movement = iof_movement
-    redemption.save(
-        update_fields=['loyalty_entry', 'reward_movement', 'iof_movement']
-    )
+    redemption.save(update_fields=['loyalty_entry', 'reward_movement', 'iof_movement'])
+    if old_iof_movement and iof_movement is None:
+        old_iof_movement.delete()
+    sync_redemption_iof_transaction(redemption)
     return redemption
+
+
+def create_reward_redemption(**kwargs):
+    return _save_reward_redemption(**kwargs)
+
+
+def update_reward_redemption(*, redemption, **kwargs):
+    return _save_reward_redemption(redemption=redemption, **kwargs)

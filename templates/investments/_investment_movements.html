@@ -2,7 +2,7 @@
 {% url 'investments:operations' as list_url %}
 <section id="investment-movements"
          hx-request='{"noHeaders":false}'
-         class="surface-panel scroll-mt-24 space-y-5 outline-none"
+         class="surface-panel scroll-mt-24 space-y-5 outline-hidden"
          tabindex="-1"
          aria-labelledby="investment-movements-title">
     <h2 id="investment-movements-title"
@@ -20,7 +20,7 @@
           class="grid gap-3 border-y border-forest/15 py-5 sm:grid-cols-2 lg:grid-cols-6 dark:border-cream/15">
         <div class="space-y-1.5 lg:col-span-2">
             <label for="investment-purpose" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate 'Purpose' %}</label>
-            <select id="investment-purpose" name="section" class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
+            <select id="investment-purpose" name="section" class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All purposes' %}</option>
                 <option value="portfolio" {% if selected_purpose == 'portfolio' %}selected{% endif %}>{% translate 'Portfolio' %}</option>
                 <option value="cash" {% if selected_purpose == 'cash' %}selected{% endif %}>{% translate 'Remunerated cash' %}</option>
@@ -32,14 +32,14 @@
             </label>
             <input id="investment-search" type="search" name="q" value="{{ search_query }}"
                    placeholder="{% translate 'Product, asset, reason or notes' %}"
-                   class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest placeholder:text-forest/70 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream dark:placeholder:text-night-muted">
+                   class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest placeholder:text-forest/70 focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream dark:placeholder:text-night-muted">
         </div>
         <div class="space-y-1.5">
             <label for="investment-kind" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
                 {% translate "Operation type" %}
             </label>
             <select id="investment-kind" name="kind"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All types' %}</option>
                 {% for value, label in kind_choices %}
                     <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
@@ -51,7 +51,7 @@
                 {% translate "Bank" %}
             </label>
             <select data-search-select id="investment-bank" name="bank"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All banks' %}</option>
                 {% comment %}Record identifiers are strings, independent of currency number formatting.{% endcomment %}
                 {% for bank in bank_choices %}
@@ -64,7 +64,7 @@
                 {% translate "Investment product" %}
             </label>
             <select data-search-select id="investment-product" name="product"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All products' %}</option>
                 {% for product in product_choices %}
                     <option value="{{ product.pk|stringformat:'s' }}" {% if selected_product == product.pk|stringformat:'s' %}selected{% endif %}>{{ product.bank.name }} / {{ product.name }}</option>
@@ -76,7 +76,7 @@
                 {% translate "Asset" %}
             </label>
             <select data-search-select id="investment-asset" name="asset"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
+                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
                 <option value="">{% translate 'All assets' %}</option>
                 {% for asset in asset_choices %}
                     <option value="{{ asset.pk|stringformat:'s' }}" {% if selected_asset == asset.pk|stringformat:'s' %}selected{% endif %}>{{ asset.code }}</option>

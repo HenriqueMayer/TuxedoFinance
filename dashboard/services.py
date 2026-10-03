@@ -228,7 +228,7 @@ def _monthly_totals(user, transactions, year, month, cutoff=None):
     }
 
 
-def _banking_expenses_for_month(user, year, month, cutoff=None):
+def _banking_expenses_for_month(user, year, month, cutoff=None, *, sources=None):
     """Return points purchases and reward IOF without duplicating transactions."""
     total = ZERO
     missing = set()
@@ -238,6 +238,8 @@ def _banking_expenses_for_month(user, year, month, cutoff=None):
         direction=LoyaltyEntry.Direction.CREDIT,
         cash_amount__isnull=False,
     ).select_related('funding_account', 'funding_credit_card__account')
+    if sources is not None:
+        purchases = purchases.select_related('program')
     for entry in purchases:
         if cutoff is not None and entry.date > cutoff:
             continue
@@ -254,10 +256,14 @@ def _banking_expenses_for_month(user, year, month, cutoff=None):
         )
         if value is not None:
             total += value
+            if sources is not None and value:
+                sources.append((entry, value))
 
     redemptions = RewardRedemption.objects.filter(
-        user=user, iof_amount__gt=ZERO
+        user=user, iof_amount__gt=ZERO, iof_transaction__isnull=True
     ).select_related('iof_account', 'iof_credit_card__account')
+    if sources is not None:
+        redemptions = redemptions.select_related('program')
     for redemption in redemptions:
         if cutoff is not None and redemption.date > cutoff:
             continue
@@ -274,6 +280,8 @@ def _banking_expenses_for_month(user, year, month, cutoff=None):
         )
         if value is not None:
             total += value
+            if sources is not None and value:
+                sources.append((redemption, value))
     return total, sorted(missing)
 
 

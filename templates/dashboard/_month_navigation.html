@@ -3,7 +3,7 @@
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
                 {% if has_previous_month %}<a href="?month={{ previous_month_param }}" aria-label="{% translate 'Previous month' %}"
-                   class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &larr;
                 </a>{% endif %}
                 <div class="min-w-0 text-center sm:text-left">
@@ -15,7 +15,7 @@
                     </p>
                 </div>
                 {% if has_next_month %}<a href="?month={{ next_month_param }}" aria-label="{% translate 'Next month' %}"
-                   class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &rarr;
                 </a>{% else %}<span class="subtle-copy">{% translate 'Forecast limit' %}</span>{% endif %}
             </div>

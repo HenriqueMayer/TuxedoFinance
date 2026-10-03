@@ -67,3 +67,15 @@ focus alone. Keep one row menu open at a time, retain native `details` behavior
 without JavaScript, and preserve outside-click, Tab-away and Escape dismissal.
 Primary navigation and question-mark help have separate hover contracts.
 Follow the [compact row-action contract](docs/frontend.md#compact-row-action-menus).
+
+Chart composition panels open with Ctrl over a mark or a touch hold and remain
+open after key release or pointer travel. Keep scrolling inside the panel,
+keyboard focus and a prominent close action; dismiss on another Ctrl press,
+Escape, any click or scroll outside the panel, Tab-away or replacement of the
+owning chart. Suppress reopening during the Ctrl press that dismissed it. Preserve unrelated HTMX updates.
+Keep composition source links discreet and scoped to the shown amounts: a single
+source opens its existing editor/context; multiple sources use a deliberate
+native disclosure. Preserve Tab access, user ownership, generated-operation
+edit locks and browser Back/Forward. Never pick an arbitrary operation for an
+aggregate row. Question-mark help and ordinary chart value tooltips retain their
+own contracts.

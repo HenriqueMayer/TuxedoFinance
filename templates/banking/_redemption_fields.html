@@ -1,0 +1,18 @@
+{% load i18n %}
+{% for field in form.visible_fields %}
+    {% if field.name == 'iof_account' or field.name == 'iof_credit_card' %}
+        <div data-form-when="{{ form.iof_amount.id_for_label }}" data-form-value="positive" data-has-errors="{{ field.errors|yesno:'true,false' }}">
+            {% include 'partials/form_field.html' with field=field %}
+        </div>
+    {% else %}
+        {% include 'partials/form_field.html' with field=field %}
+    {% endif %}
+{% endfor %}
+<script>
+    (() => {
+        const account = document.getElementById('{{ form.iof_account.id_for_label }}');
+        const card = document.getElementById('{{ form.iof_credit_card.id_for_label }}');
+        account.addEventListener('change', () => { if (account.value) card.value = ''; });
+        card.addEventListener('change', () => { if (card.value) account.value = ''; });
+    })();
+</script>

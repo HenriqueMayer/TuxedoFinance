@@ -17,7 +17,21 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      // Keep the established neutral palette when rebuilding with Tailwind 4.
       colors: {
+        gray: {
+          "50": "#f9fafb",
+          "100": "#f3f4f6",
+          "200": "#e5e7eb",
+          "300": "#d1d5db",
+          "400": "#9ca3af",
+          "500": "#6b7280",
+          "600": "#4b5563",
+          "700": "#374151",
+          "800": "#1f2937",
+          "900": "#111827",
+          "950": "#030712"
+        },
         cream: { DEFAULT: '#FAF8F3', dark: '#EBE7DE' },
         forest: { DEFAULT: '#1A2E26', light: '#2A4338', deep: '#101E18' },
         night: { DEFAULT: '#101010', surface: '#1B1B1B', raised: '#262626', muted: '#B8B8B8', line: '#808080' },
@@ -29,6 +43,10 @@ module.exports = {
         fixed: { DEFAULT: '#A65300', light: '#FFB45C' },
         oneoff: { DEFAULT: '#52605A', light: '#B8C0BC' },
       },
+      // Preserve the small shadow/radius/blur scale used by existing components.
+      boxShadow: { sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)' },
+      borderRadius: { sm: '0.125rem' },
+      blur: { sm: '4px' },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },

@@ -8,7 +8,7 @@ language selector, theme toggle and Log in / Sign up pills on the right.
 {% endcomment %}
 <header class="sticky top-0 z-40 border-b border-forest/10 dark:border-cream/10 bg-cream/90 dark:bg-night/90 backdrop-blur">
     <nav class="mx-auto flex min-h-16 w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:h-16 sm:flex-nowrap sm:px-6 sm:py-0 lg:px-8">
-        <a href="{% url 'pages:landing' %}" class="flex shrink-0 items-center gap-3 focus:outline-none focus:ring-2 focus:ring-caramel/40 rounded-xl">
+        <a href="{% url 'pages:landing' %}" class="flex shrink-0 items-center gap-3 focus:outline-hidden focus:ring-2 focus:ring-caramel/40 rounded-xl">
             <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover ring-1 ring-forest/10 dark:ring-cream/20">
             <span class="hidden sm:block text-left leading-tight">
                 <span class="block text-sm tracking-[0.2em] uppercase font-medium">{% translate 'Tuxedo' %}</span>

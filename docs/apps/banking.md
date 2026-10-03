@@ -88,9 +88,38 @@ remains authoritative and the no-JavaScript form remains complete.
 ledger. It records the points used, target account and monetary amount, IOF, and
 an optional IOF funding instrument. The service links it to a debit
 `LoyaltyEntry`, a credit `BankMovement` for the reward, and an IOF movement when
-IOF is paid from an account. Credit-card IOF remains pending for the normal card
-invoice flow. Positive IOF requires exactly one owned bank account or credit
-card; zero IOF permits neither.
+IOF is paid from an account. Credit-card IOF is included in the card's aggregate
+invoice by ledger synchronization and debits cash only on its due date. Positive
+IOF requires exactly one owned bank account or credit card; zero IOF permits
+neither.
+
+After saving, the redemption form opens the receiving bank's **Reward
+redemptions** history. Each bank shows its twenty most recent redemptions where
+one of its accounts receives the reward or funds the IOF, including via a credit
+card. This also exposes existing records and independent-program redemptions.
+Each row identifies points, date, native reward currency/account and IOF
+currency/instrument. Card-funded IOF identifies its statement month and due
+date, including when the card belongs to a different bank. Account-funded IOF
+identifies the immediate debit; zero IOF is explicit. **Edit redemption** opens
+an inline, bound form in this section; validation errors remain there. The edit
+updates its original points debit and reward movement, then reconciles IOF and
+invoices atomically. Changing the program checks its available points; editing
+the same program restores the old debit before checking the replacement.
+
+Every positive IOF owns one expense `Transaction.reward_redemption` (a nullable,
+unique source link), categorized as IOF in its funding currency. The migration
+backfills existing positive IOF without changing bank movements. A compatible
+IOF category is reused; an income-only name collision uses a numeric suffix.
+Transaction amounts support the same 16 digits as redemption amounts. The
+expense appears in transaction lists, CSV and instrument/category reports, but
+its edit/delete endpoints and admin actions are blocked; its source points entry
+is also protected against independent edits/deletion. Manage it from the
+redemption section. Account IOF keeps its original immediate movement; card IOF
+settles through the aggregate invoice. Ledger, reports and commitment snapshots
+count each charge once, preserving existing `iof:<id>` scenario identities.
+Setting IOF to zero removes the derived expense and previous IOF funding.
+An explicitly selected older redemption remains visible for editing beyond the
+usual twenty-row history limit.
 
 ## Multicurrency
 

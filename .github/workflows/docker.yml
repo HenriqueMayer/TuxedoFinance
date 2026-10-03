@@ -49,7 +49,7 @@ jobs:
           docker build --build-arg VERSION="$version" --build-arg REVISION="$(git rev-parse HEAD)" --tag tuxedo-finance:test .
       - name: Test supported upgrades, lifecycle and restore
         run: |
-          for previous in v0.3.0 v0.4.0; do
+          for previous in v0.3.0 v0.4.0 v0.9.0; do
             docker pull "ghcr.io/henriquemayer/tuxedofinance:$previous"
             uv run python scripts/docker_smoke.py --image tuxedo-finance:test --previous-image "ghcr.io/henriquemayer/tuxedofinance:$previous"
           done

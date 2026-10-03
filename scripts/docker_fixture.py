@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from accounts.models import UserPreference
 from banking.models import Bank, BankAccount, CreditCard, ExchangeRate, LoyaltyProgram, LoyaltyEntry
-from banking.services import create_transfer
+from banking.services import create_transfer, create_reward_redemption
 from categories.models import Category
 from investments.models import Asset, InvestmentProduct, Investment
 from investments.services import refresh_fx_snapshot, sync_investment_ledger
@@ -53,6 +53,11 @@ for values in (
     sync_investment_ledger(operation)
 program = LoyaltyProgram.objects.create(user=user, bank=bank, name='Retained rewards')
 LoyaltyEntry.objects.create(user=user, program=program, direction='CREDIT', kind='ADJUSTMENT', amount='1200.00', date=date(2026, 8, 1))
+for funding in (dict(iof_account=account), dict(iof_credit_card=card)):
+    create_reward_redemption(user=user, program=program, points=Decimal('100'),
+                             target_account=dollars, target_amount=Decimal('10'),
+                             iof_amount=Decimal('2.50'), date=date(2026, 8, 21),
+                             notes='Synthetic IOF upgrade source', **funding)
 sync_user_ledger(user, through_date=date(2026, 9, 20))
 '''
 
@@ -60,7 +65,7 @@ MODELS = (
     'auth.User', 'accounts.UserPreference', 'categories.Category',
     'banking.Bank', 'banking.BankAccount', 'banking.CreditCard',
     'banking.ExchangeRate', 'banking.BankTransfer', 'banking.BankMovement',
-    'banking.CardInvoice', 'banking.LoyaltyProgram', 'banking.LoyaltyEntry',
+    'banking.CardInvoice', 'banking.LoyaltyProgram', 'banking.LoyaltyEntry', 'banking.RewardRedemption',
     'transactions.Transaction', 'investments.InvestmentProduct',
     'investments.Asset', 'investments.Investment',
 )
