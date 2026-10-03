@@ -5,7 +5,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Case, DecimalField, F, Prefetch, Q, Sum, When
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
-from django.http import HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -39,6 +39,7 @@ from banking.models import (
 from banking.services import (
     cleanup_loyalty_entry_funding,
     create_reward_redemption,
+    update_reward_redemption,
     create_transfer,
     sync_loyalty_entry_funding,
     get_planning_availability,
@@ -178,6 +179,35 @@ class BankDetailView(LoginRequiredMixin, DetailView):
         context['invoices'] = CardInvoice.objects.filter(
             user=self.request.user, card__account_id__in=account_ids
         ).select_related('card__account').order_by('-reference_month')[:12]
+        # A card-funded IOF is part of an aggregate invoice, not a separate
+        # cash movement. Show its source in both receiving and funding banks.
+        redemption_query = RewardRedemption.objects.filter(user=self.request.user).filter(
+            Q(target_account_id__in=account_ids)
+            | Q(iof_account_id__in=account_ids)
+            | Q(iof_credit_card__account_id__in=account_ids)
+        ).select_related(
+            'program', 'target_account__bank', 'iof_account__bank',
+            'iof_credit_card__account__bank',
+        ).order_by('-date', '-created_at', '-pk')
+        editing = kwargs.get('editing_redemption')
+        if not editing and self.request.GET.get('edit_redemption'):
+            if not self.request.GET['edit_redemption'].isdigit():
+                raise Http404
+            editing = get_object_or_404(redemption_query, pk=self.request.GET['edit_redemption'])
+        redemptions = list(redemption_query[:20])
+        if editing and editing not in redemptions:
+            redemptions.insert(0, editing)
+        for redemption in redemptions:
+            if redemption.iof_credit_card_id:
+                card = redemption.iof_credit_card
+                redemption.iof_reference_month = card.statement_month(redemption.date)
+                redemption.iof_due_date = card.due_date_for(redemption.iof_reference_month)
+        context['redemptions'] = redemptions
+        if editing:
+            context['editing_redemption'] = editing
+            context['redemption_form'] = kwargs.get('redemption_form') or RewardRedemptionForm(
+                user=self.request.user, instance=editing, prefix='redemption',
+            )
         return context
 
 
@@ -455,6 +485,9 @@ class LoyaltyEntryUpdateView(OwnedFormMixin, UpdateView):
     form_variant = 'loyalty_entry'
     success_url = reverse_lazy('banking:list')
 
+    def get_queryset(self):
+        return super().get_queryset().filter(reward_redemption__isnull=True)
+
     def form_valid(self, form):
         try:
             with transaction.atomic():
@@ -476,6 +509,9 @@ class LoyaltyEntryUpdateView(OwnedFormMixin, UpdateView):
 class LoyaltyEntryDeleteView(OwnedDeleteView):
     model = LoyaltyEntry
 
+    def get_queryset(self):
+        return super().get_queryset().filter(reward_redemption__isnull=True)
+
     def form_valid(self, form):
         with transaction.atomic():
             cleanup_loyalty_entry_funding(self.object)
@@ -488,10 +524,13 @@ class RewardRedemptionCreateView(OperationFormMixin):
     form_class = RewardRedemptionForm
     form_title = _('Convert points or miles to account balance')
 
+    def get_success_url(self):
+        return reverse('banking:detail', args=[self.redemption.target_account.bank_id]) + '#reward-redemptions'
+
     def form_valid(self, form):
         try:
             with transaction.atomic():
-                create_reward_redemption(user=self.request.user, **form.cleaned_data)
+                self.redemption = create_reward_redemption(user=self.request.user, **form.cleaned_data)
                 sync_user_ledger(self.request.user)
         except Exception as error:
             if hasattr(error, 'message_dict'):
@@ -503,6 +542,47 @@ class RewardRedemptionCreateView(OperationFormMixin):
             raise
         messages.success(self.request, _('Reward converted and IOF funding recorded.'))
         return super().form_valid(form)
+
+
+class RewardRedemptionUpdateView(OwnedFormMixin, UpdateView):
+    model = RewardRedemption
+    form_class = RewardRedemptionForm
+
+    def get_form_kwargs(self):
+        return super().get_form_kwargs() | {'prefix': 'redemption'}
+
+    def get(self, request, *args, **kwargs):
+        redemption = self.get_object()
+        url = reverse('banking:detail', args=[redemption.target_account.bank_id])
+        return redirect(f'{url}?edit_redemption={redemption.pk}#reward-redemption-{redemption.pk}')
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                self.object = update_reward_redemption(
+                    redemption=self.object, user=self.request.user, **form.cleaned_data,
+                )
+                sync_user_ledger(self.request.user)
+        except Exception as error:
+            if not hasattr(error, 'message_dict'):
+                raise
+            for field, values in error.message_dict.items():
+                for value in values:
+                    form.add_error(field if field in form.fields else None, value)
+            return self.form_invalid(form)
+        messages.success(self.request, _('Reward redemption updated.'))
+        url = reverse('banking:detail', args=[self.object.target_account.bank_id])
+        return redirect(f'{url}#reward-redemption-{self.object.pk}')
+
+    def form_invalid(self, form):
+        # Validation recovery stays inside the source section, with the bound
+        # selections and errors rather than an independent transaction editor.
+        original = self.get_object()
+        view = BankDetailView()
+        view.setup(self.request, pk=original.target_account.bank_id)
+        view.object = view.get_object()
+        context = view.get_context_data(editing_redemption=original, redemption_form=form)
+        return render(self.request, 'banking/detail.html', context)
 
 
 class ExchangeRateListView(LoginRequiredMixin, ListView):

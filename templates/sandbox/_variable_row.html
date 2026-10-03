@@ -2,17 +2,17 @@
 <div data-variable-row class="grid items-end gap-3 rounded-2xl border border-forest/10 p-4 dark:border-cream/10 sm:grid-cols-[minmax(0,1fr)_minmax(9rem,0.55fr)_auto]">
     <label>
         <span class="field-label">{% translate "Description" %}</span>
-        <input aria-label="{% translate 'Fixed expense description' %}" class="mt-2 w-full rounded-xl border border-forest/20 bg-white px-3 py-2 text-sm text-forest placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:border-cream/20 dark:bg-night dark:text-cream dark:placeholder:text-night-muted" type="text" name="variable_label" maxlength="80" value="{{ row.label|default:'' }}" placeholder="{% translate 'E.g. rent' %}">
+        <input aria-label="{% translate 'Fixed expense description' %}" class="mt-2 w-full rounded-xl border border-forest/20 bg-white px-3 py-2 text-sm text-forest placeholder:text-forest/40 focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/30 dark:border-cream/20 dark:bg-night dark:text-cream dark:placeholder:text-night-muted" type="text" name="variable_label" maxlength="80" value="{{ row.label|default:'' }}" placeholder="{% translate 'E.g. rent' %}">
     </label>
     <div>
         <span class="field-label">{% translate "Monthly amount" %}</span>
         <div class="mt-2 flex items-center gap-2">
-            <select name="variable_type" aria-label="{% translate 'Fixed expense unit' %}" class="rounded-xl border border-forest/20 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/20 dark:bg-night">
+            <select name="variable_type" aria-label="{% translate 'Fixed expense unit' %}" class="rounded-xl border border-forest/20 bg-white px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-caramel dark:border-cream/20 dark:bg-night">
                 <option value="currency" {% if row.value_type != 'percent' %}selected{% endif %}>R$</option>
                 <option value="percent" {% if row.value_type == 'percent' %}selected{% endif %}>%</option>
             </select>
-            <input aria-label="{% translate 'Fixed expense monthly amount' %}" class="w-full rounded-xl border border-forest/20 bg-white px-3 py-2 text-sm tabular-nums text-forest placeholder:text-forest/40 focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/30 dark:border-cream/20 dark:bg-night dark:text-cream dark:placeholder:text-night-muted" type="text" inputmode="decimal" name="variable_value" min="0" step="0.01" value="{{ row.value|default:'' }}" placeholder="0.00">
+            <input aria-label="{% translate 'Fixed expense monthly amount' %}" class="w-full rounded-xl border border-forest/20 bg-white px-3 py-2 text-sm tabular-nums text-forest placeholder:text-forest/40 focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/30 dark:border-cream/20 dark:bg-night dark:text-cream dark:placeholder:text-night-muted" type="text" inputmode="decimal" name="variable_value" min="0" step="0.01" value="{{ row.value|default:'' }}" placeholder="0.00">
         </div>
     </div>
-    <button type="submit" name="action" value="remove_variable_{{ row_index }}" data-remove-variable class="rounded-full p-2 text-forest/60 hover:bg-expense/10 hover:text-expense focus:outline-none focus:ring-2 focus:ring-caramel dark:text-cream/60 dark:hover:text-expense-light" aria-label="{% translate 'Remove fixed expense' %}">×</button>
+    <button type="submit" name="action" value="remove_variable_{{ row_index }}" data-remove-variable class="rounded-full p-2 text-forest/60 hover:bg-expense/10 hover:text-expense focus:outline-hidden focus:ring-2 focus:ring-caramel dark:text-cream/60 dark:hover:text-expense-light" aria-label="{% translate 'Remove fixed expense' %}">×</button>
 </div>

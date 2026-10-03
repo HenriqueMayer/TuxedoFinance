@@ -18,7 +18,7 @@
     </header>
     {% include 'banking/_availability.html' %}
     <form method="get" class="flex items-end gap-3">
-        <div class="max-w-xl flex-1"><label for="bank-search" class="mb-2 block text-sm font-medium">{% translate 'Search' %}</label><input id="bank-search" type="search" name="q" value="{{ search_query }}" placeholder="{% translate 'Bank, account, card, or program' %}" class="w-full rounded-xl border border-forest/30 bg-white px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface"></div>
+        <div class="max-w-xl flex-1"><label for="bank-search" class="mb-2 block text-sm font-medium">{% translate 'Search' %}</label><input id="bank-search" type="search" name="q" value="{{ search_query }}" placeholder="{% translate 'Bank, account, card, or program' %}" class="w-full rounded-xl border border-forest/30 bg-white px-4 py-2.5 focus:outline-hidden focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface"></div>
         <button type="submit" class="action-link">{% translate 'Search' %}</button>
         {% if search_query %}<a href="{% url 'banking:list' %}" class="action-link">{% translate 'Clear' %}</a>{% endif %}
     </form>

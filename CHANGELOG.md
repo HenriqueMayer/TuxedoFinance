@@ -7,9 +7,18 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-03
+
 ### Fixed
 
+- Generate one protected IOF expense per reward redemption, backfill existing charges, and show them in Transactions and card reports without duplicating invoices or account debits. Edit the redemption inline in bank history to reconcile its points, reward and IOF sources.
+- Add discreet composition links to the contributing transactions, investment operations, opening positions and bank accounts; disclose multiple sources without changing totals or generated IOF edit protection.
+- Keep chart composition open after releasing Ctrl or crossing between the chart and panel; highlight its close button, close on a second Ctrl or any outside click/scroll, and preserve internal scrolling and keyboard focus.
 - Open repository and quick-start links from the bilingual static tour in a separate tab, including when the tour is embedded in a sandboxed portfolio preview.
+
+### Security
+
+- Remove the vulnerable brace-pattern dependency chain from CSS builds by using the official Tailwind PostCSS compiler, preserving the existing font, colors, component dimensions and keyboard focus styles. Keep the high-severity npm audit gate.
 
 ## [0.9.0] - 2026-09-28
 
@@ -288,7 +297,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.0...v0.8.1

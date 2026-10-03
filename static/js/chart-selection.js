@@ -3,9 +3,12 @@
     'use strict';
     if (window.TuxedoChartSelection) return;
     const initialized = new WeakSet(), active = new Map(), cache = new Map();
-    let serial = 0, hovered = null;
+    let serial = 0, hovered = null, controlDismissed = false;
     function initialize() {
         for (const [root, state] of active) if (!root.isConnected) {state.close(); state.popover.remove(); active.delete(root);}
+        // HTMX history restores cached HTML, not the original panel nodes.
+        const panels=new Set(Array.from(active.values(),state=>state.popover));
+        document.querySelectorAll('.chart-composition').forEach(panel=>{if(!panels.has(panel))panel.remove();});
         document.querySelectorAll('[data-chart-selection]').forEach(root => {
             if (initialized.has(root)) return;
             const controls = root.querySelector('[data-selection-controls]'), surface = root.querySelector('[data-selection-surface]');
@@ -66,58 +69,114 @@
                 if (range && highlight) {const first=indices[0],last=indices[indices.length-1];highlight.setAttribute('x',config.points[first].x-10);highlight.setAttribute('width',config.points[last].x-config.points[first].x+20);highlight.removeAttribute('hidden');}
             }
             function chooseRange(first,last) {
+                close();
                 selected.clear();range=[first,last];
                 for(let i=Math.min(first,last);i<=Math.max(first,last);i++) config.series.forEach((_,s)=>selected.add(i+':'+s));
                 render();
             }
             function choose(mark,additive) {
                 if (!mark) return;
+                close();
                 range=null;keyboardAnchor=null;
                 const id=key(mark);if(!additive) selected.clear();
                 if(selected.has(id)) selected.delete(id);else selected.add(id);
                 render();
             }
             const popover=document.createElement('div');popover.className='chart-composition';popover.hidden=true;popover.setAttribute('role','region');
-            const content=document.createElement('div');popover.append(content);document.body.append(popover);
-            let generation=0,currentUrl='',pin=false,controller=null;
-            function close(){generation++;controller?.abort();popover.hidden=true;currentUrl='';pin=false;}
+            popover.id='chart-composition-'+serial;popover.tabIndex=0;popover.setAttribute('aria-label',controls.dataset.detailsLabel);
+            const header=document.createElement('div');header.className='chart-composition-header';
+            const title=document.createElement('strong');title.className='min-w-0 break-words';title.textContent=controls.dataset.detailsLabel;
+            const closeButton=document.createElement('button');closeButton.type='button';closeButton.className='action-primary shrink-0';closeButton.textContent=controls.dataset.detailsClose;
+            header.append(title,closeButton);
+            const content=document.createElement('div');content.setAttribute('aria-live','polite');popover.append(header,content);document.body.append(popover);
+            marks.forEach(mark=>{if(config.points[Number(mark.dataset.point)].details?.[Number(mark.dataset.series)]){mark.setAttribute('aria-controls',popover.id);mark.setAttribute('aria-expanded','false');}});
+            let generation=0,currentUrl='',opener=null,controller=null;
+            const openingScrolls=new Map();
+            const scrollPosition=node=>node===document?[scrollX,scrollY]:[node.scrollLeft,node.scrollTop];
+            function scrollChanged(node){const before=openingScrolls.get(node),now=scrollPosition(node);return !before||before.some((value,index)=>value!==now[index]);}
+            function close(restoreFocus=false){
+                generation++;controller?.abort();
+                if(restoreFocus&&popover.contains(document.activeElement)&&opener?.isConnected)opener.focus({preventScroll:true});
+                opener?.setAttribute('aria-expanded','false');popover.hidden=true;currentUrl='';opener=null;
+            }
+            closeButton.addEventListener('click',()=>close(true));
+            popover.addEventListener('click',event=>{if(event.target.closest('a[href]'))close();});
+            // Check after native Tab assigns its destination. Pointer clicks
+            // on panel text must not dismiss it merely because focus changes.
+            popover.addEventListener('keydown',event=>{if(event.key==='Tab')setTimeout(()=>{if(!popover.hidden&&!popover.contains(document.activeElement))close();},0);});
             function position(mark) {
                 const box=(isSvg && mark.firstElementChild?mark.firstElementChild:mark).getBoundingClientRect();
                 const bounds=popover.getBoundingClientRect();
                 popover.style.left=Math.max(12,Math.min(box.x,innerWidth-bounds.width-12))+'px';
                 popover.style.top=Math.max(72,Math.min(box.bottom+8,innerHeight-bounds.height-12))+'px';
             }
-            async function inspect(mark,pinned=false) {
+            async function inspect(mark,focusPanel=false) {
                 const i=Number(mark.dataset.point),s=Number(mark.dataset.series),url=config.points[i].details?.[s];
                 if(!url)return;
-                pin=pinned;if(currentUrl===url&&!popover.hidden)return;
+                if(currentUrl===url&&!popover.hidden){
+                    if(opener!==mark){opener?.setAttribute('aria-expanded','false');opener=mark;mark.setAttribute('aria-expanded','true');}
+                    if(focusPanel)popover.focus({preventScroll:true});return;
+                }
                 active.forEach(state=>{if(state.root!==root)state.close();});
-                close();pin=pinned;currentUrl=url;const version=++generation;
-                content.textContent=controls.dataset.detailsLoading;popover.hidden=false;position(mark);
+                close();currentUrl=url;opener=mark;openingScrolls.clear();openingScrolls.set(document,scrollPosition(document));
+                for(let parent=mark.parentElement;parent;parent=parent.parentElement)openingScrolls.set(parent,scrollPosition(parent));
+                mark.setAttribute('aria-expanded','true');const version=++generation;
+                title.textContent=controls.dataset.detailsLabel;content.textContent=controls.dataset.detailsLoading;popover.hidden=false;position(mark);
+                // Ctrl opens a persistent panel so it can be released before
+                // scrolling. Keyboard opening moves focus into that panel.
+                if(focusPanel)popover.focus({preventScroll:true});
                 try {
                     controller=new AbortController();
                     let data=cache.get(url);
                     if(!data){const response=await fetch(url,{credentials:'same-origin',signal:controller.signal});if(!response.ok)throw new Error('unavailable');data=await response.json();if(cache.size>100)cache.clear();cache.set(url,data);}
                     if(version!==generation||!root.isConnected)return;
-                    content.replaceChildren();const title=document.createElement('strong');title.textContent=data.title;content.append(title);
+                    content.replaceChildren();title.textContent=data.title;
                     const ul=document.createElement('ul');ul.className='mt-3 space-y-2';content.append(ul);
-                    data.rows.forEach(row=>{const li=document.createElement('li'),label=document.createElement('span'),amount=document.createElement('strong');li.className='flex justify-between gap-4 text-sm';label.textContent=row.label;label.className='min-w-0 break-words';amount.className='shrink-0 tabular-nums';amount.textContent=money(BigInt(row.cents),data.currency);li.append(label,amount);ul.append(li);});
+                    function rowContent(target,labelText,cents,disclosure=false){
+                        const label=document.createElement('span'),amount=document.createElement('strong');
+                        target.className='chart-composition-row';label.className='chart-composition-label min-w-0 break-words';label.textContent=labelText;
+                        amount.className='shrink-0 tabular-nums';amount.textContent=money(BigInt(cents),data.currency);
+                        if(target.tagName==='A'||disclosure){
+                            const icon=document.createElementNS('http://www.w3.org/2000/svg','svg'),path=document.createElementNS('http://www.w3.org/2000/svg','path');
+                            icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');icon.setAttribute('class','inline-block h-3.5 w-3.5 align-middle text-forest/50 dark:text-night-muted');
+                            icon.setAttribute('fill','none');icon.setAttribute('stroke','currentColor');icon.setAttribute('stroke-width','1.5');
+                            path.setAttribute('d',disclosure?'m9 5 7 7-7 7':'M5 12h14m-6-6 6 6-6 6');icon.append(path);label.append(' ',icon);
+                        }
+                        target.append(label,amount);
+                    }
+                    function sourceLink(source,label=source.label,cents=source.cents){
+                        const link=document.createElement('a');link.href=source.url;link.title=source.label;link.setAttribute('aria-label',source.action+': '+source.label+' · '+money(BigInt(cents),data.currency));
+                        rowContent(link,label,cents);return link;
+                    }
+                    data.rows.forEach(row=>{
+                        const li=document.createElement('li'),sources=row.sources||[];
+                        if(sources.length===1)li.append(sourceLink(sources[0],row.label,row.cents));
+                        else if(sources.length>1){
+                            const details=document.createElement('details'),summary=document.createElement('summary'),entries=document.createElement('ul');
+                            details.className='chart-composition-group';summary.title=controls.dataset.detailsSources;rowContent(summary,row.label,row.cents,true);
+                            entries.className='chart-composition-sources';
+                            sources.forEach(source=>{const item=document.createElement('li');item.append(sourceLink(source));entries.append(item);});
+                            details.append(summary,entries);li.append(details);
+                        }else{const plain=document.createElement('div');rowContent(plain,row.label,row.cents);li.append(plain);}
+                        ul.append(li);
+                    });
+                    window.htmx?.process(content);
                     if(!data.rows.length){const p=document.createElement('p');p.textContent=controls.dataset.detailsEmpty;content.append(p);}
                     if(data.missing.length){const p=document.createElement('p');p.textContent=controls.dataset.detailsMissing+': '+data.missing.join(', ');content.append(p);}
                     position(mark);
                 } catch(error){if(error.name!=='AbortError'&&version===generation)content.textContent=controls.dataset.detailsError;}
             }
-            function clear(){selected.clear();range=null;keyboardAnchor=null;render();close();}
-            active.set(root,{root,clear,close,popover,contains:node=>surface.contains(node)||controls.contains(node)||popover.contains(node)||marks.some(mark=>mark.contains(node))});
+            function clear(restoreFocus=false){selected.clear();range=null;keyboardAnchor=null;render();close(restoreFocus);}
+            active.set(root,{root,clear,close,popover,scrollChanged,contains:node=>surface.contains(node)||controls.contains(node)||popover.contains(node)||marks.some(mark=>mark.contains(node))});
             const getMark=target=>{const mark=target.closest('[data-point]');return marks.includes(mark)?mark:null;};
             function nearest(event){const x=new DOMPoint(event.clientX,event.clientY).matrixTransform(surface.getScreenCTM().inverse()).x;return config.points.reduce((best,p,i)=>Math.abs(p.x-x)<Math.abs(config.points[best].x-x)?i:best,0);}
             let anchor=null,touchTimer=null,touchStart=null,touchHeld=false;
             root.addEventListener('pointerdown',event=>{
                 const mark=getMark(event.target);if(event.button!==0||(!surface.contains(event.target)&&!mark))return;
-                if(event.ctrlKey){if(mark)inspect(mark);return;}
+                if(event.ctrlKey)return;
                 if(event.pointerType==='touch'){
                     touchHeld=false;touchStart={x:event.clientX,y:event.clientY};
-                    if(mark)touchTimer=setTimeout(()=>{touchHeld=true;inspect(mark,true);},500);
+                    if(mark)touchTimer=setTimeout(()=>{touchHeld=true;inspect(mark);},500);
                     return;
                 }
                 event.preventDefault();
@@ -127,7 +186,7 @@
             root.addEventListener('pointermove',event=>{
                 const mark=getMark(event.target);hovered=mark?{mark,inspect}:null;
                 if(event.pointerType==='touch'&&touchStart&&Math.hypot(event.clientX-touchStart.x,event.clientY-touchStart.y)>8){clearTimeout(touchTimer);touchStart=null;}
-                if(event.ctrlKey&&mark)inspect(mark);else if(!pin&&!popover.contains(event.target))close();
+                if(event.ctrlKey&&mark&&!controlDismissed)inspect(mark);
                 if(anchor!==null)chooseRange(anchor,nearest(event));
             });
             root.addEventListener('pointerup',event=>{
@@ -136,11 +195,13 @@
                 anchor=null;touchStart=null;
             });
             root.addEventListener('pointercancel',()=>{clearTimeout(touchTimer);anchor=null;touchStart=null;});
-            root.addEventListener('pointerleave',event=>{hovered=null;if(!pin&&!popover.contains(event.relatedTarget))close();});
-            popover.addEventListener('pointerleave',()=>{if(!pin)close();});
+            root.addEventListener('pointerleave',()=>{hovered=null;});
+            root.addEventListener('focusin',()=>{hovered=null;});
             root.addEventListener('keydown',event=>{
                 const mark=getMark(event.target);if(!mark)return;
-                if(event.key==='Control'){event.preventDefault();inspect(mark,true);return;}
+                // A new hover wins over focus retained by a previous chart.
+                // Moving keyboard focus clears that pointer context again.
+                if(event.key==='Control'){event.preventDefault();if(!event.repeat){if(hovered?.mark.isConnected)hovered.inspect(hovered.mark);else inspect(mark,true);}return;}
                 if(!['Enter',' '].includes(event.key))return;event.preventDefault();
                 if(items||event.shiftKey){choose(mark,event.shiftKey);return;}
                 const index=Number(mark.dataset.point);
@@ -148,9 +209,33 @@
             });
         });
     }
+    // A second Ctrl dismisses instead of immediately reopening on the mark
+    // beneath the pointer. Keep that press suppressed until it is released.
+    document.addEventListener('keydown',event=>{
+        if(event.key!=='Control'||event.repeat)return;
+        const open=Array.from(active.values()).filter(state=>!state.popover.hidden);
+        if(open.length){open.forEach(state=>state.close(true));controlDismissed=true;event.preventDefault();event.stopPropagation();}
+    },true);
+    document.addEventListener('keyup',event=>{if(event.key==='Control')controlDismissed=false;});
+    function dismissOutside(event){
+        active.forEach(state=>{
+            if(!state.popover.hidden&&!state.popover.contains(event.target)){
+                // Native focus can queue a scroll before Ctrl opens the panel.
+                // Ignore that delayed event unless its position changed since opening.
+                if(event.type==='scroll'&&!state.scrollChanged(event.target))return;
+                state.close();if(event.ctrlKey)controlDismissed=true;
+            }
+        });
+    }
+    document.addEventListener('pointerdown',dismissOutside,true);
+    // Keyboard activation has no pointerdown. A touch hold's release belongs
+    // to its opener and must leave the newly opened panel available.
+    document.addEventListener('click',event=>{if(event.detail===0)dismissOutside(event);},true);
+    document.addEventListener('wheel',dismissOutside,{capture:true,passive:true});
+    document.addEventListener('scroll',dismissOutside,true);
     document.addEventListener('pointerdown',event=>active.forEach(state=>{if(!state.contains(event.target))state.clear();}));
-    document.addEventListener('keydown',event=>{if(event.key==='Escape')active.forEach(state=>state.clear());if(event.key==='Control'&&hovered?.mark.isConnected&&!event.target.closest('[data-point]'))hovered.inspect(hovered.mark);});
-    document.addEventListener('keyup',event=>{if(event.key==='Control')active.forEach(state=>state.close());});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')active.forEach(state=>state.clear(true));if(event.key==='Control'&&!event.repeat&&hovered?.mark.isConnected&&!event.target.closest('[data-point]'))hovered.inspect(hovered.mark);});
+    document.addEventListener('htmx:beforeSwap',event=>{const target=event.detail?.target;if(target)active.forEach(state=>{if(target.contains(state.root))state.close();});});
     window.TuxedoChartSelection={initialize};
     document.addEventListener('DOMContentLoaded',initialize);document.addEventListener('htmx:load',initialize);document.addEventListener('htmx:historyRestore',initialize);
 })();

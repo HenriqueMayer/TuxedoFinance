@@ -57,6 +57,50 @@
         </section>
     {% endif %}
 
+    {% if redemptions %}
+        <section id="reward-redemptions" class="surface-panel" aria-labelledby="reward-redemptions-title">
+            <h2 id="reward-redemptions-title" class="section-title">{% translate 'Reward redemptions' %}</h2>
+            <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
+                {% for redemption in redemptions %}
+                    <li id="reward-redemption-{{ redemption.pk|stringformat:'d' }}" class="space-y-3 py-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0"><span class="font-medium">{{ redemption.program.name }}</span><p class="subtle-copy">{{ redemption.date|date:USER_DATE_FORMAT }} · {{ redemption.points|floatformat:2 }} {{ redemption.program.unit_name }}</p></div>
+                            <span class="whitespace-nowrap font-semibold tabular-nums text-income dark:text-income-light">+{{ redemption.target_account.currency }} {{ redemption.target_amount|floatformat:2 }}</span>
+                        </div>
+                        <p class="subtle-copy">{% translate 'Credited to' %}: {{ redemption.target_account.bank.name }} · {{ redemption.target_account.name }}</p>
+                        {% if redemption.iof_amount %}
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0"><span class="font-medium">{% translate 'IOF on reward redemption' %}</span>
+                                    {% if redemption.iof_credit_card_id %}
+                                        <p class="subtle-copy">{{ redemption.iof_credit_card.account.bank.name }} · {{ redemption.iof_credit_card.name }}</p>
+                                        <p class="subtle-copy">{% blocktranslate with month=redemption.iof_reference_month|date:'M Y' due_date=redemption.iof_due_date|date:USER_DATE_FORMAT %}Included in invoice {{ month }} · Due {{ due_date }}{% endblocktranslate %}</p>
+                                    {% else %}
+                                        <p class="subtle-copy">{% translate 'Debited from' %}: {{ redemption.iof_account.bank.name }} · {{ redemption.iof_account.name }}</p>
+                                    {% endif %}
+                                </div>
+                                <span class="whitespace-nowrap font-semibold tabular-nums text-expense dark:text-expense-light">{% if redemption.iof_credit_card_id %}{{ redemption.iof_credit_card.account.currency }}{% else %}{{ redemption.iof_account.currency }}{% endif %} {{ redemption.iof_amount|floatformat:2 }}</span>
+                            </div>
+                        {% else %}<p class="subtle-copy">{% translate 'No IOF charged.' %}</p>{% endif %}
+                        {% if redemption.notes %}<p class="subtle-copy break-words">{{ redemption.notes }}</p>{% endif %}
+                        {% if editing_redemption.pk == redemption.pk %}
+                            <form method="post" action="{% url 'banking:redemption_update' redemption.pk %}" hx-boost="false" class="max-w-lg space-y-5 rounded-xl border border-forest/20 p-4 dark:border-cream/20" novalidate aria-label="{% translate 'Edit redemption' %}">
+                                {% csrf_token %}
+                                {% for error in redemption_form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+                                {% include 'banking/_redemption_fields.html' with form=redemption_form %}
+                                <div class="flex gap-3">
+                                    <button type="submit" class="action-primary">{% translate 'Save' %}</button>
+                                    <a href="{% url 'banking:detail' bank.pk %}#reward-redemption-{{ redemption.pk|stringformat:'d' }}" class="quiet-action">{% translate 'Cancel' %}</a>
+                                </div>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'banking:detail' bank.pk %}?edit_redemption={{ redemption.pk|stringformat:'d' }}#reward-redemption-{{ redemption.pk|stringformat:'d' }}" class="quiet-action">{% translate 'Edit redemption' %}</a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
     {% if invoices %}
         <section class="surface-panel">
             <h2 class="section-title">{% translate "Credit card invoices" %}</h2>

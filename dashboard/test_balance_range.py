@@ -20,7 +20,7 @@ class ChartCompositionTests(DashboardFixture):
         self.transaction(amount='123.45', category=child)
         response = self.client.get(reverse('dashboard:reports'))
         endpoint = response.context['instrument_selection']['points'][0]['details'][0]
-        self.assertEqual(self.client.get(endpoint).json()['rows'], [{'label':'Food > Cafe', 'cents':'12345'}])
+        self.assertEqual([{key: row[key] for key in ('label', 'cents')} for row in self.client.get(endpoint).json()['rows']], [{'label':'Food > Cafe', 'cents':'12345'}])
         other = get_user_model().objects.create_user('other-chart', password='test')
         self.client.force_login(other)
         self.assertEqual(self.client.get(endpoint).status_code, 404)

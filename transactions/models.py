@@ -37,7 +37,7 @@ class Transaction(models.Model):
     )
     title = models.CharField(max_length=150)
     amount = models.DecimalField(
-        max_digits=10,
+        max_digits=16,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))],
     )
@@ -78,6 +78,10 @@ class Transaction(models.Model):
     fixed_until = models.DateField(null=True, blank=True)
     date = models.DateField()
     notes = models.TextField(blank=True)
+    reward_redemption = models.OneToOneField(
+        'banking.RewardRedemption', on_delete=models.CASCADE,
+        related_name='iof_transaction', null=True, blank=True, editable=False,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -115,6 +119,10 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f'{self.title} ({self.get_transaction_type_display()})'
+
+    @property
+    def display_title(self):
+        return _('IOF on reward redemption') if self.reward_redemption_id else self.title
 
     @property
     def native_currency(self):

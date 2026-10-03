@@ -46,12 +46,12 @@ GET search plus top-level/subcategory filtering.
             <label for="filter-search" class="field-label">{% translate "Search" %}</label>
             <input type="search" id="filter-search" name="q" value="{{ search_query }}"
                    placeholder="{% translate 'Category name' %}"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-night-muted focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-night-muted focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-0 basis-full space-y-1.5 sm:basis-32 sm:flex-1">
             <label for="filter-level" class="field-label">{% translate "Level" %}</label>
             <select id="filter-level" name="level"
-                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
                 <option value="">{% translate "All levels" %}</option>
                 <option value="top" {% if selected_level == 'top' %}selected{% endif %}>{% translate "Top-level" %}</option>
                 <option value="sub" {% if selected_level == 'sub' %}selected{% endif %}>{% translate "Subcategories" %}</option>
@@ -59,7 +59,7 @@ GET search plus top-level/subcategory filtering.
         </div>
         <div class="min-w-0 basis-full space-y-1.5 sm:basis-32 sm:flex-1">
             <label for="filter-type" class="field-label">{% translate 'Type' %}</label>
-            <select id="filter-type" name="type" class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface">
+            <select id="filter-type" name="type" class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 focus:outline-hidden focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface">
                 <option value="">{% translate 'All types' %}</option>
                 <option value="INCOME" {% if selected_type == 'INCOME' %}selected{% endif %}>{% translate 'Income' %}</option>
                 <option value="EXPENSE" {% if selected_type == 'EXPENSE' %}selected{% endif %}>{% translate 'Expense' %}</option>
@@ -73,7 +73,7 @@ GET search plus top-level/subcategory filtering.
             </button>
             {% if search_query or selected_level or selected_type %}
                 <a href="{{ list_url }}"
-                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted transition hover:text-forest dark:hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted transition hover:text-forest dark:hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
                      {{ clear_filters_label }}
                 </a>
             {% endif %}

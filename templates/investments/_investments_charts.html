@@ -33,7 +33,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Previous window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &larr;
                 </a>
                 <div>
@@ -52,7 +52,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Next window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &rarr;
                 </a>
                 </div>
@@ -119,7 +119,7 @@
 
                 <g data-chart-layer="investment-total-interactions">
                     {% for point in chart_total.points %}
-                        <g class="group outline-none" tabindex="0" data-point="{{ forloop.counter0 }}" data-series="0"
+                        <g class="group outline-hidden" tabindex="0" data-point="{{ forloop.counter0 }}" data-series="0"
                            aria-label="{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}">
                             <circle cx="{{ point.x }}" cy="{{ point.y }}" r="6" fill="transparent">
                                 <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}</title>
@@ -168,7 +168,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Previous window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &larr;
                 </a>
                 <div>
@@ -187,7 +187,7 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Next window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-none focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
                     &rarr;
                 </a>
                 </div>
@@ -254,7 +254,7 @@
                     {% for group in chart_flow.groups %}
                         {% for bar in group.bars %}
                             {% if bar.value %}
-                                <g class="group outline-none" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}"
+                                <g class="group outline-hidden" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}"
                                    aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
                                     <rect x="{{ bar.x }}" y="{{ bar.y }}"
                                           width="{{ bar.width }}" height="{{ bar.height }}" rx="2" fill="transparent">

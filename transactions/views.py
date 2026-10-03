@@ -81,7 +81,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = Transaction.objects.filter(user=self.request.user).select_related(
             'category', 'bank_account__bank', 'debit_card__account__bank',
-            'credit_card__account__bank'
+            'credit_card__account__bank', 'reward_redemption__target_account'
         )
 
         # FR17: free-text search across everything the row displays, so
@@ -91,7 +91,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
         # another user's data (PRD R3).
         search = self.request.GET.get('q', '').strip()
         if search:
-            queryset = queryset.filter(
+            matching = (
                 Q(title__icontains=search)
                 | Q(notes__icontains=search)
                 | Q(category__name__icontains=search)
@@ -104,6 +104,11 @@ class TransactionListView(LoginRequiredMixin, ListView):
                 | Q(credit_card__account__name__icontains=search)
                 | Q(credit_card__account__bank__name__icontains=search)
             )
+            # Generated titles are translated at display time, including the
+            # expenses backfilled from installations in either language.
+            if search.casefold() in _('IOF on reward redemption').casefold():
+                matching |= Q(reward_redemption__isnull=False)
+            queryset = queryset.filter(matching)
 
         self.filters = QueryDict(mutable=True)
         if search:
@@ -260,7 +265,7 @@ class TransactionExportView(LoginRequiredMixin, View):
             writer.writerow(export_row((
                 item.date.isoformat(),
                 billed_month.isoformat() if billed_month else '',
-                item.title,
+                item.display_title,
                 item.transaction_type,
                 item.category.name,
                 item.payment_channel,
@@ -327,6 +332,9 @@ class TransactionUpdateView(SuccessMessageMixin, TransactionFormMixin, UpdateVie
 
     success_message = gettext_lazy('Transaction "%(title)s" updated.')
 
+    def get_queryset(self):
+        return super().get_queryset().filter(reward_redemption__isnull=True)
+
     def form_valid(self, form):
         with db_transaction.atomic():
             response = super().form_valid(form)
@@ -343,7 +351,7 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('transactions:list')
 
     def get_queryset(self):
-        return Transaction.objects.filter(user=self.request.user)
+        return Transaction.objects.filter(user=self.request.user, reward_redemption__isnull=True)
 
     def form_valid(self, form):
         title = self.object.title

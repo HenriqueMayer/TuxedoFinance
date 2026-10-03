@@ -92,6 +92,16 @@ fallbacks. The approved report set is organized by source of truth:
 Charts must label actual versus projected values. Forecasts may include future
 recurrences and invoices but must not post them or alter today's ledger.
 
+Ctrl-opened composition rows link to the owned records contributing to that
+exact chart scope. A single source opens its existing editor or account context;
+multiple sources disclose dated links and their scoped amounts. Recurrences and
+installments link once to their original transaction, while generated IOF links
+to its source redemption. Opening investment positions link to the asset rather
+than inventing an operation. Source amounts reconcile to the existing aggregate,
+including fractional FX cents; missing conversions remain explicitly incomplete.
+Navigation retains the report period and browser Back/Forward context. See the
+[chart interaction contract](../frontend.md#previous-screen-continuity-and-balance-ranges).
+
 The twelve-month evolution window contains five months before its anchor and
 six after it. Its anchor can move at most five months beyond the current month,
 so the displayed window ends eleven months from now. The dashboard's six-month

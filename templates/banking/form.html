@@ -34,16 +34,12 @@
                 <div id="loyalty-cash-fields" data-has-errors="{{ form.cash_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.cash_amount %}</div>
             </div>
             {% include 'partials/form_field.html' with field=form.notes %}
+        {% elif form.iof_amount %}
+            {% include 'banking/_redemption_fields.html' %}
         {% else %}
             {% for field in form.visible_fields %}
-                {% if field.name == 'iof_account' or field.name == 'iof_credit_card' %}
-                    <div data-form-when="{{ form.iof_amount.id_for_label }}" data-form-value="positive" data-has-errors="{{ field.errors|yesno:'true,false' }}">
-                        {% include 'partials/form_field.html' with field=field %}
-                    </div>
-                {% else %}
-                    {% include 'partials/form_field.html' with field=field %}
-                    {% if field.name == 'color' %}<div data-bank-colors data-input-id="{{ field.id_for_label }}" data-color-label="{% translate 'Use color' %}" role="group" aria-label="{% translate 'Suggested colors' %}" class="flex flex-wrap gap-2"></div>{% endif %}
-                {% endif %}
+                {% include 'partials/form_field.html' with field=field %}
+                {% if field.name == 'color' %}<div data-bank-colors data-input-id="{{ field.id_for_label }}" data-color-label="{% translate 'Use color' %}" role="group" aria-label="{% translate 'Suggested colors' %}" class="flex flex-wrap gap-2"></div>{% endif %}
             {% endfor %}
         {% endif %}
         <div class="flex gap-3">
@@ -114,16 +110,6 @@
             updatePurchaseSource(false);
         });
         updateKindFields(false);
-    })();
-</script>
-{% endif %}
-{% if form.iof_amount %}
-<script>
-    (() => {
-        const account = document.getElementById('{{ form.iof_account.id_for_label }}');
-        const card = document.getElementById('{{ form.iof_credit_card.id_for_label }}');
-        account.addEventListener('change', () => { if (account.value) card.value = ''; });
-        card.addEventListener('change', () => { if (card.value) account.value = ''; });
     })();
 </script>
 {% endif %}

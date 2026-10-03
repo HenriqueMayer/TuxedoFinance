@@ -57,7 +57,10 @@ def commitment_snapshot(user, start_month, *, month_basis="payment_date"):
             'included': True, 'override': '',
         })
 
-    transactions = Transaction.objects.filter(user=user, transaction_type='EXPENSE').select_related(
+    # Keep the existing iof:<id> identity and scenario overrides after migration.
+    transactions = Transaction.objects.filter(
+        user=user, transaction_type='EXPENSE', reward_redemption__isnull=True,
+    ).select_related(
         'bank_account__bank', 'debit_card__account__bank', 'credit_card__account__bank',
     )
     for item in transactions:

@@ -33,6 +33,12 @@ class TransactionAdmin(admin.ModelAdmin):
     )
     date_hierarchy = 'date'
 
+    def has_change_permission(self, request, obj=None):
+        return not (obj and obj.reward_redemption_id) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return not (obj and obj.reward_redemption_id) and super().has_delete_permission(request, obj)
+
     @admin.display(description=_('Payment label'))
     def payment_label(self, transaction):
         return transaction.payment_label

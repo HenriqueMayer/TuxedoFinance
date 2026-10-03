@@ -51,7 +51,7 @@ class InstrumentMonthTests(DashboardFixture):
             self.assertEqual(response.context['recurrence_breakdown']['total'], Decimal('12'))
             details = response.context['instrument_selection']['points'][0]['details']
             for endpoint, cents in zip(details, ('3500', '500')):
-                self.assertEqual(self.client.get(endpoint).json()['rows'], [
+                self.assertEqual([{key: row[key] for key in ('label', 'cents')} for row in self.client.get(endpoint).json()['rows']], [
                     {'label': 'Groceries', 'cents': cents},
                 ])
             self.assertContains(response, 'September 2026')
@@ -82,7 +82,7 @@ class InstrumentMonthTests(DashboardFixture):
             self.assertEqual(response.context['instrument_next_month'], following)
             self.assertEqual(response.context['instrument_activity']['expense_total'], Decimal(amount))
             endpoint = response.context['instrument_selection']['points'][0]['details'][0]
-            self.assertEqual(self.client.get(endpoint).json()['rows'], [
+            self.assertEqual([{key: row[key] for key in ('label', 'cents')} for row in self.client.get(endpoint).json()['rows']], [
                 {'label': 'Groceries', 'cents': str(int(amount) * 100)},
             ])
 

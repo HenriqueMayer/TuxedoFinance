@@ -20,8 +20,8 @@ Every period control in this partial carries `hx-get` /
 goes through and the URL updates without a full page load; without it
 the same link is a normal GET that renders the full reports page.
 
-Chart marks select values directly without navigation. Ctrl-hover composition
-uses signed scopes containing stable record IDs rather than display labels.
+Chart marks select values directly without navigation. Ctrl opens persistent
+composition panels using signed scopes with stable record IDs rather than labels.
 
 Design tokens (PRD §9.1): the `tone` values coming out of charts.py
 are mapped to Tailwind classes here so the design system stays in the
@@ -118,7 +118,7 @@ conventions this partial inherits.
 
                 <g data-chart-layer="balance-interactions">
                     {% for point in balance_chart.points %}
-                        <g class="group outline-none" tabindex="0" data-point="{{ forloop.counter0 }}" data-series="0"
+                        <g class="group outline-hidden" tabindex="0" data-point="{{ forloop.counter0 }}" data-series="0"
                            aria-label="{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate 'projected' %}){% endif %}">
                             <circle cx="{{ point.x }}" cy="{{ point.y }}" r="6" fill="transparent">
                                 <title>{{ point.label.date|date:'F Y' }}: {{ CURRENCY_SYMBOL }} {{ point.value|floatformat:2 }}{% if point.label.is_future %} ({% translate "projected" %}){% endif %}</title>
@@ -221,7 +221,7 @@ conventions this partial inherits.
                     {% for group in cashflow_chart.groups %}
                         {% for bar in group.bars %}
                             {% if bar.value %}
-                                <g class="group outline-none" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}"
+                                <g class="group outline-hidden" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}"
                                    aria-label="{{ group.label.date|date:'F Y' }} · {{ bar.name }}: {{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}">
                                     <rect x="{{ bar.x }}" y="{{ bar.y }}"
                                           width="{{ bar.width }}" height="{{ bar.height }}" rx="2"
@@ -297,7 +297,7 @@ conventions this partial inherits.
 
                     <g data-chart-layer="recurrence-interactions">
                         {% for segment in recurrence_chart.segments %}
-                            <g class="group outline-none" tabindex="0" data-point="{{ forloop.counter0 }}" data-series="0"
+                            <g class="group outline-hidden" tabindex="0" data-point="{{ forloop.counter0 }}" data-series="0"
                                aria-label="{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:'-1' }}%)">
                                 <path d="{{ segment.d }}" fill="transparent">
                                     <title>{{ segment.name }}: {{ CURRENCY_SYMBOL }} {{ segment.value|floatformat:2 }} ({{ segment.share|floatformat:"-1" }}%)</title>
@@ -404,7 +404,7 @@ conventions this partial inherits.
                                 {% for bar in group.bars %}
                                     {% if bar.value %}
                                         {% if bar.tone == 'expense' %}
-                                            <g class="group cursor-pointer outline-none" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}">
+                                            <g class="group cursor-pointer outline-hidden" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}">
                                                 <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2" fill="transparent">
                                                     <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Expenses for {{ label }}: {{ currency }} {{ total }}.{% endblocktranslate %}</title>
                                                 </rect>
@@ -419,7 +419,7 @@ conventions this partial inherits.
                                                 </g>
                                             </g>
                                         {% else %}
-                                            <g class="group cursor-pointer outline-none" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}">
+                                            <g class="group cursor-pointer outline-hidden" tabindex="0" data-point="{{ group.selection_index }}" data-series="{{ bar.selection_series }}">
                                                 <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="2" fill="transparent">
                                                     <title>{% blocktranslate with label=group.label.label currency=CURRENCY_SYMBOL total=bar.value|floatformat:2 %}Income for {{ label }}: {{ currency }} {{ total }}.{% endblocktranslate %}</title>
                                                 </rect>

@@ -17,7 +17,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-3">
             <details class="relative" data-export-menu hx-boost="false">
-                <summary class="cursor-pointer list-none rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-none focus:ring-2 focus:ring-caramel">
+                <summary class="cursor-pointer list-none rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-hidden focus:ring-2 focus:ring-caramel">
                     {% translate "Export CSV" %}
                 </summary>
                 <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-forest/10 dark:bg-night-surface dark:ring-cream/10">
@@ -26,13 +26,13 @@
                     <form action="{{ export_url }}" method="get" hx-boost="false" class="space-y-2">
                         <label for="export-month" class="field-label">{% translate "Billed month" %}</label>
                         <input id="export-month" type="month" name="month" required
-                               class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3 py-2 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                               class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3 py-2 text-forest dark:text-cream focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
                         <label for="export-format" class="block text-xs font-medium text-forest/70 dark:text-night-muted">{% translate "CSV format" %}</label>
                         <select id="export-format" name="format" class="w-full rounded-xl border border-forest/30 px-3 py-2 dark:border-cream/30 dark:bg-night-surface">
                             <option value="raw">{% translate "Raw CSV" %}</option>
                             <option value="spreadsheet">{% translate "Spreadsheet CSV" %}</option>
                         </select>
-                        <button type="submit" class="w-full rounded-full bg-caramel px-3 py-2 text-xs font-medium uppercase tracking-widest text-forest-deep transition hover:bg-caramel-light focus:outline-none focus:ring-2 focus:ring-caramel">{% translate "Export selected month" %}</button>
+                        <button type="submit" class="w-full rounded-full bg-caramel px-3 py-2 text-xs font-medium uppercase tracking-widest text-forest-deep transition hover:bg-caramel-light focus:outline-hidden focus:ring-2 focus:ring-caramel">{% translate "Export selected month" %}</button>
                     </form>
                 </div>
             </details>
@@ -51,11 +51,11 @@
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
             <div class="min-w-0 space-y-1.5">
                 <label for="filter-search" class="field-label">{% translate "Search" %}</label>
-                <input type="search" id="filter-search" name="q" value="{{ search_query }}" placeholder="{% translate 'Title, notes, category, bank, account or card' %}" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                <input type="search" id="filter-search" name="q" value="{{ search_query }}" placeholder="{% translate 'Title, notes, category, bank, account or card' %}" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
             </div>
             <div class="min-w-0 space-y-1.5">
                 <label for="filter-category" class="field-label">{% translate "Category" %}</label>
-                <select data-search-select id="filter-category" name="category" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                <select data-search-select id="filter-category" name="category" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
                     <option value="">{% translate "All categories" %}</option>
                     {% comment %}Identifiers must not inherit monetary thousands separators.{% endcomment %}
                     {% for category in category_choices %}
@@ -65,7 +65,7 @@
             </div>
             <div class="min-w-0 space-y-1.5">
                 <label for="filter-month" class="field-label">{% translate "Billed month" %}</label>
-                <input type="month" id="filter-month" name="month" value="{{ selected_month }}" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-none focus:ring-2 focus:ring-caramel">
+                <input type="month" id="filter-month" name="month" value="{{ selected_month }}" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
             </div>
         </div>
 
@@ -110,7 +110,7 @@
             <div class="min-w-0 flex-1 space-y-1.5">
                 <label for="filter-sort" class="block text-sm text-forest/70 dark:text-night-muted">{% translate "Sort by" %}</label>
                 <select id="filter-sort" name="sort"
-                        class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-none focus:ring-2 focus:ring-caramel/40">
+                        class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
                     <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>{% translate "Newest first" %}</option>
                     <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>{% translate "Oldest first" %}</option>
                     <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>{% translate "Last updated" %}</option>
@@ -129,7 +129,7 @@
                     <li class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
                         <div class="space-y-1">
                             <div class="flex flex-wrap items-center gap-2">
-                                <p class="text-base font-medium">{{ transaction.title }}</p>
+                                <p class="text-base font-medium">{{ transaction.display_title }}</p>
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
                                     {% if transaction.transaction_type == 'INCOME' %}bg-income/10 dark:bg-income-light/15 text-income dark:text-income-light
                                     {% elif transaction.transaction_type == 'EXPENSE' %}bg-expense/10 dark:bg-expense/15 text-expense dark:text-expense-light
@@ -174,6 +174,10 @@
                                 {% endif %}
                             </div>
                             <div class="flex items-center gap-3">
+                                {% if transaction.reward_redemption_id %}
+                                    <span class="subtle-copy">{% translate 'Managed by reward redemption' %}</span>
+                                    <a href="{% url 'banking:detail' transaction.reward_redemption.target_account.bank_id %}#reward-redemption-{{ transaction.reward_redemption_id|stringformat:'d' }}" class="quiet-action">{% translate 'View redemption' %}</a>
+                                {% else %}
                                 <a href="{% url 'transactions:update' transaction.pk %}"
                                    class="quiet-action">
                                     {% translate "Edit" %}
@@ -182,6 +186,7 @@
                                    class="quiet-action text-expense dark:text-expense-light">
                                     {% translate "Delete" %}
                                 </a>
+                                {% endif %}
                             </div>
                         </div>
                     </li>
