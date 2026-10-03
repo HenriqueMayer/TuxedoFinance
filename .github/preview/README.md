@@ -29,6 +29,11 @@ yield scenario without saving a draft or creating financial operations.
 
 ## Commands
 
+Repository and quick-start links open a separate tab with `noopener noreferrer`.
+This keeps GitHub outside the tour iframe, since GitHub does not allow framing.
+Embedding sites must allow `allow-popups allow-popups-to-escape-sandbox` in
+addition to the script and origin permissions used by the tour.
+
 For local browsing, open `preview/index.html` or `preview/pt-br/index.html`
 directly. Language links include `index.html` so they also work with `file://`
 and JavaScript disabled. If an embedded browser blocks local files, serve the

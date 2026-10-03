@@ -7,6 +7,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Open repository and quick-start links from the bilingual static tour in a separate tab, including when the tour is embedded in a sandboxed portfolio preview.
+
 ## [0.9.0] - 2026-09-28
 
 ### Added

@@ -161,3 +161,33 @@ test('mobile tour remains readable without horizontal overflow', async ({ page }
     }
     await expectScreenshots(page, 'pt-br');
 });
+
+
+test('embedded tours open repository links outside their sandbox without leaving the preview', async ({ page }) => {
+    await page.context().route('https://github.com/HenriqueMayer/TuxedoFinance**', route => route.fulfill({
+        contentType: 'text/html', body: '<h1>Repository destination</h1>',
+    }));
+    for (const [source, labels] of [
+        ['/index.html', ['View repository', 'Run locally']],
+        ['/pt-br/index.html', ['Ver repositório', 'Executar localmente']],
+    ]) {
+        await page.route('**/embedded-tour-test.html', route => route.fulfill({
+            contentType: 'text/html',
+            body: `<iframe title="Tour" src="${source}" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>`,
+        }));
+        await page.goto('/embedded-tour-test.html');
+        const tour = page.frameLocator('iframe');
+        for (const label of labels) {
+            const popupPromise = page.waitForEvent('popup');
+            await tour.getByRole('link', { name: label, exact: true }).click();
+            const popup = await popupPromise;
+            await expect(popup.getByRole('heading')).toHaveText('Repository destination');
+            expect(popup.url()).toContain('https://github.com/HenriqueMayer/TuxedoFinance');
+            expect(await popup.evaluate(() => window.opener === null)).toBe(true);
+            await expect(tour.getByRole('heading', { level: 1 })).toBeVisible();
+            await expect(page).toHaveURL(/embedded-tour-test\.html$/);
+            await popup.close();
+        }
+        await page.unroute('**/embedded-tour-test.html');
+    }
+});
