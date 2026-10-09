@@ -130,8 +130,8 @@ available starting with `v0.9.0`.
 ## ✨ Features
 
 These features are included in [v0.10.0](CHANGELOG.md#0100---2026-10-09).
-This release makes reward-redemption IOF visible as a protected transaction and
-improves chart composition controls and navigation to contributing operations.
+This release clarifies current and historical investment currency conversions,
+adds reversible asset archiving and extends operation filters and navigation.
 Existing Docker installations must select the new image version and follow the
 [update procedure](docs/docker.md#update) to receive them.
 

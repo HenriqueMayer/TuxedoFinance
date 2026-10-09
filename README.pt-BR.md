@@ -132,8 +132,8 @@ O comando está disponível a partir da `v0.9.0`.
 ## ✨ Funcionalidades
 
 Estes recursos estão incluídos na [v0.10.0](CHANGELOG.md#0100---2026-10-09).
-Esta versão exibe o IOF de resgates de pontos como uma transação protegida e
-melhora os controles da composição dos gráficos e o acesso às operações do total.
+Esta versão esclarece as conversões de moeda atuais e históricas de investimentos,
+adiciona o arquivamento reversível de ativos e amplia os filtros e o acesso às operações.
 Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 [procedimento de atualização](docs/docker.md#update) para recebê-los.
 
