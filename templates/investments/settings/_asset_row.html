@@ -1,0 +1,21 @@
+{% load i18n l10n %}
+<li id="asset-{{ asset.pk|unlocalize }}" class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <strong class="text-base font-semibold">{{ asset.name }} ({{ asset.code }})</strong>
+        <p class="subtle-copy mt-1">{% blocktranslate count count=asset.operation_count with class=asset.get_asset_class_display currency=asset.currency %}{{ class }} / {{ currency }} - {{ count }} operation{% plural %}{{ class }} / {{ currency }} - {{ count }} operations{% endblocktranslate %}</p>
+        {% if asset.has_opening_position or asset.operation_count %}
+            <p class="subtle-copy mt-1">{% if asset.has_opening_position %}{% translate 'Opening position protected' %}{% else %}{% translate 'Investment history protected' %}{% endif %}</p>
+        {% endif %}
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+        <a class="quiet-action" href="{% url 'investments:update_asset' asset.pk %}">{% translate 'Edit' %}</a>
+        {% if asset.is_archived %}{% url 'investments:restore_asset' asset.pk as archive_url %}{% else %}{% url 'investments:archive_asset' asset.pk as archive_url %}{% endif %}
+        <form method="post" action="{{ archive_url }}" hx-boost="true" hx-request='{"noHeaders":false}' novalidate>
+            {% csrf_token %}
+            <button id="asset-availability-{{ asset.pk|unlocalize }}" type="submit" class="quiet-action">{% if asset.is_archived %}{% translate 'Restore' %}{% else %}{% translate 'Archive' %}{% endif %}</button>
+        </form>
+        {% if not asset.has_opening_position and not asset.operation_count %}
+            <a class="quiet-action text-expense dark:text-expense-light" href="{% url 'investments:delete_asset' asset.pk %}">{% translate 'Delete' %}</a>
+        {% endif %}
+    </div>
+</li>

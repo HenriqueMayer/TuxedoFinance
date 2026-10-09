@@ -10,13 +10,12 @@
         {% translate "Operation history" %}
     </h2>
 
-    <form method="get"
+    <form method="get" novalidate
           action="{{ list_url }}#investment-movements"
           hx-get="{{ list_url }}"
           hx-target="#investment-movements"
-          hx-swap="outerHTML"
+          hx-swap="outerHTML show:none"
           hx-push-url="true"
-          data-scroll-target="investment-movements"
           class="grid gap-3 border-y border-forest/15 py-5 sm:grid-cols-2 lg:grid-cols-6 dark:border-cream/15">
         <div class="space-y-1.5 lg:col-span-2">
             <label for="investment-purpose" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate 'Purpose' %}</label>
@@ -83,19 +82,28 @@
                 {% endfor %}
             </select>
         </div>
+        {# Active criteria and invalid submissions keep the disclosure open. #}
+        <details id="investment-extra-filters" class="sm:col-span-2 lg:col-span-6"{% if has_extra_filters %} open{% endif %}>
+            <summary class="cursor-pointer text-sm font-medium">{% translate 'More filters' %}</summary>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                <div class="lg:col-span-2">{% include 'partials/form_field.html' with field=operation_filter.currency %}</div>
+                <div class="lg:col-span-2">{% include 'partials/form_field.html' with field=operation_filter.asset_class %}</div>
+                <div>{% include 'partials/form_field.html' with field=operation_filter.date_from %}</div>
+                <div>{% include 'partials/form_field.html' with field=operation_filter.date_to %}</div>
+            </div>
+        </details>
         <div class="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-6">
             <button type="submit"
-                    data-scroll-target="investment-movements"
+                    id="investment-filter-submit"
                     class="quiet-action">
                 {% translate 'Filter' %}
             </button>
-            {% if search_query or selected_kind or selected_bank or selected_product or selected_asset or selected_purpose %}
+            {% if search_query or selected_kind or selected_bank or selected_product or selected_asset or selected_purpose or has_extra_filters %}
                 <a href="{{ list_url }}#investment-movements"
                    hx-get="{{ list_url }}"
                    hx-target="#investment-movements"
-                   hx-swap="outerHTML"
+                   hx-swap="outerHTML show:none"
                    hx-push-url="true"
-                   data-scroll-target="investment-movements"
                    class="quiet-action">
                     {% translate "Clear filters" %}
                 </a>

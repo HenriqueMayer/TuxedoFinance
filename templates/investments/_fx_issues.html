@@ -1,0 +1,27 @@
+{% load i18n %}
+{% if chart_fx_issues %}
+<div id="investment-chart-fx-warning" class="space-y-3 text-sm">
+    <p role="status" class="text-expense dark:text-expense-light">{% translate 'Historical conversion incomplete. Native positions are preserved; the charts show only values with conversion evidence.' %}</p>
+    <details>
+        <summary class="cursor-pointer font-medium">{% translate 'Review conversion details' %}</summary>
+        <ul class="mt-4 space-y-4">
+            {% for issue in chart_fx_issues %}
+            <li class="space-y-2">
+                <p class="font-medium">{{ issue.asset.name }} · {{ issue.currency }}/{{ issue.base_currency }}</p>
+                {% if issue.reason == 'opening' %}
+                    <p class="subtle-copy">{% blocktranslate with date=issue.date|date:USER_DATE_FORMAT %}Opening position: register a rate on or before {{ date }}, the start of this chart window.{% endblocktranslate %}</p>
+                {% elif issue.reason == 'base' %}
+                    <p class="subtle-copy">{% blocktranslate with date=issue.date|date:USER_DATE_FORMAT currency=issue.snapshot_target %}Operation on {{ date }}: its conversion was recorded in {{ currency }}. Restore that reporting currency in Settings to use the saved evidence.{% endblocktranslate %}</p>
+                {% else %}
+                    <p class="subtle-copy">{% blocktranslate with date=issue.date|date:USER_DATE_FORMAT %}Operation on {{ date }}: register a rate on or before this date, then record the missing conversion in its editor.{% endblocktranslate %}</p>
+                {% endif %}
+                <div class="flex flex-wrap gap-3">
+                    {% if issue.reason == 'base' %}<a class="quiet-action" href="{% url 'accounts:settings' %}">{% translate 'Settings' %}</a>{% else %}<a class="quiet-action" href="{{ issue.rate_url }}">{% translate 'Register exchange rate' %}</a>{% endif %}
+                    {% if issue.operation_url %}<a class="quiet-action" href="{{ issue.operation_url }}">{% translate 'Open operation' %}</a>{% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </details>
+</div>
+{% endif %}

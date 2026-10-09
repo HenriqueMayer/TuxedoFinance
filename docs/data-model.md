@@ -277,6 +277,9 @@ Editing an amount, currency, fees, or date refreshes its snapshot, while
 descriptive edits leave it unchanged. If the reporting currency later differs
 from the stored snapshot target, historical consolidation is marked incomplete;
 the application does not chain a mutable second rate or replace the evidence.
+Values already in the selected reporting currency need no conversion. An
+explicit editor choice may capture previously unknown investment evidence
+after a dated owned rate is registered; it never replaces a captured snapshot.
 
 ### User preference migration and rollback
 
@@ -307,6 +310,14 @@ available for later withdrawals and also has no linked bank movement.
 | `InvestmentProduct` | owner, `bank`, name, yield mode. |
 | `Asset` | owner, name, code, `asset_class`, currency, valuation mode. |
 | `Investment` | owner, product, asset, kind and date; valuation and funding fields depend on the selected modes. |
+
+`Asset.is_archived` defaults to false. It controls availability in the active
+catalog, new-operation choices and visible current position rows. Accounting
+positions, totals, history, charts and planning still include archived assets;
+current-position views filter rows only after valuation. Owner-scoped POSTs archive/restore assets;
+existing operation editors may retain their current archived asset. Archived
+assets keep their code uniqueness and deletion protection. Assets without any
+opening-position component or operation history can be permanently deleted.
 
 `asset_class` is mandatory: `LIQUIDITY`, `CURRENCY`, `CRYPTO`, `FIXED_INCOME`,
 `EQUITY`, or `OTHER`. An `Investment` has no `title`; identity comes from

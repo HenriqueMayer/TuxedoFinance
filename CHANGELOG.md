@@ -7,6 +7,28 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-09
+
+### Fixed
+
+- Clarify native updates: back up the active database and apply pending migrations before restarting, so shared dashboard, bank and investment queries use the current schema.
+- Separate current investment totals from historical FX gaps, disclose native values and applied rates, and provide dated recovery links and explicit capture of missing historical conversions without replacing saved evidence.
+- Keep native-currency investment history available after changing the reporting currency, and skip unnecessary conversion for zero current positions.
+
+### Added
+
+- Delete unused investment assets or archive and restore assets while preserving opening positions, operations and portfolio totals; hide archived assets from Portfolio and Remunerated cash position lists and new entries while retaining historical editors and filters.
+- Add investment operation filters for dates, currency and asset class, with retained validation errors, plus position-scoped history and product shortcuts for new operations.
+- Document an investment review and a sourced Pierre Finance comparison, including remaining valuation limitations and proposed priorities.
+
+### Changed
+
+- Add the `Asset.is_archived` field with a false default, preserving existing assets and financial records; native installations must apply migrations before restarting. Rehearse container upgrades from v0.3.0, v0.4.0, v0.9.0 and v0.9.1 before publication.
+
+### Security
+
+- Update the CSS development dependency `source-map-js` to 1.2.2, resolving GHSA-68fv-2mgg-jv7q while preserving compiled styles.
+
 ## [0.9.1] - 2026-10-03
 
 ### Fixed
@@ -297,7 +319,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.1...v0.8.2

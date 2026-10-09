@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="Status da integração contínua"></a>
-  <img src="https://img.shields.io/badge/version-0.9.1-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.9.1">
+  <img src="https://img.shields.io/badge/version-0.10.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.10.0">
   <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
   <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Interface em inglês e português do Brasil">
@@ -53,14 +53,14 @@ um banco SQLite sob controle do responsável pela instalação.
 ### Docker
 
 Requer Docker Engine 28+ (ou Docker Desktop atualizado) e Compose v2+.
-Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.9.1/compose.yaml)
-e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.9.1/docker.env.example)
-da [release v0.9.1](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.9.1)
+Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/compose.yaml)
+e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/docker.env.example)
+da [release v0.10.0](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.10.0)
 para uma nova pasta de instalação. Abra um terminal nessa pasta e execute os comandos.
 Não é necessário clonar o repositório nem instalar Python, uv ou Node.js no computador:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.9.1
+image=ghcr.io/henriquemayer/tuxedofinance:v0.10.0
 docker pull "$image"
 (
   umask 077
@@ -104,9 +104,12 @@ qualquer arquivo e chave existentes. Os comandos nativos de migração e servido
 do banco com permissões exclusivas do proprietário. `.env` e `db.sqlite3` são
 ignorados pelo Git.
 Consulte o [guia de operações](docs/operations.md) para backup e restauração.
-Em uma instalação existente, preserve a chave e o banco de dados e reinicie com:
+Após atualizar o código, siga o [procedimento de atualização local](docs/operations.md#updating-a-native-installation).
+Preserve a chave e o banco de dados da instalação; faça backup do banco em uso
+antes de aplicar novas migrações. Reinicie com:
 
 ```bash
+uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
@@ -128,9 +131,9 @@ O comando está disponível a partir da `v0.9.0`.
 
 ## ✨ Funcionalidades
 
-Estes recursos estão incluídos na [v0.9.1](CHANGELOG.md#091---2026-10-03).
-Esta versão exibe o IOF de resgates de pontos como uma transação protegida e
-melhora os controles da composição dos gráficos e o acesso às operações do total.
+Estes recursos estão incluídos na [v0.10.0](CHANGELOG.md#0100---2026-10-09).
+Esta versão esclarece as conversões de moeda atuais e históricas de investimentos,
+adiciona o arquivamento reversível de ativos e amplia os filtros e o acesso às operações.
 Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 [procedimento de atualização](docs/docker.md#update) para recebê-los.
 
@@ -140,7 +143,7 @@ Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 | 🧾 **Transações** | Receitas e despesas, categorias, formas de pagamento, recorrências fixas, parcelas, contagens por tipo, filtros por categoria/recorrência e CSV fiel ou preparado para planilhas. |
 | 🏦 **Bancos** | Contas por moeda, cartões, faturas, transferências e fidelidade, com exclusão de contas e reservas parciais para o planejamento mensal. |
 | 📈 **Relatórios** | Gráficos SVG responsivos renderizados no servidor, resumos acessíveis e atualizações progressivas com HTMX. |
-| 💼 **Investimentos** | Finalidades separadas de investimento e caixa mensal, aportes/resgates/rendimentos manuais, posições iniciais, preços unitários, histórico de câmbio e gráficos dedicados. |
+| 💼 **Investimentos** | Finalidades separadas de investimento e caixa mensal, aportes/resgates/rendimentos manuais, posições iniciais, preços unitários, exclusão ou arquivamento reversível de ativos, diagnóstico de câmbio por data, gráficos dedicados e filtros de operações por período, moeda e classe de ativo. |
 | 🧮 **Planejamento** | Planejamento mensal com salário líquido CLT, consulta às faixas tributárias, parâmetros de folha, previsão de despesas existente, despesas adicionais em R$ ou percentual do salário bruto e rascunhos salvos, além de simulações editáveis de aportes e rendimentos. |
 | 🌍 **Localização** | Inglês e português do Brasil, moeda de apresentação independente (BRL, USD, EUR, GBP, JPY, CHF) e preferência de formato de data. |
 | 🌗 **Interface** | Temas claro e escuro, navegação por teclado, campos condicionais, validação no servidor e formulários funcionais sem JavaScript. |

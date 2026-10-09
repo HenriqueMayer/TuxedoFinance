@@ -14,6 +14,9 @@
 
     <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}
+        {% if form.instance.is_archived %}
+            <p class="subtle-copy">{% translate 'This asset is archived. Restore it in Investment Settings to record new operations.' %}</p>
+        {% endif %}
         {% if form.non_field_errors %}
             {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         {% endif %}

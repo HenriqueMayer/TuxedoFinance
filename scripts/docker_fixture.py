@@ -97,7 +97,7 @@ CHECK_DEFAULTS = r'''
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from banking.models import Bank, BankAccount
-from investments.models import InvestmentProduct
+from investments.models import Asset, InvestmentProduct
 user = get_user_model().objects.get(username='docker-persistence')
 assert user.check_password('Disposable-upgrade-check-2026!')
 if hasattr(BankAccount, 'planning_enabled'):
@@ -105,6 +105,8 @@ if hasattr(BankAccount, 'planning_enabled'):
     assert not BankAccount.objects.exclude(reserved_amount=Decimal('0')).exists()
 if hasattr(InvestmentProduct, 'Purpose'):
     assert not InvestmentProduct.objects.exclude(purpose=InvestmentProduct.Purpose.INVESTMENT).exists()
+if any(field.name == 'is_archived' for field in Asset._meta.fields):
+    assert not Asset.objects.filter(is_archived=True).exists()
 if any(field.name == 'color' for field in Bank._meta.fields):
     assert not Bank.objects.exclude(color='#B88D57').exists()
 '''

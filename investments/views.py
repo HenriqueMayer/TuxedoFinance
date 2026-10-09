@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -9,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Count, ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.text import format_lazy
 from django.utils.translation import gettext as _, gettext_lazy
@@ -17,10 +18,11 @@ from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
 
 from banking.models import Bank
-from banking.services import MissingExchangeRate, convert
+from banking.services import MissingExchangeRate, convert, latest_exchange_rate
 from dashboard.selection import selection_data, attach_details
 from dashboard.charts import build_bar_chart, build_line_chart
-from investments.forms import AssetForm, InvestmentForm, InvestmentProductForm, InvestmentChartFilterForm
+from investments.forms import (AssetForm, InvestmentForm, InvestmentProductForm,
+                               InvestmentChartFilterForm, InvestmentOperationFilterForm)
 from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import (
     TIMESERIES_MONTHS,
@@ -58,13 +60,42 @@ def _parse_offset(request, name):
 def _investment_setup(user):
     has_bank = Bank.objects.filter(user=user).exists()
     has_products = InvestmentProduct.objects.filter(user=user, bank__user=user).exists()
-    has_assets = Asset.objects.filter(user=user).exists()
+    has_assets = Asset.objects.filter(user=user, is_archived=False).exists()
     return {
         'has_bank': has_bank,
         'has_products': has_products,
         'has_assets': has_assets,
         'setup_complete': has_bank and has_products and has_assets,
     }
+
+
+def _historical_fx_issues(issues, base):
+    rows = {}
+    for issue in issues:
+        operation = issue.get('operation')
+        asset = operation.asset if operation else issue['asset']
+        key = (bool(operation), operation.pk if operation else asset.pk, issue['date'])
+        row = {
+            'asset': asset, 'date': issue['date'], 'currency': asset.currency,
+            'base_currency': base,
+            'rate_url': reverse('banking:exchange_rate_create') + '?' + urlencode({
+                'from_currency': asset.currency, 'to_currency': base,
+                'effective_date': issue['date'].isoformat(),
+            }),
+        }
+        if operation:
+            row['operation_url'] = reverse('investments:update', args=[operation.pk])
+            row['snapshot_target'] = operation.fx_target_currency
+            has_evidence = operation.fx_snapshot_status in {
+                Investment.FxSnapshotStatus.CAPTURED, Investment.FxSnapshotStatus.RECONSTRUCTED,
+            }
+            row['reason'] = 'base' if has_evidence and operation.fx_target_currency != base else 'snapshot'
+            if not operation.fx_target_currency:
+                row['reason'] = 'rate'
+        else:
+            row['reason'] = 'opening'
+        rows[key] = row
+    return sorted(rows.values(), key=lambda row: (row['date'], row['currency'], row['asset'].name))
 
 
 class InvestmentListView(LoginRequiredMixin, TemplateView):
@@ -80,6 +111,13 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
         )
 
     def get(self, request, *args, **kwargs):
+        if request.headers.get('HX-Target') == 'investments-charts':
+            # Older open pages still request chart islands from the former
+            # combined workspace; preserve their scope without computing cash.
+            query = request.GET.copy()
+            query.setdefault('scope', 'cash' if query.get('section') == 'cash' else 'portfolio')
+            request.GET = query
+            return InvestmentChartsView.as_view()(request, *args, **kwargs)
         movement_request = request.headers.get('HX-Target') == 'investment-movements'
         if movement_request or any(key in request.GET for key in ('page', 'q', 'kind', 'bank', 'product', 'asset')):
             query = request.GET.copy()
@@ -99,42 +137,89 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         context.update(_investment_setup(user))
         base = UserPreference.for_user(user).base_currency
-        total = Decimal('0.00')
+        today = timezone.localdate()
+        total = Decimal('0')
         missing = set()
-        purpose = self.get_purpose()
-
-        total_offset = _parse_offset(self.request, 'total_offset')
-        flow_offset = _parse_offset(self.request, 'flow_offset')
-        total_rows, total_missing = get_total_in_base_timeseries(
-            user, base, months=TIMESERIES_MONTHS, offset=total_offset, purpose=purpose,
-        )
-        flow_rows, flow_missing = get_monthly_flow_in_base(
-            user, base, months=TIMESERIES_MONTHS, offset=flow_offset, purpose=purpose,
-        )
-        portfolio_groups = get_portfolio_groups(user, purpose=purpose)
-        portfolio_missing = set()
+        native_totals = {}
+        rates = {}
+        portfolio_groups = get_portfolio_groups(user, purpose=self.get_purpose())
+        # Current positions must not inherit missing FX from an unrelated
+        # historical chart window. Zero balances need no exchange rate.
         for bank in portfolio_groups:
             for product in bank['products']:
                 for asset in product['assets']:
+                    currency = asset['currency']
+                    native_totals[currency] = native_totals.get(currency, Decimal('0')) + asset['balance']
                     try:
-                        asset['base_balance'] = convert(
-                            user, asset['balance'], asset['currency'], base
-                        )
+                        asset['base_balance'] = convert(user, asset['balance'], currency, base) if asset['balance'] else Decimal('0')
                         total += asset['base_balance']
+                        if currency != base and asset['balance'] and currency not in rates:
+                            rate = latest_exchange_rate(user, currency, base) or latest_exchange_rate(user, base, currency)
+                            rates[currency] = rate
                     except MissingExchangeRate:
                         asset['base_balance'] = None
-                        portfolio_missing.add(asset['currency'])
-        today = timezone.localdate()
+                        missing.add(currency)
+        # Archiving hides current position rows, not money: value every holding
+        # before filtering the display, and keep accounting/history queries intact.
+        visible_groups = []
+        has_archived_positions = False
+        for bank in portfolio_groups:
+            visible_products = []
+            for product in bank['products']:
+                assets = [asset for asset in product['assets'] if not asset['is_archived']]
+                has_archived_positions |= len(assets) != len(product['assets'])
+                if assets:
+                    visible_products.append({**product, 'assets': assets})
+            if visible_products:
+                visible_groups.append({**bank, 'products': visible_products})
         context.update({
             'selected_section': self.get_section(),
-            'portfolio_groups': portfolio_groups,
+            'portfolio_groups': visible_groups,
+            'has_archived_positions': has_archived_positions,
             'simulated_total': total.quantize(Decimal('0.01')),
-            'missing_rate_currencies': sorted(
-                missing | set(total_missing) | set(flow_missing) | portfolio_missing
-            ),
-            'chart_missing_rate_currencies': sorted(set(total_missing) | set(flow_missing)),
+            'missing_rate_currencies': sorted(missing),
+            'native_totals': sorted(native_totals.items()),
+            'valuation_rates': list(rates.values()),
             'base_currency': base,
             'has_investments': bool(portfolio_groups),
+            'today': today,
+        })
+        return context
+
+
+class InvestmentChartsView(InvestmentListView):
+    template_name = 'investments/charts.html'
+
+    def get(self, request, *args, **kwargs):
+        return TemplateView.get(self, request, *args, **kwargs)
+
+    def get_purpose(self):
+        return {'portfolio': InvestmentProduct.Purpose.INVESTMENT,
+                'cash': InvestmentProduct.Purpose.MONTHLY_CASH}.get(self.request.GET.get('scope'))
+
+    def get_context_data(self, **kwargs):
+        context = TemplateView.get_context_data(self, **kwargs)
+        user = self.request.user
+        context.update(_investment_setup(user))
+        base = UserPreference.for_user(user).base_currency
+        today = timezone.localdate()
+        purpose = self.get_purpose()
+        total_offset = _parse_offset(self.request, 'total_offset')
+        flow_offset = _parse_offset(self.request, 'flow_offset')
+        fx_issues = []
+        total_rows, total_missing = get_total_in_base_timeseries(
+            user, base, months=TIMESERIES_MONTHS, offset=total_offset,
+            purpose=purpose, fx_issues=fx_issues,
+        )
+        flow_rows, flow_missing = get_monthly_flow_in_base(
+            user, base, months=TIMESERIES_MONTHS, offset=flow_offset,
+            purpose=purpose, fx_issues=fx_issues,
+        )
+        context.update({
+            'selected_section': 'charts',
+            'base_currency': base,
+            'chart_missing_rate_currencies': sorted(set(total_missing) | set(flow_missing)),
+            'chart_fx_issues': _historical_fx_issues(fx_issues, base),
             'chart_total': build_line_chart(total_rows, [float(row['total']) for row in total_rows]),
             'chart_flow': build_bar_chart(flow_rows, [
                 {'name': _('Deposits'), 'tone': 'income', 'values': [float(row['deposits']) for row in flow_rows]},
@@ -165,25 +250,7 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
             context[f'{prefix}_anchor_date'] = date(year, month, 1)
             context[f'{prefix}_window_start_date'] = rows[0]['date']
             context[f'{prefix}_window_end_date'] = rows[-1]['date']
-        return context
-
-
-class InvestmentChartsView(InvestmentListView):
-    template_name = 'investments/charts.html'
-
-    def get(self, request, *args, **kwargs):
-        return TemplateView.get(self, request, *args, **kwargs)
-
-    def get_section(self):
-        return 'charts'
-
-    def get_purpose(self):
-        return {'portfolio': InvestmentProduct.Purpose.INVESTMENT,
-                'cash': InvestmentProduct.Purpose.MONTHLY_CASH}.get(self.request.GET.get('scope'))
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['chart_scope'] = self.request.GET.get('scope', '') if self.get_purpose() else ''
+        context['chart_scope'] = self.request.GET.get('scope', '') if purpose else ''
         context['chart_filter'] = InvestmentChartFilterForm(initial={'scope': context['chart_scope']})
         return context
 
@@ -228,6 +295,16 @@ class InvestmentOperationsView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(product_id=product)
         if asset.isdigit():
             queryset = queryset.filter(asset_id=asset)
+        self.operation_filter = InvestmentOperationFilterForm(self.request.GET, user=self.request.user)
+        if self.operation_filter.is_valid():
+            values = self.operation_filter.cleaned_data
+            for name, lookup in (('currency', 'asset__currency'), ('asset_class', 'asset__asset_class'),
+                                 ('date_from', 'date__gte'), ('date_to', 'date__lte')):
+                if values.get(name):
+                    queryset = queryset.filter(**{lookup: values[name]})
+        else:
+            # Invalid ranges must not quietly broaden the financial history.
+            queryset = queryset.none()
         search = self.request.GET.get('q', '').strip()
         if search:
             queryset = queryset.filter(
@@ -256,6 +333,8 @@ class InvestmentOperationsView(LoginRequiredMixin, ListView):
             'selected_product': self.request.GET.get('product', ''),
             'selected_asset': self.request.GET.get('asset', ''),
             'search_query': self.request.GET.get('q', '').strip(),
+            'operation_filter': self.operation_filter,
+            'has_extra_filters': any(self.request.GET.get(name) for name in self.operation_filter.fields),
         })
         return context
 
@@ -284,7 +363,7 @@ class InvestmentFormMixin(LoginRequiredMixin):
         refresh_snapshot = not self.object or bool(
             set(form.changed_data)
             & {'asset', 'quantity', 'unit_price', 'amount', 'ending_balance', 'fees', 'date'}
-        )
+        ) or form.cleaned_data.get('capture_missing_fx', False)
         form.instance.user = self.request.user
         with transaction.atomic():
             try:
@@ -315,6 +394,19 @@ class InvestmentFormMixin(LoginRequiredMixin):
 
 class InvestmentCreateView(InvestmentFormMixin, SuccessMessageMixin, CreateView):
     success_message = gettext_lazy('Investment operation created.')
+
+    def get_initial(self):
+        initial = super().get_initial()
+        # Position shortcuts select only explicitly requested, owned records.
+        # A bound POST remains authoritative in Django's form initialization.
+        for name, model in (('product', InvestmentProduct), ('asset', Asset)):
+            value = self.request.GET.get(name, '')
+            choices = model.objects.filter(user=self.request.user)
+            if model is Asset:
+                choices = choices.filter(is_archived=False)
+            if value.isdigit() and choices.filter(pk=value).exists():
+                initial[name] = value
+        return initial
 
 
 class InvestmentUpdateView(InvestmentFormMixin, SuccessMessageMixin, UpdateView):
@@ -354,8 +446,13 @@ class InvestmentSettingsView(LoginRequiredMixin, TemplateView):
         context['products'] = InvestmentProduct.objects.filter(
             user=self.request.user, bank__user=self.request.user
         ).select_related('bank').annotate(operation_count=Count('operations')).order_by('bank__name', 'bank_id', 'name')
-        context['assets'] = Asset.objects.filter(user=self.request.user).annotate(
+        assets = list(Asset.objects.filter(user=self.request.user).annotate(
             operation_count=Count('operations')
+        ))
+        context['assets'] = [asset for asset in assets if not asset.is_archived]
+        context['archived_assets'] = [asset for asset in assets if asset.is_archived]
+        context['show_archived_assets'] = any(
+            str(asset.pk) == self.request.GET.get('archived') for asset in context['archived_assets']
         )
         return context
 
@@ -471,6 +568,35 @@ class AssetDeleteView(SetupDeleteView):
     model = Asset
     context_object_name = 'entity'
     entity_label = gettext_lazy('asset')
+
+
+def _set_asset_archived(request, pk, archived):
+    asset = get_object_or_404(Asset, pk=pk, user=request.user)
+    asset.is_archived = archived
+    asset.save(update_fields=['is_archived', 'updated_at'])
+    message = (
+        _('Asset "%(name)s" archived. Its positions and history remain available.') if archived
+        else _('Asset "%(name)s" restored. It is available for new operations.')
+    )
+    messages.success(request, message % {'name': asset.name})
+    url = reverse('investments:settings')
+    if archived:
+        url += '?' + urlencode({'archived': asset.pk})
+    # Native submissions land on the changed asset; same-page HTMX keeps focus
+    # on its stable action button, which becomes Restore after archiving.
+    return redirect(f'{url}#asset-{asset.pk}')
+
+
+@login_required
+@require_POST
+def archive_asset(request, pk):
+    return _set_asset_archived(request, pk, True)
+
+
+@login_required
+@require_POST
+def restore_asset(request, pk):
+    return _set_asset_archived(request, pk, False)
 
 
 class InvestmentDeleteView(LoginRequiredMixin, DeleteView):

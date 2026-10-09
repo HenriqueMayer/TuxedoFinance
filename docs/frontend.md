@@ -45,9 +45,10 @@ HTMX when they target a documented page or island update. Body swaps for the
 same pathname preserve viewport and focus; navigation to another pathname moves
 focus to the new `h1`. Report and investment chart islands keep their existing
 focus and scroll restoration. The
-investment movement island updates filters and pagination independently, then
-returns to the beginning of the movement section instead of the top of the page;
-plain GET links and the section anchor provide the same no-JavaScript fallback.
+investment movement island updates filters independently while preserving scroll
+and focus. Explicit pagination links return to the beginning of the movement
+section instead of the top of the page; plain GET links and the section anchor
+provide the no-JavaScript fallback.
 
 ## Preserve the user's location
 
@@ -604,6 +605,20 @@ reason is accessible; the native disclosure fallback also supports keyboard and 
 Configuration guides bank/product/asset registration and remains available for
 later edits. Missing prerequisites make Configure investments the primary
 action on portfolio and Operations pages; completed setup enables New operation.
+Asset configuration separates active assets from a native Archived assets
+disclosure. Archive/Restore use deliberate, CSRF-protected POSTs. Same-page
+boosted responses reuse the common viewport/focus restoration, with one stable
+availability-button ID per asset; the archived disclosure opens after archiving.
+Native submissions land on the changed asset through a section anchor. Delete
+uses the existing confirmation and remains unavailable for protected holdings
+or history; a blocked deletion page offers Archive as an alternative. New
+operation choices exclude archived assets, while historical editors keep their
+own archived selection and explain how to restore it for new operations.
+Portfolio and Remunerated cash hide archived position rows and empty product/bank
+groups after calculating totals over all holdings. A short notice explains why
+archived balances remain in totals; an all-archived section has an active-position
+empty state rather than first-operation guidance. Existing Operations navigation
+keeps history accessible, and restoring an asset makes its positions visible.
 The Operations
 page owns operation search, purpose/type/record filters and pagination. Portfolio
 and remunerated-cash pages show positions and a contextual link to Operations.

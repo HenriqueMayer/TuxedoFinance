@@ -21,10 +21,11 @@ releases, persistent volumes and isolated restore rehearsals.
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and migration compatibility. |
 | [frontend.md](frontend.md) | Server-rendered design system, viewport/focus preservation, mandatory keyboard/searchable-choice form contract, progressive disclosure and banking UI structure. |
 | [design-system.html](design-system.html) | Canonical visual tokens and component catalog. |
-| [operations.md](operations.md) | Dependency updates and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
+| [operations.md](operations.md) | Native source/dependency updates, required migrations and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
 | [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |
 | [coverage-baseline.md](coverage-baseline.md) | Dated measurements, 70% combined line/branch floor, and report artifacts. |
 | [implementation-review.md](implementation-review.md) | Planning evolution review, financial corrections, validation evidence and deployment boundaries. |
+| [Investment review and Pierre comparison](reviews/investments-and-pierre-2026-10-09.md) | Current versus historical FX corrections, investment limitations, sourced competitor findings and priorities. |
 
 ## Per-app reference
 
@@ -39,7 +40,8 @@ releases, persistent volumes and isolated restore rehearsals.
 - [apps/dashboard.md](apps/dashboard.md) — cash, cash-flow, liabilities,
   investments and net-worth read models.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
-  banks/accounts for provider and cash endpoints.
+  banks/accounts for provider and cash endpoints, with asset lifecycle and
+  archived-position visibility rules.
 - [apps/sandbox.md](apps/sandbox.md) — private planning drafts, salary/budget
   scenarios, commitment snapshots and contribution/yield simulations.
 
@@ -65,7 +67,7 @@ and preview use the same locked frontend toolchain.
 
 ## Documentation status
 
-These documents describe `0.9.1` and the changes under `Unreleased`. Supported
+These documents describe `0.10.0` and the changes under `Unreleased`. Supported
 released installations use the committed incremental migrations and preserve
 existing records. The historical clean reset applied only to pre-release legacy
 schemas; it is not an instruction to reset a released installation. See

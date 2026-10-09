@@ -18,6 +18,8 @@ urlpatterns = [
     path('assets/create/', views.AssetCreateView.as_view(), name='create_asset'),
     path('assets/<int:pk>/edit/', views.AssetUpdateView.as_view(), name='update_asset'),
     path('assets/<int:pk>/delete/', views.AssetDeleteView.as_view(), name='delete_asset'),
+    path('assets/<int:pk>/archive/', views.archive_asset, name='archive_asset'),
+    path('assets/<int:pk>/restore/', views.restore_asset, name='restore_asset'),
     path('<int:pk>/edit/', views.InvestmentUpdateView.as_view(), name='update'),
     path('<int:pk>/delete/', views.InvestmentDeleteView.as_view(), name='delete'),
 ]

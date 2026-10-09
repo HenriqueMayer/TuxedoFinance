@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n l10n %}
 
 {% block title %}{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %} - Tuxedo Finance{% endblock %}
 
@@ -11,11 +11,14 @@
     </div>
     <form id="investment-operation-form" method="post" hx-boost="false" class="space-y-6 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}
-        {% if form.instance.pk %}<input type="hidden" name="operation_id" value="{{ form.instance.pk }}">{% endif %}
+        {% if form.instance.pk %}<input type="hidden" name="operation_id" value="{{ form.instance.pk|unlocalize }}">{% endif %}
         {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         <section class="space-y-5">
             {% include 'partials/form_field.html' with field=form.product %}
             {% include 'partials/form_field.html' with field=form.asset %}
+            {% if form.instance.pk and form.instance.asset.is_archived %}
+                <p class="subtle-copy">{% translate 'The asset is archived. You can edit this operation; restore the asset before recording new ones.' %}</p>
+            {% endif %}
             {% include 'partials/form_field.html' with field=form.kind %}
             {% include 'partials/form_field.html' with field=form.date %}
             <p id="asset-mode-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
@@ -80,6 +83,12 @@
                 {% include 'partials/form_field.html' with field=form.notes %}
             </div>
         </details>
+        {% if form.capture_missing_fx %}
+        <section class="space-y-3 border-t border-forest/15 pt-5 dark:border-cream/15">
+            {% include 'partials/form_field.html' with field=form.capture_missing_fx %}
+            <a class="quiet-action" href="{% url 'banking:exchange_rate_create' %}?from_currency={{ form.instance.currency }}&amp;to_currency={{ CURRENCY_CODE }}&amp;effective_date={{ form.instance.date|date:'Y-m-d' }}">{% translate 'Register exchange rate' %}</a>
+        </section>
+        {% endif %}
         <div class="flex gap-3">
             <button type="submit" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep">{% translate 'Save' %}</button>
             <a href="{% url 'investments:operations' %}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate 'Cancel' %}</a>

@@ -105,7 +105,9 @@ async function captureProfile(browser, profile) {
             await page.locator('#id_withdrawal').fill('0');
             // Native Calculate remains authoritative; no draft or ledger is saved.
             await page.locator('button[name="action"][value="calculate"]').click();
-            await page.locator('#simulation-result tbody tr').first().waitFor();
+            // Monthly rows stay inside a closed disclosure; the result header
+            // confirms calculation without expanding the user's default view.
+            await page.locator('#simulation-result .panel-heading').waitFor();
         }
         await settle(page);
         await page.screenshot({
