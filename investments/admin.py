@@ -12,8 +12,8 @@ class InvestmentProductAdmin(admin.ModelAdmin):
 
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'code', 'asset_class', 'currency', 'user')
-    list_filter = ('user', 'asset_class', 'currency')
+    list_display = ('name', 'code', 'asset_class', 'currency', 'is_archived', 'user')
+    list_filter = ('user', 'asset_class', 'currency', 'is_archived')
     search_fields = ('name', 'code')
 
     def get_deleted_objects(self, objs, request):

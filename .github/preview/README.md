@@ -26,6 +26,8 @@ current dashboard and transaction navigation when refreshing captures.
 The synthetic profiles also demonstrate a BRL 2,000 account reserve, an excluded
 USD account, and a monthly cash pot. The Planning capture calculates a hypothetical
 yield scenario without saving a draft or creating financial operations.
+The capture waits for the calculated result header and leaves the optional
+Monthly breakdown disclosure closed, matching the normal initial view.
 
 ## Commands
 

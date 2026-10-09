@@ -8,7 +8,7 @@
         <noscript><button class="action-link" type="submit">{% translate 'Filter' %}</button></noscript>
     </form>
     {% endif %}
-    {% if chart_missing_rate_currencies %}<p role="status" class="text-sm text-expense dark:text-expense-light">{% blocktranslate with currencies=chart_missing_rate_currencies|join:', ' %}Incomplete total: exchange rates are missing for {{ currencies }}.{% endblocktranslate %}</p>{% endif %}
+    {% include 'investments/_fx_issues.html' %}
 
     {# ---------------------------------------------------------------- #}
     {# Chart 1 — investment evolution (line), cumulative total in       #}

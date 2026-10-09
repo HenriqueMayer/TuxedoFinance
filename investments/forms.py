@@ -2,11 +2,15 @@ from decimal import Decimal
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from core.dates import configure_date_fields
+from core.currencies import CURRENCIES
 
 from banking.models import Bank, BankAccount, LoyaltyProgram
+from banking.services import MissingExchangeRate, convert
+from accounts.models import UserPreference
 from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import (
     YIELD_INPUT_AMOUNT,
@@ -28,6 +32,27 @@ class InvestmentChartFilterForm(forms.Form):
         choices=(('', _('Overall')), ('portfolio', _('Portfolio')), ('cash', _('Remunerated cash'))),
         widget=forms.Select(attrs={'class': INPUT_CLASSES, 'id': 'investment-chart-scope'}),
     )
+
+
+class InvestmentOperationFilterForm(forms.Form):
+    currency = forms.ChoiceField(label=_('Currency'), required=False,
+        choices=[('', _('All currencies'))] + [(code, code) for code in CURRENCIES])
+    asset_class = forms.ChoiceField(label=_('Asset class'), required=False,
+        choices=[('', _('All asset classes'))] + list(Asset.AssetClass.choices))
+    date_from = forms.DateField(label=_('From date'), required=False)
+    date_to = forms.DateField(label=_('To date'), required=False)
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.widget.attrs.update({'class': INPUT_CLASSES, 'id': f'investment-{name.replace("_", "-")}'})
+        configure_date_fields(self, user)
+
+    def clean(self):
+        data = super().clean()
+        if data.get('date_from') and data.get('date_to') and data['date_from'] > data['date_to']:
+            self.add_error('date_to', _('The end date must be on or after the start date.'))
+        return data
 
 
 class InvestmentSelect(forms.Select):
@@ -117,7 +142,14 @@ class InvestmentForm(forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = user
+        self.user = user or (self.instance.user if self.instance.pk else None)
+        if (self.instance.pk and self.instance.fx_snapshot_status == Investment.FxSnapshotStatus.UNKNOWN
+                and self.instance.currency != UserPreference.for_user(self.user).base_currency):
+            self.fields['capture_missing_fx'] = forms.BooleanField(
+                label=_('Record the missing historical conversion'), required=False, initial=False,
+                help_text=_('Use the registered exchange rate on or before the operation date. This records only missing evidence; existing conversions stay unchanged.'),
+                widget=forms.CheckboxInput(attrs={'class': 'h-4 w-4 accent-caramel'}),
+            )
         configure_date_fields(self, user)
         self.yield_preview = None
         self.operation_copy = {
@@ -149,7 +181,11 @@ class InvestmentForm(forms.ModelForm):
             self.fields['product'].queryset = InvestmentProduct.objects.filter(
                 user=user, bank__user=user
             ).select_related('bank')
-            self.fields['asset'].queryset = Asset.objects.filter(user=user)
+            available_assets = Q(is_archived=False)
+            # The current asset must remain selectable when correcting history.
+            if self.instance.pk:
+                available_assets |= Q(pk=self.instance.asset_id)
+            self.fields['asset'].queryset = Asset.objects.filter(user=user).filter(available_assets)
             accounts = BankAccount.objects.filter(user=user).select_related('bank')
             self.fields['source_account'].queryset = accounts
             self.fields['destination_account'].queryset = accounts
@@ -166,7 +202,7 @@ class InvestmentForm(forms.ModelForm):
         asset_widget.choices = self.fields['asset'].choices
         self.fields['asset'].widget = asset_widget
         for name, field in self.fields.items():
-            if name == 'yield_input_mode':
+            if name in ('yield_input_mode', 'capture_missing_fx'):
                 field.widget.attrs['class'] = 'h-4 w-4 accent-caramel'
             else:
                 field.widget.attrs['class'] = INPUT_CLASSES
@@ -243,6 +279,12 @@ class InvestmentForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
+        if data.get('capture_missing_fx') and data.get('asset') and data.get('date'):
+            try:
+                convert(self.user, Decimal('1'), data['asset'].currency,
+                        UserPreference.for_user(self.user).base_currency, as_of=data['date'])
+            except MissingExchangeRate:
+                self.add_error('capture_missing_fx', _('Register an exchange rate on or before the operation date first.'))
         if data.get('kind') == Investment.Kind.DEPOSIT:
             source = data.get('funding_source')
             if not source:

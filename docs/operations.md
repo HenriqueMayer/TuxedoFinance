@@ -59,6 +59,34 @@ code and lockfiles available until the new version passes an isolated restore
 rehearsal. Review database compatibility before running migrations on an
 installation with existing records.
 
+## Updating a native installation
+
+Stop `runserver` before updating the source checkout. Preserve `.env`, the
+signing key and the active database; follow [database discovery](#locate-the-active-database)
+and the [backup procedure](#sqlite-backup) before applying schema changes. Run
+the update commands from the checkout with the same environment/data directory
+used by the application:
+
+```bash
+uv sync --locked
+uv run python manage.py migrate
+uv run python manage.py migrate --check
+uv run python manage.py runserver
+```
+
+`runserver` does not apply migrations. A new model field such as
+`Asset.is_archived` must exist in the active database before the updated code
+serves requests. A pending migration can break several pages that share queries:
+dashboard, banks, planning and charts all read investment positions. With HTMX,
+a failed GET can leave the previous page visible, making navigation appear
+unresponsive. Check the server traceback and active migration state instead of
+resetting the database. Disposable test databases migrate independently and do
+not confirm that the installation in use has been upgraded.
+
+After starting, verify navigation and charts in the existing authenticated
+session. Keep browser tests on the [disposable runner](../CONTRIBUTING.md#browser-tests);
+do not use the installation's database or server for test fixtures.
+
 ## Locate the active database
 
 Run operational commands from the repository root with the same process

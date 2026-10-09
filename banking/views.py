@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -11,6 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
+from core.currencies import CURRENCIES
 
 from banking.forms import (
     BankAccountForm,
@@ -605,6 +608,19 @@ class ExchangeRateFormMixin(OwnedFormMixin):
 
 class ExchangeRateCreateView(ExchangeRateFormMixin, CreateView):
     form_title = _('New exchange rate')
+
+    def get_initial(self):
+        initial = super().get_initial()
+        for name in ('from_currency', 'to_currency'):
+            value = self.request.GET.get(name, '')
+            if value in CURRENCIES:
+                initial[name] = value
+        try:
+            initial['effective_date'] = date.fromisoformat(self.request.GET.get('effective_date', ''))
+        except ValueError:
+            pass
+        # A diagnostic may preselect the pair/date, never guess the price.
+        return initial
 
 
 class ExchangeRateUpdateView(ExchangeRateFormMixin, UpdateView):

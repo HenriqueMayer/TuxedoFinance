@@ -108,6 +108,7 @@ class Asset(models.Model):
     valuation_mode = models.CharField(
         max_length=10, choices=ValuationMode.choices, default=ValuationMode.UNITS
     )
+    is_archived = models.BooleanField(default=False, verbose_name=_('Archived'))
     opening_balance = models.DecimalField(
         max_digits=16, decimal_places=2, default=ZERO, validators=[NON_NEGATIVE],
         help_text=_('Existing balance before the first recorded operation.'),
@@ -371,6 +372,11 @@ class Investment(models.Model):
                 errors[field] = _('This selection must belong to the operation owner.')
         if self.product_id and self.user_id and self.product.bank.user_id != self.user_id:
             errors['product'] = _('The product bank must belong to the operation owner.')
+        # Archiving changes availability for new entries, never existing history.
+        if self.asset_id and self.asset.is_archived and not (
+            self.pk and type(self).objects.filter(pk=self.pk, asset_id=self.asset_id).exists()
+        ):
+            errors['asset'] = _('Restore this asset before recording a new operation.')
         if (self.product_id and self.asset_id
                 and self.product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH
                 and self.asset.valuation_mode != Asset.ValuationMode.MONETARY):

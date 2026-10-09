@@ -88,6 +88,20 @@ simulations may use a current rate but must label the valuation date and source.
 Missing rates remain explicit and never cause unlike currencies to be summed
 directly.
 
+Current portfolio reads are separate from historical charts. A missing opening
+rate at the start of a chart window must not mark a currently convertible
+portfolio incomplete. Current screens display native currency subtotals, the
+conversion date and applied rate/effective date; a partial total is labeled as
+such. Zero positions require no FX. Monetary foreign positions also show their
+base amount, without replacing the native value.
+
+Chart conversion details identify each opening/operation and the required date.
+Rate-registration links preselect the pair/date, never the price. Unknown
+operation evidence can be captured explicitly with an unchecked editor choice
+after a dated rate exists; it cannot replace captured evidence. Historical
+target mismatches explain which reporting currency owns the saved conversion.
+Native values need no FX when they already match the selected reporting currency.
+
 ## Settings and integrity
 
 Investment Settings manages products and assets; bank management links to the
@@ -98,6 +112,19 @@ reversal workflows are out of scope.
 All forms and services enforce per-user ownership for bank, account, product and
 asset choices. Filters cover bank, product, asset, asset class, currency, kind
 and date without changing the unfiltered portfolio totals.
+
+Operation date filters use the shared preferred-date controls and inclusive
+bounds. Invalid criteria retain their errors and return no results rather than
+silently widening the history. They remain GET forms with native submission and
+HTMX/history support. Currency, class and dates use a native More filters
+disclosure; active criteria and invalid submissions keep it open. Filter swaps
+preserve scroll and focus instead of returning to the top of the form.
+Position names link to history for the exact purpose,
+product and asset; product-level New operation links preselect only an owned,
+explicitly requested product. Asset and operation type still wait for selection.
+
+For valuation limitations and a dated competitor comparison, see the
+[2026-10-09 investment review](../reviews/investments-and-pierre-2026-10-09.md).
 
 ## Charts
 
@@ -161,8 +188,28 @@ operation history, including a fully withdrawn position. The shared deletion
 policy covers instance, QuerySet and Admin deletion and rolls back mixed batches.
 Products remain protected by operation and opening-position references.
 
+Asset configuration offers Delete for unused assets and Archive for every active
+asset. `is_archived` defaults to false for existing and new assets. Archiving is a
+reversible, owner-scoped POST that changes catalog and new-operation availability
+and hides the asset's current position rows in Portfolio and Remunerated cash.
+Empty product and bank groups are omitted from these lists. Opening positions,
+operation history, bank/loyalty ledgers, charts and portfolio/planning totals
+continue to include the asset. Valuation happens before display filtering, and
+the list explains retained totals when archived positions are hidden. Restoring
+an asset shows its positions again. Archived assets appear in a native
+disclosure with Restore and retain their unique per-user code. Deletion remains
+subject to the same protection, including after archiving.
+
+New operation choices and asset shortcuts exclude archived assets. Model
+validation rejects creating an operation with an archived asset or changing an
+existing operation to a different archived asset. Editing an existing operation
+keeps its own archived asset selectable, with its bound values and errors;
+historical filters include all assets. Restore before recording any new deposit,
+withdrawal or yield. This rule deliberately keeps archiving distinct from
+removing holdings or rewriting history.
+
 The portfolio and Operations pages highlight Configure investments until the
-user has a bank, a product and an asset. Configuration lists the three setup
+user has a bank, a product and an active asset. Configuration lists the three setup
 steps, marks completed prerequisites and links to the next missing registration.
 Once ready, New operation becomes the primary action, even before the first
 operation. Products are grouped by bank and assets remain a separate editable

@@ -360,6 +360,7 @@ def get_portfolio_groups(user, as_of=None, purpose=None):
         product_bucket = bank_bucket['products'].setdefault(product.pk, {'id': product.pk, 'name': product.name, 'purpose': product.purpose, 'yield_mode': product.yield_mode, 'assets': {}})
         return product_bucket['assets'].setdefault(asset.pk, {
             'id': asset.pk, 'name': asset.name, 'code': asset.code, 'currency': asset.currency,
+            'is_archived': asset.is_archived,
             'valuation_mode': asset.valuation_mode, 'quantity': opening_quantity, 'balance': opening_balance,
             'deposits': ZERO, 'withdrawals': ZERO, 'yields': ZERO,
         })
@@ -428,6 +429,10 @@ def _months_window(months, offset):
 
 
 def historical_value_in_base(user, operation, base_currency, on_date=None):
+    # Native values need no conversion, even after changing the reporting
+    # currency away from the target retained in an older FX snapshot.
+    if operation.currency == base_currency:
+        return operation.gross_value
     if operation.fx_snapshot_status in {
         Investment.FxSnapshotStatus.CAPTURED,
         Investment.FxSnapshotStatus.RECONSTRUCTED,
@@ -453,7 +458,7 @@ def historical_value_in_base(user, operation, base_currency, on_date=None):
         return None
 
 
-def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12, offset=0, purpose=None):
+def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12, offset=0, purpose=None, fx_issues=None):
     operations_query = Investment.objects.filter(user=user).select_related('asset')
     opening_assets = Asset.objects.filter(user=user)
     if purpose is not None:
@@ -473,11 +478,15 @@ def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12
             running += convert(user, opening, asset.currency, base_currency, as_of=start)
         except MissingExchangeRate:
             missing.add(asset.currency)
+            if fx_issues is not None:
+                fx_issues.append({'asset': asset, 'date': start})
     for operation in operations:
         if operation.date < start:
             value = historical_value_in_base(user, operation, base_currency)
             if value is None:
                 missing.add(operation.asset.currency)
+                if fx_issues is not None:
+                    fx_issues.append({'operation': operation, 'date': operation.date})
             else:
                 running += value if operation.kind != Investment.Kind.WITHDRAWAL else -value
     for year, month in window:
@@ -488,13 +497,15 @@ def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12
             value = historical_value_in_base(user, operation, base_currency)
             if value is None:
                 missing.add(operation.asset.currency)
+                if fx_issues is not None:
+                    fx_issues.append({'operation': operation, 'date': operation.date})
             else:
                 running += value if operation.kind != Investment.Kind.WITHDRAWAL else -value
         rows.append({'date': date(year, month, 1), 'year': year, 'month': month, 'opening_balance': opening_balance, 'total': running.quantize(CENTS)})
     return rows, sorted(missing)
 
 
-def get_monthly_flow_in_base(user, base_currency, currencies=None, months=12, offset=0, purpose=InvestmentProduct.Purpose.INVESTMENT):
+def get_monthly_flow_in_base(user, base_currency, currencies=None, months=12, offset=0, purpose=InvestmentProduct.Purpose.INVESTMENT, fx_issues=None):
     operations_query = Investment.objects.filter(user=user)
     if purpose is not None:
         operations_query = operations_query.filter(product__purpose=purpose)
@@ -509,6 +520,8 @@ def get_monthly_flow_in_base(user, base_currency, currencies=None, months=12, of
             value = historical_value_in_base(user, operation, base_currency)
             if value is None:
                 missing.add(operation.asset.currency)
+                if fx_issues is not None:
+                    fx_issues.append({'operation': operation, 'date': operation.date})
                 continue
             key = {
                 Investment.Kind.DEPOSIT: 'deposits',

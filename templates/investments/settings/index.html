@@ -42,7 +42,7 @@
         {% empty %}<p class="subtle-copy">{% translate "No products." %}</p>{% endfor %}
     </section>
     {% endif %}
-    {% if has_products or has_assets %}
+    {% if has_products or has_assets or archived_assets %}
     <section id="investment-assets" class="surface-panel space-y-4">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div class="label-with-help">
             {% translate "Assets" as catalog_label %}
@@ -51,7 +51,21 @@
             {% include 'partials/help_popover.html' with help_id='investment-assets-help' help_label=catalog_label help_text=catalog_help %}
         </div><a href="{% url 'investments:create_asset' %}" class="action-link">{% translate "New asset" %}</a></div>
         <p class="subtle-copy">{% translate 'An asset is what you hold, such as a bond, fund or share. Choose the product and asset when recording an operation.' %}</p>
-        <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for asset in assets %}<li class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between"><div><strong class="text-base font-semibold">{{ asset.name }} ({{ asset.code }})</strong><p class="text-sm text-forest/70 dark:text-night-muted">{% blocktranslate count count=asset.operation_count with class=asset.get_asset_class_display currency=asset.currency %}{{ class }} / {{ currency }} - {{ count }} operation{% plural %}{{ class }} / {{ currency }} - {{ count }} operations{% endblocktranslate %}</p></div><div class="flex flex-wrap gap-3"><a class="quiet-action" href="{% url 'investments:update_asset' asset.pk %}">{% translate "Edit" %}</a>{% if asset.has_opening_position or asset.operation_count %}<span class="max-w-xs text-sm text-forest/70 dark:text-night-muted">{% if asset.has_opening_position %}{% translate 'Opening position protected' %}{% else %}{% translate 'Investment history protected' %}{% endif %}</span>{% else %}<a class="quiet-action text-expense dark:text-expense-light" href="{% url 'investments:delete_asset' asset.pk %}">{% translate "Delete" %}</a>{% endif %}</div></li>{% empty %}<li class="p-5 text-sm">{% translate "No assets." %}</li>{% endfor %}</ul>
+        <p class="subtle-copy">{% translate 'Delete assets without an opening position or operations. Archive other assets to remove them from new operations while preserving balances and history.' %}</p>
+        <ul id="investment-active-assets" class="divide-y divide-forest/10 dark:divide-cream/10">
+            {% for asset in assets %}
+                {% include 'investments/settings/_asset_row.html' %}
+            {% empty %}<li class="p-5 text-sm">{% translate "No active assets." %}</li>{% endfor %}
+        </ul>
+        {% if archived_assets %}
+        <details id="investment-archived-assets" class="border-t border-forest/10 pt-4 dark:border-cream/10" {% if show_archived_assets %}open{% endif %}>
+            <summary id="investment-archived-summary" class="quiet-action cursor-pointer">{% translate 'Archived assets' %} ({{ archived_assets|length }})</summary>
+            <p class="subtle-copy mt-3">{% translate 'Archived assets still count toward positions and reports. Restore an asset to record new operations.' %}</p>
+            <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+                {% for asset in archived_assets %}{% include 'investments/settings/_asset_row.html' %}{% endfor %}
+            </ul>
+        </details>
+        {% endif %}
     </section>
     {% endif %}
 </div>
