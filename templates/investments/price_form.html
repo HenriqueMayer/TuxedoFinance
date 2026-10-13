@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Observed unit price' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-md space-y-6">
+    <h1 class="page-title">{% translate 'Observed unit price' %}</h1>
+    <p class="subtle-copy">{% translate 'Record a price you consulted. It changes the position valuation, never its quantity or bank balance.' %}</p>
+    <form method="post" hx-boost="false" class="surface-panel space-y-5" novalidate>
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+        {% for field in form %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
+        <div class="flex flex-wrap gap-3"><button type="submit" class="action-primary">{% translate 'Save' %}</button><a href="{% url 'investments:prices' %}" class="quiet-action">{% translate 'Cancel' %}</a></div>
+    </form>
+</div>
+{% endblock %}

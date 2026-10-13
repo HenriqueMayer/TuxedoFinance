@@ -1,5 +1,6 @@
 """Investment products, assets, and portfolio operations."""
 
+from datetime import date
 from decimal import Decimal
 
 from django.conf import settings
@@ -76,6 +77,10 @@ class InvestmentProduct(models.Model):
     def clean(self):
         if self.bank_id and self.user_id and self.bank.user_id != self.user_id:
             raise ValidationError({'bank': _('The bank must belong to the product owner.')})
+        if self.pk and self.goal_allocations.exists():
+            previous = type(self).objects.filter(pk=self.pk).values_list('purpose', flat=True).first()
+            if previous != self.purpose:
+                raise ValidationError({'purpose': _('Purpose cannot be changed while this product has goal reservations, including archived goals.')})
         if self.pk and self.purpose == self.Purpose.MONTHLY_CASH and (
             self.operations.exclude(asset__valuation_mode=Asset.ValuationMode.MONETARY).exists()
             or self.opening_balance_assets.exclude(valuation_mode=Asset.ValuationMode.MONETARY).exists()
@@ -125,6 +130,7 @@ class Asset(models.Model):
         InvestmentProduct, on_delete=models.PROTECT, related_name='opening_balance_assets',
         null=True, blank=True, help_text=_('Product that holds the opening balance.'),
     )
+    opening_date = models.DateField(null=True, blank=True, verbose_name=_('Opening position date'))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -156,6 +162,26 @@ class Asset(models.Model):
 
     def clean(self):
         errors = {}
+        if self.pk and self.goal_allocations.exists():
+            original = type(self).objects.filter(pk=self.pk).values('currency', 'valuation_mode').first()
+            if original and self.currency != original['currency']:
+                errors['currency'] = _('Currency cannot be changed while this asset has goal reservations, including archived goals.')
+            if original and self.valuation_mode != original['valuation_mode']:
+                errors['valuation_mode'] = _('Valuation mode cannot be changed while this asset has goal reservations, including archived goals.')
+        if self.pk and self.price_observations.exists():
+            original = type(self).objects.filter(pk=self.pk).values('currency', 'valuation_mode').first()
+            if original and self.currency != original['currency']:
+                errors['currency'] = _('Currency cannot be changed after this asset has price observations.')
+            if original and self.valuation_mode != original['valuation_mode']:
+                errors['valuation_mode'] = _('Valuation mode cannot be changed after this asset has price observations.')
+        if self.has_opening_position and not self.pk and not self.opening_date:
+            errors['opening_date'] = _('Enter the date of the opening position.')
+        if self.opening_date and not self.has_opening_position:
+            errors['opening_date'] = _('An opening date requires an opening position.')
+        if self.pk and self.opening_date and self.opening_product_id:
+            first = self.operations.filter(product_id=self.opening_product_id).order_by('date').first()
+            if first and first.date < self.opening_date:
+                errors['opening_date'] = _('The opening date cannot follow an existing operation.')
         if self.valuation_mode == self.ValuationMode.UNITS:
             if self.opening_balance != ZERO:
                 errors['opening_balance'] = _('Only monetary assets can have an opening balance.')
@@ -234,6 +260,10 @@ class Investment(models.Model):
         decimal_places=2,
         default=Decimal('0.00'),
         validators=[NON_NEGATIVE],
+    )
+    fees_in_asset_currency = models.BooleanField(
+        default=False, verbose_name=_('Fees are in the asset currency'),
+        help_text=_('Include these fees in acquisition cost or sale results. Leave unchecked when their currency is unknown. This never changes the bank amount.'),
     )
     cash_amount = models.DecimalField(
         max_digits=16,
@@ -383,6 +413,8 @@ class Investment(models.Model):
             errors['asset'] = _('Monthly cash pots can only hold monetary assets.')
 
         if self.asset_id and self.asset.valuation_mode == Asset.ValuationMode.MONETARY:
+            if self.fees_in_asset_currency:
+                errors['fees_in_asset_currency'] = _('Fee cost allocation is for unit-based assets.')
             if self.amount is None or self.amount <= 0:
                 errors['amount'] = _('Monetary assets require a positive investment amount.')
             if self.quantity is not None:
@@ -438,5 +470,37 @@ class Investment(models.Model):
                 if present:
                     errors[field] = _('Yield is internal and does not use cash or funding fields.')
 
+        if errors:
+            raise ValidationError(errors)
+
+        if isinstance(self.date, date) and self.user_id and self.product_id and self.asset_id and self.kind in self.Kind.values:
+            from investments.positions import validate_position_candidate
+            validate_position_candidate(self)
+
+
+class PriceObservation(models.Model):
+    """A user-entered, dated unit price, independent of position operations."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='investment_prices')
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='price_observations')
+    date = models.DateField(verbose_name=_('Observation date'))
+    unit_price = models.DecimalField(max_digits=20, decimal_places=8, validators=[POSITIVE_8DP], verbose_name=_('Observed unit price'))
+    source = models.CharField(max_length=200, verbose_name=_('Source'), help_text=_('For example, the statement or quotation you consulted. Prices are entered locally.'))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at', '-pk']
+        constraints = [
+            models.UniqueConstraint(fields=['asset', 'date'], name='investments_unique_price_asset_date'),
+            models.CheckConstraint(condition=models.Q(unit_price__gt=0), name='investments_price_gt_zero'),
+        ]
+
+    def clean(self):
+        errors = {}
+        if self.asset_id:
+            if self.user_id and self.asset.user_id != self.user_id:
+                errors['asset'] = _('This selection must belong to the operation owner.')
+            elif self.asset.valuation_mode != Asset.ValuationMode.UNITS:
+                errors['asset'] = _('Price observations are for unit-based assets.')
         if errors:
             raise ValidationError(errors)

@@ -22,7 +22,7 @@ async function seed(page, info, unusedCount = 8) {
     const product = await page.locator('#id_opening_product option').last().getAttribute('value');
     await post(page, '/investments/assets/create/', { name: 'Z saved position', code: 'SAVED',
         asset_class: 'LIQUIDITY', currency: 'BRL', valuation_mode: 'MONETARY',
-        opening_balance: '100', opening_product: product, opening_quantity: '0', opening_unit_price: '0' });
+        opening_date: '2025-01-01', opening_balance: '100', opening_product: product, opening_quantity: '0', opening_unit_price: '0' });
     await page.goto('/investments/create/');
     const asset = await page.locator('#id_asset option').last().getAttribute('value');
     await post(page, '/investments/create/', { product, asset, kind: 'YIELD', amount: '10',

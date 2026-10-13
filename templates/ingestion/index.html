@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate 'Statement imports' %} - Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-5xl space-y-6">
+<div><h1 class="page-title">{% translate 'Statement imports' %}</h1><p class="subtle-copy mt-2">{% translate 'Review local CSV or OFX cash entries before changing your finances. Reconcile the statement without inventing an adjustment.' %}</p></div>
+<form method="post" enctype="multipart/form-data" hx-boost="false" novalidate class="surface-panel space-y-5 p-6">
+{% csrf_token %}<h2 class="section-title">{% translate 'Upload a local statement' %}</h2>
+{% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+{% for field in form.visible_fields %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
+<p class="subtle-copy">{% translate 'OFX currency must match the selected account. CSV columns, date order and decimal separator are chosen in the next step.' %}</p>
+<button class="action-primary" type="submit">{% translate 'Stage statement' %}</button>
+</form>
+<section class="surface-panel space-y-4 p-6"><h2 class="section-title">{% translate 'Import history' %}</h2>
+{% for batch in batches %}<div class="flex flex-wrap items-center justify-between gap-3 border-b border-forest/10 py-3 dark:border-cream/10"><div><a class="quiet-action" href="{% url 'ingestion:detail' batch.pk %}">{{ batch.file_name }}</a><p class="subtle-copy">{{ batch.account }} · {{ batch.get_status_display }} · {{ batch.created_at|date:USER_DATE_FORMAT }}</p></div><span class="text-sm">{{ batch.file_format }}</span></div>{% empty %}<p class="subtle-copy">{% translate 'No statements imported yet.' %}</p>{% endfor %}
+{% if batches.has_previous %}<a class="quiet-action" href="?page={{ batches.previous_page_number }}">{% translate 'Previous' %}</a>{% endif %}{% if batches.has_next %}<a class="quiet-action" href="?page={{ batches.next_page_number }}">{% translate 'Next' %}</a>{% endif %}
+</section></div>
+{% endblock %}

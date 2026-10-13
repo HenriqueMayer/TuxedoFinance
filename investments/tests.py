@@ -87,6 +87,10 @@ class InvestmentModelTests(InvestmentFixtureMixin, TestCase):
         self.assertEqual(withdrawal.signed_value, Decimal('-100.0000000000000000'))
 
     def test_validation_matrix_accepts_valid_operations(self):
+        self.asset.opening_quantity = Decimal('2.5')
+        self.asset.opening_unit_price = Decimal('40')
+        self.asset.opening_product = self.product
+        self.asset.save()
         cases = (
             self.operation(
                 Investment.Kind.DEPOSIT,
@@ -354,7 +358,8 @@ class InvestmentLedgerTests(InvestmentFixtureMixin, TestCase):
         self.assertIsNotNone(withdrawal.bank_movement)
         group = get_portfolio_groups(self.user)[0]['products'][0]['assets'][0]
         self.assertEqual(group['quantity'], Decimal('0.15000000'))
-        self.assertEqual(group['balance'], Decimal('8800.0000000000000000'))
+        self.assertEqual(group['balance'], Decimal('9000'))
+        self.assertEqual(group['realized_gain'], Decimal('200'))
 
 
 class MonetaryYieldTests(InvestmentFixtureMixin, TestCase):
@@ -602,6 +607,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
             'opening_quantity': '0.25',
             'opening_unit_price': '60000',
             'opening_product': self.product.pk,
+            'opening_date': '2026-01-01',
         })
 
         self.assertRedirects(response, reverse('investments:settings'))

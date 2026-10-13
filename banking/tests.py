@@ -602,7 +602,7 @@ class BankingViewTests(TestCase):
     def test_account_and_card_crud_is_owned_and_returns_to_bank(self):
         response = self.client.post(
             reverse('banking:account_create'),
-            {'bank': self.account.bank_id, 'name': 'Savings', 'currency': 'USD', 'opening_balance': '4.00'},
+            {'bank': self.account.bank_id, 'name': 'Savings', 'currency': 'USD', 'opening_balance': '4.00', 'opening_date': '2025-01-01'},
         )
         savings = BankAccount.objects.get(user=self.user, name='Savings')
         self.assertRedirects(response, reverse('banking:detail', args=[self.account.bank_id]))

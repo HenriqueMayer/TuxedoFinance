@@ -21,7 +21,7 @@ async function seed(page, info) {
     await page.goto('/banking/accounts/create/');
     const bank = await page.locator('#id_bank option').last().getAttribute('value');
     await post(page, '/banking/accounts/create/', {
-        bank, name: 'Daily', currency: 'BRL', opening_balance: '1000', pix_enabled: 'on',
+        bank, name: 'Daily', currency: 'BRL', opening_date: '2025-01-01', opening_balance: '1000', pix_enabled: 'on',
     });
     await post(page, '/categories/create/', { name: 'Monthly groceries', transaction_type: 'EXPENSE' });
     await page.goto('/transactions/create/');

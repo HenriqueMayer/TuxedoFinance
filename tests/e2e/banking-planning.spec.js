@@ -14,7 +14,7 @@ async function seed(page, testInfo) {
     await post(page, '/banking/create/', { name: 'Monthly bank' });
     await page.goto('/banking/accounts/create/');
     const bank = await page.locator('#id_bank option').last().getAttribute('value');
-    await post(page, '/banking/accounts/create/', { bank, name: 'Monthly account', currency: 'BRL', opening_balance: '5000', pix_enabled: 'on', planning_enabled: 'on', reserved_amount: '2000' });
+    await post(page, '/banking/accounts/create/', { bank, name: 'Monthly account', currency: 'BRL', opening_date: '2025-01-01', opening_balance: '5000', pix_enabled: 'on', planning_enabled: 'on', reserved_amount: '2000' });
     await page.goto('/banking/');
     return bank;
 }

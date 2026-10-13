@@ -25,7 +25,7 @@ async function seed(page, testInfo) {
     const product = await page.locator('#id_opening_product option').last().getAttribute('value');
     await post(page, '/investments/assets/create/', {
         name: 'Saved balance', code: 'SAVE', asset_class: 'LIQUIDITY', currency: 'BRL',
-        valuation_mode: 'MONETARY', opening_balance: '1000', opening_product: product,
+        valuation_mode: 'MONETARY', opening_date: '2025-01-01', opening_balance: '1000', opening_product: product,
         opening_quantity: '0', opening_unit_price: '0',
     });
     await page.goto('/investments/create/');
@@ -39,7 +39,7 @@ async function seed(page, testInfo) {
 async function seedExpenses(page) {
     await page.goto('/banking/accounts/create/');
     const bank = await page.locator('#id_bank option').last().getAttribute('value');
-    await post(page, '/banking/accounts/create/', {bank, name:'Daily',currency:'BRL',opening_balance:'1000',pix_enabled:'on'});
+    await post(page, '/banking/accounts/create/', {bank, name:'Daily',currency:'BRL',opening_date: '2020-01-01', opening_balance:'1000',pix_enabled:'on'});
     await post(page, '/categories/create/', {name:'Selection A',transaction_type:'EXPENSE'});
     await post(page, '/categories/create/', {name:'Selection B',transaction_type:'EXPENSE'});
     await page.goto('/transactions/create/');
@@ -230,10 +230,17 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         await page.goto('/investments/charts/');
         const total=page.locator('[data-chart-selection]').first(),mark=total.locator('[data-point]').last();
         await mark.focus();await page.keyboard.press('Control');await expect(panel).toBeFocused();
-        const investmentGroup=panel.locator('details').filter({has:page.locator('summary').filter({hasText:'Savings > Saved balance'})});
-        await investmentGroup.locator('summary').press('Space');await expect(investmentGroup).toHaveAttribute('open','');
-        const yieldLink=investmentGroup.locator('a[href$="/edit/"]').filter({hasText:language==='en'?'Yield':'Rendimento'});
-        await yieldLink.press('Enter');await expect(page).toHaveURL(/\/investments\/\d+\/edit\/$/);
+        // The plotted holding includes opening capital; its link must open
+        // this product/asset context instead of picking an arbitrary yield.
+        const positionLink=panel.locator('a').filter({hasText:'Savings > Saved balance'});
+        await expect(positionLink).toHaveAttribute('href', /\/operations\/\?section=portfolio&product=\d+&asset=\d+/);
+        await positionLink.press('Enter');
+        await expect(page).toHaveURL(/\/investments\/operations\/\?section=portfolio&product=\d+&asset=\d+/);
+        const selected=new URL(page.url()).searchParams;
+        await expect(page.locator('#investment-product')).toHaveValue(selected.get('product'));
+        await expect(page.locator('#investment-asset')).toHaveValue(selected.get('asset'));
+        await page.locator('#investment-movements a[href$="/edit/"]').first().press('Enter');
+        await expect(page).toHaveURL(/\/investments\/\d+\/edit\/$/);
         await expect(page.locator('#id_kind')).toHaveValue('YIELD');await expect(page.locator('#id_amount')).toHaveValue('10.00');
     });
 }
@@ -272,7 +279,7 @@ test('bank color palette, arbitrary color and marker edit preserve the bank',asy
 test('Shift-click sums chosen bars independently of the intervening series',async({page},info)=>{
     await seed(page,info);await seedExpenses(page);
     await page.goto('/banking/accounts/create/');const bank=await page.locator('#id_bank option').last().getAttribute('value');
-    await post(page,'/banking/accounts/create/',{bank,name:'Second',currency:'BRL',opening_balance:'0'});
+    await post(page,'/banking/accounts/create/',{bank,name:'Second',currency:'BRL',opening_date: '2025-01-01', opening_balance:'0'});
     await post(page,'/categories/create/',{name:'Income',transaction_type:'INCOME'});
     await page.goto('/transactions/create/');
     const accounts=page.locator('#id_bank_account option');const second=await accounts.filter({hasText:'Second'}).getAttribute('value');

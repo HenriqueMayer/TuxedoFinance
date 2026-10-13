@@ -62,3 +62,8 @@ class Category(models.Model):
                     'This category has transactions of another type and cannot be classified that way.'
                 )
             })
+        if self.pk and self.transaction_type and self.transaction_splits.exclude(transaction__transaction_type=self.transaction_type).exists():
+            raise ValidationError({'transaction_type': _('This category has splits of another transaction type.')})
+        if self.pk:
+            from planning.services import validate_budget_category_change
+            validate_budget_category_change(self)

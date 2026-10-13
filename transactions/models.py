@@ -203,6 +203,9 @@ class Transaction(models.Model):
                 errors['fixed_until'] = _(
                     'The end month cannot precede the start month.'
                 )
+        account = self.payment_account
+        if account and account.opening_date and self.date and self.date < account.opening_date:
+            errors['date'] = _('The transaction cannot precede the account opening balance date.')
         if errors:
             raise ValidationError(errors)
 
@@ -324,3 +327,60 @@ class Transaction(models.Model):
                 else self.first_installment_amount + self.installment_amount * (paid - 1)
             )
         return self.amount
+
+    @staticmethod
+    def _split_amount(amount, capacities):
+        total = sum(capacities, ZERO)
+        if not amount or not total:
+            return [ZERO for _value in capacities]
+        exact = [amount * value / total for value in capacities]
+        values = [value.quantize(Decimal('0.01'), rounding=ROUND_DOWN) for value in exact]
+        cents = int((amount - sum(values, ZERO)) * 100)
+        ranking = sorted(range(len(values)), key=lambda index: (-(exact[index] - values[index]), index))
+        for index in ranking[:cents]:
+            values[index] += Decimal('0.01')
+        return values
+
+    def category_allocations_for(self, amount):
+        """Allocate one event with deterministic largest-remainder cents."""
+        rows = list(self.splits.all()) if self.pk else []
+        if not rows:
+            return [(self.category, amount)]
+        return [(row.category, value) for row, value in zip(rows, self._split_amount(amount, [row.amount for row in rows]))]
+
+    def category_allocations_for_month(self, year, month):
+        amount = self.amount_for_month(year, month)
+        if not self.is_installment_plan or not amount:
+            return self.category_allocations_for(amount)
+        rows = list(self.splits.all()) if self.pk else []
+        if not rows:
+            return [(self.category, amount)]
+        remaining = [row.amount for row in rows]
+        # Allocate each installment against the remaining category capacities.
+        # Independent cumulative rounding can make a tiny final category
+        # negative; this replay keeps every row nonnegative and closes exactly.
+        for index in range(self.months_from_start(year, month) + 1):
+            installment = self.first_installment_amount if index == 0 else self.installment_amount
+            values = self._split_amount(installment, remaining)
+            remaining = [capacity - value for capacity, value in zip(remaining, values)]
+        return [(row.category, value) for row, value in zip(rows, values)]
+
+
+class TransactionSplit(models.Model):
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='splits')
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='transaction_splits')
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+
+    class Meta:
+        ordering = ['pk']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gt=0), name='transactions_split_amount_gt_zero'),
+            models.UniqueConstraint(fields=['transaction', 'category'], name='transactions_unique_split_category'),
+        ]
+
+    def clean(self):
+        if self.transaction_id and self.category_id:
+            if self.category.user_id != self.transaction.user_id:
+                raise ValidationError({'category': _('This category must belong to the transaction owner.')})
+            if self.category.transaction_type and self.category.transaction_type != self.transaction.transaction_type:
+                raise ValidationError({'category': _('Choose a category compatible with the transaction type.')})

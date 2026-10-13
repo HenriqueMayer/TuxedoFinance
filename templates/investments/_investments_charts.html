@@ -9,6 +9,9 @@
     </form>
     {% endif %}
     {% include 'investments/_fx_issues.html' %}
+    {% if chart_unknown_baselines %}<p role="status" class="subtle-copy">{% translate 'Opening dates are unknown for part of this history. Holdings before the first recorded operation are assumed rather than dated evidence.' %}</p>{% endif %}
+    {% if chart_missing_prices %}<p role="status" class="subtle-copy">{% translate 'Some historical unit positions have no dated price and are shown at remaining cost. This curve is not a complete market return series.' %}</p>{% endif %}
+    {% if chart_history_errors %}<p role="alert" class="text-expense dark:text-expense-light">{% translate 'Existing operation history needs review before its results can be relied on.' %}</p>{% endif %}
 
     {# ---------------------------------------------------------------- #}
     {# Chart 1 — investment evolution (line), cumulative total in       #}
@@ -21,7 +24,7 @@
                 <div class="label-with-help">
                     {% translate 'Investment evolution' as chart_label %}
                     <h2 class="section-title">{{ chart_label }}</h2>
-                    {% translate 'Recorded portfolio value at each month end, including opening positions held before recorded operations. Historical operations use their saved exchange-rate evidence. Missing conversions are reported beside the charts.' as chart_help %}
+                    {% translate 'Month-end holdings valued with the latest price observed by that date, or remaining weighted cost. Dated openings appear only after their baseline. Unknown opening dates and missing prices limit historical performance.' as chart_help %}
                     {% include 'partials/help_popover.html' with help_id='investment-evolution-help' help_label=chart_label help_text=chart_help %}
                 </div>
             </div>
@@ -145,6 +148,17 @@
             {% endlocalize %}
         </div>
     {% include 'partials/chart_selection.html' with selection=total_selection %}
+    </section>
+
+    <section class="surface-panel space-y-4" aria-label="{% translate 'Recorded performance history' %}">
+        <h2 class="section-title">{% translate 'Recorded performance history' %}</h2>
+        <p class="subtle-copy">{% translate 'Month-end value and cumulative results in the base currency. Realized results use the sale-date conversion; yields keep their declared entry value. Missing evidence is marked as incomplete, and these amounts do not imply a percentage return.' %}</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead><tr class="border-b border-forest/10 text-left dark:border-cream/10"><th class="py-3 pr-4">{% translate 'Month' %}</th><th class="py-3 pr-4">{% translate 'Position value' %}</th><th class="py-3 pr-4">{% translate 'Remaining acquisition cost' %}</th><th class="py-3 pr-4">{% translate 'Realized result' %}</th><th class="py-3 pr-4">{% translate 'Unrealized result' %}</th><th class="py-3">{% translate 'Evidence' %}</th></tr></thead>
+                <tbody>{% for row in performance_rows %}<tr class="border-b border-forest/10 dark:border-cream/10"><th class="whitespace-nowrap py-3 pr-4 text-left font-normal">{{ row.date|date:'M Y' }}</th><td class="number py-3 pr-4">{{ row.total|floatformat:2 }}</td><td class="number py-3 pr-4">{{ row.cost_total|floatformat:2 }}</td><td class="number py-3 pr-4">{{ row.realized_total|floatformat:2 }}</td><td class="number py-3 pr-4">{{ row.unrealized_total|floatformat:2 }}</td><td class="py-3">{% if row.snapshot.performance_complete %}{% translate 'Recorded' %}{% else %}{% translate 'Incomplete' %}{% endif %}</td></tr>{% endfor %}</tbody>
+            </table>
+        </div>
     </section>
 
     {# ---------------------------------------------------------------- #}

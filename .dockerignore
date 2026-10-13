@@ -23,6 +23,10 @@
 !investments/**
 !sandbox/
 !sandbox/**
+!planning/
+!planning/**
+!ingestion/
+!ingestion/**
 !templates/
 !templates/**
 !static/

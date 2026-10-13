@@ -1,0 +1,9 @@
+{% load i18n %}
+<div class="space-y-3">
+{% for row in rows %}<div class="rounded-xl border border-forest/10 p-4 dark:border-cream/10"><p class="font-medium">{{ row.date|date:USER_DATE_FORMAT }} · {{ row.currency }} {{ row.amount }} · {{ row.description }}</p><p class="subtle-copy">{% translate 'Entry' %} {{ row.number }} · {{ row.get_action_display }}</p>
+{% if row.category %}<p>{{ row.category }}</p>{% endif %}{% if row.matched_movement %}<p>{% translate 'Existing movement' %}: {{ row.matched_movement.description }} · #{{ row.matched_movement.pk }}</p>{% endif %}{% if row.invoice %}<p>{{ row.invoice }}</p>{% endif %}{% if row.counterparty_account %}<p>{{ row.counterparty_account }} · {{ row.counterparty_account.currency }} {{ row.counterparty_amount }}</p>{% endif %}
+{% if row.external_id %}<p class="subtle-copy">{% translate 'Bank identifier' %}: {{ row.external_id }}</p>{% endif %}
+{% if row.created_transaction %}<a class="quiet-action" href="{% url 'transactions:update' row.created_transaction_id %}">{% translate 'Open created transaction' %}</a>{% elif row.created_payment %}<a class="quiet-action" href="{% url 'banking:invoice_detail' row.created_payment.invoice_id %}">{% translate 'Open invoice' %}</a>{% elif row.created_transfer %}<a class="quiet-action" href="{% url 'banking:detail' row.created_transfer.source_account.bank_id %}">{% translate 'Open transfer account' %}</a>{% endif %}
+<details class="mt-3"><summary class="quiet-action cursor-pointer">{% translate 'Original row evidence' %}</summary><pre class="mt-2 overflow-x-auto whitespace-pre-wrap text-sm">{{ row.raw }}</pre></details>
+</div>{% endfor %}
+</div>

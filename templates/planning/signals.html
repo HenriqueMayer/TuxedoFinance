@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Local signals' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <header class="workspace-header"><div><h1 class="page-title">{% translate 'Local signals' %}</h1><p class="subtle-copy mt-2">{% translate 'Explained suggestions from recorded local data. Reviewing a signal changes only its review status.' %}</p></div><a href="{% url 'planning:signals_settings' %}" class="action-link">{% translate 'Signal settings' %}</a></header>
+    <p class="subtle-copy">{% translate 'Duplicate and increase checks use up to 1,000 expenses in the last 90 days. These patterns require review and never prove a duplicate or a subscription. Cash forecasts use recorded bank movements and unpaid confirmed-mode invoices within the configured horizon.' %}</p>
+    {% for notice in notices %}<p role="status" class="subtle-copy">{{ notice }}</p>{% endfor %}
+    <a class="quiet-action" href="{% url 'planning:signals' %}{% if not include_reviewed %}?reviewed=1{% endif %}">{% if include_reviewed %}{% translate 'Show pending signals' %}{% else %}{% translate 'Include reviewed signals' %}{% endif %}</a>
+    {% for signal in signals %}
+    <article class="surface-panel space-y-4" aria-labelledby="signal-{{ forloop.counter }}">
+        <h2 id="signal-{{ forloop.counter }}" class="section-title">{{ signal.title }}</h2>
+        <p class="text-sm leading-relaxed">{{ signal.explanation }}</p>
+        {% if signal.partial %}<p class="text-sm text-expense dark:text-expense-light">{% translate 'Some expenses have missing exchange rates; these totals are partial.' %}</p>{% endif %}
+        <div class="flex flex-wrap gap-3">{% for source in signal.sources %}<a href="{{ source.url }}" class="text-sm underline">{{ source.label }}</a>{% endfor %}</div>
+        <form method="post" action="{% url 'planning:signal_decision' %}" hx-boost="false" class="flex flex-wrap items-center gap-3">
+            {% csrf_token %}<input type="hidden" name="key" value="{{ signal.key }}">
+            {% if signal.decision %}<p class="subtle-copy">{{ signal.decision.get_action_display }}</p><button type="submit" name="action" value="REOPEN" class="action-link">{% translate 'Reopen signal' %}</button>
+            {% else %}<button type="submit" name="action" value="ACK" class="action-link">{% translate 'Acknowledge' %}</button><button type="submit" name="action" value="DISMISS" class="quiet-action">{% translate 'Dismiss signal' %}</button>{% endif %}
+        </form>
+    </article>
+    {% empty %}<p class="subtle-copy py-8">{% translate 'No pending signals in the available local evidence.' %}</p>{% endfor %}
+</div>
+{% endblock %}

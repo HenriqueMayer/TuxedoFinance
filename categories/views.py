@@ -178,7 +178,7 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
         except ProtectedError:
             messages.error(
                 self.request,
-                _('"%(name)s" cannot be deleted because it is still used by existing transactions.')
+                _('"%(name)s" cannot be deleted because it is still used by existing transactions or budgets.')
                 % {'name': name},
             )
             return redirect('categories:list')
@@ -197,10 +197,10 @@ def delete_all_categories(request):
     category_count = categories.count()
 
     if request.method == 'POST':
-        if categories.filter(transactions__isnull=False).exists():
+        if categories.filter(Q(transactions__isnull=False) | Q(transaction_splits__isnull=False) | Q(budgets__isnull=False)).exists():
             messages.error(
                 request,
-                _('Categories cannot be deleted while they are used by existing transactions.'),
+                _('Categories cannot be deleted while they are used by existing transactions or budgets.'),
             )
             return redirect('categories:list')
 

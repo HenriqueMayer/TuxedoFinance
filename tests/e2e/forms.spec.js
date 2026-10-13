@@ -18,7 +18,7 @@ async function fixture(page, testInfo) {
     await post(page, '/banking/create/', { name: 'Keyboard bank' });
     await page.goto('/banking/accounts/create/');
     const bank = await page.locator('#id_bank option').last().getAttribute('value');
-    await post(page, '/banking/accounts/create/', { bank, name: 'Keyboard account', currency: 'BRL', opening_balance: '1000', pix_enabled: 'on' });
+    await post(page, '/banking/accounts/create/', { bank, name: 'Keyboard account', currency: 'BRL', opening_date: '2025-01-01', opening_balance: '1000', pix_enabled: 'on' });
     await page.goto('/banking/credit-cards/create/');
     const account = await page.locator('#id_account option').last().getAttribute('value');
     for (const name of ['Keyboard card A', 'Keyboard card B']) {

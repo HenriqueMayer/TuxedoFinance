@@ -9,6 +9,7 @@
     </div>
     <div class="flex flex-wrap items-center gap-3">
         <a class="quiet-action" href="{% url 'investments:update_asset' asset.pk %}">{% translate 'Edit' %}</a>
+        {% if asset.valuation_mode == 'UNITS' %}<a class="quiet-action" href="{% url 'investments:prices' %}?asset={{ asset.pk|unlocalize }}">{% translate 'Observed prices' %}</a>{% endif %}
         {% if asset.is_archived %}{% url 'investments:restore_asset' asset.pk as archive_url %}{% else %}{% url 'investments:archive_asset' asset.pk as archive_url %}{% endif %}
         <form method="post" action="{{ archive_url }}" hx-boost="true" hx-request='{"noHeaders":false}' novalidate>
             {% csrf_token %}

@@ -153,7 +153,7 @@
                                 {% endif %}
                             </div>
                             <p class="text-sm text-forest/70 dark:text-night-muted">
-                                {{ transaction.category.name }} &middot; {{ transaction.payment_label }}
+                                {% if transaction.splits.all %}{% for split in transaction.splits.all %}{{ split.category.name }}{% if not forloop.last %} / {% endif %}{% endfor %}{% else %}{{ transaction.category.name }}{% endif %} &middot; {{ transaction.payment_label }}
                                 &middot; {{ transaction.get_payment_channel_display }}
                                 &middot; {{ transaction.date|date:USER_DATE_FORMAT }}
                             </p>
@@ -178,6 +178,7 @@
                                     <span class="subtle-copy">{% translate 'Managed by reward redemption' %}</span>
                                     <a href="{% url 'banking:detail' transaction.reward_redemption.target_account.bank_id %}#reward-redemption-{{ transaction.reward_redemption_id|stringformat:'d' }}" class="quiet-action">{% translate 'View redemption' %}</a>
                                 {% else %}
+                                <a href="{% url 'transactions:split' transaction.pk %}" class="quiet-action">{% translate 'Split' %}</a>
                                 <a href="{% url 'transactions:update' transaction.pk %}"
                                    class="quiet-action">
                                     {% translate "Edit" %}

@@ -2,15 +2,18 @@
 """Synthetic investment history and saved planning examples for opt-in demos."""
 
 from calendar import monthrange
-from datetime import date
+from datetime import date, datetime, time
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.http import QueryDict
+from django.utils import timezone
 
 from accounts.models import UserPreference
-from investments.models import Asset, Investment, InvestmentProduct
+from investments.models import Asset, Investment, InvestmentProduct, PriceObservation
 from investments.services import refresh_fx_snapshot, sync_investment_ledger
+from planning.models import FinancialGoal, GoalAllocation
+from planning.services import goal_sources, save_allocation
 from sandbox.forms import SalarySandboxForm, YieldSimulationForm
 from sandbox.models import ScenarioDraft
 from sandbox.planning import commitment_snapshot, simulate_yield, snapshot_total
@@ -43,6 +46,8 @@ COPY = {
         'investment': 'Additional investment',
         'travel': 'Travel goal',
         'yield_draft': 'Two-year savings goal with a planned withdrawal',
+        'observed_price': 'Synthetic local price series; fictional demonstration, not a market feed',
+        'cash_goal': 'Keep the monthly buffer available',
     },
     'pt': {
         'portfolio': 'Carteira de longo prazo',
@@ -69,6 +74,8 @@ COPY = {
         'investment': 'Investimento adicional',
         'travel': 'Objetivo de viagem',
         'yield_draft': 'Objetivo de dois anos com resgate planejado',
+        'observed_price': 'Série local sintética de preços; demonstração fictícia, não é um feed de mercado',
+        'cash_goal': 'Manter a reserva das contas do mês',
     },
 }
 
@@ -128,7 +135,7 @@ def _draft(*, user, name, kind, inputs, snapshot=None):
 
 
 def seed_investments_and_drafts(
-    *, user, language, as_of, checking, savings, global_account,
+    *, user, language, as_of, checking, savings, goals_account, global_account,
     primary_bank, global_bank, program,
 ):
     """Populate a new demo owner inside the caller's atomic, localized context.
@@ -152,39 +159,39 @@ def seed_investments_and_drafts(
     cash = _save(
         Asset, user=user, name=labels['cash_asset'], code='DEMO-CASH',
         asset_class=Asset.AssetClass.LIQUIDITY, currency='BRL',
-        valuation_mode=Asset.ValuationMode.MONETARY,
+        valuation_mode=Asset.ValuationMode.MONETARY, opening_date=_month(as_of, -12, 1),
         opening_balance=Decimal('2400.00'), opening_product=cash_product,
     )
     fixed = _save(
         Asset, user=user, name=labels['fixed_asset'], code='DEMO-FIXED',
         asset_class=Asset.AssetClass.FIXED_INCOME, currency='BRL',
-        valuation_mode=Asset.ValuationMode.MONETARY,
+        valuation_mode=Asset.ValuationMode.MONETARY, opening_date=_month(as_of, -12, 1),
         opening_balance=Decimal('6000.00'), opening_product=portfolio,
     )
     currency = _save(
         Asset, user=user, name=labels['currency_asset'], code='DEMO-USD',
         asset_class=Asset.AssetClass.CURRENCY, currency='USD',
-        valuation_mode=Asset.ValuationMode.MONETARY,
+        valuation_mode=Asset.ValuationMode.MONETARY, opening_date=_month(as_of, -12, 1),
         opening_balance=Decimal('250.00'), opening_product=global_portfolio,
     )
     crypto = _save(
         Asset, user=user, name=labels['crypto_asset'], code='DEMO-CRYPTO',
         asset_class=Asset.AssetClass.CRYPTO, currency='USD',
-        valuation_mode=Asset.ValuationMode.UNITS,
+        valuation_mode=Asset.ValuationMode.UNITS, opening_date=_month(as_of, -12, 1),
         opening_quantity=Decimal('2.00000000'),
         opening_unit_price=Decimal('90.00000000'), opening_product=global_portfolio,
     )
     equity = _save(
         Asset, user=user, name=labels['equity_asset'], code='DEMO-EQUITY',
         asset_class=Asset.AssetClass.EQUITY, currency='USD',
-        valuation_mode=Asset.ValuationMode.UNITS,
+        valuation_mode=Asset.ValuationMode.UNITS, opening_date=_month(as_of, -12, 1),
         opening_quantity=Decimal('12.00000000'),
         opening_unit_price=Decimal('50.00000000'), opening_product=global_portfolio,
     )
     alternative = _save(
         Asset, user=user, name=labels['other_asset'], code='DEMO-OTHER',
         asset_class=Asset.AssetClass.OTHER, currency='BRL',
-        valuation_mode=Asset.ValuationMode.UNITS,
+        valuation_mode=Asset.ValuationMode.UNITS, opening_date=_month(as_of, -12, 1),
         opening_quantity=Decimal('10.00000000'),
         opening_unit_price=Decimal('40.00000000'), opening_product=portfolio,
     )
@@ -224,6 +231,7 @@ def seed_investments_and_drafts(
             user=user, product=global_portfolio, asset=equity, kind=Investment.Kind.DEPOSIT,
             quantity=Decimal('1.00000000'), unit_price=price,
             cash_amount=price + Decimal('0.50'), fees=Decimal('0.50'),
+            fees_in_asset_currency=True,
             source_account=global_account, date=deposit_date,
             reason=labels['international'], notes=labels['notes'],
         )
@@ -259,6 +267,7 @@ def seed_investments_and_drafts(
         user=user, product=global_portfolio, asset=equity, kind=Investment.Kind.WITHDRAWAL,
         quantity=Decimal('2.00000000'), unit_price=Decimal('64.00000000'),
         cash_amount=Decimal('127.00'), fees=Decimal('1.00'),
+        fees_in_asset_currency=True,
         destination_account=global_account, date=_month(as_of, -1, 24),
         reason=labels['withdrawal'], notes=labels['notes'],
     )
@@ -267,6 +276,32 @@ def seed_investments_and_drafts(
         amount=Decimal('600.00'), cash_amount=Decimal('600.00'),
         destination_account=savings, date=_month(as_of, -2, 22), reason=labels['withdrawal'],
     )
+
+    for asset, increase in [(crypto, Decimal('2.50')), (equity, Decimal('1.20')), (alternative, Decimal('0.80'))]:
+        for index, offset in enumerate(range(-12, 1)):
+            _save(PriceObservation, user=user, asset=asset, date=_month(as_of, offset),
+                  unit_price=asset.opening_unit_price + increase * index,
+                  source=labels['observed_price'])
+
+    current_sources = goal_sources(user)
+    for name, target, currency_code, allocation_amount, source in [
+        (labels['emergency'], '25000', 'BRL', '8000', {'bank_account': savings}),
+        (labels['travel'], '1200', 'USD', '1200', {'bank_account': goals_account}),
+        (labels['cash_goal'], '3000', 'BRL', '1200', {'product': cash_product, 'asset': cash}),
+    ]:
+        goal = _save(FinancialGoal, user=user, name=name, target_amount=Decimal(target),
+                     currency=currency_code, target_date=_month(as_of, 6, 20))
+        allocation = GoalAllocation(user=user, goal=goal, amount=Decimal(allocation_amount), **source)
+        # Synthetic registration metadata matches the chosen demo cutoff so
+        # its explicit reserve is also visible when reviewing that sample month.
+        registered = timezone.make_aware(datetime.combine(as_of, time.min))
+        FinancialGoal.objects.filter(pk=goal.pk).update(created_at=registered, updated_at=registered)
+        source_balance = current_sources.get(allocation.source_key, {}).get('balance', Decimal('0'))
+        if source_balance >= allocation.amount:
+            # A future anchor can place openings after today's clock. Keep its
+            # target unfunded rather than claiming cash which does not exist yet.
+            allocation = save_allocation(allocation)
+            GoalAllocation.objects.filter(pk=allocation.pk).update(created_at=registered, updated_at=registered)
 
     month = as_of.replace(day=1)
     snapshot = commitment_snapshot(user, month, month_basis='reference_month')

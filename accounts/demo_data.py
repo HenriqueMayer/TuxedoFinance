@@ -2,7 +2,7 @@
 """Explicit, fictional demo profiles; never read or clone an existing owner."""
 
 from calendar import monthrange
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -13,12 +13,15 @@ from accounts.demo_investments import seed_investments_and_drafts
 from accounts.models import UserPreference
 from banking.models import (
     Bank, BankAccount, CreditCard, DebitCard, ExchangeRate, LoyaltyEntry,
-    LoyaltyProgram,
+    InvoicePayment, LoyaltyProgram,
 )
+from banking.settlements import save_invoice_payment
 from banking.services import (
     create_reward_redemption, create_transfer, sync_loyalty_entry_funding,
 )
 from categories.models import Category
+from planning.models import CategoryBudget, SignalDecision, SignalSettings
+from planning.services import local_signals
 from transactions.models import Transaction
 from transactions.services import sync_user_ledger
 
@@ -90,7 +93,7 @@ def seed_demo_profile(*, language, username, password, as_of):
 
         def account(bank, en, pt, currency, balance, **extra):
             return _create(BankAccount, user=user, bank=bank, name=label(en, pt),
-                           currency=currency, opening_balance=Decimal(balance), **extra)
+                           currency=currency, opening_balance=Decimal(balance), opening_date=_month(as_of, -12, 1), **extra)
 
         checking = account(primary, 'Everyday account', 'Conta do dia a dia', 'BRL', '6500', reserved_amount=Decimal('1500'))
         savings = account(second, 'Emergency reserve', 'Reserva de emergência', 'BRL', '18000', planning_enabled=False)
@@ -107,6 +110,14 @@ def seed_demo_profile(*, language, username, password, as_of):
         physical = card('Aurora physical', 'Aurora físico', 'PHYSICAL', 24, 5)
         virtual = card('Aurora online', 'Aurora virtual', 'VIRTUAL', 18, 25)
         additional = card('Aurora household', 'Aurora adicional', 'ADDITIONAL', 28, 8)
+        # A fresh fictional card may explicitly seed a historical manual baseline.
+        # Existing owners are never accepted by this command or migrated to it.
+        manual = _create(CreditCard, user=user, account=checking,
+                         name=label('Aurora confirmed payments', 'Aurora pagamentos confirmados'),
+                         card_type='VIRTUAL', closing_day=10, due_day=20,
+                         manual_settlement_from=_month(as_of, -12))
+        forecast_account = account(primary, 'Upcoming debit example', 'Exemplo de débito previsto',
+                                   'BRL', '100', planning_enabled=False)
 
         for index, offset in enumerate(range(-12, 1)):
             for currency, base in [('USD', Decimal('4.85')), ('EUR', Decimal('5.35'))]:
@@ -179,6 +190,35 @@ def seed_demo_profile(*, language, username, password, as_of):
               _month(as_of, -1, 12), 'ACCOUNT', global_account)
         entry('Next holiday booking', 'Reserva das próximas férias', '650', travel,
               _month(as_of, 1, 10), 'ACCOUNT', goals)
+        entry('Manual invoice awaiting payment', 'Fatura manual aguardando pagamento', '420',
+              learning, _month(as_of, -3, 6), instrument=manual)
+        entry('Manual invoice with a partial payment', 'Fatura manual com pagamento parcial', '360',
+              learning, _month(as_of, -2, 6), instrument=manual)
+        review_note = label('Intentional synthetic review example; never inferred from another owner.',
+                            'Exemplo sintético intencional de revisão; não deriva de outra pessoa.')
+        for when in [as_of - timedelta(days=1), as_of]:
+            entry('Cloud storage review example', 'Exemplo de revisão de armazenamento online',
+                  '39.90', subscriptions, when, 'ACCOUNT', checking, notes=review_note)
+        for when in [as_of - timedelta(days=3), as_of - timedelta(days=2)]:
+            entry('Parking review example', 'Exemplo de revisão de estacionamento',
+                  '20', transport, when, 'ACCOUNT', checking, notes=review_note)
+        for when, amount in [(as_of - timedelta(days=30), '29.90'), (as_of, '35.90')]:
+            entry('Design toolkit monthly review', 'Revisão mensal de ferramenta de design',
+                  amount, subscriptions, when, 'ACCOUNT', checking, notes=review_note)
+        entry('Known upcoming debit example', 'Exemplo de débito futuro registrado', '200',
+              utilities, as_of + timedelta(days=10), 'ACCOUNT', forecast_account,
+              notes=label('Fictional recorded obligation; no future income is assumed.',
+                          'Obrigação fictícia registrada; nenhuma receita futura é presumida.'))
+
+        for month, category_item, amount in [
+            (_month(as_of, -1), food, '950'), (_month(as_of, -1), housing, '2800'),
+            (_month(as_of, -1), learning, '350'), (_month(as_of, 0), food, '800'),
+            (_month(as_of, 0), housing, '2800'), (_month(as_of, 0), technology, '700'),
+        ]:
+            if month.year >= 1901:
+                _create(CategoryBudget, user=user, category=category_item, month=month,
+                        currency='BRL', amount=Decimal(amount))
+        _create(SignalSettings, user=user)
 
         for offset, destination, source_amount, target_amount in [
             (-6, savings, '1500', '1500'), (-4, global_account, '1000', '200'),
@@ -224,11 +264,26 @@ def seed_demo_profile(*, language, username, password, as_of):
                                      notes=label('Demonstration redemption', 'Resgate de demonstração'), **funding)
 
         sync_user_ledger(user, through_date=as_of)
+        partial_invoice = user.card_invoices.get(card=manual, reference_month=_month(as_of, -2))
+        payment_date = _month(as_of, -2, 22)
+        if payment_date <= date.today():
+            # Confirm only a past/current fictional payment. A future --as-of
+            # may project obligations, but cannot fabricate future confirmation.
+            save_invoice_payment(InvoicePayment(
+                user=user, invoice=partial_invoice, account=checking, amount=Decimal('180'),
+                date=payment_date,
+                notes=label('Synthetic confirmed partial payment', 'Pagamento parcial confirmado sintético'),
+            ))
+            sync_user_ledger(user, through_date=as_of)
         invoice = user.card_invoices.filter(card=physical, due_date__lte=as_of).order_by('-due_date').first()
         loyalty(program, 'CREDIT', 'INVOICE_AWARD', '1250', invoice.due_date,
                 'Points earned on a paid bill', 'Pontos recebidos de fatura paga', invoice=invoice)
         seed_investments_and_drafts(
             user=user, language=language, as_of=as_of, checking=checking, savings=savings,
-            global_account=global_account, primary_bank=primary, global_bank=global_bank, program=program,
+            goals_account=goals, global_account=global_account, primary_bank=primary,
+            global_bank=global_bank, program=program,
         )
+        duplicate = next((item for item in local_signals(user, as_of=as_of)['signals'] if item['kind'] == 'duplicates'), None)
+        if duplicate:
+            _create(SignalDecision, user=user, key=duplicate['key'], action=SignalDecision.Action.ACKNOWLEDGED)
         return user

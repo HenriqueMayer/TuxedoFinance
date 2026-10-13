@@ -90,7 +90,7 @@ test('salary plan uses the selected month forecast and saves only when requested
     await post(page, '/banking/create/', { name: 'Planning bank' });
     await page.goto('/banking/accounts/create/');
     const bank = await page.locator('#id_bank option').last().getAttribute('value');
-    await post(page, '/banking/accounts/create/', { bank, name: 'Checking', currency: 'BRL', opening_balance: '1000', pix_enabled: 'on' });
+    await post(page, '/banking/accounts/create/', { bank, name: 'Checking', currency: 'BRL', opening_date: '2025-01-01', opening_balance: '1000', pix_enabled: 'on' });
     await page.goto('/transactions/create/');
     const account = await page.locator('#id_bank_account option').last().getAttribute('value');
     const category = await page.locator('#id_category option').last().getAttribute('value');

@@ -19,9 +19,10 @@ async function seed(page, info) {
     await post(page, '/investments/products/create/', { bank, name: 'Dollar product', purpose: 'INVESTMENT' });
     await page.goto('/investments/assets/create/');
     const product = await page.locator('#id_opening_product option').last().getAttribute('value');
+    const openingDate = '2025-01-01';
     await post(page, '/investments/assets/create/', { name: 'Dollar position', code: 'USD',
         asset_class: 'LIQUIDITY', currency: 'USD', valuation_mode: 'MONETARY',
-        opening_balance: '100', opening_product: product, opening_quantity: '0', opening_unit_price: '0' });
+        opening_date: openingDate, opening_balance: '100', opening_product: product, opening_quantity: '0', opening_unit_price: '0' });
     const today = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     await post(page, '/banking/exchange-rates/create/', { from_currency: 'USD', to_currency: 'BRL',
@@ -30,7 +31,7 @@ async function seed(page, info) {
     const asset = await page.locator('#id_asset option').last().getAttribute('value');
     await post(page, '/investments/create/', { product, asset, kind: 'YIELD', yield_input_mode: 'YIELD_AMOUNT',
         amount: '10', fees: '0', date: yesterday });
-    return { product, asset, today, yesterday };
+    return { product, asset, today, yesterday, openingDate };
 }
 
 async function tabTo(page, control) {
@@ -67,8 +68,15 @@ for (const theme of ['light', 'dark']) {
         const warning = page.locator('#investment-chart-fx-warning');
         await expect(warning).toContainText('Historical conversion incomplete');
         await warning.locator('summary').press('Enter');
-        const opening = warning.locator('li').filter({ hasText: 'Opening position:' });
+        // The dated baseline and each missing valuation cutoff have their own
+        // rate link. Recover the declared baseline rather than an arbitrary row.
+        const opening = warning.locator('li').filter({
+            has: page.locator(`a[href$="effective_date=${data.openingDate}"]`),
+        });
+        await expect(opening).toHaveCount(1);
+        await expect(opening).toContainText('Opening position:');
         await opening.getByRole('link', { name: 'Register exchange rate' }).press('Enter');
+        await expect(page).toHaveURL(new RegExp(`effective_date=${data.openingDate}`));
         await expect(page.locator('#id_from_currency')).toHaveValue('USD');
         await expect(page.locator('#id_to_currency')).toHaveValue('BRL');
         await expect(page.locator('#id_rate')).toHaveValue('');

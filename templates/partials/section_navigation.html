@@ -3,10 +3,20 @@
 <nav class="section-nav mb-6" aria-label="{% translate 'Overview sections' %}">
     <a href="{% url 'dashboard:index' %}" {% if request.resolver_match.url_name == 'index' %}aria-current="page"{% endif %}>{% translate 'Dashboard' %}</a>
     <a href="{% url 'dashboard:reports' %}" {% if request.resolver_match.url_name == 'reports' %}aria-current="page"{% endif %}>{% translate 'Reports' %}</a>
+    <a href="{% url 'dashboard:wealth' %}" {% if request.resolver_match.url_name == 'wealth' %}aria-current="page"{% endif %}>{% translate 'Net worth' %}</a>
 </nav>
-{% elif request.resolver_match.namespace == 'transactions' or request.resolver_match.namespace == 'categories' %}
+{% elif request.resolver_match.namespace == 'transactions' or request.resolver_match.namespace == 'categories' or request.resolver_match.namespace == 'ingestion' %}
 <nav class="section-nav mb-6" aria-label="{% translate 'Activity sections' %}">
     <a href="{% url 'transactions:list' %}" {% if request.resolver_match.namespace == 'transactions' %}aria-current="page"{% endif %}>{% translate 'Transactions' %}</a>
     <a href="{% url 'categories:list' %}" {% if request.resolver_match.namespace == 'categories' %}aria-current="page"{% endif %}>{% translate 'Categories' %}</a>
+    <a href="{% url 'ingestion:index' %}" {% if request.resolver_match.namespace == 'ingestion' %}aria-current="page"{% endif %}>{% translate 'Import statements' %}</a>
 </nav>
+{% elif request.resolver_match.namespace == 'banking' %}
+<nav class="section-nav mb-6" aria-label="{% translate 'Banking sections' %}">
+    <a href="{% url 'banking:list' %}">{% translate 'Banks' %}</a>
+    <a href="{% url 'banking:invoices' %}" {% if request.resolver_match.url_name == 'invoices' or request.resolver_match.url_name == 'invoice_detail' %}aria-current="page"{% endif %}>{% translate 'Invoices' %}</a>
+    <a href="{% url 'banking:exchange_rates' %}">{% translate 'Exchange rates' %}</a>
+</nav>
+{% elif request.resolver_match.namespace == 'planning' %}
+{% include 'planning/_navigation.html' %}
 {% endif %}

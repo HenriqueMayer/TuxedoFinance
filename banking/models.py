@@ -1,6 +1,7 @@
 from calendar import monthrange
 from datetime import date
 from decimal import Decimal
+import uuid
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -67,6 +68,7 @@ class BankAccount(TimestampedModel):
     opening_balance = models.DecimalField(
         max_digits=16, decimal_places=2, default=ZERO
     )
+    opening_date = models.DateField(null=True, blank=True)
     pix_enabled = models.BooleanField(default=True)
     planning_enabled = models.BooleanField(default=True)
     reserved_amount = models.DecimalField(
@@ -93,6 +95,12 @@ class BankAccount(TimestampedModel):
     def clean(self):
         if self.bank_id and self.user_id and self.bank.user_id != self.user_id:
             raise ValidationError({'bank': _('The bank must belong to the account owner.')})
+        if self.pk:
+            previous_currency = BankAccount.objects.filter(pk=self.pk).values_list('currency', flat=True).first()
+            # A reserve is denominated in its source currency, including when
+            # its goal is archived. Reinterpreting it would invent funding.
+            if previous_currency != self.currency and self.goal_allocations.exists():
+                raise ValidationError({'currency': _('Currency cannot change while this account has goal reservations.')})
 
     def current_balance(self, as_of=None):
         from banking.services import account_balance
@@ -147,6 +155,10 @@ class CreditCard(TimestampedModel):
     due_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(31)]
     )
+    manual_settlement_from = models.DateField(
+        null=True, blank=True,
+        help_text=_('Confirm payments for invoices due on or after this date. Earlier invoices retain automatic settlement.'),
+    )
 
     class Meta:
         ordering = ['name']
@@ -199,6 +211,8 @@ class CreditCard(TimestampedModel):
 class CardInvoice(TimestampedModel):
     class Status(models.TextChoices):
         SCHEDULED = 'SCHEDULED', _('Scheduled')
+        PARTIAL = 'PARTIAL', _('Partially paid')
+        OVERDUE = 'OVERDUE', _('Overdue')
         PAID = 'PAID', _('Paid')
 
     user = models.ForeignKey(
@@ -216,6 +230,7 @@ class CardInvoice(TimestampedModel):
         max_length=10, choices=Status.choices, default=Status.SCHEDULED
     )
     paid_at = models.DateTimeField(null=True, blank=True)
+    manual_settlement = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-reference_month', 'card__name']
@@ -238,7 +253,19 @@ class CardInvoice(TimestampedModel):
 
     @property
     def is_overdue(self):
-        return self.status == self.Status.SCHEDULED and self.due_date < date.today()
+        return self.status != self.Status.PAID and self.due_date < date.today()
+
+    @property
+    def confirmed_amount(self):
+        return sum((payment.amount for payment in self.payments.all() if payment.date <= date.today()), ZERO)
+
+    @property
+    def remaining_amount(self):
+        return max(ZERO, self.amount - self.confirmed_amount) if self.manual_settlement else (ZERO if self.status == self.Status.PAID else self.amount)
+
+    @property
+    def overpaid_amount(self):
+        return max(ZERO, self.confirmed_amount - self.amount) if self.manual_settlement else ZERO
 
     def clean(self):
         errors = {}
@@ -399,6 +426,40 @@ class BankMovement(TimestampedModel):
                 errors['transfer'] = _('The transfer must belong to the movement owner.')
             if self.kind != self.Kind.TRANSFER:
                 errors['kind'] = _('A transfer-linked movement must have TRANSFER kind.')
+        if errors:
+            raise ValidationError(errors)
+
+
+class InvoicePayment(TimestampedModel):
+    """A confirmed cash payment, distinct from a projected invoice debit."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invoice_payments')
+    invoice = models.ForeignKey(CardInvoice, on_delete=models.PROTECT, related_name='payments')
+    account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name='invoice_payments')
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    date = models.DateField()
+    notes = models.TextField(blank=True)
+    confirmation_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    movement = models.OneToOneField(BankMovement, on_delete=models.PROTECT, related_name='confirmed_invoice_payment', null=True, editable=False)
+
+    class Meta:
+        ordering = ['date', 'created_at', 'pk']
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name='banking_invoice_payment_gt_zero')]
+
+    def clean(self):
+        errors = {}
+        for name in ('invoice', 'account'):
+            related = getattr(self, name) if getattr(self, name + '_id') else None
+            if related and self.user_id and related.user_id != self.user_id:
+                errors[name] = _('This selection must belong to the payment owner.')
+        if self.invoice_id and self.account_id and self.invoice.account.currency != self.account.currency:
+            errors['account'] = _('Choose an account in the invoice currency.')
+        if self.invoice_id and not self.invoice.manual_settlement:
+            errors['invoice'] = _('This invoice uses automatic settlement.')
+        if self.date and self.date > date.today():
+            errors['date'] = _('Confirmed payments cannot be dated in the future.')
+        if self.account_id and self.account.opening_date and self.date and self.date < self.account.opening_date:
+            errors['date'] = _('The payment cannot precede the account opening balance date.')
         if errors:
             raise ValidationError(errors)
 

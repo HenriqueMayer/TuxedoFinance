@@ -1,6 +1,15 @@
 @import "tailwindcss" source(none);
 @config "../../tailwind.config.js";
 
+/* Vendored Inter: English and Portuguese require no external font request. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: optional;
+  src: url('../fonts/inter-latin-variable.woff2') format('woff2');
+}
+
 /* Preserve existing reset and keyboard focus behavior across compiler versions. */
 @layer base {
   *, ::before, ::after, ::backdrop, ::file-selector-button { border-color: #e5e7eb; }

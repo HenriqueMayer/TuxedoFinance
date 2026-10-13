@@ -8,6 +8,8 @@ module.exports = {
     './core/**/*.py',
     './dashboard/**/*.py',
     './investments/**/*.py',
+    './ingestion/**/*.py',
+    './planning/**/*.py',
     './pages/**/*.py',
     './sandbox/**/*.py',
     './docs/design-system.html',

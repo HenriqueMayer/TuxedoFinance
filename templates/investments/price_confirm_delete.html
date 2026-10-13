@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Delete price observation' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-md space-y-6"><h1 class="page-title">{% translate 'Delete price observation' %}</h1>
+    <p>{% blocktranslate with asset=object.asset.name date=object.date|date:USER_DATE_FORMAT %}Delete the observation for {{ asset }} on {{ date }}?{% endblocktranslate %}</p>
+    <p class="subtle-copy">{% translate 'Valuations will use the preceding observation or remaining cost. Operations and bank balances stay unchanged.' %}</p>
+    <form method="post" hx-boost="false" class="surface-panel flex gap-3" novalidate>{% csrf_token %}<button type="submit" class="action-primary">{% translate 'Delete' %}</button><a class="quiet-action" href="{% url 'investments:prices' %}">{% translate 'Cancel' %}</a></form>
+</div>
+{% endblock %}

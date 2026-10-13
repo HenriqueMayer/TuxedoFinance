@@ -1,0 +1,18 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate 'Map statement columns' %} - Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6"><div><h1 class="page-title">{% translate 'Map statement columns' %}</h1><p class="subtle-copy mt-2">{{ batch.file_name }} · {{ batch.account }} · {{ batch.account.currency }}</p></div>
+<section class="surface-panel space-y-3 p-6"><h2 class="section-title">{% translate 'Original file preview' %}</h2><div class="overflow-x-auto"><pre class="text-sm">{% for line in preview %}{{ line }}
+{% endfor %}</pre></div><p class="subtle-copy">{% translate 'Negative amounts debit the account; positive amounts credit it. No category or financial operation is inferred.' %}</p></section>
+<form method="post" hx-boost="false" novalidate class="surface-panel space-y-5 p-6" data-import-mapping>
+{% csrf_token %}{% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+{% include 'partials/form_field.html' with field=form.date_column %}{% include 'partials/form_field.html' with field=form.description_column %}
+{% include 'partials/form_field.html' with field=form.amount_mode %}
+<div data-import-amount="signed" data-has-errors="{{ form.amount_column.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.amount_column %}</div>
+<div data-import-amount="separate" data-has-errors="{% if form.debit_column.errors or form.credit_column.errors %}true{% else %}false{% endif %}" class="space-y-5">{% include 'partials/form_field.html' with field=form.debit_column %}{% include 'partials/form_field.html' with field=form.credit_column %}</div>
+{% include 'partials/form_field.html' with field=form.id_column %}{% include 'partials/form_field.html' with field=form.currency_column %}{% include 'partials/form_field.html' with field=form.date_format %}{% include 'partials/form_field.html' with field=form.decimal_mark %}
+<p class="subtle-copy">{% translate 'Changing a saved mapping replaces the pending row decisions. Confirmed imports cannot be remapped.' %}</p>
+<div class="flex flex-wrap gap-3"><button class="action-primary" type="submit">{% translate 'Review parsed entries' %}</button><a class="action-secondary" href="{% url 'ingestion:index' %}">{% translate 'Cancel' %}</a></div>
+</form></div>
+{% endblock %}
+{% block extra_js %}{% include 'ingestion/_conditional_script.html' %}{% endblock %}

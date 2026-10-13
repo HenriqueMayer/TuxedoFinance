@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Goals' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <header class="workspace-header"><div><h1 class="page-title">{% translate 'Goals' %}</h1><p class="subtle-copy mt-2">{% translate 'Reserve an existing bank or cash-pot balance for a named target.' %}</p></div><a href="{% url 'planning:goal_create' %}" class="action-primary">{% translate 'New goal' %}</a></header>
+    <p class="subtle-copy">{% translate 'Goals name part of an existing reserve. Planning uses the greater of the account reserve and active goal reservations, so the same reserve is not deducted twice. Progress never creates money or assumes investment returns.' %}</p>
+    <a href="{% url 'planning:goals' %}{% if not include_archived %}?archived=1{% endif %}" class="quiet-action">{% if include_archived %}{% translate 'Show active goals' %}{% else %}{% translate 'Include archived goals' %}{% endif %}</a>
+    <div class="grid gap-5 lg:grid-cols-2">
+        {% for row in rows %}<section class="surface-panel space-y-4" aria-labelledby="goal-{{ row.goal.pk }}"><h2 id="goal-{{ row.goal.pk }}" class="section-title"><a class="underline-offset-4 hover:underline" href="{% url 'planning:goal_detail' row.goal.pk %}">{{ row.goal.name }}</a></h2>{% include 'planning/_goal_summary.html' %}<a class="action-link" href="{% url 'planning:goal_detail' row.goal.pk %}">{% translate 'Review reservations' %}</a></section>
+        {% empty %}<p class="subtle-copy py-8">{% translate 'No goals yet. Create a target, then reserve a real balance.' %}</p>{% endfor %}
+    </div>
+</div>
+{% endblock %}

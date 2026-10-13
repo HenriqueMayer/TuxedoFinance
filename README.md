@@ -151,6 +151,27 @@ Existing Docker installations must select the new image version and follow the
 > Credit-card purchases belong to their statement month; account cash changes on
 > the invoice due date. Invoice settlement is not a second expense.
 
+### Unreleased source branch
+
+`feat/personal-finance-evolution` adds the features below for local review.
+They are not included in the published v0.10.0 image or static preview. Follow
+the [branch testing guide](docs/branch-testing.md) to test a disposable copy
+before migrating an existing installation.
+
+| Area | Additions |
+|---|---|
+| Statement imports | Local CSV/OFX upload, explicit column/date/decimal mapping, staged review, stable-ID deduplication, possible-duplicate warnings, matching to existing bank evidence, confirmed invoice payments and owned-account transfers. Closing balances are reconciled without automatic adjustments; undo refuses changed source records. |
+| Category splits | Divide a transaction between categories with exact totals and installment cents; reports, budgets and CSV exports retain the allocations without duplicating payments. |
+| Confirmed invoices | Opt a card into recorded full or partial payments from an actual account. Earlier automatic invoices retain their behavior; unpaid amounts remain visible forecast obligations. |
+| Budgets and goals | Monthly category limits with previous-month copying, recorded spending and known forecasts; targets with currency/date and reservations backed by existing bank or monetary cash-pot balances. Insufficient backing and reference FX limitations remain visible. |
+| Local signals | Explained duplicate, subscription-increase, budget-overspend and future-cash-shortage suggestions, with acknowledge/dismiss/reopen actions that leave source finances unchanged. |
+| Valuations and wealth | Dated local unit-price observations, weighted-average remaining cost, realized/unrealized results, explicit fee currency and a monthly net-worth series including incurred card debt. Missing history, opening dates, prices and FX are disclosed. |
+| Local operation | Locally served fonts, reused reporting/conversion context and incremental ledger synchronization, plus expanded synthetic demonstration data. |
+
+The branch does not add a live bank connection, external quote feed or cloud AI
+service. Price observations and review decisions stay in the local database;
+historical valuations do not invent a cash-flow-adjusted percentage return.
+
 <details>
 <summary><strong>🎨 Visual language</strong></summary>
 

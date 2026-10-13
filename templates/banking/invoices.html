@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate 'Invoices' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-6"><h1 class="page-title">{% translate 'Invoices' %}</h1>
+<p class="subtle-copy">{% translate 'Automatic cards settle on their due date. For confirmed mode, record the actual payments; outstanding amounts remain in the forecast.' %}</p>
+<ul class="surface-panel divide-y divide-forest/10 dark:divide-cream/10">
+{% for invoice in invoices %}<li class="flex flex-wrap justify-between gap-3 p-5"><a class="quiet-action" href="{% url 'banking:invoice_detail' invoice.pk %}">{{ invoice.card.name }} · {{ invoice.reference_month|date:'M Y' }}</a><span>{{ invoice.get_status_display }} · {{ invoice.account.currency }} {{ invoice.amount }}</span>{% if invoice.manual_settlement %}<span>{% translate 'Remaining' %}: {{ invoice.remaining_amount }}</span>{% endif %}</li>
+{% empty %}<li class="p-5">{% translate 'No invoices yet.' %}</li>{% endfor %}
+</ul>
+{% if is_paginated %}<nav aria-label="{% translate 'Pagination' %}" class="flex justify-between">{% if page_obj.has_previous %}<a class="quiet-action" href="?page={{ page_obj.previous_page_number }}">{% translate 'Previous' %}</a>{% endif %}{% if page_obj.has_next %}<a class="quiet-action" href="?page={{ page_obj.next_page_number }}">{% translate 'Next' %}</a>{% endif %}</nav>{% endif %}
+</div>
+{% endblock %}

@@ -2,6 +2,8 @@
 
 The current architecture for Tuxedo Finance uses Django's full-stack delivery
 model and explicit banking and ledger domain concepts.
+This guide covers the `0.10.0` release baseline and the implemented Unreleased
+local-finance evolution; it does not imply that branch changes are published.
 
 ## Stack
 
@@ -38,6 +40,8 @@ banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
 transactions/  # categorized economic events and recurrence schedules
 dashboard/     # ledger, cash-flow, invoice and net-worth read models
 investments/   # products, assets, position operations and valuation
+planning/      # category budgets, existing-cash goals and local review signals
+ingestion/     # explicitly reviewed local statements and guarded import undo
 sandbox/       # private planning drafts and isolated simulations
 ```
 
@@ -62,6 +66,11 @@ Arrows mean "calls or imports", not ownership.
   event settles; it does not calculate account balances.
 - `investments` reuses `Bank` and `BankAccount` for providers and cash legs, but
   keeps its position ledger independent from `Transaction`.
+- `planning` owns limits, earmarks and review decisions, reading existing
+  transactions and cash sources without posting financial activity.
+- `ingestion` owns statement evidence and import decisions. Only explicit
+  confirmation calls canonical transaction, payment or transfer services;
+  matching an existing movement does not create a second source.
 - `dashboard` query services compose the ledgers without posting records. Its
   views first call transaction synchronization, which can write derived banking
   records. The app owns no financial model.
@@ -74,10 +83,14 @@ event and its movements runs in one database transaction.
 
 | Question | Source |
 |---|---|
-| What cash is available? | `BankAccount.opening_balance` + signed `BankMovement` amounts effective through the requested date. |
-| What was income or expense? | Categorized `Transaction`. |
-| What is owed on credit cards? | Derived `CardInvoice` totals and due-date movements; source purchases remain transactions, loyalty purchases, or redemption IOF. |
-| What investment quantity is held? | `Investment`. |
+| What cash is available? | The applicable dated `BankAccount` opening + signed `BankMovement` amounts effective through the requested date. |
+| What was income or expense? | Categorized `Transaction`, with exact `TransactionSplit` allocations when present. |
+| What is billed on credit cards? | Derived `CardInvoice` totals; default automatic due-date movements or explicitly confirmed manual `InvoicePayment` rows. |
+| What card debt is incurred at a date? | Purchase and realized recurrence sources through that date, including future installments, less effective settlements; excess payment remains card credit. |
+| What investment quantity and cost are held? | Dated opening plus chronological `Investment` replay per product/asset; unit disposals remove weighted cost, not signed proceeds. |
+| What is a position worth at a date? | Remaining quantity × latest local `PriceObservation` by that date, or disclosed remaining-cost fallback; monetary positions use their balance. |
+| What is reserved for a goal? | `GoalAllocation` backed by existing positive account/cash-pot balances; no new financial asset is created. |
+| What did an imported statement establish? | Owned `ImportBatch`/`ImportedRow` evidence and explicit source links, not a replacement bank ledger. |
 | How many loyalty points exist? | Signed `LoyaltyEntry` rows. |
 | What was a transfer or investment worth historically? | Its persisted FX snapshot, including source/target currencies, rate, effective date, and status. |
 | What is another amount worth now? | User's `UserPreference.base_currency` plus a current `ExchangeRate`, shown as a labeled current valuation. |
@@ -98,8 +111,21 @@ The default projection horizon is twelve months beyond today. Future-effective
 movements may already exist in storage; balance queries filter by effective
 date so they do not become realized cash early. Recurrences derive movements
 and invoice amounts from their source transaction, without creating additional
-`Transaction` rows. Invoice status is derived from the due date and the
-synchronization cutoff; it is not confirmation from an external bank.
+`Transaction` rows. Default automatic invoice status is derived from the due
+date and synchronization cutoff, not confirmation from an external bank.
+Cards may opt into manual settlement from a due-date boundary; those invoices
+have no projected settlement movement and derive status from explicit payments.
+Manual mode is sticky per invoice so later settings changes do not erase
+confirmed evidence. Payment-bearing invoices survive source/horizon cleanup.
+
+The projection compares existing movements and invoices to their desired
+fields, saving only changed values and deleting only stale derived rows.
+Repeated unchanged synchronization retains identifiers and timestamps and
+does not repeat unchanged writes. It still reads and folds source history;
+this is diff reconciliation, not incremental event processing or a persisted
+cache. Atomic workflows and `select_for_update` support row locking where the
+database provides it. SQLite serializes writers; neither that call nor fewer
+writes makes concurrent SQLite writers independent.
 
 This keeps a local installation synchronized without a scheduler. As records
 and recurrence history grow, measure request latency, query counts, and SQLite
@@ -113,9 +139,12 @@ Services, rather than views or templates, own atomic posting:
 1. **PIX/debit/account transaction:** validate ownership and currency; save
    the categorized transaction and synchronize its effective-date movement atomically.
 2. **Credit transaction:** save the source transaction and synchronize invoice
-   totals plus their due-date movements; create no purchase-date account debit.
-3. **Invoice settlement:** create one due-date account debit and attach it to the
-   invoice. Re-running is idempotent and cannot create a second settlement.
+   totals plus automatic due-date movements where applicable; create no
+   purchase-date account debit.
+3. **Invoice settlement:** default automatic mode creates one due-date debit.
+   Optional manual confirmation atomically saves `InvoicePayment` and its
+   actual-date debit, with a unique confirmation UUID preventing repeat posting.
+   Partial payment changes settlement evidence, not the source purchase amount.
 4. **Own transfer:** create two movements sharing a transfer identifier. The
    movements use kind `TRANSFER`, not income/expense; cross-currency pairs retain both
    native amounts and their persisted FX snapshot when conversion is available.
@@ -126,6 +155,13 @@ Services, rather than views or templates, own atomic posting:
 6. **Loyalty redemption:** create a `RewardRedemption`, its points debit and the
    target-account reward credit atomically. Account-funded IOF posts immediately;
    credit-card IOF enters the invoice synchronization path.
+7. **Statement import:** stage and review bounded local evidence without
+   financial mutation; confirm all explicit decisions atomically through these
+   same source services and synchronize once. Matching posts nothing. Guarded
+   undo deletes only unchanged sources created by that import.
+8. **Budget/goal/quote:** save owned limits, reservations or local prices without
+   a cash posting. A quote changes valuation evidence; a goal names a portion of
+   existing cash. Neither is income or an additional bank movement.
 
 Personal financial entries are editable; audit-grade reversal workflows are out
 of scope.
@@ -142,9 +178,23 @@ Bank transfers and investment operations that require conversion persist an FX
 snapshot. Missing rates preserve native data and produce an explicit incomplete
 status. Existing transfers and investments are reconstructed only where an
 authoritative rate provides evidence; otherwise no rate is invented. Other
-financial entities continue to use live/current rates until a future roadmap
-item extends snapshot coverage. Editing amount, currency, fees, or date
-refreshes the snapshot; descriptive edits preserve it.
+financial entities use labeled read-time conversion, at the current or selected
+cutoff date, until a future scope extends captured snapshot coverage. Editing
+amount, currency, fees, or date refreshes the snapshot; descriptive edits preserve it.
+
+`banking.services.ConversionContext` caches pair/date lookup results within one
+owned request, including missing evidence, and rejects reuse for another user.
+Dashboard composition and portfolio series can share it. It is not a global
+rate cache and cannot replace an operation's captured FX evidence. Dated account,
+card and quote valuations request the cutoff rate; cost-based historical
+investment components retain their operation evidence. Missing valuation or
+performance evidence is carried separately rather than silently summed away.
+
+New nonzero account and asset openings require dates. Incremental migrations
+leave older unknown opening dates null, retaining current holdings with an
+explicit incomplete-baseline warning. Replay and derived read models are
+editable reconstructions, not immutable statement snapshots; they do not infer
+annualized or cash-flow-adjusted returns.
 
 ## Routes
 
@@ -153,11 +203,13 @@ The route namespaces remain domain-based:
 | Prefix | App | Scope |
 |---|---|---|
 | `/accounts/` | `accounts` | signup, login, POST logout, and authenticated preferences |
-| `/dashboard/` | `dashboard` | overview and reports |
+| `/dashboard/` | `dashboard` | overview, reports and dated wealth |
 | `/transactions/` | `transactions` | categorized event CRUD/search |
 | `/categories/` | `categories` | category CRUD |
 | `/banking/` | `banking` | banks, accounts, ledger, PIX, cards, invoices, loyalty |
-| `/investments/` | `investments` | portfolio, products, assets, operations, rates |
+| `/investments/` | `investments` | portfolio, products, assets, operations, local prices and charts |
+| `/planning/` | `planning` | operational budgets, backed goals, reservations and local signals |
+| `/imports/` | `ingestion` | owned CSV/OFX staging, mapping, review, confirmation and guarded undo |
 | `/sandbox/` | `sandbox` | authenticated planning workspace and explicit draft persistence |
 | `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
 

@@ -15,6 +15,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
     <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">
         {% if form.instance.pk %}{% translate "Edit Transaction" %}{% else %}{% translate "New Transaction" %}{% endif %}
     </h1>
+    {% if form.instance.pk %}<p><a class="quiet-action" href="{% url 'transactions:split' form.instance.pk %}">{% translate 'Split between categories' %}</a></p>{% endif %}
 
     <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}

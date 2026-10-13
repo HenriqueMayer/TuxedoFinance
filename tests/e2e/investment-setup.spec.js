@@ -111,6 +111,11 @@ for (const theme of ['light', 'dark']) {
         await page.keyboard.press('Tab');
         await expect(tooltip).toBeHidden();
         await page.getByRole('navigation', { name: 'Investment sections' }).getByRole('link', { name: 'Configuration' }).click();
+        // Both screens contain this trigger. Wait for the HTMX destination so
+        // its swap cannot close a notice opened on the departing screen.
+        await expect(page).toHaveURL(/\/investments\/settings\/$/);
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Investment Settings');
+        await page.mouse.move(2, 2);
         await trigger.hover();
         await expect(tooltip).toBeVisible();
         await page.getByRole('heading', { level: 1 }).click();

@@ -177,8 +177,9 @@ the upstream release checksum before running browser smoke tests.
 Django's content-security-policy middleware restricts script sources, forms,
 images and connections to this installation. Inline scripts and styles remain
 allowed because translated progressive-enhancement copy and server-calculated
-chart geometry are rendered directly by Django templates; Google Fonts is the
-only external presentation origin. Language selection uses a delegated local
+chart geometry are rendered directly by Django templates. Inter is a vendored
+Latin variable font with its SIL Open Font License in `static/fonts/`; font,
+script and style requests stay on this installation. Language selection uses a delegated local
 listener instead of an inline event handler and retains its `noscript` submit.
 
 ## Template tree
@@ -534,8 +535,9 @@ and test configuration is documented in
 ## Planning workspaces and shared presentation
 
 The primary navigation is **Overview / Activity / Banks / Investments / Planning**.
-Overview contains Dashboard and Reports; Activity contains Transactions and
-Categories. Existing domain URLs remain stable. Account settings and language
+Overview contains Dashboard, Reports and Net worth; Activity contains Transactions,
+Categories and Imports. Banks includes Invoices. Planning contains the existing
+simulations plus Budgets, Goals and Signals. Existing domain URLs remain stable. Account settings and language
 live in the account-options disclosure; the mobile menu has the same destinations.
 A native navigation fallback remains available without JavaScript.
 Desktop primary links retain their direct destinations and reveal section

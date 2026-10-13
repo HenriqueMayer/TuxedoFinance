@@ -11,7 +11,7 @@ from core.currencies import CURRENCIES
 from banking.models import Bank, BankAccount, LoyaltyProgram
 from banking.services import MissingExchangeRate, convert
 from accounts.models import UserPreference
-from investments.models import Asset, Investment, InvestmentProduct
+from investments.models import Asset, Investment, InvestmentProduct, PriceObservation
 from investments.services import (
     YIELD_INPUT_AMOUNT,
     YIELD_INPUT_ENDING_BALANCE,
@@ -98,7 +98,7 @@ class InvestmentForm(forms.ModelForm):
     class Meta:
         model = Investment
         fields = (
-            'product', 'asset', 'kind', 'amount', 'quantity', 'unit_price', 'fees',
+            'product', 'asset', 'kind', 'amount', 'quantity', 'unit_price', 'fees', 'fees_in_asset_currency',
             'cash_amount', 'source_account', 'source_program', 'source_points',
             'destination_account', 'date', 'reason', 'notes',
         )
@@ -202,7 +202,7 @@ class InvestmentForm(forms.ModelForm):
         asset_widget.choices = self.fields['asset'].choices
         self.fields['asset'].widget = asset_widget
         for name, field in self.fields.items():
-            if name in ('yield_input_mode', 'capture_missing_fx'):
+            if name in ('yield_input_mode', 'capture_missing_fx', 'fees_in_asset_currency'):
                 field.widget.attrs['class'] = 'h-4 w-4 accent-caramel'
             else:
                 field.widget.attrs['class'] = INPUT_CLASSES
@@ -304,6 +304,8 @@ class InvestmentForm(forms.ModelForm):
         elif asset and asset.valuation_mode == Asset.ValuationMode.MONETARY:
             data['cash_amount'] = data.get('amount')
             self.instance.cash_amount = data['cash_amount']
+        if asset and asset.valuation_mode == Asset.ValuationMode.MONETARY and data.get('fees_in_asset_currency'):
+            self.add_error('fees_in_asset_currency', _('Fee cost allocation is for unit-based assets.'))
         return data
 
 
@@ -345,7 +347,7 @@ class AssetForm(forms.ModelForm):
         model = Asset
         fields = (
             'name', 'code', 'asset_class', 'currency', 'valuation_mode',
-            'opening_balance', 'opening_quantity', 'opening_unit_price', 'opening_product',
+            'opening_balance', 'opening_quantity', 'opening_unit_price', 'opening_product', 'opening_date',
         )
         labels = {
             'name': _('Name'),
@@ -357,6 +359,7 @@ class AssetForm(forms.ModelForm):
             'opening_quantity': _('Opening quantity'),
             'opening_unit_price': _('Opening unit price'),
             'opening_product': _('Opening balance product'),
+            'opening_date': _('Opening position date'),
         }
         help_texts = {
             'code': _('Short identifier, for example BTC, USD, PETR4, or CDB-2028.'),
@@ -367,6 +370,7 @@ class AssetForm(forms.ModelForm):
             'opening_quantity': _('Existing units before you start recording operations. Unit-based assets only.'),
             'opening_unit_price': _('Price per existing unit. Unit-based assets only.'),
             'opening_product': _('Required when an opening balance or opening position is provided.'),
+            'opening_date': _('The position exists at the start of this date, before its recorded operations. An older unknown date remains unknown until you provide it.'),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -384,6 +388,7 @@ class AssetForm(forms.ModelForm):
         self.original_opening_unit_price = self.instance.opening_unit_price if self.instance.pk else None
         self.original_opening_product = self.instance.opening_product_id if self.instance.pk else None
         self.fields['opening_product'].queryset = InvestmentProduct.objects.filter(user=user)
+        configure_date_fields(self, user)
         self.fields['opening_quantity'].widget = forms.NumberInput(
             attrs={'step': '0.00000001', 'min': '0'}
         )
@@ -407,6 +412,8 @@ class AssetForm(forms.ModelForm):
 
     def clean_currency(self):
         currency = self.cleaned_data['currency']
+        if self.instance.pk and currency != self.original_currency and self.instance.price_observations.exists():
+            raise forms.ValidationError(_('Currency cannot be changed after this asset has price observations.'))
         if (
             self.instance.pk
             and currency != self.original_currency
@@ -431,6 +438,8 @@ class AssetForm(forms.ModelForm):
 
     def clean_valuation_mode(self):
         valuation_mode = self.cleaned_data['valuation_mode']
+        if self.instance.pk and valuation_mode != self.original_valuation_mode and self.instance.price_observations.exists():
+            raise forms.ValidationError(_('Valuation mode cannot be changed after this asset has price observations.'))
         if self.instance.pk and valuation_mode != self.original_valuation_mode and self.instance.operations.exists():
             raise forms.ValidationError(_('Valuation mode cannot be changed after this asset has investment operations.'))
         return valuation_mode
@@ -468,3 +477,31 @@ class AssetForm(forms.ModelForm):
             self.original_opening_unit_price,
             _('Opening unit price'),
         )
+
+
+class PriceObservationForm(forms.ModelForm):
+    class Meta:
+        model = PriceObservation
+        fields = ('asset', 'date', 'unit_price', 'source')
+        widgets = {'unit_price': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0.00000001'})}
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance.user = user
+        available = Q(is_archived=False)
+        if self.instance.pk:
+            available |= Q(pk=self.instance.asset_id)
+        self.fields['asset'].queryset = Asset.objects.filter(user=user, valuation_mode=Asset.ValuationMode.UNITS).filter(available)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = INPUT_CLASSES
+        configure_date_fields(self, user)
+
+    def clean(self):
+        data = super().clean()
+        if data.get('asset') and data.get('date'):
+            matching = PriceObservation.objects.filter(asset=data['asset'], date=data['date'])
+            if self.instance.pk:
+                matching = matching.exclude(pk=self.instance.pk)
+            if matching.exists():
+                self.add_error('date', _('A price exists for this asset and date. Edit that observation instead.'))
+        return data

@@ -1,0 +1,9 @@
+{% load i18n %}
+<nav class="section-nav mb-6" aria-label="{% translate 'Planning sections' %}">
+    <a href="{% url 'planning:budgets' %}"{% if section == 'budgets' %} aria-current="page"{% endif %}>{% translate 'Category budgets' %}</a>
+    <a href="{% url 'planning:goals' %}"{% if section == 'goals' %} aria-current="page"{% endif %}>{% translate 'Goals' %}</a>
+    <a href="{% url 'planning:signals' %}"{% if section == 'signals' %} aria-current="page"{% endif %}>{% translate 'Local signals' %}</a>
+    <a href="{% url 'sandbox:index' %}"{% if request.resolver_match.namespace == 'sandbox' and kind == 'budget' %} aria-current="page"{% endif %}>{% translate 'Monthly plan' %}</a>
+    <a href="{% url 'sandbox:simulation' %}"{% if request.resolver_match.namespace == 'sandbox' and kind == 'yield' %} aria-current="page"{% endif %}>{% translate 'Yield simulation' %}</a>
+    <a href="{% url 'sandbox:drafts' %}"{% if request.resolver_match.namespace == 'sandbox' and request.resolver_match.url_name == 'drafts' %} aria-current="page"{% endif %}>{% translate 'Saved drafts' %}</a>
+</nav>

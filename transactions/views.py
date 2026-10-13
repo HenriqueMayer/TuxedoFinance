@@ -1,13 +1,16 @@
 import csv
+import json
 from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction as db_transaction
 from django.db.models import Count, Q
+from django.forms import inlineformset_factory
 from django.http import HttpResponse, QueryDict
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
@@ -18,9 +21,34 @@ from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 from banking.models import BankAccount
 from categories.models import Category
 from core.csv import export_row
-from transactions.forms import TransactionDateFilterForm, TransactionForm
-from transactions.models import Transaction
+from transactions.forms import TransactionDateFilterForm, TransactionForm, TransactionSplitForm, BaseTransactionSplitFormSet
+from transactions.models import Transaction, TransactionSplit
 from transactions.services import sync_user_ledger
+
+
+@login_required
+def category_split(request, pk):
+    item = get_object_or_404(Transaction, pk=pk, user=request.user, reward_redemption__isnull=True)
+    factory = inlineformset_factory(Transaction, TransactionSplit, form=TransactionSplitForm, formset=BaseTransactionSplitFormSet, extra=2, max_num=20, validate_max=True)
+    data = request.POST.copy() if request.method == 'POST' else None
+    if data is not None and 'add_split' in data:
+        try:
+            count = int(data.get('splits-TOTAL_FORMS', '0'))
+        except ValueError:
+            count = 0
+        data['splits-TOTAL_FORMS'] = str(min(max(2, count + 1), 20))
+    formset = factory(data, instance=item, prefix='splits', form_kwargs={'user': request.user, 'transaction_type': item.transaction_type})
+    if request.method == 'POST' and 'clear_split' in request.POST:
+        item.splits.all().delete()
+        return redirect('transactions:update', pk=pk)
+    if request.method == 'POST' and 'add_split' not in request.POST and formset.is_valid():
+        with db_transaction.atomic():
+            # A split changes classification only: the parent and its cash
+            # projection retain their identifiers and amounts.
+            formset.save()
+        messages.success(request, _('Category split saved.'))
+        return redirect('transactions:update', pk=pk)
+    return render(request, 'transactions/split.html', {'transaction': item, 'formset': formset})
 
 
 def _requested_billed_month(raw_month):
@@ -82,7 +110,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
         queryset = Transaction.objects.filter(user=self.request.user).select_related(
             'category', 'bank_account__bank', 'debit_card__account__bank',
             'credit_card__account__bank', 'reward_redemption__target_account'
-        )
+        ).prefetch_related('splits__category')
 
         # FR17: free-text search across everything the row displays, so
         # "salary" finds the transaction whether the word is in its title,
@@ -95,6 +123,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
                 Q(title__icontains=search)
                 | Q(notes__icontains=search)
                 | Q(category__name__icontains=search)
+                | Q(splits__category__name__icontains=search)
                 | Q(bank_account__name__icontains=search)
                 | Q(bank_account__bank__name__icontains=search)
                 | Q(debit_card__name__icontains=search)
@@ -108,7 +137,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
             # expenses backfilled from installations in either language.
             if search.casefold() in _('IOF on reward redemption').casefold():
                 matching |= Q(reward_redemption__isnull=False)
-            queryset = queryset.filter(matching)
+            queryset = queryset.filter(matching).distinct()
 
         self.filters = QueryDict(mutable=True)
         if search:
@@ -136,7 +165,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
                 counts[item.transaction_type] += 1
         else:
             counts = dict(rows.order_by().values('transaction_type').annotate(
-                count=Count('pk'),
+                count=Count('pk', distinct=True),
             ).values_list('transaction_type', 'count'))
         self.type_counts = counts
         self.has_transactions = bool(sum(counts.values())) or Transaction.objects.filter(
@@ -164,16 +193,19 @@ class TransactionListView(LoginRequiredMixin, ListView):
             else:
                 rows = rows.filter(predicates[recurrence])
 
-        category_ids = ({item.category_id for item in rows} if monthly else
-                        rows.order_by().values('category_id'))
+        if monthly:
+            category_ids = {category.pk for item in rows for category, _amount in item.category_allocations_for(item.amount)}
+        else:
+            category_ids = set(rows.filter(splits__isnull=True).order_by().values_list('category_id', flat=True))
+            category_ids.update(TransactionSplit.objects.filter(transaction__in=rows).values_list('category_id', flat=True))
         self.category_choices = list(Category.objects.filter(
             user=self.request.user, pk__in=category_ids,
         ).select_related('parent_category'))
         category = self.request.GET.get('category', '')
         if category in {str(item.pk) for item in self.category_choices}:
             self.filters['category'] = category
-            rows = ([item for item in rows if str(item.category_id) == category]
-                    if monthly else rows.filter(category_id=category))
+            rows = ([item for item in rows if any(str(cat.pk) == category for cat, _amount in item.category_allocations_for(item.amount))]
+                    if monthly else rows.filter(Q(splits__isnull=True, category_id=category) | Q(splits__category_id=category)).distinct())
         return rows
 
     def _filter_url(self, **changes):
@@ -233,7 +265,7 @@ class TransactionExportView(LoginRequiredMixin, View):
         transactions = Transaction.objects.filter(user=request.user).select_related(
             'category', 'bank_account__bank', 'debit_card__account__bank',
             'credit_card__account__bank',
-        ).order_by('-date', '-created_at', '-pk')
+        ).prefetch_related('splits__category').order_by('-date', '-created_at', '-pk')
         transactions = _filter_transactions_by_billed_month(transactions, raw_month)
 
         filename = 'transactions.csv'
@@ -250,7 +282,7 @@ class TransactionExportView(LoginRequiredMixin, View):
             'transaction_date', 'billed_month', 'title', 'transaction_type',
             'category', 'payment_channel', 'bank', 'account', 'credit_card',
             'currency', 'amount', 'total_amount', 'installments', 'is_fixed',
-            'fixed_until', 'notes',
+            'fixed_until', 'notes', 'category_splits',
         ))
 
         for item in transactions:
@@ -279,6 +311,7 @@ class TransactionExportView(LoginRequiredMixin, View):
                 str(item.is_fixed).lower(),
                 item.fixed_until.isoformat() if item.fixed_until else '',
                 item.notes,
+                json.dumps([{'category_id': category.pk, 'category': category.name, 'amount': str(value)} for category, value in (item.category_allocations_for_month(*selected_month) if selected_month else item.category_allocations_for(amount))], ensure_ascii=False) if item.splits.all() else '',
             ), spreadsheet=spreadsheet))
         return response
 

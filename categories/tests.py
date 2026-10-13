@@ -248,9 +248,18 @@ class CategoryDeleteAllTests(TestCase):
 
         self.assertContains(
             response,
-            'Categories cannot be deleted while they are used by existing transactions.',
+            'Categories cannot be deleted while they are used by existing transactions or budgets.',
         )
         self.assertEqual(Category.objects.filter(user=self.user).count(), 2)
+
+    def test_budget_blocks_category_deletion_without_transactions(self):
+        from datetime import date
+        from planning.models import CategoryBudget
+        CategoryBudget.objects.create(user=self.user, category=self.first, month=date(2026, 10, 1), currency='BRL', amount=100)
+        response = self.client.post(reverse('categories:delete_all'), follow=True)
+        self.assertContains(response, 'existing transactions or budgets')
+        self.assertEqual(Category.objects.filter(user=self.user).count(), 2)
+        self.assertTrue(CategoryBudget.objects.filter(user=self.user).exists())
 
 
 class CategoryImportExportTests(TestCase):

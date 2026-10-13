@@ -19,8 +19,8 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         await page.goto('/banking/accounts/create/');
         const receiving=await page.locator('#id_bank option').filter({hasText:'Receiving bank'}).getAttribute('value');
         const funding=await page.locator('#id_bank option').filter({hasText:'Funding bank'}).getAttribute('value');
-        await post(page,'/banking/accounts/create/',{bank:receiving,name:'Reward account',currency:'BRL',opening_balance:'0'});
-        await post(page,'/banking/accounts/create/',{bank:funding,name:'IOF account',currency:'USD',opening_balance:'100'});
+        await post(page,'/banking/accounts/create/',{bank:receiving,name:'Reward account',currency:'BRL',opening_date: '2025-01-01', opening_balance:'0'});
+        await post(page,'/banking/accounts/create/',{bank:funding,name:'IOF account',currency:'USD',opening_date: '2025-01-01', opening_balance:'100'});
         await page.goto('/banking/credit-cards/create/');
         const account=await page.locator('#id_account option').filter({hasText:'IOF account'}).getAttribute('value');
         await post(page,'/banking/credit-cards/create/',{account,name:'IOF card',card_type:'PHYSICAL',closing_day:'20',due_day:'28'});

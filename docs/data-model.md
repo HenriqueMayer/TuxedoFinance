@@ -1,7 +1,9 @@
 # Data Model
 
-The current schema and its business rules. Legacy financial rows are not
-automatically migrated. See [Breaking release](#breaking-release).
+The current schema and business rules cover `0.10.0` plus implemented Unreleased
+changes. Supported releases preserve their financial rows through incremental
+migrations. Only unsupported pre-release legacy schemas lack automatic
+conversion; see [Breaking release](#breaking-release).
 
 ## Entity-relationship diagram
 
@@ -18,6 +20,14 @@ erDiagram
     USER ||--o{ INVESTMENT_PRODUCT : owns
     USER ||--o{ ASSET : owns
     USER ||--o{ INVESTMENT : records
+    USER ||--o{ PRICE_OBSERVATION : records
+    USER ||--o{ INVOICE_PAYMENT : confirms
+    USER ||--o{ CATEGORY_BUDGET : configures
+    USER ||--o{ FINANCIAL_GOAL : owns
+    USER ||--o{ GOAL_ALLOCATION : reserves
+    USER ||--o| SIGNAL_SETTINGS : configures
+    USER ||--o{ SIGNAL_DECISION : reviews
+    USER ||--o{ IMPORT_BATCH : reviews
 
     BANK ||--o{ BANK_ACCOUNT : contains
     BANK_ACCOUNT ||--o{ BANK_MOVEMENT : posts
@@ -27,11 +37,17 @@ erDiagram
     BANK_ACCOUNT ||--o{ BANK_TRANSFER : receives
     CREDIT_CARD ||--o{ CARD_INVOICE : generates
     CARD_INVOICE |o--o| BANK_MOVEMENT : settles_as
+    CARD_INVOICE ||--o{ INVOICE_PAYMENT : receives
+    BANK_ACCOUNT ||--o{ INVOICE_PAYMENT : funds
+    INVOICE_PAYMENT |o--o| BANK_MOVEMENT : confirms_actual_debit
     BANK_TRANSFER ||--|{ BANK_MOVEMENT : posts_two
     EXCHANGE_RATE |o--o{ BANK_TRANSFER : evidences
 
     CATEGORY |o--o{ CATEGORY : parent_of
     CATEGORY ||--o{ TRANSACTION : classifies
+    TRANSACTION ||--o{ TRANSACTION_SPLIT : allocates
+    CATEGORY ||--o{ TRANSACTION_SPLIT : classifies_share
+    CATEGORY ||--o{ CATEGORY_BUDGET : limits
     BANK_ACCOUNT |o--o{ TRANSACTION : account_or_pix
     DEBIT_CARD |o--o{ TRANSACTION : debit_channel
     CREDIT_CARD |o--o{ TRANSACTION : credit_channel
@@ -56,15 +72,30 @@ erDiagram
     INVESTMENT_PRODUCT |o--o{ ASSET : holds_opening_position
     INVESTMENT_PRODUCT ||--o{ INVESTMENT : records
     ASSET ||--o{ INVESTMENT : denominates
+    ASSET ||--o{ PRICE_OBSERVATION : priced_at
     BANK_ACCOUNT |o--o{ INVESTMENT : funds_or_receives
     LOYALTY_PROGRAM |o--o{ INVESTMENT : funds_with_points
     EXCHANGE_RATE |o--o{ INVESTMENT : evidences
     INVESTMENT |o--o| BANK_MOVEMENT : posts_cash_leg
     INVESTMENT |o--o| LOYALTY_ENTRY : posts_points_leg
+
+    FINANCIAL_GOAL ||--o{ GOAL_ALLOCATION : names_reserve
+    BANK_ACCOUNT |o--o{ GOAL_ALLOCATION : earmarked_account
+    INVESTMENT_PRODUCT |o--o{ GOAL_ALLOCATION : earmarked_cash_product
+    ASSET |o--o{ GOAL_ALLOCATION : earmarked_monetary_asset
+    BANK_ACCOUNT ||--o{ IMPORT_BATCH : reviewed_statement
+    IMPORT_BATCH ||--o{ IMPORTED_ROW : contains
+    IMPORTED_ROW ||--o| EXTERNAL_STATEMENT_IDENTITY : establishes
+    BANK_ACCOUNT ||--o{ EXTERNAL_STATEMENT_IDENTITY : scopes_identifier
+    IMPORTED_ROW }o--o| TRANSACTION : creates_source
+    IMPORTED_ROW }o--o| INVOICE_PAYMENT : creates_payment
+    IMPORTED_ROW }o--o| BANK_TRANSFER : creates_transfer
+    IMPORTED_ROW }o--o| BANK_MOVEMENT : matches_existing
 ```
 
-Every financial model also carries a direct `user` foreign key, even when the
-diagram emphasizes its domain relationship. Optional edges reflect nullable
+Financial ownership is direct or inherited through an owned source: for example,
+`TransactionSplit` inherits its transaction owner and `ImportedRow` its batch
+owner. Optional edges reflect nullable
 foreign keys. Business services enforce stronger rules where the database shape
 alone cannot—for example, a transfer posts exactly two movements and a
 transaction selects exactly one payment instrument.
@@ -83,7 +114,10 @@ flowchart TD
     T[Transaction] --> Channel{Payment channel}
     Channel -->|Account, PIX or debit card| Immediate[Create or update immediate BankMovement]
     Channel -->|Credit card| Invoice[Derive CardInvoice total by card and statement month]
-    Invoice --> Due[Create or update due-date BankMovement]
+    Invoice --> Mode{Settlement mode}
+    Mode -->|Automatic default| Due[Create or update due-date BankMovement]
+    Mode -->|Manual opt-in| Payment[Explicit InvoicePayment]
+    Payment --> Actual[Actual-date BankMovement]
 
     Transfer[BankTransfer] --> TransferDebit[Source-account debit movement]
     Transfer --> TransferCredit[Destination-account credit movement]
@@ -93,6 +127,11 @@ flowchart TD
     InvestmentKind -->|Deposit from loyalty program| PointsDebit[LoyaltyEntry debit]
     InvestmentKind -->|Withdrawal| InvestmentCredit[Destination-account credit movement]
     InvestmentKind -->|Yield| PositionOnly[Position change only]
+    Price[Local PriceObservation] --> Valuation[Read-only position valuation]
+    Reservation[GoalAllocation] --> Earmark[Read-only earmark of existing cash]
+    Import[Local statement review] --> Confirm{Explicit confirmation}
+    Confirm -->|Match or skip| EvidenceOnly[Evidence only]
+    Confirm -->|Create or settle| Sources[Canonical transaction/payment/transfer service]
 
     Redemption[RewardRedemption] --> RedemptionPoints[LoyaltyEntry redemption debit]
     Redemption --> RewardCredit[Target-account reward credit]
@@ -142,12 +181,20 @@ The former investment-only `Institution` model is removed.
 | `bank` | Owning `Bank`. |
 | `name` | User-facing account label. |
 | `currency` | Native ISO 4217 currency; immutable after the first movement. |
-| `opening_balance` | Native balance immediately before the first ledger entry. |
+| `opening_balance` | Native tracked starting balance; no synthetic movement. |
+| `opening_date` | Nullable baseline date; required for new nonzero openings. |
+| `planning_enabled` / `reserved_amount` | Inclusion and manual native reserve, without changing ledger cash. |
 | `pix_enabled` | Account capability, `True` by default. |
 | timestamps | `created_at`, `updated_at`. |
 
 A bank has many accounts; currency does not identify an account. Multiple BRL,
 USD, or other accounts under the same bank are valid.
+The opening applies only on and after a known baseline date. Existing null
+dates remain unknown through migration and make dated wealth incomplete.
+Forms reject an opening date after an existing movement; import confirmation
+requires a known date for a nonzero opening rather than inferring one.
+Any saved goal allocation also blocks account-currency changes, including
+archived goals, preserving the reservation's native denomination.
 
 ### `BankMovement`
 
@@ -163,23 +210,38 @@ USD, or other accounts under the same bank are valid.
 | `transfer` | Optional link to the two-sided `BankTransfer`. |
 | `source_key` | Optional per-user idempotency key for a source-backed movement. |
 
-`available_balance = opening_balance + credits - debits`. This ledger is the
+`available_balance = applicable opening_balance + credits - debits`. This ledger is the
 only source of account balance. Source-backed rows are synchronized when their
 transaction, invoice, transfer, investment, or reward source changes.
 
 ### Cards and invoices
 
 `DebitCard(user, account, name)` and
-`CreditCard(user, account, name, card_type, closing_day, due_day)` both belong to one
+`CreditCard(user, account, name, card_type, closing_day, due_day,
+manual_settlement_from)` both belong to one
 account. A `CardInvoice` belongs to a credit card and records reference month,
-due date, amount, status, paid timestamp and its settlement movement.
+due date, amount, status, paid timestamp and sticky manual-settlement flag.
 
 A debit purchase creates a transaction and immediate debit movement. A credit
 purchase has no direct invoice foreign key: synchronization groups it by card
 and statement month into a `CardInvoice`, with no purchase-date account debit.
-The invoice has one due-date `INVOICE` movement for its payable total. Dashboard
+By default the invoice has one due-date `INVOICE` movement for its payable total. Dashboard
 logic must never add invoice purchases to account balance separately from that
 movement.
+
+`manual_settlement_from` defaults to null and uses invoice due dates as the
+opt-in boundary. A manual invoice has no synthetic due-date movement. Its
+`InvoicePayment(user, invoice, account, amount, date, notes, confirmation_key,
+movement)` rows each own an actual-date debit. Invoice and account references
+use `PROTECT`, and ownership/currency/positive amount/date checks are enforced
+before posting. The UUID is unique; identical retries return the prior payment,
+and conflicting reuse is rejected.
+
+Manual statuses are `SCHEDULED`, `PARTIAL`, `OVERDUE` or `PAID` based on payments
+through the cutoff. A payment cannot exceed the current total less other
+payments when saved. Later purchase corrections retain real payments and may
+produce card credit. Historical debt uses dated payment evidence, not today's
+status. See [manual settlement](apps/banking.md#optional-manual-settlement).
 
 ## Transactions
 
@@ -203,6 +265,23 @@ creates paired movements, and is excluded from income and expense. Investments
 are not a transaction type: their cash legs use investment movements and their
 position history remains in `investments`.
 
+### `TransactionSplit`
+
+An optional allocation stores `transaction`, protected owned `category` and a
+positive two-decimal `amount`, unique per transaction/category. Two or more
+distinct compatible allocations must equal the source amount exactly; the form
+supports at most twenty. Parent category stays required, but allocated reports
+replace its whole-amount contribution. Splits create no additional cash or
+invoice records.
+
+Installments apportion cents over remaining category capacities with stable
+largest-remainder ordering. Every month reconciles to its installment, no
+capacity becomes negative and the full plan returns the source allocations.
+Fixed recurrences reuse the source split. CSV appends JSON `category_splits`,
+using full allocations or the selected month's cents. The deliberate
+spreadsheet variant neutralizes formula-like text and is separate from the
+verbatim interchange export.
+
 ## Categories
 
 ### `Category`
@@ -213,7 +292,9 @@ unclassified category remains valid for both types, while a typed category is
 validated against its matching transaction type. Migration `categories.0002`
 leaves existing categories unclassified; it does not relabel categories or
 financial records. A used category cannot be classified incompatibly with its
-existing transactions. Names are unique per user, parent
+existing transactions or splits. Saved expense budgets also block incompatible
+income classification and hierarchy edits that introduce overlapping limits.
+Names are unique per user, parent
 choices are user-scoped, and `Transaction.category` uses `PROTECT`. Deleting a
 parent sets its children to top level; deleting a category referenced by
 transaction history is blocked.
@@ -266,13 +347,16 @@ later edited or deleted. New and existing users default to BRL.
 A preference change affects consolidated presentation only; it never silently
 converts or relabels stored financial data.
 
-Historical transfer and investment reports use the persisted snapshot, so
+Historical transfer and investment operation-flow reports use the persisted snapshot, so
 changing or deleting an `ExchangeRate` cannot rewrite those prior totals.
-Current/manual rates are used only for explicitly labeled current valuations.
+Current/manual rates are used for explicitly labeled read-time valuations.
+Dated account, card and local-price valuations request a rate at their cutoff;
+these are not captured operation evidence. The owned request-scoped
+`ConversionContext` shares pair/date lookups without changing saved snapshots.
 If no rate exists, native data is preserved and conversion is marked
 incomplete. Existing rows are reconstructed only when an authoritative rate
-supplies evidence; no rate is guessed. Other entities remain on live/current
-conversion until a future roadmap item extends snapshot coverage.
+supplies evidence; no rate is guessed. Other entities use labeled read-time
+conversion at their selected cutoff, rather than captured operation snapshots.
 Editing an amount, currency, fees, or date refreshes its snapshot, while
 descriptive edits leave it unchanged. If the reporting currency later differs
 from the stored snapshot target, historical consolidation is marked incomplete;
@@ -310,6 +394,14 @@ available for later withdrawals and also has no linked bank movement.
 | `InvestmentProduct` | owner, `bank`, name, yield mode. |
 | `Asset` | owner, name, code, `asset_class`, currency, valuation mode. |
 | `Investment` | owner, product, asset, kind and date; valuation and funding fields depend on the selected modes. |
+| `PriceObservation` | owner, unit asset, date, positive `unit_price`, optional local source label; unique asset/date. |
+
+`Asset.opening_date` is nullable for existing unknown baselines and required for
+new nonzero openings. Known openings apply only at/after their date, which
+cannot follow an existing operation. They never create an acquisition operation
+or account movement. Historical fallback context does not make an unknown date
+known. Product purpose remains `INVESTMENT` or `MONTHLY_CASH`, the latter
+accepting only monetary holdings.
 
 `Asset.is_archived` defaults to false. It controls availability in the active
 catalog, new-operation choices and visible current position rows. Accounting
@@ -345,23 +437,111 @@ operation retains native values and a historical FX snapshot when conversion is
 required. Deposit and withdrawal cash legs are never manually duplicated as
 income/expense.
 
+### Position replay and local valuation
+
+`replay_positions` orders operations by `(date, created_at, pk)` and maintains
+independent quantity/cost pools per product/asset. Unit acquisitions and yields
+add their declared entry value; disposals remove weighted average cost and
+record proceeds minus removed cost as realized result. A full withdrawal sets
+quantity and remaining cost to zero. Monetary positions retain signed amounts.
+Proposed creation, edits and deletion validate all affected history, including
+both pairs if an operation moves; later negative positions are rejected.
+
+`Investment.fees_in_asset_currency` defaults to false, including migrated rows.
+Only explicit asset-currency fees on unit operations enter acquisition cost or
+disposal results; monetary operations reject that declaration.
+Unmarked/legacy fees retain their original value as metadata outside those
+calculations. The actual bank `cash_amount` is never derived again from cost,
+yield or fee assumptions.
+
+`PriceObservation` does not post to any ledger. Valuation chooses the latest
+local positive unit price on or before the cutoff; no price uses remaining cost
+as a disclosed fallback with unknown unrealized result. Closed quantity needs
+no quote. Monetary balances need no market quote. Cost and gains expose their
+own missing FX/price/baseline/legacy-fee evidence; recorded yields already inside
+the position must not be added to asset value again.
+
+`get_portfolio_valuation`, `get_portfolio_series` and compatible
+`get_portfolio_groups` compose these values for portfolio, charts and wealth.
+Historical cost components consume captured operation FX. Native realized
+gains use disposal-date conversion rather than attributing cross-currency FX
+gains. Editable replay does not establish tax lots or infer annualized,
+time-weighted or money-weighted returns. See [investments](apps/investments.md).
+
+## Operational planning
+
+`CategoryBudget(user, category, month, currency, amount)` is unique per owned
+category/month/currency, requires a positive limit and includes descendants.
+Overlapping category branches in the same month/currency are rejected. Actual
+and forecast spending use economic reference months and category allocations;
+limits do not post or reserve money.
+
+`FinancialGoal(user, name, target_amount, currency, target_date, is_archived)`
+receives `GoalAllocation` rows. Each allocation stores one account or one
+monthly-cash product/monetary-asset pair and a native positive amount. Active
+reservations cannot initially exceed positive source backing. Later balance
+shrinkage produces visible apportioned shortfall, not a new asset or hidden
+negative cash. Account availability sets aside the greater of manual reserve
+and active goal allocations; cash-pot reservations also reduce availability.
+Archiving releases active availability, and restoring rechecks backing.
+
+Saved source references use `PROTECT` even for archived goals. Product purpose
+and asset currency/valuation mode are guarded against semantic redefinition.
+Historical progress excludes later-created reservations but uses current edited
+definitions, not a historical snapshot of target/allocation edits.
+
+`SignalSettings` is optional one-to-one per user. Unsaved defaults require no
+read-time write. `SignalDecision(user, key, action)` is unique by owner/evidence
+key; acknowledge/dismiss changes only the review decision. Signals inspect
+local source evidence, include forecast manual obligations without posting them
+and never automatically alter financial records. See [planning](apps/planning.md).
+
+## Local statement evidence
+
+`ImportBatch` belongs to an owner/account and stores bounded raw text, exact-file
+hash, format/encoding, mapping, optional dated closing evidence, reconciliation
+and `STAGED`, `READY`, `CONFIRMED` or `UNDONE` status. Its active file hash is
+unique by owner/account. `ImportedRow` inherits the batch owner, keeps normalized
+signed cash, optional external identifier, raw values, action, chosen/created
+source links and a confirmation source snapshot; row numbers are unique within
+the batch.
+
+`ExternalStatementIdentity` is unique by owner/account/external identifier and
+belongs to one confirmed row. Confirmation verifies every explicit action and
+the reviewed digest, posting canonical sources atomically or matching without
+posting. Nonzero unknown account baselines must first be dated. Source snapshots
+include category splits and cash legs, so guarded undo refuses changed/missing
+created records or evidence matched by another confirmed batch. Undo deletes
+only unchanged sources it created, keeps matched originals and retains the
+undone batch. Closing discrepancies never create a balancing adjustment.
+See [ingestion](apps/ingestion.md) for parsing limits and duplication rules.
+
 ## Dashboard formulas
 
-- **Available balance per account:** opening balance plus its posted movements.
+- **Available balance per account:** applicable dated opening plus movements
+  effective through the requested date.
 - **Consolidated available balance:** current reporting uses the user's
   `UserPreference.base_currency`; persisted FX evidence protects supported
   historical conversions from later rate changes.
 - **Income/Expenses:** categorized `Transaction` economic events, excluding own
   transfers and investment cash legs.
-- **Credit-card payable:** open invoice totals, shown separately from available
-  cash until settlement.
+- **Billed card payable:** invoice totals less effective payments, shown
+  separately from bank cash. **Incurred debt:** full purchases through the cutoff
+  (including future installments) and fixed occurrences already realized, less
+  effective settlements. Future recurrence templates are not debt.
 - **Planning availability:** account cash after excluding positive funds or
   capped native-currency reserves, plus eligible monthly cash-pot positions.
   Negative account deficits and card commitments are never hidden.
-- **Net worth:** full bank balances plus all product positions (investments and
-  monthly cash pots), minus open card invoices. Planning exclusions and reserves
-  do not reduce wealth. Invoice purchases and invoice payment movements must not
-  both reduce the same component.
+- **Net worth:** full bank balances plus all dated product position valuations
+  (investments and monthly cash pots), plus card credit, minus positive incurred
+  card debt. Manual confirmations use actual dates; automatic mode uses its
+  settlement movement amount/date. Excess effective payments remain card credit,
+  including a debit before an explicitly overridden future purchase. Planning
+  exclusions/reserves do not reduce wealth. Settlement is counted once.
+- **Incomplete evidence:** unknown nonzero opening dates, missing FX, missing
+  unit quotes/cost fallbacks and invalid recorded position history remain
+  visible. Zero balances require no FX. Source/price/read-time-rate edits may
+  change reconstructed wealth without altering captured operation evidence.
 
 ## Integrity
 
@@ -429,6 +609,22 @@ Supported released installations, including v0.3.0, upgrade through committed
 additive migrations. Preserve existing records, ownership, native amounts,
 opening positions and historical FX evidence. Back up and rehearse the upgrade
 before migrating an installation with valuable data.
+
+### Unreleased local-finance migrations
+
+`banking.0008_bankaccount_opening_date_and_more` adds nullable account baselines,
+the optional manual card boundary, invoice mode/status support and payments.
+`investments.0009_position_valuation` adds nullable asset baselines, the false
+fee-currency declaration default and local price observations. Neither invents
+legacy dates, prices, fee currencies or confirmed payments.
+
+`transactions.0003_transactionsplit` adds optional allocations without changing
+old categories or source amounts. `planning.0001_initial` and
+`ingestion.0001_initial` create the new operational planning and local evidence
+tables; no existing financial records are imported or reserved automatically.
+Retain the full migration chain. A code/image downgrade alone cannot reverse
+schema or discard new records safely; use an owner-tested matching backup when
+rollback is required.
 
 ## Breaking release
 

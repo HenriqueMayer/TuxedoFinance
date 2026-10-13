@@ -1,0 +1,15 @@
+{% load i18n %}
+<details class="mt-3 text-sm">
+    <summary class="quiet-action cursor-pointer">{% translate 'Cost, price and results' %}</summary>
+    <dl class="mt-3 grid gap-3 sm:grid-cols-2">
+        <div><dt class="subtle-copy">{% translate 'Remaining acquisition cost' %}</dt><dd>{{ asset.currency }} {{ asset.remaining_cost|floatformat:2 }}</dd></div>
+        <div><dt class="subtle-copy">{% translate 'Average acquisition cost per unit' %}</dt><dd>{{ asset.currency }} {{ asset.average_cost|floatformat:'-8' }}</dd></div>
+        <div><dt class="subtle-copy">{% translate 'Realized result' %}</dt><dd>{{ asset.currency }} {{ asset.realized_gain|floatformat:2 }}</dd></div>
+        <div><dt class="subtle-copy">{% translate 'Unrealized result' %}</dt><dd>{% if asset.unrealized_gain is not None %}{{ asset.currency }} {{ asset.unrealized_gain|floatformat:2 }}{% else %}{% translate 'No observed price' %}{% endif %}</dd></div>
+    </dl>
+    {% if asset.price_observation %}<p class="subtle-copy mt-3">{% translate 'Observed price' %}: {{ asset.currency }} {{ asset.price_observation.unit_price.normalize }} · {{ asset.price_observation.date|date:USER_DATE_FORMAT }} · {{ asset.price_observation.source }}. <a class="quiet-action" href="{% url 'investments:update_price' asset.price_observation.pk %}">{% translate 'Edit observation' %}</a></p>{% else %}<p class="subtle-copy mt-3">{% translate 'No dated price is available. This position is shown at remaining cost, without an inferred market gain.' %}</p>{% endif %}
+    {% if asset.unapplied_fees %}<p class="subtle-copy mt-3">{% translate 'Fees with undeclared currency are retained as metadata and excluded from cost and results.' %}</p>{% endif %}
+    {% if asset.baseline_unknown %}<a class="quiet-action mt-3" href="{% url 'investments:update_asset' asset.id %}">{% translate 'Review opening date' %}</a>{% endif %}
+    <a class="quiet-action mt-3" href="{% url 'investments:prices' %}?asset={{ asset.id|stringformat:'s' }}">{% translate 'Price history' %}</a>
+    {% if not asset.is_archived %}<a class="quiet-action mt-3" href="{% url 'investments:create_price' %}?asset={{ asset.id|stringformat:'s' }}">{% translate 'New observation' %}</a>{% endif %}
+</details>

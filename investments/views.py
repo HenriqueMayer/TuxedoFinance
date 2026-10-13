@@ -22,8 +22,9 @@ from banking.services import MissingExchangeRate, convert, latest_exchange_rate
 from dashboard.selection import selection_data, attach_details
 from dashboard.charts import build_bar_chart, build_line_chart
 from investments.forms import (AssetForm, InvestmentForm, InvestmentProductForm,
-                               InvestmentChartFilterForm, InvestmentOperationFilterForm)
-from investments.models import Asset, Investment, InvestmentProduct
+                               InvestmentChartFilterForm, InvestmentOperationFilterForm, PriceObservationForm)
+from investments.models import Asset, Investment, InvestmentProduct, PriceObservation
+from investments.positions import get_portfolio_valuation, validate_position_history
 from investments.services import (
     TIMESERIES_MONTHS,
     cleanup_investment_ledger,
@@ -142,18 +143,22 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
         missing = set()
         native_totals = {}
         rates = {}
-        portfolio_groups = get_portfolio_groups(user, purpose=self.get_purpose())
+        snapshot = get_portfolio_valuation(user, purpose=self.get_purpose(), base_currency=base)
+        portfolio_groups = get_portfolio_groups(user, purpose=self.get_purpose(), snapshot=snapshot)
         # Current positions must not inherit missing FX from an unrelated
         # historical chart window. Zero balances need no exchange rate.
         for bank in portfolio_groups:
             for product in bank['products']:
                 for asset in product['assets']:
                     currency = asset['currency']
-                    native_totals[currency] = native_totals.get(currency, Decimal('0')) + asset['balance']
+                    native_totals[currency] = native_totals.get(currency, Decimal('0')) + asset['valuation']
                     try:
-                        asset['base_balance'] = convert(user, asset['balance'], currency, base) if asset['balance'] else Decimal('0')
+                        asset['base_balance'] = asset['base_value']
+                        if asset['base_balance'] is None:
+                            missing.add(currency)
+                            continue
                         total += asset['base_balance']
-                        if currency != base and asset['balance'] and currency not in rates:
+                        if currency != base and asset['valuation'] and currency not in rates:
                             rate = latest_exchange_rate(user, currency, base) or latest_exchange_rate(user, base, currency)
                             rates[currency] = rate
                     except MissingExchangeRate:
@@ -183,6 +188,7 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
             'base_currency': base,
             'has_investments': bool(portfolio_groups),
             'today': today,
+            'portfolio_snapshot': snapshot,
         })
         return context
 
@@ -227,6 +233,11 @@ class InvestmentChartsView(InvestmentListView):
                 {'name': _('Yields'), 'tone': 'investment', 'values': [float(row['yields']) for row in flow_rows]},
             ]),
             'today': today,
+            'portfolio_snapshot': get_portfolio_valuation(user, purpose=purpose, base_currency=base),
+            'chart_unknown_baselines': any(row['snapshot']['unknown_baselines'] for row in total_rows),
+            'chart_missing_prices': any(row['snapshot']['missing_prices'] for row in total_rows),
+            'chart_history_errors': any(row['snapshot']['history_errors'] for row in total_rows),
+            'performance_rows': total_rows,
             'total_offset': total_offset,
             'total_previous_offset_param': total_offset - 1,
             'total_next_offset_param': total_offset + 1,
@@ -366,6 +377,7 @@ class InvestmentFormMixin(LoginRequiredMixin):
         ) or form.cleaned_data.get('capture_missing_fx', False)
         form.instance.user = self.request.user
         with transaction.atomic():
+            prior_pair = Investment.objects.filter(pk=form.instance.pk, user=self.request.user).values_list('product_id', 'asset_id').first() if form.instance.pk else None
             try:
                 form.refresh_yield_amount(lock=True)
                 form.instance.full_clean()
@@ -380,6 +392,10 @@ class InvestmentFormMixin(LoginRequiredMixin):
                 refresh_fx_snapshot(self.object)
             try:
                 sync_investment_ledger(self.object)
+                pairs = [(self.object.product_id, self.object.asset_id)]
+                if prior_pair:
+                    pairs.append(prior_pair)
+                validate_position_history(self.request.user, pairs)
             except Exception as error:
                 if hasattr(error, 'message_dict'):
                     transaction.set_rollback(True)
@@ -615,8 +631,79 @@ class InvestmentDeleteView(LoginRequiredMixin, DeleteView):
         return Investment.objects.filter(user=self.request.user)
 
     def form_valid(self, form):
-        with transaction.atomic():
-            cleanup_investment_ledger(self.object)
-            response = super().form_valid(form)
+        try:
+            with transaction.atomic():
+                validate_position_history(self.request.user, [(self.object.product_id, self.object.asset_id)], exclude_pk=self.object.pk)
+                cleanup_investment_ledger(self.object)
+                response = super().form_valid(form)
+        except ValidationError as error:
+            form.add_error(None, error.messages)
+            return self.form_invalid(form)
         messages.success(self.request, _('Investment operation deleted.'))
         return response
+
+
+class PriceObservationListView(LoginRequiredMixin, ListView):
+    model = PriceObservation
+    template_name = 'investments/prices.html'
+    context_object_name = 'observations'
+    paginate_by = 30
+
+    def get_queryset(self):
+        rows = PriceObservation.objects.filter(user=self.request.user).select_related('asset')
+        asset = self.request.GET.get('asset', '')
+        return rows.filter(asset_id=asset) if asset.isdigit() else rows
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['selected_section'] = 'prices'
+        context['selected_asset'] = self.request.GET.get('asset', '')
+        return context
+
+
+class PriceObservationFormMixin(LoginRequiredMixin):
+    model = PriceObservation
+    form_class = PriceObservationForm
+    template_name = 'investments/price_form.html'
+    success_url = reverse_lazy('investments:prices')
+
+    def get_queryset(self):
+        return PriceObservation.objects.filter(user=self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_initial(self):
+        initial = super().get_initial()
+        asset = self.request.GET.get('asset', '')
+        if asset.isdigit() and Asset.objects.filter(user=self.request.user, pk=asset, valuation_mode='UNITS', is_archived=False).exists():
+            initial['asset'] = asset
+        return initial
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        try:
+            with transaction.atomic():
+                return super().form_valid(form)
+        except IntegrityError:
+            form.add_error('date', _('A price exists for this asset and date. Edit that observation instead.'))
+            return self.form_invalid(form)
+
+
+class PriceObservationCreateView(PriceObservationFormMixin, CreateView):
+    pass
+
+
+class PriceObservationUpdateView(PriceObservationFormMixin, UpdateView):
+    pass
+
+
+class PriceObservationDeleteView(LoginRequiredMixin, DeleteView):
+    model = PriceObservation
+    template_name = 'investments/price_confirm_delete.html'
+    success_url = reverse_lazy('investments:prices')
+
+    def get_queryset(self):
+        return PriceObservation.objects.filter(user=self.request.user)

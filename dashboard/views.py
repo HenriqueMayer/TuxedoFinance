@@ -2,6 +2,7 @@ from datetime import date
 from calendar import monthrange
 
 from dashboard.selection import selection_data, attach_details
+from banking.services import ConversionContext
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
@@ -100,8 +101,9 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         sync_user_ledger(self.request.user)
+        conversion = ConversionContext(self.request.user)
         year, month = _selected_month(self.request, _is_projectable)
-        context.update(get_dashboard_summary(self.request.user, year, month))
+        context.update(get_dashboard_summary(self.request.user, year, month, conversion=conversion))
         context['category_selection'] = selection_data(context['expense_categories'], [('total', _('Expenses'))], label='name')
         today = timezone.localdate()
         cutoff = min(today, date(year, month, monthrange(year, month)[1])) if (year, month) <= (today.year, today.month) else None
@@ -138,8 +140,9 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         sync_user_ledger(self.request.user)
+        conversion = ConversionContext(self.request.user)
         offset = _parse_charts_offset(self.request, _is_offset_window_safe)
-        evolution = get_account_evolution(self.request.user, offset=offset)
+        evolution = get_account_evolution(self.request.user, offset=offset, conversion=conversion)
         months = evolution['months']
         context.update(
             {
@@ -214,7 +217,7 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             context[f'instrument_{direction}_month'] = (
                 f'{year:04d}-{month:02d}' if _is_representable(year, month) else None
             )
-        activity = get_instrument_activity(self.request.user, window=instrument_window)
+        activity = get_instrument_activity(self.request.user, window=instrument_window, conversion=conversion)
         context['instrument_activity'] = activity
         context['instrument_chart'] = self._instrument_chart(activity)
 
@@ -235,11 +238,11 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             )
         if installment_value == 'ALL':
             recurrence = get_expenses_by_recurrence(
-                self.request.user, months=ALL_TIME_MONTHS
+                self.request.user, months=ALL_TIME_MONTHS, conversion=conversion,
             )
             context['installment_window_label'] = _('All time')
         else:
-            recurrence = get_expenses_by_recurrence(self.request.user, year, month)
+            recurrence = get_expenses_by_recurrence(self.request.user, year, month, conversion=conversion)
             context['installment_window_label'] = date_format(date(year, month, 1), 'F Y')
         context['recurrence_breakdown'] = recurrence
         context['recurrence_chart'] = (
@@ -257,7 +260,8 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             ('expense_total', _('Expenses')), ('income_total', _('Income')),
         ], label='label', chart=context['instrument_chart'])
         context['balance_selection'] = selection_data(months, [('closing_balance', _('Balance'))], mode='change', opening=evolution['opening_balance'], chart=context['balance_chart'])
-        attach_details(context['balance_selection'], self.request.user, 'ledger', months, ['balance'])
+        attach_details(context['balance_selection'], self.request.user, 'ledger', months, ['balance'],
+            projected=True, forecast_from=today.isoformat())
         attach_details(context['cashflow_selection'], self.request.user, 'cashflow', months, ['income', 'withdrawals', 'expenses', 'investments'])
         attach_details(context['instrument_selection'], self.request.user, 'instruments',
             activity['instruments'], ['expenses', 'income'],

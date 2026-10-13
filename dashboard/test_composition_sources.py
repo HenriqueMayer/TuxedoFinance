@@ -80,17 +80,17 @@ class CompositionSourceTests(DashboardFixture):
         asset = Asset.objects.create(user=self.user, name='Source asset', code='SOURCE', asset_class='LIQUIDITY', currency='BRL',
                                     valuation_mode='MONETARY', opening_balance='100', opening_product=product)
         deposit = Investment.objects.create(user=self.user, product=product, asset=asset, kind='DEPOSIT', amount='20', date=date(2026, 9, 3))
-        gain = Investment.objects.create(user=self.user, product=product, asset=asset, kind='YIELD', amount='5', date=date(2026, 9, 4))
-        withdrawal = Investment.objects.create(user=self.user, product=product, asset=asset, kind='WITHDRAWAL', amount='10', date=date(2026, 10, 1))
+        Investment.objects.create(user=self.user, product=product, asset=asset, kind='YIELD', amount='5', date=date(2026, 9, 4))
+        Investment.objects.create(user=self.user, product=product, asset=asset, kind='WITHDRAWAL', amount='10', date=date(2026, 10, 1))
         row = composition(self.user, {'scope': 'portfolio', 'series': 'total', 'period': '2026-09',
                                       'opening_date': '2026-09-01', 'purpose': 'INVESTMENT'})['rows'][0]
         self.assertEqual(row['cents'], '12500')
         self.assertEqual({source['url'] for source in row['sources']}, {
-            reverse('investments:update_asset', args=[asset.pk]), reverse('investments:update', args=[deposit.pk]),
-            reverse('investments:update', args=[gain.pk]),
+            reverse('investments:operations') + f'?section=portfolio&product={product.pk}&asset={asset.pk}',
         })
         row = composition(self.user, {'scope': 'portfolio-flow', 'series': 'deposits', 'period': '2026-09'})['rows'][0]
         self.assertEqual(row['sources'][0]['url'], reverse('investments:update', args=[deposit.pk]))
         self.assertEqual(row['sources'][0]['cents'], '2000')
         row = composition(self.user, {'scope': 'portfolio', 'series': 'total', 'period': '2026-10', 'opening_date': '2026-09-01'})['rows'][0]
-        self.assertEqual(next(source['cents'] for source in row['sources'] if source['url'] == reverse('investments:update', args=[withdrawal.pk])), '-1000')
+        self.assertEqual(row['cents'], '11500')
+        self.assertEqual(sum(int(source['cents']) for source in row['sources']), 11500)

@@ -21,14 +21,14 @@
                 {% translate 'Included in planning availability. Record actual yields here; redeem to an account before paying.' as portfolio_help %}
             {% else %}
                 {% translate 'Portfolio' as portfolio_label %}
-                {% translate 'This is historical operation value, not a live market valuation.' as portfolio_help %}
+                {% translate 'Units use the latest local price observation or their remaining acquisition cost. Bank cash and realized results are separate.' as portfolio_help %}
             {% endif %}
             <h2 class="section-title">{{ portfolio_label }}</h2>
             {% include 'partials/help_popover.html' with help_id='investments-portfolio-help' help_label=portfolio_label help_text=portfolio_help %}
         </div>
         <div class="text-right">
             <p id="investment-total" class="text-3xl font-semibold tracking-tight tabular-nums">{{ base_currency }} {{ simulated_total|floatformat:2 }}</p>
-            <p class="subtle-copy mt-1">{% if missing_rate_currencies %}{% translate 'Partial total' %}{% else %}{% translate 'Recorded value' %}{% endif %}</p>
+            <p class="subtle-copy mt-1">{% if missing_rate_currencies %}{% translate 'Partial total' %}{% else %}{% translate 'Observed values and remaining cost' %}{% endif %}</p>
             <p class="subtle-copy mt-1">{% blocktranslate with date=today|date:USER_DATE_FORMAT %}Currency conversion as of {{ date }}{% endblocktranslate %}</p>
         </div>
         {% if missing_rate_currencies %}<div id="investment-fx-warning" role="status" class="w-full space-y-2 text-sm text-expense dark:text-expense-light"><p>{% blocktranslate with currencies=missing_rate_currencies|join:', ' %}Current total incomplete: exchange rates are missing for {{ currencies }}.{% endblocktranslate %}</p><a class="quiet-action" href="{% url 'banking:exchange_rates' %}">{% translate 'Manage exchange rates' %}</a></div>{% endif %}
@@ -44,6 +44,8 @@
         </details>
         {% endif %}
     </section>
+    {% if selected_section != 'cash' %}{% include 'investments/_performance.html' %}{% endif %}
+    {% if portfolio_snapshot.missing_prices %}<p id="investment-price-warning" role="status" class="subtle-copy">{% translate 'Some unit positions have no observed price and use remaining cost. Add local observations to show their value and unrealized result.' %} <a class="quiet-action" href="{% url 'investments:prices' %}">{% translate 'Observed prices' %}</a></p>{% endif %}
     <section class="space-y-8" aria-label="{% translate 'Positions' %}">
     {% if has_archived_positions %}<p id="investment-archived-positions-note" class="subtle-copy">{% translate 'Archived assets are hidden from this list. Their balances remain in totals and history.' %}</p>{% endif %}
     {% for bank in portfolio_groups %}
@@ -56,7 +58,7 @@
             <div class="hidden overflow-x-auto sm:block" tabindex="0" role="region" aria-label="{{ product.name }}"><table class="data-table min-w-[42rem] table-fixed">
                 <colgroup><col class="w-[28%]"><col class="w-[27%]"><col class="w-[15%]"><col class="w-[15%]"><col class="w-[15%]"></colgroup>
                 <thead><tr><th scope="col">{% translate 'Asset' %}</th><th scope="col" class="number">{% translate 'Position' %}</th><th scope="col" class="number">{% translate 'Deposits' %}</th><th scope="col" class="number">{% translate 'Yields' %}</th><th scope="col" class="number">{% translate 'Withdrawals' %}</th></tr></thead>
-                <tbody>{% for asset in product.assets %}<tr><td><a class="font-medium hover:underline" href="{% url 'investments:operations' %}?section={{ selected_section }}&amp;product={{ product.id|stringformat:'s' }}&amp;asset={{ asset.id|stringformat:'s' }}" aria-label="{% blocktranslate with asset=asset.name %}View operations for {{ asset }}{% endblocktranslate %}">{{ asset.name }}</a><p class="subtle-copy mt-1">{{ asset.code }} · {{ asset.currency }}</p></td><td class="number font-semibold">{% if asset.valuation_mode == 'MONETARY' %}{{ asset.currency }} {{ asset.balance|floatformat:2 }}{% if asset.currency != base_currency and asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% else %}{% blocktranslate with quantity=asset.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% if asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% endif %}</td><td class="number">{{ asset.currency }} {{ asset.deposits|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</td></tr>{% endfor %}</tbody>
+                <tbody>{% for asset in product.assets %}<tr><td><a class="font-medium hover:underline" href="{% url 'investments:operations' %}?section={{ selected_section }}&amp;product={{ product.id|stringformat:'s' }}&amp;asset={{ asset.id|stringformat:'s' }}" aria-label="{% blocktranslate with asset=asset.name %}View operations for {{ asset }}{% endblocktranslate %}">{{ asset.name }}</a><p class="subtle-copy mt-1">{{ asset.code }} · {{ asset.currency }}</p>{% if asset.valuation_mode == 'UNITS' %}{% include 'investments/_position_details.html' %}{% endif %}</td><td class="number font-semibold">{% if asset.valuation_mode == 'MONETARY' %}{{ asset.currency }} {{ asset.balance|floatformat:2 }}{% if asset.currency != base_currency and asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% else %}{% blocktranslate with quantity=asset.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% if asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% endif %}</td><td class="number">{{ asset.currency }} {{ asset.deposits|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</td></tr>{% endfor %}</tbody>
             </table></div>
             <ul class="divide-y divide-forest/10 sm:hidden dark:divide-cream/10">
                 {% for asset in product.assets %}
@@ -81,6 +83,7 @@
                             <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Yields' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</dd></div>
                             <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Withdrawals' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</dd></div>
                         </dl>
+                        {% if asset.valuation_mode == 'UNITS' %}{% include 'investments/_position_details.html' %}{% endif %}
                     </li>
                 {% endfor %}
             </ul>

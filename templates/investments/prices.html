@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Observed prices' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-7">
+    <header class="workspace-header"><h1 class="page-title">{% translate 'Observed prices' %}</h1><a href="{% url 'investments:create_price' %}{% if selected_asset %}?asset={{ selected_asset }}{% endif %}" class="action-primary">{% translate 'New observation' %}</a></header>
+    {% include 'investments/_sections.html' %}
+    <p class="subtle-copy">{% translate 'The latest observation on or before the valuation date prices the units you hold. Without an observation, the position shows its remaining acquisition cost. Sources are your own records; no external feed is contacted.' %}</p>
+    <div class="surface-panel overflow-x-auto" tabindex="0" role="region" aria-label="{% translate 'Observed prices' %}">
+        <table class="data-table"><thead><tr><th>{% translate 'Asset' %}</th><th>{% translate 'Date' %}</th><th>{% translate 'Unit price' %}</th><th>{% translate 'Source' %}</th><th>{% translate 'Actions' %}</th></tr></thead>
+        <tbody>{% for observation in observations %}<tr><td>{{ observation.asset.name }} · {{ observation.asset.code }}</td><td>{{ observation.date|date:USER_DATE_FORMAT }}</td><td>{{ observation.asset.currency }} {{ observation.unit_price.normalize }}</td><td>{{ observation.source }}</td><td><div class="flex flex-wrap gap-3"><a class="quiet-action" href="{% url 'investments:update_price' observation.pk %}">{% translate 'Edit' %}</a><a class="quiet-action text-expense dark:text-expense-light" href="{% url 'investments:delete_price' observation.pk %}">{% translate 'Delete' %}</a></div></td></tr>{% empty %}<tr><td colspan="5">{% translate 'No observed prices.' %}</td></tr>{% endfor %}</tbody></table>
+    </div>
+    {% if is_paginated %}<nav class="flex gap-4" aria-label="{% translate 'Pagination' %}">{% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}" class="quiet-action">{% translate 'Previous' %}</a>{% endif %}<span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}" class="quiet-action">{% translate 'Next' %}</a>{% endif %}</nav>{% endif %}
+</div>
+{% endblock %}

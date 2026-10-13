@@ -5,7 +5,8 @@
 <div class="space-y-7">
     <header class="workspace-header"><h1 class="page-title">{% translate 'Investments' %}</h1>{% include 'investments/_primary_action.html' %}</header>
     {% include 'investments/_sections.html' %}
-    <p class="subtle-copy">{% translate 'Historical position values and recorded movements, not live market prices.' %}</p>
+    <p class="subtle-copy">{% translate 'Month-end positions use dated local prices when available and remaining acquisition cost otherwise. Recorded cash flows stay separate.' %}</p>
+    {% include 'investments/_performance.html' %}
     {% include 'investments/_investments_charts.html' %}
 </div>
 {% endblock %}

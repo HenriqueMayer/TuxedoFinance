@@ -75,10 +75,11 @@
             <div id="withdrawal-fields" data-has-errors="{{ form.destination_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.destination_account %}</div>
             <div id="cash-fields" data-has-errors="{{ form.cash_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.cash_amount %}</div>
         </section>
-        <details class="rounded-xl ring-1 ring-forest/10 dark:ring-cream/10"{% if form.fees.errors or form.fees.value and form.fees.value != '0' and form.fees.value != '0.00' or form.reason.errors or form.notes.errors or form.reason.value or form.notes.value %} open{% endif %}>
+        <details class="rounded-xl ring-1 ring-forest/10 dark:ring-cream/10"{% if form.fees.errors or form.fees_in_asset_currency.errors or form.fees_in_asset_currency.value or form.fees.value and form.fees.value != '0' and form.fees.value != '0.00' or form.reason.errors or form.notes.errors or form.reason.value or form.notes.value %} open{% endif %}>
             <summary class="cursor-pointer px-4 py-3 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/80">{% translate 'Advanced options' %}</summary>
             <div class="space-y-5 p-4 pt-1">
                 <div id="operation-fees" data-has-errors="{{ form.fees.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fees %}</div>
+                <div id="fee-currency-fields" data-has-errors="{{ form.fees_in_asset_currency.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.fees_in_asset_currency %}</div>
                 {% include 'partials/form_field.html' with field=form.reason %}
                 {% include 'partials/form_field.html' with field=form.notes %}
             </div>
@@ -201,6 +202,8 @@
             setHidden(groups.money, mode !== 'MONETARY', !clearStale);
             setHidden(groups.units, mode !== 'UNITS', !clearStale);
             setHidden(groups.fees, !mode, !clearStale);
+            setHidden(document.getElementById('fee-currency-fields'), mode !== 'UNITS', !clearStale);
+            if (clearStale && mode !== 'UNITS') document.getElementById('{{ form.fees_in_asset_currency.id_for_label }}').checked = false;
             if (clearStale) {
                 if (mode !== 'UNITS') {
                     quantity.value = '';

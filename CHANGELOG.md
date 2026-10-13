@@ -7,6 +7,23 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Import local CSV/OFX statements with explicit mapping, staged review, stable bank-ID deduplication and possible-duplicate warnings; match existing bank movements, confirm invoice payments or record owned-account transfers. Compare stated closing balances without automatic adjustments and undo unchanged batches with guarded source snapshots.
+- Split transactions between categories with exact native totals and cumulative installment cents, preserving one financial source while applying allocations to reports, budgets, filters and CSV exports.
+- Add monthly category budgets, previous-month copying and recorded/forecast spending; add currency/date goals with named reservations of existing account or monetary cash-pot balances, capped progress and visible shortfalls.
+- Add explained local duplicate, subscription-increase, budget-overspend and future-cash-shortage signals with reversible review decisions that do not mutate source finances.
+- Add opt-in confirmed credit-card payments, including partial payments, actual account debits and remaining forecast obligations; preserve earlier automatic invoice settlement and guard repeated submissions.
+- Add dated local investment price observations, weighted-average remaining cost, realized/unrealized results and explicit fee currency, plus a net-worth series that includes incurred card debt and discloses incomplete valuation evidence.
+- Expand synthetic demo data with known opening dates, local prices, budgets, funded goals, review signals and overdue/partial confirmed invoices; future anchors keep unfunded targets instead of inventing current capacity or future confirmed payments.
+- Document isolated manual branch testing with a disposable SQLite backup and an owner acceptance checklist; no release, image or version change is published by these additions.
+
+### Changed
+
+- Serve the interface font locally and reuse reporting and conversion context; incrementally synchronize unchanged ledger projections without repeated data writes. Document synthetic performance observations and their limits.
+- Add migrations for imports, category splits, budgets, goals, price observations, opening dates and confirmed payments. Existing financial records remain intact; legacy opening dates remain unknown until explicitly entered and existing cards retain automatic settlement until opted in.
+- Preserve shared keyboard, conditional-field, contextual-help, theme and no-JavaScript form behavior across the new workflows, with English and Brazilian Portuguese interface copy.
+
 ## [0.10.0] - 2026-10-09
 
 ### Fixed

@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     'banking',
     'investments',
     'sandbox',
+    'planning',
+    'ingestion',
 ]
 
 MIDDLEWARE = [
@@ -186,12 +188,12 @@ STATICFILES_DIRS = [
 # Restrict executable content to this installation. Inline scripts and styles
 # remain allowed because the server-rendered templates contain the synchronous
 # theme bootstrap, translated progressive-enhancement copy and calculated chart
-# geometry. Google Fonts is the only external presentation origin.
+# geometry. Presentation assets are served by the local installation.
 SECURE_CSP = {
     'default-src': [CSP.SELF],
     'script-src': [CSP.SELF, CSP.UNSAFE_INLINE],
-    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, 'https://fonts.googleapis.com'],
-    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE],
+    'font-src': [CSP.SELF],
     'img-src': [CSP.SELF, 'data:'],
     'connect-src': [CSP.SELF],
     'object-src': [CSP.NONE],

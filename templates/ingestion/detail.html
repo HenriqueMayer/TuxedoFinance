@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{{ batch.file_name }} - {% translate 'Statement import' %}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6"><div><h1 class="page-title">{% translate 'Statement import' %}</h1><p class="subtle-copy mt-2">{{ batch.file_name }} · {{ batch.account }} · {{ batch.get_status_display }}</p></div>
+<section class="surface-panel space-y-3 p-6"><h2 class="section-title">{% translate 'Local provenance' %}</h2><p class="subtle-copy break-words">SHA-256: {{ batch.file_hash }}</p><p>{{ batch.file_format }} · {{ batch.created_at|date:USER_DATE_FORMAT }} · {{ batch.account.currency }}</p>
+{% if batch.mapping %}<details><summary class="quiet-action cursor-pointer">{% translate 'Reviewed column mapping' %}</summary><pre class="mt-2 overflow-x-auto whitespace-pre-wrap text-sm">{{ batch.mapping }}</pre></details>{% endif %}
+{% if batch.status == 'CONFIRMED' %}<a class="quiet-action" href="{% url 'ingestion:undo' batch.pk %}">{% translate 'Review undo' %}</a>{% else %}<p>{% translate 'Only unchanged records created by this import were removed. Matched original records were kept. A new upload requires an explicit review.' %}</p>{% endif %}</section>
+{% if reconciliation %}<section class="surface-panel space-y-2 p-6"><h2 class="section-title">{% translate 'Closing balance reconciliation' %}</h2><p>{{ reconciliation.date }} · {{ batch.account.currency }}</p><p>{% translate 'Statement balance' %}: {{ reconciliation.expected }}</p><p>{% translate 'Current ledger balance at that date' %}: {{ reconciliation.actual }}</p><p>{% translate 'Difference' %}: {{ reconciliation.difference }}</p><p class="subtle-copy">{% translate 'A difference is information to review. No automatic adjustment is created.' %}</p></section>{% endif %}
+<section class="surface-panel space-y-4 p-6"><h2 class="section-title">{% translate 'Reviewed entries' %}</h2>{% include 'ingestion/_decisions.html' %}</section></div>
+{% endblock %}

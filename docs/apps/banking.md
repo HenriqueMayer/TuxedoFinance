@@ -21,8 +21,16 @@ Bank
 
 A `Bank` may have any number of `BankAccount` rows, including multiple accounts
 in the same currency. Each account has exactly one currency. Its available
-balance is `opening_balance + sum(BankMovement.signed_amount)`; transaction rows
+balance is its applicable opening balance plus
+`sum(BankMovement.signed_amount)`; transaction rows
 are never added to that formula independently.
+
+New nonzero openings require `BankAccount.opening_date`. Cutoff reads include a
+dated opening only on or after that date, and the date cannot follow an existing
+movement. Older openings keep a null date through migration rather than an
+invented historical baseline. Current balances retain them, while dated wealth
+discloses that their baseline is unknown. Statement confirmation requires the
+owner to resolve a nonzero unknown account baseline first.
 
 Bank list and account detail views synchronize derived transactions and invoices
 before reading balances. These requests may write to the ledger; the balance
@@ -38,8 +46,10 @@ helpers themselves only query it. The synchronization service lives in
 - A **credit-card purchase** becomes an invoice item. It affects spending
   reports in the statement month, including the appropriate installment or
   recurrence amount, and does not create a purchase-date account debit.
-- A `CardInvoice` is paid on its `due_date` by one debit movement against the
-  linked account. Invoice items are not debited again, preventing double count.
+- By default a `CardInvoice` is projected as paid on its `due_date` by one debit
+  movement against the linked account. Optional manual settlement replaces
+  that projection with explicitly confirmed payments. Invoice items are not
+  debited again, preventing double count.
 - An external PIX is an ordinary categorized `INCOME` or `EXPENSE` transaction,
   with its immediate ledger movement. PIX is not synonymous with transfer.
 
@@ -59,9 +69,39 @@ cash-flow KPIs.
 Both `DebitCard` and `CreditCard` belong to one `BankAccount`. A credit card also
 stores its statement-closing rule and due day. Each invoice stores a reference month, due date, status, and amount; its
 native currency comes from the linked card account. Synchronization derives the
-total from source records and creates one due-date movement, including for
-future invoices. Available cash includes that movement only once effective. Partial payments, if introduced, must be represented as
-explicit invoice payments; they must not mutate purchase amounts.
+total from source records. Automatic mode creates one due-date movement,
+including for future invoices; cash includes it only once effective. Automatic
+paid status describes the local projection, not bank confirmation.
+
+### Optional manual settlement
+
+`CreditCard.manual_settlement_from` is an owner-selected due-date boundary.
+Its default is null, preserving automatic behavior for existing and new cards.
+Invoices due before the boundary retain their prior behavior. An invoice that
+has entered manual mode keeps `CardInvoice.manual_settlement=True`, preserving
+confirmed evidence even if the card setting subsequently changes.
+
+Manual invoices have no synthetic due-date debit. `InvoicePayment` records a
+positive native amount, actual date, owned funding account, notes and unique
+confirmation UUID. The account must have the invoice currency; the payment
+cannot be in the future or before its known account opening. Each confirmation
+posts exactly one linked debit `BankMovement` on the actual payment date.
+Repeating the same UUID with the same payload returns the existing payment;
+reuse with different values is rejected. Payments, movements and invoice status
+are saved atomically by `banking.settlements.save_invoice_payment`.
+
+Partial payments are supported, and new or edited confirmations cannot exceed
+the current invoice total after other payments. Status is scheduled, partial,
+overdue or paid according to confirmed payments through the cutoff. Editing or
+deleting a confirmation updates or removes its own cash movement without
+altering purchases. A source purchase correction/deletion does not erase real
+payments: excess confirmed payment becomes visible card credit in wealth.
+Payment-bearing invoices survive source/horizon reconciliation.
+
+`manual_invoice_obligations(user, as_of)` exposes outstanding manual amounts
+for due-date forecasts. These planned obligations do not post cash or count as
+another expense. Historical readers filter confirmations by their actual date
+and must not use today's paid flag as evidence of an earlier payment.
 
 ## Loyalty
 
@@ -89,7 +129,8 @@ ledger. It records the points used, target account and monetary amount, IOF, and
 an optional IOF funding instrument. The service links it to a debit
 `LoyaltyEntry`, a credit `BankMovement` for the reward, and an IOF movement when
 IOF is paid from an account. Credit-card IOF is included in the card's aggregate
-invoice by ledger synchronization and debits cash only on its due date. Positive
+invoice by ledger synchronization and settles through the card's automatic or
+manual invoice mode. Positive
 IOF requires exactly one owned bank account or credit card; zero IOF permits
 neither.
 
@@ -127,11 +168,12 @@ Bank accounts, invoices and investment assets retain their configured native
 currency. Consolidated reporting uses the authenticated user's
 `UserPreference.base_currency`, which defaults to BRL and is editable in
 Settings. Historical transfer reports use each transfer's persisted FX
-snapshot and effective evidence date; current rates are reserved for explicitly
-labeled current valuations.
+snapshot and effective evidence date; read-time rates serve explicitly labeled
+current or cutoff-date valuations.
 Missing rates preserve native amounts and mark the conversion incomplete.
 Changing the preference never mutates native amounts. Other banking entities
-remain on live/current conversion until a future roadmap item extends coverage.
+use read-time conversion rather than captured operation snapshots. Dated wealth
+requests cutoff-date rates; current screens request their stated valuation date.
 
 The exchange-rate list provides create, edit and confirmed delete actions for
 the signed-in user's rates. Forms and cancellation return to that list. Editing
@@ -146,6 +188,8 @@ must be unique per user.
 - Every queryset and relationship is scoped to the authenticated user.
 - Referenced banks, accounts, cards, invoices, movements, rates, and loyalty
   ledgers are protected from destructive cascade.
+- Account currency cannot change while any goal reservation references it,
+  including an archived goal, even if no cash movement has yet been recorded.
 - Personal ledger and loyalty entries remain editable; audit-grade reversal
   workflows are out of scope.
 - Exactly one settlement path applies to an event: immediate account movement or
@@ -169,7 +213,8 @@ Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-c
 `BankAccount.planning_enabled` defaults to true and `reserved_amount` defaults
 to zero. Reservations use the account's native currency and persist until the
 owner changes them; they do not create movements or reset each month. An included
-account reserves `min(reserved_amount, max(balance, 0))`. An excluded account
+account sets aside the greater of its manual reserve and active goal allocations,
+capped at its positive balance. An excluded account
 sets aside its positive balance. Negative balances remain visible in planning,
 and excluded funding never removes an invoice or other obligation.
 
@@ -177,8 +222,15 @@ and excluded funding never removes an invoice or other obligation.
 balances, monetary cash pots, set-aside amounts, availability, reserve shortfall
 and missing currencies. Positions are calculated by product and asset, with
 opening positions counted once. The date cutoff excludes future movements and
-operations. This is a funding snapshot before upcoming bills, not a second
+operations and openings dated after the cutoff. Active goal allocations also
+reserve monetary cash pots; archived goals release availability while retaining
+their source references. Shrinking balances show a shortfall instead of
+manufacturing backing. This is a funding snapshot before upcoming bills, not a second
 ledger or an amount that can be spent without redeeming a cash pot.
+
+The helper accepts an optional request-owned `ConversionContext` for shared FX
+lookups. Reservations are earmarks of existing cash, not withdrawals, expenses
+or new assets. They do not reduce net worth. See [planning](planning.md).
 
 Bank lists and detail tables consume grouped balances instead of calling an
 aggregate for each account. The planning toggle uses an owned, CSRF-protected

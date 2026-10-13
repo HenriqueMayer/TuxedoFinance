@@ -3,6 +3,7 @@ from datetime import date
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Case, DecimalField, F, Prefetch, Q, Sum, When
 from django.db.models.deletion import ProtectedError
@@ -23,6 +24,7 @@ from banking.forms import (
     CreditCardForm,
     DebitCardForm,
     ExchangeRateForm,
+    InvoicePaymentForm,
     LoyaltyEntryForm,
     LoyaltyProgramForm,
     RewardRedemptionForm,
@@ -35,6 +37,7 @@ from banking.models import (
     CreditCard,
     DebitCard,
     ExchangeRate,
+    InvoicePayment,
     LoyaltyEntry,
     LoyaltyProgram,
     RewardRedemption,
@@ -48,6 +51,7 @@ from banking.services import (
     get_planning_availability,
 )
 from transactions.services import sync_user_ledger
+from banking.settlements import save_invoice_payment, delete_invoice_payment
 
 
 def _programs(user):
@@ -248,7 +252,11 @@ class OwnedFormMixin(LoginRequiredMixin):
     def form_valid(self, form):
         form.instance.user = self.request.user
         try:
-            return super().form_valid(form)
+            with transaction.atomic():
+                response = super().form_valid(form)
+                if isinstance(form.instance, CreditCard):
+                    sync_user_ledger(self.request.user)
+                return response
         except IntegrityError:
             form.add_error(None, _('A record with these values already exists.'))
             return self.form_invalid(form)
@@ -341,6 +349,68 @@ class CreditCardUpdateView(RelatedFormMixin, UpdateView):
     model = CreditCard
     form_class = CreditCardForm
     form_title = _('Edit credit card')
+
+
+class InvoiceListView(LoginRequiredMixin, ListView):
+    template_name = 'banking/invoices.html'
+    context_object_name = 'invoices'
+    paginate_by = 30
+
+    def get_queryset(self):
+        sync_user_ledger(self.request.user)
+        return CardInvoice.objects.filter(user=self.request.user).select_related('card__account__bank').prefetch_related('payments')
+
+
+def _payment_errors(form, error):
+    if hasattr(error, 'message_dict'):
+        for field, messages_ in error.message_dict.items():
+            for message in messages_:
+                form.add_error(field if field in form.fields else None, message)
+    else:
+        form.add_error(None, error)
+
+
+@login_required
+def invoice_detail(request, pk):
+    sync_user_ledger(request.user)
+    invoice = get_object_or_404(CardInvoice.objects.select_related('card__account__bank').prefetch_related('payments__account'), pk=pk, user=request.user)
+    form = InvoicePaymentForm(request.POST or None, user=request.user, invoice=invoice)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            save_invoice_payment(form.save(commit=False))
+        except ValidationError as error:
+            _payment_errors(form, error)
+        else:
+            messages.success(request, _('Invoice payment confirmed.'))
+            return redirect('banking:invoice_detail', pk=pk)
+    from transactions.models import Transaction
+    items = Transaction.objects.filter(user=request.user, credit_card=invoice.card).select_related('category')
+    sources = [(item, item.amount_for_month(invoice.reference_month.year, invoice.reference_month.month)) for item in items]
+    return render(request, 'banking/invoice_detail.html', {'invoice': invoice, 'form': form, 'sources': [(item, amount) for item, amount in sources if amount]})
+
+
+@login_required
+def invoice_payment_edit(request, pk):
+    payment = get_object_or_404(InvoicePayment.objects.select_related('invoice__card__account'), pk=pk, user=request.user)
+    form = InvoicePaymentForm(request.POST or None, instance=payment, user=request.user, invoice=payment.invoice)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            save_invoice_payment(form.save(commit=False))
+        except ValidationError as error:
+            _payment_errors(form, error)
+        else:
+            return redirect('banking:invoice_detail', pk=payment.invoice_id)
+    return render(request, 'banking/form.html', {'form': form, 'form_title': _('Edit confirmed payment'), 'cancel_url': reverse('banking:invoice_detail', args=[payment.invoice_id])})
+
+
+@login_required
+def invoice_payment_delete(request, pk):
+    payment = get_object_or_404(InvoicePayment.objects.select_related('invoice__card__account'), pk=pk, user=request.user)
+    invoice_id = payment.invoice_id
+    if request.method == 'POST':
+        delete_invoice_payment(payment)
+        return redirect('banking:invoice_detail', pk=invoice_id)
+    return render(request, 'banking/payment_delete.html', {'payment': payment})
 
 
 class LoyaltyProgramCreateView(RelatedFormMixin, CreateView):

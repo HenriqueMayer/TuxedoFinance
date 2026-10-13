@@ -7,7 +7,7 @@ is expressed through owned banking accounts, cards, invoices, and movements.
 ## Responsibilities
 
 - CRUD, search and filtering for `INCOME` and `EXPENSE` events.
-- Category assignment for income/expense.
+- Category assignment and optional exact category allocations for income/expense.
 - Amount, event date, recurrence and notes; consolidated reporting uses the
   authenticated user's base currency while native amounts remain unchanged.
 - Selection of PIX, debit card, credit card, or direct account as the settlement
@@ -83,9 +83,38 @@ beyond today. Future-effective rows may exist in the database, but balance
 queries exclude them until their effective date. See
 [request-time synchronization](../architecture.md#request-time-synchronization).
 
+Reconciliation compares projected values to existing rows and saves only actual
+changes. Unchanged rows retain their identifiers and timestamps; source keys
+prevent duplicate movements. Manual invoice payments are confirmed evidence,
+not disposable projections, and remain protected when a source or forecast
+horizon changes. Atomic synchronization still uses SQLite's serialized writer
+behavior; skipping unchanged writes does not provide concurrent row locks.
+
+## Category splits
+
+`TransactionSplit` optionally allocates a source transaction to two or more
+owned compatible categories. The positive, distinct category amounts must sum
+exactly to the source amount; the form supports at most twenty rows. The parent
+category stays required as a legacy/fallback field. When splits exist, reports
+use the allocations instead of adding that parent category again.
+
+Splits do not create transactions, installments, movements or invoices. They
+therefore cannot change the transaction's cash or statement total. Editing an
+amount or type must keep its allocations valid. Generated redemption IOF remains
+managed from its source and cannot be split through the ordinary transaction
+editor.
+
+`category_allocations_for_month` distributes installment cents proportionally
+over remaining category capacities. It floors shares, assigns remainders in
+stable order and carries the unallocated capacity to the next installment.
+Each monthly split equals that installment exactly, no allocation becomes
+negative, and the full plan reproduces the original category totals. Fixed
+recurrences reuse their source allocations for each occurrence without copying
+source records.
+
 ## Listing and reporting semantics
 
-The list opens on the full history. Search covers title, notes, category, bank,
+The list opens on the full history. Search covers title, notes, category and split category, bank,
 account and card labels. Free-text search and the exact category selector sit
 next to each other on wider screens and consecutively on mobile, in the same
 reading and keyboard order. Billed month follows them; exact event
@@ -103,7 +132,8 @@ not total monetary amounts.
 
 Category choices contain only owned categories with records matching the search,
 dates, type and recurrence. Parent names appear as `Parent › Child`; selecting a
-category matches that exact category, not its descendants. Recurrence shortcuts
+category matches that exact parent/fallback or allocated category, not its
+descendants. Recurrence shortcuts
 are All, Fixed (`is_fixed=True`), Installments (`is_fixed=False`, `installments>1`)
 and One-off (`is_fixed=False`, `installments=1`). Income hides Installments and
 clears an incompatible installment selection.
@@ -125,9 +155,19 @@ results; without a month, filtering and aggregation stay in SQL.
 Authenticated users may export all their transactions or the active billed
 month as UTF-8 CSV. Full exports download as `transactions.csv`; a monthly
 export uses `transactions-YYYY-MM.csv`. The header is
-`transaction_date,billed_month,title,transaction_type,category,payment_channel,bank,account,credit_card,currency,amount,total_amount,installments,is_fixed,fixed_until,notes`.
+`transaction_date,billed_month,title,transaction_type,category,payment_channel,bank,account,credit_card,currency,amount,total_amount,installments,is_fixed,fixed_until,notes,category_splits`.
 For monthly exports, `amount` is the amount charged in that month while
 `total_amount` retains the original transaction amount.
+
+`category_splits` is empty for unsplit records or contains JSON objects with
+`category_id`, `category` and native `amount`. A monthly export includes that
+month's allocated cents, not the full source allocations. The ordinary export
+preserves text verbatim. The deliberate `format=spreadsheet` variant adds
+`-spreadsheet` to the filename and prefixes formula-like text with an apostrophe
+while retaining numeric cells. It is a spreadsheet presentation format, not a
+lossless interchange format; importers must not automatically strip that prefix.
+These transaction reports are not cash statements and are rejected by the
+[statement importer](ingestion.md) to avoid occurrence/settlement duplication.
 
 Own transfers are visibly neutral and never receive income/expense colors or
 category totals.
@@ -139,5 +179,9 @@ of scope.
 ## Form keyboard behavior
 
 Categories now wait for the transaction type and use the shared searchable choice. Down/Up visibly navigate; Enter confirms; Escape/Tab cancel unconfirmed search text. Credit-card details wait for a specific card; recurrence dates wait for the checkbox. Advanced options are operable with Enter/Space.
+
+Category splitting begins unchecked and reveals allocation rows only when
+selected. Split choices share the same type compatibility, owned selectors,
+bound-error recovery and complete native submission as the parent form.
 
 Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).

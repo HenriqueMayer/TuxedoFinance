@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from core.dates import configure_date_fields
 from banking.models import BankAccount, CreditCard, DebitCard
 from categories.models import Category
-from transactions.models import Transaction
+from transactions.models import Transaction, TransactionSplit
 
 
 INPUT_CLASSES = (
@@ -150,6 +150,43 @@ class TransactionForm(forms.ModelForm):
     def clean_installments(self):
         installments = self.cleaned_data.get('installments')
         return 1 if installments is None else installments
+
+    def clean(self):
+        cleaned = super().clean()
+        if self.instance.pk:
+            splits = list(self.instance.splits.select_related('category'))
+            if splits and cleaned.get('amount') != sum((row.amount for row in splits), 0):
+                self.add_error('amount', _('Clear the category split before changing the total amount.'))
+            if any(row.category.transaction_type and row.category.transaction_type != cleaned.get('transaction_type') for row in splits):
+                self.add_error('transaction_type', _('Clear incompatible category splits before changing the transaction type.'))
+        return cleaned
+
+
+class TransactionSplitForm(forms.ModelForm):
+    class Meta:
+        model = TransactionSplit
+        fields = ('category', 'amount')
+        labels = {'category': _('Category'), 'amount': _('Category amount')}
+        widgets = {'amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'})}
+
+    def __init__(self, *args, user=None, transaction_type=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.db.models import Q
+        self.fields['category'].queryset = Category.objects.filter(user=user).filter(Q(transaction_type__isnull=True) | Q(transaction_type='') | Q(transaction_type=transaction_type)).select_related('parent_category')
+        for field in self.fields.values():
+            field.widget.attrs['class'] = INPUT_CLASSES
+
+
+class BaseTransactionSplitFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        rows = [form.cleaned_data for form in self.forms if form.cleaned_data and not form.cleaned_data.get('DELETE')]
+        if len(rows) < 2:
+            raise forms.ValidationError(_('Use at least two categories, or clear the split.'))
+        if sum((row.get('amount', 0) for row in rows), 0) != self.instance.amount:
+            raise forms.ValidationError(_('Category amounts must add up to the transaction total.'))
 
 
 class TransactionDateFilterForm(forms.Form):

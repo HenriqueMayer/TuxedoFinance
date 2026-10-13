@@ -1,4 +1,6 @@
 from django import forms
+from django.utils import timezone
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 from core.dates import configure_date_fields
@@ -11,6 +13,7 @@ from banking.models import (
     CreditCard,
     DebitCard,
     ExchangeRate,
+    InvoicePayment,
     LoyaltyEntry,
     LoyaltyProgram,
     RewardRedemption,
@@ -66,7 +69,7 @@ class BankAccountForm(OwnedModelForm):
     class Meta:
         model = BankAccount
         fields = (
-            'bank', 'name', 'currency', 'opening_balance', 'pix_enabled',
+            'bank', 'name', 'currency', 'opening_balance', 'opening_date', 'pix_enabled',
             'planning_enabled', 'reserved_amount',
         )
         widgets = {
@@ -75,6 +78,7 @@ class BankAccountForm(OwnedModelForm):
         }
         help_texts = {
             'opening_balance': _('Balance immediately before the first ledger movement.'),
+            'opening_date': _('Balance at the start of this date, before its movements. Legacy dates may remain unknown.'),
             'planning_enabled': _('Include this account in monthly planning. Negative balances remain visible.'),
             'reserved_amount': _('Keep this amount outside planning. The account balance and history do not change.'),
         }
@@ -83,6 +87,7 @@ class BankAccountForm(OwnedModelForm):
             'name': _('Name'),
             'currency': _('Currency'),
             'opening_balance': _('Opening balance'),
+            'opening_date': _('Opening balance date'),
             'pix_enabled': _('Pix enabled'),
             'planning_enabled': _('Use in monthly planning'),
             'reserved_amount': _('Reserved amount'),
@@ -118,6 +123,11 @@ class BankAccountForm(OwnedModelForm):
                 self.add_error('currency', _('Currency cannot change after financial activity.'))
             if has_history and bank != original.bank:
                 self.add_error('bank', _('The bank cannot change after financial activity.'))
+            opening_date = cleaned.get('opening_date')
+            if opening_date and original.movements.filter(effective_date__lt=opening_date).exists():
+                self.add_error('opening_date', _('Review earlier movements before changing the opening balance date.'))
+        elif cleaned.get('opening_balance') and not cleaned.get('opening_date'):
+            self.add_error('opening_date', _('Enter the date of a new opening balance.'))
         return cleaned
 
 
@@ -157,7 +167,7 @@ class DebitCardForm(CardForm):
 class CreditCardForm(CardForm):
     class Meta:
         model = CreditCard
-        fields = ('account', 'name', 'card_type', 'closing_day', 'due_day')
+        fields = ('account', 'name', 'card_type', 'closing_day', 'due_day', 'manual_settlement_from')
         widgets = {
             'closing_day': forms.NumberInput(attrs={'min': '1', 'max': '31'}),
             'due_day': forms.NumberInput(attrs={'min': '1', 'max': '31'}),
@@ -165,6 +175,7 @@ class CreditCardForm(CardForm):
         help_texts = {
             'closing_day': _('Purchases on or after this day enter the next statement.'),
             'due_day': _('Clamped to the last day in shorter months.'),
+            'manual_settlement_from': format_lazy('{} {}', CreditCard._meta.get_field('manual_settlement_from').help_text, _('Existing confirmed invoices keep their mode if this date is changed or cleared.')),
         }
         labels = {
             'account': _('Account'),
@@ -172,7 +183,38 @@ class CreditCardForm(CardForm):
             'card_type': _('Card type'),
             'closing_day': _('Closing day'),
             'due_day': _('Due day'),
+            'manual_settlement_from': _('Confirm payments from'),
         }
+
+    def clean_manual_settlement_from(self):
+        value = self.cleaned_data.get('manual_settlement_from')
+        original = CreditCard.objects.filter(pk=self.instance.pk).values_list('manual_settlement_from', flat=True).first() if self.instance.pk else None
+        if value and value != original and value < timezone.localdate():
+            raise forms.ValidationError(_('Choose today or a future date to preserve historical automatic payments.'))
+        return value
+
+
+class InvoicePaymentForm(OwnedModelForm):
+    confirmation_key = forms.UUIDField(widget=forms.HiddenInput)
+    class Meta:
+        model = InvoicePayment
+        fields = ('account', 'amount', 'date', 'notes')
+        labels = {'account': _('Payment account'), 'amount': _('Amount paid'), 'date': _('Payment date'), 'notes': _('Notes')}
+        widgets = {'amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}), 'notes': forms.Textarea(attrs={'rows': 3})}
+
+    def __init__(self, *args, invoice, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance.invoice = invoice
+        self.initial['confirmation_key'] = self.instance.confirmation_key
+        self.fields['account'].queryset = BankAccount.objects.filter(user=self.user, currency=invoice.account.currency).select_related('bank')
+
+    def save(self, commit=True):
+        payment = super().save(commit=False)
+        if not payment.pk:
+            payment.confirmation_key = self.cleaned_data['confirmation_key']
+        if commit:
+            payment.save()
+        return payment
 
 
 class LoyaltyProgramForm(OwnedModelForm):

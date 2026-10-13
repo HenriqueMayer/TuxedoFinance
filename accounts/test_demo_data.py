@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """Opt-in demonstration profiles stay isolated from real financial records."""
 
-from datetime import date
+from datetime import date, timedelta
+from decimal import Decimal
 from io import StringIO
 from unittest.mock import patch
 
@@ -12,15 +13,19 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from accounts.demo_data import seed_demo_profile
+from accounts.demo_data import _month, seed_demo_profile
 from accounts.models import UserPreference
 from banking.models import (
     Bank, BankAccount, BankMovement, BankTransfer, CardInvoice, CreditCard,
-    DebitCard, ExchangeRate, LoyaltyEntry, LoyaltyProgram, RewardRedemption,
+    DebitCard, ExchangeRate, InvoicePayment, LoyaltyEntry, LoyaltyProgram, RewardRedemption,
 )
+from banking.services import account_balance, get_planning_availability
 from categories.models import Category
 from categories.signals import DEFAULT_CATEGORY_NAMES
-from investments.models import Asset, Investment, InvestmentProduct
+from investments.models import Asset, Investment, InvestmentProduct, PriceObservation
+from investments.positions import get_portfolio_valuation
+from planning.models import CategoryBudget, FinancialGoal, GoalAllocation, SignalDecision, SignalSettings
+from planning.services import budget_progress, goal_progress, local_signals, reserved_by_source
 from sandbox.models import ScenarioDraft
 from transactions.models import Transaction
 
@@ -31,7 +36,8 @@ OWNED_MODELS = (
     UserPreference, Bank, BankAccount, DebitCard, CreditCard, CardInvoice,
     BankTransfer, BankMovement, LoyaltyProgram, LoyaltyEntry, RewardRedemption,
     ExchangeRate, Category, Transaction, InvestmentProduct, Asset, Investment,
-    ScenarioDraft,
+    ScenarioDraft, InvoicePayment, PriceObservation, CategoryBudget, FinancialGoal,
+    GoalAllocation, SignalSettings, SignalDecision,
 )
 
 
@@ -141,6 +147,17 @@ class InsertDemoCommandTests(TestCase):
                     call_command('insert_demo', *arguments, stdout=StringIO())
                 self.assertEqual(record_snapshot(), before)
 
+    def test_distant_future_demo_keeps_unfunded_targets_without_future_confirmation(self):
+        anchor = _month(date.today(), 24, 15)
+        user = seed_demo_profile(language='en', username='future_demo',
+                                 password='Future-demo-isolated-29', as_of=anchor)
+        self.assertEqual(FinancialGoal.objects.filter(user=user).count(), 3)
+        self.assertFalse(GoalAllocation.objects.filter(user=user).exists())
+        self.assertFalse(InvoicePayment.objects.filter(user=user).exists())
+        self.assertFalse(user.bank_movements.filter(source_key__startswith='invoice-payment:').exists())
+        self.assertEqual(reserved_by_source(user), {'accounts': {}, 'cash_pots': {}})
+        self.assertEqual(get_planning_availability(user)['bank_total'], Decimal('0'))
+
     @override_settings(ALLOW_SIGNUPS=True)
     def test_normal_signup_does_not_populate_demonstration_data(self):
         response = self.client.post(reverse('accounts:signup'), {
@@ -248,8 +265,84 @@ class DemoProfileContentTests(TestCase):
                 for transfer in user.bank_transfers.all():
                     self.assertEqual(transfer.movements.count(), 2)
                 for invoice in user.card_invoices.filter(status=CardInvoice.Status.PAID):
-                    self.assertEqual(invoice.settlement_movement.amount, invoice.amount)
-                    self.assertEqual(invoice.settlement_movement.account_id, invoice.card.account_id)
+                    if invoice.manual_settlement:
+                        self.assertEqual(invoice.confirmed_amount, invoice.amount)
+                        self.assertFalse(BankMovement.objects.filter(user=user, source_key=f'invoice:{invoice.pk}').exists())
+                    else:
+                        self.assertEqual(invoice.settlement_movement.amount, invoice.amount)
+                        self.assertEqual(invoice.settlement_movement.account_id, invoice.card.account_id)
+
+    def test_manual_demo_invoices_post_only_the_confirmed_partial_payment(self):
+        for user in self.profiles.values():
+            with self.subTest(user=user.username):
+                invoices = user.card_invoices.filter(manual_settlement=True)
+                self.assertEqual(invoices.count(), 2)
+                overdue = invoices.get(status=CardInvoice.Status.OVERDUE)
+                partial = invoices.get(status=CardInvoice.Status.PARTIAL)
+                self.assertEqual(overdue.amount, Decimal('420'))
+                self.assertEqual(overdue.confirmed_amount, Decimal('0'))
+                self.assertEqual(partial.amount, Decimal('360'))
+                self.assertEqual(partial.remaining_amount, Decimal('180'))
+                self.assertLess(overdue.due_date, AS_OF)
+                payment = partial.payments.get()
+                self.assertEqual(payment.amount, Decimal('180'))
+                self.assertLessEqual(payment.date, AS_OF)
+                self.assertEqual(payment.movement.amount, payment.amount)
+                self.assertEqual(payment.movement.source_key, f'invoice-payment:{payment.pk}')
+                self.assertEqual(payment.movement.effective_date, payment.date)
+                self.assertFalse(user.bank_movements.filter(source_key__in=[f'invoice:{item.pk}' for item in invoices]).exists())
+
+    def test_category_budgets_real_goals_and_explained_signals_are_connected(self):
+        for user in self.profiles.values():
+            with self.subTest(user=user.username):
+                rows = budget_progress(user, AS_OF.replace(day=1), as_of=AS_OF)
+                self.assertEqual(len(rows), 3)
+                self.assertTrue(all(row['complete'] for row in rows))
+                self.assertTrue(any(row['over_budget'] for row in rows))
+                goals = goal_progress(user, as_of=AS_OF)
+                self.assertEqual(len(goals), 3)
+                self.assertTrue(all(row['complete'] and row['progress'] > 0 and not row['has_shortfall'] for row in goals))
+                self.assertEqual({row['goal'].currency for row in goals}, {'BRL', 'USD'})
+                sources = reserved_by_source(user, AS_OF)
+                self.assertEqual(len(sources['accounts']), 2)
+                self.assertEqual(len(sources['cash_pots']), 1)
+                availability = get_planning_availability(user, AS_OF)
+                for row in availability['account_rows']:
+                    named = sources['accounts'].get(row['account'].pk, Decimal('0'))
+                    expected = min(max(row['account'].reserved_amount, named), max(row['balance'], Decimal('0')))
+                    if not row['account'].planning_enabled:
+                        expected = max(row['balance'], Decimal('0'))
+                    self.assertEqual(row['reserved'], expected)
+                cash = availability['cash_pots'][0]
+                self.assertEqual(cash['reserved'], Decimal('1200'))
+                self.assertEqual(cash['available'], cash['balance'] - Decimal('1200'))
+                signals = local_signals(user, as_of=AS_OF)['signals']
+                self.assertTrue({'duplicates', 'subscriptionincrease', 'budgetoverspend', 'futurecashshortage'}.issubset({item['kind'] for item in signals}))
+                self.assertTrue(any(item['decision'] is not None for item in signals))
+                self.assertTrue(any(item['kind'] == 'duplicates' and item['decision'] is None for item in signals))
+                self.assertTrue(all(item['explanation'] and item['sources'] for item in signals))
+                forecast = user.bank_accounts.get(opening_balance=Decimal('100'))
+                self.assertEqual(account_balance(forecast, AS_OF), Decimal('100'))
+                self.assertEqual(account_balance(forecast, AS_OF + timedelta(days=10)), Decimal('-100'))
+
+    def test_unit_valuations_have_dated_fictional_local_sources_and_known_openings(self):
+        for user in self.profiles.values():
+            with self.subTest(user=user.username):
+                self.assertFalse(user.bank_accounts.filter(opening_date__isnull=True).exists())
+                self.assertFalse(user.investment_assets.filter(opening_date__isnull=True).exists())
+                observations = user.investment_prices.all()
+                self.assertEqual(observations.count(), 39)
+                self.assertTrue(all('sintética' in item.source or 'Synthetic' in item.source for item in observations))
+                valuation = get_portfolio_valuation(user, AS_OF)
+                unit_rows = [row for row in valuation['positions'] if row['asset'].valuation_mode == Asset.ValuationMode.UNITS]
+                self.assertEqual(len(unit_rows), 3)
+                for row in unit_rows:
+                    observation = row['asset'].price_observations.filter(date__lte=AS_OF).order_by('-date').first()
+                    self.assertEqual(row['valuation'], row['quantity'] * observation.unit_price)
+                    self.assertEqual(row['price_observation'].pk, observation.pk)
+                    self.assertFalse(row['baseline_unknown'])
+                self.assertTrue(valuation['complete'])
+                self.assertTrue(valuation['performance_complete'])
 
     def test_every_record_validates_and_every_related_owner_is_the_demo_user(self):
         for user in self.profiles.values():
@@ -283,7 +376,8 @@ class DemoProfileContentTests(TestCase):
             'categories:list', 'banking:list', 'banking:exchange_rates',
             'investments:list', 'investments:charts', 'investments:operations',
             'investments:settings', 'sandbox:index', 'sandbox:simulation',
-            'sandbox:drafts', 'accounts:settings',
+            'sandbox:drafts', 'accounts:settings', 'planning:budgets',
+            'planning:goals', 'planning:signals', 'banking:invoices', 'investments:prices',
         )
         for language, user in self.profiles.items():
             self.client.force_login(user)

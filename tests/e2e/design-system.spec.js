@@ -46,6 +46,7 @@ async function createMonetaryInvestment(page, testInfo) {
     await page.getByLabel(/^\s*Currency/).selectOption('BRL');
     await page.getByLabel(/^\s*How this asset is valued/).selectOption('MONETARY');
     await page.getByRole('spinbutton', { name: /^Opening balance/ }).fill('1000');
+    await page.locator('#id_opening_date').fill('01/01/2025');
     await selectChoice(page.locator('#id_opening_product-search'), { label: 'Investment bank - Savings' });
     await page.getByRole('button', { name: 'Save' }).click();
     // Confirm the fixture was persisted before leaving the asset form.

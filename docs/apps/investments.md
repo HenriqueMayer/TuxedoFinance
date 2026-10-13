@@ -10,6 +10,7 @@ become ordinary categorized transactions.
 Bank
 └── InvestmentProduct
     └── Investment ── Asset
+                     └── PriceObservation (local, dated)
 
 Asset = name + code + asset class + currency + valuation mode
 ```
@@ -29,6 +30,14 @@ Assets use one immutable valuation mode after their first operation:
 | `UNITS` | Traded assets such as shares, funds and crypto. | `quantity * unit_price`. |
 
 A monetary asset may have an `opening_balance` and its holding product: money already held before the first recorded operation. It appears in the position balance but does not create a bank movement, income, expense, deposit or withdrawal. It can only be changed before the asset has investment operations. Unit-based assets always have an opening balance of zero.
+
+Unit assets instead support an opening quantity and declared unit cost in one
+opening product. New nonzero openings require `Asset.opening_date`; the date
+cannot follow an existing operation. A dated opening is included only on and
+after that date. Incremental migration leaves older unknown dates null rather
+than inventing acquisition history. Those openings remain visible with an
+unknown-baseline warning; a chart fallback date is presentation context, not
+evidence of an acquisition date.
 
 ## Operations
 
@@ -76,15 +85,60 @@ Automatic monthly and annual yield calculations are not implemented. Yield
 is entered manually; the total-balance option derives the operation amount
 from the supplied balance without introducing automatic accrual.
 
+For unit assets, a yield adds the quantity and the value declared at its own
+entry price. Replay does not replace that historical value with a later market
+price. `cash_amount` always remains the actual bank debit or credit entered by
+the owner; position cost calculations never silently change it.
+
+## Weighted cost and editable history
+
+`investments.positions.replay_positions` rebuilds each product/asset position
+in `(date, created_at, pk)` order. Unit deposits and unit yields increase
+quantity and remaining cost. A withdrawal removes cost at the weighted average
+immediately before that withdrawal and records realized proceeds minus removed
+cost. A full disposal clears quantity and cost exactly. The same asset in two
+products has two independent cost pools; this is a personal accounting model,
+not a tax-lot or tax-reporting service.
+
+Unit operations may explicitly mark `fees_in_asset_currency`. This unchecked
+choice permits known asset-currency fees to increase acquisition cost or reduce
+disposal proceeds. Existing and unmarked fees remain recorded metadata, outside
+cost and realized-result calculations, because their currency is unknown. The
+interface discloses unapplied fees. Monetary operations cannot apply the
+unit-cost fee declaration. Neither choice reinterprets the bank cash
+leg or creates a separate fee transaction.
+
+Creation, edits and deletion validate the entire affected chronological replay,
+including the old and new product/asset pairs when a record moves. A change that
+would leave any later quantity or monetary position negative is rejected. This
+protects earlier acquisitions used by later withdrawals and permits valid
+out-of-order edits. Invalid legacy sequences produce explicit history errors
+rather than invented holdings or returns.
+
 ## Valuation
 
+`PriceObservation` stores one positive unit price per owned asset/date, with an
+optional local source label. It is available only for unit-priced assets. The
+Prices screen provides create, edit and confirmed delete actions; existing
+quotes for archived assets remain editable, while new choices exclude them.
+Quotes do not post bank movements, investment operations or FX evidence, and no
+external price feed is contacted.
+
+Valuation uses the latest recorded price on or before its cutoff and multiplies
+it by the remaining quantity. Without a usable quote, remaining cost is shown
+as an explicit fallback and unrealized gain is unknown. Monetary positions use
+their native balance. Cost, local valuation, realized results, recorded yields
+and unrealized results are separate amounts. Recorded yields remain part of the
+position; they must not be added to valuation a second time.
+
 Portfolio totals are grouped by bank, product, asset class, asset and currency.
-Historical charts use captured and reconstructed FX snapshots. Descriptive
+Historical operation flows and cost components use captured and reconstructed
+FX snapshots; local price valuations use cutoff-date rates. Descriptive
 edits retain the snapshot; amount, asset, fee, or date edits refresh it.
 Changing the reporting currency does not chain a mutable rate onto historical
 evidence; snapshots targeting another base are reported as incomplete.
-Current portfolio
-simulations may use a current rate but must label the valuation date and source.
+Current portfolio reads may use a current rate but must label the valuation
+date and source.
 Missing rates remain explicit and never cause unlike currencies to be summed
 directly.
 
@@ -101,6 +155,27 @@ operation evidence can be captured explicitly with an unchecked editor choice
 after a dated rate exists; it cannot replace captured evidence. Historical
 target mismatches explain which reporting currency owns the saved conversion.
 Native values need no FX when they already match the selected reporting currency.
+
+`get_portfolio_valuation(user, as_of=None, purpose=None, base_currency=None, *, historical=False, opening_fallback_date=None, conversion=None)` returns
+positions and totals with missing-price, missing-FX, unknown-baseline,
+unapplied-fee and history-error metadata.
+`get_portfolio_series(user, base_currency, periods, purpose=None, *, conversion=None)`
+produces dated snapshots for supplied `(year, month)` periods and accepts the
+same shared conversion context. `get_portfolio_groups(..., snapshot=None)`
+preserves the existing
+bank/product/asset grouping interface: unit `balance` is remaining cost, while
+`valuation` and `base_value` are explicit valuation fields. Consumers must not
+sum signed withdrawal proceeds to infer a remaining position.
+
+Historical cost components consume persisted operation FX evidence. Known
+opening dates and dated price valuations use rates available at their requested
+date. Native realized gains use disposal-date conversion; the result is not an
+attribution of exchange-rate gains across currencies. The shared
+`banking.services.ConversionContext` reuses rate lookups within one request;
+it does not overwrite captured evidence. Unknown baselines, missing quotes or
+conversion evidence prevent a complete performance claim. The application does
+not infer percentage, annualized, time-weighted or money-weighted returns from
+these amounts.
 
 ## Settings and integrity
 
@@ -133,7 +208,12 @@ SVG charts and exact selection/composition data. Its Overall, Portfolio and
 Remunerated cash filter scopes both the historical position curve and monthly
 deposits, withdrawals and internal yields. Overall includes both purposes;
 opening positions remain visible even without operations. It does not include
-ordinary bank cash or imply market-price valuation.
+ordinary bank cash. The position curve uses the latest local price available at
+each cutoff, or remaining cost with a missing-price warning. Its recorded
+performance table separates valuation, cost, cumulative realized result and
+unrealized result. Monthly operation-flow bars retain recorded deposits,
+withdrawals and yields with their historical FX evidence. Position value and
+results also appear above the portfolio; Prices is the separate quote editor.
 
 Changing the scope immediately applies the filter while preserving each chart's
 month window, focus and scroll. The Filter button is the no-JavaScript fallback.
@@ -161,6 +241,7 @@ Monetary yield input modes precede their value fields, so Tab proceeds from the
 chosen mode to the revealed amount or ending balance and its contextual help.
 
 Optional fees live in Advanced options, which opens for existing fees or errors.
+The asset-currency fee checkbox is an explicit declaration and begins unchecked.
 For opening unit positions, the unit price waits for a positive quantity and
 returns to zero when the quantity is deliberately cleared. Initialization and
 browser-history restoration preserve bound values and errors.
@@ -176,12 +257,16 @@ A monetary asset may occur in different products: purpose belongs to the product
 and the authoritative position is the product/asset pair. A cash product cannot
 hold unit-priced assets, including opening positions and historical operations.
 Reclassification changes analysis, not the underlying operations or bank ledger.
+Product purpose and asset currency/valuation mode cannot change while goal
+allocations reference them, including allocations retained by archived goals.
+This preserves the denomination and meaning of a saved reservation.
 
 Deposits and withdrawals between an included account and a cash pot are internal
 to combined planning resources. They still change the individual bank balance.
 Record actual yield as an ordinary yield operation, using an amount or ending
 balance. It changes only the pot until redeemed. Historical investment value is
-not a live market valuation; the UI labels this distinction explicitly.
+recorded evidence rather than an external live market feed; local observations
+and missing-price cost fallbacks identify their date and source explicitly.
 
 Asset deletion is blocked by any nonzero opening-position component or any
 operation history, including a fully withdrawn position. The shared deletion
@@ -222,4 +307,6 @@ Planning retains the working destination. The notice uses a text trigger rather
 than a question-mark help icon, shares floating positioning/dismissal behavior,
 and has a native disclosure fallback for keyboard and touch. Saved scenarios and their hypothetical
 yield never post investment or bank movements.
-Market quotes, price histories and agent integration remain roadmap work.
+External market feeds, broker synchronization and agent integration remain
+outside the implemented local scope. Local dated quotes and position performance
+are implemented under Unreleased; they do not turn simulations into postings.

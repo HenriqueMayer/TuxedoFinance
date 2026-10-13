@@ -41,7 +41,11 @@ releases, persistent volumes and isolated restore rehearsals.
   investments and net-worth read models.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
   banks/accounts for provider and cash endpoints, with asset lifecycle and
-  archived-position visibility rules.
+  archived-position visibility rules, weighted cost and local dated quotes.
+- [apps/planning.md](apps/planning.md) — category budgets, goals backed by
+  existing cash, reservations and deterministic local review signals.
+- [apps/ingestion.md](apps/ingestion.md) — explicit local CSV/OFX statement
+  mapping, review, matching, confirmation, reconciliation and guarded undo.
 - [apps/sandbox.md](apps/sandbox.md) — private planning drafts, salary/budget
   scenarios, commitment snapshots and contribution/yield simulations.
 

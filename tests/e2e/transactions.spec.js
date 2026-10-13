@@ -23,7 +23,7 @@ async function prepare(page, testInfo) {
     await page.goto('/banking/accounts/create/');
     const bank = await page.locator('#id_bank option').last().getAttribute('value');
     await postForm(page, '/banking/accounts/create/', {
-        bank, name: 'Daily', currency: 'BRL', opening_balance: '1000', pix_enabled: 'on',
+        bank, name: 'Daily', currency: 'BRL', opening_date: '2025-01-01', opening_balance: '1000', pix_enabled: 'on',
     });
     await postForm(page, '/categories/create/', { name: 'Navigation subscriptions', transaction_type: 'EXPENSE' });
     await postForm(page, '/categories/create/', { name: 'Pay', transaction_type: 'INCOME' });

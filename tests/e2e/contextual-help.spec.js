@@ -26,7 +26,7 @@ async function seed(page, testInfo) {
     const product = await page.locator('#id_opening_product option').last().getAttribute('value');
     await post(page, '/investments/assets/create/', {
         name: 'Saved balance', code: 'SAVE', asset_class: 'LIQUIDITY', currency: 'BRL',
-        valuation_mode: 'MONETARY', opening_balance: '1000', opening_product: product,
+        valuation_mode: 'MONETARY', opening_date: '2025-01-01', opening_balance: '1000', opening_product: product,
         opening_quantity: '0', opening_unit_price: '0',
     });
     await page.goto('/investments/create/');
@@ -133,7 +133,7 @@ test('contextual help remains available without JavaScript and on touch', async 
             ['/dashboard/', 'Month performance', 'available cash changes'],
             ['/dashboard/reports/', 'Balance evolution', 'close of each month'],
             ['/dashboard/reports/', 'Income and expenses by account or card', 'release Ctrl to scroll the panel'],
-            ['/investments/', 'Portfolio', 'not a live market valuation'],
+            ['/investments/', 'Portfolio', 'latest local price observation'],
             ['/investments/settings/', 'Investment Settings', 'Banks, accounts, loyalty programs'],
         ]) {
             await offline.goto(path);

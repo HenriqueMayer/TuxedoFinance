@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ goal.name }} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <header class="workspace-header"><h1 class="page-title">{{ goal.name }}</h1><div class="flex flex-wrap gap-3"><a class="action-link" href="{% url 'planning:goal_update' goal.pk %}">{% translate 'Edit goal' %}</a>{% if not goal.is_archived %}<a class="action-primary" href="{% url 'planning:allocation_create' goal.pk %}">{% translate 'Reserve a balance' %}</a>{% endif %}</div></header>
+    <section class="surface-panel space-y-4">{% include 'planning/_goal_summary.html' %}</section>
+    <p class="subtle-copy">{% translate 'Reservations stay in their source currency. Target progress uses registered reference exchange rates as of today, not effective operation rates. When a balance falls, its backing is shared proportionally between active goals.' %}</p>
+    <p class="subtle-copy">{% translate 'Historical planning excludes reservations created later. Editing or archiving a reservation changes the current plan; past reserve edits are not a historical ledger.' %}</p>
+    <section class="space-y-4" aria-labelledby="goal-reservations"><h2 id="goal-reservations" class="section-title">{% translate 'Reserved sources' %}</h2>
+        {% for detail in row.allocations %}<article class="surface-panel space-y-4">
+            <h3 class="font-semibold">{% if detail.source %}<a class="underline" href="{{ detail.source.url }}">{{ detail.allocation.source_label }}</a>{% else %}{{ detail.allocation.source_label }}{% endif %}</h3>
+            <dl class="grid grid-cols-2 gap-4 text-sm">
+                <div><dt class="subtle-copy">{% translate 'Named reservation' %}</dt><dd class="tabular-nums">{{ detail.allocation.source_currency }} {{ detail.allocation.amount|floatformat:2 }}</dd></div>
+                <div><dt class="subtle-copy">{% translate 'Backed by source' %}</dt><dd class="tabular-nums">{{ detail.allocation.source_currency }} {{ detail.backed|floatformat:2 }}</dd></div>
+                {% if detail.shortfall and not goal.is_archived %}<div><dt class="subtle-copy">{% translate 'Insufficient backing' %}</dt><dd class="tabular-nums text-expense dark:text-expense-light">{{ detail.allocation.source_currency }} {{ detail.shortfall|floatformat:2 }}</dd></div>{% endif %}
+            </dl>
+            <div class="flex flex-wrap gap-3">{% if not goal.is_archived %}<a class="quiet-action" href="{% url 'planning:allocation_update' goal.pk detail.allocation.pk %}">{% translate 'Edit reservation' %}</a>{% endif %}<form method="post" action="{% url 'planning:allocation_delete' detail.allocation.pk %}" hx-boost="false">{% csrf_token %}<button type="submit" class="quiet-action">{% translate 'Release reservation' %}</button></form></div>
+        </article>{% empty %}<p class="subtle-copy">{% translate 'No balance reserved for this goal yet.' %}</p>{% endfor %}
+    </section>
+    <form method="post" action="{% url 'planning:goal_archive' goal.pk %}" hx-boost="false">{% csrf_token %}<button type="submit" class="action-link">{% if goal.is_archived %}{% translate 'Restore goal' %}{% else %}{% translate 'Archive goal' %}{% endif %}</button></form>
+</div>
+{% endblock %}

@@ -25,6 +25,12 @@ class MissingExchangeRate(LookupError):
     pass
 
 
+def _opening_balance_as_of(account, as_of):
+    # Undated legacy openings retain their established behavior; a newly dated
+    # baseline must not appear in periods before its effective date.
+    return account.opening_balance if account.opening_date is None or account.opening_date <= as_of else ZERO
+
+
 def account_balance(account, as_of=None):
     as_of = as_of or timezone.localdate()
     queryset = account.movements.filter(effective_date__lte=as_of)
@@ -42,7 +48,7 @@ def account_balance(account, as_of=None):
             output_field=amount_field,
         )
     )['total']
-    return account.opening_balance + movement_total
+    return _opening_balance_as_of(account, as_of) + movement_total
 
 
 def account_balances(user, as_of=None):
@@ -57,12 +63,12 @@ def account_balances(user, as_of=None):
         ))
     ).values_list('account_id', 'total'))
     return [
-        {'account': account, 'balance': account.opening_balance + totals.get(account.pk, ZERO)}
+        {'account': account, 'balance': _opening_balance_as_of(account, as_of) + totals.get(account.pk, ZERO)}
         for account in BankAccount.objects.filter(user=user).select_related('bank')
     ]
 
 
-def get_planning_availability(user, as_of=None):
+def get_planning_availability(user, as_of=None, *, conversion=None):
     """Cash usable for planning, without changing balances or hiding deficits.
 
     Row amounts are native currency; aggregate amounts are in the user's base
@@ -71,16 +77,24 @@ def get_planning_availability(user, as_of=None):
     """
     from accounts.models import UserPreference
     from investments.services import get_monthly_cash_positions
+    from planning.services import reserved_by_source
 
     as_of = as_of or timezone.localdate()
-    base = UserPreference.objects.filter(user=user).values_list('base_currency', flat=True).first() or 'BRL'
+    if conversion is None:
+        # This read service also works before a preference row is initialized.
+        base = UserPreference.objects.filter(user=user).values_list('base_currency', flat=True).first() or 'BRL'
+        conversion = ConversionContext(user, base_currency=base)
+    else:
+        conversion.check_user(user)
+        base = conversion.base_currency
+    named_reserves = reserved_by_source(user, as_of)
     missing = set()
     rates = {}
 
     def in_base(amount, currency):
         if currency not in rates:
             try:
-                rates[currency] = convert(user, Decimal('1'), currency, base, as_of)
+                rates[currency] = conversion.convert(Decimal('1'), currency, as_of=as_of)
             except MissingExchangeRate:
                 rates[currency] = None
                 missing.add(currency)
@@ -94,8 +108,11 @@ def get_planning_availability(user, as_of=None):
     for row in account_balances(user, as_of):
         account, balance = row['account'], row['balance']
         positive = max(balance, ZERO)
-        reserved = min(account.reserved_amount, positive) if account.planning_enabled else positive
-        shortfall = max(account.reserved_amount - positive, ZERO) if account.planning_enabled else ZERO
+        named = named_reserves['accounts'].get(account.pk, ZERO)
+        # Named goals label the existing reserve rather than reserving it twice.
+        requested = max(account.reserved_amount, named)
+        reserved = min(requested, positive) if account.planning_enabled else positive
+        shortfall = max(requested - positive, ZERO) if account.planning_enabled else ZERO
         row.update(currency=account.currency, reserved=reserved, available=balance-reserved, shortfall=shortfall)
         for key, total_key in (
             ('balance', 'bank_total'), ('reserved', 'reserved_total'),
@@ -113,10 +130,23 @@ def get_planning_availability(user, as_of=None):
             result['available_total'] += row['converted_available']
         result['account_rows'].append(row)
     for row in get_monthly_cash_positions(user, as_of):
+        requested = named_reserves['cash_pots'].get((row['product'].pk, row['asset'].pk), ZERO)
+        positive = max(row['balance'], ZERO)
+        row['reserved'] = min(requested, positive)
+        row['available'] = row['balance'] - row['reserved']
+        row['shortfall'] = max(requested - positive, ZERO)
         row['base_balance'] = in_base(row['balance'], row['currency'])
+        row['base_reserved'] = in_base(row['reserved'], row['currency'])
+        row['base_shortfall'] = in_base(row['shortfall'], row['currency'])
+        row['base_available'] = (
+            None if row['base_balance'] is None
+            else row['base_balance'] - row['base_reserved']
+        )
         if row['base_balance'] is not None:
             result['pot_total'] += row['base_balance']
-            result['available_total'] += row['base_balance']
+            result['reserved_total'] += row['base_reserved']
+            result['reserve_shortfall'] += row['base_shortfall']
+            result['available_total'] += row['base_available']
         result['cash_pots'].append(row)
     result['missing_currencies'] = sorted(missing)
     return result
@@ -218,6 +248,9 @@ def create_transfer(
         transfer.fx_effective_date = date
         transfer.fx_snapshot_status = BankTransfer.FxSnapshotStatus.CAPTURED
     transfer.save()
+    # Ledger labels are bounded summaries; the transfer keeps the full notes
+    # (including imported statement evidence) for review and undo checks.
+    movement_description = notes[:BankMovement._meta.get_field('description').max_length]
     create_movement(
         user=user,
         account=transfer.source_account,
@@ -225,7 +258,7 @@ def create_transfer(
         kind=BankMovement.Kind.TRANSFER,
         amount=source_amount,
         effective_date=date,
-        description=notes,
+        description=movement_description,
         transfer=transfer,
     )
     create_movement(
@@ -235,7 +268,7 @@ def create_transfer(
         kind=BankMovement.Kind.TRANSFER,
         amount=destination_amount,
         effective_date=date,
-        description=notes,
+        description=movement_description,
         transfer=transfer,
     )
     return transfer
@@ -275,6 +308,54 @@ def convert(user, amount, from_currency, to_currency, as_of=None):
             'date': as_of or timezone.localdate(),
         }
     )
+
+
+class ConversionContext:
+    """Reuse presentation rates only for one user's current request or calculation.
+
+    Posting and captured historical evidence continue to use their existing
+    services. Keeping original inverse rates preserves Decimal division exactly.
+    """
+
+    def __init__(self, user, base_currency=None):
+        from accounts.models import UserPreference
+
+        self.user = user
+        self.user_id = user.pk
+        self.base_currency = (
+            base_currency if base_currency is not None
+            else UserPreference.for_user(user).base_currency
+        )
+        self.today = timezone.localdate()
+        self._rates = {}
+
+    def check_user(self, user):
+        if user.pk != self.user_id:
+            raise ValueError('A conversion context belongs to exactly one user.')
+        return self
+
+    def _rate(self, source, target, as_of):
+        key = (source, target, as_of)
+        if key not in self._rates:
+            self._rates[key] = latest_exchange_rate(self.user, source, target, as_of)
+        return self._rates[key]
+
+    def convert(self, amount, from_currency, to_currency=None, as_of=None):
+        amount = Decimal(amount)
+        to_currency = self.base_currency if to_currency is None else to_currency
+        if from_currency == to_currency:
+            return amount
+        as_of = self.today if as_of is None else as_of
+        direct = self._rate(from_currency, to_currency, as_of)
+        if direct is not None:
+            return amount * direct.rate
+        inverse = self._rate(to_currency, from_currency, as_of)
+        if inverse is not None:
+            return amount / inverse.rate
+        raise MissingExchangeRate(
+            gettext('No %(from_currency)s/%(to_currency)s exchange rate is available as of %(date)s.')
+            % {'from_currency': from_currency, 'to_currency': to_currency, 'date': as_of}
+        )
 
 
 def _iof_category(user):

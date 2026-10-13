@@ -153,6 +153,27 @@ Instalações Docker existentes precisam selecionar a nova imagem e seguir o
 > Compras no cartão de crédito pertencem ao mês da fatura; o dinheiro sai da conta
 > na data de vencimento. A liquidação da fatura não é uma segunda despesa.
 
+### Código em desenvolvimento
+
+A branch `feat/personal-finance-evolution` adiciona os recursos abaixo para
+validação local. Eles ainda não estão na imagem publicada da v0.10.0 nem na
+prévia estática. Siga o [guia de testes da branch](docs/branch-testing.md), em
+inglês, para testar uma cópia descartável antes de migrar uma instalação existente.
+
+| Área | Novidades |
+|---|---|
+| Importação de extratos | Upload local de CSV/OFX, mapeamento explícito de colunas/data/decimais, revisão prévia, deduplicação por identificador estável, avisos de possíveis duplicatas, vínculo com movimentos bancários existentes, pagamentos confirmados de faturas e transferências entre contas próprias. Saldos finais são conciliados sem ajustes automáticos; desfazer recusa registros de origem alterados. |
+| Divisão por categorias | Distribuição de uma transação entre categorias com totais e centavos exatos nas parcelas; relatórios, orçamentos e exportações CSV preservam as divisões sem duplicar pagamentos. |
+| Faturas confirmadas | Opção por cartão para registrar pagamentos totais ou parciais a partir de uma conta real. Faturas automáticas anteriores mantêm seu comportamento; valores não pagos continuam visíveis como obrigações previstas. |
+| Orçamentos e metas | Limites mensais por categoria, cópia do mês anterior, gastos registrados e previsões conhecidas; metas com moeda/data e reservas respaldadas por saldos existentes em contas ou caixas monetários. Falta de saldo e limitações do câmbio de referência ficam visíveis. |
+| Sinais locais | Sugestões explicadas de duplicatas, aumentos de assinaturas, orçamento excedido e falta futura de caixa, com ações de ciência/descarte/reabertura que preservam os registros financeiros de origem. |
+| Avaliações e patrimônio | Cotações unitárias locais por data, custo médio ponderado remanescente, resultados realizados/não realizados, moeda explícita das taxas e série mensal de patrimônio líquido incluindo dívidas de cartão já contraídas. Histórico, datas de abertura, cotações e câmbio ausentes são sinalizados. |
+| Operação local | Fontes servidas localmente, reutilização do contexto de relatórios/conversões e sincronização incremental do razão, além de dados sintéticos de demonstração ampliados. |
+
+A branch não adiciona conexão bancária ao vivo, feed externo de cotações ou
+serviço de IA na nuvem. Cotações e decisões de revisão permanecem no banco local;
+as avaliações históricas não inventam retorno percentual ajustado pelos fluxos.
+
 <details>
 <summary><strong>🎨 Linguagem visual</strong></summary>
 

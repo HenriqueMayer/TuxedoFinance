@@ -108,7 +108,7 @@
                 {% for invoice in invoices %}
                     <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div><span class="font-medium">{{ invoice.card.name }} - {{ invoice.reference_month|date:'M Y' }}</span><p class="text-sm text-forest/70 dark:text-night-muted">{% blocktranslate with due_date=invoice.due_date|date:USER_DATE_FORMAT status=invoice.get_status_display %}Due {{ due_date }} - {{ status }}{% endblocktranslate %}{% if invoice.is_overdue %} <strong class="text-caramel-ink dark:text-caramel-light">{% translate "Overdue" %}</strong>{% endif %}</p></div>
-                        <div class="flex items-center gap-3"><span class="shrink-0 whitespace-nowrap tabular-nums font-semibold">{{ invoice.account.currency }} {{ invoice.amount }}</span><a href="{% url 'banking:entry_create' %}?invoice={{ invoice.pk }}" class="text-sm text-caramel-ink dark:text-caramel-light">{% translate "Add points" %}</a></div>
+                        <div class="flex items-center gap-3"><span class="shrink-0 whitespace-nowrap tabular-nums font-semibold">{{ invoice.account.currency }} {{ invoice.amount }}</span><a href="{% url 'banking:invoice_detail' invoice.pk %}" class="quiet-action">{% translate 'View invoice' %}</a><a href="{% url 'banking:entry_create' %}?invoice={{ invoice.pk }}" class="text-sm text-caramel-ink dark:text-caramel-light">{% translate "Add points" %}</a></div>
                     </li>
                 {% endfor %}
             </ul>

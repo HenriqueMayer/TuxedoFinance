@@ -36,9 +36,12 @@ transactions and movements still use explicitly current/read-time conversion.
 
 `BankMovement` is authoritative for available cash. PIX and debit movements
 appear immediately. Credit purchases appear in expense analysis and invoice
-liabilities, but not in account balance. On the due date, the invoice's single
-payment movement reduces available cash and clears the liability; it does not
-create another expense.
+liabilities, but not in account balance. In default automatic mode, the
+invoice's single due-date movement reduces cash; that projected settlement is
+not external confirmation. Optional manual mode uses only confirmed actual-date
+payments for cash. Neither settlement creates another expense. Manual unpaid
+amounts appear separately as due-date forecast obligations without becoming
+synthetic cash movements.
 
 Own-account transfers are visible in account ledgers but net to zero in
 consolidated cash and are excluded from income/expense.
@@ -50,7 +53,8 @@ does not increase available bank balance.
 The dashboard keeps economic performance distinct from cash settlement. Income
 and expenses describe activity assigned to the statement month. Projected closing
 balances, available cash and the current month's through-today cash change
-come from dated account movements. Card purchases therefore stay in their
+come from dated account movements plus separate unpaid manual obligations for
+the forecast portion. Card purchases therefore stay in their
 statement month while actual account cash changes when the invoice is settled.
 The live account and open-invoice panels always describe today, even while
 another month is selected.
@@ -87,17 +91,22 @@ fallbacks. The approved report set is organized by source of truth:
 4. Credit-card invoice evolution, due dates and paid/open status.
 5. Currency-aware balances with persisted investment-operation snapshots and
    clearly labeled current/read-time valuations for entities not yet covered.
-6. Net-worth evolution combining bank cash, investments and open invoices.
+6. Dated net-worth evolution combining bank cash, investment/cash-pot positions,
+   incurred card debt and any confirmed card credit.
 
 Charts must label actual versus projected values. Forecasts may include future
-recurrences and invoices but must not post them or alter today's ledger.
+recurrences and invoices. Synchronization may store future-effective
+projections, but they must not affect today's cash early; manual payment
+forecasts never create confirmation records or cash movements.
 
 Ctrl-opened composition rows link to the owned records contributing to that
 exact chart scope. A single source opens its existing editor or account context;
 multiple sources disclose dated links and their scoped amounts. Recurrences and
 installments link once to their original transaction, while generated IOF links
 to its source redemption. Opening investment positions link to the asset rather
-than inventing an operation. Source amounts reconcile to the existing aggregate,
+than inventing an operation. Portfolio valuation compositions instead link each
+product/asset position to its scoped operation history and use its dated value,
+without summing sale proceeds as remaining holdings. Source amounts reconcile to the existing aggregate,
 including fractional FX cents; missing conversions remain explicitly incomplete.
 Navigation retains the report period and browser Back/Forward context. See the
 [chart interaction contract](../frontend.md#previous-screen-continuity-and-balance-ranges).
@@ -122,6 +131,50 @@ windows remain available while their opening balance date is representable.
   investment totals use persisted FX snapshots; missing conversion is explicitly
   incomplete elsewhere.
 
+## Dated wealth
+
+`/dashboard/wealth/` reads
+`dashboard.wealth.wealth_snapshot(user, as_of, *, conversion=None)` at
+month-end cutoffs, capped at today for the current
+month. The GET start-month filter covers up to ten years and has a native form
+fallback. This is a dated resource history, not an annualized return chart.
+
+Each snapshot combines applicable account openings and movements, replayed
+investment positions valued with local quotes or disclosed remaining-cost
+fallbacks, and incurred credit-card obligations. A card purchase incurs its
+whole unpaid amount when purchased, including installments not yet billed.
+Future occurrences of a fixed template are not existing debt; only occurrences
+through the cutoff are included. Loyalty point purchases and generated IOF use
+their original dated sources without duplicating their invoice charges.
+Only the recorded sources modeled here contribute; unrecorded loans, property
+or other assets/liabilities are not inferred from cash or statement descriptions.
+
+Confirmed manual payments reduce debt only from their actual date. Automatic
+settlements use the amount and effective date of their existing settlement
+movement. A payment exceeding incurred debt after a source correction, or a
+due-date automatic debit preceding an explicitly overridden future purchase,
+appears as card credit. It is added to assets rather than silently discarded or
+subtracted as negative debt:
+
+```text
+assets = bank cash + investment/cash-pot value + card credit
+net worth = assets - positive incurred card debt
+```
+
+Cash-pot deposits and withdrawals move value between existing assets; they do
+not increase net worth by themselves. Goal reservations earmark those assets
+and are not an additional asset or liability. Empty foreign accounts require no
+FX for zero balances. Missing conversions from banking, cards or positions are
+merged into the snapshot's incomplete metadata; unlike currencies are never
+added directly.
+
+Older nonzero openings with unknown dates remain visible but make the history
+incomplete. A missing local unit quote shows cost fallback explicitly, so the
+result is not a fully observed market valuation. Editing source history, local
+quotes or read-time rates can change this reconstructed history; it is not an
+immutable external bank statement. Captured investment-operation FX evidence
+remains protected.
+
 ## Resources versus activity
 
 Planning availability comes from the shared Banking read model: included bank
@@ -131,7 +184,8 @@ make the displayed consolidated total explicitly incomplete.
 
 Income and expense performance retain statement-month attribution. Bank closing
 balance projections follow effective movement dates, including invoice due dates
-and the actual bank cash legs of investments. Points-funded deposits create no
+in automatic mode, planned manual obligations, and the actual bank cash legs
+of investments. Points-funded deposits create no
 bank cash outflow. Cash-pot movements are not investment-contribution metrics.
 The selected future month is bounded so the six-month outlook stays inside the
 existing twelve-month synchronization horizon; the UI disables forward navigation

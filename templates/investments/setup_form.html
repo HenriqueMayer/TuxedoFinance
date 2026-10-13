@@ -39,6 +39,7 @@
                 </div>
             </div>
             <div id="opening-product-fields" data-has-errors="{{ form.opening_product.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_product %}</div>
+            <div id="opening-date-fields" data-has-errors="{{ form.opening_date.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_date %}</div>
         {% else %}
             {% for field in form %}
                 {% include 'partials/form_field.html' with field=field %}
@@ -91,6 +92,8 @@
                 : hasUnits;
             if (!hasOpening && clearStale) document.getElementById('{{ form.opening_product.id_for_label }}').value = '';
             setHidden(document.getElementById('opening-product-fields'), !hasOpening, !clearStale);
+            setHidden(document.getElementById('opening-date-fields'), !hasOpening, !clearStale);
+            if (!hasOpening && clearStale) document.getElementById('{{ form.opening_date.id_for_label }}').value = '';
         }
         [openingBalance, openingQuantity].forEach(input => input.addEventListener('input', () => {
             updateOpeningProduct(true);

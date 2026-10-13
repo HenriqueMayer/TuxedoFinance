@@ -28,4 +28,6 @@ urlpatterns = [
     path('banking/', include('banking.urls')),
     path('investments/', include('investments.urls')),
     path('sandbox/', include('sandbox.urls')),
+    path('planning/', include('planning.urls')),
+    path('imports/', include('ingestion.urls')),
 ]

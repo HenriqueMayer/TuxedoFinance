@@ -63,6 +63,8 @@ for (const dark of [false, true]) {
         await expect(activity.getByRole('link', { name: 'Transactions', exact: true })).toBeFocused();
         await page.keyboard.press('Tab');
         await page.keyboard.press('Tab');
+        await expect(activity.getByRole('link', { name: 'Import statements', exact: true })).toBeFocused();
+        await page.keyboard.press('Tab');
         await expect(navigation.locator('[data-nav-item="banks"] > a')).toBeFocused();
         await expect(activity.locator('details')).not.toHaveAttribute('open', '');
         await navigation.locator('[data-nav-item="planning"] > a').hover();
