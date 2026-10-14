@@ -1,0 +1,10 @@
+{% load i18n navigation %}
+<section id="investment-position-list" class="space-y-4" aria-label="{% translate 'Positions' %}">
+    {% if has_archived_positions %}<p id="investment-archived-positions-note" class="subtle-copy">{% translate 'Archived assets are hidden from this list. Their balances remain in totals and history.' %}</p>{% endif %}
+    {% for row in position_rows %}
+        <article id="{{ row.anchor }}" class="surface-panel scroll-mt-24 hidden sm:block">{% include 'investments/_position_card.html' with update_url=row.update_url %}</article>
+        <article id="{{ row.anchor }}-mobile" class="surface-panel scroll-mt-24 sm:hidden">{% include 'investments/_position_card.html' with update_url=row.mobile_update_url %}</article>
+    {% empty %}
+        <div class="surface-panel space-y-3"><p class="subtle-copy">{% if has_archived_positions and not search_query %}{% translate 'No active positions in this section.' %}{% elif search_query or position_scope != 'all' %}{% translate 'No positions match these filters.' %}{% else %}{% translate 'Add what you already hold, or start with a zero balance and record the first operation.' %}{% endif %}</p>{% url 'investments:guided_create' as add_url %}<a class="action-link" href="{% contextual_url add_url %}">{% translate 'Add investment' %}</a></div>
+    {% endfor %}
+</section>

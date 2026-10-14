@@ -3,6 +3,7 @@
 
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from core.features import feature_available, roadmap_url
 
 
 AREAS = (
@@ -56,7 +57,9 @@ def workspace_navigation(request):
         'APP_AREA_LABEL': next((item['label'] for item in navigation if item['active']), _('Settings') if namespace == 'accounts' else 'Tuxedo Finance'),
         'APP_SECTION_LABEL': section_label,
         'APP_SECTIONS': [
-            {'label': label, 'url': reverse(route), 'active': selected}
+            {'label': label, 'url': reverse(route), 'active': selected,
+             'paused': route in ('dashboard:wealth', 'ingestion:index') and not feature_available('wealth' if route == 'dashboard:wealth' else 'imports'),
+             'roadmap_url': roadmap_url('wealth' if route == 'dashboard:wealth' else 'imports') if route in ('dashboard:wealth', 'ingestion:index') else ''}
             for label, route, selected in sections
         ],
     }

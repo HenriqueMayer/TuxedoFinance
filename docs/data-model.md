@@ -632,3 +632,18 @@ Historical note: the banking redesign replaced pre-release legacy schemas with
 a clean initial schema. Only those unsupported pre-release installations lack an
 automatic conversion path. This historical reset does not apply to upgrades from
 published releases and must never be repeated for an ordinary Docker update.
+
+
+### Position participation and zero configuration
+
+`PositionPlanningSetting(user, product, asset, planning_enabled)` has one unique
+row per owned monetary cash-pot pair. Missing settings include existing positions;
+excluded positive holdings become reserved rather than disappearing from balances.
+The flag creates no financial operation. Account participation uses the existing
+`BankAccount.planning_enabled` field.
+
+`Asset.opening_product` may also describe a configured zero position when opening
+balance/quantity/cost are zero. Such configuration has no opening event or date,
+contributes no money and supports the first explicit operation. Nonzero openings
+retain their date, owner, compatibility and cost requirements; financial replay
+continues to test `has_opening_position` rather than mere placement membership.

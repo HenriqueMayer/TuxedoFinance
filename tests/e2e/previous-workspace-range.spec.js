@@ -75,12 +75,16 @@ test('browser history restores repeated simulation rows and warns on leaving a r
     await page.locator('#id_rate').fill('1');
     await expect(page.locator('#simulation-result .panel-heading')).toBeVisible();
     page.once('dialog', dialog => dialog.accept());
-    await page.getByRole('link', {name: 'Saved drafts', exact: true}).click();
-    await expect(page).toHaveURL(/\/sandbox\/drafts\/$/);
+    await page.getByRole('navigation', {name: 'Planning sections', exact: true})
+        .getByRole('link', {name: 'Tools', exact: true}).click();
+    await expect(page).toHaveURL(/\/planning\/tools\/$/);
     const snapshot = await page.evaluate(() => JSON.parse(sessionStorage.getItem('tuxedo.history-workspace.v2')));
     expect(snapshot.entries['/sandbox/simulation/'].forms.some(form => form.fields.some(field =>
         field.name === 'contribution_23' && field.value === '456.78'))).toBe(true);
+    // Workspace snapshots retain only the current and immediately previous
+    // screen. Check Back before taking another discovery hop from Tools.
     await page.goBack();
+    await expect(page).toHaveURL(/\/sandbox\/simulation\/$/);
     await expect(page.locator('[data-workspace-restored]')).toBeVisible();
     await expect(page.locator('#id_months')).toHaveValue('24');
     await expect(page.locator('[name="contribution_23"]')).toHaveValue('456.78');

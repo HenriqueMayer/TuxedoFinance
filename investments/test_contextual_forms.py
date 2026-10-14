@@ -39,10 +39,12 @@ class ContextualInvestmentTests(TestCase):
             self.assertEqual(query['next'], [f'/investments/#position-{self.product.pk}-{self.asset.pk}'])
         query = parse_qs(urlsplit(row['mobile_action_urls']['yield']).query)
         self.assertTrue(query['next'][0].endswith('-mobile'))
-        self.assertContains(response, 'Contribute')
-        self.assertContains(response, 'Redeem')
-        self.assertContains(response, 'Record yield')
-        self.assertContains(response, 'Update price')
+        self.assertContains(response, row['update_url'].replace('&', '&amp;'))
+        chooser = self.client.get(reverse('investments:position_update', args=[self.product.pk, self.share.pk]))
+        self.assertContains(chooser, 'Contribute')
+        self.assertContains(chooser, 'Redeem')
+        self.assertContains(chooser, 'Record yield')
+        self.assertContains(chooser, 'Update price')
 
     def test_shortcut_keeps_yield_input_and_funding_explicit(self):
         response = self.client.get(reverse('investments:create'), {'product': self.product.pk,

@@ -26,9 +26,11 @@ class PlanningWorkspaceUXTests(PlanningFixture):
         FinancialGoal.objects.create(user=self.other, name='Private target', target_amount='100', currency='BRL')
         response = self.client.get(reverse('planning:index'))
         self.assertEqual((response.context['budget_count'], response.context['goal_count']), (1, 1))
-        self.assertContains(response, reverse('planning:budgets'))
-        for name in ['planning:goals', 'sandbox:index', 'sandbox:simulation', 'sandbox:drafts']:
+        self.assertContains(response, 'id="budgets"')
+        for name in ['planning:goals', 'planning:tools']:
             self.assertContains(response, reverse(name))
+        self.assertNotContains(response, reverse('sandbox:simulation'))
+        self.assertContains(self.client.get(reverse('planning:tools')), reverse('sandbox:simulation'))
         self.assertNotContains(response, 'Private target')
 
     def test_overview_new_budget_keeps_its_selected_month(self):

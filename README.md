@@ -160,14 +160,14 @@ before migrating an existing installation.
 
 | Area | Additions |
 |---|---|
-| Statement imports | Local CSV/OFX upload, explicit column/date/decimal mapping, staged review, stable-ID deduplication, possible-duplicate warnings, matching to existing bank evidence, confirmed invoice payments and owned-account transfers. Closing balances are reconciled without automatic adjustments; undo refuses changed source records. |
+| Statement imports (under review) | Interface operations are paused in Roadmap; confirmed/undone provenance remains readable. Dormant local CSV/OFX upload, explicit column/date/decimal mapping, staged review, stable-ID deduplication, possible-duplicate warnings, matching to existing bank evidence, confirmed invoice payments and owned-account transfers. Closing balances are reconciled without automatic adjustments; undo refuses changed source records. |
 | Category splits | Divide a transaction between categories with exact totals and installment cents; reports, budgets and CSV exports retain the allocations without duplicating payments. |
 | Confirmed invoices | Opt a card into recorded full or partial payments from an actual account. Earlier automatic invoices retain their behavior; unpaid amounts remain visible forecast obligations. |
 | Budgets and goals | Monthly category limits with previous-month copying, recorded spending and known forecasts; targets with currency/date and reservations backed by existing bank or monetary cash-pot balances. Insufficient backing and reference FX limitations remain visible. |
 | Local signals | Explained duplicate, subscription-increase, budget-overspend and future-cash-shortage suggestions, with acknowledge/dismiss/reopen actions that leave source finances unchanged. |
-| Valuations and wealth | Dated local unit-price observations, weighted-average remaining cost, realized/unrealized results, explicit fee currency and a monthly net-worth series including incurred card debt. Missing history, opening dates, prices and FX are disclosed. |
+| Valuations and wealth | Dated local unit-price observations, weighted-average remaining cost, realized/unrealized results, explicit fee currency and net-worth calculations including incurred card debt; the net-worth interface is paused in Roadmap. Missing history, opening dates, prices and FX are disclosed. |
 | Local operation | Locally served fonts, reused reporting/conversion context and incremental ledger synchronization, plus expanded synthetic demonstration data. |
-| Daily navigation | The same five destinations in a desktop sidebar and mobile bottom bar, local section tabs, contextual account/card/position actions and retained form origins. Planning emphasizes budgets/goals; transaction splits and optional initial goal reserves share their creation flow. |
+| Daily navigation | The same five destinations in a desktop sidebar and mobile bottom bar, local section tabs, contextual account/card/position actions and retained form origins. Live filters, category List/Tree, collapsible banks and separate reserves. Investments opens a simple list with Update; Plan opens monthly available cash and budgets, with Goals and Tools secondary. |
 
 The branch does not add a live bank connection, external quote feed or cloud AI
 service. Price observations and review decisions stay in the local database;

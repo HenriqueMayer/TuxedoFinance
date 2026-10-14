@@ -12,6 +12,8 @@ from django.views.decorators.http import require_POST
 from core.navigation import return_url
 from planning.forms import CategoryBudgetForm, FinancialGoalForm, GoalCreationForm, GoalAllocationForm, MonthForm, SignalSettingsForm
 from planning.models import CategoryBudget, FinancialGoal, GoalAllocation, SignalDecision
+from planning.monthly import monthly_outlook
+from transactions.services import sync_user_ledger
 from planning.services import budget_progress, copy_previous_budgets, create_goal, goal_progress, local_signals, save_allocation, save_budget, set_goal_archived, signal_settings
 
 
@@ -25,10 +27,12 @@ def _month(request):
 
 @login_required
 def index(request):
-    _, month = _month(request)
+    form, month = _month(request)
+    sync_user_ledger(request.user)
     budget_rows = budget_progress(request.user, month)
     return render(request, 'planning/index.html', {
-        'section': 'overview', 'month': month, 'budget_count': len(budget_rows),
+        'section': 'overview', 'month': month, 'month_form': form, 'rows': budget_rows,
+        'outlook': monthly_outlook(request.user, month), 'budget_count': len(budget_rows),
         'budget_attention_count': sum(row['over_budget'] or row['forecast_over_budget'] or not row['complete'] for row in budget_rows),
         'goal_count': FinancialGoal.objects.filter(user=request.user, is_archived=False).count(),
     })
@@ -36,10 +40,16 @@ def index(request):
 
 @login_required
 def budgets(request):
+    # Keep old bookmarks and form return URLs while owning one monthly view.
     form, month = _month(request)
-    return render(request, 'planning/budgets.html', {
-        'section': 'budgets', 'month_form': form, 'month': month, 'rows': budget_progress(request.user, month),
-    })
+    if form.is_bound and not form.is_valid():
+        return index(request)
+    return redirect(reverse('planning:index') + f'?month={month:%Y-%m}#budgets')
+
+
+@login_required
+def tools(request):
+    return render(request, 'planning/tools.html', {'section': 'tools'})
 
 
 @login_required
@@ -91,7 +101,12 @@ def budget_delete(request, pk):
 
 @login_required
 def goals(request):
-    return render(request, 'planning/goals.html', {'section': 'goals', 'rows': goal_progress(request.user, include_archived=request.GET.get('archived') == '1'), 'include_archived': request.GET.get('archived') == '1'})
+    query = request.GET.get('q', '').strip()[:200]
+    rows = goal_progress(request.user, include_archived=request.GET.get('archived') == '1')
+    if query:
+        rows = [row for row in rows if query.casefold() in row['goal'].name.casefold()]
+    return render(request, 'planning/goals.html', {'section': 'goals', 'rows': rows, 'query': query,
+        'include_archived': request.GET.get('archived') == '1'})
 
 
 @login_required

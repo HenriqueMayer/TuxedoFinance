@@ -41,16 +41,17 @@ GET search plus top-level/subcategory filtering.
         </div>
     </div>
 
-    <form method="get" class="surface-panel flex flex-wrap items-end gap-4">
+    <form id="category-filters" method="get" action="{{ list_url }}" data-live-filters data-live-results="category-results" hx-boost="false" class="surface-panel flex flex-wrap items-end gap-4">
+        <input type="hidden" name="view" value="{{ selected_view }}" data-live-default="list">
         <div class="min-w-0 basis-full space-y-1.5 sm:basis-48 sm:flex-[2]">
             <label for="filter-search" class="field-label">{% translate "Search" %}</label>
-            <input type="search" id="filter-search" name="q" value="{{ search_query }}"
+            <input type="search" id="filter-search" name="q" data-live-search value="{{ search_query }}"
                    placeholder="{% translate 'Category name' %}"
                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-night-muted focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
         </div>
         <div class="min-w-0 basis-full space-y-1.5 sm:basis-32 sm:flex-1">
             <label for="filter-level" class="field-label">{% translate "Level" %}</label>
-            <select id="filter-level" name="level"
+            <select id="filter-level" name="level" data-live-change
                     class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
                 <option value="">{% translate "All levels" %}</option>
                 <option value="top" {% if selected_level == 'top' %}selected{% endif %}>{% translate "Top-level" %}</option>
@@ -59,7 +60,7 @@ GET search plus top-level/subcategory filtering.
         </div>
         <div class="min-w-0 basis-full space-y-1.5 sm:basis-32 sm:flex-1">
             <label for="filter-type" class="field-label">{% translate 'Type' %}</label>
-            <select id="filter-type" name="type" class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 focus:outline-hidden focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface">
+            <select id="filter-type" name="type" data-live-change class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 focus:outline-hidden focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface">
                 <option value="">{% translate 'All types' %}</option>
                 <option value="INCOME" {% if selected_type == 'INCOME' %}selected{% endif %}>{% translate 'Income' %}</option>
                 <option value="EXPENSE" {% if selected_type == 'EXPENSE' %}selected{% endif %}>{% translate 'Expense' %}</option>
@@ -67,39 +68,56 @@ GET search plus top-level/subcategory filtering.
             </select>
         </div>
         <div class="flex items-center gap-3">
-            <button type="submit"
+            <button type="submit" data-live-submit
                     class="quiet-action">
                  {% translate "Filter" %}
             </button>
-            {% if search_query or selected_level or selected_type %}
-                <a href="{{ list_url }}"
+            <span id="category-clear-control" data-live-fragment="category-filters">
+            {% if has_filters %}
+                <a id="category-clear-filters" href="{{ list_url }}{% if selected_view == 'tree' %}?view=tree{% endif %}" data-live-reset data-live-link="category-filters"
                    class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted transition hover:text-forest dark:hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
                      {{ clear_filters_label }}
                 </a>
             {% endif %}
+            </span>
         </div>
     </form>
 
+    <div id="category-view-controls" data-live-fragment="category-filters" class="flex flex-wrap items-center justify-between gap-3">
+        <p id="category-results-status" role="status" class="subtle-copy">{% blocktranslate count count=result_count %}{{ count }} category{% plural %}{{ count }} categories{% endblocktranslate %}</p>
+        <nav aria-label="{% translate 'Category view' %}" class="flex gap-2">
+            <a id="category-view-list" href="{% querystring view=None %}" data-live-link="category-filters" data-live-set="view" data-live-value="list" {% if selected_view == 'list' %}aria-current="true"{% endif %} class="quiet-action {% if selected_view == 'list' %}bg-caramel/10{% endif %}">{% translate 'List' %}</a>
+            <a id="category-view-tree" href="{% querystring view='tree' %}" data-live-link="category-filters" data-live-set="view" data-live-value="tree" {% if selected_view == 'tree' %}aria-current="true"{% endif %} class="quiet-action {% if selected_view == 'tree' %}bg-caramel/10{% endif %}">{% translate 'Tree' %}</a>
+        </nav>
+    </div>
+    <div id="category-results">
     {% if categories %}
-        <div class="surface-panel" data-category-tree>
-            {% if has_category_groups %}
+        <div class="surface-panel" {% if selected_view == 'tree' %}data-category-tree{% endif %}>
+            {% if selected_view == 'tree' and has_category_groups %}
                 <div hidden data-category-actions class="mb-2 flex flex-wrap justify-end gap-2 border-b border-forest/10 pb-3 dark:border-cream/10">
                     <button type="button" data-category-action="collapse" class="quiet-action">{% translate 'Collapse all' %}</button>
                     <button type="button" data-category-action="expand" class="quiet-action">{% translate 'Expand all' %}</button>
                 </div>
             {% endif %}
             <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+                {% if selected_view == 'tree' %}
                 {% for group in category_groups %}
                     {% comment %}Keep the recursive include isolated while carrying the explicit origin for its editor links.{% endcomment %}
-                    {% include 'categories/_category_group.html' with group=group request=request only %}
+                    {% include 'categories/_category_group.html' with group=group category=group.category request=request expanded=has_filters only %}
                 {% endfor %}
+                {% else %}
+                {% for category in categories %}
+                    {% include 'categories/_category_group.html' with category=category request=request only %}
+                {% endfor %}
+                {% endif %}
             </ul>
         </div>
-    {% elif search_query or selected_level or selected_type %}
-        {% include 'partials/empty_state.html' with title=no_matching_title message=no_matching_message cta_url=list_url cta_label=clear_filters_label %}
+    {% elif has_filters %}
+        {% include 'partials/empty_state.html' with title=no_matching_title message=no_matching_message %}
     {% else %}
         {% include 'partials/empty_state.html' with title=no_categories_title message=no_categories_message cta_url=create_url cta_label=new_category_label %}
     {% endif %}
+    </div>
 </div>
 {% endblock %}
 

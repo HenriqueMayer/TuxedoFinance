@@ -1,35 +1,17 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n navigation %}
 
 {% block title %}{% translate "Exchange rates" %} - Tuxedo Finance{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><a href="{% url 'banking:list' %}" class="text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Banks" %}</a><h1 class="mt-1 font-sans text-4xl font-semibold tracking-tight">{% translate "Exchange rates" %}</h1><p class="mt-1 text-sm text-forest/70 dark:text-night-muted">{% translate "Historical rates consolidate account and investment values into the base currency." %}</p></div>
-        <a href="{% url 'banking:exchange_rate_create' %}" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep">{% translate "New rate" %}</a>
-    </div>
-    {% if rates %}
-        <ul class="divide-y divide-forest/10 rounded-3xl bg-white px-5 ring-1 ring-forest/10 dark:divide-cream/10 dark:bg-night-surface dark:ring-cream/10">
-            {% for rate in rates %}
-                <li id="exchange-rate-{{ rate.pk }}" class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="min-w-0 break-words">
-                        <span class="font-semibold">1 {{ rate.from_currency }} = {{ rate.rate }} {{ rate.to_currency }}</span>
-                        <p class="text-sm text-forest/70 dark:text-night-muted">{{ rate.effective_date|date:USER_DATE_FORMAT }}{% if rate.notes %} - {{ rate.notes }}{% endif %}</p>
-                    </div>
-                    <div class="flex shrink-0 gap-3">
-                        <a id="edit-exchange-rate-{{ rate.pk }}" href="{% url 'banking:exchange_rate_update' rate.pk %}" class="action-link">{% translate "Edit" %}</a>
-                        <a id="delete-exchange-rate-{{ rate.pk }}" href="{% url 'banking:exchange_rate_delete' rate.pk %}" class="action-link text-expense dark:text-expense-light">{% translate "Delete" %}</a>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        {% url 'banking:exchange_rate_create' as rate_create_url %}
-        {% translate "No exchange rates yet" as empty_title %}
-        {% translate "Add historical rates before consolidating accounts in different currencies." as empty_message %}
-        {% translate "New rate" as empty_cta %}
-        {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=rate_create_url cta_label=empty_cta %}
-    {% endif %}
+    <header class="workspace-header"><div><h1 class="page-title">{% translate "Exchange rates" %}</h1><p class="subtle-copy mt-2">{% translate "Historical rates consolidate account and investment values into the base currency." %}</p></div>{% url 'banking:exchange_rate_create' as rate_create_url %}<a href="{% contextual_url rate_create_url %}" class="action-primary">{% translate "New rate" %}</a></header>
+    <p class="subtle-copy">{% translate 'These local reference rates do not replace the effective amounts and conversion evidence saved in your operations.' %}</p>
+    <form id="rate-filter-form" method="get" hx-boost="false" novalidate data-live-filters data-live-results="rate-results" class="surface-panel grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {% for field in filter_form %}{% include 'partials/form_field.html' %}{% endfor %}
+        <div class="flex items-end"><button type="submit" data-live-submit class="action-link">{% translate 'Filter' %}</button></div>
+    </form>
+    <div id="rate-result-meta" data-live-fragment="rate-filter-form" class="space-y-3">{% include 'banking/_filter_errors.html' %}<div class="flex flex-wrap items-center gap-3"><p class="subtle-copy">{% blocktranslate count count=paginator.count %}{{ count }} rate{% plural %}{{ count }} rates{% endblocktranslate %}</p>{% if has_filters %}<a class="quiet-action" href="{% url 'banking:exchange_rates' %}" data-live-reset data-live-link="rate-filter-form">{% translate 'Clear filters' %}</a>{% endif %}</div></div>
+    {% include 'banking/_rate_results.html' %}
 </div>
 {% endblock %}

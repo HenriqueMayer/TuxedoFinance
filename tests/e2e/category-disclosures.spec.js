@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const { test, expect } = require('@playwright/test');
+const {requestPath, expectContextualDestination} = require('./helpers/navigation');
 
 async function post(page, route, fields) {
     const response = await page.request.get(route);
@@ -41,10 +42,17 @@ async function prepare(page, testInfo) {
 }
 
 function toggle(page, id) {
-    return page.locator(`button[data-category-toggle][aria-controls="category-children-${id}"]`);
+    return page.locator(`summary[data-category-toggle][aria-controls="category-children-${id}"]`);
 }
 function children(page, id) { return page.locator(`#category-children-${id}`); }
-function edit(page, id) { return page.locator(`a[href="/categories/${id}/edit/"]`); }
+function edit(page, id) { return page.locator(`a[href^="/categories/${id}/edit/"]`); }
+async function tree(page, expanded = false) {
+    await page.locator('#category-view-tree').click();
+    await expect(page.locator('#category-view-tree')).toHaveAttribute('aria-current', 'true');
+    if (expanded) {
+        await page.locator('button[data-category-action="expand"]').click();
+    }
+}
 async function allExpanded(page, ids) {
     for (const id of [ids.living, ids.heating, ids.transport]) {
         await expect(toggle(page, id)).toHaveAttribute('aria-expanded', 'true');
@@ -95,9 +103,12 @@ for (const theme of ['light', 'dark']) {
         // Cancel belongs to a native form. Exercise HTMX separately through
         // the list's real GET filter before checking the replacement menus.
         await page.evaluate(() => { window.rowMenuNavigationMarker = true; });
-        await page.getByRole('button', { name: 'Filter', exact: true }).click();
-        await expect(page).toHaveURL(/q=/);
+        await page.locator('#filter-search').fill('Water');
+        await page.locator('#filter-search').press('Enter');
+        await expect(page).toHaveURL(/q=Water/);
         expect(await page.evaluate(() => window.rowMenuNavigationMarker)).toBe(true);
+        await page.locator('#category-clear-filters').click();
+        await expect(page).toHaveURL(/\/categories\/$/);
         await neighbor.hover();
         await expect(openMenus).toHaveCount(0);
         await first.click();
@@ -154,6 +165,7 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
         await page.setViewportSize({ width, height: 844 });
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         const ids = await prepare(page, testInfo);
+        await tree(page, true);
         await expect(page.locator('[data-category-tree]')).toBeVisible();
         await allExpanded(page, ids);
 
@@ -194,6 +206,7 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
         await allExpanded(page, ids);
 
         // Row actions do not act as disclosure triggers.
+        await page.locator('summary[aria-label="More options: Living costs"]').click();
         await page.locator(`a[href="/categories/create/?parent=${ids.living}"]`).click();
         await expect(page).toHaveURL(new RegExp(`/categories/create/\\?parent=${ids.living}$`));
         await expect(page.locator('#id_parent_category')).toHaveValue(ids.living);
@@ -206,12 +219,14 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
         await expect(edit(page, ids.heating)).toBeVisible();
         await page.keyboard.press('Escape');
         await living.click();
+        await living.press('Enter');
+        const origin = requestPath(page.url());
         await edit(page, ids.living).click();
-        await expect(page).toHaveURL(new RegExp(`/categories/${ids.living}/edit/$`));
+        await expectContextualDestination(page, `/categories/${ids.living}/edit/`, origin);
         await expect(page.locator('#id_name')).toHaveValue('Living costs');
         await page.goBack();
-        await expect(living).toHaveAttribute('aria-expanded', 'false');
-        await expect(edit(page, ids.heating)).toBeHidden();
+        await expect(living).toHaveAttribute('aria-expanded', 'true');
+        await expect(edit(page, ids.heating)).toBeVisible();
         await expect(edit(page, ids.fuel)).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         await screenshot(page, testInfo, `category-groups-${theme}.png`);
@@ -222,7 +237,7 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
             await expect(page.getByRole('button', { name: 'Recolher tudo', exact: true })).toBeVisible();
             await expect(page.getByRole('button', { name: 'Expandir tudo', exact: true })).toBeVisible();
             await living.click();
-            await expect(children(page, ids.living)).toBeHidden();
+            await expect(children(page, ids.living)).toBeVisible();
             await screenshot(page, testInfo, 'category-groups-pt-br-dark-mobile.png');
         }
     });
@@ -230,18 +245,20 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
 
 test('category filtering exposes matching descendants and history restores disclosure state', async ({ page }, testInfo) => {
     const ids = await prepare(page, testInfo);
+    await tree(page, true);
     await page.evaluate(() => { window.categoryHistoryMarker = 'same-document'; });
     await page.locator('#filter-search').fill('Heating');
-    await page.getByRole('button', { name: 'Filter', exact: true }).click();
+    await page.locator('#filter-search').press('Enter');
     await expect(page).toHaveURL(/q=Heating/);
     expect(await page.evaluate(() => window.categoryHistoryMarker)).toBe('same-document');
     await expect(edit(page, ids.heating)).toBeVisible();
     await expect(page.getByText('Subcategory of Living costs', { exact: true })).toBeVisible();
     await expect(edit(page, ids.living)).toHaveCount(0);
     await expect(edit(page, ids.solar)).toHaveCount(0);
-    await expect(page.locator('button[data-category-toggle]')).toHaveCount(0);
+    await expect(page.locator('[data-category-toggle]')).toHaveCount(0);
 
     await page.getByRole('link', { name: 'Clear filters', exact: true }).click();
+    await page.locator('button[data-category-action="expand"]').click();
     await allExpanded(page, ids);
     const living = toggle(page, ids.living);
     await living.click();
@@ -249,7 +266,7 @@ test('category filtering exposes matching descendants and history restores discl
     await page.locator('main nav').getByRole('link', { name: 'Transactions', exact: true }).click();
     await expect(page).toHaveURL(/\/transactions\/$/);
     await page.goBack();
-    await expect(page).toHaveURL(/\/categories\/$/);
+    await expect(page).toHaveURL(/\/categories\/\?view=tree$/);
     await expect(living).toHaveAttribute('aria-expanded', 'false');
     await expect(edit(page, ids.heating)).toBeHidden();
     await living.press('Enter');
@@ -257,6 +274,7 @@ test('category filtering exposes matching descendants and history restores discl
     await living.press('Space');
     await expect(edit(page, ids.heating)).toBeHidden();
     await page.reload();
+    await page.locator('button[data-category-action="expand"]').click();
     await allExpanded(page, ids);
 });
 
@@ -266,10 +284,7 @@ test('all category levels stay readable and searchable without JavaScript on mob
     try {
         const ids = await prepare(page, testInfo);
         for (const id of Object.values(ids)) await expect(edit(page, id)).toBeVisible();
-        await expect(page.locator('button[data-category-toggle]')).toHaveCount(3);
-        for (const button of await page.locator('button[data-category-toggle], button[data-category-action]').all()) {
-            await expect(button).toBeHidden();
-        }
+        await expect(page.locator('[data-category-toggle]')).toHaveCount(0);
         const solarName = page.locator(`#category-name-${ids.solar}`);
         await expect(solarName).toBeVisible();
         await expect(solarName).toContainText('Solar servicing');
@@ -283,6 +298,17 @@ test('all category levels stay readable and searchable without JavaScript on mob
         await expect(edit(page, ids.solar)).toBeVisible();
         await expect(edit(page, ids.heating)).toHaveCount(0);
         await expect(page.getByText('Subcategory of Heating', { exact: true })).toBeVisible();
+        await page.locator('#category-clear-filters').click();
+        await page.locator('#category-view-tree').click();
+        const living = toggle(page, ids.living);
+        await expect(living).toBeVisible();
+        await expect(children(page, ids.living)).toBeHidden();
+        await living.press('Enter');
+        await expect(children(page, ids.living)).toBeVisible();
+        await toggle(page, ids.heating).press('Space');
+        await expect(edit(page, ids.solar)).toBeVisible();
+        await toggle(page, ids.heating).press('Enter');
+        await expect(edit(page, ids.solar)).toBeHidden();
     } finally {
         await context.close();
     }

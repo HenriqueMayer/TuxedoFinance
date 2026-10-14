@@ -8,13 +8,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.db.models import Count, ProtectedError, Q
+from django.db.models import Count, Max, ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.text import format_lazy
 from django.utils.translation import gettext as _, gettext_lazy
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
 
 from banking.models import Bank
@@ -23,7 +23,8 @@ from dashboard.selection import selection_data, attach_details
 from dashboard.charts import build_bar_chart, build_line_chart
 from investments.forms import (AssetForm, InvestmentForm, InvestmentProductForm,
                                InvestmentChartFilterForm, InvestmentOperationFilterForm, PriceObservationForm)
-from investments.models import Asset, Investment, InvestmentProduct, PriceObservation
+from investments.forms import GuidedInvestmentForm
+from investments.models import Asset, Investment, InvestmentProduct, PriceObservation, PositionPlanningSetting
 from investments.positions import get_portfolio_valuation, validate_position_history
 from investments.services import (
     TIMESERIES_MONTHS,
@@ -33,9 +34,114 @@ from investments.services import (
     get_total_in_base_timeseries,
     sync_investment_ledger,
     refresh_fx_snapshot,
+    create_guided_investment,
 )
 from accounts.models import UserPreference
-from core.navigation import ReturnContextMixin, with_return_url
+from core.navigation import ReturnContextMixin, return_url, with_return_url
+
+
+def _configured_rows(user, snapshot, purpose=None):
+    """Zero configuration belongs in navigation, outside financial replay/totals."""
+    known = {(row['product'].pk, row['asset'].pk) for row in snapshot['positions']}
+    assets = Asset.objects.filter(user=user, opening_product__user=user).select_related('opening_product__bank')
+    if purpose:
+        assets = assets.filter(opening_product__purpose=purpose)
+    zero = Decimal('0')
+    rows = []
+    for asset in assets:
+        if (asset.opening_product_id, asset.pk) not in known:
+            rows.append({'product': asset.opening_product, 'asset': asset, 'quantity': zero,
+                'balance': zero, 'remaining_cost': zero, 'average_cost': zero, 'realized_gain': zero,
+                'unrealized_gain': None, 'valuation': zero, 'base_value': zero, 'deposits': zero,
+                'withdrawals': zero, 'yields': zero, 'unapplied_fees': zero, 'fees': zero,
+                'price_observation': None, 'baseline_unknown': False, 'history_errors': [],
+                'configured_only': True})
+    return rows
+
+
+def _position_row(user, product, asset):
+    snapshot = get_portfolio_valuation(user)
+    rows = snapshot['positions'] + _configured_rows(user, snapshot)
+    row = next((row for row in rows if row['product'].pk == product.pk and row['asset'].pk == asset.pk), None)
+    if row is None:
+        # Future operations also establish owned context, without current money.
+        if not Investment.objects.filter(user=user, product=product, asset=asset).exists():
+            from django.http import Http404
+            raise Http404
+        row = {'product': product, 'asset': asset, 'quantity': Decimal('0'), 'balance': Decimal('0'),
+            'remaining_cost': Decimal('0'), 'average_cost': Decimal('0'), 'realized_gain': Decimal('0'),
+            'unrealized_gain': None, 'valuation': Decimal('0'), 'price_observation': None,
+            'unapplied_fees': Decimal('0'), 'baseline_unknown': False, 'history_errors': [], 'configured_only': True}
+    observation = row['price_observation']
+    last_date = Investment.objects.filter(user=user, product=product, asset=asset, date__lte=timezone.localdate()).order_by('-date').values_list('date', flat=True).first()
+    return {**row, 'id': asset.pk, 'name': asset.name, 'code': asset.code, 'currency': asset.currency,
+            'evidence_date': observation.date if observation else (last_date or asset.opening_date),
+            'valuation_mode': asset.valuation_mode, 'is_archived': asset.is_archived}
+
+
+def _asset_configuration_url(request, asset):
+    # Restoration belongs to the owned configuration list, with its archived
+    # disclosure opened before navigating to the precise asset anchor.
+    target = reverse('investments:settings') + '?' + urlencode({'archived': asset.pk}) + f'#asset-{asset.pk}'
+    return with_return_url(target, request.get_full_path())
+
+
+@login_required
+def position_detail(request, product_pk, asset_pk):
+    product = get_object_or_404(InvestmentProduct.objects.select_related('bank'), user=request.user,
+                              bank__user=request.user, pk=product_pk)
+    asset = get_object_or_404(Asset, user=request.user, pk=asset_pk)
+    row = _position_row(request.user, product, asset)
+    planning_enabled = PositionPlanningSetting.objects.filter(user=request.user, product=product, asset=asset).values_list('planning_enabled', flat=True).first()
+    detail_url = reverse('investments:position_detail', args=[product.pk, asset.pk])
+    history_url = reverse('investments:operations') + '?' + urlencode({'product': product.pk, 'asset': asset.pk})
+    update_url = reverse('investments:position_update', args=[product.pk, asset.pk])
+    operations = Investment.objects.filter(user=request.user, product=product, asset=asset).order_by('-date', '-created_at', '-pk')[:10]
+    return render(request, 'investments/position.html', {'position': row, 'product': product, 'asset': row,
+        'selected_section': 'positions', 'today': timezone.localdate(), 'history_url': history_url,
+        'update_url': with_return_url(update_url, request.get_full_path()),
+        'asset_edit_url': with_return_url(reverse('investments:update_asset', args=[asset.pk]), request.get_full_path()),
+        'product_edit_url': with_return_url(reverse('investments:update_product', args=[product.pk]), request.get_full_path()),
+        'configuration_url': _asset_configuration_url(request, asset),
+        'recent_operations': operations, 'detail_url': detail_url,
+        'planning_enabled': planning_enabled is not False})
+
+
+@login_required
+def position_update(request, product_pk, asset_pk):
+    product = get_object_or_404(InvestmentProduct.objects.select_related('bank'), user=request.user,
+                              bank__user=request.user, pk=product_pk)
+    asset = get_object_or_404(Asset, user=request.user, pk=asset_pk)
+    row = _position_row(request.user, product, asset)
+    destination = return_url(request, reverse('investments:position_detail', args=[product.pk, asset.pk]))
+    actions = {kind.lower(): with_return_url(reverse('investments:create') + '?' + urlencode(
+        {'product': product.pk, 'asset': asset.pk, 'kind': kind}), destination) for kind in Investment.Kind.values}
+    actions['price'] = with_return_url(reverse('investments:create_price') + '?' + urlencode({'asset': asset.pk}), destination)
+    return render(request, 'investments/position_update.html', {'position': row, 'product': product,
+        'selected_section': 'positions', 'actions': actions, 'return_url': destination,
+        'configuration_url': _asset_configuration_url(request, asset)})
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def guided_investment(request):
+    form = GuidedInvestmentForm(request.POST or None, user=request.user)
+    destination = return_url(request, reverse('investments:list'))
+    if request.method == 'POST' and form.is_valid():
+        try:
+            product, asset = create_guided_investment(request.user, form.cleaned_data)
+        except (ValidationError, IntegrityError) as error:
+            if isinstance(error, IntegrityError):
+                form.add_error(None, _('The institution or investment already exists. Review the configuration.'))
+            else:
+                mapping = {'bank': 'institution', 'name': 'name', 'code': 'code'}
+                for field, errors in getattr(error, 'message_dict', {'__all__': error.messages}).items():
+                    for message in errors:
+                        form.add_error(mapping.get(field, field) if mapping.get(field, field) in form.fields else None, message)
+        else:
+            messages.success(request, _('Investment added. Existing holdings were recorded without a bank payment.'))
+            return redirect(with_return_url(reverse('investments:position_detail', args=[product.pk, asset.pk]), destination))
+    return render(request, 'investments/guided_form.html', {'form': form, 'return_url': destination})
 
 
 def _add_months(year, month, offset):
@@ -104,13 +210,12 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
     template_name = 'investments/list.html'
 
     def get_section(self):
-        return 'cash' if self.request.GET.get('section') == 'cash' else 'portfolio'
+        scope = self.request.GET.get('scope', self.request.GET.get('section', 'all'))
+        return scope if scope in ('portfolio', 'cash') else 'all'
 
     def get_purpose(self):
-        return (
-            InvestmentProduct.Purpose.MONTHLY_CASH if self.get_section() == 'cash'
-            else InvestmentProduct.Purpose.INVESTMENT
-        )
+        return {'cash': InvestmentProduct.Purpose.MONTHLY_CASH,
+                'portfolio': InvestmentProduct.Purpose.INVESTMENT}.get(self.get_section())
 
     def get(self, request, *args, **kwargs):
         if request.headers.get('HX-Target') == 'investments-charts':
@@ -121,7 +226,8 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
             request.GET = query
             return InvestmentChartsView.as_view()(request, *args, **kwargs)
         movement_request = request.headers.get('HX-Target') == 'investment-movements'
-        if movement_request or any(key in request.GET for key in ('page', 'q', 'kind', 'bank', 'product', 'asset')):
+        legacy_search = 'section' in request.GET and 'q' in request.GET and 'scope' not in request.GET
+        if movement_request or legacy_search or any(key in request.GET for key in ('page', 'kind', 'bank', 'product', 'asset', 'tab')):
             query = request.GET.copy()
             if query.get('section') != 'cash':
                 query['section'] = 'portfolio'
@@ -132,6 +238,8 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
         if self.request.headers.get('HX-Request') == 'true':
             if self.request.headers.get('HX-Target') == 'investments-charts':
                 return ['investments/_investments_charts.html']
+            if self.request.headers.get('HX-Target') == 'investment-position-list':
+                return ['investments/_position_list.html']
         return [self.template_name]
 
     def get_context_data(self, **kwargs):
@@ -145,7 +253,12 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
         native_totals = {}
         rates = {}
         snapshot = get_portfolio_valuation(user, purpose=self.get_purpose(), base_currency=base)
-        portfolio_groups = get_portfolio_groups(user, purpose=self.get_purpose(), snapshot=snapshot)
+        display_snapshot = {**snapshot, 'positions': snapshot['positions'] + _configured_rows(user, snapshot, self.get_purpose())}
+        portfolio_groups = get_portfolio_groups(user, purpose=self.get_purpose(), snapshot=display_snapshot)
+        last_dates = {(row['product_id'], row['asset_id']): row['last_date'] for row in
+            Investment.objects.filter(user=user, date__lte=today).values('product_id', 'asset_id').annotate(last_date=Max('date'))}
+        planning_flags = {(product, asset): enabled for product, asset, enabled in
+            PositionPlanningSetting.objects.filter(user=user).values_list('product_id', 'asset_id', 'planning_enabled')}
         # Current positions must not inherit missing FX from an unrelated
         # historical chart window. Zero balances need no exchange rate.
         for bank in portfolio_groups:
@@ -157,6 +270,22 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
                     self.request.get_full_path(), fragment=f"product-{product['id']}")
                 for asset in product['assets']:
                     asset['anchor'] = f"position-{product['id']}-{asset['id']}"
+                    asset['planning_enabled'] = planning_flags.get((product['id'], asset['id']), True)
+                    asset['detail_url'] = reverse('investments:position_detail', args=[product['id'], asset['id']])
+                    asset['history_url'] = reverse('investments:operations') + '?' + urlencode({'product': product['id'], 'asset': asset['id']})
+                    asset['update_url'] = with_return_url(reverse('investments:position_update', args=[product['id'], asset['id']]),
+                        self.request.get_full_path(), fragment=asset['anchor'])
+                    asset['mobile_update_url'] = with_return_url(reverse('investments:position_update', args=[product['id'], asset['id']]),
+                        self.request.get_full_path(), fragment=asset['anchor'] + '-mobile')
+                    opening_date = asset['asset'].opening_date
+                    asset['evidence_date'] = last_dates.get((product['id'], asset['id']), opening_date)
+                    if asset['price_observation']:
+                        asset['evidence_label'] = _('Local unit price')
+                        asset['evidence_date'] = asset['price_observation'].date
+                    elif asset.get('configured_only'):
+                        asset['evidence_label'] = _('No current position') if opening_date else _('Ready for the first operation')
+                    else:
+                        asset['evidence_label'] = _('Recorded balance') if asset['valuation_mode'] == 'MONETARY' else _('At remaining acquisition cost')
                     for name, fragment in (('action_urls', asset['anchor']), ('mobile_action_urls', asset['anchor'] + '-mobile')):
                         asset[name] = {
                             kind.lower(): with_return_url(
@@ -185,17 +314,27 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
         # before filtering the display, and keep accounting/history queries intact.
         visible_groups = []
         has_archived_positions = False
+        position_rows = []
+        query = self.request.GET.get('q', '').strip()
         for bank in portfolio_groups:
             visible_products = []
             for product in bank['products']:
-                assets = [asset for asset in product['assets'] if not asset['is_archived']]
-                has_archived_positions |= len(assets) != len(product['assets'])
+                active_assets = [asset for asset in product['assets'] if not asset['is_archived']]
+                has_archived_positions |= len(active_assets) != len(product['assets'])
+                assets = [asset for asset in active_assets if not query or query.casefold() in
+                          ' '.join((asset['name'], asset['code'], product['name'], bank['name'])).casefold()]
+                position_rows.extend({**asset, 'bank_name': bank['name'], 'product_name': product['name'],
+                                      'purpose': product['purpose']} for asset in assets)
                 if assets:
                     visible_products.append({**product, 'assets': assets})
             if visible_products:
                 visible_groups.append({**bank, 'products': visible_products})
         context.update({
-            'selected_section': self.get_section(),
+            'selected_section': 'positions',
+            'position_scope': self.get_section(),
+            'position_rows': position_rows,
+            'position_count': len(position_rows),
+            'search_query': query,
             'portfolio_groups': visible_groups,
             'has_archived_positions': has_archived_positions,
             'simulated_total': total.quantize(Decimal('0.01')),

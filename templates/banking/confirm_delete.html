@@ -8,6 +8,7 @@
     <h1 class="font-sans text-4xl font-semibold tracking-tight">{% blocktranslate with item_name=item %}Delete {{ item_name }}?{% endblocktranslate %}</h1>
         <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
         {% csrf_token %}
+        {% if return_url %}<input type="hidden" name="next" value="{{ return_url }}">{% endif %}
         <p class="text-sm text-forest/70 dark:text-night-muted">{% if delete_message %}{{ delete_message }}{% else %}{% translate "This action cannot be undone. Financial records that reference this item will prevent deletion." %}{% endif %}</p>
         <div class="flex gap-3">
             <button type="submit" class="rounded-full bg-expense px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white">{% translate "Delete" %}</button>

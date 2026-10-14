@@ -41,7 +41,7 @@ for (const theme of ['light', 'dark']) {
     test(`operations navigation, scoped history and keyboard filters (${theme})`, async ({ page }, info) => {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await seed(page, info);
-        await page.goto('/investments/');
+        await page.goto('/investments/?scope=portfolio');
         await expect(page.locator('#investment-movements')).toHaveCount(0);
         const link = page.locator('#investment-operations-link');
         await expect(page.locator('#investments-charts')).toHaveCount(0);
@@ -51,8 +51,10 @@ for (const theme of ['light', 'dark']) {
         await page.keyboard.press('Enter');
         await expect(page).toHaveURL(/operations\/\?section=portfolio$/);
         const tabs = page.getByRole('navigation', { name: 'Investment sections' });
-        await expect(tabs.getByRole('link', { name: 'Operations', exact: true })).toHaveAttribute('aria-current', 'page');
+        await expect(tabs.getByRole('link', { name: 'History', exact: true })).toHaveAttribute('aria-current', 'page');
+        await tabs.locator('[data-investment-more] > summary').press('Enter');
         await expect(tabs.getByRole('button', { name: 'Simulate returns' })).toHaveAttribute('aria-disabled', 'true');
+        await tabs.locator('[data-investment-more] > summary').press('Escape');
         await expect(page.locator('#investments-charts')).toHaveCount(0);
         const history = page.locator('#investment-movements');
         await expect(history).toContainText('Page 1 of 2');
@@ -69,27 +71,27 @@ for (const theme of ['light', 'dark']) {
         await page.locator('#investment-purpose').focus();
         await page.keyboard.press('End');
         await page.keyboard.press('Tab');
-        await history.getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(history).toContainText('Pot yield');
         await expect(history.locator('ul > li')).toHaveCount(1);
         await history.getByRole('link', { name: 'Clear filters', exact: true }).press('Enter');
         await expect(page.locator('#investment-purpose')).toHaveValue('');
         await expect(history).toContainText('Page 1 of 2');
         const sections = page.getByRole('navigation', { name: 'Investment sections' });
-        await expect(sections.getByRole('link', { name: 'Operations', exact: true })).toBeVisible();
+        await expect(sections.getByRole('link', { name: 'History', exact: true })).toBeVisible();
         // The section link reloads the same URL after Clear filters. A URL assertion
         // alone can pass while the old tabs are still being replaced by HTMX.
         await Promise.all([
             page.waitForResponse(response => response.request().method() === 'GET'
                 && new URL(response.url()).pathname === '/investments/operations/'
                 && new URL(response.url()).search === ''),
-            sections.getByRole('link', { name: 'Operations', exact: true }).press('Enter'),
+            sections.getByRole('link', { name: 'History', exact: true }).press('Enter'),
         ]);
         await expect(page.locator('body')).not.toHaveAttribute('aria-busy', 'true');
         await expect(page.locator('body')).not.toHaveClass(/htmx-settling/);
         await expect(page).toHaveURL(/\/investments\/operations\/$/);
-        await tabs.getByRole('link', { name: 'Remunerated cash', exact: true }).press('Enter');
-        await expect(page).toHaveURL(/\/investments\/\?section=cash$/);
+        await tabs.getByRole('link', { name: 'My investments', exact: true }).press('Enter');
+        await page.locator('#position-scope').selectOption('cash');
+        await expect(page).toHaveURL(url => url.searchParams.get('scope') === 'cash');
         await page.locator('#investment-operations-link').press('Enter');
         await expect(page).toHaveURL(/operations\/\?section=cash$/);
         await expect(history).toContainText('Pot yield');
@@ -106,7 +108,7 @@ test('operations remain usable on mobile without JavaScript', async ({ page, bro
         const mobile = await context.newPage();
         await mobile.goto('/investments/');
         await mobile.locator('#investment-operations-link').press('Enter');
-        await expect(mobile).toHaveURL(/operations\/\?section=portfolio$/);
+        await expect(mobile).toHaveURL(/\/investments\/operations\/$/);
         await mobile.locator('#investment-purpose').selectOption('cash');
         await mobile.getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(mobile.locator('#investment-movements')).toContainText('Pot yield');
@@ -207,7 +209,9 @@ for (const theme of ['light', 'dark']) {
         try {
             await seed(page, info, 1);
             await page.goto('/investments/charts/');
-            await expect(page.getByRole('navigation', { name: 'Seções de investimentos' }).getByRole('link', { name: 'Gráficos' })).toHaveAttribute('aria-current', 'page');
+            await expect(page.locator('[data-investment-more] > summary')).toHaveAttribute('aria-current', 'true');
+            await page.locator('[data-investment-more] > summary').press('Enter');
+            await expect(page.getByRole('link', { name: 'Análises', exact: true })).toBeVisible();
             await expect(page.locator('#investment-chart-scope option:checked')).toHaveText('Geral');
             await page.locator('#investment-chart-scope').selectOption('cash');
             await expect(page).toHaveURL(/scope=cash/);

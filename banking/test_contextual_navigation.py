@@ -5,7 +5,7 @@ from uuid import uuid4
 from urllib.parse import parse_qs, urlsplit
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from banking.models import Bank, BankAccount, CardInvoice, CreditCard
@@ -76,7 +76,9 @@ class ContextualBankNavigationTests(TestCase):
         response = self.client.get(reverse('banking:invoices'), {'card': invoice.card_id})
         self.assertEqual(list(response.context['invoices']), [invoice])
         self.assertEqual(response.context['selected_card'], invoice.card)
-        self.assertNotContains(response, other_invoice.card.name)
+        # Other owned cards remain selectable, but their invoice rows must not
+        # escape the explicit card filter.
+        self.assertNotContains(response, f'id="invoice-{other_invoice.pk}"')
         foreign_bank = Bank.objects.create(user=self.other, name='Foreign')
         foreign_account = BankAccount.objects.create(user=self.other, bank=foreign_bank, name='Foreign', currency='BRL')
         foreign_card = CreditCard.objects.create(user=self.other, account=foreign_account, name='Foreign', closing_day=31, due_day=30)
@@ -103,6 +105,7 @@ class ContextualBankNavigationTests(TestCase):
         invoice.refresh_from_db()
         self.assertEqual(invoice.remaining_amount, Decimal('75'))
 
+    @override_settings(REVIEWED_FEATURES={'imports'})
     def test_dashboard_pending_imports_are_owned_and_never_count_as_cash(self):
         batch = ImportBatch.objects.create(user=self.user, account=self.account, file_name='owner.csv', file_hash='a' * 64, file_format='CSV', raw_text='date,amount', status='STAGED')
         ImportBatch.objects.create(user=self.other, account=self.account, file_name='foreign.csv', file_hash='b' * 64, file_format='CSV', raw_text='date,amount', status='READY')
@@ -113,3 +116,12 @@ class ContextualBankNavigationTests(TestCase):
         self.assertNotContains(response, 'foreign.csv')
         self.assertEqual(response.context['current_balance'], 1000)
         self.assertContains(response, reverse('ingestion:mapping', args=[batch.pk]))
+
+    @override_settings(REVIEWED_FEATURES=set())
+    def test_paused_imports_do_not_offer_pending_actions_or_change_current_cash(self):
+        ImportBatch.objects.create(user=self.user, account=self.account, file_name='owner.csv', file_hash='a' * 64,
+                                  file_format='CSV', raw_text='date,amount', status='STAGED')
+        response = self.client.get(reverse('dashboard:index'))
+        self.assertEqual(response.context['pending_import_count'], 0)
+        self.assertEqual(response.context['pending_imports'], [])
+        self.assertEqual(response.context['current_balance'], 1000)

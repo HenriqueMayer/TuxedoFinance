@@ -143,7 +143,8 @@ test(`contextual finance returns and split keyboard recovery (${width}, ${theme}
     await page.goto(portfolioOrigin);
     const suffix = width < 640 ? '-mobile' : '';
     const fundRow = page.locator(`#position-${data.product}-${data.fund}${suffix}`);
-    await fundRow.getByRole('link', { name: 'Record yield', exact: true }).press('Enter');
+    await fundRow.getByRole('link', { name: 'Update', exact: true }).press('Enter');
+    await page.getByRole('link', { name: 'Record yield', exact: true }).press('Enter');
     await expect(page.locator('#id_product')).toHaveValue(data.product);
     await expect(page.locator('#id_asset')).toHaveValue(data.fund);
     await expect(page.locator('#id_kind')).toHaveValue('YIELD');
@@ -155,10 +156,11 @@ test(`contextual finance returns and split keyboard recovery (${width}, ${theme}
     await expect(page).toHaveURL(new RegExp(`#position-${data.product}-${data.fund}${suffix}$`));
     await expect(fundRow).toContainText(/105[,.]00/);
     const shareRow = page.locator(`#position-${data.product}-${data.share}${suffix}`);
+    await shareRow.getByRole('link', { name: 'Update', exact: true }).press('Enter');
     for (const label of ['Contribute', 'Redeem', 'Record yield', 'Update price']) {
-        await expect(shareRow.getByRole('link', { name: label, exact: true })).toBeVisible();
+        await expect(page.getByRole('link', { name: label, exact: true })).toBeVisible();
     }
-    await shareRow.getByRole('link', { name: 'Update price', exact: true }).press('Enter');
+    await page.getByRole('link', { name: 'Update price', exact: true }).press('Enter');
     await expect(page.locator('#id_asset')).toHaveValue(data.share);
     await page.locator('#id_date').fill('10/01/2026');
     await page.locator('#id_unit_price').fill('125');
@@ -172,7 +174,7 @@ test(`contextual finance returns and split keyboard recovery (${width}, ${theme}
     await expect(page).toHaveURL(new RegExp(`#position-${data.product}-${data.share}${suffix}$`));
     await expect(shareRow).toContainText('2 units');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await shareRow.getByRole('link', { name: 'Update price', exact: true }).focus();
+    await shareRow.getByRole('link', { name: 'Update', exact: true }).focus();
     await page.screenshot({ path: info.outputPath(`contextual-position-${width}-${theme}.png`), fullPage: true });
 
     await page.goto(`/transactions/create/?credit_card=${data.confirmedCard}&next=%2Fbanking%2F`);
@@ -207,7 +209,8 @@ test('category splits and contextual price links work without JavaScript', async
         expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe(origin);
         await page.goto('/investments/?section=portfolio');
         const row = page.locator(`#position-${data.product}-${data.share}-mobile`);
-        await row.getByRole('link', { name: 'Update price', exact: true }).press('Enter');
+        await row.getByRole('link', { name: 'Update', exact: true }).press('Enter');
+        await page.getByRole('link', { name: 'Update price', exact: true }).press('Enter');
         await expect(page.locator('#id_asset')).toHaveValue(data.share);
         await page.getByRole('link', { name: 'Cancel', exact: true }).press('Enter');
         await expect(page).toHaveURL(new RegExp(`#position-${data.product}-${data.share}-mobile$`));

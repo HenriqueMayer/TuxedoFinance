@@ -76,6 +76,7 @@ def get_planning_availability(user, as_of=None, *, conversion=None):
     The caller owns ledger synchronization; this calculation never writes it.
     """
     from accounts.models import UserPreference
+    from investments.models import PositionPlanningSetting
     from investments.services import get_monthly_cash_positions
     from planning.services import reserved_by_source
 
@@ -129,12 +130,18 @@ def get_planning_availability(user, as_of=None, *, conversion=None):
         if row['converted_available'] is not None:
             result['available_total'] += row['converted_available']
         result['account_rows'].append(row)
+    position_settings = {
+        (setting.product_id, setting.asset_id): setting.planning_enabled
+        for setting in PositionPlanningSetting.objects.filter(
+            user=user, product__user=user, asset__user=user)
+    }
     for row in get_monthly_cash_positions(user, as_of):
+        row['planning_enabled'] = position_settings.get((row['product'].pk, row['asset'].pk), True)
         requested = named_reserves['cash_pots'].get((row['product'].pk, row['asset'].pk), ZERO)
         positive = max(row['balance'], ZERO)
-        row['reserved'] = min(requested, positive)
+        row['reserved'] = min(requested, positive) if row['planning_enabled'] else positive
         row['available'] = row['balance'] - row['reserved']
-        row['shortfall'] = max(requested - positive, ZERO)
+        row['shortfall'] = max(requested - positive, ZERO) if row['planning_enabled'] else ZERO
         row['base_balance'] = in_base(row['balance'], row['currency'])
         row['base_reserved'] = in_base(row['reserved'], row['currency'])
         row['base_shortfall'] = in_base(row['shortfall'], row['currency'])
@@ -148,8 +155,32 @@ def get_planning_availability(user, as_of=None, *, conversion=None):
             result['reserve_shortfall'] += row['base_shortfall']
             result['available_total'] += row['base_available']
         result['cash_pots'].append(row)
+    result['included_account_rows'] = [row for row in result['account_rows'] if row['account'].planning_enabled]
+    result['reserved_account_rows'] = [row for row in result['account_rows'] if not row['account'].planning_enabled]
+    result['included_cash_pots'] = [row for row in result['cash_pots'] if row['planning_enabled']]
+    result['reserved_cash_pots'] = [row for row in result['cash_pots'] if not row['planning_enabled']]
     result['missing_currencies'] = sorted(missing)
     return result
+
+
+@transaction.atomic
+def set_position_planning(user, product_id, asset_id, enabled):
+    """Set aside a known owned cash position; never post or rewrite money."""
+    from django.contrib.auth import get_user_model
+    from investments.models import PositionPlanningSetting
+    from investments.services import get_monthly_cash_positions
+
+    get_user_model().objects.select_for_update().get(pk=user.pk)
+    source = next((row for row in get_monthly_cash_positions(user)
+                   if row['product'].pk == product_id and row['asset'].pk == asset_id), None)
+    if source is None:
+        raise ValidationError(gettext('This cash position is unavailable.'))
+    setting = PositionPlanningSetting.objects.filter(user=user, product_id=product_id, asset_id=asset_id).first()
+    setting = setting or PositionPlanningSetting(user=user, product=source['product'], asset=source['asset'])
+    setting.planning_enabled = enabled
+    setting.full_clean()
+    setting.save()
+    return setting
 
 
 def create_movement(

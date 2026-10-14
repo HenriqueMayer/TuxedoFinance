@@ -190,3 +190,13 @@ bank cash outflow. Cash-pot movements are not investment-contribution metrics.
 The selected future month is bounded so the six-month outlook stays inside the
 existing twelve-month synchronization horizon; the UI disables forward navigation
 at that limit.
+
+
+## Net-worth interface review
+
+The net-worth page is paused by a route-level review gate and its section status
+links to Roadmap. `wealth_snapshot` and financial calculations remain available
+to their existing consumers. Dashboard and Reports retain their organization;
+paused pending-import calls to action are not shown while review is unavailable.
+Per-position cash participation changes planning availability, preserving actual
+balances, debt, history and wealth calculations.

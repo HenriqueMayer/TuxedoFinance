@@ -823,7 +823,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         response = self.client.get(reverse('investments:list'))
         self.assertNotContains(response, 'id="investments-charts"')
         self.assertContains(response, reverse('investments:charts'))
-        self.assertContains(response, reverse('investments:operations') + '?section=portfolio')
+        self.assertContains(response, reverse('investments:operations'))
 
     def test_movement_pagination_uses_a_position_preserving_htmx_island(self):
         for index in range(11):
@@ -833,7 +833,8 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
 
         response = self.client.get(reverse('investments:operations'))
         self.assertContains(response, 'id="investment-movements"')
-        self.assertContains(response, 'hx-target="#investment-movements"')
+        self.assertContains(response, 'data-live-results="investment-operation-results"')
+        self.assertContains(response, 'data-live-link="investment-history-filters"')
         self.assertContains(response, 'data-scroll-target="investment-movements"')
         self.assertContains(response, '?page=2#investment-movements')
 

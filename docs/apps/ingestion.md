@@ -142,3 +142,16 @@ suggestion and leaves the submitted subset unchanged.
 `save_review(partial=True)` accepts only a nonempty subset of the owned batch.
 Confirmation continues validating every row and the complete decision digest.
 Read/write responses retain their existing owner scope and `never_cache`.
+
+
+## Interface review gate
+
+Statement upload, mapping, review, confirmation and undo are paused by
+`core.features.review_gate`. Both direct GETs and stale POSTs go to Roadmap before
+any service executes. The source model, parser, deduplication and posted ledgers
+remain intact. `/imports/history/` and owned confirmed/undone detail are read-only,
+uncached provenance; pending batches cannot enter the review UI. Core default
+settings keep the feature paused; dormant workflow tests explicitly opt in with
+an isolated `override_settings`, while default-gate regressions prove no writes.
+The dashboard does not advertise paused pending actions. No release date is
+promised and bank synchronization remains outside this local iteration.

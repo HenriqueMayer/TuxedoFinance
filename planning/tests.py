@@ -353,7 +353,7 @@ class PlanningViewTests(PlanningFixture):
         private = FinancialGoal.objects.create(user=self.other, name='Private goal', currency='BRL', target_amount='100')
         self.assertEqual(self.client.get(reverse('planning:goals')).status_code, 302)
         self.client.force_login(self.user)
-        for route in ['budgets', 'goals', 'signals', 'budget_create', 'goal_create', 'signals_settings']:
+        for route in ['index', 'tools', 'goals', 'signals', 'budget_create', 'goal_create', 'signals_settings']:
             with self.subTest(route=route):
                 self.assertEqual(self.client.get(reverse(f'planning:{route}')).status_code, 200)
         self.assertEqual(self.client.get(reverse('planning:goal_detail', args=[private.pk])).status_code, 404)
@@ -381,7 +381,7 @@ class PlanningViewTests(PlanningFixture):
 
     def test_budget_invalid_filter_recovery_and_copy_invalid_month(self):
         self.client.force_login(self.user)
-        response = self.client.get(reverse('planning:budgets'), {'month': 'invalid'})
+        response = self.client.get(reverse('planning:index'), {'month': 'invalid'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'value="invalid"')
         self.assertContains(response, 'role="alert"')

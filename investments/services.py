@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from uuid import uuid4
 
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -21,6 +22,38 @@ CENTS = Decimal('0.01')
 TIMESERIES_MONTHS = 12
 YIELD_INPUT_ENDING_BALANCE = 'ENDING_BALANCE'
 YIELD_INPUT_AMOUNT = 'YIELD_AMOUNT'
+
+
+@transaction.atomic
+def create_guided_investment(user, values):
+    """Create owned configuration/opening evidence together, never a cash debit."""
+    from django.contrib.auth import get_user_model
+    from banking.models import Bank
+    from investments.models import PositionPlanningSetting
+
+    get_user_model().objects.select_for_update().get(pk=user.pk)
+    if values['new_institution']:
+        bank = Bank(user=user, name=values['institution_name'])
+        bank.full_clean()
+        bank.save()
+    else:
+        bank = Bank.objects.get(user=user, pk=values['institution'].pk)
+    product = InvestmentProduct(user=user, bank=bank, name=values['name'], purpose=values['purpose'])
+    product.full_clean()
+    product.save()
+    asset = Asset(user=user, name=values['name'], code=values['code'] or f'APP-{uuid4().hex[:12].upper()}',
+        asset_class=values.get('asset_class') or Asset.AssetClass.OTHER, currency=values['currency'],
+        valuation_mode=values['valuation_mode'], opening_product=product,
+        opening_balance=values['opening_balance'], opening_quantity=values['opening_quantity'],
+        opening_unit_price=values['opening_unit_price'], opening_date=values['opening_date'])
+    asset.full_clean()
+    asset.save()
+    if product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH:
+        setting = PositionPlanningSetting(user=user, product=product, asset=asset,
+                                          planning_enabled=values['planning_enabled'])
+        setting.full_clean()
+        setting.save()
+    return product, asset
 
 
 @dataclass(frozen=True)

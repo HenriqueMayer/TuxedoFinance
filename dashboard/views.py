@@ -3,6 +3,7 @@ from calendar import monthrange
 
 from dashboard.selection import selection_data, attach_details
 from banking.services import ConversionContext
+from core.features import feature_available
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
@@ -119,7 +120,7 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         context['has_next_month'] = _is_projectable(next_year, next_month)
         from ingestion.models import ImportBatch
         # Staged statements are decisions awaiting review, never posted cash.
-        pending = ImportBatch.objects.filter(user=self.request.user, status__in=[ImportBatch.Status.STAGED, ImportBatch.Status.READY]).select_related('account')
+        pending = ImportBatch.objects.filter(user=self.request.user, status__in=[ImportBatch.Status.STAGED, ImportBatch.Status.READY]).select_related('account') if feature_available('imports') else ImportBatch.objects.none()
         context['pending_import_count'] = pending.count()
         context['pending_imports'] = list(pending[:3])
         return context

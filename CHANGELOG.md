@@ -9,20 +9,27 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Import local CSV/OFX statements with explicit mapping, staged review, stable bank-ID deduplication and possible-duplicate warnings; match existing bank movements, confirm invoice payments or record owned-account transfers. Compare stated closing balances without automatic adjustments and undo unchanged batches with guarded source snapshots.
+- Add a local CSV/OFX statement implementation with explicit mapping, staged review, stable bank-ID deduplication and possible-duplicate warnings; match existing bank movements, confirm invoice payments or record owned-account transfers. Compare stated closing balances without automatic adjustments and undo unchanged batches with guarded source snapshots. Interface operations remain paused pending usability review.
 - Split transactions between categories with exact native totals and cumulative installment cents, preserving one financial source while applying allocations to reports, budgets, filters and CSV exports.
 - Add monthly category budgets, previous-month copying and recorded/forecast spending; add currency/date goals with named reservations of existing account or monetary cash-pot balances, capped progress and visible shortfalls.
 - Add explained local duplicate, subscription-increase, budget-overspend and future-cash-shortage signals with reversible review decisions that do not mutate source finances.
 - Add opt-in confirmed credit-card payments, including partial payments, actual account debits and remaining forecast obligations; preserve earlier automatic invoice settlement and guard repeated submissions.
-- Add dated local investment price observations, weighted-average remaining cost, realized/unrealized results and explicit fee currency, plus a net-worth series that includes incurred card debt and discloses incomplete valuation evidence.
+- Add dated local investment price observations, weighted-average remaining cost, realized/unrealized results and explicit fee currency, plus underlying net-worth calculations that include incurred card debt and disclose incomplete valuation evidence. The net-worth interface remains under review.
 - Expand synthetic demo data with known opening dates, local prices, budgets, funded goals, review signals and overdue/partial confirmed invoices; future anchors keep unfunded targets instead of inventing current capacity or future confirmed payments.
 - Document isolated manual branch testing with a disposable SQLite backup and an owner acceptance checklist; no release, image or version change is published by these additions.
 
 ### Changed
 
+- Apply consultation searches while typing/deleting and apply choices, dates and ordering immediately; retain stable keyboard focus, cursor, scroll, Back/Forward and native submit fallback.
+- Add explicit category List/Tree views, native collapsible bank groups and separate Reserves; exclude chosen monetary cash positions from spendable availability without hiding balances or debts.
+- Open Investments with a compact holdings list and Update, guided atomic registration and contextual history; move analyses and full configuration into secondary options. Zero configured holdings create no opening cash movement.
+- Open Plan with the selected month's available-money outlook and budgets; keep Goals accessible and move signals, simulations and drafts into Tools. Distinguish recorded balances from known projections and show valuation limits.
+- Pause Net worth and statement operations behind Roadmap review gates, including direct/stale submissions; preserve owned posted import history as read-only provenance. No release date is promised.
+- Organize invoice and exchange-rate consultation and clarify changed form/action presentation. Add a per-position planning-participation migration with existing positions included by default.
+
 - Simplify daily navigation into Home, Transactions, Accounts, Investments and Plan, using a desktop sidebar and mobile bottom bar with shared active states and local section tabs. Preserve native links, keyboard focus, user options and no-JavaScript access.
-- Keep form Save/Cancel in explicit, validated local context; expose account updates, card invoices and position operations where their records appear. Show pending statement reviews on Home and remaining confirmed invoice obligations beside payment recording.
-- Bring category splits into transaction creation/editing and optional initial reservations into goal creation. Compact import review, preserve visible errors and offer explicit compatible CSV-mapping reuse without posting or classifying automatically.
+- Keep form Save/Cancel in explicit, validated local context; expose account updates, card invoices and position operations where their records appear. Show remaining confirmed invoice obligations beside payment recording.
+- Bring category splits into transaction creation/editing and optional initial reservations into goal creation; preserve visible errors and entered choices.
 - Allow an explicit private-interface disposable preview for phone testing on a trusted LAN; loopback remains the default and the installation database is untouched.
 - Serve the interface font locally and reuse reporting and conversion context; incrementally synchronize unchanged ledger projections without repeated data writes. Document synthetic performance observations and their limits.
 - Add migrations for imports, category splits, budgets, goals, price observations, opening dates and confirmed payments. Existing financial records remain intact; legacy opening dates remain unknown until explicitly entered and existing cards retain automatic settlement until opted in.

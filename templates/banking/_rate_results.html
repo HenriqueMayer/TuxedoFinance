@@ -1,0 +1,14 @@
+{% load i18n navigation %}
+<div id="rate-results" class="space-y-4" data-preserve-view>
+    {% if rates %}
+    <ul class="surface-panel divide-y divide-forest/10 dark:divide-cream/10">
+        {% for rate in rates %}
+        <li id="exchange-rate-{{ rate.pk|stringformat:'d' }}" class="flex flex-wrap items-center justify-between gap-4 py-4">
+            <div class="min-w-0 break-words"><p class="font-semibold">1 {{ rate.from_currency }} = {{ rate.rate }} {{ rate.to_currency }}</p><p class="subtle-copy">{{ rate.effective_date|date:USER_DATE_FORMAT }}{% if rate.notes %} · {{ rate.notes }}{% endif %}</p></div>
+            <div class="flex flex-wrap items-center gap-3">{% url 'banking:exchange_rate_update' rate.pk as edit_url %}<a id="edit-exchange-rate-{{ rate.pk|stringformat:'d' }}" href="{% contextual_url edit_url %}" class="quiet-action">{% translate "Edit" %}</a><details class="secondary-actions compact-menu" name="rate-row-actions"><summary aria-label="{% translate 'More options' %}: {{ rate.from_currency }} / {{ rate.to_currency }}"><span aria-hidden="true">⋯</span></summary><div class="secondary-actions-panel">{% url 'banking:exchange_rate_delete' rate.pk as delete_url %}<a id="delete-exchange-rate-{{ rate.pk|stringformat:'d' }}" href="{% contextual_url delete_url %}" class="text-expense dark:text-expense-light">{% translate "Delete" %}</a></div></details></div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}<p class="surface-panel subtle-copy">{% if has_filters %}{% translate 'No matching exchange rates.' %}{% else %}{% translate 'No exchange rates yet' %}. {% translate 'Add historical rates before consolidating accounts in different currencies.' %}{% endif %}</p>{% endif %}
+    {% if is_paginated %}<nav aria-label="{% translate 'Pagination' %}" class="flex justify-between">{% if page_obj.has_previous %}<a class="quiet-action" data-live-link="rate-filter-form" href="{% querystring page=page_obj.previous_page_number %}">{% translate 'Previous' %}</a>{% endif %}{% if page_obj.has_next %}<a class="quiet-action" data-live-link="rate-filter-form" href="{% querystring page=page_obj.next_page_number %}">{% translate 'Next' %}</a>{% endif %}</nav>{% endif %}
+</div>

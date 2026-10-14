@@ -376,7 +376,7 @@ class DemoProfileContentTests(TestCase):
             'categories:list', 'banking:list', 'banking:exchange_rates',
             'investments:list', 'investments:charts', 'investments:operations',
             'investments:settings', 'sandbox:index', 'sandbox:simulation',
-            'sandbox:drafts', 'accounts:settings', 'planning:budgets',
+            'sandbox:drafts', 'accounts:settings', 'planning:index', 'planning:tools',
             'planning:goals', 'planning:signals', 'banking:invoices', 'investments:prices',
         )
         for language, user in self.profiles.items():

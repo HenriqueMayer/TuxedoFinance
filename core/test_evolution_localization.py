@@ -11,16 +11,16 @@ class EvolutionLocalizationTests(TestCase):
         self.client.force_login(user)
         self.client.cookies['django_language'] = 'pt-br'
         for path, heading in (
-            ('/imports/', 'Importações de extratos'),
-            ('/planning/budgets/', 'Orçamentos por categoria'),
+            ('/imports/', 'Em revisão'),
+            ('/planning/', 'Planejar este mês'),
             ('/planning/goals/', 'Metas'),
             ('/planning/signals/', 'Sinais locais'),
-            ('/dashboard/wealth/', 'Patrimônio líquido'),
+            ('/dashboard/wealth/', 'Em revisão'),
             ('/banking/invoices/', 'Faturas'),
             ('/investments/prices/', 'Cotações observadas'),
         ):
             with self.subTest(path=path):
-                response = self.client.get(path)
+                response = self.client.get(path, follow=True)
                 self.assertContains(response, heading)
                 self.assertContains(response, 'lang="pt-br"')
                 self.assertNotContains(response, 'fonts.googleapis.com')

@@ -1,7 +1,7 @@
 # `pages`
 
 A public product overview at `/`, named `pages:landing`, rendered by
-`LandingView(TemplateView)`. The app has no models or forms and queries no
+`LandingView(TemplateView)`. The public landing has no models or forms and queries no
 financial records. The shared shell supplies presentation context and the
 appropriate public or authenticated navigation.
 
@@ -44,3 +44,13 @@ shared form-field partial across apps. It preserves native Django widgets and
 error/help associations, automatically marking model choices for the shared
 keyboard-search enhancement. See the
 [form contract](../frontend.md#keyboard-and-choice-contract).
+
+
+## Authenticated roadmap
+
+`/roadmap/` explains the Net worth and Import statements usability review gates,
+without a promised release date. Paused section labels remain visible; their
+status links go directly to the relevant roadmap anchor. Account options also
+expose Roadmap. Only an owned existence query decides whether to offer confirmed
+import history. The roadmap never displays another user's records or runs an
+import, valuation write, subscription or deployment.

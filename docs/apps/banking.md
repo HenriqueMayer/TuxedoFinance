@@ -251,3 +251,18 @@ total, confirmed amount and remaining amount precede payment entry and sources.
 Payment entry explicitly records an already completed bank payment. Successful
 entry stays beside the invoice result; Cancel returns to the supplied local
 origin. Source editors and payment editors return to the same invoice section.
+
+
+## Compact accounts and dynamic consultation
+
+Banks use native details/summary with stable IDs: a closed group shows only its
+name, color bookmark and expansion affordance. Participation-excluded accounts
+and cash positions appear inside a separate Reserves disclosure, with explicit
+include/exclude POST actions. Same-record refreshes preserve disclosure state,
+focus and position. Available cash differs from balances and must remain labelled.
+
+Invoices and local exchange rates use the shared dynamic search/filter contract,
+owner-scoped choices and native fallback. Invoice rows keep reference month, due
+amount, paid/remaining amounts and settlement mode visible. Rate forms use the
+shared form renderer, deliberate Save/Cancel and contextual origins; local
+reference rates do not rewrite evidence saved in financial operations.

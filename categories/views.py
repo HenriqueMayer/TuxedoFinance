@@ -34,6 +34,10 @@ class CategoryListView(LoginRequiredMixin, ListView):
         level = self.request.GET.get('level')
         return level if level in ('top', 'sub') else ''
 
+    def _selected_type(self):
+        kind = self.request.GET.get('type', '')
+        return kind if kind in (*Category.TransactionType.values, 'unclassified') else ''
+
     def get_queryset(self):
         queryset = Category.objects.filter(user=self.request.user).select_related(
             'parent_category'
@@ -51,7 +55,7 @@ class CategoryListView(LoginRequiredMixin, ListView):
         if level:
             queryset = queryset.filter(parent_category__isnull=level == 'top')
 
-        selected_type = self.request.GET.get('type', '')
+        selected_type = self._selected_type()
         if selected_type in Category.TransactionType.values:
             queryset = queryset.filter(transaction_type=selected_type)
         elif selected_type == 'unclassified':
@@ -63,12 +67,15 @@ class CategoryListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '').strip()
         context['selected_level'] = self._selected_level()
-        context['selected_type'] = self.request.GET.get('type', '')
+        context['selected_type'] = self._selected_type()
+        context['selected_view'] = 'tree' if self.request.GET.get('view') == 'tree' else 'list'
+        context['has_filters'] = bool(context['search_query'] or context['selected_level'] or context['selected_type'])
         context['has_categories'] = Category.objects.filter(user=self.request.user).exists()
         # Group only visible results: a matching child whose parent was filtered
         # out must remain visible. Walk iteratively so legacy cycles cannot lose
         # records or cause infinite recursion while constructing the forest.
         categories = list(context['categories'])
+        context['result_count'] = len(categories)
         visible_ids = {category.pk for category in categories}
         children = defaultdict(list)
         roots = []

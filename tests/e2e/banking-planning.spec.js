@@ -16,6 +16,7 @@ async function seed(page, testInfo) {
     const bank = await page.locator('#id_bank option').last().getAttribute('value');
     await post(page, '/banking/accounts/create/', { bank, name: 'Monthly account', currency: 'BRL', opening_date: '2025-01-01', opening_balance: '5000', pix_enabled: 'on', planning_enabled: 'on', reserved_amount: '2000' });
     await page.goto('/banking/');
+    await page.locator(`#bank-${bank} > summary`).press('Enter');
     return bank;
 }
 for (const dark of [false, true]) {
@@ -34,7 +35,8 @@ for (const dark of [false, true]) {
         await expect(row.locator('td').nth(3)).toContainText('0,00');
         // Focus is restored after swap; viewport restoration also runs after
         // HTMX settles attributes and the browser performs its final reflow.
-        await expect.poll(async () => Math.abs(await page.evaluate(() => window.scrollY) - top)).toBeLessThan(4);
+        await expect.poll(async () => page.evaluate(previous => Math.abs(window.scrollY - Math.min(previous,
+            document.documentElement.scrollHeight - innerHeight)), top)).toBeLessThan(4);
         await expect(page.locator('#planning-availability')).toContainText('BRL 0,00');
         await page.keyboard.press('Space');
         await expect(row.getByRole('button', { name: 'Set aside Monthly account', exact: true })).toBeFocused();

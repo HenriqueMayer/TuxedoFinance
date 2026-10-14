@@ -109,3 +109,11 @@ reimport. Imports do not strip prefixes from names automatically.
 Category creation/editing can carry a validated local `next` origin. Save/Cancel
 retain the list's search/type/level filters and invalid responses keep the same
 origin. Ownership and duplicate-name/hierarchy checks remain on the server.
+
+
+## List and tree views
+
+Categories default to a compact List and expose an explicit Tree choice. The tree
+uses native nested details/summary, supports keyboard and no JavaScript, and
+expands matching branches during search. Search/type filters and view switches
+use the shared live-filter contract, with selected view retained by Clear.

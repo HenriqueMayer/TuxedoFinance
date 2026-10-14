@@ -116,8 +116,9 @@ for (const theme of ['light', 'dark']) {
         await page.getByRole('button', { name: 'Save', exact: true }).press('Enter');
         await expect(page).toHaveURL(/\/investments\/operations\//);
         await page.goto('/investments/');
-        const holding = page.locator('tbody tr').filter({ hasText: 'Local share' });
-        await holding.locator('summary').press('Enter');
+        await page.locator('#investment-position-list:visible').getByRole('link', { name: 'Local share', exact: true }).filter({ visible: true }).press('Enter');
+        const holding = page.locator('main');
+        await holding.getByText('Cost, price and results', { exact: true }).press('Enter');
         await expect(holding).toContainText('252');
         await expect(holding).toContainText('Statement consulted locally');
         await page.screenshot({ path: info.outputPath(`valuation-${theme}.png`), fullPage: true });

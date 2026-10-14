@@ -551,11 +551,15 @@ and test configuration is documented in
 ## Planning workspaces and shared presentation
 
 The primary navigation is **Home / Transactions / Accounts / Investments / Plan**.
-Home contains Dashboard, Reports and Net worth; Transactions contains the ledger,
-Categories and Imports. Accounts includes Invoices and Exchange rates. Plan
-opens a summary emphasizing Budgets and Goals, with Signals and the existing
-simulations reachable through section navigation. Existing domain URLs remain
-stable; `/planning/` is the planning overview.
+Home contains Dashboard and Reports; Net worth is visibly paused for review.
+Transactions contains the ledger and Categories; Imports is also paused. The
+Roadmap explains both gates and retains read-only confirmed import provenance.
+Accounts includes Invoices and Exchange rates. Investments opens a simple list
+of holdings with Update beside each row; history, analyses and full configuration
+remain secondary. Plan opens the monthly cash outlook and budgets, with three
+sections: This month, Goals and Tools. Signals and simulations live in Tools.
+Existing domain URLs retain ownership and safe contextual return behavior;
+`/planning/budgets/?month=…` redirects to the same month at `/planning/`.
 Account settings and language live in account options. Primary links navigate
 directly in both sidebar and bottom navigation. Option buttons, including
 Export CSV, account options, project links and row actions, open only by click,
@@ -577,6 +581,9 @@ opening one menu, then verify that its action still targets the original record.
 Cover click toggling, switching rows, keyboard, touch, HTMX and the native
 fallback. Changes to primary navigation or question-mark help must not silently
 change this activation-only contract.
+
+Card action links use their heading as `aria-labelledby` and supporting copy as
+`aria-describedby`, keeping a short action name and an accessible explanation.
 
 Record new UI/UX and domain-presentation decisions in their owning guide and use
 focused code comments for interaction rules whose purpose is not obvious. Add
@@ -613,15 +620,14 @@ availability summary out of band, so the row and aggregate remain consistent.
 
 ## Previous-screen continuity and balance ranges
 
-Investment navigation keeps a gray Simulate returns notice last. It cannot
-navigate and explains that the simulator is available from Planning → Yield
-simulation. This text-triggered notice is visually distinct from question-mark
-help, but reuses the floating popover lifecycle for hover, keyboard, touch,
-viewport bounds and HTMX. Its `aria-disabled` button remains focusable so the
-reason is accessible; the native disclosure fallback also supports keyboard and touch.
-Configuration guides bank/product/asset registration and remains available for
-later edits. Missing prerequisites make Configure investments the primary
-action on portfolio and Operations pages; completed setup enables New operation.
+The investment entry screen is My investments. Add investment is a guided,
+atomic institution/product/asset registration with explicit purpose and valuation
+mode. It accepts a zero opening without creating cash or financial evidence;
+nonzero openings require a date. Update opens a contextual choice of contribution,
+withdrawal, yield or local price, retaining server financial validation. Full
+configuration and analyses remain in a deliberate More menu; simulations are
+reachable through Plan → Tools. See the investment guide for the zero-position
+configuration rule and the distinction between acquisition cost and market price.
 Asset configuration separates active assets from a native Archived assets
 disclosure. Archive/Restore use deliberate, CSRF-protected POSTs. Same-page
 boosted responses reuse the common viewport/focus restoration, with one stable
@@ -636,12 +642,11 @@ groups after calculating totals over all holdings. A short notice explains why
 archived balances remain in totals; an all-archived section has an active-position
 empty state rather than first-operation guidance. Existing Operations navigation
 keeps history accessible, and restoring an asset makes its positions visible.
-The Operations
-page owns operation search, purpose/type/record filters and pagination. Portfolio
-and remunerated-cash pages show positions and a contextual link to Operations.
-The Charts tab filters historical positions and flows by Overall, Portfolio or
+The History
+page owns operation search, purpose/type/record filters and pagination. The holdings
+list and each position detail provide scoped history. Charts under More → Analyses filters historical positions and flows by Overall, Portfolio or
 Remunerated cash; scope and independent month windows survive GET/HTMX updates.
-The same destination remains in workspace section tabs. Old movement-filter
+The charts destination remains accessible through the secondary More menu. Old movement-filter
 URLs redirect to the new page. Chart navigation and operation pagination keep
 separate HTMX regions. Operation forms return to an explicit originating
 position or filtered history after Save/Cancel, using `core.navigation` and the
@@ -756,3 +761,38 @@ and help name together. Currency labels follow the currency selector. Duration
 shortcuts activate only on click, touch or keyboard, preserve focus, and use the
 same month field/override retention as manual entry. Live results never replace
 parameter fields. See the [planning guide](apps/sandbox.md) for calculation rules.
+
+
+## Live consultation filters
+
+All consultation searches apply while typing or deleting (300 ms debounce).
+Short choices, record selections, committed dates and ordering apply immediately.
+Show Clear beside the controls when a filter is active. No-JavaScript GET forms
+retain their submit button; network failure reveals it as a recovery path. POST
+operations and scenario execution remain deliberate actions.
+
+Reuse `static/js/live-filters.js` with a stable GET form ID, `data-live-filters`,
+`data-live-results="result-id"`, and `hx-boost="false"`. Mark text inputs with
+`data-live-search`, choices/committed-date wrappers with `data-live-change`, and
+fallback submit buttons with `data-live-submit`. Result counts and Clear links
+outside the result island use a stable ID and `data-live-fragment="form-id"`.
+Clear links also use `data-live-reset` to reset controls synchronously before
+the GET, so immediately typing a new query cannot revive the old filters.
+Filter/pagination links use `data-live-link="form-id"`; pill changes may use
+`data-live-set`/`data-live-value` to retain unsent search text. Do not attach a
+second HTMX auto-submit handler to the same form.
+
+Keep the controls in the document, replace only results/metadata, abort stale
+requests, and initialize shared forms/help after replacement. Do not rewrite
+partial dates or composition input. Preserve caret, keyboard focus, nonzero
+scroll and surviving account/reserve disclosures. Category branches intentionally
+follow search expansion; action menus never inherit an open state through a
+replacement. One typing session creates one history entry; explicit choices and
+Enter create separate entries. Back/Forward restores fresh owned GET results
+and controls without triggering unsaved-operation warnings. Load the helper after
+`previous-workspace.js` so edited POST departure guards retain priority.
+Live GET forms do not capture or restore draft fields in workspace snapshots:
+their applied URL and fresh history response own the controls and results.
+Leaving during a pending search and returning therefore restores the last
+applied query, while unsent POST drafts and simulation rows keep their existing
+restoration behavior.

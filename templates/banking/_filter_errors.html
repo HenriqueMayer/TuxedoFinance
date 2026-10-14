@@ -1,0 +1,1 @@
+{% if filter_form.errors %}<div role="alert" class="space-y-1 text-sm text-expense dark:text-expense-light">{% for field, errors in filter_form.errors.items %}{% for error in errors %}<p>{{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}

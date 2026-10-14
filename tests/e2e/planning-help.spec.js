@@ -48,7 +48,8 @@ for (const theme of ['light', 'dark']) {
         await expect(tooltip).toBeHidden();
 
         // Tab into the help from the preceding section navigation.
-        await page.getByRole('link', { name: 'Saved drafts', exact: true }).focus();
+        await page.getByRole('navigation', { name: 'Planning sections', exact: true })
+            .getByRole('link', { name: 'Tools', exact: true }).focus();
         await page.keyboard.press('Tab');
         await expect(headingHelp).toBeFocused();
         await expect(tooltip).toBeVisible();

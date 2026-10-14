@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -35,6 +36,20 @@ def _error(form, error):
                 form.add_error(None, value)
     else:
         form.add_error(None, error)
+
+
+@login_required
+@never_cache
+@require_http_methods(['GET'])
+def history(request):
+    # The review gate pauses writes, but never hides posted source provenance.
+    query = request.GET.get('q', '').strip()[:200]
+    batches = ImportBatch.objects.filter(user=request.user, status__in=['CONFIRMED', 'UNDONE']).select_related('account__bank')
+    if query:
+        batches = batches.filter(Q(file_name__icontains=query) | Q(account__name__icontains=query) | Q(account__bank__name__icontains=query))
+    return render(request, 'ingestion/history.html', {
+        'batches': Paginator(batches, 20).get_page(request.GET.get('page')), 'query': query,
+    })
 
 
 @login_required

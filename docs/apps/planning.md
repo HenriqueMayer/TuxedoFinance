@@ -103,7 +103,7 @@ signal alters a financial source or ledger.
 
 ## Routes, forms and isolation
 
-`/planning/` opens budgets; `/planning/goals/` and `/planning/signals/` expose
+`/planning/` opens the monthly cash outlook and budgets; `/planning/goals/` and `/planning/signals/` expose
 goals and local checks. Budgets and allocations support owned create, edit and
 delete flows. Goals support creation/editing and reversible archiving rather
 than a destructive delete route; archiving and signal decisions are explicit POSTs.
@@ -122,9 +122,9 @@ See [banking availability](banking.md#monthly-planning-availability),
 
 ## Daily planning workspace
 
-`/planning/` opens a summary with budgets and goals as the two primary tasks.
-Signals and the existing monthly/yield simulations and saved drafts remain
-reachable from the same workspace. Budget links preserve the selected month.
+`/planning/` opens the monthly cash outlook and budgets. Goals remain a primary
+section; signals, monthly/yield simulations and saved drafts live in Tools.
+Budget links preserve the selected month.
 
 A new goal can optionally reserve an existing bank/cash-pot balance during the
 same submission. The checkbox begins unchecked; selecting it reveals an empty
@@ -137,3 +137,31 @@ atomically through the existing reservation validation. Invalid or insufficient
 backing creates neither record and retains the bound form. This names a portion
 of existing cash; it never transfers money or manufactures progress. Goal and
 budget editors carry a validated local origin through Save/Cancel and errors.
+
+
+## Daily monthly workspace
+
+`monthly_outlook(user, month)` separates recorded available cash at the cutoff
+(minimum of today and month end) from projected month-end available cash. It
+reuses synchronized bank movements and the existing manual-invoice obligation
+calculation; unpaid manual invoices are forecast evidence, never fabricated bank
+debits. Reserve backing is capped after obligations, so an excluded positive
+account does not produce an invented deficit while real negative cash remains
+visible. Monetary cash pots use their per-position participation and named goal
+reservations. Conversions are request-owned, Decimal-based and expose missing FX.
+Unknown account and monetary cash-pot opening dates remain a visible historical
+limitation. A cash-pot opening belongs only to its configured product/asset pair;
+zero openings and operations in another product do not create a false warning.
+
+Projections cover the current month and the next eleven months, matching the
+ledger horizon. Later months still support category limits but show no cash
+forecast. Past months show recorded end balances. Availability/reservation flags
+and goal definitions are current settings, not an immutable history of past edits.
+Budget spending follows invoice reference months while cash follows payments;
+these are separate comparisons and budgets are not deducted as reservations.
+
+This month, Goals and Tools are the only primary sections. Old budget URLs redirect
+to the selected month and budget anchor. Monthly controls and goal searches use
+the shared live-filter contract; native GET fallback and invalid-month recovery
+remain available. Tools retains local signals, salary planning, yield scenarios
+and saved drafts without turning any scenario into a posting.

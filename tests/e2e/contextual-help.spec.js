@@ -71,6 +71,13 @@ async function checkHelp(page, label, id) {
     await expect(panel).toBeHidden();
 }
 
+async function openAnalyses(page) {
+    const sections = page.getByRole('navigation', { name: 'Investment sections' });
+    await sections.locator('[data-investment-more] > summary').press('Enter');
+    await sections.getByRole('link', { name: 'Analyses', exact: true }).press('Enter');
+    await expect(page).toHaveURL(/\/investments\/charts\/$/);
+}
+
 for (const dark of [false, true]) {
     test(`contextual dashboard and investment help stays readable and transient (${dark ? 'dark' : 'light'})`, async ({ page }, testInfo) => {
         const errors = [];
@@ -93,8 +100,13 @@ for (const dark of [false, true]) {
         await expect(page.locator('#report-instruments-help')).toContainText('release Ctrl to scroll the panel');
 
         await page.goto('/investments/');
-        await checkHelp(page, 'Portfolio', 'investments-portfolio-help');
-        await page.goto('/investments/charts/');
+        // Holdings keep valuation evidence in a native disclosure; the
+        // detailed financial explanations remain in the preserved analyses.
+        const valueDetails = page.locator('#position-value-details');
+        await valueDetails.locator(':scope > summary').press('Enter');
+        await expect(valueDetails).toContainText('Local prices or remaining acquisition cost value units.');
+        await expect(valueDetails).toContainText('Bank cash and realized results remain separate.');
+        await openAnalyses(page);
         await checkHelp(page, 'Investment evolution', 'investment-evolution-help');
         const evolution = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Investment evolution', exact: true }) });
         await evolution.getByRole('link', { name: 'Next window', exact: true }).click();
@@ -104,14 +116,18 @@ for (const dark of [false, true]) {
         await page.setViewportSize({ width: 390, height: 740 });
         await page.goto('/investments/');
         const positions = page.getByRole('region', { name: 'Positions', exact: true });
-        await expect(positions.getByRole('table')).toBeHidden();
-        const mobilePosition = positions.getByRole('listitem');
+        const mobilePosition = positions.locator('article:visible');
         await expect(mobilePosition).toBeVisible();
-        for (const label of ['Saved balance', 'Deposits', 'Yields', 'Withdrawals']) {
-            await expect(mobilePosition.getByText(label, { exact: true })).toBeVisible();
-        }
+        await expect(mobilePosition.getByRole('link', { name: 'Saved balance', exact: true })).toBeVisible();
+        await expect(mobilePosition).toContainText('Recorded balance');
+        await expect(mobilePosition).toContainText('BRL 1.010,00');
+        await expect(mobilePosition.getByRole('link', { name: 'Update', exact: true })).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-        await page.goto('/investments/charts/');
+        await openAnalyses(page);
+        const flow = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Monthly flow', exact: true }) });
+        for (const label of ['Deposits', 'Yields', 'Withdrawals']) {
+            await expect(flow.getByText(label, { exact: true })).toBeVisible();
+        }
         await page.getByRole('button', { name: 'Explain Investment evolution', exact: true }).press('Enter');
         const mobileBox = await page.locator('#investment-evolution-help').boundingBox();
         expect(mobileBox.x).toBeGreaterThanOrEqual(12);
@@ -133,7 +149,8 @@ test('contextual help remains available without JavaScript and on touch', async 
             ['/dashboard/', 'Month performance', 'available cash changes'],
             ['/dashboard/reports/', 'Balance evolution', 'close of each month'],
             ['/dashboard/reports/', 'Income and expenses by account or card', 'release Ctrl to scroll the panel'],
-            ['/investments/', 'Portfolio', 'latest local price observation'],
+            ['/investments/charts/', 'Investment evolution', 'latest price observed by that date'],
+            ['/investments/charts/', 'Monthly flow', 'current on each entry’s date'],
             ['/investments/settings/', 'Investment Settings', 'Banks, accounts, loyalty programs'],
         ]) {
             await offline.goto(path);
@@ -148,15 +165,15 @@ test('contextual help remains available without JavaScript and on touch', async 
     const touch = await browser.newContext({ storageState, hasTouch: true, isMobile: true, viewport: { width: 390, height: 740 } });
     try {
         const mobile = await touch.newPage();
-        await mobile.goto('/investments/');
-        const trigger = mobile.getByRole('button', { name: 'Explain Portfolio', exact: true });
+        await mobile.goto('/investments/charts/');
+        const trigger = mobile.getByRole('button', { name: 'Explain Investment evolution', exact: true });
         await trigger.tap();
-        await expect(mobile.locator('#investments-portfolio-help')).toBeVisible();
+        await expect(mobile.locator('#investment-evolution-help')).toBeVisible();
         await trigger.tap();
-        await expect(mobile.locator('#investments-portfolio-help')).toBeHidden();
+        await expect(mobile.locator('#investment-evolution-help')).toBeHidden();
         await trigger.tap();
         await mobile.getByRole('heading', { level: 1 }).tap();
-        await expect(mobile.locator('#investments-portfolio-help')).toBeHidden();
+        await expect(mobile.locator('#investment-evolution-help')).toBeHidden();
     } finally {
         await touch.close();
     }

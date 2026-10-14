@@ -123,7 +123,8 @@
   .subtle-copy { @apply text-sm text-forest/70 dark:text-night-muted; }
   .category-disclosure { @apply -my-2 inline-flex min-h-11 items-center gap-2 rounded-lg py-2 text-left font-medium hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-caramel dark:hover:text-caramel-light; }
   .category-disclosure svg { @apply shrink-0 text-forest/70 dark:text-night-muted; }
-  .category-disclosure[aria-expanded="false"] svg { transform: rotate(-90deg); }
+  .category-disclosure[aria-expanded="false"] svg,
+  details:not([open]) > summary.category-disclosure svg { transform: rotate(-90deg); }
   [data-category-tree] [hidden] { display: none; }
   @media (max-width: 767px) {
     .account-table { @apply block min-w-0; }
@@ -134,7 +135,10 @@
     .account-table tbody tr:last-child { @apply border-b-0 pb-0; }
     .account-table td { @apply block border-0 p-0 text-left; }
     .account-table td:first-child, .account-table td:last-child { grid-column: 1 / -1; }
-    .account-table td[data-label]::before { content: attr(data-label); @apply mb-1.5 block text-xs font-normal text-forest/70 dark:text-night-muted; }
+    .account-table td[data-label]::before { content: attr(data-label); @apply mb-1.5 block text-xs font-normal text-forest/70; }
+    /* Dark variants after ::before cannot match a DOM element. Scope the
+       ancestor explicitly so mobile labels retain readable contrast. */
+    .dark .account-table td[data-label]::before { color: theme('colors.night.muted'); }
     .account-table td .account-currency { @apply hidden; }
     .account-table td:last-child > div { @apply justify-start; }
     .account-table td:last-child .quiet-action { @apply px-0; }
@@ -259,3 +263,23 @@
     outline: 2px solid theme('colors.caramel.light');
     outline-offset: 3px;
   }
+
+@layer components {
+  .filter-panel { @apply flex flex-wrap items-end gap-4 rounded-2xl border border-forest/15 bg-white p-4 dark:border-cream/15 dark:bg-night-surface; }
+  .form-input { @apply min-h-11 rounded-xl border border-forest/20 bg-white px-4 py-3 text-forest dark:border-cream/20 dark:bg-night dark:text-cream; }
+  .status-badge { @apply inline-flex items-center rounded-full bg-forest/5 px-3 py-1 text-xs font-medium text-forest dark:bg-cream/10 dark:text-cream; }
+  .section-paused { @apply flex min-h-11 flex-wrap items-center gap-2 px-3 py-2 text-sm text-forest/60 dark:text-night-muted; }
+  .roadmap-badge { @apply rounded-full border border-forest/20 px-2 py-1 text-xs font-medium hover:bg-forest/5 dark:border-cream/20 dark:hover:bg-cream/10; }
+  .money-highlight { @apply text-3xl font-semibold tracking-tight sm:text-4xl; }
+  .explanation-disclosure > summary { @apply min-h-11 cursor-pointer py-3 text-sm font-medium; }
+  .tool-card { @apply block transition-colors hover:border-caramel focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel; }
+  .bank-disclosure-summary { @apply flex min-h-14 cursor-pointer list-none items-center justify-between gap-4; }
+  .bank-disclosure-summary::-webkit-details-marker { display: none; }
+  .bank-disclosure-summary > svg, .reserve-disclosure-summary > svg { @apply h-5 w-5 shrink-0 transition-transform; }
+  .bank-disclosure[open] > .bank-disclosure-summary > svg,
+  .reserve-disclosure[open] > .reserve-disclosure-summary > svg { transform: rotate(180deg); }
+  .bank-disclosure-content { @apply mt-5 space-y-5; }
+  .reserve-disclosure-summary { @apply flex min-h-11 list-none items-center justify-between gap-3; }
+  .reserve-disclosure-summary::-webkit-details-marker { display: none; }
+  .reserve-disclosure { @apply border-t border-forest/15 dark:border-cream/15; }
+}

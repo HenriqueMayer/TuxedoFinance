@@ -35,6 +35,10 @@ ALLOW_SIGNUPS = os.environ.get('ALLOW_SIGNUPS', 'True').strip().lower() in {
     '1', 'true', 'yes', 'on'
 }
 
+# These interfaces are paused during the usability review. Domain calculations
+# and recorded provenance remain available to their other consumers.
+REVIEWED_FEATURES = frozenset()
+
 SECRET_KEY = os.environ.get('SECRET_KEY', '').strip()
 if not SECRET_KEY:
     raise ImproperlyConfigured('SECRET_KEY must be set in the environment.')

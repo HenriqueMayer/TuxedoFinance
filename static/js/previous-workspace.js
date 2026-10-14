@@ -28,6 +28,9 @@
             document.querySelector('meta[name="tuxedo-assets"]')?.content].join('|');
     }
     function fields(form) {
+        // Applied live GET state belongs to its URL and fresh history response.
+        // Never restore an unsent query over the restored result island.
+        if (form.method.toLowerCase() === 'get' && form.hasAttribute('data-live-filters')) return [];
         return Array.from(form.elements).filter(field => field.name &&
             ['INPUT', 'SELECT', 'TEXTAREA'].includes(field.tagName) &&
             !['password', 'file', 'hidden', 'submit', 'button', 'reset'].includes(field.type) &&
@@ -53,7 +56,9 @@
         const snapshot = capture();
         // GET filters are view state: retain them for Back/Forward, but only
         // unsent POST fields (and simulation results) need a departure warning.
-        return snapshot && JSON.stringify({forms: snapshot.forms.filter(form => form.method === 'post'),
+        // Hidden-only actions can appear/disappear with GET results. They have
+        // no editable draft and must not turn a filtered list into unsent work.
+        return snapshot && JSON.stringify({forms: snapshot.forms.filter(form => form.method === 'post' && form.fields.length),
             rows: snapshot.rows, yieldRows: snapshot.yieldRows});
     }
     function simulationResult() {
@@ -125,10 +130,17 @@
         snapshot.categories.forEach(([id, expanded]) => {
             const node = document.getElementById(id);
             const button = Array.from(root.querySelectorAll('[data-category-toggle]')).find(item => item.getAttribute('aria-controls') === id);
-            if (node && button) { node.hidden = expanded === 'false'; button.setAttribute('aria-expanded', expanded); }
+            if (node && button) {
+                if (button.matches('summary')) {
+                    button.closest('details').open = expanded === 'true';
+                    node.hidden = false;
+                } else node.hidden = expanded === 'false';
+                button.setAttribute('aria-expanded', expanded);
+            }
         });
         window.TuxedoForms?.init();
         window.TuxedoForms?.refresh(root);
+        window.TuxedoCategories?.init();
         root.querySelector('[data-workspace-restored]').hidden = false;
         requestAnimationFrame(() => {
             document.getElementById(snapshot.focus)?.focus({preventScroll: true});
@@ -199,6 +211,15 @@
         // A newly visible page can receive another click before HTMX's settle
         // delay ends. Treat it as the current workspace immediately.
         if (event.detail.target === document.body) settled();
+    });
+    document.addEventListener('tuxedo:live-filters-updated', () => {
+        // A live GET changes only view state. Keep the workspace URL current
+        // without rebasing or approving any edited POST on the same screen.
+        currentUrl = url();
+        pendingHistory = '';
+        submitting = false;
+        approvedDestination = '';
+        remember();
     });
     document.addEventListener('submit', event => {
         if (event.target.closest('main') || event.target.action.includes('/logout')) {

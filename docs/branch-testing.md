@@ -53,26 +53,34 @@ forward the port on your router. If the local firewall or Wi-Fi client isolation
 blocks the connection, review those settings before enabling only the chosen
 local port/interface; the helper never changes them.
 
-For this UI/UX iteration, check these tasks in both themes on computer and phone:
+For the area-by-area simplification, check these tasks in both themes on computer
+and phone, in English or Portuguese:
 
-1. Navigate through Home, Transactions, Accounts, Investments and Plan. Find
-   Reports, Net worth, Categories, Imports, Invoices and every simulation from
-   the owning workspace. Check the account settings, language and logout.
-2. From a searched account row, open Update account and choose a manual entry
-   or statement. Confirm the account selection and return to the same search
-   after Cancel. Check that row actions open only deliberately.
-3. Open a card invoice from Home or Accounts. Record a partial payment made
-   at the bank and inspect the remaining amount. Recover from an invalid amount
-   without losing the paying account. Existing automatic cards stay automatic.
-4. Record an operation or dated price from an investment position and return
-   to that position. Verify a filtered ledger also retains its origin.
-5. Create/edit a split transaction in one submission, including an invalid
-   sum. Create a goal with an optional initial real-balance reserve; insufficient
-   backing must preserve the form and create neither a goal nor a reserve.
-6. Review a small import: collapsed details stay reachable, errors and the next
-   required decision remain visible, reuse of a compatible mapping is explicit,
-   and confirmation still precedes financial posting. Check Back/Forward,
-   keyboard choices near the bottom bar and the no-JavaScript path.
+1. Keep Dashboard/Reports usable; Net worth and Import statements explain their
+   pause through Roadmap. Confirm old import URLs cannot post or undo anything.
+   Posted import provenance is available as read-only history when it exists.
+2. Type and delete transaction search text; choose filters and ordering without
+   Apply. Clear is near active controls. Check caret, keyboard, scroll and
+   Back/Forward; Save/Cancel return to the currently filtered list. Repeat with
+   JavaScript disabled, using the ordinary submit fallback.
+3. Switch Categories between List and Tree, expand/collapse with Enter/Space,
+   search a child and clear without losing the selected view.
+4. Collapse a bank to its name/color, reopen it, move an account or emergency
+   cash pot into Reserves and check available money. Its real balance/history
+   stays recorded. Restore participation and check the aggregate again.
+5. Find a specific invoice with live bank/card/month/status filters. Record a
+   partial confirmed payment and recover an invalid amount. Search local rates,
+   create one using the ordinary Save/Cancel flow and inspect date errors.
+6. Add an application through the guided form, including a zero opening, a
+   monetary reserve and units with acquisition cost. If you need a classification,
+   choose it in Advanced before the first operation (existing history locks it).
+   Open Update and record an
+   operation or local price; History and detailed metrics remain accessible.
+7. Plan opens the selected month, available cash after known commitments and
+   budgets. Distinguish the recorded cutoff from projection and reservations.
+   Create/edit a category limit; open Goals or Tools for the less frequent tasks.
+8. Create a split transaction or a goal with a real reserve, including invalid
+   sums/capacity. Errors keep entered choices and never create partial records.
 
 The public static tour still represents the published release. This branch's
 interactive preview is the acceptance environment; no integration, bank
@@ -95,13 +103,9 @@ created in the disposable preview without affecting the installation.
    remaining cost. Record a dated local price and inspect historical valuations;
    removing it uses the preceding observation or remaining cost. Declaring fees
    in the asset currency changes cost/results, never the actual bank amount.
-3. **Imports:** stage a small CSV with date, description and signed amount;
-   select its columns, date format and decimal convention. Review each row and
-   inspect the final confirmation. Compare its closing balance with the ledger.
-   Repeat the file and a bank identifier to inspect deduplication. Match existing
-   cash evidence for investments and transfers instead of creating an expense.
-   Undo an unchanged batch; edit an imported record and verify undo refuses the
-   whole batch. OFX uses the same review and final confirmation.
+3. **Imports (paused):** opening upload/review/confirm/undo redirects to Roadmap.
+   Posted confirmed/undone history is read-only, user-owned and never offers an
+   undo while paused. Existing posted movements remain inspectable at source.
 4. **Budgets:** set an expense-category limit and copy it to the next month.
    Inspect recorded and forecast spending, including child categories, category
    splits and reference FX limitations. An overlapping parent/child limit in the
@@ -117,12 +121,8 @@ created in the disposable preview without affecting the installation.
    parts must add up exactly, including installment cents. The source still
    generates one payment or invoice obligation. Inspect filters, reports, budget
    consumption and the `category_splits` field in transaction CSV exports.
-8. **Wealth:** inspect assets, incurred card debts, card credits and the monthly
-   series. An equal-amount transfer between same-currency accounts or a goal
-   reserve leaves net worth unchanged; paying an
-   already recognized card debt exchanges cash for debt. Full installment debt
-   is included; future recurring purchases are excluded. Missing opening dates,
-   prices and FX are visible, without an inferred percentage return.
+8. **Wealth (paused):** its section is labelled under review and opens Roadmap;
+   underlying calculations remain available to their other consumers.
 9. **Confirmed invoices:** set today as the start date in a card's settings and
    use an invoice due on or after it. Record a partial payment from an account
    in the invoice currency. Inspect the
@@ -161,9 +161,9 @@ on Linux amd64 with Engine 26.1.5 and Compose 5.6.0; they do not certify arm64 o
 replace the documented Engine 28+ installation baseline. Manual acceptance on
 the owner's financial data remains pending, using the disposable preview above.
 
-### Navigation and UI/UX iteration — 14 October 2026
+### Initial navigation and UI/UX iteration — 14 October 2026
 
-Validation of the current navigation changes also used synthetic or disposable
+Validation of the initial navigation changes also used synthetic or disposable
 databases:
 
 - All 521 Django tests passed in the final complete run, with 94% coverage in
@@ -182,10 +182,47 @@ databases:
   pinned HTMX and `git diff --check` passed. npm and locked Python runtime
   dependency audits reported no known vulnerabilities.
 
-This UI/UX iteration adds no migrations or dependencies. The previous container
+That initial UI/UX iteration added no migrations or dependencies. The previous container
 lifecycle checks were not repeated. Browser checks use Chromium; acceptance on
 the owner's actual computer, phone and financial data remains pending. Banks,
 Cloudflare, deployment and integration into `main` remain outside this iteration.
+
+### Area-by-area simplification — 14 October 2026
+
+The subsequent simplification described in the area checklist above was verified
+with synthetic or disposable databases:
+
+- All 563 Django tests passed with 94% combined coverage in the existing scope
+  (including executed test modules and migrations). All 17 repository-tool tests
+  and all six static-tour tests passed.
+- All 212 active interactive browser scenarios were verified across the complete
+  run and focused reruns. Six statement-operation scenarios are intentionally
+  skipped while that interface is paused; separate tests cover the server gates,
+  stale POST rejection and owned read-only import history.
+- The final 29-scenario rerun covers live-filter races, preferred-date errors,
+  typing/deleting/Clear, fresh Back/Forward restoration, the monthly workspace in
+  both languages/themes at desktop/mobile widths, and preserved POST/simulation
+  history. A pending-query regression first reproduced mismatched text/results
+  before the minimal fix, then passed in both themes. Keyboard, touch and native
+  submissions without JavaScript remain covered.
+- Django checks, migration dry run, version consistency, executable lint,
+  JavaScript syntax, translation format/compiled-output checks, reproducible CSS
+  and `git diff --check` passed. npm and the locked Python runtime dependency
+  audits reported no known vulnerabilities.
+- A synthetic `investments.0009` database was copied with the read-only SQLite
+  backup helper and upgraded to `0010`. Default participation, the 1,300 BRL
+  available balance and an existing automatic card remained correct; the
+  original database hash stayed unchanged.
+
+This iteration adds `investments.0010_position_planning_setting`, an additive
+table for explicit cash-position participation. Existing positions remain
+included by default; no source balances or operations are rewritten. The preview
+helper applies it only to the disposable copy. No dependencies or version changes
+were introduced, and the previous Docker lifecycle checks were not repeated.
+Browser checks use Chromium and simulated desktop/mobile viewports; acceptance
+on the owner's actual computer, phone and data remains pending. No merge into
+`main`, publication, bank connection or Cloudflare deployment is authorized by
+these automated checks.
 
 ## Performance evidence
 

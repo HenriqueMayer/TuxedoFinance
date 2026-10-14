@@ -56,9 +56,11 @@ async function assertFits(page) {
 
     const apply = page.locator('#transaction-filters button[type="submit"]');
     const category = page.locator('#filter-category-search, #filter-category:not([hidden])');
-    const a = await apply.boundingBox();
     const b = await category.boundingBox();
-    expect(a.y >= b.y + b.height - 1 || a.x >= b.x + b.width - 1).toBe(true);
+    if (await apply.isVisible()) {
+        const a = await apply.boundingBox();
+        expect(a.y >= b.y + b.height - 1 || a.x >= b.x + b.width - 1).toBe(true);
+    }
     const search = await page.locator('#filter-search').boundingBox();
     if (page.viewportSize().width >= 640) {
         expect(Math.abs(search.y - b.y)).toBeLessThanOrEqual(2);
@@ -88,7 +90,6 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await expect(fixed).toHaveAttribute('aria-current', 'true');
     await expect(page.locator('#transaction-results-status')).toHaveText('1 transaction');
     await selectChoice(page.locator('#filter-category'), category);
-    await page.getByRole('button', { name: 'Apply filters' }).click();
     await expect(page).toHaveURL(new RegExp(`category=${category}`));
     await typeCards(page).getByRole('link', { name: /^Income/ }).click();
     await expect(page).not.toHaveURL(/category=/);
@@ -98,16 +99,16 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await expect(page.locator('#filter-category')).toHaveValue(category);
     await expect(page.locator('#transaction-results-status')).toHaveText('1 transaction');
     await page.locator('#filter-month').fill('2026-02');
-    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await page.locator('#filter-month').press('Tab');
     await expect(typeCards(page).getByRole('link', { name: /^All/ })).toContainText('1');
     await page.getByText('More filters', { exact: true }).click();
     await page.locator('#filter-date').fill('2026-01-15');
-    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await page.locator('#filter-date').press('Tab');
     // Sorting uses the applied filter state after the localized date redirect.
     await expect(page).toHaveURL(/date=2026-01-15/);
     await expect(page.locator('#filter-date')).toBeVisible();
     await page.locator('#filter-sort').selectOption('oldest');
-    await page.getByRole('button', { name: 'Sort', exact: true }).click();
+    await expect(page).toHaveURL(/sort=oldest/);
     await expect(page).toHaveURL(/recurrence=fixed/);
     await expect(page).toHaveURL(/date=2026-01-15/);
     await expect(page.locator('#filter-category')).toHaveValue(category);
@@ -130,6 +131,8 @@ for (const theme of ['light', 'dark']) {
             await expect(page.getByRole('heading', { level: 1 })).toHaveText(mobile ? 'Transações' : 'Transactions');
             await expect(typeCards(page).getByRole('link').nth(1)).toContainText(mobile ? 'Receitas' : 'Income');
             await expect(page.locator('#filter-date')).toBeHidden();
+            await expect(page.locator('#transaction-apply-filters')).toBeHidden();
+            await expect(page.locator('#transaction-sort')).toHaveCount(0);
             await assertFits(page);
             await page.screenshot({ path: testInfo.outputPath('transactions.png'), fullPage: true });
         });
@@ -159,14 +162,15 @@ test(`transaction updates retain viewport and focus at ${width}px`, async ({ pag
     await page.setViewportSize({ width, height: 650 });
     await prepare(page, testInfo);
 
-    async function keepsPosition(control, remainsVisible = true) {
+    async function keepsPosition(control, remainsVisible = true, action = () => control.click()) {
         await control.scrollIntoViewIfNeeded();
         await control.evaluate(element => element.focus({ preventScroll: true }));
         const before = await page.evaluate(() => window.scrollY);
         expect(before).toBeGreaterThan(50);
-        await control.click();
-        await expect(page.locator('body')).not.toHaveClass(/htmx-(request|settling|swapping)/);
-        await expect(page.locator('body')).not.toHaveAttribute('aria-busy', 'true');
+        const updated = page.evaluate(() => new Promise(resolve => document.addEventListener('tuxedo:live-filters-updated', () => resolve(), {once: true})));
+        await action();
+        await updated;
+        await expect(page.locator('#transaction-results')).not.toHaveAttribute('aria-busy', 'true');
         await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
         const { after, maximum } = await page.evaluate(() => ({
             after: window.scrollY, maximum: document.documentElement.scrollHeight - innerHeight,
@@ -181,13 +185,13 @@ test(`transaction updates retain viewport and focus at ${width}px`, async ({ pag
     await keepsPosition(typeCards(page).getByRole('link', { name: /^Expenses/ }));
     await expect(page.locator('#transaction-results-status')).toHaveText('2 transactions');
     await keepsPosition(page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ }));
-    await keepsPosition(page.getByRole('button', { name: 'Apply filters' }));
-    await page.locator('#filter-sort').selectOption('oldest');
-    await keepsPosition(page.getByRole('button', { name: 'Sort', exact: true }));
+    await keepsPosition(page.locator('#filter-sort'), true, () => page.locator('#filter-sort').selectOption('oldest'));
     await keepsPosition(page.getByRole('link', { name: 'Clear filters', exact: true }), false);
     await expect(page.locator('#transaction-results-status')).toHaveText('3 transactions');
-    await page.locator('#filter-search').fill('No matching record');
-    await keepsPosition(page.getByRole('button', { name: 'Apply filters' }));
+    await keepsPosition(page.locator('#filter-search'), true, async () => {
+        await page.locator('#filter-search').fill('No matching record');
+        await page.locator('#filter-search').press('Enter');
+    });
     await expect(page.getByText('No matching transactions')).toBeVisible();
 
     // Deliberate navigation to another page still starts at that destination.

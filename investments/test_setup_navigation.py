@@ -18,7 +18,7 @@ class InvestmentSetupNavigationTests(TestCase):
                     reverse('investments:operations')]:
             response = self.client.get(url)
             self.assertEqual(response.context['setup_complete'], complete)
-            target = 'investments:create' if complete else 'investments:settings'
+            target = 'investments:guided_create'
             destination = with_return_url(reverse(target), url)
             self.assertContains(response, f'href="{destination}" class="action-primary"')
             if not complete:
@@ -63,11 +63,13 @@ class InvestmentSetupNavigationTests(TestCase):
             self.assertNotContains(response, 'data-workspace-shortcut')
             self.assertContains(response, reverse('planning:index'))
         planning = self.client.get(reverse('planning:index'))
-        self.assertContains(planning, reverse('sandbox:simulation'))
+        self.assertContains(planning, reverse('planning:tools'))
+        tools = self.client.get(reverse('planning:tools'))
+        self.assertContains(tools, reverse('sandbox:simulation'))
 
     def test_portuguese_setup_and_notice_are_translated(self):
         self.client.cookies['django_language'] = 'pt-br'
         response = self.client.get(reverse('investments:list'))
-        self.assertContains(response, 'Configurar investimentos')
+        self.assertContains(response, 'Adicionar aplicação')
         self.assertContains(response, 'Planejar → Simulação de rendimentos')
         self.assertNotContains(response, 'To simulate investment returns')

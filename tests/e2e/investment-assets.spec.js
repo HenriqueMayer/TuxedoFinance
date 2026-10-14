@@ -76,16 +76,16 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('#investment-active-assets')).not.toContainText('Z saved position');
         await page.screenshot({ path: info.outputPath(`archived-assets-${theme}.png`), fullPage: true });
 
-        await page.goto('/investments/');
+        await page.goto('/investments/?scope=portfolio');
         await expect(page.locator('#investment-total')).toHaveText(/BRL 110[,.]00/);
-        await expect(page.getByRole('link', { name: 'View operations for Z saved position' })).toHaveCount(0);
+        await expect(page.getByRole('link', { name: 'Z saved position', exact: true })).toHaveCount(0);
         await expect(page.locator('main')).toContainText('No active positions in this section.');
         await page.locator('#investment-operations-link').press('Enter');
         await expect(page.locator('#investment-movements')).toContainText('Saved operation');
         await expect(page.locator('#investment-movements')).not.toContainText('Saved cash operation');
         await page.goto('/investments/?section=cash');
         await expect(page.locator('#investment-total')).toHaveText(/BRL 7[,.]00/);
-        await expect(page.getByRole('link', { name: 'View operations for Z saved position' })).toHaveCount(0);
+        await expect(page.getByRole('link', { name: 'Z saved position', exact: true })).toHaveCount(0);
         await expect(page.locator('#investment-archived-positions-note')).toContainText('Their balances remain in totals and history.');
         await expect(page.locator('main')).not.toContainText('Asset cash pot');
         await page.screenshot({ path: info.outputPath(`archived-cash-positions-${theme}.png`), fullPage: true });
@@ -122,11 +122,11 @@ for (const theme of ['light', 'dark']) {
         await expectRetainedScroll(page, restoreTop);
         await expect(page.locator('#investment-archived-assets')).toHaveCount(0);
         await page.goto('/investments/?section=cash');
-        await expect(page.getByRole('link', { name: 'View operations for Z saved position' }).first()).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Z saved position', exact: true }).filter({ visible: true })).toBeVisible();
         await expect(page.locator('#investment-total')).toHaveText(/BRL 7[,.]00/);
         await expect(page.locator('#investment-archived-positions-note')).toHaveCount(0);
-        await page.goto('/investments/');
-        await expect(page.getByRole('link', { name: 'View operations for Z saved position' }).first()).toBeVisible();
+        await page.goto('/investments/?scope=portfolio');
+        await expect(page.getByRole('link', { name: 'Z saved position', exact: true }).filter({ visible: true })).toBeVisible();
         await expect(page.locator('#investment-total')).toHaveText(/BRL 113[,.]00/);
         await page.goto('/investments/create/');
         await selectChoice(page.locator('#id_asset'), data.asset);

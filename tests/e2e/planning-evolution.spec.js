@@ -30,7 +30,7 @@ for (const theme of ['light', 'dark']) {
         await page.addInitScript(theme => localStorage.setItem('theme', theme), theme);
         await page.goto('/planning/budgets/create/');
         await expect(page.locator('nav[aria-label="Planning sections"]')).toHaveCount(1);
-        await expect(page.locator('nav[aria-label="Planning sections"]').getByRole('link', { name: 'Overview', exact: true })).toHaveAttribute('href', '/planning/');
+        await expect(page.locator('nav[aria-label="Planning sections"]').getByRole('link', { name: 'This month', exact: true })).toHaveAttribute('href', '/planning/');
         const categorySearch = page.locator('#category-search');
         await expect(categorySearch).toHaveValue('');
         await page.locator('#id_month').focus();
@@ -69,10 +69,10 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('#id_amount')).toHaveValue('-1');
         await page.locator('#id_amount').fill('250');
         await page.getByRole('button', { name: 'Save', exact: true }).press('Enter');
-        await expect(page).toHaveURL(/planning\/budgets\/\?month=/);
+        await expect(page).toHaveURL(/planning\/\?month=/);
         await expect(page.locator('main')).toContainText('250,00');
         await page.locator('#id_month').press('Tab');
-        await page.getByRole('button', { name: 'Show month', exact: true }).press('Enter');
+        await page.locator('#id_month').press('Enter');
         await expect(page.locator('main')).toContainText('250,00');
 
         await page.goto(goalUrl);

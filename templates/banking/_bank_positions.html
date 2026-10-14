@@ -1,0 +1,15 @@
+{% load i18n %}
+<div id="bank-positions-{{ bank.pk|stringformat:'d' }}" class="space-y-5" data-preserve-view>
+    {% if bank.included_rows %}{% include 'banking/_account_table.html' with rows=bank.included_rows %}{% endif %}
+    {% include 'banking/_cash_pots.html' with pots=bank.included_pots %}
+    {% if bank.reserved_rows or bank.reserved_pots %}
+    <details id="bank-reserves-{{ bank.pk|stringformat:'d' }}" class="reserve-disclosure" {% if reserve_open or bank.reserve_open %}open{% endif %}>
+        <summary class="reserve-disclosure-summary cursor-pointer py-3 font-medium">{% translate 'Reserves' %} {% include 'partials/chevron_down.html' %}</summary>
+        <div class="space-y-5 pt-3"><p class="subtle-copy">{% translate 'Set aside from planning. Balances, history and net worth are preserved; negative balances still reduce availability.' %}</p>
+            {% if bank.reserved_rows %}{% include 'banking/_account_table.html' with rows=bank.reserved_rows %}{% endif %}
+            {% include 'banking/_cash_pots.html' with pots=bank.reserved_pots %}
+        </div>
+    </details>
+    {% endif %}
+    {% if not bank.planning_rows and not bank.cash_pots %}<p class="subtle-copy">{% translate 'No accounts yet.' %}</p>{% endif %}
+</div>

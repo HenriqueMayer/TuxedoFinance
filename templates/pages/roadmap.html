@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Roadmap' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6">
+    <header><h1 class="page-title">{% translate 'Roadmap' %}</h1><p class="subtle-copy mt-2">{% translate 'These areas are being redesigned to make everyday use simpler.' %}</p></header>
+    {% for item in review_items %}
+    <section id="{{ item.key }}" class="surface-panel scroll-mt-24 space-y-3">
+        <div class="panel-heading"><h2 class="section-title">{{ item.title }}</h2><span class="status-badge">{% translate 'Under review' %}</span></div>
+        <p class="subtle-copy">{{ item.description }}</p>
+        <p class="subtle-copy">{% translate 'Temporarily unavailable. No release date is scheduled.' %}</p>
+        {% if item.key == 'imports' and has_import_history %}<a class="action-link" href="{% url 'ingestion:history' %}">{% translate 'View import history' %}</a>{% endif %}
+    </section>
+    {% endfor %}
+    <section class="space-y-3"><h2 class="section-title">{% translate 'Future studies' %}</h2><p class="subtle-copy">{% translate 'Optional bank connections and cloud hosting will be evaluated separately.' %}</p></section>
+</div>
+{% endblock %}

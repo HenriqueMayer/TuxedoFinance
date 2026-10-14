@@ -4,6 +4,7 @@ from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 from core.dates import configure_date_fields
+from sandbox.forms import parse_month
 
 from banking.models import (
     Bank,
@@ -453,3 +454,59 @@ class ExchangeRateForm(OwnedModelForm):
             'effective_date': _('Effective date'),
             'notes': _('Notes'),
         }
+
+
+class BankSearchForm(forms.Form):
+    q = forms.CharField(required=False, label=_('Search'), max_length=200,
+        widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': '',
+            'placeholder': _('Bank, account, card, program or cash pot'), 'class': INPUT_CLASSES}))
+
+
+class InvoiceFilterForm(forms.Form):
+    q = forms.CharField(required=False, label=_('Search'),
+                        widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': ''}))
+    month = forms.CharField(required=False, label=_('Invoice month'),
+                            widget=forms.TextInput(attrs={'type': 'month', 'min': '1901-01', 'max': '9988-12', 'data-live-change': ''}))
+    bank = forms.ModelChoiceField(required=False, queryset=Bank.objects.none(), label=_('Bank'), empty_label=_('All banks'))
+    card = forms.ModelChoiceField(required=False, queryset=CreditCard.objects.none(), label=_('Credit card'), empty_label=_('All cards'))
+    status = forms.ChoiceField(required=False, label=_('Status'), choices=[('', _('All statuses')), *CardInvoice.Status.choices])
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, auto_id='invoice-filter-%s', **kwargs)
+        self.fields['bank'].queryset = Bank.objects.filter(user=user)
+        self.fields['card'].queryset = CreditCard.objects.filter(user=user, account__user=user, account__bank__user=user).select_related('account__bank')
+        self.fields['card'].label_from_instance = lambda card: f'{card.account.bank.name} · {card.account.name} · {card.name}'
+        for name, field in self.fields.items():
+            field.widget.attrs['class'] = INPUT_CLASSES
+            if name != 'q':
+                field.widget.attrs['data-live-change'] = ''
+        # Keep malformed native month text recoverable after an invalid GET.
+        if self.is_bound and self.errors.get('month'):
+            self.fields['month'].widget = forms.TextInput(attrs={key: value for key, value in self.fields['month'].widget.attrs.items() if key != 'type'})
+
+    def clean_month(self):
+        value = self.cleaned_data['month']
+        return parse_month(value) if value else None
+
+
+class ExchangeRateFilterForm(forms.Form):
+    q = forms.CharField(required=False, label=_('Search'),
+                        widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': ''}))
+    from_currency = forms.ChoiceField(required=False, label=_('From currency'), choices=[('', _('All currencies')), *ExchangeRate._meta.get_field('from_currency').choices])
+    to_currency = forms.ChoiceField(required=False, label=_('To currency'), choices=[('', _('All currencies')), *ExchangeRate._meta.get_field('to_currency').choices])
+    date_from = forms.DateField(required=False, label=_('From date'))
+    date_to = forms.DateField(required=False, label=_('To date'))
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, auto_id='rate-filter-%s', **kwargs)
+        configure_date_fields(self, user)
+        for name, field in self.fields.items():
+            field.widget.attrs['class'] = INPUT_CLASSES
+            if name != 'q':
+                field.widget.attrs['data-live-change'] = ''
+
+    def clean(self):
+        data = super().clean()
+        if data.get('date_from') and data.get('date_to') and data['date_from'] > data['date_to']:
+            self.add_error('date_to', _('Choose an end date on or after the start date.'))
+        return data

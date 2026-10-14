@@ -86,12 +86,12 @@ class CategoryListFilterTests(TestCase):
         self.assertEqual(response.context['search_query'], 'DELIVERY')
 
     def test_disclosure_groups_keep_matching_children_visible_without_their_parent(self):
-        response = self.client.get(reverse('categories:list'))
+        response = self.client.get(reverse('categories:list'), {'view': 'tree'})
         groups = response.context['category_groups']
         groceries = next(group for group in groups if group['category'] == self.groceries)
         self.assertEqual([group['category'] for group in groceries['children']], [self.delivery])
         self.assertContains(response, f'aria-controls="category-children-{self.groceries.pk}"')
-        self.assertContains(response, 'aria-expanded="true"')
+        self.assertContains(response, '<details data-category-branch >')
 
         filtered = self.client.get(reverse('categories:list'), {'q': 'Delivery'})
         self.assertEqual([group['category'] for group in filtered.context['category_groups']], [self.delivery])
@@ -101,7 +101,7 @@ class CategoryListFilterTests(TestCase):
 
     def test_disclosure_tree_supports_nested_categories_and_renders_legacy_cycles_once(self):
         grandchild = Category.objects.create(user=self.user, name='Weekend Delivery', parent_category=self.delivery)
-        response = self.client.get(reverse('categories:list'))
+        response = self.client.get(reverse('categories:list'), {'view': 'tree'})
         groceries = next(group for group in response.context['category_groups'] if group['category'] == self.groceries)
         self.assertEqual(groceries['children'][0]['children'][0]['category'], grandchild)
 
@@ -109,7 +109,7 @@ class CategoryListFilterTests(TestCase):
         # still expose every owned record once, without recursive graph traversal.
         self.groceries.parent_category = grandchild
         self.groceries.save(update_fields=['parent_category'])
-        response = self.client.get(reverse('categories:list'))
+        response = self.client.get(reverse('categories:list'), {'view': 'tree'})
         for category in (self.groceries, self.delivery, grandchild, self.salary):
             self.assertContains(response, f'data-category-group="{category.pk}"', count=1)
 

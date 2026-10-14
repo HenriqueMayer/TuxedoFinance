@@ -86,3 +86,15 @@ native disclosure. Preserve Tab access, user ownership, generated-operation
 edit locks and browser Back/Forward. Never pick an arbitrary operation for an
 aggregate row. Question-mark help and ordinary chart value tooltips retain their
 own contracts.
+
+
+## Dynamic consultation filters
+
+All read-only searches and filters apply dynamically with JavaScript. Reuse
+`static/js/live-filters.js`: debounce text typing/deleting, apply choices,
+committed dates and ordering immediately, and show Clear near active controls.
+Preserve stable controls, caret, keyboard focus, scroll, owned disclosures and
+browser Back/Forward. Retain an ordinary GET submit fallback without JavaScript
+or after request failure. Keep POST writes and simulations explicitly submitted.
+Follow the [live consultation contract](docs/frontend.md#live-consultation-filters)
+and test real keyboard interactions, both themes, mobile, and native fallback.

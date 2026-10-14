@@ -192,12 +192,10 @@ class Asset(models.Model):
                 errors['opening_unit_price'] = _('Opening quantity and unit price must be provided together.')
             if has_quantity and not self.opening_product_id:
                 errors['opening_product'] = _('Select the product that holds the opening units.')
-            if not has_quantity and self.opening_product_id:
-                errors['opening_product'] = _('Select an opening product only when there is an opening position.')
         elif self.opening_balance > ZERO and not self.opening_product_id:
             errors['opening_product'] = _('Select the product that holds the opening balance.')
-        elif self.opening_balance == ZERO and self.opening_product_id:
-            errors['opening_product'] = _('Select an opening product only when there is an opening balance.')
+        # A zero-valued configured position can identify its product without
+        # inventing an opening event; replay uses has_opening_position instead.
         if self.valuation_mode == self.ValuationMode.MONETARY and (
             self.opening_quantity != ZERO or self.opening_unit_price != ZERO
         ):
@@ -212,6 +210,35 @@ class Asset(models.Model):
         if (self.pk and self.valuation_mode != self.ValuationMode.MONETARY
                 and self.operations.filter(product__purpose=InvestmentProduct.Purpose.MONTHLY_CASH).exists()):
             errors['valuation_mode'] = _('Monthly cash pots can only hold monetary assets.')
+        if errors:
+            raise ValidationError(errors)
+
+
+class PositionPlanningSetting(models.Model):
+    """A position's planning choice never changes its holdings or accounting."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name='position_planning_settings')
+    product = models.ForeignKey(InvestmentProduct, on_delete=models.CASCADE,
+                                related_name='planning_settings')
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='planning_settings')
+    planning_enabled = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'product', 'asset'],
+                                               name='investments_unique_position_planning')]
+
+    def clean(self):
+        errors = {}
+        if self.product_id:
+            if self.product.user_id != self.user_id:
+                errors['product'] = _('Select a product that belongs to you.')
+            elif self.product.purpose != InvestmentProduct.Purpose.MONTHLY_CASH:
+                errors['product'] = _('Planning exclusions apply only to remunerated cash positions.')
+        if self.asset_id:
+            if self.asset.user_id != self.user_id:
+                errors['asset'] = _('Select an asset that belongs to you.')
+            elif self.asset.valuation_mode != Asset.ValuationMode.MONETARY:
+                errors['asset'] = _('Planning exclusions apply only to monetary assets.')
         if errors:
             raise ValidationError(errors)
 

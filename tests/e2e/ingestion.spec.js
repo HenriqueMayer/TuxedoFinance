@@ -2,6 +2,9 @@
 const { test, expect } = require('@playwright/test');
 const { selectChoice } = require('./helpers/forms');
 
+// Upload/review/undo are paused in the roadmap; service coverage remains active.
+test.skip(true, 'Statement interface under usability review; server gate covered by monthly-roadmap.');
+
 async function post(page, path, fields) {
     const response = await page.request.get(path);
     const csrf = (await response.text()).match(/name="csrfmiddlewaretoken" value="([^"]+)"/)[1];

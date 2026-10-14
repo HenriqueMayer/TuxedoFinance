@@ -1,4 +1,5 @@
 from datetime import date
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -22,9 +23,12 @@ from banking.forms import (
     BankTransferForm,
     BankForm,
     BankColorForm,
+    BankSearchForm,
     CreditCardForm,
     DebitCardForm,
     ExchangeRateForm,
+    ExchangeRateFilterForm,
+    InvoiceFilterForm,
     InvoicePaymentForm,
     LoyaltyEntryForm,
     LoyaltyProgramForm,
@@ -50,6 +54,7 @@ from banking.services import (
     create_transfer,
     sync_loyalty_entry_funding,
     get_planning_availability,
+    set_position_planning,
 )
 from transactions.services import sync_user_ledger
 from banking.settlements import save_invoice_payment, delete_invoice_payment
@@ -74,6 +79,39 @@ def _decorate_banks(banks, availability):
             row['account'] = account
             bank.planning_rows.append(row)
         bank.cash_pots = [row for row in availability['cash_pots'] if row['product'].bank_id == bank.pk]
+        bank.included_rows = [row for row in bank.planning_rows if row['account'].planning_enabled]
+        bank.reserved_rows = [row for row in bank.planning_rows if not row['account'].planning_enabled]
+        bank.included_pots = [row for row in bank.cash_pots if row['planning_enabled']]
+        bank.reserved_pots = [row for row in bank.cash_pots if not row['planning_enabled']]
+
+
+def _canonical_id(value):
+    return bool(value and value.isascii() and value.isdecimal() and value[0] != '0'
+                and len(value) <= 19 and (len(value) < 19 or value <= '9223372036854775807'))
+
+
+def _planning_destination(request, bank_id, anchor):
+    fallback = reverse('banking:list') if request.POST.get('return_to') == 'list' else reverse('banking:detail', args=[bank_id])
+    target = urlsplit(return_url(request, fallback))
+    if target.path not in (reverse('banking:list'), reverse('banking:detail', args=[bank_id])):
+        return urlunsplit(target)
+    query = dict(parse_qsl(target.query, keep_blank_values=True))
+    if target.path == reverse('banking:list'):
+        query['open'] = str(bank_id)
+    # A native POST must return to the row it just moved into Reserves too.
+    if request.POST.get('enabled') == '0':
+        query['reserves'] = str(bank_id)
+    return urlunsplit((target.scheme, target.netloc, target.path, urlencode(query), anchor))
+
+
+def _position_response(request, bank_id, *, reserve_open=False):
+    bank = get_object_or_404(Bank.objects.prefetch_related(Prefetch('accounts',
+        queryset=BankAccount.objects.filter(user=request.user).prefetch_related('credit_cards', 'debit_cards'))), pk=bank_id, user=request.user)
+    availability = get_planning_availability(request.user)
+    _decorate_banks([bank], availability)
+    return render(request, 'banking/_positions_response.html', {'bank': bank, 'availability': availability,
+        'return_to': request.POST.get('return_to', 'detail'), 'reserve_open': reserve_open,
+        'planning_return_url': return_url(request, '')})
 
 
 @login_required
@@ -85,6 +123,8 @@ def account_planning(request, pk):
         return HttpResponseBadRequest('Invalid planning selection.')
     account.planning_enabled = enabled == '1'
     account.save(update_fields=['planning_enabled', 'updated_at'])
+    if request.headers.get('HX-Target') == f'bank-positions-{account.bank_id}':
+        return _position_response(request, account.bank_id, reserve_open=True)
     if request.headers.get('HX-Target') == f'account-row-{account.pk}':
         availability = get_planning_availability(request.user)
         row = next(row for row in availability['account_rows'] if row['account'].pk == account.pk)
@@ -93,8 +133,26 @@ def account_planning(request, pk):
             'return_to': request.POST.get('return_to', 'detail'),
         })
     messages.success(request, _('Planning availability updated. The account balance is unchanged.'))
-    url = reverse('banking:list') if request.POST.get('return_to') == 'list' else reverse('banking:detail', args=[account.bank_id])
-    return redirect(f'{url}#account-row-{account.pk}')
+    return redirect(_planning_destination(request, account.bank_id, f'account-row-{account.pk}'))
+
+
+@login_required
+@require_POST
+def position_planning(request, product_pk, asset_pk):
+    from investments.models import Asset, InvestmentProduct
+    product = get_object_or_404(InvestmentProduct, user=request.user, bank__user=request.user, pk=product_pk)
+    get_object_or_404(Asset, user=request.user, pk=asset_pk)
+    enabled = request.POST.get('enabled')
+    if enabled not in {'0', '1'}:
+        return HttpResponseBadRequest('Invalid planning selection.')
+    try:
+        set_position_planning(request.user, product_pk, asset_pk, enabled == '1')
+    except ValidationError:
+        raise Http404
+    if request.headers.get('HX-Target') == f'bank-positions-{product.bank_id}':
+        return _position_response(request, product.bank_id, reserve_open=True)
+    messages.success(request, _('Planning availability updated. The position balance is unchanged.'))
+    return redirect(_planning_destination(request, product.bank_id, f'cash-position-{product_pk}-{asset_pk}'))
 
 
 class BankListView(LoginRequiredMixin, ListView):
@@ -133,15 +191,24 @@ class BankListView(LoginRequiredMixin, ListView):
                 | Q(accounts__debit_cards__name__icontains=search)
                 | Q(accounts__credit_cards__name__icontains=search)
                 | Q(loyalty_programs__name__icontains=search)
+                | Q(investment_products__name__icontains=search)
+                | Q(investment_products__operations__asset__name__icontains=search)
+                | Q(investment_products__opening_balance_assets__name__icontains=search)
             ).distinct()
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '').strip()
+        context['filter_form'] = BankSearchForm(self.request.GET or None, auto_id='bank-filter-%s')
         context['independent_programs'] = _programs(self.request.user).filter(bank__isnull=True).prefetch_related('cards')
+        if context['search_query']:
+            context['independent_programs'] = context['independent_programs'].filter(name__icontains=context['search_query'])
         context['availability'] = get_planning_availability(self.request.user)
         _decorate_banks(context['banks'], context['availability'])
+        for bank in context['banks']:
+            bank.is_open = bool(context['search_query']) or self.request.GET.get('open') == str(bank.pk)
+            bank.reserve_open = self.request.GET.get('reserves') == str(bank.pk)
         return context
 
 
@@ -181,6 +248,7 @@ class BankDetailView(LoginRequiredMixin, DetailView):
         account_ids = [account.pk for account in self.object.accounts.all()]
         context['availability'] = get_planning_availability(self.request.user)
         _decorate_banks([self.object], context['availability'])
+        context['reserve_open'] = self.request.GET.get('reserves') == str(self.object.pk)
         context['movements'] = BankMovement.objects.filter(
             user=self.request.user, account_id__in=account_ids
         ).select_related('account').order_by('-effective_date', '-created_at')[:20]
@@ -368,15 +436,33 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         invoices = CardInvoice.objects.filter(user=self.request.user).select_related('card__account__bank').prefetch_related('payments')
         card_id = self.request.GET.get('card', '')
         if card_id:
-            if (not card_id.isascii() or not card_id.isdigit()
-                    or len(card_id) > 19 or int(card_id) > 9223372036854775807):
+            if not _canonical_id(card_id):
                 raise Http404
             self.card = get_object_or_404(CreditCard, user=self.request.user, pk=card_id)
             invoices = invoices.filter(card=self.card)
-        return invoices
+        bank_id = self.request.GET.get('bank', '')
+        if bank_id:
+            if not _canonical_id(bank_id):
+                raise Http404
+            get_object_or_404(Bank, user=self.request.user, pk=bank_id)
+        self.filter_form = InvoiceFilterForm(self.request.GET or None, user=self.request.user)
+        if self.filter_form.is_bound:
+            if not self.filter_form.is_valid():
+                return invoices.none()
+            data = self.filter_form.cleaned_data
+            if data['month']:
+                invoices = invoices.filter(reference_month=data['month'])
+            if data['bank']:
+                invoices = invoices.filter(card__account__bank=data['bank'])
+            if data['status']:
+                invoices = invoices.filter(status=data['status'])
+            if data['q']:
+                invoices = invoices.filter(Q(card__name__icontains=data['q']) | Q(card__account__name__icontains=data['q']) | Q(card__account__bank__name__icontains=data['q']))
+        return invoices.order_by('-reference_month', 'card__account__bank__name', 'card__name', 'pk')
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs) | {'selected_card': getattr(self, 'card', None)}
+        return super().get_context_data(**kwargs) | {'selected_card': getattr(self, 'card', None),
+            'filter_form': self.filter_form, 'has_filters': any(self.request.GET.get(name) for name in self.filter_form.fields)}
 
 
 def _payment_errors(form, error):
@@ -688,9 +774,29 @@ class ExchangeRateListView(LoginRequiredMixin, ListView):
     model = ExchangeRate
     template_name = 'banking/exchange_rates.html'
     context_object_name = 'rates'
+    paginate_by = 30
 
     def get_queryset(self):
-        return ExchangeRate.objects.filter(user=self.request.user)
+        rates = ExchangeRate.objects.filter(user=self.request.user)
+        self.filter_form = ExchangeRateFilterForm(self.request.GET or None, user=self.request.user)
+        if self.filter_form.is_bound:
+            if not self.filter_form.is_valid():
+                return rates.none()
+            data = self.filter_form.cleaned_data
+            for name in ('from_currency', 'to_currency'):
+                if data[name]:
+                    rates = rates.filter(**{name: data[name]})
+            if data['date_from']:
+                rates = rates.filter(effective_date__gte=data['date_from'])
+            if data['date_to']:
+                rates = rates.filter(effective_date__lte=data['date_to'])
+            if data['q']:
+                rates = rates.filter(Q(from_currency__icontains=data['q']) | Q(to_currency__icontains=data['q']) | Q(notes__icontains=data['q']))
+        return rates.order_by('-effective_date', 'from_currency', 'to_currency', '-pk')
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(**kwargs) | {'filter_form': self.filter_form,
+            'has_filters': any(self.request.GET.get(name) for name in self.filter_form.fields)}
 
 
 class ExchangeRateFormMixin(OwnedFormMixin):
@@ -727,11 +833,12 @@ class ExchangeRateDeleteView(OwnedDeleteView):
     model = ExchangeRate
 
     def get_success_url(self):
-        return reverse('banking:exchange_rates')
+        return return_url(self.request, reverse('banking:exchange_rates'))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['cancel_url'] = self.get_success_url()
+        context['return_url'] = self.get_success_url()
         context['delete_message'] = _(
             'This action cannot be undone. Current valuations may change or show missing rates. '
             'Conversions already saved in transfers and investments will be preserved.'

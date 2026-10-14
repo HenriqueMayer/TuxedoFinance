@@ -22,7 +22,7 @@ primary pill button — no one-off styling is introduced.
         <p class="mx-auto max-w-sm text-sm font-normal text-forest/70 dark:text-night-muted">{{ message }}</p>
     </div>
     {% if cta_url %}
-        <a href="{{ cta_url }}"
+        <a href="{{ cta_url }}"{% if live_reset_form %} data-live-reset data-live-link="{{ live_reset_form }}"{% endif %}
            class="group mt-2 inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-xs uppercase tracking-widest font-medium text-forest-deep transition-colors hover:bg-caramel-light">
             {{ cta_label }}
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>

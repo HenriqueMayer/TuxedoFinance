@@ -293,30 +293,45 @@ historical filters include all assets. Restore before recording any new deposit,
 withdrawal or yield. This rule deliberately keeps archiving distinct from
 removing holdings or rewriting history.
 
-The portfolio and Operations pages highlight Configure investments until the
-user has a bank, a product and an active asset. Configuration lists the three setup
-steps, marks completed prerequisites and links to the next missing registration.
-Once ready, New operation becomes the primary action, even before the first
-operation. Products are grouped by bank and assets remain a separate editable
-catalog. Configuration stays in the investment navigation for later maintenance.
+My investments opens a compact holdings list with registered value and Update.
+The guided Add investment workflow saves an owned institution, product and asset
+atomically. It starts purpose and valuation choices empty, asks the user whether
+remunerated cash participates in planning, and separates money from units/cost.
+The optional classification is chosen before the first operation; the existing
+history lock prevents changing it afterward. Unknown classification is stored
+as Other and does not invent a financial type. Nonzero opening holdings require
+a date and never debit an account. Zero holdings
+may retain `opening_product` as their configured placement without an opening
+movement or invented cost/date; first-operation actions remain available.
 
-Simulate returns is a gray, non-navigating item in investment sections. Its
-floating notice opens on hover, keyboard focus or touch and directs users to
-Planning → Yield simulation. The investment submenu has no simulation link;
-Planning retains the working destination. The notice uses a text trigger rather
-than a question-mark help icon, shares floating positioning/dismissal behavior,
-and has a native disclosure fallback for keyboard and touch. Saved scenarios and their hypothetical
-yield never post investment or bank movements.
+History, Analyses and Full configuration remain accessible through contextual
+links and a deliberate More menu. Simulations stay in Plan → Tools. The Update
+screen chooses contribution, withdrawal, yield or local unit-price observation,
+then opens the existing financial form with owned, compatible shortcut context.
+Partial valuations, missing prices and unknown opening dates remain visible;
+remaining acquisition cost is labelled as cost rather than a market quote.
+
 External market feeds, broker synchronization and agent integration remain
 outside the implemented local scope. Local dated quotes and position performance
 are implemented under Unreleased; they do not turn simulations into postings.
 
 ## Position actions and return context
 
-Position rows/cards expose an activation-only menu for Contribute, Redeem,
-Record yield and Update price. Explicit owned product/asset/type shortcuts use
+Position rows/cards expose one Update action, opening a contextual chooser for
+Contribute, Redeem, Record yield and (for unit positions) Update price. Explicit owned product/asset/type shortcuts use
 existing server validation and conditional choices. Save/Cancel return to the
 originating desktop row or mobile card using its stable anchor, or to the
 filtered operation/price history when opened there. Unchanged destinations
 without explicit context retain their existing default. Local return URLs never
 relax ownership, archived-asset restrictions or generated-operation edit locks.
+
+
+## Per-position planning participation
+
+`PositionPlanningSetting` stores one owner/product/asset participation flag for
+monetary `MONTHLY_CASH` positions. An absent row includes the position, preserving
+existing behavior. An excluded positive balance is entirely set aside; its real
+balance and operations stay recorded and negative amounts still reduce available
+money. The atomic service validates owned compatible sources, and changes require
+a deliberate CSRF-protected POST. Archiving an asset is a separate visibility
+rule and must never be used as an availability exclusion.

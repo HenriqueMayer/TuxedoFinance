@@ -69,10 +69,11 @@ test('date filter keeps ISO URLs through HTMX navigation, history and changed pr
     await page.goto('/transactions/?date=2026-04-03');
     await expect(page.locator('#filter-date')).toHaveValue('03/04/2026');
     await page.locator('#filter-date').fill('14/08/2026');
-    await page.locator('#transaction-apply-filters').click();
+    // A committed date edit applies immediately; Apply remains a no-JS fallback.
+    await page.locator('#filter-date').press('Tab');
+    await expect(page.locator('[data-open-date-picker]')).toBeFocused();
     await expect(page).toHaveURL(/date=2026-08-14/);
     await expect(page.locator('#filter-date')).toHaveValue('14/08/2026');
-    await page.locator('#filter-date').press('Tab');
     await expect(page.locator('[data-open-date-picker]')).toBeFocused();
     await page.goBack();
     await expect(page.locator('#filter-date')).toHaveValue('03/04/2026');

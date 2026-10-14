@@ -39,10 +39,19 @@ for (const dark of [false, true]) {
         expect(await edit.evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
         await page.screenshot({ path: testInfo.outputPath('rate-actions-desktop.png'), fullPage: true });
         await page.setViewportSize({ width: 390, height: 844 });
+        // The consultation filters make the mobile page taller. Reach the
+        // action again through real keyboard focus after the viewport changes.
+        await page.keyboard.press('Shift+Tab');
+        await tabTo(page, edit);
         await expect(edit).toBeInViewport();
+        const options = page.locator('#rate-results details[name="rate-row-actions"] > summary');
+        await tabTo(page, options);
+        await page.keyboard.press('Enter');
         await expect(page.locator('main').getByRole('link', { name: 'Delete', exact: true })).toBeInViewport();
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         await page.screenshot({ path: testInfo.outputPath('rate-actions-mobile.png'), fullPage: true });
+        await page.keyboard.press('Escape');
+        await edit.focus();
         await page.keyboard.press('Enter');
         await expect(page.getByRole('heading', { name: 'Edit exchange rate' })).toBeVisible();
         await expect(page.locator('#id_from_currency')).toHaveValue('USD');
@@ -87,18 +96,20 @@ for (const dark of [false, true]) {
         await expect(page.locator('main li')).toContainText('1 USD = 5,25000000 BRL');
         await expect(page.locator('main li')).toContainText('Corrected rate');
         const remove = page.locator('main').getByRole('link', { name: 'Delete', exact: true });
+        await page.locator('#rate-results details[name="rate-row-actions"] > summary').press('Enter');
         await tabTo(page, remove);
         await page.keyboard.press('Enter');
         await expect(page.locator('main')).toContainText('Conversions already saved');
         await tabTo(page, page.getByRole('link', { name: 'Cancel', exact: true }));
         await page.keyboard.press('Enter');
         await expect(page.locator('main li')).toContainText('Corrected rate');
+        await page.locator('#rate-results details[name="rate-row-actions"] > summary').press('Enter');
         await tabTo(page, remove);
         await page.keyboard.press('Enter');
         await tabTo(page, page.getByRole('button', { name: 'Delete', exact: true }));
         await page.keyboard.press('Space');
         await expect(page).toHaveURL(/\/banking\/exchange-rates\/$/);
-        await expect(page.getByText('No exchange rates yet', { exact: true })).toBeVisible();
+        await expect(page.locator('#rate-results')).toContainText('No exchange rates yet');
     });
 }
 
@@ -119,6 +130,7 @@ test('exchange rates work without JavaScript and translate to Portuguese', async
         await expect(page.locator('#id_effective_date')).toHaveValue('23/09/2026');
         await page.getByRole('link', { name: 'Cancelar', exact: true }).click();
         await expect(page).toHaveURL(/\/banking\/exchange-rates\/$/);
+        await page.locator('#rate-results details[name="rate-row-actions"] > summary').press('Enter');
         await page.locator('main').getByRole('link', { name: 'Excluir', exact: true }).click();
         await expect(page.locator('main')).toContainText('serão preservadas.');
         await page.getByRole('button', { name: 'Excluir', exact: true }).click();

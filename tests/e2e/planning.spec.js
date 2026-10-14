@@ -184,9 +184,13 @@ test.describe('planning without JavaScript', () => {
         await page.getByRole('button', { name: 'Calculate month', exact: true }).click();
         await expect(page.locator('#scenario-result-title')).toBeVisible();
         await page.getByRole('button', { name: 'Save draft', exact: true }).click();
+        await page.getByRole('navigation', { name: 'Planning sections', exact: true })
+            .getByRole('link', { name: 'Tools', exact: true }).click();
         await page.getByRole('link', { name: 'Saved drafts', exact: true }).click();
         await page.getByRole('button', { name: 'Duplicate', exact: true }).click();
         await expect(page.locator('#id_draft_name')).toHaveValue('Copy of My incomplete plan');
+        await page.getByRole('navigation', { name: 'Planning sections', exact: true })
+            .getByRole('link', { name: 'Tools', exact: true }).click();
         await page.getByRole('link', { name: 'Saved drafts', exact: true }).click();
         for (const checkbox of await page.getByRole('checkbox').all()) await checkbox.check();
         await page.getByRole('button', { name: 'Compare selected drafts' }).click();

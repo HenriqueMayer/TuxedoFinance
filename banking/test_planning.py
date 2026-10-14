@@ -119,7 +119,8 @@ class PlanningAvailabilityTests(TestCase):
             self.assertEqual(len(account_balances(self.user, self.today)), 21)
         with CaptureQueriesContext(connection) as queries:
             result = get_planning_availability(self.user, self.today)
-        # Named goals add two constant reads; movement volume adds no query.
-        self.assertEqual(len(queries), 7)
+        # Named goals and per-position exclusions add only constant grouped
+        # reads; movement or account volume adds no query.
+        self.assertEqual(len(queries), 8)
         self.assertTrue(all(query['sql'].lstrip().upper().startswith('SELECT') for query in queries))
         self.assertEqual(result['bank_total'], Decimal('1000'))

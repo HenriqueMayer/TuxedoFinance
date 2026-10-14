@@ -76,15 +76,9 @@ test(`split categories and confirmed invoice payment preserve keyboard errors ($
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({path:testInfo.outputPath(`invoice-${theme}.png`), fullPage:true});
     await page.goto('/dashboard/wealth/');
-    await expect(page.locator('.metric-panel').filter({hasText:'Net worth'})).toContainText(/800[,.]00/);
-    let departureWarnings = 0;
-    page.on('dialog', async dialog => { departureWarnings++; await dialog.accept(); });
-    await page.locator('#id_start_month').fill('2026-01');
-    await page.getByRole('button', {name:'Apply', exact:true}).click();
-    await expect(page).toHaveURL(/start_month=2026-01/);
-    expect(departureWarnings).toBe(0);
+    await expect(page).toHaveURL(/\/roadmap\/#wealth$/);
+    await expect(page.locator('#wealth')).toContainText('Under review');
     expect(externalRequests).toEqual([]);
-    await page.screenshot({path:testInfo.outputPath(`wealth-${theme}.png`), fullPage:true});
 });
 }
 
