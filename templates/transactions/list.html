@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n navigation %}
 
 {% comment %}Progressive GET navigation; normalized filters survive pagination and sorting.{% endcomment %}
 
@@ -7,6 +7,7 @@
 
 {% block content %}
 {% url 'transactions:create' as create_url %}
+{% contextual_url create_url as create_url %}
 {% url 'transactions:list' as list_url %}
 {% url 'transactions:export' as export_url %}
 <div class="space-y-6">
@@ -178,12 +179,14 @@
                                     <span class="subtle-copy">{% translate 'Managed by reward redemption' %}</span>
                                     <a href="{% url 'banking:detail' transaction.reward_redemption.target_account.bank_id %}#reward-redemption-{{ transaction.reward_redemption_id|stringformat:'d' }}" class="quiet-action">{% translate 'View redemption' %}</a>
                                 {% else %}
-                                <a href="{% url 'transactions:split' transaction.pk %}" class="quiet-action">{% translate 'Split' %}</a>
-                                <a href="{% url 'transactions:update' transaction.pk %}"
+                                {% url 'transactions:update' transaction.pk as update_url %}
+                                {% url 'transactions:delete' transaction.pk as delete_url %}
+                                {% with split_target=update_url|add:'?split=1' %}<a href="{% contextual_url split_target %}#category-split-choice" class="quiet-action">{% translate 'Split' %}</a>{% endwith %}
+                                <a href="{% contextual_url update_url %}"
                                    class="quiet-action">
                                     {% translate "Edit" %}
                                 </a>
-                                <a href="{% url 'transactions:delete' transaction.pk %}"
+                                <a href="{% contextual_url delete_url %}"
                                    class="quiet-action text-expense dark:text-expense-light">
                                     {% translate "Delete" %}
                                 </a>

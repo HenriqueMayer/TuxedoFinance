@@ -310,3 +310,13 @@ yield never post investment or bank movements.
 External market feeds, broker synchronization and agent integration remain
 outside the implemented local scope. Local dated quotes and position performance
 are implemented under Unreleased; they do not turn simulations into postings.
+
+## Position actions and return context
+
+Position rows/cards expose an activation-only menu for Contribute, Redeem,
+Record yield and Update price. Explicit owned product/asset/type shortcuts use
+existing server validation and conditional choices. Save/Cancel return to the
+originating desktop row or mobile card using its stable anchor, or to the
+filtered operation/price history when opened there. Unchanged destinations
+without explicit context retain their existing default. Local return URLs never
+relax ownership, archived-asset restrictions or generated-operation edit locks.

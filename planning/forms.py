@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from categories.models import Category
 from core.dates import configure_date_fields
 from planning.models import CategoryBudget, FinancialGoal, GoalAllocation, SignalSettings
-from planning.services import goal_sources, validate_allocation
+from planning.services import goal_sources, reserved_by_source, validate_allocation
 from sandbox.forms import parse_month
 
 INPUT_CLASSES = (
@@ -75,11 +75,68 @@ class FinancialGoalForm(forms.ModelForm):
         fields = ['name', 'target_amount', 'currency', 'target_date']
         help_texts = {'target_date': _('Optional deadline. Progress comes only from balances explicitly reserved for this goal.')}
 
-    def __init__(self, *args, user, **kwargs):
+    def __init__(self, *args, user, style=True, **kwargs):
         super().__init__(*args, **kwargs)
         self.instance.user = user
         configure_date_fields(self, user)
+        if style:
+            style_fields(self)
+
+
+class GoalCreationForm(FinancialGoalForm):
+    reserve_now = forms.BooleanField(required=False, label=_('Reserve a balance now'))
+    source = forms.ChoiceField(required=False, label=_('Cash source'), choices=[],
+        widget=forms.Select(attrs={'data-search-select': '', 'data-search-id': 'goal-source-search'}))
+    reserved_amount = forms.DecimalField(required=False, label=_('Reserved amount'),
+        max_digits=16, decimal_places=2, min_value=Decimal('0.01'),
+        help_text=_('Amount in the source currency. This names part of the existing balance; it does not transfer money.'))
+
+    def __init__(self, *args, user, **kwargs):
+        # Inactive controls are ignored by the server too, including native
+        # submissions where a user unchecks a previously completed reservation.
+        submitted = args[0] if args else kwargs.get('data')
+        if submitted is not None and not submitted.get('reserve_now'):
+            data = submitted.copy()
+            data['source'] = data['reserved_amount'] = ''
+            if args:
+                args = (data, *args[1:])
+            else:
+                kwargs['data'] = data
+        super().__init__(*args, user=user, style=False, **kwargs)
+        self.sources = goal_sources(user)
+        reserves = reserved_by_source(user)
+        choices = [('', _('Select a cash source'))]
+        for key, source in self.sources.items():
+            named = reserves['accounts'].get(source['account'].pk, Decimal('0')) if source['account'] else reserves['cash_pots'].get((source['product'].pk, source['asset'].pk), Decimal('0'))
+            available = max(Decimal('0'), source['balance'] - named)
+            choices.append((key, f"{source['label']} · {source['currency']} {available:.2f}"))
+        self.fields['source'].choices = choices
+        self.allocation = None
         style_fields(self)
+
+    @property
+    def goal_fields(self):
+        return [self[name] for name in self._meta.fields]
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('reserve_now'):
+            return cleaned
+        for name in ('source', 'reserved_amount'):
+            if not cleaned.get(name) and name not in self.errors:
+                self.add_error(name, _('This field is required.'))
+        source = self.sources.get(cleaned.get('source'))
+        if source and cleaned.get('reserved_amount') is not None:
+            allocation = GoalAllocation(user=self.instance.user, goal=self.instance,
+                bank_account=source['account'], product=source['product'], asset=source['asset'], amount=cleaned['reserved_amount'])
+            try:
+                allocation.full_clean(exclude=['goal'])
+                validate_allocation(allocation, sources=self.sources)
+            except ValidationError as error:
+                self.add_error('reserved_amount', '\n'.join(error.messages))
+            else:
+                self.allocation = allocation
+        return cleaned
 
 
 class GoalAllocationForm(forms.Form):
@@ -99,7 +156,7 @@ class GoalAllocationForm(forms.Form):
         if self.instance.pk and self.instance.source_key not in self.sources:
             # An existing reservation stays editable when its pot no longer
             # appears in the current ledger; server validation still rejects funding it.
-            self.fields['source'].choices.append((self.instance.source_key, self.instance.source_label))
+            self.fields['source'].choices = [*self.fields['source'].choices, (self.instance.source_key, self.instance.source_label)]
         if self.instance.pk:
             self.initial.update(source=self.instance.source_key, amount=self.instance.amount)
         style_fields(self)

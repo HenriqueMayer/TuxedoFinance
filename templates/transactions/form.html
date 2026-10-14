@@ -15,10 +15,10 @@ through the shared partials/form_field.html renderer (PRD §9.4).
     <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">
         {% if form.instance.pk %}{% translate "Edit Transaction" %}{% else %}{% translate "New Transaction" %}{% endif %}
     </h1>
-    {% if form.instance.pk %}<p><a class="quiet-action" href="{% url 'transactions:split' form.instance.pk %}">{% translate 'Split between categories' %}</a></p>{% endif %}
-
     <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="next" value="{{ return_url }}">
+        {{ split_formset.management_form }}
 
         {% if form.non_field_errors %}
             <div class="space-y-1.5">
@@ -31,9 +31,26 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         {% include 'partials/form_field.html' with field=form.title %}
         {% include 'partials/form_field.html' with field=form.amount %}
         {% include 'partials/form_field.html' with field=form.transaction_type %}
+        <div id="category-split-choice" data-has-errors="{{ form.split_categories.errors|yesno:'true,false' }}">
+            {% include 'partials/form_field.html' with field=form.split_categories %}
+        </div>
         <div id="category-fields" data-has-errors="{{ form.category.errors|yesno:'true,false' }}">
             {% include 'partials/form_field.html' with field=form.category %}
         </div>
+        <section id="category-split-fields" class="space-y-5" data-has-errors="{% if split_formset.errors or split_formset.non_form_errors %}true{% else %}false{% endif %}">
+            <p class="subtle-copy">{% translate 'Category amounts must equal the total. Installments distribute exact cents across their original categories; recurring entries repeat the same split. The payment remains a single event.' %}</p>
+            {% for error in split_formset.non_form_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+            {% for row in split_formset %}
+            <fieldset class="space-y-3 rounded-xl border border-forest/20 p-4 dark:border-cream/20" data-split-row>
+                <legend>{% translate 'Category' %} {{ forloop.counter }}</legend>
+                {% for hidden in row.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+                {% for error in row.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+                {% include 'partials/form_field.html' with field=row.category %}
+                {% include 'partials/form_field.html' with field=row.amount %}
+                {% include 'partials/form_field.html' with field=row.DELETE %}
+            </fieldset>
+            {% endfor %}
+        </section>
         {% include 'partials/form_field.html' with field=form.payment_channel %}
         <p id="payment-channel-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
         <div id="bank-account-fields" class="space-y-5" data-has-errors="{{ form.bank_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.bank_account %}</div>
@@ -67,15 +84,19 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             </div>
         </details>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+            {% comment %}The first native submit is Save: Enter in an ordinary field must not add a split row, including when split controls are hidden.{% endcomment %}
             <button type="submit"
                     class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                 {% translate "Save" %}
             </button>
-            <a href="{% url 'transactions:list' %}"
+            <a href="{{ return_url }}"
                class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                 {% translate "Cancel" %}
             </a>
+            <div id="category-split-actions" data-has-errors="{% if split_formset.errors or split_formset.non_form_errors %}true{% else %}false{% endif %}">
+                <button type="submit" name="add_split" value="1" class="quiet-action">{% translate 'Add category' %}</button>
+            </div>
         </div>
     </form>
 </div>
@@ -85,6 +106,9 @@ through the shared partials/form_field.html renderer (PRD §9.4).
 <script>
     (function () {
         const category = document.getElementById('{{ form.category.id_for_label }}');
+        const split = document.getElementById('{{ form.split_categories.id_for_label }}');
+        const splitFields = document.getElementById('category-split-fields');
+        const splitActions = document.getElementById('category-split-actions');
         const channel = document.getElementById('{{ form.payment_channel.id_for_label }}');
         const transactionType = document.getElementById('{{ form.transaction_type.id_for_label }}');
         const bankAccount = document.getElementById('{{ form.bank_account.id_for_label }}');
@@ -108,6 +132,27 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         };
         if (!category || !channel) return;
         const setHidden = window.TuxedoForms.setHidden;
+        function updateCategoryFields(clearStale) {
+            setHidden(document.getElementById('category-split-choice'), !transactionType.value, !clearStale);
+            setHidden(groups.category, !transactionType.value || split.checked, !clearStale);
+            setHidden(splitFields, !transactionType.value || !split.checked, !clearStale);
+            setHidden(splitActions, !transactionType.value || !split.checked, !clearStale);
+            splitFields.querySelectorAll('select[name$="-category"]').forEach(select => {
+                const selected = select.selectedOptions[0];
+                if (clearStale && selected && selected.dataset.transactionType
+                        && selected.dataset.transactionType !== transactionType.value) select.value = '';
+                Array.from(select.options).forEach(option => {
+                    option.hidden = Boolean(option.dataset.transactionType && option.dataset.transactionType !== transactionType.value);
+                });
+            });
+        }
+        function updateCreditSettlement() {
+            if (channel.value !== 'CREDIT_CARD') return;
+            const option = creditCard.selectedOptions[0];
+            status.textContent = option && option.value
+                ? '{% translate "This purchase is added to the selected card invoice." %} ' + option.dataset.settlementDescription
+                : '{% translate "Choose the card to review its invoice settlement settings." %}';
+        }
         function updateCardDetails(clearStale) {
             const inactive = channel.value !== 'CREDIT_CARD' || !creditCard.value;
             if (inactive && clearStale) { installments.value = '1'; billingOverride.value = ''; }
@@ -150,7 +195,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             } else if (value === 'DEBIT_CARD') {
                 status.textContent = '{% translate "This transaction updates the debit card account immediately." %}';
             } else if (value === 'CREDIT_CARD') {
-                status.textContent = '{% translate "This purchase is added to the selected credit card invoice and debited when that invoice is due." %}';
+                updateCreditSettlement();
             } else {
                 status.textContent = '';
             }
@@ -176,7 +221,7 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             Array.from(category.options).forEach(option => {
                 option.hidden = Boolean(option.dataset.transactionType && option.dataset.transactionType !== transactionType.value);
             });
-            setHidden(groups.category, !transactionType.value, !clearStale);
+            updateCategoryFields(clearStale);
         }
         function updateFixedFields(clearStale) {
             setHidden(groups.fixedUntil, !fixed.checked, !clearStale);
@@ -196,6 +241,18 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             updateCardDetails(true);
             updateCardAccountContext(creditCard, creditAccountContext);
             updateBestPurchaseDay();
+            updateCreditSettlement();
+        });
+        split.addEventListener('change', () => {
+            // Explicitly abandoning a split clears editable allocations, while
+            // management/record IDs remain intact for server-owned validation.
+            if (!split.checked) splitFields.querySelectorAll('select, input:not([type="hidden"])').forEach(control => {
+                if (control.type === 'checkbox') control.checked = false;
+                else control.value = '';
+            });
+            if (split.checked) category.value = '';
+            updateCategoryFields(true);
+            window.TuxedoForms.refresh(split.form);
         });
         fixed.addEventListener('change', () => updateFixedFields(true));
     })();

@@ -20,6 +20,7 @@
     <!-- Theme bootstrap (FOUC guard, adapted from base.html) -->
     <script>
         (function () {
+            document.documentElement.classList.add('js-ready');
             var stored = localStorage.getItem('theme');
             var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             var isDark = stored ? stored === 'dark' : prefersDark;
@@ -65,37 +66,27 @@
     <div class="max-w-3xl">
         <span class="text-caramel-ink dark:text-caramel-light uppercase tracking-widest text-xs font-medium block mb-4">Section 0</span>
         <h2 class="font-sans text-4xl lg:text-5xl tracking-tight font-semibold">Application shell.</h2>
-        <p class="mt-4 text-base text-forest/70 dark:text-night-muted leading-relaxed font-normal">Shared navigation, account options, surface and metric cards, tables and forms preserve the Haven &amp; Hound palette and typography. Primary tabs reveal their options on hover and retain keyboard, touch and native disclosure access. Contextual help keeps explanations next to the relevant label.</p>
+        <p class="mt-4 text-base text-forest/70 dark:text-night-muted leading-relaxed font-normal">Shared navigation, account options, surface and metric cards, tables and forms preserve the Haven &amp; Hound palette and typography. Home, Transactions, Accounts, Investments and Plan are direct links in a persistent desktop sidebar or mobile bottom bar. Area tabs keep secondary destinations discoverable without global submenus. This catalogue contains the previews within the example; the application fixes its sidebar and bottom bar to the viewport. Contextual help keeps explanations next to the relevant label.</p>
     </div>
 
-    <div class="rounded-3xl border border-forest/10 dark:border-cream/10 max-h-[90vh] overflow-y-auto">
-    <!-- APP NAVBAR -->
-    <header class="sticky top-0 z-40 border-b border-forest/10 dark:border-cream/10 bg-white/95 dark:bg-night-surface/95 backdrop-blur">
-        <nav class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex h-16 items-center justify-between gap-4">
-                <!-- Logo block (H&H style) -->
-                <a href="#shell" class="flex shrink-0 items-center gap-3 group">
-                    <img src="../static/brand/tuxedo-mark-256.png" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover ring-1 ring-forest/10 dark:ring-cream/20">
-                    <span class="hidden sm:block text-left leading-tight">
-                        <span class="block text-sm tracking-[0.2em] uppercase font-medium">Tuxedo</span>
-                        <span class="block text-xs tracking-[0.15em] uppercase text-caramel-ink dark:text-caramel-light mt-0.5">Finance</span>
-                    </span>
-                </a>
-
-                <div class="hidden min-w-0 items-center gap-1 xl:flex">
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="overview"><a href="#workspaces" class="primary-link" aria-current="page">Overview</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Overview: More options" aria-controls="catalogue-overview-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-overview-panel"><a href="#dashboard">Dashboard</a><a href="#data">Reports</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="activity"><a href="#workspaces" class="primary-link">Activity</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Activity: More options" aria-controls="catalogue-activity-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-activity-panel"><a href="#components">Transactions</a><a href="#workspaces">Categories</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="banks"><a href="#workspaces" class="primary-link">Banks</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Banks: More options" aria-controls="catalogue-banks-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-banks-panel"><a href="#workspaces">Bank balances</a><a href="#forms">Transfer</a><a href="#data">Exchange rates</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="investments"><a href="#workspaces" class="primary-link">Investments</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Investments: More options" aria-controls="catalogue-investments-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-investments-panel"><a href="#workspaces">Portfolio</a><a href="#workspaces">Remunerated cash</a><a href="#planning-sheet-example">Simulate returns</a><a href="#forms">Products and assets</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="planning"><a href="#workspaces" class="primary-link">Planning</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Planning: More options" aria-controls="catalogue-planning-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-planning-panel"><a href="#forms">Monthly plan</a><a href="#workspaces">Yield simulation</a><a href="#workspaces">Saved drafts</a></div></details></div>
-                </div>
-
-                <div class="hidden items-center gap-2 xl:flex">
-                    <button type="button" data-theme-toggle aria-label="Toggle color theme" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
+    <div id="catalogue-workspace-shell" class="grid overflow-hidden rounded-3xl border border-forest/10 dark:border-cream/10 lg:grid-cols-[13rem_minmax(0,1fr)]">
+    <!-- Contained preview: the application fixes these shared components to the viewport. -->
+    <aside class="app-sidebar" style="position:static;grid-column:1;grid-row:1 / span 3">
+        <a href="#shell" class="app-brand"><img src="../static/brand/tuxedo-mark-256.png" alt="" class="h-10 w-10 rounded-xl"><span class="text-sm font-medium tracking-widest">TUXEDO<br>FINANCE</span></a>
+        <nav class="app-navigation-list" aria-label="Example desktop workspaces" data-catalogue-navigation="desktop"><a href="#dashboard" data-nav-item="home" class="app-navigation-link" aria-current="page"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7M5 9v11h5v-7h4v7h5V9" /></svg><span>Home</span></a>
+<a href="#components" data-nav-item="transactions" class="app-navigation-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4" /></svg><span>Transactions</span></a>
+<a href="#workspaces" data-nav-item="accounts" class="app-navigation-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9h18L12 3 3 9Zm2 3v6m7-6v6m7-6v6M3 21h18" /></svg><span>Accounts</span></a>
+<a href="#data" data-nav-item="investments" class="app-navigation-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M6 16v-4m6 4V8m6 8V4" /></svg><span>Investments</span></a>
+<a href="#planning-sheet-example" data-nav-item="plan" class="app-navigation-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v4m8-4v4M4 10h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm3 9 3 3 5-5" /></svg><span>Plan</span></a></nav>
+    </aside>
+    <header class="border-b border-forest/10 bg-white/95 dark:border-cream/10 dark:bg-night-surface/95 lg:col-start-2">
+        <div class="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
+            <a href="#shell" class="app-brand lg:hidden"><img src="../static/brand/tuxedo-mark-256.png" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl"></a>
+            <span class="hidden text-sm font-medium lg:block">Home</span>
+            <div class="hidden items-center gap-2 lg:flex"><button type="button" data-theme-toggle aria-label="Toggle color theme" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
                         <svg class="h-5 w-5 dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>
                         <svg class="hidden h-5 w-5 dark:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
-                    </button>
-                    <details class="secondary-actions">
+                    </button><details class="secondary-actions">
                         <summary>demo-user <svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
                         <div class="secondary-actions-panel">
                             <a href="#forms">Settings</a>
@@ -104,29 +95,24 @@
                             <a href="#shell">Project documentation</a>
                             <a href="#shell">Log out</a>
                         </div>
-                    </details>
-                </div>
-
-                <!-- Mobile actions -->
-                <div class="flex items-center gap-2 xl:hidden">
-                    <button type="button" id="menu-btn" aria-controls="mobile-menu" aria-expanded="false" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/20 dark:hover:bg-cream/10">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                        <span class="sr-only">Toggle menu</span>
-                    </button>
-                </div>
-            </div>
-        </nav>
-        <noscript><nav class="mobile-navigation-links flex flex-wrap items-center gap-4 border-t border-forest/10 p-3 xl:hidden" aria-label="Main navigation without JavaScript">
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="overview"><a href="#workspaces" class="primary-link" aria-current="page">Overview</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Overview: More options" aria-controls="catalogue-native-overview-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-native-overview-panel"><a href="#dashboard">Dashboard</a><a href="#data">Reports</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="activity"><a href="#workspaces" class="primary-link">Activity</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Activity: More options" aria-controls="catalogue-native-activity-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-native-activity-panel"><a href="#components">Transactions</a><a href="#workspaces">Categories</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="banks"><a href="#workspaces" class="primary-link">Banks</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Banks: More options" aria-controls="catalogue-native-banks-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-native-banks-panel"><a href="#workspaces">Bank balances</a><a href="#forms">Transfer</a><a href="#data">Exchange rates</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="investments"><a href="#workspaces" class="primary-link">Investments</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Investments: More options" aria-controls="catalogue-native-investments-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-native-investments-panel"><a href="#workspaces">Portfolio</a><a href="#workspaces">Remunerated cash</a><a href="#planning-sheet-example">Simulate returns</a><a href="#forms">Products and assets</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="planning"><a href="#workspaces" class="primary-link">Planning</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Planning: More options" aria-controls="catalogue-native-planning-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-native-planning-panel"><a href="#forms">Monthly plan</a><a href="#workspaces">Yield simulation</a><a href="#workspaces">Saved drafts</a></div></details></div>
-                </nav></noscript>
+                    </details></div>
+            <button type="button" id="menu-btn" aria-controls="mobile-menu" aria-expanded="false" class="action-link lg:hidden"><span aria-hidden="true">☰</span><span class="sr-only">Toggle menu</span></button>
+        </div>
+        <noscript><div class="p-3 lg:hidden"><details class="secondary-actions">
+                        <summary>demo-user <svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+                        <div class="secondary-actions-panel">
+                            <a href="#forms">Settings</a>
+                            <label for="lang-native" class="sr-only">Language</label>
+                            <select id="lang-native" class="rounded-full border border-forest/20 bg-transparent px-3 py-2"><option>EN</option><option>PT</option></select>
+                            <a href="#shell">Project documentation</a>
+                            <a href="#shell">Log out</a>
+                        </div>
+                    </details></div></noscript>
     </header>
 
     <!-- APP MAIN (demo content) -->
-    <div id="dashboard" class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div id="dashboard" class="mx-auto w-full min-w-0 max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:col-start-2 lg:px-8">
+        <nav class="section-nav" aria-label="Example Home sections"><a href="#dashboard" aria-current="page">Dashboard</a><a href="#data">Reports</a><a href="#workspaces">Net worth</a></nav>
         <div class="space-y-3" role="status" aria-live="polite">
             <div class="flex items-start gap-3 rounded-2xl border border-income/40 bg-income/10 px-4 py-3 text-sm text-income dark:text-income-light">
                 <p class="font-medium">Transaction created successfully.</p>
@@ -157,7 +143,7 @@
     </div>
 
     <!-- APP FOOTER -->
-    <footer class="bg-forest text-cream/70 dark:bg-night-surface dark:text-night-muted">
+    <footer class="bg-forest text-cream/70 dark:bg-night-surface dark:text-night-muted lg:col-start-2">
         <div class="mx-auto flex w-full max-w-7xl flex-col items-center gap-3 px-4 py-10 text-center sm:flex-row sm:justify-between sm:gap-4 sm:text-left sm:px-6 lg:px-8">
             <div class="flex items-center gap-2">
                 <img src="../static/brand/tuxedo-mark-256.png" alt="" class="h-8 w-8 rounded-lg object-cover">
@@ -166,6 +152,11 @@
             <p class="text-xs font-normal">&copy; 2026 <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-caramel-light">HenriqueMayer</a>. All rights reserved.</p>
         </div>
     </footer>
+    <nav class="app-bottom-navigation" style="position:static" aria-label="Example mobile workspaces" data-catalogue-navigation="mobile"><a href="#dashboard" data-nav-item="home" class="app-navigation-link" aria-current="page"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7M5 9v11h5v-7h4v7h5V9" /></svg><span>Home</span></a>
+<a href="#components" data-nav-item="transactions" class="app-navigation-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4" /></svg><span>Transactions</span></a>
+<a href="#workspaces" data-nav-item="accounts" class="app-navigation-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9h18L12 3 3 9Zm2 3v6m7-6v6m7-6v6M3 21h18" /></svg><span>Accounts</span></a>
+<a href="#data" data-nav-item="investments" class="app-navigation-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M6 16v-4m6 4V8m6 8V4" /></svg><span>Investments</span></a>
+<a href="#planning-sheet-example" data-nav-item="plan" class="app-navigation-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v4m8-4v4M4 10h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm3 9 3 3 5-5" /></svg><span>Plan</span></a></nav>
     </div>
 </section>
 
@@ -194,7 +185,7 @@
         <div>
             <span class="text-caramel-ink dark:text-caramel-light uppercase tracking-widest text-xs font-medium block mb-4">Section 1</span>
             <h2 class="font-sans text-4xl tracking-tight font-semibold">Typography.</h2>
-            <p class="mt-4 max-w-2xl text-base font-normal leading-relaxed text-forest/70 dark:text-night-muted">Inter 400&ndash;700 is used throughout. Headings use semibold weight, body copy starts at 16px, supporting text starts at 14px, and compact labels never render below 12px. Monetary data keeps tabular numerals.</p>
+            <p class="mt-4 max-w-2xl text-base font-normal leading-relaxed text-forest/70 dark:text-night-muted">Inter 400&ndash;700 is used throughout. Headings use semibold weight, body copy starts at 16px, supporting text starts at 14px, and compact labels start at 12px. The mobile bottom bar is the sole exception: its five complete destination labels use 10&ndash;11px, never below 10px, with touch targets of at least 44 &times; 44px. Narrow screens use tighter spacing rather than truncation or reduced targets. Monetary data keeps tabular numerals.</p>
         </div>
 
         <div class="divide-y divide-forest/10 dark:divide-cream/10 border-y border-forest/10 dark:border-cream/10">
@@ -346,15 +337,15 @@
         <div>
             <span class="text-caramel-ink dark:text-caramel-light uppercase tracking-widest text-xs font-medium block mb-4">Section 3</span>
             <h2 class="font-sans text-4xl tracking-tight font-semibold">Navigation.</h2>
-            <p class="mt-4 text-base text-forest/70 dark:text-night-muted leading-relaxed font-normal max-w-2xl">Five primary destinations keep their label and SVG caret on one line. The active area uses a quiet background; secondary section links use a caramel underline. Reports belong under Overview; Categories under Activity. Settings, language and logout share account options. Native details reveal secondary actions; touch and keyboard retain visible focus.</p>
+            <p class="mt-4 text-base text-forest/70 dark:text-night-muted leading-relaxed font-normal max-w-2xl">The same five direct destinations appear on desktop and mobile, with a quiet active background and visible keyboard focus. Local section tabs use a caramel underline: Reports and Net worth belong to Home; Categories and Imports belong to Transactions. Settings, language and logout share account options. Option menus require click, touch or keyboard activation; hovering never opens them. Native links and details remain usable without JavaScript.</p>
         </div>
 
         <div class="rounded-3xl border border-forest/10 dark:border-cream/10 p-6 sm:p-8">
             <p class="text-xs uppercase tracking-widest font-medium text-forest/70 dark:text-night-muted mb-5">Link states</p>
             <nav class="flex flex-wrap items-center gap-2" aria-label="Example navigation states">
-                <div class="nav-disclosure relative flex items-center"><a href="#navigation" class="primary-link" aria-current="page">Overview</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Example Overview: More options" aria-controls="catalogue-state-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div id="catalogue-state-panel" class="nav-disclosure-panel"><a href="#dashboard">Dashboard</a><a href="#data">Reports</a></div></details></div>
-                <a href="#workspaces" class="primary-link">Inactive link</a>
-                <button type="button" class="action-link" aria-label="Open example navigation" onclick="document.getElementById('menu-btn').click()">Open mobile menu</button>
+                <a href="#dashboard" class="app-navigation-link" aria-current="page">Home</a>
+                <a href="#workspaces" class="app-navigation-link">Inactive link</a>
+                <button type="button" class="action-link" aria-label="Open example navigation" onclick="document.getElementById('menu-btn').click()">Open account options</button>
             </nav>
         </div>
 
@@ -1003,13 +994,8 @@
         <h2 id="mobile-menu-title" class="text-sm font-medium uppercase tracking-widest">Navigation menu</h2>
         <button type="button" id="close-menu-btn" aria-controls="mobile-menu" aria-expanded="false" class="action-link"><span aria-hidden="true">×</span><span class="sr-only">Close menu</span></button>
     </div>
-    <nav class="mobile-navigation-links my-6 flex flex-col items-start gap-2 text-lg" aria-label="Main navigation">
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="overview"><a href="#workspaces" class="primary-link mobile-link" aria-current="page">Overview</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Overview: More options" aria-controls="catalogue-mobile-overview-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-mobile-overview-panel"><a class="mobile-link" href="#dashboard">Dashboard</a><a class="mobile-link" href="#data">Reports</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="activity"><a href="#workspaces" class="primary-link mobile-link">Activity</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Activity: More options" aria-controls="catalogue-mobile-activity-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-mobile-activity-panel"><a class="mobile-link" href="#components">Transactions</a><a class="mobile-link" href="#workspaces">Categories</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="banks"><a href="#workspaces" class="primary-link mobile-link">Banks</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Banks: More options" aria-controls="catalogue-mobile-banks-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-mobile-banks-panel"><a class="mobile-link" href="#workspaces">Bank balances</a><a class="mobile-link" href="#forms">Transfer</a><a class="mobile-link" href="#data">Exchange rates</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="investments"><a href="#workspaces" class="primary-link mobile-link">Investments</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Investments: More options" aria-controls="catalogue-mobile-investments-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-mobile-investments-panel"><a class="mobile-link" href="#workspaces">Portfolio</a><a class="mobile-link" href="#workspaces">Remunerated cash</a><a class="mobile-link" href="#planning-sheet-example">Simulate returns</a><a class="mobile-link" href="#forms">Products and assets</a></div></details></div>
-                    <div class="nav-disclosure relative flex items-center" data-nav-item="planning"><a href="#workspaces" class="primary-link mobile-link">Planning</a><details data-nav-menu><summary tabindex="0" class="nav-disclosure-toggle flex list-none items-center justify-center" aria-label="Planning: More options" aria-controls="catalogue-mobile-planning-panel"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m5.5 7.75 4.5 4.5 4.5-4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-disclosure-panel" id="catalogue-mobile-planning-panel"><a class="mobile-link" href="#forms">Monthly plan</a><a class="mobile-link" href="#workspaces">Yield simulation</a><a class="mobile-link" href="#workspaces">Saved drafts</a></div></details></div>
-                </nav>
+    <p class="my-6 truncate text-lg font-medium">demo-user</p>
+
     <div class="mt-auto space-y-5 border-t border-forest/15 pt-6 dark:border-cream/15">
         <a href="#forms" class="action-link mobile-link">Settings</a>
         <div class="flex items-center gap-4"><label for="lang-mobile" class="field-label">Language</label><select id="lang-mobile" class="rounded-full border border-forest/20 bg-transparent px-3 py-2"><option>EN</option><option>PT</option></select><button type="button" data-theme-toggle aria-label="Toggle color theme" class="flex h-10 w-10 items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors dark:border-cream/30 dark:hover:bg-cream/10">

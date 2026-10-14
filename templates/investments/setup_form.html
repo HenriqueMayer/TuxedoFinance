@@ -14,6 +14,7 @@
 
     <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="next" value="{{ return_url }}">
         {% if form.instance.is_archived %}
             <p class="subtle-copy">{% translate 'This asset is archived. Restore it in Investment Settings to record new operations.' %}</p>
         {% endif %}
@@ -47,7 +48,7 @@
         {% endif %}
         <div class="flex items-center gap-3">
             <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light">{% translate 'Save' %}</button>
-            <a href="{% url 'investments:settings' %}" class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90">{% translate 'Cancel' %}</a>
+            <a href="{{ return_url }}" class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90">{% translate 'Cancel' %}</a>
         </div>
     </form>
 </div>

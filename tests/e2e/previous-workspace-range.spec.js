@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const {test, expect} = require('@playwright/test');
+const { requestPath, expectContextualDestination } = require('./helpers/navigation');
 
 async function signup(page, info) {
     const response = await page.request.get('/accounts/signup/');
@@ -19,7 +20,7 @@ for (const theme of ['light', 'dark']) {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await page.goto('/transactions/');
         await page.getByRole('link', {name: 'New Transaction', exact: true}).first().click();
-        await expect(page).toHaveURL(/\/transactions\/create\/$/);
+        await expectContextualDestination(page, '/transactions/create/', '/transactions/');
         const formUrl = page.url();
         const title = page.locator('#id_title');
         await title.fill('Unsent transaction');
@@ -52,11 +53,11 @@ test('browser Back confirmation preserves edited form when canceled', async ({pa
     await signup(page, info);
     await page.goto('/transactions/');
     await page.getByRole('link', {name: 'New Transaction', exact: true}).first().click();
-    await expect(page).toHaveURL(/\/transactions\/create\/$/);
+    await expectContextualDestination(page, '/transactions/create/', '/transactions/');
     await page.locator('#id_title').fill('Stay here');
     page.once('dialog', dialog => dialog.dismiss());
     await page.goBack();
-    await expect(page).toHaveURL(/\/transactions\/create\/$/);
+    await expectContextualDestination(page, '/transactions/create/', '/transactions/');
     await expect(page.locator('#id_title')).toHaveValue('Stay here');
     page.once('dialog', dialog => dialog.accept());
     await page.goBack();
@@ -89,12 +90,13 @@ test('history snapshots stay in the current tab and user scope', async ({page, c
     await signup(page, info);
     await page.goto('/transactions/');
     await page.getByRole('link', {name: 'New Transaction', exact: true}).first().click();
-    await expect(page).toHaveURL(/\/transactions\/create\/$/);
+    await expectContextualDestination(page, '/transactions/create/', '/transactions/');
+    const formKey = requestPath(page.url());
     await page.locator('#id_title').fill('Private draft');
     page.once('dialog', dialog => dialog.accept());
     await page.getByRole('link', {name: 'Cancel', exact: true}).click();
     const state = await page.evaluate(() => JSON.parse(sessionStorage.getItem('tuxedo.history-workspace.v2')));
-    expect(state.entries['/transactions/create/'].forms.some(form => form.fields.some(field => field.value === 'Private draft'))).toBe(true);
+    expect(state.entries[formKey].forms.some(form => form.fields.some(field => field.value === 'Private draft'))).toBe(true);
     const other = await context.newPage();
     await other.goto('/transactions/');
     expect(await other.evaluate(() => sessionStorage.getItem('tuxedo.history-workspace.v2'))).toBeNull();
@@ -155,8 +157,8 @@ for (const theme of ['light', 'dark']) {
         await report.locator('[data-point]').last().press('Shift+Space');
         await expect(report.locator('[data-selection-summary]')).toBeVisible();
         await page.getByRole('navigation', {name: 'Main navigation'})
-            .getByRole('link', {name: 'Planning', exact: true}).click();
-        await expect(page).toHaveURL(/\/sandbox\/$/);
+            .getByRole('link', {name: 'Plan', exact: true}).click();
+        await expect(page).toHaveURL(/\/planning\/$/);
         expect(dialogs).toEqual([]);
     });
 }

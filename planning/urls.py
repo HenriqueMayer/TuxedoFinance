@@ -4,7 +4,7 @@ from planning import views
 
 app_name = 'planning'
 urlpatterns = [
-    path('', views.budgets, name='index'),
+    path('', views.index, name='index'),
     path('budgets/', views.budgets, name='budgets'),
     path('budgets/create/', views.budget_form, name='budget_create'),
     path('budgets/<int:pk>/edit/', views.budget_form, name='budget_update'),

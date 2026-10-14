@@ -1,13 +1,14 @@
-{% extends 'base.html' %}{% load i18n %}
+{% extends 'base.html' %}{% load i18n navigation %}
 {% block title %}{% translate 'Confirm statement import' %} - Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="mx-auto max-w-3xl space-y-6"><div><h1 class="page-title">{% translate 'Confirm statement import' %}</h1><p class="subtle-copy mt-2">{{ batch.file_name }} · {{ batch.account }}</p></div>
 <section class="surface-panel space-y-4 p-6"><p>{% translate 'These saved decisions will be applied together. Matches preserve their original financial sources. Transfers and invoice payments do not create another income or expense.' %}</p>
 {% if batch.closing_date %}<p>{% translate 'Statement closing balance' %}: {{ batch.account.currency }} {{ batch.closing_balance }} · {{ batch.closing_date|date:USER_DATE_FORMAT }}</p>{% endif %}
 {% include 'ingestion/_decisions.html' %}
-<a class="quiet-action" href="{% url 'ingestion:review' batch.pk %}">{% translate 'Edit review' %}</a></section>
+{% url 'ingestion:review' batch.pk as review_url %}<a class="quiet-action" href="{% contextual_url review_url return_url %}">{% translate 'Edit review' %}</a></section>
 <form method="post" hx-boost="false" novalidate class="surface-panel space-y-5 p-6">{% csrf_token %}{% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+<input type="hidden" name="next" value="{{ return_url }}">
 {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
 {% include 'partials/form_field.html' with field=form.reviewed %}
-<div class="flex flex-wrap gap-3"><button class="action-primary" type="submit">{% translate 'Confirm import' %}</button><a class="action-secondary" href="{% url 'ingestion:review' batch.pk %}">{% translate 'Cancel' %}</a></div></form></div>
+<div class="flex flex-wrap gap-3"><button class="action-primary" type="submit">{% translate 'Confirm import' %}</button><a class="action-link" href="{{ cancel_url }}">{% translate 'Cancel' %}</a></div></form></div>
 {% endblock %}

@@ -818,7 +818,9 @@ class DashboardPageContractTests(DashboardFixture):
         self.assertContains(response, '1 more invoice')
         self.assertEqual(len(response.context['account_balances_preview']), 5)
         self.assertEqual(len(response.context['open_invoices_preview']), 5)
-        self.assertContains(response, 'View Banking', count=2)
+        self.assertContains(response, 'View Banking', count=1)
+        self.assertContains(response, 'href="/banking/invoices/" class="quiet-action shrink-0">Invoices</a>', count=1)
+        self.assertContains(response, 'href="/banking/invoices/%s/?next=' % response.context['open_invoices_preview'][0].pk)
 
     def test_views_sync_before_render_and_show_current_headings(self):
         for name in ('dashboard:index', 'dashboard:reports'):

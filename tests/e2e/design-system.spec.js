@@ -102,8 +102,14 @@ test('authenticated navigation remains usable at tablet widths', async ({ page }
     await page.setViewportSize({ width: 1024, height: 900 });
     await page.reload();
 
+    await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeHidden();
+    const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
+    await expect(navigation).toHaveAttribute('data-app-navigation', 'desktop');
+    await expect(navigation.getByRole('link', { name: 'Home', exact: true })).toBeVisible();
+    await page.setViewportSize({ width: 1023, height: 900 });
+    await expect(navigation).toHaveAttribute('data-app-navigation', 'mobile');
+    await expect(navigation.getByRole('link')).toHaveCount(5);
     await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeVisible();
-    await expect(page.locator('body > header').getByRole('link', { name: 'Overview', exact: true })).toBeHidden();
     await expect(page.locator('main nav').getByRole('link', { name: 'Reports', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n assets %}
+{% load i18n assets navigation %}
 
 {% comment %}
 Category list (PRD §13, Sprint 4 — 4.2.1/4.2.5). Shows only the logged-in
@@ -34,7 +34,7 @@ GET search plus top-level/subcategory filtering.
                     {% if has_categories %}<a href="{% url 'categories:delete_all' %}" class="text-expense dark:text-expense-light">{% translate 'Delete all' %}</a>{% endif %}
                 </div>
             </details>
-            <a href="{{ create_url }}"
+            <a href="{% contextual_url create_url %}"
                class="action-primary">
                  {{ new_category_label }}
             </a>
@@ -90,7 +90,8 @@ GET search plus top-level/subcategory filtering.
             {% endif %}
             <ul class="divide-y divide-forest/10 dark:divide-cream/10">
                 {% for group in category_groups %}
-                    {% include 'categories/_category_group.html' with group=group only %}
+                    {% comment %}Keep the recursive include isolated while carrying the explicit origin for its editor links.{% endcomment %}
+                    {% include 'categories/_category_group.html' with group=group request=request only %}
                 {% endfor %}
             </ul>
         </div>

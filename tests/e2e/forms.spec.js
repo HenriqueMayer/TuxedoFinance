@@ -117,6 +117,7 @@ for (const viewport of [
         await page.keyboard.press('Tab');
         const search = page.locator('#id_credit_card-search');
         const list = page.locator('#id_credit_card-search-results');
+        await tabTo(page, search);
         await expect(search).toBeFocused();
         await expect(list.getByRole('option')).toHaveCount(8);
         const fullyVisible = async () => search.evaluate(input => {
@@ -171,6 +172,8 @@ test('a recurring credit transaction can be completed with keyboard only', async
     await page.keyboard.press('Tab');
     await page.keyboard.press('e');
     await page.keyboard.press('Tab');
+    await tabTo(page, page.locator('#category-search'));
+    await expect(page.locator('#id_split_categories')).not.toBeChecked();
     await expect(page.locator('#category-search')).toBeFocused();
     await page.keyboard.type('aplicati');
     await page.keyboard.press('ArrowDown');
@@ -179,6 +182,7 @@ test('a recurring credit transaction can be completed with keyboard only', async
     await tabTo(page, page.getByLabel(/^\s*Payment channel/));
     await page.keyboard.press('c');
     await page.keyboard.press('Tab');
+    await tabTo(page, page.locator('#id_credit_card-search'));
     await expect(page.locator('#id_credit_card-search')).toBeFocused();
     await expect(page.getByLabel(/^\s*Installments/)).toBeHidden();
     await page.keyboard.type('Keyboard card A');
@@ -309,9 +313,16 @@ test('native forms and conditional fields remain usable without JavaScript', asy
         await page.locator('#id_title').fill('Native transaction');
         await page.locator('#id_amount').fill('10');
         await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
-        await page.getByLabel('Category', { exact: false }).selectOption({ label: 'Aplicativo Comida' });
+        await page.locator('#id_category').selectOption({ label: 'Aplicativo Comida' });
+        await expect(page.locator('#id_split_categories')).not.toBeChecked();
         await page.getByLabel(/^\s*Payment channel/).selectOption('ACCOUNT');
         await page.locator('#id_bank_account').selectOption(account);
+        await page.getByLabel(/^\s*Transaction date/).fill('31/02/2026');
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await expect(page.locator('#id_date')).toHaveValue('31/02/2026');
+        await expect(page.locator('#id_date')).toHaveAttribute('aria-invalid', 'true');
+        await expect(page.locator('#id_title')).toHaveValue('Native transaction');
+        await expect(page.locator('#id_category option:checked')).toHaveText('Aplicativo Comida');
         await page.getByLabel(/^\s*Transaction date/).fill('07/09/2026');
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await expect(page).toHaveURL(/transactions\/$/);

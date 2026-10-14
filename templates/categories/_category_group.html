@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n navigation %}
 <li data-category-group="{{ group.category.pk }}">
     <div class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="min-w-0">
@@ -17,7 +17,7 @@
         </div>
         <div class="flex shrink-0 flex-wrap items-center gap-3">
             {% if not group.category.parent_category %}<a href="{% url 'categories:create' %}?parent={{ group.category.pk }}" class="quiet-action">{% translate 'Add subcategory' %}</a>{% endif %}
-            <a href="{% url 'categories:update' group.category.pk %}" class="quiet-action">{% translate 'Edit' %}</a>
+            {% url 'categories:update' group.category.pk as edit_url %}<a href="{% contextual_url edit_url %}" class="quiet-action">{% translate 'Edit' %}</a>
             <details class="secondary-actions compact-menu" name="category-row-actions">
                 <summary aria-label="{% translate 'More options' %}: {{ group.category.name }}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'More options' %}: {{ group.category.name }}</span></summary>
                 <div class="secondary-actions-panel"><a href="{% url 'categories:delete' group.category.pk %}" class="text-expense dark:text-expense-light">{% translate 'Delete' %}</a></div>
@@ -27,7 +27,7 @@
     {% if group.children %}
         <ul id="category-children-{{ group.category.pk }}" aria-labelledby="category-name-{{ group.category.pk }}" class="ml-3 divide-y divide-forest/10 border-t border-forest/10 pl-3 dark:divide-cream/10 dark:border-cream/10">
             {% for child_group in group.children %}
-                {% include 'categories/_category_group.html' with group=child_group only %}
+                {% include 'categories/_category_group.html' with group=child_group request=request only %}
             {% endfor %}
         </ul>
     {% endif %}

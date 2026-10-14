@@ -204,8 +204,14 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, 'aria-modal="true"')
         self.assertContains(
             response,
-            f'href="{reverse("pages:landing")}" class="flex shrink-0 items-center gap-3 group',
+            f'href="{reverse("dashboard:index")}" class="flex shrink-0 items-center gap-3 group',
         )
+        self.assertContains(response, 'data-app-navigation="desktop"')
+        self.assertContains(response, 'data-app-navigation="mobile"')
+        self.assertNotContains(response, 'data-nav-menu')
+        for area in ('home', 'transactions', 'accounts', 'investments', 'plan'):
+            self.assertContains(response, f'id="app-desktop-{area}-link"')
+            self.assertContains(response, f'id="app-mobile-{area}-link"')
         self.assertContains(response, 'aria-label="Settings"')
         self.assertContains(response, reverse('accounts:settings'))
 

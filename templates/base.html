@@ -57,6 +57,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
     comment is required here.) {% endcomment %}
     <script>
         (function () {
+            document.documentElement.classList.add('js-ready');
             var stored = localStorage.getItem('theme');
             var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             var isDark = stored ? stored === 'dark' : prefersDark;
@@ -84,8 +85,9 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <script src="{% asset 'js/chart-selection.js' %}" defer></script>
     <script src="{% asset 'js/bank-colors.js' %}" defer></script>
 </head>
-<body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
+<body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="{% if request.user.is_authenticated %}app-layout {% endif %}flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
     {% if request.user.is_authenticated %}
+        {% include 'partials/app_sidebar.html' %}
         {% include 'partials/navbar_app.html' %}
     {% else %}
         {% include 'partials/navbar_public.html' %}
@@ -101,6 +103,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
     </main>
 
     {% include 'partials/footer.html' %}
+    {% if request.user.is_authenticated %}{% include 'partials/app_bottom_navigation.html' %}{% endif %}
     {% include 'partials/form_ui_strings.html' %}
 
     {% block extra_js %}{% endblock %}

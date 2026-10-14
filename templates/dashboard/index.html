@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n l10n %}
+{% load i18n l10n navigation %}
 
 {% comment %}
 Monthly-performance dashboard. The current month separates modeled economic
@@ -20,13 +20,18 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
     <header class="workspace-header">
         <h1 class="page-title">{% translate "Dashboard" %}</h1>
         <div class="flex flex-wrap items-center gap-3">
-            <a href="{{ sandbox_url }}" class="quiet-action">{% translate "Planning / Sandbox" %}</a>
-            <a href="{% url 'dashboard:reports' %}" class="quiet-action">{% translate "Reports" %}</a>
-            <a href="{{ create_url }}" class="action-primary">{% translate "New Transaction" %}</a>
+            <a href="{% contextual_url create_url %}" class="action-primary">{% translate "New Transaction" %}</a>
         </div>
     </header>
 
     {% include 'banking/_availability.html' with availability=planning_availability %}
+
+    {% if pending_import_count %}
+    <section class="surface-panel space-y-3" aria-labelledby="pending-review-heading">
+        <div class="panel-heading"><h2 id="pending-review-heading" class="section-title">{% translate 'Awaiting your review' %}</h2><a class="quiet-action" href="{% url 'ingestion:index' %}">{% translate 'Imports' %} · {{ pending_import_count }}</a></div>
+        <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for batch in pending_imports %}<li class="flex flex-wrap items-center justify-between gap-3 py-3"><span class="min-w-0 break-words">{{ batch.account.name }} · {{ batch.file_name }}</span>{% if batch.status == 'STAGED' %}{% url 'ingestion:mapping' batch.pk as review_url %}{% else %}{% url 'ingestion:review' batch.pk as review_url %}{% endif %}<a class="action-link" href="{% contextual_url review_url %}">{{ batch.get_status_display }}</a></li>{% endfor %}</ul>
+    </section>
+    {% endif %}
 
     {% if missing_currencies %}
         <div role="status" class="rounded-3xl border border-caramel/40 bg-caramel/10 p-4 text-sm text-caramel-ink dark:border-caramel/40 dark:bg-caramel/10 dark:text-caramel-light">
@@ -127,7 +132,7 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
                     <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
                         {% for row in account_balances_preview %}
                             <li class="flex items-center justify-between gap-4 py-2.5">
-                                <span class="min-w-0 text-sm font-medium text-forest/90 dark:text-cream/90">{{ row.label }}</span>
+                                <a href="{% url 'banking:detail' row.account.bank_id %}#account-row-{{ row.account.pk|stringformat:'d' }}" class="min-w-0 text-sm font-medium text-forest/90 underline-offset-4 hover:underline dark:text-cream/90">{{ row.label }}</a>
                                 <span class="shrink-0 tabular-nums text-forest/70 dark:text-night-muted">{{ row.currency }} {{ row.native_balance|floatformat:2 }}</span>
                             </li>
                         {% endfor %}
@@ -149,17 +154,17 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
                         {% include 'partials/help_popover.html' with help_id='dashboard-invoices-help' help_label=panel_label help_text=panel_help %}
                     </div>
                 </div>
-                <a href="{{ banking_url }}" class="quiet-action shrink-0">{% translate "View Banking" %}</a>
+                <a href="{% url 'banking:invoices' %}" class="quiet-action shrink-0">{% translate "Invoices" %}</a>
             </div>
             {% if open_invoices_preview %}
                 <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
                     {% for invoice in open_invoices_preview %}
                         <li class="flex items-center justify-between gap-4 py-2.5">
                             <span class="min-w-0">
-                                <span class="block text-sm font-medium text-forest/90 dark:text-cream/90">{{ invoice.card.account.bank.name }} &gt; {{ invoice.card.name }}</span>
+                                {% url 'banking:invoice_detail' invoice.pk as invoice_url %}<a href="{% contextual_url invoice_url %}" class="block text-sm font-medium text-forest/90 underline-offset-4 hover:underline dark:text-cream/90">{{ invoice.card.account.bank.name }} &gt; {{ invoice.card.name }}</a>
                                 <span class="text-xs text-forest/70 dark:text-night-muted">{% blocktranslate with due_date=invoice.due_date|date:USER_DATE_FORMAT %}Due {{ due_date }}{% endblocktranslate %}</span>
                             </span>
-                            <span class="shrink-0 tabular-nums text-caramel-ink dark:text-caramel-light">{{ invoice.card.account.currency }} {{ invoice.amount|floatformat:2 }}</span>
+                            <span class="shrink-0 text-right tabular-nums text-caramel-ink dark:text-caramel-light">{{ invoice.card.account.currency }} {% if invoice.manual_settlement %}{{ invoice.remaining_amount|floatformat:2 }}<span class="block text-xs">{% translate 'Remaining' %}</span>{% else %}{{ invoice.amount|floatformat:2 }}{% endif %}</span>
                         </li>
                     {% endfor %}
                 </ul>

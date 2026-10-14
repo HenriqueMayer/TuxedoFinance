@@ -105,3 +105,7 @@ Import, export and Delete all are secondary options. Default CSV export preserve
 the import contract. `?format=spreadsheet` selects the separately named spreadsheet
 variant, which neutralizes formula-like text and is not intended for faithful
 reimport. Imports do not strip prefixes from names automatically.
+
+Category creation/editing can carry a validated local `next` origin. Save/Cancel
+retain the list's search/type/level filters and invalid responses keep the same
+origin. Ownership and duplicate-name/hierarchy checks remain on the server.

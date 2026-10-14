@@ -1,5 +1,6 @@
 {% load i18n %}
 <nav class="section-nav mb-6" aria-label="{% translate 'Planning sections' %}">
+    <a href="{% url 'planning:index' %}"{% if section == 'overview' %} aria-current="page"{% endif %}>{% translate 'Overview' %}</a>
     <a href="{% url 'planning:budgets' %}"{% if section == 'budgets' %} aria-current="page"{% endif %}>{% translate 'Category budgets' %}</a>
     <a href="{% url 'planning:goals' %}"{% if section == 'goals' %} aria-current="page"{% endif %}>{% translate 'Goals' %}</a>
     <a href="{% url 'planning:signals' %}"{% if section == 'signals' %} aria-current="page"{% endif %}>{% translate 'Local signals' %}</a>

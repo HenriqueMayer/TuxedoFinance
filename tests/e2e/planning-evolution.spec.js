@@ -30,6 +30,7 @@ for (const theme of ['light', 'dark']) {
         await page.addInitScript(theme => localStorage.setItem('theme', theme), theme);
         await page.goto('/planning/budgets/create/');
         await expect(page.locator('nav[aria-label="Planning sections"]')).toHaveCount(1);
+        await expect(page.locator('nav[aria-label="Planning sections"]').getByRole('link', { name: 'Overview', exact: true })).toHaveAttribute('href', '/planning/');
         const categorySearch = page.locator('#category-search');
         await expect(categorySearch).toHaveValue('');
         await page.locator('#id_month').focus();

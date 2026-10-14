@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n navigation %}
 {% block title %}{% translate 'Category budgets' %} — Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="space-y-6">
     <header class="workspace-header">
         <div><h1 class="page-title">{% translate 'Category budgets' %}</h1><p class="subtle-copy mt-2">{% translate 'Monthly expense limits, including subcategories. Credit expenses follow the invoice reference month used by the dashboard.' %}</p></div>
-        <a class="action-primary" href="{% url 'planning:budget_create' %}?month={{ month|date:'Y-m' }}">{% translate 'New category budget' %}</a>
+        {% url 'planning:budget_create' as create_url %}{% with selected_month=month|date:'Y-m' %}<a class="action-primary" href="{% contextual_url create_url|add:'?month='|add:selected_month %}">{% translate 'New category budget' %}</a>{% endwith %}
     </header>
     <div class="flex flex-wrap items-end gap-4">
         <form method="get" class="flex flex-wrap items-end gap-3">
@@ -24,7 +24,7 @@
         <section class="surface-panel space-y-4" aria-labelledby="budget-{{ row.budget.pk }}">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 id="budget-{{ row.budget.pk }}" class="section-title">{{ row.budget.category }}</h2>
-                <a href="{% url 'planning:budget_update' row.budget.pk %}" class="quiet-action">{% translate 'Edit limit' %}</a>
+                {% url 'planning:budget_update' row.budget.pk as edit_url %}<a href="{% contextual_url edit_url %}" class="quiet-action">{% translate 'Edit limit' %}</a>
             </div>
             <dl class="grid grid-cols-2 gap-4 text-sm">
                 <div><dt class="subtle-copy">{% translate 'Budget limit' %}</dt><dd class="mt-1 font-semibold tabular-nums">{{ row.budget.currency }} {{ row.budget.amount|floatformat:2 }}</dd></div>

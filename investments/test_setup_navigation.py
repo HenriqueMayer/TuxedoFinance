@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from banking.models import Bank
+from core.navigation import with_return_url
 from investments.models import Asset, InvestmentProduct
 
 
@@ -18,23 +19,24 @@ class InvestmentSetupNavigationTests(TestCase):
             response = self.client.get(url)
             self.assertEqual(response.context['setup_complete'], complete)
             target = 'investments:create' if complete else 'investments:settings'
-            self.assertContains(response, f'href="{reverse(target)}" class="action-primary"')
+            destination = with_return_url(reverse(target), url)
+            self.assertContains(response, f'href="{destination}" class="action-primary"')
             if not complete:
                 self.assertNotContains(response, 'New operation')
 
     def test_primary_action_follows_setup_and_not_operation_count(self):
         self.assert_primary(False)
         response = self.client.get(reverse('investments:settings'))
-        self.assertContains(response, f'href="{reverse("banking:create")}" class="action-primary"')
+        self.assertContains(response, f'href="{with_return_url(reverse("banking:create"), reverse("investments:settings"))}" class="action-primary"')
         self.assertNotContains(response, 'id="investment-products"')
         bank = Bank.objects.create(user=self.user, name='Investment bank')
         self.assert_primary(False)
         response = self.client.get(reverse('investments:settings'))
-        self.assertContains(response, f'href="{reverse("investments:create_product")}" class="action-primary"')
+        self.assertContains(response, f'href="{with_return_url(reverse("investments:create_product"), reverse("investments:settings"))}" class="action-primary"')
         InvestmentProduct.objects.create(user=self.user, bank=bank, name='Brokerage')
         self.assert_primary(False)
         response = self.client.get(reverse('investments:settings'))
-        self.assertContains(response, f'href="{reverse("investments:create_asset")}" class="action-primary"')
+        self.assertContains(response, f'href="{with_return_url(reverse("investments:create_asset"), reverse("investments:settings"))}" class="action-primary"')
         asset = Asset.objects.create(user=self.user, name='Fund', code='FUND', currency='BRL')
         self.assert_primary(True)
         response = self.client.get(reverse('investments:settings'))
@@ -57,13 +59,15 @@ class InvestmentSetupNavigationTests(TestCase):
         for route in ['investments:list', 'investments:settings', 'investments:operations']:
             response = self.client.get(reverse(route))
             self.assertContains(response, 'aria-disabled="true"')
-            self.assertContains(response, 'To simulate investment returns, open Planning')
+            self.assertContains(response, 'To simulate investment returns, open Plan')
             self.assertNotContains(response, 'data-workspace-shortcut')
-            self.assertContains(response, reverse('sandbox:simulation'))
+            self.assertContains(response, reverse('planning:index'))
+        planning = self.client.get(reverse('planning:index'))
+        self.assertContains(planning, reverse('sandbox:simulation'))
 
     def test_portuguese_setup_and_notice_are_translated(self):
         self.client.cookies['django_language'] = 'pt-br'
         response = self.client.get(reverse('investments:list'))
         self.assertContains(response, 'Configurar investimentos')
-        self.assertContains(response, 'Planejamento → Simulação de rendimentos')
+        self.assertContains(response, 'Planejar → Simulação de rendimentos')
         self.assertNotContains(response, 'To simulate investment returns')

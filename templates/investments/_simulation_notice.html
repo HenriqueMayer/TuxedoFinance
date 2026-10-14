@@ -4,12 +4,12 @@
             aria-describedby="{{ notice_id }}" aria-controls="{{ notice_id }}" aria-expanded="false"
             data-help-trigger hidden>{% translate 'Simulate returns' %}</button>
     <span id="{{ notice_id }}" class="help-content action-notice" role="tooltip" data-help-content hidden>
-        {% translate 'To simulate investment returns, open Planning → Yield simulation.' %}
+        {% translate 'To simulate investment returns, open Plan → Yield simulation.' %}
     </span>
     <noscript>
         <details class="unavailable-action-native">
             <summary role="button" class="unavailable-action-trigger" aria-disabled="true" aria-describedby="{{ notice_id }}-native">{% translate 'Simulate returns' %}</summary>
-            <span id="{{ notice_id }}-native" class="help-fallback-content action-notice" role="tooltip">{% translate 'To simulate investment returns, open Planning → Yield simulation.' %}</span>
+            <span id="{{ notice_id }}-native" class="help-fallback-content action-notice" role="tooltip">{% translate 'To simulate investment returns, open Plan → Yield simulation.' %}</span>
         </details>
     </noscript>
 </span>

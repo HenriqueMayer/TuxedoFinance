@@ -167,6 +167,7 @@ before migrating an existing installation.
 | Local signals | Explained duplicate, subscription-increase, budget-overspend and future-cash-shortage suggestions, with acknowledge/dismiss/reopen actions that leave source finances unchanged. |
 | Valuations and wealth | Dated local unit-price observations, weighted-average remaining cost, realized/unrealized results, explicit fee currency and a monthly net-worth series including incurred card debt. Missing history, opening dates, prices and FX are disclosed. |
 | Local operation | Locally served fonts, reused reporting/conversion context and incremental ledger synchronization, plus expanded synthetic demonstration data. |
+| Daily navigation | The same five destinations in a desktop sidebar and mobile bottom bar, local section tabs, contextual account/card/position actions and retained form origins. Planning emphasizes budgets/goals; transaction splits and optional initial goal reserves share their creation flow. |
 
 The branch does not add a live bank connection, external quote feed or cloud AI
 service. Price observations and review decisions stay in the local database;

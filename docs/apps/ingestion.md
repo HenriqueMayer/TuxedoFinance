@@ -117,3 +117,28 @@ use `never_cache`.
 
 See [banking](banking.md#optional-manual-settlement) and
 [transactions](transactions.md#settlement-behavior) for the posting boundaries.
+
+## Compact review and continuity
+
+An owned account shortcut on upload preselects that account. A validated local
+origin is preserved through mapping, review, confirmation and undo screens;
+Cancel and a completed confirmation can return to the original account/search.
+Mapping reuse is an explicit GET choice from the latest confirmed CSV for the
+same owner/account, headers, encoding and delimiter. It only prepares fields;
+parsing and financial decisions still require their normal explicit submissions.
+
+Review displays 25 rows per page with native details showing original evidence
+and decision controls. The first pending row and bound errors are expanded.
+Saving one page validates its complete decisions, retains other pages and moves
+to the first remaining decision; it never posts financial sources. The optional
+bulk action skips only still-undecided entries on the current page whose strong
+bank identifiers were already confirmed. Valid choices are preserved, invalid
+ones prevent the save, and fuzzy description matches are never bulk-skipped.
+The bulk action rechecks its confirmed identifiers and still-empty saved actions
+inside the same review transaction before writing any decisions. Undoing the
+original import or saving a decision in another tab invalidates the old
+suggestion and leaves the submitted subset unchanged.
+
+`save_review(partial=True)` accepts only a nonempty subset of the owned batch.
+Confirmation continues validating every row and the complete decision digest.
+Read/write responses retain their existing owner scope and `never_cache`.

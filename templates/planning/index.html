@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load i18n navigation %}
+{% block title %}{% translate 'Planning' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <header class="workspace-header"><div><h1 class="page-title">{% translate 'Planning' %}</h1><p class="subtle-copy mt-2">{% translate 'Set spending limits and reserve real balances for your goals.' %}</p></div></header>
+    <div class="grid gap-5 lg:grid-cols-2">
+        <section class="surface-panel space-y-4" aria-labelledby="planning-budgets">
+            <h2 id="planning-budgets" class="section-title">{% translate 'Category budgets' %}</h2>
+            <p class="subtle-copy">{% translate 'Compare monthly limits with recorded spending and the expense forecast.' %}</p>
+            <p>{{ month|date:'F Y' }} · {% blocktranslate count count=budget_count %}{{ count }} budget{% plural %}{{ count }} budgets{% endblocktranslate %}{% if budget_attention_count %} · {% blocktranslate count count=budget_attention_count %}{{ count }} needs review{% plural %}{{ count }} need review{% endblocktranslate %}{% endif %}</p>
+            <div class="flex flex-wrap gap-3"><a class="action-primary" href="{% url 'planning:budgets' %}?month={{ month|date:'Y-m' }}">{% translate 'Review budgets' %}</a>{% url 'planning:budget_create' as create_budget %}{% with selected_month=month|date:'Y-m' %}<a class="action-link" href="{% contextual_url create_budget|add:'?month='|add:selected_month %}">{% translate 'New category budget' %}</a>{% endwith %}</div>
+        </section>
+        <section class="surface-panel space-y-4" aria-labelledby="planning-goals">
+            <h2 id="planning-goals" class="section-title">{% translate 'Goals' %}</h2>
+            <p class="subtle-copy">{% translate 'Create a target and optionally reserve an existing balance in the same step.' %}</p>
+            <p>{% blocktranslate count count=goal_count %}{{ count }} active goal{% plural %}{{ count }} active goals{% endblocktranslate %}</p>
+            <div class="flex flex-wrap gap-3"><a class="action-primary" href="{% url 'planning:goals' %}">{% translate 'Review goals' %}</a>{% url 'planning:goal_create' as create_goal %}<a class="action-link" href="{% contextual_url create_goal %}">{% translate 'New goal' %}</a></div>
+        </section>
+    </div>
+    <section class="surface-panel space-y-4" aria-labelledby="planning-signals"><h2 id="planning-signals" class="section-title">{% translate 'Local signals' %}</h2><p class="subtle-copy">{% translate 'Review explained suggestions without changing their financial sources.' %}</p><a class="action-link" href="{% url 'planning:signals' %}">{% translate 'Review local signals' %}</a></section>
+    <section class="space-y-4" aria-labelledby="planning-simulations"><h2 id="planning-simulations" class="section-title">{% translate 'Simulations and saved drafts' %}</h2><p class="subtle-copy">{% translate 'Explore a monthly plan or investment return scenario separately from your recorded budgets and goals.' %}</p><div class="flex flex-wrap gap-3"><a class="action-link" href="{% url 'sandbox:index' %}">{% translate 'Monthly plan' %}</a><a class="action-link" href="{% url 'sandbox:simulation' %}">{% translate 'Yield simulation' %}</a><a class="action-link" href="{% url 'sandbox:drafts' %}">{% translate 'Saved drafts' %}</a></div></section>
+</div>
+{% endblock %}

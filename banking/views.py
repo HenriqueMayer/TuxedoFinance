@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from core.currencies import CURRENCIES
+from core.navigation import ReturnContextMixin, return_url, with_return_url
 
 from banking.forms import (
     BankAccountForm,
@@ -218,7 +219,7 @@ class BankDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class OwnedFormMixin(LoginRequiredMixin):
+class OwnedFormMixin(ReturnContextMixin, LoginRequiredMixin):
     template_name = 'banking/form.html'
     form_title = ''
     form_variant = ''
@@ -243,8 +244,14 @@ class OwnedFormMixin(LoginRequiredMixin):
         context = super().get_context_data(**kwargs)
         context['form_title'] = self.form_title
         context['form_variant'] = self.form_variant
-        context['cancel_url'] = self.get_cancel_url()
+        context['cancel_url'] = self.get_return_url()
+        # A rendered fallback is for Cancel. Posting it as an explicit origin
+        # would mask defaults that become known only after creating the record.
+        context['return_url'] = return_url(self.request, '')
         return context
+
+    def get_return_fallback(self):
+        return self.get_cancel_url()
 
     def get_cancel_url(self):
         return reverse('banking:list')
@@ -274,7 +281,7 @@ class BankUpdateView(OwnedFormMixin, UpdateView):
     form_class = BankForm
     form_title = _('Edit bank')
 
-    def get_success_url(self):
+    def get_return_fallback(self):
         return reverse('banking:detail', args=[self.object.pk])
 
     def get_cancel_url(self):
@@ -297,9 +304,9 @@ class RelatedFormMixin(OwnedFormMixin):
             return obj.bank
         return None
 
-    def get_success_url(self):
+    def get_return_fallback(self):
         bank = self.get_bank()
-        return reverse('banking:detail', args=[bank.pk]) if bank else reverse('banking:list')
+        return reverse('banking:detail', args=[bank.pk]) if bank else self.get_cancel_url()
 
     def get_cancel_url(self):
         if getattr(self, 'object', None) and self.object.pk:
@@ -358,7 +365,18 @@ class InvoiceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         sync_user_ledger(self.request.user)
-        return CardInvoice.objects.filter(user=self.request.user).select_related('card__account__bank').prefetch_related('payments')
+        invoices = CardInvoice.objects.filter(user=self.request.user).select_related('card__account__bank').prefetch_related('payments')
+        card_id = self.request.GET.get('card', '')
+        if card_id:
+            if (not card_id.isascii() or not card_id.isdigit()
+                    or len(card_id) > 19 or int(card_id) > 9223372036854775807):
+                raise Http404
+            self.card = get_object_or_404(CreditCard, user=self.request.user, pk=card_id)
+            invoices = invoices.filter(card=self.card)
+        return invoices
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(**kwargs) | {'selected_card': getattr(self, 'card', None)}
 
 
 def _payment_errors(form, error):
@@ -382,11 +400,15 @@ def invoice_detail(request, pk):
             _payment_errors(form, error)
         else:
             messages.success(request, _('Invoice payment confirmed.'))
-            return redirect('banking:invoice_detail', pk=pk)
+            # Keep the payment outcome beside its remaining obligation. An
+            # origin is for Cancel; recording a payment remains on this invoice.
+            target = with_return_url(reverse('banking:invoice_detail', args=[pk]), return_url(request, ''))
+            return redirect(target + '#invoice-summary')
     from transactions.models import Transaction
     items = Transaction.objects.filter(user=request.user, credit_card=invoice.card).select_related('category')
     sources = [(item, item.amount_for_month(invoice.reference_month.year, invoice.reference_month.month)) for item in items]
-    return render(request, 'banking/invoice_detail.html', {'invoice': invoice, 'form': form, 'sources': [(item, amount) for item, amount in sources if amount]})
+    return render(request, 'banking/invoice_detail.html', {'invoice': invoice, 'form': form, 'sources': [(item, amount) for item, amount in sources if amount],
+        'return_url': return_url(request, reverse('banking:invoices'))})
 
 
 @login_required
@@ -399,8 +421,9 @@ def invoice_payment_edit(request, pk):
         except ValidationError as error:
             _payment_errors(form, error)
         else:
-            return redirect('banking:invoice_detail', pk=payment.invoice_id)
-    return render(request, 'banking/form.html', {'form': form, 'form_title': _('Edit confirmed payment'), 'cancel_url': reverse('banking:invoice_detail', args=[payment.invoice_id])})
+            return redirect(return_url(request, reverse('banking:invoice_detail', args=[payment.invoice_id])))
+    destination = return_url(request, reverse('banking:invoice_detail', args=[payment.invoice_id]))
+    return render(request, 'banking/form.html', {'form': form, 'form_title': _('Edit confirmed payment'), 'cancel_url': destination, 'return_url': destination})
 
 
 @login_required
@@ -477,7 +500,7 @@ class LoyaltyProgramDeleteView(OwnedDeleteView):
     model = LoyaltyProgram
 
 
-class OperationFormMixin(LoginRequiredMixin, FormView):
+class OperationFormMixin(ReturnContextMixin, LoginRequiredMixin, FormView):
     template_name = 'banking/form.html'
     form_title = ''
     success_url = reverse_lazy('banking:list')
@@ -499,7 +522,8 @@ class OperationFormMixin(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form_title'] = self.form_title
-        context['cancel_url'] = reverse('banking:list')
+        context['cancel_url'] = self.get_return_url()
+        context['return_url'] = return_url(self.request, '')
         return context
 
 
@@ -597,8 +621,10 @@ class RewardRedemptionCreateView(OperationFormMixin):
     form_class = RewardRedemptionForm
     form_title = _('Convert points or miles to account balance')
 
-    def get_success_url(self):
-        return reverse('banking:detail', args=[self.redemption.target_account.bank_id]) + '#reward-redemptions'
+    def get_return_fallback(self):
+        if getattr(self, 'redemption', None):
+            return reverse('banking:detail', args=[self.redemption.target_account.bank_id]) + '#reward-redemptions'
+        return reverse('banking:list')
 
     def form_valid(self, form):
         try:

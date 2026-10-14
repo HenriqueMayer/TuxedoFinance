@@ -1,8 +1,9 @@
 import tempfile
+import argparse
 from pathlib import Path
 import unittest
 
-from scripts.preview_branch import preview_environment
+from scripts.preview_branch import preview_environment, private_preview_host
 
 
 class BranchPreviewIsolationTests(unittest.TestCase):
@@ -18,3 +19,17 @@ class BranchPreviewIsolationTests(unittest.TestCase):
             self.assertEqual(env['ALLOW_SIGNUPS'], 'False')
             self.assertEqual(env['ALLOWED_HOSTS'], 'localhost,127.0.0.1')
             self.assertEqual(inherited['TUXEDO_DATA_DIR'], '/installation')
+
+    def test_private_lan_is_explicit_and_has_exact_allowed_host(self):
+        with tempfile.TemporaryDirectory() as directory:
+            env = preview_environment(directory, {'ALLOWED_HOSTS': '*'}, bind_host='192.168.1.25')
+            self.assertEqual(env['ALLOWED_HOSTS'], 'localhost,127.0.0.1,192.168.1.25')
+            self.assertEqual(env['ALLOW_SIGNUPS'], 'False')
+            self.assertEqual(env['TUXEDO_ENV_FILE'], '/dev/null')
+        for address in ['localhost', '127.0.0.1', '127.0.0.2', '10.1.2.3', '172.16.0.2', '192.168.1.25']:
+            self.assertEqual(private_preview_host(address), address)
+
+    def test_wildcards_public_addresses_and_hostnames_are_rejected(self):
+        for address in ['0.0.0.0', '8.8.8.8', '169.254.1.2', '172.15.0.2', '::', '::1', '*', 'example.com', '192.168.1.2:8766']:
+            with self.subTest(address=address), self.assertRaises(argparse.ArgumentTypeError):
+                private_preview_host(address)

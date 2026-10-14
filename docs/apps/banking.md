@@ -235,3 +235,19 @@ or new assets. They do not reduce net worth. See [planning](planning.md).
 Bank lists and detail tables consume grouped balances instead of calling an
 aggregate for each account. The planning toggle uses an owned, CSRF-protected
 POST; the same change works with a normal form submission without JavaScript.
+
+## Contextual daily actions
+
+Accounts remain grouped by institution, but the workspace is named Accounts.
+Each row has an activation-only Update account disclosure for a new transaction,
+statement import or owned transfer. Validated account shortcuts and local `next`
+origins preserve the search and return destination through Save/Cancel and errors.
+Credit cards expose a purchase shortcut and a card-scoped invoice list alongside
+their dated settlement mode. Invoice filters validate card ownership and keep
+the selection during pagination.
+
+Home and bank details link directly to an invoice. Its due date, status, native
+total, confirmed amount and remaining amount precede payment entry and sources.
+Payment entry explicitly records an already completed bank payment. Successful
+entry stays beside the invoice result; Cancel returns to the supplied local
+origin. Source editors and payment editors return to the same invoice section.

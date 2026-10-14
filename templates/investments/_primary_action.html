@@ -1,6 +1,7 @@
-{% load i18n %}
+{% load i18n navigation %}
+{% url 'investments:create' as operation_url %}{% url 'investments:settings' as settings_url %}
 {% if setup_complete %}
-    <a href="{% url 'investments:create' %}" class="action-primary">{% translate 'New operation' %}</a>
+    <a href="{% contextual_url operation_url %}" class="action-primary">{% translate 'New operation' %}</a>
 {% else %}
-    <a href="{% url 'investments:settings' %}" class="action-primary">{% translate 'Configure investments' %}</a>
+    <a href="{% contextual_url settings_url %}" class="action-primary">{% translate 'Configure investments' %}</a>
 {% endif %}

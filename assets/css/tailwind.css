@@ -63,21 +63,32 @@
   .label-with-help { @apply flex flex-wrap items-center gap-2; }
   .primary-link { @apply whitespace-nowrap py-2 text-sm font-medium text-forest/70 transition-colors hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted dark:hover:text-caramel-light; }
   .primary-link[aria-current="page"] { @apply font-semibold text-forest dark:text-cream; }
-  .nav-disclosure { @apply relative flex shrink-0 items-center rounded-xl transition-colors hover:bg-forest/5 dark:hover:bg-cream/5; }
-  .nav-disclosure:has(> a[aria-current="page"]) { @apply bg-forest/5 dark:bg-cream/10; }
-  .nav-disclosure > .primary-link { @apply flex min-h-11 items-center py-0 pl-3 pr-1; }
-  .nav-disclosure-toggle { @apply flex h-11 w-7 cursor-pointer list-none items-center justify-center rounded-lg text-forest/50 transition-colors hover:text-forest focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream/60 dark:hover:text-cream; }
-  .nav-disclosure-toggle::marker { content: ''; }
-  .nav-disclosure-toggle::-webkit-details-marker { display: none; }
-  .nav-disclosure-toggle svg { @apply h-3.5 w-3.5 transition-transform; }
-  [data-nav-menu][open] > .nav-disclosure-toggle svg { transform: rotate(180deg); }
-  .nav-disclosure-panel { @apply absolute left-0 top-full z-50 mt-2 w-60 space-y-0.5 rounded-2xl border border-forest/10 bg-white p-2 text-sm dark:border-cream/15 dark:bg-night-raised; box-shadow: 0 16px 40px -12px rgb(26 46 38 / .2), 0 2px 6px rgb(26 46 38 / .04); max-width: calc(100vw - 2rem); }
-  .nav-disclosure-panel > a { @apply flex min-h-11 items-center rounded-lg px-3 py-2 text-left font-normal text-forest transition-colors hover:bg-forest/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream dark:hover:bg-cream/10; }
-  .mobile-navigation-links .nav-disclosure { @apply block w-full; }
-  .mobile-navigation-links .nav-disclosure > a { @apply inline-flex py-3 pl-3 pr-12; }
-  .mobile-navigation-links .nav-disclosure-toggle { @apply absolute right-1 top-0 h-12 w-11; }
-  .mobile-navigation-links .nav-disclosure-panel { @apply static mt-0 w-full border-0 bg-transparent px-3 pb-3 shadow-none dark:bg-transparent; }
-  .mobile-navigation-links .nav-disclosure-panel > a { @apply text-base; }
+  /* The same five destinations stay visible; secondary screens live in area tabs. */
+  .app-layout { padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); }
+  #menu-btn { display: none; }
+  .js-ready #menu-btn { display: inline-flex; }
+  html:has(.app-layout) { scroll-padding-top: 5rem; scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); }
+  html:has(.app-layout header noscript nav) { scroll-padding-top: 9rem; }
+  .app-sidebar { @apply fixed inset-y-0 left-0 z-40 hidden w-52 flex-col border-r border-forest/10 bg-white px-4 dark:border-cream/10 dark:bg-night-surface lg:flex; overflow-y: auto; }
+  .app-brand { @apply flex min-h-16 shrink-0 items-center gap-3 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel; }
+  .app-navigation-list { @apply flex flex-col gap-2 py-6; }
+  .app-navigation-link { @apply flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-forest/70 transition-colors hover:bg-forest/5 hover:text-forest focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted dark:hover:bg-cream/5 dark:hover:text-cream; }
+  .app-navigation-link svg { @apply h-5 w-5 shrink-0; }
+  .app-navigation-link[aria-current="page"] { @apply bg-caramel/15 font-semibold text-forest dark:bg-caramel/20 dark:text-cream; }
+  .app-bottom-navigation { @apply fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-forest/15 bg-white px-1 pt-1 dark:border-cream/15 dark:bg-night-surface lg:hidden; padding-bottom: calc(.25rem + env(safe-area-inset-bottom, 0px)); }
+  .app-bottom-navigation .app-navigation-link { @apply min-w-0 flex-col justify-start gap-1 px-0 py-2 text-center; min-height: 4rem; font-size: clamp(.625rem, 2.8vw, .6875rem); letter-spacing: -.015em; }
+  .app-bottom-navigation .app-navigation-link span { white-space: nowrap; }
+  /* Color and background identify the active mobile destination without making long labels wider. */
+  .app-bottom-navigation .app-navigation-link[aria-current="page"] { font-weight: 500; }
+  @media (max-width: 359px) {
+    .app-bottom-navigation { padding-inline: 0; }
+    .app-bottom-navigation .app-navigation-link { letter-spacing: -.04em; }
+  }
+  @media (min-width: 1024px) {
+    .js-ready #menu-btn { display: none; }
+    .app-layout { padding-left: 13rem; padding-bottom: 0; }
+    html:has(.app-layout) { scroll-padding-bottom: 1rem; }
+  }
   .section-nav { @apply flex flex-wrap gap-x-6 gap-y-2 border-b border-forest/15 dark:border-cream/15; }
   .section-nav a { @apply border-b-2 border-transparent px-1 py-3 text-sm text-forest/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted; }
   .section-nav a[aria-current="page"] { @apply border-caramel font-medium text-forest dark:text-cream; }

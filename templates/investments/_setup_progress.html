@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n navigation %}
 <section id="investment-setup" class="surface-panel space-y-5" aria-labelledby="investment-setup-title">
     <h2 id="investment-setup-title" class="section-title">{% translate 'Set up your investments' %}</h2>
     <ol class="divide-y divide-forest/10 dark:divide-cream/10">
@@ -16,10 +16,10 @@
         </li>
     </ol>
     {% if not has_bank %}
-        <a href="{% url 'banking:create' %}" class="action-primary">{% translate 'New bank' %}</a>
+        {% url 'banking:create' as bank_url %}<a href="{% contextual_url bank_url %}" class="action-primary">{% translate 'New bank' %}</a>
     {% elif not has_products %}
-        <a href="{% url 'investments:create_product' %}" class="action-primary">{% translate 'New product' %}</a>
+        <a {% url 'investments:create_product' as product_url %}href="{% contextual_url product_url %}" class="action-primary">{% translate 'New product' %}</a>
     {% else %}
-        <a href="{% url 'investments:create_asset' %}" class="action-primary">{% translate 'New asset' %}</a>
+        <a {% url 'investments:create_asset' as asset_url %}href="{% contextual_url asset_url %}" class="action-primary">{% translate 'New asset' %}</a>
     {% endif %}
 </section>

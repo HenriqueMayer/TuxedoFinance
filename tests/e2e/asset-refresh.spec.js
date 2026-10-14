@@ -46,7 +46,7 @@ for (const legacy of [false, true]) {
         page.on('request', request => {
             if (request.isNavigationRequest()) documents.push(new URL(request.url()).pathname);
         });
-        const link = page.locator('header [data-nav-item="activity"] > a').first();
+        const link = page.getByRole('navigation', { name: 'Main navigation', exact: true }).getByRole('link', { name: 'Transactions', exact: true });
         await link.evaluate((element, href) => {
             element.href = href;
             window.htmx.process(element);
@@ -69,7 +69,7 @@ for (const legacy of [false, true]) {
         await page.evaluate(() => { window.assetDocumentMarker = 'current document'; });
         const currentResponse = page.waitForResponse(response => response.request().resourceType() === 'xhr'
             && new URL(response.url()).pathname === '/banking/');
-        await page.locator('header [data-nav-item="banks"] > a').first().click();
+        await page.getByRole('navigation', { name: 'Main navigation', exact: true }).getByRole('link', { name: 'Accounts', exact: true }).click();
         const current = await currentResponse;
         expect(current.request().headers()['x-tuxedo-assets']).toBe(revision);
         expect(current.headers()['hx-redirect']).toBeUndefined();

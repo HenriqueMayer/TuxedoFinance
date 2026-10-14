@@ -262,6 +262,18 @@ def save_allocation(allocation):
 
 
 @transaction.atomic
+def create_goal(goal, allocation=None):
+    """Create a target and its optional real reservation as one operation."""
+    get_user_model().objects.select_for_update().get(pk=goal.user_id)
+    goal.full_clean()
+    goal.save()
+    if allocation is not None:
+        allocation.goal = goal
+        save_allocation(allocation)
+    return goal
+
+
+@transaction.atomic
 def set_goal_archived(goal, archived):
     get_user_model().objects.select_for_update().get(pk=goal.user_id)
     if not archived and goal.is_archived:

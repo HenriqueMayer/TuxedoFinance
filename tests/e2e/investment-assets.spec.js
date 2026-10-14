@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const { test, expect } = require('@playwright/test');
 const { selectChoice } = require('./helpers/forms');
+const { contextualTarget } = require('./helpers/navigation');
 
 async function post(page, path, values) {
     const response = await page.request.get(path);
@@ -28,7 +29,8 @@ async function seed(page, info, unusedCount = 8) {
     await post(page, '/investments/create/', { product, asset, kind: 'YIELD', amount: '10',
         yield_input_mode: 'YIELD_AMOUNT', fees: '0', date: '2026-09-01', reason: 'Saved operation' });
     await page.goto('/investments/operations/');
-    const editor = await page.locator('#investment-movements a[href$="/edit/"]').first().getAttribute('href');
+    const editor = (await contextualTarget(page.locator('#investment-movements').getByRole('link', { name: 'Edit', exact: true }),
+        /^\/investments\/\d+\/edit\/$/, '/investments/operations/')).href;
     await post(page, '/investments/products/create/', { bank, name: 'Asset cash pot', purpose: 'MONTHLY_CASH' });
     await page.goto('/investments/assets/create/');
     const cashProduct = await page.locator('#id_opening_product option').filter({ hasText: 'Asset cash pot' }).getAttribute('value');

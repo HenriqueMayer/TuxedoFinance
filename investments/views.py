@@ -35,6 +35,7 @@ from investments.services import (
     refresh_fx_snapshot,
 )
 from accounts.models import UserPreference
+from core.navigation import ReturnContextMixin, with_return_url
 
 
 def _add_months(year, month, offset):
@@ -149,7 +150,23 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
         # historical chart window. Zero balances need no exchange rate.
         for bank in portfolio_groups:
             for product in bank['products']:
+                product['create_url'] = with_return_url(
+                    reverse('investments:create') + '?' + urlencode({'product': product['id']}),
+                    self.request.get_full_path(), fragment=f"product-{product['id']}")
+                product['edit_url'] = with_return_url(reverse('investments:update_product', args=[product['id']]),
+                    self.request.get_full_path(), fragment=f"product-{product['id']}")
                 for asset in product['assets']:
+                    asset['anchor'] = f"position-{product['id']}-{asset['id']}"
+                    for name, fragment in (('action_urls', asset['anchor']), ('mobile_action_urls', asset['anchor'] + '-mobile')):
+                        asset[name] = {
+                            kind.lower(): with_return_url(
+                                reverse('investments:create') + '?' + urlencode({'product': product['id'], 'asset': asset['id'], 'kind': kind}),
+                                self.request.get_full_path(), fragment=fragment)
+                            for kind in Investment.Kind.values
+                        }
+                        asset[name]['price'] = with_return_url(
+                            reverse('investments:create_price') + '?' + urlencode({'asset': asset['id']}),
+                            self.request.get_full_path(), fragment=fragment)
                     currency = asset['currency']
                     native_totals[currency] = native_totals.get(currency, Decimal('0')) + asset['valuation']
                     try:
@@ -350,15 +367,15 @@ class InvestmentOperationsView(LoginRequiredMixin, ListView):
         return context
 
 
-class InvestmentFormMixin(LoginRequiredMixin):
+class InvestmentFormMixin(ReturnContextMixin, LoginRequiredMixin):
     model = Investment
     form_class = InvestmentForm
     template_name = 'investments/form.html'
     success_url = reverse_lazy('investments:operations')
 
-    def get_success_url(self):
+    def get_return_fallback(self):
         url = str(self.success_url)
-        if self.object.product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH:
+        if self.object and self.object.product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH:
             return f'{url}?section=cash'
         return url
 
@@ -422,6 +439,9 @@ class InvestmentCreateView(InvestmentFormMixin, SuccessMessageMixin, CreateView)
                 choices = choices.filter(is_archived=False)
             if value.isdigit() and choices.filter(pk=value).exists():
                 initial[name] = value
+        kind = self.request.GET.get('kind', '').upper()
+        if kind in Investment.Kind.values:
+            initial['kind'] = kind
         return initial
 
 
@@ -473,7 +493,7 @@ class InvestmentSettingsView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class SetupFormMixin(LoginRequiredMixin):
+class SetupFormMixin(ReturnContextMixin, LoginRequiredMixin):
     template_name = 'investments/setup_form.html'
     success_url = reverse_lazy('investments:settings')
     entity_label = ''
@@ -542,7 +562,7 @@ class AssetUpdateView(AssetFormMixin, SuccessMessageMixin, UpdateView):
     success_message = gettext_lazy('Asset "%(name)s" updated.')
 
 
-class SetupDeleteView(LoginRequiredMixin, DeleteView):
+class SetupDeleteView(ReturnContextMixin, LoginRequiredMixin, DeleteView):
     template_name = 'investments/settings/confirm_delete_entity.html'
     success_url = reverse_lazy('investments:settings')
     entity_label = ''
@@ -563,7 +583,7 @@ class SetupDeleteView(LoginRequiredMixin, DeleteView):
                 response = super().form_valid(form)
         except ProtectedError:
             messages.error(self.request, _('This item has an opening position or investment history and cannot be deleted.'))
-            return redirect('investments:settings')
+            return redirect(self.get_return_url())
         messages.success(
             self.request,
             _('%(entity)s deleted.') % {'entity': self.entity_label.title()},
@@ -615,13 +635,13 @@ def restore_asset(request, pk):
     return _set_asset_archived(request, pk, False)
 
 
-class InvestmentDeleteView(LoginRequiredMixin, DeleteView):
+class InvestmentDeleteView(ReturnContextMixin, LoginRequiredMixin, DeleteView):
     model = Investment
     template_name = 'investments/confirm_delete.html'
     context_object_name = 'investment'
     success_url = reverse_lazy('investments:operations')
 
-    def get_success_url(self):
+    def get_return_fallback(self):
         url = str(self.success_url)
         if self.object.product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH:
             return f'{url}?section=cash'
@@ -658,10 +678,14 @@ class PriceObservationListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['selected_section'] = 'prices'
         context['selected_asset'] = self.request.GET.get('asset', '')
+        target = reverse('investments:create_price')
+        if context['selected_asset'].isdigit():
+            target += '?' + urlencode({'asset': context['selected_asset']})
+        context['price_create_url'] = with_return_url(target, self.request.get_full_path())
         return context
 
 
-class PriceObservationFormMixin(LoginRequiredMixin):
+class PriceObservationFormMixin(ReturnContextMixin, LoginRequiredMixin):
     model = PriceObservation
     form_class = PriceObservationForm
     template_name = 'investments/price_form.html'
@@ -700,7 +724,7 @@ class PriceObservationUpdateView(PriceObservationFormMixin, UpdateView):
     pass
 
 
-class PriceObservationDeleteView(LoginRequiredMixin, DeleteView):
+class PriceObservationDeleteView(ReturnContextMixin, LoginRequiredMixin, DeleteView):
     model = PriceObservation
     template_name = 'investments/price_confirm_delete.html'
     success_url = reverse_lazy('investments:prices')

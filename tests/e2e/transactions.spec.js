@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const { selectChoice } = require('./helpers/forms');
 const { test, expect } = require('@playwright/test');
+const { requestPath, expectContextualDestination } = require('./helpers/navigation');
 
 async function postForm(page, path, fields) {
     const response = await page.request.get(path === '/i18n/setlang/' ? '/transactions/' : path);
@@ -190,10 +191,11 @@ test(`transaction updates retain viewport and focus at ${width}px`, async ({ pag
     await expect(page.getByText('No matching transactions')).toBeVisible();
 
     // Deliberate navigation to another page still starts at that destination.
+    const origin = requestPath(page.url());
     await page.getByRole('link', { name: 'New Transaction', exact: true })
         .evaluate(element => element.focus({ preventScroll: true }));
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/transactions\/create\/$/);
+    await expectContextualDestination(page, '/transactions/create/', origin);
     await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });

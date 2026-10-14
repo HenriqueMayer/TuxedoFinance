@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n navigation %}
 {% block title %}{% translate 'Investments' %} - Tuxedo Finance{% endblock %}
 {% block content %}
 {% url 'investments:list' as list_url %}
@@ -51,18 +51,18 @@
     {% for bank in portfolio_groups %}
         <div class="surface-panel"><h2 class="section-title">{{ bank.name }}</h2>
         {% for product in bank.products %}
-            <div class="panel-heading mt-4 border-b border-forest/10 pb-1 dark:border-cream/10">
+            <div id="product-{{ product.id|stringformat:'s' }}" class="panel-heading scroll-mt-24 mt-4 border-b border-forest/10 pb-1 dark:border-cream/10">
                 <h3 class="text-base font-medium text-forest/80 dark:text-cream/80">{{ product.name }}</h3>
-                <div class="flex flex-wrap gap-3"><a href="{% url 'investments:create' %}?product={{ product.id|stringformat:'s' }}" class="quiet-action">{% translate 'New operation' %}</a><a href="{% url 'investments:update_product' product.id %}" class="quiet-action">{% translate 'Edit' %}</a></div>
+                <div class="flex flex-wrap gap-3"><a href="{{ product.create_url }}" class="quiet-action">{% translate 'New operation' %}</a><a href="{{ product.edit_url }}" class="quiet-action">{% translate 'Edit' %}</a></div>
             </div>
             <div class="hidden overflow-x-auto sm:block" tabindex="0" role="region" aria-label="{{ product.name }}"><table class="data-table min-w-[42rem] table-fixed">
                 <colgroup><col class="w-[28%]"><col class="w-[27%]"><col class="w-[15%]"><col class="w-[15%]"><col class="w-[15%]"></colgroup>
                 <thead><tr><th scope="col">{% translate 'Asset' %}</th><th scope="col" class="number">{% translate 'Position' %}</th><th scope="col" class="number">{% translate 'Deposits' %}</th><th scope="col" class="number">{% translate 'Yields' %}</th><th scope="col" class="number">{% translate 'Withdrawals' %}</th></tr></thead>
-                <tbody>{% for asset in product.assets %}<tr><td><a class="font-medium hover:underline" href="{% url 'investments:operations' %}?section={{ selected_section }}&amp;product={{ product.id|stringformat:'s' }}&amp;asset={{ asset.id|stringformat:'s' }}" aria-label="{% blocktranslate with asset=asset.name %}View operations for {{ asset }}{% endblocktranslate %}">{{ asset.name }}</a><p class="subtle-copy mt-1">{{ asset.code }} · {{ asset.currency }}</p>{% if asset.valuation_mode == 'UNITS' %}{% include 'investments/_position_details.html' %}{% endif %}</td><td class="number font-semibold">{% if asset.valuation_mode == 'MONETARY' %}{{ asset.currency }} {{ asset.balance|floatformat:2 }}{% if asset.currency != base_currency and asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% else %}{% blocktranslate with quantity=asset.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% if asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% endif %}</td><td class="number">{{ asset.currency }} {{ asset.deposits|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</td></tr>{% endfor %}</tbody>
+                <tbody>{% for asset in product.assets %}<tr id="{{ asset.anchor }}" class="scroll-mt-24"><td><a class="font-medium hover:underline" href="{% url 'investments:operations' %}?section={{ selected_section }}&amp;product={{ product.id|stringformat:'s' }}&amp;asset={{ asset.id|stringformat:'s' }}" aria-label="{% blocktranslate with asset=asset.name %}View operations for {{ asset }}{% endblocktranslate %}">{{ asset.name }}</a><p class="subtle-copy mt-1">{{ asset.code }} · {{ asset.currency }}</p>{% include 'investments/_position_actions.html' with actions=asset.action_urls %}{% if asset.valuation_mode == 'UNITS' %}{% include 'investments/_position_details.html' with position_fragment=asset.anchor %}{% endif %}</td><td class="number font-semibold">{% if asset.valuation_mode == 'MONETARY' %}{{ asset.currency }} {{ asset.balance|floatformat:2 }}{% if asset.currency != base_currency and asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% else %}{% blocktranslate with quantity=asset.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% if asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% endif %}</td><td class="number">{{ asset.currency }} {{ asset.deposits|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</td></tr>{% endfor %}</tbody>
             </table></div>
             <ul class="divide-y divide-forest/10 sm:hidden dark:divide-cream/10">
                 {% for asset in product.assets %}
-                    <li class="space-y-4 py-4">
+                    <li id="{{ asset.anchor }}-mobile" class="scroll-mt-24 space-y-4 py-4">
                         <div class="flex flex-wrap items-start justify-between gap-4">
                             <div class="min-w-0">
                                 <a class="text-sm font-medium hover:underline" href="{% url 'investments:operations' %}?section={{ selected_section }}&amp;product={{ product.id|stringformat:'s' }}&amp;asset={{ asset.id|stringformat:'s' }}" aria-label="{% blocktranslate with asset=asset.name %}View operations for {{ asset }}{% endblocktranslate %}">{{ asset.name }}</a>
@@ -83,7 +83,7 @@
                             <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Yields' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</dd></div>
                             <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Withdrawals' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</dd></div>
                         </dl>
-                        {% if asset.valuation_mode == 'UNITS' %}{% include 'investments/_position_details.html' %}{% endif %}
+                        {% include 'investments/_position_actions.html' with actions=asset.mobile_action_urls %}{% if asset.valuation_mode == 'UNITS' %}{% with mobile_anchor=asset.anchor|add:'-mobile' %}{% include 'investments/_position_details.html' with position_fragment=mobile_anchor %}{% endwith %}{% endif %}
                     </li>
                 {% endfor %}
             </ul>

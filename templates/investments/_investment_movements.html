@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n navigation %}
 {% url 'investments:operations' as list_url %}
 <section id="investment-movements"
          hx-request='{"noHeaders":false}'
@@ -151,11 +151,11 @@
                             </p>
                         </div>
                         <div class="flex gap-3">
-                            <a href="{% url 'investments:update' investment.pk %}"
+                            {% url 'investments:update' investment.pk as edit_url %}<a href="{% contextual_url edit_url %}"
                                class="quiet-action">
                                 {% translate 'Edit' %}
                             </a>
-                            <a href="{% url 'investments:delete' investment.pk %}"
+                            {% url 'investments:delete' investment.pk as delete_url %}<a href="{% contextual_url delete_url %}"
                                class="quiet-action text-expense dark:text-expense-light">
                                 {% translate 'Delete' %}
                             </a>

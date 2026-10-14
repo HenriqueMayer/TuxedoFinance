@@ -1,24 +1,41 @@
-{% extends 'base.html' %}{% load i18n %}
+{% extends 'base.html' %}{% load i18n navigation %}
 {% block title %}{{ invoice.card.name }} — {% translate 'Invoice' %}{% endblock %}
 {% block content %}
 <div class="mx-auto max-w-3xl space-y-6">
-<h1 class="page-title">{{ invoice.card.name }} · {{ invoice.reference_month|date:'M Y' }}</h1>
-<div class="surface-panel space-y-2 p-6"><p>{% translate 'Due date' %}: {{ invoice.due_date|date:USER_DATE_FORMAT }}</p><p>{{ invoice.get_status_display }} · {{ invoice.account.currency }} {{ invoice.amount }}</p>
-{% if invoice.manual_settlement %}<p>{% translate 'Confirmed payments' %}: {{ invoice.confirmed_amount }} · {% translate 'Remaining' %}: {{ invoice.remaining_amount }}</p>{% if invoice.overpaid_amount %}<p role="alert" class="text-expense dark:text-expense-light">{% translate 'The invoice changed after payment. Review this overpayment:' %} {{ invoice.overpaid_amount }}</p>{% endif %}
-{% else %}<p class="subtle-copy">{% translate 'Automatic settlement is preserved for this invoice. Enable confirmed payments from a new date in the card settings.' %}</p>{% endif %}
-<a class="quiet-action" href="{% url 'banking:credit_card_update' invoice.card_id %}">{% translate 'Card settings' %}</a></div>
-<section class="surface-panel space-y-3 p-6"><h2 class="section-title">{% translate 'Invoice sources' %}</h2>{% for item, amount in sources %}<p><a class="quiet-action" href="{% url 'transactions:update' item.pk %}">{{ item.display_title }}</a> · {{ invoice.account.currency }} {{ amount }}</p>{% empty %}<p class="subtle-copy">{% translate 'No editable purchase sources. Loyalty purchases may also contribute to this invoice.' %}</p>{% endfor %}</section>
-{% if invoice.manual_settlement %}
-<section class="surface-panel space-y-4 p-6"><h2 class="section-title">{% translate 'Confirmed payments' %}</h2>
-{% for payment in invoice.payments.all %}<div class="flex flex-wrap gap-3"><span>{{ payment.date|date:USER_DATE_FORMAT }} · {{ payment.account }} · {{ payment.amount }}</span><a class="quiet-action" href="{% url 'banking:invoice_payment_edit' payment.pk %}">{% translate 'Edit' %}</a><a class="quiet-action" href="{% url 'banking:invoice_payment_delete' payment.pk %}">{% translate 'Delete' %}</a></div>{% empty %}<p class="subtle-copy">{% translate 'No confirmed payments.' %}</p>{% endfor %}
+<header class="workspace-header"><h1 class="page-title">{{ invoice.card.name }} · {{ invoice.reference_month|date:'M Y' }}</h1>
+{% url 'banking:credit_card_update' invoice.card_id as settings_url %}<a class="quiet-action" href="{% contextual_url settings_url %}">{% translate 'Card settings' %}</a></header>
+<section id="invoice-summary" class="surface-panel space-y-4" aria-label="{% translate 'Invoice summary' %}">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div><p class="subtle-copy">{% translate 'Due date' %}: {{ invoice.due_date|date:USER_DATE_FORMAT }}</p><p class="mt-1 font-medium">{{ invoice.get_status_display }}</p></div>
+        <div class="text-right"><p class="subtle-copy">{% translate 'Invoice total' %}</p><p class="text-2xl font-semibold tabular-nums">{{ invoice.account.currency }} {{ invoice.amount|floatformat:2 }}</p></div>
+    </div>
+    {% if invoice.manual_settlement %}
+        <div class="flex flex-wrap justify-between gap-3 border-t border-forest/15 pt-4 dark:border-cream/15">
+            <p>{% translate 'Confirmed payments' %}: <span class="tabular-nums">{{ invoice.account.currency }} {{ invoice.confirmed_amount|floatformat:2 }}</span></p>
+            <p class="font-semibold text-caramel-ink dark:text-caramel-light">{% translate 'Remaining' %}: <span class="tabular-nums">{{ invoice.remaining_amount|floatformat:2 }} {{ invoice.account.currency }}</span></p>
+        </div>
+        {% if invoice.overpaid_amount %}<p role="alert" class="text-expense dark:text-expense-light">{% translate 'The invoice changed after payment. Review this overpayment:' %} {{ invoice.account.currency }} {{ invoice.overpaid_amount|floatformat:2 }}</p>{% endif %}
+        <a class="action-primary" href="#invoice-payment">{% translate 'Record payment' %}</a>
+    {% else %}
+        <p class="subtle-copy">{% translate 'Automatic settlement is preserved for this invoice. Enable confirmed payments from a new date in the card settings.' %}</p>
+    {% endif %}
 </section>
-<form method="post" hx-boost="false" novalidate class="surface-panel space-y-5 p-6">
-<h2 class="section-title">{% translate 'Confirm a payment' %}</h2>{% csrf_token %}
-{% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
-{% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert">{{ error }}</p>{% endfor %}{% endfor %}
-{% for field in form.visible_fields %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
-<button class="action-primary" type="submit">{% translate 'Confirm payment' %}</button>
+{% if invoice.manual_settlement %}
+<form id="invoice-payment" method="post" hx-boost="false" novalidate class="surface-panel space-y-5">
+    <h2 class="section-title">{% translate 'Confirm a payment' %}</h2>
+    <p class="subtle-copy">{% translate 'Record a payment already made at your bank. This application does not send a payment.' %}</p>
+    {% csrf_token %}<input type="hidden" name="next" value="{{ return_url }}">
+    {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+    {% for field in form.visible_fields %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
+    <div class="flex flex-wrap gap-3"><button class="action-primary" type="submit">{% translate 'Confirm payment' %}</button><a class="action-link" href="{{ return_url }}">{% translate 'Cancel' %}</a></div>
 </form>
+<section id="invoice-payments" class="surface-panel space-y-4"><h2 class="section-title">{% translate 'Confirmed payments' %}</h2>
+    {% for payment in invoice.payments.all %}<div class="flex flex-wrap items-center justify-between gap-3 border-b border-forest/10 py-3 dark:border-cream/10"><span class="min-w-0">{{ payment.date|date:USER_DATE_FORMAT }} · {{ payment.account }} · {{ invoice.account.currency }} {{ payment.amount|floatformat:2 }}</span><div class="flex gap-2">{% url 'banking:invoice_payment_edit' payment.pk as edit_url %}<a class="quiet-action" href="{% contextual_url edit_url request.path 'invoice-payments' %}">{% translate 'Edit' %}</a><a class="quiet-action" href="{% url 'banking:invoice_payment_delete' payment.pk %}">{% translate 'Delete' %}</a></div></div>{% empty %}<p class="subtle-copy">{% translate 'No confirmed payments.' %}</p>{% endfor %}
+</section>
 {% endif %}
+<section class="surface-panel space-y-3"><h2 class="section-title">{% translate 'Invoice sources' %}</h2>
+    {% for item, amount in sources %}{% url 'transactions:update' item.pk as edit_url %}<p class="flex flex-wrap justify-between gap-3 border-b border-forest/10 py-3 dark:border-cream/10"><a class="quiet-action" href="{% contextual_url edit_url request.path 'invoice-summary' %}">{{ item.display_title }}</a><span class="tabular-nums">{{ invoice.account.currency }} {{ amount|floatformat:2 }}</span></p>{% empty %}<p class="subtle-copy">{% translate 'No editable purchase sources. Loyalty purchases may also contribute to this invoice.' %}</p>{% endfor %}
+</section>
 </div>
 {% endblock %}

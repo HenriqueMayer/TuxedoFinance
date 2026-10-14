@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const { test, expect } = require('@playwright/test');
 const { selectChoice } = require('./helpers/forms');
+const { expectContextualDestination } = require('./helpers/navigation');
 
 async function signup(page, info) {
     const response = await page.request.get('/accounts/signup/');
@@ -70,7 +71,7 @@ for (const theme of ['light', 'dark']) {
         await expect(page).toHaveURL(/\/investments\/$/);
         await expect(primary).toHaveText('New operation');
         await primary.press('Enter');
-        await expect(page).toHaveURL(/\/investments\/create\/$/);
+        await expectContextualDestination(page, '/investments/create/', '/investments/');
         await expect(page.locator('#id_product option').last()).toContainText('Brokerage');
     });
 
@@ -85,7 +86,7 @@ for (const theme of ['light', 'dark']) {
         await expect(trigger).toHaveCSS('cursor', 'not-allowed');
         await trigger.hover();
         await expect(tooltip).toBeVisible();
-        await expect(tooltip).toContainText('Planning → Yield simulation');
+        await expect(tooltip).toContainText('Plan → Yield simulation');
         const box = await trigger.boundingBox();
         await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
         await expect(page).toHaveURL(/\/investments\/$/);
@@ -121,9 +122,9 @@ for (const theme of ['light', 'dark']) {
         await page.getByRole('heading', { level: 1 }).click();
         await expect(tooltip).toBeHidden();
         await page.setViewportSize({ width: 1440, height: 900 });
-        const menu = page.getByRole('navigation', { name: 'Main navigation' }).locator('[data-nav-item="planning"]');
-        await menu.locator(':scope > a').hover();
-        await menu.getByRole('link', { name: 'Yield simulation', exact: true }).click();
+        await page.getByRole('navigation', { name: 'Main navigation', exact: true }).getByRole('link', { name: 'Plan', exact: true }).click();
+        await expect(page).toHaveURL(/\/planning\/$/);
+        await page.getByRole('navigation', { name: 'Planning sections', exact: true }).getByRole('link', { name: 'Yield simulation', exact: true }).click();
         await expect(page).toHaveURL(/\/sandbox\/simulation\/$/);
     });
 }
@@ -148,7 +149,7 @@ test('investment setup and simulation notice support Portuguese, touch and no Ja
             await mobile.touchscreen.tap(rect.x + rect.width / 2, rect.y + rect.height / 2);
             const hint = mobile.getByRole('tooltip').filter({ hasText: 'Para simular rendimentos de investimentos' });
             await expect(hint).toBeVisible();
-            await expect(hint).toContainText('Planejamento → Simulação de rendimentos');
+            await expect(hint).toContainText('Planejar → Simulação de rendimentos');
             await expect(mobile).toHaveURL(/\/investments\/$/);
             await mobile.getByRole('heading', { level: 1 }).tap();
             if (javaScriptEnabled) await expect(hint).toBeHidden();

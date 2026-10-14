@@ -20,6 +20,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Simplify daily navigation into Home, Transactions, Accounts, Investments and Plan, using a desktop sidebar and mobile bottom bar with shared active states and local section tabs. Preserve native links, keyboard focus, user options and no-JavaScript access.
+- Keep form Save/Cancel in explicit, validated local context; expose account updates, card invoices and position operations where their records appear. Show pending statement reviews on Home and remaining confirmed invoice obligations beside payment recording.
+- Bring category splits into transaction creation/editing and optional initial reservations into goal creation. Compact import review, preserve visible errors and offer explicit compatible CSV-mapping reuse without posting or classifying automatically.
+- Allow an explicit private-interface disposable preview for phone testing on a trusted LAN; loopback remains the default and the installation database is untouched.
 - Serve the interface font locally and reuse reporting and conversion context; incrementally synchronize unchanged ledger projections without repeated data writes. Document synthetic performance observations and their limits.
 - Add migrations for imports, category splits, budgets, goals, price observations, opening dates and confirmed payments. Existing financial records remain intact; legacy opening dates remain unknown until explicitly entered and existing cards retain automatic settlement until opted in.
 - Preserve shared keyboard, conditional-field, contextual-help, theme and no-JavaScript form behavior across the new workflows, with English and Brazilian Portuguese interface copy.

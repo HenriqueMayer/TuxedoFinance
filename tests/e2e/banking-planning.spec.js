@@ -71,11 +71,11 @@ test('bank controls and category options remain usable without JavaScript', asyn
         await page.getByRole('button', { name: 'Filter', exact: true }).click();
         await expect(page).toHaveURL(/type=unclassified/);
         await page.setViewportSize({ width: 390, height: 740 });
-        await expect(page.getByRole('link', { name: 'Planning', exact: true })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Plan', exact: true })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Log out', exact: true })).toBeVisible();
         await page.locator('#language-select-mobile-native').selectOption('pt-br');
         await page.locator('#language-select-mobile-native').locator('..').getByRole('button', { name: 'Apply', exact: true }).click();
         await expect(page.locator('html')).toHaveAttribute('lang', 'pt-br');
-        await expect(page.getByRole('link', { name: 'Planejamento', exact: true })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Planejar', exact: true })).toBeVisible();
     } finally { await context.close(); }
 });

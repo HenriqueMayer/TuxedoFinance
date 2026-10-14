@@ -75,16 +75,15 @@ for (const theme of ['light', 'dark']) {
         await history.getByRole('link', { name: 'Clear filters', exact: true }).press('Enter');
         await expect(page.locator('#investment-purpose')).toHaveValue('');
         await expect(history).toContainText('Page 1 of 2');
-        const menu = page.getByRole('navigation', { name: 'Main navigation' }).locator('[data-nav-item="investments"]');
-        await menu.locator(':scope > a').hover();
-        await expect(menu.getByRole('link', { name: 'Operations', exact: true })).toBeVisible();
-        // The menu reloads the same URL after Clear filters. A URL assertion
+        const sections = page.getByRole('navigation', { name: 'Investment sections' });
+        await expect(sections.getByRole('link', { name: 'Operations', exact: true })).toBeVisible();
+        // The section link reloads the same URL after Clear filters. A URL assertion
         // alone can pass while the old tabs are still being replaced by HTMX.
         await Promise.all([
             page.waitForResponse(response => response.request().method() === 'GET'
                 && new URL(response.url()).pathname === '/investments/operations/'
                 && new URL(response.url()).search === ''),
-            menu.getByRole('link', { name: 'Operations', exact: true }).press('Enter'),
+            sections.getByRole('link', { name: 'Operations', exact: true }).press('Enter'),
         ]);
         await expect(page.locator('body')).not.toHaveAttribute('aria-busy', 'true');
         await expect(page.locator('body')).not.toHaveClass(/htmx-settling/);

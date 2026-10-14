@@ -7,8 +7,20 @@
         <h1 class="page-title">{{ heading }}</h1>
         <form method="post" hx-boost="false" novalidate class="surface-panel space-y-5">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ return_url }}">
             {% for error in form.non_field_errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
-            {% for field in form %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
+            {% if goal_creation %}
+                {% for field in form.goal_fields %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
+                <fieldset class="space-y-5" data-goal-reservation>
+                    <legend class="section-title mb-3">{% translate 'Initial reservation (optional)' %}</legend>
+                    <p class="subtle-copy">{% translate 'Create only the target, or name part of an existing balance now. Cash sources show the balance still available for active goals.' %}</p>
+                    {% include 'partials/form_field.html' with field=form.reserve_now %}
+                    <div data-goal-reserve-fields data-has-errors="{% if form.source.errors or form.reserved_amount.errors %}true{% else %}false{% endif %}" class="space-y-5">
+                        {% include 'partials/form_field.html' with field=form.source %}
+                        <div data-goal-reserve-amount data-has-errors="{{ form.reserved_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.reserved_amount %}</div>
+                    </div>
+                </fieldset>
+            {% else %}{% for field in form %}{% include 'partials/form_field.html' with field=field %}{% endfor %}{% endif %}
             <div class="flex flex-wrap items-center gap-3">
                 <button class="action-primary" type="submit">{% translate 'Save' %}</button>
                 <a class="action-link" href="{{ cancel_url }}">{% translate 'Cancel' %}</a>
@@ -17,3 +29,4 @@
     </div>
 </div>
 {% endblock %}
+{% block extra_js %}{% if goal_creation %}{% include 'planning/_reservation_script.html' %}{% endif %}{% endblock %}

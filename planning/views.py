@@ -9,9 +9,10 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from planning.forms import CategoryBudgetForm, FinancialGoalForm, GoalAllocationForm, MonthForm, SignalSettingsForm
+from core.navigation import return_url
+from planning.forms import CategoryBudgetForm, FinancialGoalForm, GoalCreationForm, GoalAllocationForm, MonthForm, SignalSettingsForm
 from planning.models import CategoryBudget, FinancialGoal, GoalAllocation, SignalDecision
-from planning.services import budget_progress, copy_previous_budgets, goal_progress, local_signals, save_allocation, save_budget, set_goal_archived, signal_settings
+from planning.services import budget_progress, copy_previous_budgets, create_goal, goal_progress, local_signals, save_allocation, save_budget, set_goal_archived, signal_settings
 
 
 def _month(request):
@@ -20,6 +21,17 @@ def _month(request):
     if form.is_bound and form.is_valid():
         month = form.cleaned_data['month']
     return form, month
+
+
+@login_required
+def index(request):
+    _, month = _month(request)
+    budget_rows = budget_progress(request.user, month)
+    return render(request, 'planning/index.html', {
+        'section': 'overview', 'month': month, 'budget_count': len(budget_rows),
+        'budget_attention_count': sum(row['over_budget'] or row['forecast_over_budget'] or not row['complete'] for row in budget_rows),
+        'goal_count': FinancialGoal.objects.filter(user=request.user, is_archived=False).count(),
+    })
 
 
 @login_required
@@ -35,6 +47,7 @@ def budget_form(request, pk=None):
     instance = get_object_or_404(CategoryBudget, pk=pk, user=request.user) if pk else None
     initial = {}
     month_form, month = _month(request)
+    fallback_month = instance.month if instance else month
     if not month_form.is_bound or month_form.is_valid():
         initial['month'] = month.strftime('%Y-%m')
     form = CategoryBudgetForm(request.POST or None, user=request.user, instance=instance, initial=initial)
@@ -49,8 +62,9 @@ def budget_form(request, pk=None):
                 form.add_error(None, error)
         else:
             messages.success(request, _('Budget saved.'))
-            return redirect(reverse('planning:budgets') + f'?month={budget.month:%Y-%m}')
-    return render(request, 'planning/form.html', {'form': form, 'section': 'budgets', 'heading': _('Edit category budget') if pk else _('New category budget'), 'cancel_url': reverse('planning:budgets')})
+            return redirect(return_url(request, reverse('planning:budgets') + f'?month={budget.month:%Y-%m}'))
+    cancel_url = return_url(request, reverse('planning:budgets') + f'?month={fallback_month:%Y-%m}')
+    return render(request, 'planning/form.html', {'form': form, 'section': 'budgets', 'heading': _('Edit category budget') if pk else _('New category budget'), 'cancel_url': cancel_url, 'return_url': return_url(request, '')})
 
 
 @login_required
@@ -83,12 +97,17 @@ def goals(request):
 @login_required
 def goal_form(request, pk=None):
     instance = get_object_or_404(FinancialGoal, user=request.user, pk=pk) if pk else None
-    form = FinancialGoalForm(request.POST or None, user=request.user, instance=instance)
+    form_class = FinancialGoalForm if pk else GoalCreationForm
+    form = form_class(request.POST or None, user=request.user, instance=instance)
     if request.method == 'POST' and form.is_valid():
-        goal = form.save()
-        messages.success(request, _('Goal saved. Reserve an existing balance to record progress.'))
-        return redirect('planning:goal_detail', pk=goal.pk)
-    return render(request, 'planning/form.html', {'form': form, 'section': 'goals', 'heading': _('Edit goal') if pk else _('New goal'), 'cancel_url': reverse('planning:goals')})
+        try:
+            goal = form.save() if pk else create_goal(form.save(commit=False), form.allocation)
+        except ValidationError as error:
+            form.add_error(None, '\n'.join(error.messages))
+        else:
+            messages.success(request, _('Goal saved.') if pk or form.allocation else _('Goal saved. Reserve an existing balance to record progress.'))
+            return redirect(return_url(request, reverse('planning:goal_detail', args=[goal.pk])))
+    return render(request, 'planning/form.html', {'form': form, 'goal_creation': not pk, 'section': 'goals', 'heading': _('Edit goal') if pk else _('New goal'), 'cancel_url': return_url(request, reverse('planning:goals')), 'return_url': return_url(request, '')})
 
 
 @login_required
@@ -112,8 +131,8 @@ def allocation_form(request, goal_pk, pk=None):
             form.add_error(None, '\n'.join(error.messages))
         else:
             messages.success(request, _('Balance reserved for this goal.'))
-            return redirect('planning:goal_detail', pk=goal.pk)
-    return render(request, 'planning/form.html', {'form': form, 'section': 'goals', 'heading': _('Edit goal reservation') if pk else _('Reserve a balance'), 'cancel_url': reverse('planning:goal_detail', args=[goal.pk])})
+            return redirect(return_url(request, reverse('planning:goal_detail', args=[goal.pk])))
+    return render(request, 'planning/form.html', {'form': form, 'section': 'goals', 'heading': _('Edit goal reservation') if pk else _('Reserve a balance'), 'cancel_url': return_url(request, reverse('planning:goal_detail', args=[goal.pk])), 'return_url': return_url(request, '')})
 
 
 @login_required

@@ -90,7 +90,7 @@ TEMPLATES = [
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
-            'libraries': {'assets': 'core.templatetags.assets'},
+            'libraries': {'assets': 'core.templatetags.assets', 'navigation': 'core.templatetags.navigation'},
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',

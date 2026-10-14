@@ -54,7 +54,9 @@ for (const [order, theme, language] of [['DMY', 'light', 'en'], ['MDY', 'dark', 
             await calendar.press('Enter');
             await page.keyboard.press('Escape');
             await input.fill(invalid);
-            await page.locator('main form[method="post"] button[type="submit"]').first().click();
+            await page.locator('main form[method="post"]').getByRole('button', {
+                name: language === 'en' ? 'Save' : 'Salvar', exact: true,
+            }).click();
             await expect(page.locator(id)).toHaveValue(invalid);
             await expect(page.locator(id)).toHaveAttribute('aria-invalid', 'true');
         }

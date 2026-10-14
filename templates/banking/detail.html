@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n navigation %}
 
 {% block title %}{{ bank.name }} - Tuxedo Finance{% endblock %}
 
@@ -7,11 +7,10 @@
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <a href="{% url 'banking:list' %}" class="text-sm text-forest/60 hover:text-caramel-ink dark:text-night-muted dark:hover:text-caramel-light">{% translate "Banks" %}</a>
-            <div class="mt-2 flex items-center gap-3"><a class="bank-color-link" style="--bank-color: {{ bank.color|default:'#B88D57' }}" href="{% url 'banking:color' bank.pk %}" aria-label="{% translate 'Change marker color' %}"><span class="bank-marker" aria-hidden="true"></span></a><h1 class="page-title">{{ bank.name }}</h1></div>
+            <div class="flex items-center gap-3">{% url 'banking:color' bank.pk as color_url %}<a class="bank-color-link" style="--bank-color: {{ bank.color|default:'#B88D57' }}" href="{% contextual_url color_url %}" aria-label="{% translate 'Change marker color' %}"><span class="bank-marker" aria-hidden="true"></span></a><h1 class="page-title">{{ bank.name }}</h1></div>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{% url 'banking:update' bank.pk %}" class="quiet-action">{% translate "Edit bank" %}</a>
+            {% url 'banking:update' bank.pk as edit_url %}<a href="{% contextual_url edit_url %}" class="quiet-action">{% translate "Edit bank" %}</a>
             <details class="secondary-actions"><summary>{% translate 'More options' %}</summary><div class="secondary-actions-panel"><a href="{% url 'banking:program_create' %}?bank={{ bank.pk }}">{% translate "Add loyalty program" %}</a><a href="{% url 'banking:delete' bank.pk %}" class="text-expense dark:text-expense-light">{% translate "Delete" %}</a></div></details>
             <a href="{% url 'banking:account_create' %}?bank={{ bank.pk }}" class="action-primary">{% translate "Add account" %}</a>
         </div>
@@ -20,6 +19,7 @@
     {% include 'banking/_availability.html' %}
     <section class="surface-panel space-y-4" aria-label="{% translate 'Accounts' %}">
         {% include 'banking/_account_table.html' %}
+        {% include 'banking/_cards.html' %}
         {% include 'banking/_cash_pots.html' %}
     </section>
     <section class="surface-panel space-y-4" aria-label="{% translate 'Account instruments' %}">

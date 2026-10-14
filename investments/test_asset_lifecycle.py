@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from banking.models import Bank, BankAccount, BankMovement, ExchangeRate, LoyaltyEntry
 from banking.services import get_planning_availability
+from core.navigation import with_return_url
 from investments.forms import AssetForm, InvestmentForm
 from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import get_monthly_cash_positions, get_total_in_base_timeseries, sync_investment_ledger
@@ -47,7 +48,8 @@ class AssetLifecycleTests(TestCase):
         asset = self.asset()
         self.assertFalse(asset.is_archived)
         url = reverse('investments:delete_asset', args=[asset.pk])
-        self.assertContains(self.client.get(reverse('investments:settings')), f'href="{url}"')
+        self.assertContains(self.client.get(reverse('investments:settings')),
+                            f'href="{with_return_url(url, reverse("investments:settings"))}"')
         response = self.client.get(url)
         self.assertContains(response, 'This action cannot be undone.')
         self.assertTrue(Asset.objects.filter(pk=asset.pk).exists())

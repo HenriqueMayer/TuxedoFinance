@@ -80,8 +80,11 @@ for (const dark of [false, true]) {
         await page.evaluate(value => localStorage.setItem('theme', value ? 'dark' : 'light'), dark);
         await stage(page);
         await page.evaluate(value => document.documentElement.classList.toggle('dark', value), dark);
-        const action = page.locator('select[name$="-action"]');
-        const category = page.locator('select[name$="-category"]');
+        const entry = page.locator('[data-import-entry]');
+        await expect(entry).toHaveCount(1);
+        await expect(entry).toHaveAttribute('open', '');
+        const action = entry.locator('select[name$="-action"]');
+        const category = entry.locator('select[name$="-category"]');
         const categoryId = await category.getAttribute('id');
         const search = page.locator(`[id="${categoryId}-search"]`);
         await expect(action).toHaveValue('');
@@ -101,7 +104,7 @@ for (const dark of [false, true]) {
         await action.press('End');
         await expect(action).toHaveValue('TRANSFER');
         await expect(category).toHaveValue('');
-        const other = page.locator('select[name$="-counterparty_account"]');
+        const other = entry.locator('select[name$="-counterparty_account"]');
         const otherId = await other.getAttribute('id');
         const otherSearch = page.locator(`[id="${otherId}-search"]`);
         const otherAmount = page.getByLabel('Actual amount in the other account');
@@ -144,8 +147,10 @@ test('CSV mapping and full review submission work without JavaScript', async ({ 
     const page = await context.newPage();
     await fixture(page, testInfo);
     await stage(page, false);
-    await page.locator('select[name$="-action"]').selectOption('CREATE');
-    const category = page.locator('select[name$="-category"]');
+    const entry = page.locator('[data-import-entry]');
+    await expect(entry).toHaveAttribute('open', '');
+    await entry.locator('select[name$="-action"]').selectOption('CREATE');
+    const category = entry.locator('select[name$="-category"]');
     const value = await category.locator('option').evaluateAll(options => options.find(option => option.textContent.includes('Imported coffee')).value);
     await category.selectOption(value);
     await page.getByRole('button', { name: 'Save review and inspect confirmation' }).click();

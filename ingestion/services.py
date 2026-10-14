@@ -182,14 +182,31 @@ def decision_digest(batch):
 
 
 @transaction.atomic
-def save_review(user, batch_id, decisions):
+def save_review(user, batch_id, decisions, *, partial=False, confirmed_skips=()):
+    # Paginated reviews can save a validated subset of this owned batch.
+    # This never posts cash; confirm_batch still validates every row and digest.
     batch = ImportBatch.objects.select_for_update().select_related('account', 'user').get(user=user, pk=batch_id)
     if batch.status != 'READY':
         raise ValidationError(_('Only an unconfirmed mapped statement can be reviewed.'))
     rows = list(batch.rows.select_for_update())
-    if set(decisions) != {row.pk for row in rows}:
+    owned_ids = {row.pk for row in rows}
+    if (partial and (not decisions or not set(decisions).issubset(owned_ids))) or (not partial and set(decisions) != owned_ids):
         raise ValidationError(_('Review all statement entries.'))
+    if confirmed_skips:
+        skipped = set(confirmed_skips)
+        # A suggestion can become stale while another tab undoes its source
+        # import or saves a deliberate decision. Recheck under the review lock
+        # before applying any of the explicitly requested batch choices.
+        confirmed = set(ExternalStatementIdentity.objects.filter(user_id=batch.user_id,
+            account_id=batch.account_id, external_id__in=[row.external_id for row in rows if row.pk in skipped]).values_list('external_id', flat=True))
+        if not skipped.issubset(set(decisions)) or any(
+            row.action or row.external_id not in confirmed or decisions[row.pk].get('action') != 'SKIP'
+            for row in rows if row.pk in skipped
+        ):
+            raise ValidationError(_('The review changed. Reload and inspect it before confirming.'))
     for row in rows:
+        if row.pk not in decisions:
+            continue
         for field in DECISION_FIELDS:
             setattr(row, field, decisions[row.pk].get(field))
         validate_decision(row)

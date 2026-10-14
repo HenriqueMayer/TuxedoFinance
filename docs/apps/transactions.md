@@ -185,3 +185,26 @@ selected. Split choices share the same type compatibility, owned selectors,
 bound-error recovery and complete native submission as the parent form.
 
 Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+
+## Contextual transaction entry
+
+An explicit owned account/card shortcut selects its compatible funding context.
+The originating URL, including its filters, is carried through an encoded local
+`next` field and server validation. Save/Cancel return to that origin; the normal
+ledger remains the fallback. Generated operations retain their edit locks.
+
+The ordinary create/edit form includes an optional category-split checkbox and
+the existing allocation formset. New splits start unchecked. A submitted total,
+type and allocations are validated and saved together atomically; errors retain
+the bound rows. With allocations selected, the first compatible category is the
+structural parent category, while reports continue using the actual allocations.
+The standalone split editor and legacy submissions remain available. No extra
+bank movement is created by classification.
+
+Save is the first native submit button in the form. Enter from an ordinary
+text/amount field therefore validates and saves, even when category splitting
+is active or its controls are hidden. Add category follows the primary actions
+and requires explicit activation; it adds a bound row without saving the parent.
+Its wrapper follows the same type/split visibility and error-recovery rules as
+the allocation rows. Both actions remain native submissions without JavaScript;
+searchable-choice Enter still only confirms the highlighted choice.

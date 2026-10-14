@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const {test, expect} = require('@playwright/test');
+const { requestPath, contextualTarget } = require('./helpers/navigation');
 async function post(page, path, values) {
     const response = await page.request.get(path);
     const csrf = (await response.text()).match(/name="csrfmiddlewaretoken" value="([^"]+)"/)[1];
@@ -239,8 +240,12 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         const selected=new URL(page.url()).searchParams;
         await expect(page.locator('#investment-product')).toHaveValue(selected.get('product'));
         await expect(page.locator('#investment-asset')).toHaveValue(selected.get('asset'));
-        await page.locator('#investment-movements a[href$="/edit/"]').first().press('Enter');
-        await expect(page).toHaveURL(/\/investments\/\d+\/edit\/$/);
+        const historyOrigin = requestPath(page.url());
+        const edit = page.locator('#investment-movements').getByRole('link', { name: language === 'en' ? 'Edit' : 'Editar', exact: true });
+        const editor = await contextualTarget(edit, /^\/investments\/\d+\/edit\/$/, historyOrigin);
+        await edit.press('Enter');
+        await expect(page).toHaveURL(editor.href);
+        await expect(page.locator('main input[name="next"]')).toHaveValue(historyOrigin);
         await expect(page.locator('#id_kind')).toHaveValue('YIELD');await expect(page.locator('#id_amount')).toHaveValue('10.00');
     });
 }

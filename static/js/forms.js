@@ -96,7 +96,13 @@
                 if (!input.isConnected || document.activeElement !== input || list.hidden || !input.getClientRects().length) return;
                 const viewport = window.visualViewport;
                 const viewportTop = viewport ? viewport.offsetTop : 0;
-                const bottom = viewportTop + (viewport ? viewport.height : window.innerHeight) - 16;
+                const viewportBottom = viewportTop + (viewport ? viewport.height : window.innerHeight);
+                const bottomNavigation = document.querySelector('.app-bottom-navigation');
+                // Fixed workspace navigation must not cover a keyboard-reached result.
+                // The visual viewport still wins when the software keyboard is open.
+                const navigationTop = bottomNavigation?.getClientRects().length
+                    ? bottomNavigation.getBoundingClientRect().top : Infinity;
+                const bottom = Math.min(viewportBottom, navigationTop) - 16;
                 const header = document.querySelector('body > header');
                 const top = Math.max(viewportTop, header ? header.getBoundingClientRect().bottom : 0) + 16;
                 const inputTop = input.getBoundingClientRect().top;

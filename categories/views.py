@@ -20,6 +20,7 @@ from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 from categories.forms import CategoryForm, CategoryImportForm
 from categories.models import Category
 from core.csv import export_row
+from core.navigation import ReturnContextMixin
 
 
 class CategoryListView(LoginRequiredMixin, ListView):
@@ -92,7 +93,7 @@ class CategoryListView(LoginRequiredMixin, ListView):
         return context
 
 
-class CategoryFormMixin(LoginRequiredMixin):
+class CategoryFormMixin(ReturnContextMixin, LoginRequiredMixin):
     """Shared plumbing for the create/update CBVs (per-user isolation, PRD R3)."""
 
     model = Category

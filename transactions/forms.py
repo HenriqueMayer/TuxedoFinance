@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from core.dates import configure_date_fields
+from core.dates import configure_date_fields, date_order
 from banking.models import BankAccount, CreditCard, DebitCard
 from categories.models import Category
 from transactions.models import Transaction, TransactionSplit
@@ -31,6 +31,11 @@ class TransactionSelect(forms.Select):
 
 
 class TransactionForm(forms.ModelForm):
+    split_categories = forms.BooleanField(
+        required=False, label=_('Split between categories'),
+        help_text=_('Allocate the full amount between categories. This remains one transaction and one payment.'),
+    )
+
     class Meta:
         model = Transaction
         fields = (
@@ -70,8 +75,19 @@ class TransactionForm(forms.ModelForm):
             'fixed_until': _('Optional last recurrence month, inclusive.'),
         }
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user=None, manage_splits=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.manage_splits = manage_splits
+        if user is not None:
+            self.instance.user = user
+        if not self.is_bound and self.instance.pk:
+            self.initial.setdefault('split_categories', self.instance.splits.exists())
+        split_selected = (self.data.get('split_categories') if self.is_bound
+                          else self.initial.get('split_categories'))
+        if self.manage_splits and split_selected:
+            # The first reviewed allocation supplies the structural fallback
+            # category; the full split owns reporting classification.
+            self.fields['category'].required = False
         configure_date_fields(self, user)
         self.fields['category'].queryset = Category.objects.filter(user=user)
         self.fields['bank_account'].queryset = BankAccount.objects.filter(user=user).select_related('bank')
@@ -84,6 +100,9 @@ class TransactionForm(forms.ModelForm):
             f'{card.name} - {card.account.bank.name} > {card.account.name} ({card.account.currency})'
         )
         self.fields['installments'].required = False
+        self.fields['credit_card'].help_text = _(
+            'Invoices follow the selected card settlement settings. Automatic mode records settlement on the due date; confirmed mode changes cash only after a confirmed payment. The app does not pay the bank.'
+        )
         self.fields['billing_override'].choices = [
             ('', _('Automatic (from card cycle)')),
             (str(Transaction.BillChoice.CURRENT.value), _('Current bill')),
@@ -122,12 +141,18 @@ class TransactionForm(forms.ModelForm):
                 str(card.pk): {
                     'data-account-label': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})',
                     'data-best-purchase-day': str(card.best_purchase_day),
+                    'data-settlement-description': (
+                        _('New invoices due on or after %(date)s require confirmed payments. Existing invoices retain their recorded mode. The app does not pay the bank.')
+                        % {'date': card.manual_settlement_from.strftime('%m/%d/%Y' if date_order(user) == 'MDY' else '%d/%m/%Y')}
+                        if card.manual_settlement_from else
+                        _('New invoices use automatic accounting on the due date. Existing invoices retain their recorded mode. The app does not pay the bank.')
+                    ),
                 }
                 for card in credit_cards
             },
         )
         for name, field in self.fields.items():
-            field.widget.attrs['class'] = CHECKBOX_CLASSES if name == 'is_fixed' else INPUT_CLASSES
+            field.widget.attrs['class'] = CHECKBOX_CLASSES if name in ('is_fixed', 'split_categories') else INPUT_CLASSES
             described_by = []
             if field.help_text:
                 described_by.append(f'{field.widget.attrs.get("id", "id_" + name)}-help')
@@ -153,7 +178,9 @@ class TransactionForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        if self.instance.pk:
+        if self.manage_splits and cleaned.get('split_categories'):
+            cleaned['category'] = None
+        if self.instance.pk and not self.manage_splits:
             splits = list(self.instance.splits.select_related('category'))
             if splits and cleaned.get('amount') != sum((row.amount for row in splits), 0):
                 self.add_error('amount', _('Clear the category split before changing the total amount.'))
@@ -169,15 +196,42 @@ class TransactionSplitForm(forms.ModelForm):
         labels = {'category': _('Category'), 'amount': _('Category amount')}
         widgets = {'amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'})}
 
-    def __init__(self, *args, user=None, transaction_type=None, **kwargs):
+    def __init__(self, *args, user=None, transaction_type=None, allow_type_changes=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.allow_type_changes = allow_type_changes
         from django.db.models import Q
-        self.fields['category'].queryset = Category.objects.filter(user=user).filter(Q(transaction_type__isnull=True) | Q(transaction_type='') | Q(transaction_type=transaction_type)).select_related('parent_category')
+        categories = Category.objects.filter(user=user).select_related('parent_category')
+        if not allow_type_changes:
+            categories = categories.filter(Q(transaction_type__isnull=True) | Q(transaction_type='') | Q(transaction_type=transaction_type))
+        self.fields['category'].queryset = categories
+        widget = TransactionSelect()
+        widget.choice_data = {str(category.pk): {'data-transaction-type': category.transaction_type or ''}
+                              for category in categories}
+        widget.choices = self.fields['category'].choices
+        self.fields['category'].widget = widget
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
 
+    def validate_constraints(self):
+        if not self.allow_type_changes:
+            return super().validate_constraints()
+        # Combined editing validates the final allocation set. Checking each
+        # old row against the database would incorrectly reject category swaps.
+        exclude = self._get_validation_exclusions()
+        exclude.add('transaction')
+        try:
+            self.instance.validate_constraints(exclude=exclude)
+        except forms.ValidationError as error:
+            self._update_errors(error)
+
 
 class BaseTransactionSplitFormSet(forms.BaseInlineFormSet):
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        # A hidden identifier cannot select another transaction's allocation.
+        form.fields['id'].queryset = self.get_queryset()
+        form.fields['DELETE'].widget.attrs['class'] = CHECKBOX_CLASSES
+
     def clean(self):
         super().clean()
         if any(self.errors):
@@ -185,6 +239,10 @@ class BaseTransactionSplitFormSet(forms.BaseInlineFormSet):
         rows = [form.cleaned_data for form in self.forms if form.cleaned_data and not form.cleaned_data.get('DELETE')]
         if len(rows) < 2:
             raise forms.ValidationError(_('Use at least two categories, or clear the split.'))
+        if len({row['category'].pk for row in rows}) != len(rows):
+            raise forms.ValidationError(_('Choose each category only once.'))
+        if any(row['category'].transaction_type and row['category'].transaction_type != self.instance.transaction_type for row in rows):
+            raise forms.ValidationError(_('Choose categories compatible with the transaction type.'))
         if sum((row.get('amount', 0) for row in rows), 0) != self.instance.amount:
             raise forms.ValidationError(_('Category amounts must add up to the transaction total.'))
 

@@ -117,6 +117,11 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         context['next_month_param'] = f'{next_year:04d}-{next_month:02d}'
         context['has_previous_month'] = _is_projectable(previous_year, previous_month)
         context['has_next_month'] = _is_projectable(next_year, next_month)
+        from ingestion.models import ImportBatch
+        # Staged statements are decisions awaiting review, never posted cash.
+        pending = ImportBatch.objects.filter(user=self.request.user, status__in=[ImportBatch.Status.STAGED, ImportBatch.Status.READY]).select_related('account')
+        context['pending_import_count'] = pending.count()
+        context['pending_imports'] = list(pending[:3])
         return context
 
 

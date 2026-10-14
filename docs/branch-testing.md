@@ -34,6 +34,50 @@ data during this review. Automated browser tests also use their own disposable
 database, through `npm run test:e2e`; the direct Playwright command must never
 target the preview or a personal installation.
 
+## Computer and phone review
+
+The preview is loopback-only unless you explicitly choose a private IPv4 address.
+To test on a phone, connect both devices to a trusted private network and supply
+this computer's LAN address, for example:
+
+```bash
+uv run python scripts/preview_branch.py --bind 192.168.1.25
+```
+
+Replace the example with the address assigned to your computer. Open
+`http://192.168.1.25:8766/` on either device. The helper binds only that interface,
+accepts exactly that host plus loopback, disables signups and still migrates only
+the disposable copy. It rejects wildcard/public bindings. This temporary preview
+uses HTTP, so use it only on your trusted LAN and stop it after testing. Do not
+forward the port on your router. If the local firewall or Wi-Fi client isolation
+blocks the connection, review those settings before enabling only the chosen
+local port/interface; the helper never changes them.
+
+For this UI/UX iteration, check these tasks in both themes on computer and phone:
+
+1. Navigate through Home, Transactions, Accounts, Investments and Plan. Find
+   Reports, Net worth, Categories, Imports, Invoices and every simulation from
+   the owning workspace. Check the account settings, language and logout.
+2. From a searched account row, open Update account and choose a manual entry
+   or statement. Confirm the account selection and return to the same search
+   after Cancel. Check that row actions open only deliberately.
+3. Open a card invoice from Home or Accounts. Record a partial payment made
+   at the bank and inspect the remaining amount. Recover from an invalid amount
+   without losing the paying account. Existing automatic cards stay automatic.
+4. Record an operation or dated price from an investment position and return
+   to that position. Verify a filtered ledger also retains its origin.
+5. Create/edit a split transaction in one submission, including an invalid
+   sum. Create a goal with an optional initial real-balance reserve; insufficient
+   backing must preserve the form and create neither a goal nor a reserve.
+6. Review a small import: collapsed details stay reachable, errors and the next
+   required decision remain visible, reuse of a compatible mapping is explicit,
+   and confirmation still precedes financial posting. Check Back/Forward,
+   keyboard choices near the bottom bar and the no-JavaScript path.
+
+The public static tour still represents the published release. This branch's
+interactive preview is the acceptance environment; no integration, bank
+connection, Cloudflare deployment or publication is implied by these tests.
+
 ## Acceptance checklist
 
 Use real keyboard navigation in both themes. For a focused fallback check,
@@ -116,6 +160,32 @@ The local environment used Python 3.12.13 and Node.js 22.23.3. Docker checks ran
 on Linux amd64 with Engine 26.1.5 and Compose 5.6.0; they do not certify arm64 or
 replace the documented Engine 28+ installation baseline. Manual acceptance on
 the owner's financial data remains pending, using the disposable preview above.
+
+### Navigation and UI/UX iteration — 14 October 2026
+
+Validation of the current navigation changes also used synthetic or disposable
+databases:
+
+- All 521 Django tests passed in the final complete run, with 94% coverage in
+  the configured scope. All 17 repository-tool tests passed.
+- All 186 interactive browser scenarios were verified: 150 passed in the
+  complete run, and the remaining 36 passed in isolated reruns after fixes.
+  The ten affected transaction, goal and import scenarios were checked again
+  after the final keyboard and review-continuity changes and passed. All six
+  static-tour tests also passed.
+- Browser checks cover desktop and mobile viewports, English and Portuguese,
+  both themes, real keyboard events, touch and native submissions without
+  JavaScript. The Portuguese bottom bar was checked at 320px while navigating
+  through all five destinations, including their active labels and touch targets.
+- Django checks, migration dry run, version consistency, executable lint,
+  JavaScript syntax, translation format/compiled-output checks, reproducible CSS,
+  pinned HTMX and `git diff --check` passed. npm and locked Python runtime
+  dependency audits reported no known vulnerabilities.
+
+This UI/UX iteration adds no migrations or dependencies. The previous container
+lifecycle checks were not repeated. Browser checks use Chromium; acceptance on
+the owner's actual computer, phone and financial data remains pending. Banks,
+Cloudflare, deployment and integration into `main` remain outside this iteration.
 
 ## Performance evidence
 

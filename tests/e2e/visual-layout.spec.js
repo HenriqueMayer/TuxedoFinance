@@ -15,7 +15,7 @@ async function signUp(page, testInfo) {
 
 for (const language of ['en', 'pt-br']) {
     for (const theme of ['light', 'dark']) {
-        test(`desktop navigation retains one aligned row and a single chevron (${language}, ${theme})`, async ({ page }, testInfo) => {
+        test(`five destinations fit desktop sidebar and mobile dock (${language}, ${theme})`, async ({ page }, testInfo) => {
             await page.addInitScript(value => localStorage.setItem('theme', value), theme);
             await signUp(page, testInfo);
             const csrf = await page.locator('[name="csrfmiddlewaretoken"]').first().inputValue();
@@ -24,38 +24,77 @@ for (const language of ['en', 'pt-br']) {
             });
             await page.reload();
             await expect(page.locator('html')).toHaveAttribute('lang', language);
-            for (const width of [1280, 1440, 1920]) {
+            const navigation = page.getByRole('navigation', { name: language === 'en' ? 'Main navigation' : 'Navegação principal', exact: true });
+            const labels = await navigation.getByRole('link').allTextContents();
+            expect(labels).toHaveLength(5);
+            for (const width of [320, 390, 768, 1023, 1024, 1280, 1440, 1920]) {
                 await page.setViewportSize({ width, height: 900 });
-                const items = page.locator('body > header [data-nav-item]');
-                await expect(items).toHaveCount(5);
-                const geometry = await items.evaluateAll(elements => elements.map(item => {
-                    const link = item.querySelector(':scope > a');
-                    const toggle = item.querySelector('summary');
-                    const a = link.getBoundingClientRect();
-                    const b = toggle.getBoundingClientRect();
-                    return { top: a.y, bottom: a.bottom, left: a.x, right: b.right,
-                        centerDifference: Math.abs(a.y + a.height / 2 - b.y - b.height / 2),
-                        display: getComputedStyle(item).display, marker: getComputedStyle(toggle).listStyleType,
-                        svgCount: toggle.querySelectorAll('svg').length,
-                        text: toggle.textContent.trim() };
+                await expect(navigation).toHaveCount(1);
+                await expect(navigation).toHaveAttribute('data-app-navigation', width < 1024 ? 'mobile' : 'desktop');
+                await expect(navigation.getByRole('link')).toHaveText(labels);
+                await expect(navigation.locator('summary, details')).toHaveCount(0);
+                const geometry = await navigation.getByRole('link').evaluateAll(elements => elements.map(link => {
+                    const box = link.getBoundingClientRect();
+                    const label = link.querySelector('span').getBoundingClientRect();
+                    return { x: box.x, y: box.y, right: box.right, bottom: box.bottom, width: box.width, height: box.height,
+                        labelWidth: label.width, labelHeight: label.height, lineHeight: parseFloat(getComputedStyle(link).lineHeight),
+                        svgCount: link.querySelectorAll('svg').length };
                 }));
-                const header = await page.locator('body > header').boundingBox();
                 for (const item of geometry) {
-                    expect(item.display).toBe('flex');
-                    expect(item.marker).toBe('none');
                     expect(item.svgCount).toBe(1);
-                    expect(item.text).toBe('');
-                    expect(item.centerDifference).toBeLessThan(1);
-                    expect(item.top).toBeGreaterThanOrEqual(header.y);
-                    expect(item.bottom).toBeLessThanOrEqual(header.y + header.height);
-                    expect(item.left).toBeGreaterThan(0);
-                    expect(item.right).toBeLessThan(width);
+                    expect(item.labelWidth).toBeLessThanOrEqual(item.width);
+                    if (width < 1024) expect(item.labelHeight).toBeLessThanOrEqual(item.lineHeight + 1);
+                    expect(item.width).toBeGreaterThanOrEqual(44);
+                    expect(item.height).toBeGreaterThanOrEqual(44);
+                    expect(item.x).toBeGreaterThanOrEqual(0);
+                    expect(item.right).toBeLessThanOrEqual(width);
+                    expect(item.y).toBeGreaterThanOrEqual(0);
+                    expect(item.bottom).toBeLessThanOrEqual(900);
                 }
-                expect(new Set(geometry.map(item => item.top)).size).toBe(1);
+                if (width >= 1024) {
+                    expect(new Set(geometry.map(item => item.x)).size).toBe(1);
+                    for (let index = 1; index < geometry.length; index++) expect(geometry[index].y).toBeGreaterThan(geometry[index - 1].bottom);
+                    const content = await page.locator('main').boundingBox();
+                    expect(content.x).toBeGreaterThanOrEqual(208);
+                } else {
+                    expect(new Set(geometry.map(item => item.y)).size).toBe(1);
+                    for (let index = 1; index < geometry.length; index++) expect(geometry[index].x).toBeGreaterThanOrEqual(geometry[index - 1].right);
+                }
                 expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+                if (language === 'pt-br' && width === 320) {
+                    // Real navigation must fit the longest Portuguese label
+                    // when active, as well as when inactive.
+                    for (let index = 0; index < 5; index++) {
+                        await navigation.getByRole('link').nth(index).click();
+                        await expect(navigation.getByRole('link').nth(index)).toHaveAttribute('aria-current', 'page');
+                        await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1);
+                        const bounds = await navigation.getByRole('link').evaluateAll(links => links.map(link => {
+                            const box = link.getBoundingClientRect();
+                            const label = link.querySelector('span').getBoundingClientRect();
+                            return { width: box.width, height: box.height, labelWidth: label.width,
+                                labelHeight: label.height, lineHeight: parseFloat(getComputedStyle(link).lineHeight) };
+                        }));
+                        for (const box of bounds) {
+                            expect(box.width).toBeGreaterThanOrEqual(44);
+                            expect(box.height).toBeGreaterThanOrEqual(44);
+                            expect(box.labelWidth).toBeLessThanOrEqual(box.width);
+                            expect(box.labelHeight).toBeLessThanOrEqual(box.lineHeight + 1);
+                        }
+                    }
+                }
             }
-            await page.setViewportSize({ width: 1440, height: 900 });
-            await page.screenshot({ path: testInfo.outputPath(`navigation-${language}-${theme}.png`) });
+            for (const width of [1440, 390]) {
+                await page.setViewportSize({ width, height: 900 });
+                await page.screenshot({ path: testInfo.outputPath(`navigation-${width}-${language}-${theme}.png`) });
+                const before = await navigation.boundingBox();
+                await page.locator('main').evaluate(el => { el.style.minHeight = '1800px'; });
+                await page.evaluate(() => window.scrollTo(0, 500));
+                expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+                const after = await navigation.boundingBox();
+                expect(after.y).toBeCloseTo(before.y, 0);
+                expect(after.x).toBeCloseTo(before.x, 0);
+                await page.evaluate(() => window.scrollTo(0, 0));
+            }
         });
     }
 }

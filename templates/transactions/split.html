@@ -7,6 +7,7 @@
     <p class="subtle-copy">{% translate 'Category amounts must equal the total. Installments distribute exact cents across their original categories; recurring entries repeat the same split. The payment remains a single event.' %}</p>
     <form method="post" hx-boost="false" novalidate class="surface-panel space-y-5 p-6">
         {% csrf_token %}{{ formset.management_form }}
+        <input type="hidden" name="next" value="{{ return_url }}">
         {% for error in formset.non_form_errors %}<p class="text-expense dark:text-expense-light" role="alert">{{ error }}</p>{% endfor %}
         {% for row in formset %}
         <fieldset class="space-y-3 rounded-xl border border-forest/20 p-4 dark:border-cream/20">
@@ -22,7 +23,7 @@
             <button name="add_split" value="1" class="quiet-action">{% translate 'Add category' %}</button>
             <button type="submit" class="action-primary">{% translate 'Save split' %}</button>
             <button name="clear_split" value="1" class="quiet-action">{% translate 'Clear split' %}</button>
-            <a href="{% url 'transactions:update' transaction.pk %}" class="quiet-action">{% translate 'Cancel' %}</a>
+            <a href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a>
         </div>
     </form>
 </div>

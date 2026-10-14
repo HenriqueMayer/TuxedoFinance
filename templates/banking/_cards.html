@@ -1,0 +1,17 @@
+{% load i18n navigation %}
+{% for account in bank.accounts.all %}{% if account.credit_cards.all %}
+<div class="space-y-2">
+    <h3 class="font-medium">{% translate 'Credit cards' %} · {{ account.name }}</h3>
+    <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+    {% for card in account.credit_cards.all %}
+        <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+            <div class="min-w-0"><p class="font-medium">{{ card.name }}</p><p class="subtle-copy">{% if card.manual_settlement_from %}{% blocktranslate with date=card.manual_settlement_from|date:USER_DATE_FORMAT %}Confirmed payments from {{ date }}{% endblocktranslate %}{% else %}{% translate 'Automatic settlement on due date' %}{% endif %}</p></div>
+            <div class="flex flex-wrap gap-2">
+                {% url 'transactions:create' as transaction_url %}{% with card_id=card.pk|stringformat:'d' %}{% with target=transaction_url|add:'?credit_card='|add:card_id %}<a class="quiet-action" href="{% contextual_url target %}" aria-label="{% blocktranslate with card=card.name %}New transaction on {{ card }}{% endblocktranslate %}">{% translate 'New transaction' %}</a>{% endwith %}{% endwith %}
+                {% url 'banking:invoices' as invoices_url %}{% with card_id=card.pk|stringformat:'d' %}{% with target=invoices_url|add:'?card='|add:card_id %}<a class="action-link" href="{% contextual_url target %}" aria-label="{% blocktranslate with card=card.name %}Invoices for {{ card }}{% endblocktranslate %}">{% translate 'Invoices' %}</a>{% endwith %}{% endwith %}
+            </div>
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}{% endfor %}

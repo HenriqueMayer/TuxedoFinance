@@ -113,7 +113,7 @@ together.
 
 The navigation brand combines `tuxedo-mark-256.png` with a two-line uppercase
 wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. It always
-links to the public landing page, including for authenticated users. Primary
+links to Home for authenticated users and the public landing page for anonymous visitors. Primary
 actions are solid caramel pills with forest-deep text; `caramel-ink` carries
 brand links over light surfaces. Shared outline and quiet actions use subtle
 neutral hover surfaces. Titles, labels, controls and tabular monetary figures all use Inter.
@@ -149,17 +149,29 @@ authenticated navbar, messages, content block and footer. The authenticated
 navigation becomes:
 
 ```text
-Overview | Activity | Banks | Investments | Planning
+Home | Transactions | Accounts | Investments | Plan
 ```
 
-`Banks` remains active for nested bank, account, card, invoice, movement and
-loyalty routes. The authenticated desktop navigation starts at the `xl`
-breakpoint so tablet and narrow-laptop widths do not compress or overflow the
-full link set. Below that breakpoint, the mobile navigation is a full-screen
-cream modal in light mode and near-black modal in dark mode, with the same
-links and ordering as desktop. It slides in,
-locks page scrolling, makes background content inert, contains keyboard focus,
-closes on Escape and restores focus to its trigger.
+`Accounts` remains active for nested bank, account, card, invoice, movement and
+loyalty routes. `core.workspace_navigation` supplies the same five labels,
+destinations and active states to a persistent desktop sidebar at `lg` (1024px)
+and a fixed bottom navigation below that breakpoint. Primary links navigate
+directly, without hover submenus. Workspace section tabs keep reports, net
+worth, categories, imports, invoices and exchange rates discoverable.
+The body reserves room for the sidebar and bottom bar, including the mobile
+safe area. Searchable-choice viewport calculations also account for the bar.
+The bottom bar is the sole compact-label typography exception: its five full
+labels use 10–11px, never below 10px, with tighter spacing on narrow screens.
+Mobile active labels keep medium weight so complete labels fit at 320px;
+foreground color and the caramel background identify the selected destination.
+Every destination retains a touch target of at least 44 × 44px and visible
+keyboard focus. Check complete labels in both languages, including the active
+semibold state at 320px.
+
+The mobile account-options dialog contains settings, language, theme, project
+documentation and logout. It slides in, locks page scrolling, makes background
+content inert, contains keyboard focus, closes on Escape and restores focus to
+its trigger. Native account options remain available without JavaScript.
 
 `partials/language_selector.html` appears in account options on desktop and the
 mobile menu, with an explicit native fallback when JavaScript is disabled. It
@@ -328,7 +340,9 @@ inputs with caramel focus, and the Save/Cancel pill action pattern. Checkboxes
 use `accent-caramel`. Server-side validation remains authoritative.
 
 - PIX/account/debit choices state `Affects account balance immediately`.
-- Credit card choices state `Added to the card invoice; account debited on due date`.
+- Credit card choices distinguish automatic due-date settlement from the
+  card's dated confirmed-payment mode. Recording a confirmed payment updates
+  local records for a payment already made at the bank; it never sends money.
 - Own transfer forms identify source and destination, show both currencies, and
   explain that the transfer is not income or expense.
 - Credit transaction forms show the target invoice/due date when known.
@@ -392,8 +406,10 @@ settled. Own transfers may appear in activity but are visually neutral and
 absent from income/expense charts. Projected figures are labeled and never
 presented as posted cash. A compact top-six category breakdown follows the same
 month-to-date, completed-month, or planned-month context as the metrics. Live bank
-accounts and upcoming invoices are limited to five rows each and link to Banking
-for the complete lists.
+accounts and upcoming invoices are limited to five rows each. Accounts link
+directly to their bank row; invoices link to their source detail and show the
+remaining amount in confirmed mode. A separate owned, staged-import queue
+highlights decisions waiting for review without counting them as posted cash.
 
 ## Reports and charts
 
@@ -534,15 +550,14 @@ and test configuration is documented in
 
 ## Planning workspaces and shared presentation
 
-The primary navigation is **Overview / Activity / Banks / Investments / Planning**.
-Overview contains Dashboard, Reports and Net worth; Activity contains Transactions,
-Categories and Imports. Banks includes Invoices. Planning contains the existing
-simulations plus Budgets, Goals and Signals. Existing domain URLs remain stable. Account settings and language
-live in the account-options disclosure; the mobile menu has the same destinations.
-A native navigation fallback remains available without JavaScript.
-Desktop primary links retain their direct destinations and reveal section
-options on hover. A separate native disclosure arrow supports keyboard and
-touch; Escape and outside interaction dismiss the menu. Option buttons, including
+The primary navigation is **Home / Transactions / Accounts / Investments / Plan**.
+Home contains Dashboard, Reports and Net worth; Transactions contains the ledger,
+Categories and Imports. Accounts includes Invoices and Exchange rates. Plan
+opens a summary emphasizing Budgets and Goals, with Signals and the existing
+simulations reachable through section navigation. Existing domain URLs remain
+stable; `/planning/` is the planning overview.
+Account settings and language live in account options. Primary links navigate
+directly in both sidebar and bottom navigation. Option buttons, including
 Export CSV, account options, project links and row actions, open only by click,
 touch or keyboard activation. Hovering them never reveals their options.
 
@@ -625,10 +640,15 @@ The Operations
 page owns operation search, purpose/type/record filters and pagination. Portfolio
 and remunerated-cash pages show positions and a contextual link to Operations.
 The Charts tab filters historical positions and flows by Overall, Portfolio or
-Remunerated cash; scope and independent month windows survive GET/HTMX updates. The same destination appears in section tabs and desktop/mobile
-navigation menus. Old movement-filter URLs redirect to the new page. Chart navigation
-and operation pagination keep separate HTMX regions. Operation forms return to the
-history after a successful save or deletion.
+Remunerated cash; scope and independent month windows survive GET/HTMX updates.
+The same destination remains in workspace section tabs. Old movement-filter
+URLs redirect to the new page. Chart navigation and operation pagination keep
+separate HTMX regions. Operation forms return to an explicit originating
+position or filtered history after Save/Cancel, using `core.navigation` and the
+`contextual_url` template tag. The default remains the operation history when
+no safe origin is supplied. Return paths are encoded explicitly, persisted in
+a hidden `next` field through invalid POSTs, and validated as local paths;
+they do not relax user ownership.
 
 Browser Back/Forward restores workspace context from tab-local sessionStorage,
 scoped to the authenticated user and interface identity. Capture each visited

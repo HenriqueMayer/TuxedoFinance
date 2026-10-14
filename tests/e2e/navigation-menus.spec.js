@@ -14,67 +14,58 @@ async function createAccount(page, testInfo) {
     await page.goto('/banking/');
 }
 
+const destinations = ['Home', 'Transactions', 'Accounts', 'Investments', 'Plan'];
+
 for (const dark of [false, true]) {
-    test(`main navigation opens by hover and preserves direct links and keyboard (${dark ? 'dark' : 'light'})`, async ({ page }, testInfo) => {
+    test(`five direct workspaces retain keyboard order and secondary discovery (${dark ? 'dark' : 'light'})`, async ({ page }, testInfo) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await createAccount(page, testInfo);
         await page.evaluate(value => {
             document.documentElement.classList.toggle('dark', value);
             localStorage.setItem('theme', value ? 'dark' : 'light');
         }, dark);
-        const navigation = page.locator('header nav').first();
-        for (const [area, label] of [['overview', 'Reports'], ['activity', 'Categories'],
-            ['banks', 'Exchange rates'], ['investments', 'Configuration'], ['planning', 'Saved drafts']]) {
-            const item = navigation.locator(`[data-nav-item="${area}"]`);
-            await item.locator('summary').hover();
-            await expect(item.locator('details')).not.toHaveAttribute('open', '');
-            await item.locator(':scope > a').hover();
-            await expect(item.locator('details')).toHaveAttribute('open', '');
-            await expect(item.getByRole('link', { name: label, exact: true })).toBeVisible();
-            await item.getByRole('link', { name: label, exact: true }).hover();
-            const bounds = await item.locator('.nav-disclosure-panel').boundingBox();
-            expect(bounds.x).toBeGreaterThanOrEqual(0);
-            expect(bounds.x + bounds.width).toBeLessThanOrEqual(1440);
+        const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
+        await expect(navigation).toHaveAttribute('data-app-navigation', 'desktop');
+        await expect(navigation.getByRole('link')).toHaveText(destinations);
+        await expect(navigation.locator('details, summary')).toHaveCount(0);
+        for (const name of destinations) {
+            await navigation.getByRole('link', { name, exact: true }).hover();
+            await expect(page.locator('[data-nav-menu]')).toHaveCount(0);
             await expect(page).toHaveURL(/\/banking\/$/);
-            await page.locator('main h1').hover();
-            await expect(item.locator('details')).not.toHaveAttribute('open', '');
         }
-        await navigation.locator(':scope > a').focus();
-        await page.keyboard.press('Tab');
-        const overview = navigation.locator('[data-nav-item="overview"]');
-        await expect(overview.locator(':scope > a')).toBeFocused();
+        await navigation.getByRole('link', { name: 'Home', exact: true }).focus();
+        for (const name of destinations) {
+            const link = navigation.getByRole('link', { name, exact: true });
+            await expect(link).toBeFocused();
+            expect(await link.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid');
+            if (name !== 'Plan') await page.keyboard.press('Tab');
+        }
         await page.keyboard.press('Enter');
+        await expect(page).toHaveURL(/\/planning\/$/);
+        await expect(navigation.getByRole('link', { name: 'Plan', exact: true })).toHaveAttribute('aria-current', 'page');
+        await navigation.getByRole('link', { name: 'Home', exact: true }).press('Enter');
         await expect(page).toHaveURL(/\/dashboard\/$/);
-        await expect(page.locator('#nav-desktop-overview-toggle')).toBeVisible();
-        const activity = navigation.locator('[data-nav-item="activity"]');
-        await activity.locator(':scope > a').focus();
-        await page.keyboard.press('Tab');
-        await expect(activity.locator('summary')).toBeFocused();
-        await page.keyboard.press('Space');
-        await expect(activity.locator('details')).toHaveAttribute('open', '');
-        await page.keyboard.press('Tab');
-        await expect(activity.getByRole('link', { name: 'Transactions', exact: true })).toBeFocused();
-        await page.keyboard.press('Tab');
-        await expect(activity.getByRole('link', { name: 'Categories', exact: true })).toBeFocused();
-        await page.keyboard.press('Escape');
-        await expect(activity.locator('summary')).toBeFocused();
-        await expect(activity.locator('details')).not.toHaveAttribute('open', '');
-        await page.keyboard.press('ArrowDown');
-        await expect(activity.getByRole('link', { name: 'Transactions', exact: true })).toBeFocused();
-        await page.keyboard.press('Tab');
-        await page.keyboard.press('Tab');
-        await expect(activity.getByRole('link', { name: 'Import statements', exact: true })).toBeFocused();
-        await page.keyboard.press('Tab');
-        await expect(navigation.locator('[data-nav-item="banks"] > a')).toBeFocused();
-        await expect(activity.locator('details')).not.toHaveAttribute('open', '');
-        await navigation.locator('[data-nav-item="planning"] > a').hover();
-        await page.screenshot({ path: testInfo.outputPath(`navigation-${dark ? 'dark' : 'light'}.png`) });
-        await navigation.locator('[data-nav-item="planning"]').getByRole('link', { name: 'Saved drafts', exact: true }).click();
-        await expect(page).toHaveURL(/\/sandbox\/drafts\/$/);
-        await expect(page.locator('header [data-nav-menu][open]')).toHaveCount(0);
+        const home = page.getByRole('navigation', { name: 'Home sections' });
+        await expect(home.getByRole('link')).toHaveText(['Dashboard', 'Reports', 'Net worth']);
+        await home.getByRole('link', { name: 'Reports', exact: true }).click();
+        await expect(page).toHaveURL(/\/dashboard\/reports\/$/);
+        await expect(home.getByRole('link', { name: 'Reports', exact: true })).toHaveAttribute('aria-current', 'page');
+        await navigation.getByRole('link', { name: 'Transactions', exact: true }).click();
+        const activity = page.getByRole('navigation', { name: 'Transaction sections' });
+        await expect(activity.getByRole('link')).toHaveText(['Transactions', 'Categories', 'Import statements']);
+        await activity.getByRole('link', { name: 'Categories', exact: true }).click();
+        await expect(page).toHaveURL(/\/categories\/$/);
+        await expect(navigation.getByRole('link', { name: 'Transactions', exact: true })).toHaveAttribute('aria-current', 'page');
+        await navigation.getByRole('link', { name: 'Accounts', exact: true }).click();
+        const accounts = page.getByRole('navigation', { name: 'Account sections' });
+        await expect(accounts.getByRole('link')).toHaveText(['Accounts', 'Invoices', 'Exchange rates']);
+        await accounts.getByRole('link', { name: 'Invoices', exact: true }).click();
+        await expect(page).toHaveURL(/\/banking\/invoices\/$/);
+        await expect(navigation.getByRole('link', { name: 'Accounts', exact: true })).toHaveAttribute('aria-current', 'page');
         await page.goBack();
-        await navigation.locator('[data-nav-item="overview"] > a').hover();
-        await expect(navigation.locator('[data-nav-item="overview"] details')).toHaveAttribute('open', '');
+        await expect(page).toHaveURL(/\/banking\/$/);
+        await expect(navigation.getByRole('link', { name: 'Accounts', exact: true })).toHaveAttribute('aria-current', 'page');
+        await page.screenshot({ path: testInfo.outputPath(`navigation-${dark ? 'dark' : 'light'}.png`) });
     });
 }
 
@@ -100,7 +91,6 @@ test('option buttons require activation, retain portal help and leave content ac
     await expect(project).toHaveAttribute('open', '');
     await page.locator('main h1').click();
     await expect(project).not.toHaveAttribute('open', '');
-
     await page.goto('/categories/');
     const options = page.locator('main details.secondary-actions').first();
     await options.locator(':scope > summary').hover();
@@ -126,7 +116,7 @@ test('option buttons require activation, retain portal help and leave content ac
     await expect(advanced).not.toHaveAttribute('open', '');
 });
 
-test('Escape dismisses focused page help before a menu opened elsewhere by hover', async ({ page }, testInfo) => {
+test('primary navigation hover preserves focused help and Escape retains menu activation rules', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await createAccount(page, testInfo);
     await page.goto('/categories/');
@@ -134,45 +124,57 @@ test('Escape dismisses focused page help before a menu opened elsewhere by hover
     await help.press('Enter');
     const tooltip = page.locator('#categories-help');
     await expect(tooltip).toBeVisible();
-    const planning = page.locator('body > header [data-nav-item="planning"]');
-    await planning.locator(':scope > a').hover();
-    await expect(planning.locator('details')).toHaveAttribute('open', '');
+    await page.getByRole('navigation', { name: 'Main navigation', exact: true }).getByRole('link', { name: 'Plan', exact: true }).hover();
+    await expect(page.locator('[data-nav-menu]')).toHaveCount(0);
     await expect(help).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(tooltip).toBeHidden();
     await expect(help).toBeFocused();
-    await expect(planning.locator('details')).toHaveAttribute('open', '');
+    const options = page.locator('header .secondary-actions');
+    await options.locator('summary').focus();
+    await expect(options).not.toHaveAttribute('open', '');
+    await page.keyboard.press('Space');
+    await expect(options).toHaveAttribute('open', '');
     await page.keyboard.press('Escape');
-    await expect(planning.locator('details')).not.toHaveAttribute('open', '');
+    await expect(options).not.toHaveAttribute('open', '');
+    await expect(options.locator('summary')).toBeFocused();
 });
 
-test('mobile menus support touch, direct destinations and nested Escape', async ({ browser }, testInfo) => {
+test('mobile bottom destinations remain direct and account dialog preserves focus and touch', async ({ browser }, testInfo) => {
     const context = await browser.newContext({ viewport: { width: 390, height: 740 }, hasTouch: true, isMobile: true });
     const page = await context.newPage();
     try {
         await createAccount(page, testInfo);
-        await page.getByRole('button', { name: 'Toggle menu', exact: true }).tap();
-        const dialog = page.getByRole('dialog');
-        const planning = dialog.locator('[data-nav-item="planning"]');
-        await planning.locator('summary').tap();
-        await expect(planning.getByRole('link', { name: 'Saved drafts', exact: true })).toBeVisible();
-        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-        await planning.locator('summary').tap();
-        await expect(planning.locator('details')).not.toHaveAttribute('open', '');
-        await planning.locator('summary').tap();
-        await page.keyboard.press('Escape');
-        await expect(planning.locator('details')).not.toHaveAttribute('open', '');
-        await expect(dialog).toHaveAttribute('aria-hidden', 'false');
-        await page.keyboard.press('Escape');
-        await expect(page.locator('#mobile-menu')).toHaveAttribute('aria-hidden', 'true');
-        await page.getByRole('button', { name: 'Toggle menu', exact: true }).tap();
-        await dialog.locator('[data-nav-item="overview"] > a').tap();
+        const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
+        await expect(navigation).toHaveAttribute('data-app-navigation', 'mobile');
+        await expect(navigation.getByRole('link')).toHaveText(destinations);
+        const dock = await navigation.boundingBox();
+        expect(dock.y + dock.height).toBeCloseTo(740, 0);
+        await navigation.getByRole('link', { name: 'Home', exact: true }).tap();
         await expect(page).toHaveURL(/\/dashboard\/$/);
+        await navigation.getByRole('link', { name: 'Plan', exact: true }).tap();
+        await expect(page).toHaveURL(/\/planning\/$/);
         await page.getByRole('button', { name: 'Toggle menu', exact: true }).tap();
-        await planning.locator('summary').tap();
-        await planning.getByRole('link', { name: 'Saved drafts', exact: true }).tap();
-        await expect(page).toHaveURL(/\/sandbox\/drafts\/$/);
+        const dialog = page.getByRole('dialog', { name: 'Navigation menu' });
+        await expect(dialog).toHaveAttribute('aria-hidden', 'false');
+        await expect(page.locator('main')).toHaveAttribute('inert', '');
+        await expect(page.locator('[data-app-navigation="mobile"]')).toHaveAttribute('inert', '');
+        await expect(dialog.locator('[data-nav-item]')).toHaveCount(0);
+        await expect(page.getByRole('button', { name: 'Close menu', exact: true })).toBeFocused();
+        await page.keyboard.press('Shift+Tab');
+        await expect(dialog.getByRole('button', { name: 'Log out', exact: true })).toBeFocused();
+        await page.keyboard.press('Tab');
+        await expect(page.getByRole('button', { name: 'Close menu', exact: true })).toBeFocused();
+        await page.keyboard.press('Escape');
         await expect(page.locator('#mobile-menu')).toHaveAttribute('aria-hidden', 'true');
+        await expect(page.getByRole('button', { name: 'Toggle menu', exact: true })).toBeFocused();
+        await expect(page.locator('main')).not.toHaveAttribute('inert', '');
+        await page.getByRole('button', { name: 'Toggle menu', exact: true }).tap();
+        await dialog.getByRole('link', { name: 'Settings', exact: true }).tap();
+        await expect(page).toHaveURL(/\/accounts\/settings\/$/);
+        await expect(page.locator('#mobile-menu')).toHaveAttribute('aria-hidden', 'true');
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.screenshot({ path: testInfo.outputPath('navigation-mobile.png') });
         await page.goto('/categories/');
         const options = page.locator('main details.secondary-actions').first();
         await options.locator(':scope > summary').tap();
@@ -189,22 +191,49 @@ test('mobile menus support touch, direct destinations and nested Escape', async 
 });
 
 for (const width of [1440, 390]) {
-    test(`navigation submenus work without JavaScript at ${width}px`, async ({ browser }, testInfo) => {
+    test(`workspace destinations and secondary links work without JavaScript at ${width}px`, async ({ browser }, testInfo) => {
         const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width, height: 840 } });
         const page = await context.newPage();
         try {
             await createAccount(page, testInfo);
-            const variant = width < 1280 ? 'native' : 'desktop';
-            const toggle = page.locator(`#nav-${variant}-overview-toggle`);
-            await toggle.press('Enter');
-            const reports = page.locator(`#nav-${variant}-overview-panel`).getByRole('link', { name: 'Reports', exact: true });
-            await expect(reports).toBeVisible();
-            await reports.click();
+            const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
+            await expect(navigation.getByRole('link')).toHaveText(destinations);
+            await navigation.getByRole('link', { name: 'Home', exact: true }).press('Enter');
+            await page.getByRole('navigation', { name: 'Home sections' }).getByRole('link', { name: 'Reports', exact: true }).click();
             await expect(page).toHaveURL(/\/dashboard\/reports\/$/);
-            await page.locator(`#nav-${variant}-planning-toggle`).press('Space');
-            await page.locator(`#nav-${variant}-planning-panel`).getByRole('link', { name: 'Saved drafts', exact: true }).click();
-            await expect(page).toHaveURL(/\/sandbox\/drafts\/$/);
+            await navigation.getByRole('link', { name: 'Plan', exact: true }).click();
+            await expect(page).toHaveURL(/\/planning\/$/);
+            await navigation.getByRole('link', { name: 'Accounts', exact: true }).click();
+            await page.getByRole('navigation', { name: 'Account sections' }).getByRole('link', { name: 'Exchange rates', exact: true }).click();
+            await expect(page).toHaveURL(/\/banking\/exchange-rates\/$/);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         } finally { await context.close(); }
+    });
+}
+
+for (const width of [1440, 390]) {
+    test(`explicit section anchors stay below the sticky header at ${width}px`, async ({ page }, info) => {
+        await page.setViewportSize({ width, height: 800 });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await createAccount(page, info);
+        await page.goto('/dashboard/reports/');
+        const target = page.locator('#report-summary');
+        // Put a genuine report anchor below the fold, then reach it through
+        // keyboard section navigation rather than scrolling it in the test.
+        await target.evaluate(el => { el.style.marginTop = '32rem'; });
+        const link = page.getByRole('navigation', { name: 'Home sections' }).getByRole('link', { name: 'Reports', exact: true });
+        await link.evaluate(el => {
+            el.href = '#report-summary';
+            el.setAttribute('hx-boost', 'false');
+            window.htmx.process(el);
+        });
+        await link.press('Enter');
+        await expect.poll(async () => {
+            const summary = await target.boundingBox();
+            const header = await page.locator('body > header').boundingBox();
+            return summary.y - header.y - header.height;
+        }).toBeGreaterThanOrEqual(15);
+        await expect.poll(async () => (await target.boundingBox()).y).toBeLessThan(100);
+        expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
     });
 }

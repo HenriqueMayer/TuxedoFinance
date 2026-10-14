@@ -119,3 +119,21 @@ Follow the [shared form contract](../frontend.md#keyboard-and-choice-contract).
 See [banking availability](banking.md#monthly-planning-availability),
 [category splits](transactions.md#category-splits) and
 [sandbox](sandbox.md) for their separate accounting boundaries.
+
+## Daily planning workspace
+
+`/planning/` opens a summary with budgets and goals as the two primary tasks.
+Signals and the existing monthly/yield simulations and saved drafts remain
+reachable from the same workspace. Budget links preserve the selected month.
+
+A new goal can optionally reserve an existing bank/cash-pot balance during the
+same submission. The checkbox begins unchecked; selecting it reveals an empty
+owned source choice, then the amount. New form fields use the shared renderer,
+conditional error recovery and a complete native path. Source choice labels
+identify the currency and remaining balance after active goal allocations.
+
+`create_goal` serializes by owner and saves the goal and optional allocation
+atomically through the existing reservation validation. Invalid or insufficient
+backing creates neither record and retains the bound form. This names a portion
+of existing cash; it never transfers money or manufactures progress. Goal and
+budget editors carry a validated local origin through Save/Cancel and errors.

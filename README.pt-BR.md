@@ -169,6 +169,7 @@ inglês, para testar uma cópia descartável antes de migrar uma instalação ex
 | Sinais locais | Sugestões explicadas de duplicatas, aumentos de assinaturas, orçamento excedido e falta futura de caixa, com ações de ciência/descarte/reabertura que preservam os registros financeiros de origem. |
 | Avaliações e patrimônio | Cotações unitárias locais por data, custo médio ponderado remanescente, resultados realizados/não realizados, moeda explícita das taxas e série mensal de patrimônio líquido incluindo dívidas de cartão já contraídas. Histórico, datas de abertura, cotações e câmbio ausentes são sinalizados. |
 | Operação local | Fontes servidas localmente, reutilização do contexto de relatórios/conversões e sincronização incremental do razão, além de dados sintéticos de demonstração ampliados. |
+| Navegação diária | Os mesmos cinco destinos em menu lateral no computador e barra inferior no celular, abas locais, ações junto da conta/cartão/posição e retorno à origem dos formulários. Planejar destaca orçamentos/metas; divisão por categorias e reserva inicial opcional compartilham o fluxo de criação. |
 
 A branch não adiciona conexão bancária ao vivo, feed externo de cotações ou
 serviço de IA na nuvem. Cotações e decisões de revisão permanecem no banco local;

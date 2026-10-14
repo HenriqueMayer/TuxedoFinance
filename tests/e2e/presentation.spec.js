@@ -27,7 +27,7 @@ for (const theme of ['light', 'dark']) {
         await expect(panel).toContainText('Before upcoming bills.');
         await panel.hover();
         await expect(panel).toBeVisible();
-        await page.getByRole('heading', { name: 'Banks', exact: true }).hover();
+        await page.getByRole('heading', { name: 'Accounts', exact: true }).hover();
         await expect(panel).toBeHidden();
         await help.focus();
         await page.keyboard.press('Enter');

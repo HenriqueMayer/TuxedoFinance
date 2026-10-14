@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const { test, expect } = require('@playwright/test');
 const { selectChoice } = require('./helpers/forms');
+const { contextualTarget } = require('./helpers/navigation');
 
 async function post(page, path, values) {
     const response = await page.request.get(path);
@@ -24,8 +25,10 @@ async function prepare(page, testInfo) {
     const category = await page.locator('#id_category option').filter({hasText: /^Food$/}).getAttribute('value');
     await post(page, '/transactions/create/', {title:'Shared purchase', amount:'100', transaction_type:'EXPENSE', category, payment_channel:'ACCOUNT', bank_account:account, date:'2026-10-01', installments:'1'});
     await page.goto('/transactions/');
-    const split = await page.getByRole('link', {name:'Split', exact:true}).getAttribute('href');
-    return {account, split};
+    const split = await contextualTarget(page.getByRole('link', {name:'Split', exact:true}),
+        /^\/transactions\/\d+\/edit\/$/, '/transactions/');
+    expect(split.searchParams.get('split')).toBe('1');
+    return {account, split: split.href, legacySplit: split.pathname.replace('/edit/', '/split/'), editor: split.pathname};
 }
 
 for (const theme of ['light', 'dark']) {
@@ -39,13 +42,15 @@ test(`split categories and confirmed invoice payment preserve keyboard errors ($
     await page.locator('#id_splits-0-amount').fill('40');
     await selectChoice(page.locator('#id_splits-1-category'), {label:'Transport'});
     await page.locator('#id_splits-1-amount').fill('59');
-    await page.getByRole('button', {name:'Save split', exact:true}).focus();
+    await expect(page.locator('#id_split_categories')).toBeChecked();
+    await page.getByRole('button', {name:'Save', exact:true}).focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('alert').filter({hasText:'Category amounts must add up'})).toBeVisible();
     await expect(page.locator('#id_splits-0-category-search')).toHaveValue('Food');
     await page.locator('#id_splits-1-amount').fill('60');
-    await page.getByRole('button', {name:'Save split', exact:true}).click();
-    await expect(page).toHaveURL(/transactions\/\d+\/edit\/$/);
+    await page.getByRole('button', {name:'Save', exact:true}).click();
+    await expect(page).toHaveURL(url => url.pathname === '/transactions/' && url.search === '');
+    await expect(page.locator('main')).toContainText('Shared purchase');
 
     const today = new Date().toISOString().slice(0,10);
     await post(page, '/banking/credit-cards/create/', {account, name:'Confirmed card', card_type:'PHYSICAL', closing_day:'31', due_day:'31', manual_settlement_from:today});
@@ -87,13 +92,15 @@ test('category split has a native no-JavaScript path', async ({browser}, testInf
     const context = await browser.newContext({javaScriptEnabled:false});
     const page = await context.newPage();
     try {
-        const {split} = await prepare(page, testInfo);
-        await page.goto(split);
+        const {legacySplit, editor} = await prepare(page, testInfo);
+        // The primary action now opens combined editing. Keep independent
+        // browser coverage for existing native standalone split URLs as well.
+        await page.goto(legacySplit);
         await page.locator('#id_splits-0-category').selectOption({label:'Food'});
         await page.locator('#id_splits-0-amount').fill('40');
         await page.locator('#id_splits-1-category').selectOption({label:'Transport'});
         await page.locator('#id_splits-1-amount').fill('60');
         await page.getByRole('button', {name:'Save split', exact:true}).click();
-        await expect(page).toHaveURL(/transactions\/\d+\/edit\/$/);
+        await expect(page).toHaveURL(url => url.pathname === editor && url.search === '');
     } finally { await context.close(); }
 });
