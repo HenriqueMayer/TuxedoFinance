@@ -14,7 +14,7 @@ class CategoryOriginTests(TestCase):
         self.client.force_login(user)
         origin = '/categories/?q=Meals&type=EXPENSE'
         response = self.client.get(origin)
-        self.assertContains(response, 'next=%2Fcategories%2F%3Fq%3DMeals%26type%3DEXPENSE', count=3)
+        self.assertContains(response, 'next=%2Fcategories%2F%3Fq%3DMeals%26type%3DEXPENSE', count=4)
         for category in (parent, child):
             url = reverse('categories:update', args=[category.pk])
             response = self.client.post(url, {'name': '', 'transaction_type': 'EXPENSE', 'next': origin})

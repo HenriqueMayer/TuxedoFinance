@@ -1,0 +1,11 @@
+{% load i18n navigation %}
+<div class="flex shrink-0 flex-wrap items-center gap-3">
+    {% url 'categories:update' item.pk as edit_url %}<a href="{% contextual_url edit_url %}" class="quiet-action">{% translate 'Edit' %}</a>
+    <details class="secondary-actions compact-menu" name="category-row-actions">
+        <summary aria-label="{% translate 'More options' %}: {{ item.name }}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'More options' %}: {{ item.name }}</span></summary>
+        <div class="secondary-actions-panel">
+            {% if not item.parent_category %}{% url 'categories:create' as create_url %}{% with parent=item.pk|stringformat:'s' %}<a href="{% contextual_url create_url|add:'?parent='|add:parent %}">{% translate 'Add subcategory' %}</a>{% endwith %}{% endif %}
+            <a href="{% url 'categories:delete' item.pk %}" class="text-expense dark:text-expense-light">{% translate 'Delete' %}</a>
+        </div>
+    </details>
+</div>

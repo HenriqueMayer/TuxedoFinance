@@ -7,19 +7,18 @@
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <div class="flex items-center gap-3">{% url 'banking:color' bank.pk as color_url %}<a class="bank-color-link" style="--bank-color: {{ bank.color|default:'#B88D57' }}" href="{% contextual_url color_url %}" aria-label="{% translate 'Change marker color' %}"><span class="bank-marker" aria-hidden="true"></span></a><h1 class="page-title">{{ bank.name }}</h1></div>
+            <div class="flex items-center gap-3">{% url 'banking:color' bank.pk as color_url %}<span class="bank-marker" style="--bank-color: {{ bank.color|default:'#B88D57' }}" aria-hidden="true"></span><h1 class="page-title">{{ bank.name }}</h1></div>
         </div>
         <div class="flex flex-wrap gap-2">
-            {% url 'banking:update' bank.pk as edit_url %}<a href="{% contextual_url edit_url %}" class="quiet-action">{% translate "Edit bank" %}</a>
-            <details class="secondary-actions"><summary>{% translate 'More options' %}</summary><div class="secondary-actions-panel"><a href="{% url 'banking:program_create' %}?bank={{ bank.pk }}">{% translate "Add loyalty program" %}</a><a href="{% url 'banking:delete' bank.pk %}" class="text-expense dark:text-expense-light">{% translate "Delete" %}</a></div></details>
             <a href="{% url 'banking:account_create' %}?bank={{ bank.pk }}" class="action-primary">{% translate "Add account" %}</a>
+            <details class="secondary-actions"><summary>{% translate 'More options' %}</summary><div class="secondary-actions-panel">{% url 'banking:update' bank.pk as edit_url %}<a href="{% contextual_url edit_url %}">{% translate 'Edit bank' %}</a><a href="{% contextual_url color_url %}">{% translate 'Change marker color' %}</a><a href="{% url 'banking:program_create' %}?bank={{ bank.pk }}">{% translate "Add loyalty program" %}</a><a href="{% url 'banking:delete' bank.pk %}" class="text-expense dark:text-expense-light">{% translate "Delete" %}</a></div></details>
         </div>
     </div>
 
     {% include 'banking/_availability.html' %}
     <section class="surface-panel space-y-4" aria-label="{% translate 'Accounts' %}">
         {% include 'banking/_bank_positions.html' %}
-        {% include 'banking/_cards.html' %}
+        {% include 'banking/_cards.html' with manage_cards=True %}
     </section>
     <section class="surface-panel space-y-4" aria-label="{% translate 'Account instruments' %}">
         <h2 class="section-title">{% translate 'Account instruments' %}</h2>
@@ -36,8 +35,6 @@
             <p class="subtle-copy">{% blocktranslate with currency=account.currency balance=account.opening_balance|floatformat:2 %}Opening balance: {{ currency }} {{ balance }}{% endblocktranslate %}</p>
             <h3 class="mt-4 text-sm font-semibold">{% translate 'Debit cards' %}</h3>
             <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for card in account.debit_cards.all %}<li class="flex flex-wrap justify-between gap-3 py-3"><span>{{ card.name }}</span><span><a href="{% url 'banking:debit_card_update' card.pk %}" class="underline">{% translate 'Edit' %}</a> · <a href="{% url 'banking:debit_card_delete' card.pk %}" class="text-expense underline dark:text-expense-light">{% translate 'Delete' %}</a></span></li>{% empty %}<li class="subtle-copy py-3">{% translate 'No debit cards.' %}</li>{% endfor %}</ul>
-            <h3 class="mt-4 text-sm font-semibold">{% translate 'Credit cards' %}</h3>
-            <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for card in account.credit_cards.all %}<li class="flex flex-wrap justify-between gap-3 py-3"><span>{{ card.name }} <span class="subtle-copy">{{ card.get_card_type_display }} · {% blocktranslate with closing_day=card.closing_day due_day=card.due_day %}closes {{ closing_day }}, due {{ due_day }}{% endblocktranslate %}</span></span><span><a href="{% url 'banking:credit_card_update' card.pk %}" class="underline">{% translate 'Edit' %}</a> · <a href="{% url 'banking:credit_card_delete' card.pk %}" class="text-expense underline dark:text-expense-light">{% translate 'Delete' %}</a></span></li>{% empty %}<li class="subtle-copy py-3">{% translate 'No credit cards.' %}</li>{% endfor %}</ul>
         </details>
         {% endfor %}
     </section>

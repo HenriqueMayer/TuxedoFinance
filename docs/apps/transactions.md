@@ -114,13 +114,16 @@ source records.
 
 ## Listing and reporting semantics
 
-The list opens on the full history. Search covers title, notes, category and split category, bank,
-account and card labels. Free-text search and the exact category selector sit
-next to each other on wider screens and consecutively on mobile, in the same
-reading and keyboard order. Billed month follows them; exact event
-date is under **More filters**, automatically expanded when a date is applied.
-Ordering lives beside the results. All controls work through ordinary GET
-requests, including without JavaScript. Enhanced filtering, card/recurrence
+The list opens on the full history. Search covers title, notes, category and split
+category, bank, account and card labels. The compact consultation bar keeps search,
+billed month and the **All**, **Income** and **Expenses** choices visible. A single
+native **Filters** disclosure contains the exact category choice, recurrence,
+event date and ordering. Its badge counts these additional criteria; Clear stays
+next to the controls whenever any filter or nondefault ordering is active.
+Applied additional criteria and invalid dates open the disclosure on a fresh GET.
+Live updates preserve its mounted controls and the user's disclosure choice.
+All controls work through ordinary GET requests, including without JavaScript.
+Enhanced filtering, card/recurrence
 selection, sorting and pagination preserve viewport position and keyboard focus
 through the [shared navigation contract](../frontend.md#preserve-the-users-location).
 
@@ -142,8 +145,10 @@ The list accepts `category=<id>` and `recurrence=fixed|installment|oneoff` along
 `q`, `month=YYYY-MM`, `date=YYYY-MM-DD`, `type=INCOME|EXPENSE` and the existing
 `sort` values. Invalid, unavailable or incompatible selections are ignored and
 are not carried into navigation. Changing type or recurrence clears category;
-filter changes reset pagination. Search, dates and category use **Apply filters**.
-Sorting and pagination preserve applied filters. Empty installations invite the
+filter changes reset pagination. With JavaScript, typing/deleting search text,
+confirmed choices and dates apply dynamically through the shared live-filter
+helper. **Apply filters** remains outside the disclosure as the complete native
+GET fallback. Sorting and pagination preserve applied filters. Empty installations invite the
 first transaction; empty filtered results offer filter recovery.
 
 Billed month uses `Transaction.amount_for_month`: credit purchases follow their
@@ -151,6 +156,13 @@ statement cycle, while fixed and installment records appear in every applicable
 month. Fixed includes ended recurrences when no month is selected. Month-based
 filtering calculates eligibility once and reuses it for counts, categories and
 results; without a month, filtering and aggregation stay in SQL.
+
+The shared month filter retains its canonical `YYYY-MM` input without JavaScript.
+Its enhanced panel offers a year and a searchable localized month name; confirming
+a unique month match with Enter changes the billed month. Ambiguous names still
+require an explicit selection. This month-only shortcut does not change financial
+record pickers, and a category-name query does not automatically include that
+category's descendants.
 
 Authenticated users may export all their transactions or the active billed
 month as UTF-8 CSV. Full exports download as `transactions.csv`; a monthly

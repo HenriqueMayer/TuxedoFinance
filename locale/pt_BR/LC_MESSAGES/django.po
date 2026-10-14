@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 20:03+0000\n"
+"POT-Creation-Date: 2026-10-14 22:35+0000\n"
 "PO-Revision-Date: 2026-10-14 16:34+0000\n"
 "Last-Translator: Tuxedo Finance contributors\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -86,7 +86,7 @@ msgstr "Suas configurações foram atualizadas."
 msgid "Name"
 msgstr "Nome"
 
-#: banking/forms.py:51 banking/views.py:361
+#: banking/forms.py:51 banking/views.py:362
 msgid "Marker color"
 msgstr "Cor do marcador"
 
@@ -381,7 +381,7 @@ msgstr "Conta do IOF"
 msgid "Iof credit card"
 msgstr "Cartão de crédito do IOF"
 
-#: banking/forms.py:439 banking/views.py:336
+#: banking/forms.py:439 banking/views.py:337
 msgid "A record with these values already exists."
 msgstr "Já existe um registro com estes valores."
 
@@ -411,7 +411,7 @@ msgstr "Data de vigência"
 #: banking/forms.py:460 banking/forms.py:466 banking/forms.py:493
 #: templates/banking/list.html:22 templates/categories/list.html:47
 #: templates/ingestion/history.html:7 templates/investments/list.html:24
-#: templates/transactions/list.html:55
+#: templates/transactions/list.html:53
 msgid "Search"
 msgstr "Pesquisar"
 
@@ -419,7 +419,11 @@ msgstr "Pesquisar"
 msgid "Bank, account, card, program or cash pot"
 msgstr "Banco, conta, cartão, programa ou cofrinho"
 
-#: banking/forms.py:468
+#: banking/forms.py:467
+msgid "Card, account or bank"
+msgstr "Cartão, conta ou banco"
+
+#: banking/forms.py:468 templates/banking/invoices.html:15
 msgid "Invoice month"
 msgstr "Mês da fatura"
 
@@ -442,6 +446,10 @@ msgstr "Situação"
 #: banking/forms.py:472
 msgid "All statuses"
 msgstr "Todos os status"
+
+#: banking/forms.py:494
+msgid "Currency or notes"
+msgstr "Moeda ou observações"
 
 #: banking/forms.py:495 banking/forms.py:496 investments/forms.py:133
 msgid "All currencies"
@@ -508,7 +516,7 @@ msgstr "Agendada"
 msgid "Partially paid"
 msgstr "Parcialmente paga"
 
-#: banking/models.py:215 templates/banking/detail.html:109
+#: banking/models.py:215 templates/banking/detail.html:106
 msgid "Overdue"
 msgstr "Vencida"
 
@@ -563,7 +571,7 @@ msgstr "Débito"
 
 #: banking/models.py:358 categories/models.py:22 dashboard/views.py:172
 #: dashboard/views.py:260 dashboard/views.py:266 dashboard/views.py:299
-#: templates/categories/list.html:65
+#: templates/categories/list.html:66
 #: templates/dashboard/_reports_charts.html:432
 #: templates/dashboard/_reports_charts.html:464
 #: templates/dashboard/index.html:70 templates/dashboard/index.html:190
@@ -572,7 +580,7 @@ msgid "Income"
 msgstr "Receita"
 
 #: banking/models.py:359 categories/models.py:23
-#: templates/categories/list.html:66 transactions/models.py:23
+#: templates/categories/list.html:67 transactions/models.py:23
 msgid "Expense"
 msgstr "Despesa"
 
@@ -777,121 +785,121 @@ msgstr "Os pagamentos não podem exceder o valor atual da fatura."
 msgid "%(card)s confirmed invoice payment"
 msgstr "Pagamento confirmado da fatura de %(card)s"
 
-#: banking/views.py:135
+#: banking/views.py:136
 msgid "Planning availability updated. The account balance is unchanged."
 msgstr ""
 "Disponibilidade para planejamento atualizada. O saldo da conta não mudou."
 
-#: banking/views.py:154
+#: banking/views.py:155
 msgid "Planning availability updated. The position balance is unchanged."
 msgstr "Disponibilidade para planejamento atualizada. O saldo da aplicação não mudou."
 
-#: banking/views.py:343 templates/banking/list.html:16
+#: banking/views.py:344 templates/banking/list.html:16
 #: templates/investments/_setup_progress.html:19
 msgid "New bank"
 msgstr "Novo banco"
 
-#: banking/views.py:350 templates/banking/_bank_list_results.html:11
-#: templates/banking/detail.html:13
+#: banking/views.py:351 templates/banking/_bank_list_results.html:13
+#: templates/banking/detail.html:14
 msgid "Edit bank"
 msgstr "Editar banco"
 
-#: banking/views.py:396
+#: banking/views.py:397
 msgid "New account"
 msgstr "Nova conta"
 
-#: banking/views.py:402
+#: banking/views.py:403
 msgid "Edit account"
 msgstr "Editar conta"
 
-#: banking/views.py:408
+#: banking/views.py:409
 msgid "New debit card"
 msgstr "Novo cartão de débito"
 
-#: banking/views.py:414
+#: banking/views.py:415
 msgid "Edit debit card"
 msgstr "Editar cartão de débito"
 
-#: banking/views.py:420
+#: banking/views.py:421
 msgid "New credit card"
 msgstr "Novo cartão de crédito"
 
-#: banking/views.py:426
+#: banking/views.py:427
 msgid "Edit credit card"
 msgstr "Editar cartão de crédito"
 
-#: banking/views.py:488
+#: banking/views.py:490
 msgid "Invoice payment confirmed."
 msgstr "Pagamento da fatura confirmado."
 
-#: banking/views.py:512
+#: banking/views.py:514
 msgid "Edit confirmed payment"
 msgstr "Editar pagamento confirmado"
 
-#: banking/views.py:528
+#: banking/views.py:530
 msgid "New loyalty program"
 msgstr "Novo programa de fidelidade"
 
-#: banking/views.py:543
+#: banking/views.py:545
 msgid "Edit loyalty program"
 msgstr "Editar programa de fidelidade"
 
-#: banking/views.py:562
+#: banking/views.py:564
 msgid ""
 "This item cannot be deleted because financial records still reference it."
 msgstr ""
 "Este item não pode ser excluído porque ainda é referenciado por registros "
 "financeiros."
 
-#: banking/views.py:565
+#: banking/views.py:567
 msgid "Item deleted."
 msgstr "Item excluído."
 
-#: banking/views.py:618 ingestion/models.py:48
+#: banking/views.py:620 ingestion/models.py:48
 msgid "Transfer between my accounts"
 msgstr "Transferência entre minhas contas"
 
-#: banking/views.py:622
+#: banking/views.py:624
 msgid "Transfer recorded without changing income or expenses."
 msgstr "Transferência registrada sem alterar receitas ou despesas."
 
-#: banking/views.py:629
+#: banking/views.py:631
 msgid "New points or miles entry"
 msgstr "Novo lançamento de pontos ou milhas"
 
-#: banking/views.py:652
+#: banking/views.py:654
 msgid "Points entry recorded."
 msgstr "Lançamento de pontos registrado."
 
-#: banking/views.py:667
+#: banking/views.py:669
 msgid "Edit points or miles entry"
 msgstr "Editar lançamento de pontos ou milhas"
 
-#: banking/views.py:680
+#: banking/views.py:682
 msgid "Points entry updated."
 msgstr "Lançamento de pontos atualizado."
 
-#: banking/views.py:708
+#: banking/views.py:710
 msgid "Convert points or miles to account balance"
 msgstr "Converter pontos ou milhas em saldo da conta"
 
-#: banking/views.py:728
+#: banking/views.py:730
 msgid "Reward converted and IOF funding recorded."
 msgstr "Recompensa convertida e pagamento do IOF registrado."
 
-#: banking/views.py:758
+#: banking/views.py:760
 msgid "Reward redemption updated."
 msgstr "Resgate de pontos atualizado."
 
-#: banking/views.py:812
+#: banking/views.py:815
 msgid "New exchange rate"
 msgstr "Nova taxa de câmbio"
 
-#: banking/views.py:829
+#: banking/views.py:832
 msgid "Edit exchange rate"
 msgstr "Editar taxa de câmbio"
 
-#: banking/views.py:843
+#: banking/views.py:846
 msgid ""
 "This action cannot be undone. Current valuations may change or show missing "
 "rates. Conversions already saved in transfers and investments will be "
@@ -917,7 +925,7 @@ msgstr "Sem categoria principal"
 msgid "Unclassified (income and expense)"
 msgstr "Sem classificação (receita e despesa)"
 
-#: categories/forms.py:66 categories/views.py:140
+#: categories/forms.py:66 categories/views.py:175
 msgid "You already have a category with this name."
 msgstr "Você já tem uma categoria com este nome."
 
@@ -989,17 +997,32 @@ msgstr "Hobbies e entretenimento"
 msgid "Services"
 msgstr "Serviços"
 
-#: categories/views.py:153
+#: categories/views.py:124 investments/forms.py:68
+#: templates/categories/_category_group.html:9
+#: templates/categories/_category_group.html:18
+#: templates/categories/list.html:68
+msgid "Unclassified"
+msgstr "Sem classificação"
+
+#: categories/views.py:126 templates/categories/_category_group.html:9
+#: templates/categories/_category_group.html:18
+#, python-format
+msgid "%(count)s transaction"
+msgid_plural "%(count)s transactions"
+msgstr[0] "%(count)s transação"
+msgstr[1] "%(count)s transações"
+
+#: categories/views.py:188
 #, python-format
 msgid "Category \"%(name)s\" created."
 msgstr "Categoria \"%(name)s\" criada."
 
-#: categories/views.py:163
+#: categories/views.py:198
 #, python-format
 msgid "Category \"%(name)s\" updated."
 msgstr "Categoria \"%(name)s\" atualizada."
 
-#: categories/views.py:189
+#: categories/views.py:224
 #, python-format
 msgid ""
 "\"%(name)s\" cannot be deleted because it is still used by existing "
@@ -1008,12 +1031,12 @@ msgstr ""
 "\"%(name)s\" não pode ser excluída porque ainda é usada por transações ou "
 "orçamentos existentes."
 
-#: categories/views.py:195
+#: categories/views.py:230
 #, python-format
 msgid "Category \"%(name)s\" deleted."
 msgstr "Categoria \"%(name)s\" excluída."
 
-#: categories/views.py:211
+#: categories/views.py:246
 msgid ""
 "Categories cannot be deleted while they are used by existing transactions or "
 "budgets."
@@ -1021,53 +1044,53 @@ msgstr ""
 "As categorias não podem ser excluídas enquanto forem usadas por transações "
 "ou orçamentos existentes."
 
-#: categories/views.py:217
+#: categories/views.py:252
 msgid "All categories deleted."
 msgstr "Todas as categorias foram excluídas."
 
-#: categories/views.py:250
+#: categories/views.py:285
 msgid "The CSV file must use UTF-8 encoding."
 msgstr "O arquivo CSV deve usar a codificação UTF-8."
 
-#: categories/views.py:256
+#: categories/views.py:291
 msgid "The CSV header must be: name,transaction_type,parent_category."
 msgstr "O cabeçalho do CSV deve ser: name,transaction_type,parent_category."
 
-#: categories/views.py:269
+#: categories/views.py:304
 #, python-format
 msgid "Line %(line)s has no category name."
 msgstr "A linha %(line)s não possui um nome de categoria."
 
-#: categories/views.py:271
+#: categories/views.py:306
 #, python-format
 msgid "Line %(line)s contains a name longer than 100 characters."
 msgstr "A linha %(line)s contém um nome com mais de 100 caracteres."
 
-#: categories/views.py:274
+#: categories/views.py:309
 #, python-format
 msgid "Line %(line)s has an invalid transaction type."
 msgstr "A linha %(line)s possui um tipo de transação inválido."
 
-#: categories/views.py:277
+#: categories/views.py:312
 #, python-format
 msgid "The category \"%(name)s\" appears more than once."
 msgstr "A categoria \"%(name)s\" aparece mais de uma vez."
 
-#: categories/views.py:279
+#: categories/views.py:314
 #, python-format
 msgid "The category \"%(name)s\" cannot be its own parent."
 msgstr "A categoria \"%(name)s\" não pode ser sua própria categoria principal."
 
-#: categories/views.py:304
+#: categories/views.py:339
 #, python-format
 msgid "Parent category not found: %(name)s."
 msgstr "Categoria principal não encontrada: %(name)s."
 
-#: categories/views.py:313
+#: categories/views.py:348
 msgid "The CSV contains a circular category hierarchy."
 msgstr "O CSV contém uma hierarquia circular de categorias."
 
-#: categories/views.py:340
+#: categories/views.py:375
 #, python-format
 msgid ""
 "%(created)s categories imported; %(skipped)s existing categories skipped."
@@ -1078,28 +1101,6 @@ msgstr ""
 #: core/dates.py:33
 msgid "Enter a valid date."
 msgstr "Informe uma data válida."
-
-#: core/features.py:13 core/workspace_navigation.py:37
-#: templates/dashboard/wealth.html:2 templates/dashboard/wealth.html:4
-#: templates/dashboard/wealth.html:7 templates/dashboard/wealth.html:9
-msgid "Net worth"
-msgstr "Patrimônio líquido"
-
-#: core/features.py:14
-msgid ""
-"A clearer view of recorded assets and debts, with understandable historical "
-"limits."
-msgstr "Uma visão mais clara dos ativos e dívidas registrados, com limitações históricas compreensíveis."
-
-#: core/features.py:15 core/workspace_navigation.py:44
-msgid "Import statements"
-msgstr "Importar extratos"
-
-#: core/features.py:16
-msgid ""
-"A simpler statement review and reconciliation flow. Existing confirmed "
-"import history remains available."
-msgstr "Um fluxo mais simples para revisar e conciliar extratos. O histórico de importações confirmadas continua disponível."
 
 #: core/settings.py:160
 msgid "English"
@@ -1120,8 +1121,9 @@ msgid "Transactions"
 msgstr "Transações"
 
 #: core/workspace_navigation.py:12 core/workspace_navigation.py:51
-#: templates/banking/detail.html:20 templates/banking/list.html:3
-#: templates/banking/list.html:7
+#: templates/banking/_bank_positions.html:3
+#: templates/banking/_bank_positions.html:9 templates/banking/detail.html:19
+#: templates/banking/list.html:3 templates/banking/list.html:7
 msgid "Accounts"
 msgstr "Contas"
 
@@ -1151,6 +1153,12 @@ msgstr "Dashboard"
 msgid "Reports"
 msgstr "Relatórios"
 
+#: core/workspace_navigation.py:37 templates/dashboard/wealth.html:2
+#: templates/dashboard/wealth.html:4 templates/dashboard/wealth.html:7
+#: templates/dashboard/wealth.html:9
+msgid "Net worth"
+msgstr "Patrimônio líquido"
+
 #: core/workspace_navigation.py:40
 msgid "Transaction sections"
 msgstr "Seções das transações"
@@ -1160,11 +1168,15 @@ msgstr "Seções das transações"
 msgid "Categories"
 msgstr "Categorias"
 
+#: core/workspace_navigation.py:44
+msgid "Import statements"
+msgstr "Importar extratos"
+
 #: core/workspace_navigation.py:47
 msgid "Account sections"
 msgstr "Seções das contas"
 
-#: core/workspace_navigation.py:52 templates/banking/_cards.html:11
+#: core/workspace_navigation.py:52 templates/banking/_cards.html:13
 #: templates/banking/invoices.html:2 templates/banking/invoices.html:4
 #: templates/dashboard/index.html:157
 msgid "Invoices"
@@ -1178,8 +1190,8 @@ msgstr "Taxas de câmbio"
 #: core/workspace_navigation.py:57 templates/accounts/settings.html:4
 #: templates/accounts/settings.html:9 templates/accounts/settings.html:10
 #: templates/investments/_fx_issues.html:19
-#: templates/partials/navbar_app.html:14 templates/partials/navbar_app.html:31
-#: templates/partials/navbar_app.html:44
+#: templates/partials/navbar_app.html:14 templates/partials/navbar_app.html:30
+#: templates/partials/navbar_app.html:42
 msgid "Settings"
 msgstr "Configurações"
 
@@ -1228,7 +1240,7 @@ msgstr "Compra de pontos: %(name)s"
 msgid "Open points entry"
 msgstr "Abrir lançamento de pontos"
 
-#: dashboard/details.py:183 templates/banking/detail.html:72
+#: dashboard/details.py:183 templates/banking/detail.html:69
 #: transactions/models.py:125 transactions/views.py:141
 msgid "IOF on reward redemption"
 msgstr "IOF sobre resgate de pontos"
@@ -1241,7 +1253,7 @@ msgstr "Custos bancários"
 msgid "Installments"
 msgstr "Parcelas"
 
-#: dashboard/services.py:812 templates/transactions/list.html:144
+#: dashboard/services.py:812 templates/transactions/list.html:141
 msgid "Fixed"
 msgstr "Fixa"
 
@@ -1254,12 +1266,12 @@ msgstr "Avulsa"
 #: templates/dashboard/_reports_charts.html:417
 #: templates/dashboard/_reports_charts.html:458
 #: templates/dashboard/index.html:70 templates/dashboard/index.html:191
-#: transactions/views.py:248
+#: transactions/views.py:255
 msgid "Expenses"
 msgstr "Despesas"
 
-#: dashboard/views.py:178 dashboard/views.py:260 investments/views.py:379
-#: investments/views.py:400 templates/dashboard/index.html:70
+#: dashboard/views.py:178 dashboard/views.py:260 investments/views.py:388
+#: investments/views.py:409 templates/dashboard/index.html:70
 #: templates/dashboard/index.html:193
 #: templates/sandbox/_simulation_result.html:13
 msgid "Withdrawals"
@@ -1432,7 +1444,7 @@ msgid "Actual amount in the other account"
 msgstr "Valor efetivo na outra conta"
 
 #: ingestion/forms.py:120 planning/forms.py:54
-#: templates/transactions/form.html:45 templates/transactions/list.html:59
+#: templates/transactions/form.html:45 templates/transactions/list.html:80
 #: templates/transactions/split.html:14 transactions/forms.py:59
 #: transactions/forms.py:196
 msgid "Category"
@@ -1888,11 +1900,6 @@ msgstr "Opcional. Um identificador interno é gerado quando não informado."
 msgid "Asset class"
 msgstr "Classe do ativo"
 
-#: investments/forms.py:68 templates/categories/_category_group.html:17
-#: templates/categories/list.html:67
-msgid "Unclassified"
-msgstr "Sem classificação"
-
 #: investments/forms.py:69
 msgid ""
 "Optional classification. Choose it before recording operations; existing "
@@ -1927,7 +1934,7 @@ msgstr "Informe as unidades e o custo de aquisição juntos."
 msgid "Enter the date of the opening position."
 msgstr "Informe a data da posição inicial."
 
-#: investments/forms.py:124 investments/forms.py:504 investments/views.py:684
+#: investments/forms.py:124 investments/forms.py:504 investments/views.py:693
 msgid "You already have an asset with this code."
 msgstr "Você já tem um ativo com este código."
 
@@ -1997,7 +2004,7 @@ msgstr "Produto"
 msgid "Asset"
 msgstr "Ativo"
 
-#: investments/forms.py:212 templates/categories/list.html:62
+#: investments/forms.py:212 templates/categories/list.html:63
 msgid "Type"
 msgstr "Tipo"
 
@@ -2158,7 +2165,7 @@ msgstr ""
 "Cofrinhos para o mês continuam disponíveis para pagar contas. Mover dinheiro "
 "para eles ou retirá-lo é uma transferência interna."
 
-#: investments/forms.py:435 investments/views.py:664
+#: investments/forms.py:435 investments/views.py:673
 msgid "This bank already has a product with this name."
 msgstr "Este banco já tem um produto com este nome."
 
@@ -2296,7 +2303,7 @@ msgstr ""
 "O campo %(label)s não pode ser alterado depois que este ativo tiver "
 "operações de investimento."
 
-#: investments/forms.py:600 investments/views.py:845
+#: investments/forms.py:600 investments/views.py:854
 msgid "A price exists for this asset and date. Edit that observation instead."
 msgstr "Já existe uma cotação para este ativo nesta data. Edite esse registro."
 
@@ -2635,116 +2642,117 @@ msgstr ""
 msgid "Enter a positive yield amount."
 msgstr "Informe um valor de rendimento positivo."
 
-#: investments/views.py:126
+#: investments/views.py:135
 msgid "The institution or investment already exists. Review the configuration."
 msgstr "A instituição ou aplicação já existe. Revise os cadastros."
 
-#: investments/views.py:133
+#: investments/views.py:142
 msgid ""
 "Investment added. Existing holdings were recorded without a bank payment."
 msgstr "Aplicação adicionada. Os valores existentes foram registrados sem um pagamento bancário."
 
-#: investments/views.py:274 templates/investments/position.html:8
+#: investments/views.py:283 templates/investments/position.html:8
 msgid "Local unit price"
 msgstr "Cotação local por unidade"
 
-#: investments/views.py:277
+#: investments/views.py:286
 msgid "No current position"
 msgstr "Sem posição atual"
 
-#: investments/views.py:277
+#: investments/views.py:286
 msgid "Ready for the first operation"
 msgstr "Pronto para a primeira operação"
 
-#: investments/views.py:279 templates/investments/position.html:8
+#: investments/views.py:288 templates/investments/position.html:8
 msgid "Recorded balance"
 msgstr "Saldo registrado"
 
-#: investments/views.py:279 templates/investments/position.html:8
+#: investments/views.py:288 templates/investments/position.html:8
 msgid "At remaining acquisition cost"
 msgstr "Pelo custo de aquisição restante"
 
-#: investments/views.py:378 investments/views.py:400
+#: investments/views.py:387 investments/views.py:409
 msgid "Deposits"
 msgstr "Aportes"
 
-#: investments/views.py:380 investments/views.py:400
+#: investments/views.py:389 investments/views.py:409
 msgid "Yields"
 msgstr "Rendimentos"
 
-#: investments/views.py:397 templates/dashboard/_reports_charts.html:283
+#: investments/views.py:406 templates/dashboard/_reports_charts.html:283
 msgid "Total"
 msgstr "Total"
 
-#: investments/views.py:559
+#: investments/views.py:568
 msgid "Investment operation created."
 msgstr "Operação de investimento criada."
 
-#: investments/views.py:579
+#: investments/views.py:588
 msgid "Investment operation updated."
 msgstr "Operação de investimento atualizada."
 
-#: investments/views.py:632
+#: investments/views.py:641
 msgid "This item already exists."
 msgstr "Este item já existe."
 
-#: investments/views.py:644 templates/banking/_rate_results.html:8
-#: templates/banking/detail.html:38 templates/banking/detail.html:40
-#: templates/banking/detail.html:52 templates/banking/invoice_detail.html:34
-#: templates/categories/_category_group.html:21
+#: investments/views.py:653 templates/banking/_cards.html:15
+#: templates/banking/_rate_results.html:8 templates/banking/detail.html:37
+#: templates/banking/detail.html:49 templates/banking/invoice_detail.html:34
+#: templates/categories/_category_actions.html:3
+#: templates/categories/_graph.html:7
 #: templates/investments/_investment_movements.html:152
 #: templates/investments/position.html:18 templates/investments/prices.html:11
 #: templates/investments/settings/_asset_row.html:11
 #: templates/investments/settings/index.html:37
-#: templates/transactions/list.html:185
+#: templates/transactions/list.html:182
 msgid "Edit"
 msgstr "Editar"
 
-#: investments/views.py:644
+#: investments/views.py:653
 msgid "Add"
 msgstr "Adicionar"
 
-#: investments/views.py:662 investments/views.py:727
+#: investments/views.py:671 investments/views.py:736
 msgid "investment product"
 msgstr "produto de investimento"
 
-#: investments/views.py:663
+#: investments/views.py:672
 msgid "Name a product and assign it to a bank you manage in Banking."
 msgstr ""
 "Dê um nome ao produto e associe-o a um banco que você gerencia em Bancos."
 
-#: investments/views.py:671
+#: investments/views.py:680
 #, python-format
 msgid "Investment product \"%(name)s\" created."
 msgstr "Produto de investimento \"%(name)s\" criado."
 
-#: investments/views.py:675
+#: investments/views.py:684
 #, python-format
 msgid "Investment product \"%(name)s\" updated."
 msgstr "Produto de investimento \"%(name)s\" atualizado."
 
-#: investments/views.py:681 investments/views.py:736
+#: investments/views.py:690 investments/views.py:745
 msgid "asset"
 msgstr "ativo"
 
-#: investments/views.py:682
+#: investments/views.py:691
 msgid ""
 "Class describes what it is; currency describes how its unit price is quoted."
 msgstr ""
 "A classe descreve o que ele é; a moeda descreve como seu preço unitário é "
 "cotado."
 
-#: investments/views.py:688
+#: investments/views.py:697
 #, python-format
 msgid "Asset \"%(name)s\" created."
 msgstr "Ativo \"%(name)s\" criado."
 
-#: investments/views.py:692
+#: investments/views.py:701
 #, python-format
 msgid "Asset \"%(name)s\" updated."
 msgstr "Ativo \"%(name)s\" atualizado."
 
-#: investments/views.py:715
+#: investments/views.py:724
 msgid ""
 "This item has an opening position or investment history and cannot be "
 "deleted."
@@ -2752,12 +2760,12 @@ msgstr ""
 "Este item possui uma posição inicial ou histórico de investimentos e não "
 "pode ser excluído."
 
-#: investments/views.py:719
+#: investments/views.py:728
 #, python-format
 msgid "%(entity)s deleted."
 msgstr "%(entity)s excluído."
 
-#: investments/views.py:744
+#: investments/views.py:753
 #, python-format
 msgid ""
 "Asset \"%(name)s\" archived. Its positions and history remain available."
@@ -2765,19 +2773,20 @@ msgstr ""
 "Ativo \"%(name)s\" arquivado. Suas posições e seu histórico continuam "
 "disponíveis."
 
-#: investments/views.py:745
+#: investments/views.py:754
 #, python-format
 msgid "Asset \"%(name)s\" restored. It is available for new operations."
 msgstr ""
 "Ativo \"%(name)s\" restaurado. Ele está disponível para novas operações."
 
-#: investments/views.py:792
+#: investments/views.py:801
 msgid "Investment operation deleted."
 msgstr "Operação de investimento excluída."
 
 #: planning/forms.py:37 planning/forms.py:49 planning/models.py:29
 #: templates/dashboard/index.html:189
 #: templates/investments/_investments_charts.html:158
+#: templates/partials/month_filter.html:3
 #: templates/sandbox/_simulation_result.html:17
 #: templates/sandbox/simulation.html:48
 msgid "Month"
@@ -3393,7 +3402,7 @@ msgid "Save settings"
 msgstr "Salvar configurações"
 
 #: templates/accounts/settings.html:35 templates/banking/confirm_delete.html:16
-#: templates/banking/detail.html:91 templates/banking/form.html:49
+#: templates/banking/detail.html:88 templates/banking/form.html:49
 #: templates/banking/invoice_detail.html:31
 #: templates/banking/payment_delete.html:3
 #: templates/categories/confirm_delete.html:28
@@ -3483,8 +3492,8 @@ msgstr "Atualizar %(account)s"
 msgid "Update account"
 msgstr "Atualizar conta"
 
-#: templates/banking/_account_row.html:17 templates/banking/_cards.html:10
-#: templates/banking/detail.html:30
+#: templates/banking/_account_row.html:17 templates/banking/_cards.html:14
+#: templates/banking/detail.html:29
 msgid "New transaction"
 msgstr "Nova transação"
 
@@ -3492,16 +3501,7 @@ msgstr "Nova transação"
 msgid "Import statement"
 msgstr "Importar extrato"
 
-#: templates/banking/_account_row.html:18 templates/dashboard/index.html:31
-msgid "Imports"
-msgstr "Importações"
-
-#: templates/banking/_account_row.html:18 templates/pages/roadmap.html:9
-#: templates/partials/section_navigation.html:5
-msgid "Under review"
-msgstr "Em revisão"
-
-#: templates/banking/_account_row.html:19 templates/banking/detail.html:31
+#: templates/banking/_account_row.html:19 templates/banking/detail.html:30
 msgid "Own transfer"
 msgstr "Transferência entre contas"
 
@@ -3567,40 +3567,54 @@ msgstr ""
 "Antes das próximas contas a pagar. O dinheiro reservado continua nos seus "
 "saldos; dívidas nunca são ocultadas."
 
-#: templates/banking/_bank_list_results.html:8
-msgid "Bank details"
-msgstr "Detalhes do banco"
-
-#: templates/banking/_bank_list_results.html:9 templates/banking/detail.html:15
+#: templates/banking/_bank_list_results.html:8 templates/banking/detail.html:13
 msgid "Add account"
 msgstr "Adicionar conta"
 
-#: templates/banking/_bank_list_results.html:10
-#: templates/banking/detail.html:10
+#: templates/banking/_bank_list_results.html:9
+msgid "Bank details"
+msgstr "Detalhes do banco"
+
+#: templates/banking/_bank_list_results.html:11
+#, python-format
+msgid "Options for %(bank)s"
+msgstr "Opções de %(bank)s"
+
+#: templates/banking/_bank_list_results.html:11
+#: templates/banking/_cards.html:15 templates/banking/_rate_results.html:8
+#: templates/banking/detail.html:14 templates/banking/list.html:10
+#: templates/categories/_category_actions.html:5
+#: templates/categories/list.html:29
+msgid "More options"
+msgstr "Mais opções"
+
+#: templates/banking/_bank_list_results.html:14
+#: templates/banking/detail.html:14
 msgid "Change marker color"
 msgstr "Alterar cor do marcador"
 
-#: templates/banking/_bank_list_results.html:15
-msgid "Loyalty:"
-msgstr "Fidelidade:"
+#: templates/banking/_bank_list_results.html:20
+#: templates/banking/detail.html:44
+msgid "Loyalty programs"
+msgstr "Programas de fidelidade"
 
-#: templates/banking/_bank_list_results.html:18
+#: templates/banking/_bank_list_results.html:23
 msgid "No matching banks"
 msgstr "Nenhum banco encontrado"
 
-#: templates/banking/_bank_list_results.html:18
+#: templates/banking/_bank_list_results.html:23
 msgid "No banks yet"
 msgstr "Ainda não há bancos"
 
-#: templates/banking/_bank_list_results.html:18
+#: templates/banking/_bank_list_results.html:23
 msgid "Add a bank, then create its currency-specific accounts and cards."
 msgstr "Adicione um banco e crie suas contas e cartões específicos por moeda."
 
-#: templates/banking/_bank_list_results.html:19
+#: templates/banking/_bank_list_results.html:24
 msgid "Independent loyalty programs"
 msgstr "Programas de fidelidade independentes"
 
-#: templates/banking/_bank_list_results.html:19
+#: templates/banking/_bank_list_results.html:24
 #: templates/ingestion/_decisions.html:3 templates/ingestion/review.html:23
 msgid "Entry"
 msgstr "Lançamento"
@@ -3619,28 +3633,62 @@ msgstr "Separado do planejamento. Saldos, histórico e patrimônio são preserva
 msgid "No accounts yet."
 msgstr "Ainda não há contas."
 
-#: templates/banking/_cards.html:4 templates/banking/detail.html:39
+#: templates/banking/_cards.html:4 templates/banking/_cards.html:23
 msgid "Credit cards"
 msgstr "Cartões de crédito"
 
-#: templates/banking/_cards.html:8
+#: templates/banking/_cards.html:11
+#, python-format
+msgid "closes %(closing_day)s, due %(due_day)s"
+msgstr "fecha no dia %(closing_day)s, vence no dia %(due_day)s"
+
+#: templates/banking/_cards.html:11
 #, python-format
 msgid "Confirmed payments from %(date)s"
 msgstr "Pagamentos confirmados a partir de %(date)s"
 
-#: templates/banking/_cards.html:8
+#: templates/banking/_cards.html:11
 msgid "Automatic settlement on due date"
 msgstr "Liquidação automática no vencimento"
 
-#: templates/banking/_cards.html:10
+#: templates/banking/_cards.html:13
+#, python-format
+msgid "Invoices for %(card)s"
+msgstr "Faturas de %(card)s"
+
+#: templates/banking/_cards.html:14
 #, python-format
 msgid "New transaction on %(card)s"
 msgstr "Nova transação em %(card)s"
 
-#: templates/banking/_cards.html:11
+#: templates/banking/_cards.html:15
 #, python-format
-msgid "Invoices for %(card)s"
-msgstr "Faturas de %(card)s"
+msgid "Options for %(card)s"
+msgstr "Opções de %(card)s"
+
+#: templates/banking/_cards.html:15 templates/banking/_rate_results.html:8
+#: templates/banking/confirm_delete.html:14 templates/banking/detail.html:14
+#: templates/banking/detail.html:37 templates/banking/detail.html:49
+#: templates/banking/invoice_detail.html:34
+#: templates/banking/payment_delete.html:3
+#: templates/categories/_category_actions.html:8
+#: templates/categories/_graph.html:7
+#: templates/categories/confirm_delete.html:24
+#: templates/investments/_investment_movements.html:156
+#: templates/investments/confirm_delete.html:29
+#: templates/investments/price_confirm_delete.html:9
+#: templates/investments/prices.html:11
+#: templates/investments/settings/_asset_row.html:19
+#: templates/investments/settings/confirm_delete_entity.html:17
+#: templates/investments/settings/index.html:37 templates/sandbox/drafts.html:9
+#: templates/transactions/confirm_delete.html:25
+#: templates/transactions/list.html:186
+msgid "Delete"
+msgstr "Excluir"
+
+#: templates/banking/_cards.html:23
+msgid "No credit cards."
+msgstr "Nenhum cartão de crédito."
 
 #: templates/banking/_cash_pot_row.html:3
 msgid "Redeem to an account before paying."
@@ -3665,7 +3713,7 @@ msgstr "Total da fatura"
 msgid "Remaining"
 msgstr "Restante"
 
-#: templates/banking/_invoice_results.html:10 templates/banking/detail.html:110
+#: templates/banking/_invoice_results.html:10 templates/banking/detail.html:107
 msgid "View invoice"
 msgstr "Ver fatura"
 
@@ -3680,7 +3728,7 @@ msgstr "Nenhuma fatura ainda."
 #: templates/banking/_invoice_results.html:16
 #: templates/banking/_rate_results.html:13 templates/ingestion/history.html:13
 #: templates/investments/_investment_movements.html:170
-#: templates/investments/prices.html:13 templates/transactions/list.html:200
+#: templates/investments/prices.html:13 templates/transactions/list.html:197
 msgid "Pagination"
 msgstr "Paginação"
 
@@ -3688,7 +3736,7 @@ msgstr "Paginação"
 #: templates/banking/_rate_results.html:13 templates/ingestion/history.html:13
 #: templates/ingestion/index.html:15 templates/ingestion/review.html:42
 #: templates/investments/_investment_movements.html:177
-#: templates/investments/prices.html:13 templates/transactions/list.html:204
+#: templates/investments/prices.html:13 templates/transactions/list.html:201
 msgid "Previous"
 msgstr "Anterior"
 
@@ -3696,34 +3744,9 @@ msgstr "Anterior"
 #: templates/banking/_rate_results.html:13 templates/ingestion/history.html:13
 #: templates/ingestion/index.html:15 templates/ingestion/review.html:42
 #: templates/investments/_investment_movements.html:193
-#: templates/investments/prices.html:13 templates/transactions/list.html:217
+#: templates/investments/prices.html:13 templates/transactions/list.html:214
 msgid "Next"
 msgstr "Próxima"
-
-#: templates/banking/_rate_results.html:8 templates/banking/detail.html:14
-#: templates/banking/list.html:10 templates/categories/_category_group.html:23
-#: templates/categories/list.html:29
-msgid "More options"
-msgstr "Mais opções"
-
-#: templates/banking/_rate_results.html:8
-#: templates/banking/confirm_delete.html:14 templates/banking/detail.html:14
-#: templates/banking/detail.html:38 templates/banking/detail.html:40
-#: templates/banking/detail.html:52 templates/banking/invoice_detail.html:34
-#: templates/banking/payment_delete.html:3
-#: templates/categories/_category_group.html:26
-#: templates/categories/confirm_delete.html:24
-#: templates/investments/_investment_movements.html:156
-#: templates/investments/confirm_delete.html:29
-#: templates/investments/price_confirm_delete.html:9
-#: templates/investments/prices.html:11
-#: templates/investments/settings/_asset_row.html:19
-#: templates/investments/settings/confirm_delete_entity.html:17
-#: templates/investments/settings/index.html:37 templates/sandbox/drafts.html:9
-#: templates/transactions/confirm_delete.html:25
-#: templates/transactions/list.html:189
-msgid "Delete"
-msgstr "Excluir"
 
 #: templates/banking/_rate_results.html:12
 msgid "No matching exchange rates."
@@ -3761,82 +3784,69 @@ msgstr ""
 msgid "Add loyalty program"
 msgstr "Adicionar programa de fidelidade"
 
-#: templates/banking/detail.html:24 templates/banking/detail.html:25
+#: templates/banking/detail.html:23 templates/banking/detail.html:24
 msgid "Account instruments"
 msgstr "Meios de pagamento da conta"
 
-#: templates/banking/detail.html:28
+#: templates/banking/detail.html:27
 msgid "Cards and actions"
 msgstr "Cartões e ações"
 
-#: templates/banking/detail.html:32
+#: templates/banking/detail.html:31
 msgid "Add debit card"
 msgstr "Adicionar cartão de débito"
 
-#: templates/banking/detail.html:33
+#: templates/banking/detail.html:32
 msgid "Add credit card"
 msgstr "Adicionar cartão de crédito"
 
-#: templates/banking/detail.html:34
+#: templates/banking/detail.html:33
 msgid "Delete account"
 msgstr "Excluir conta"
 
-#: templates/banking/detail.html:36
+#: templates/banking/detail.html:35
 #, python-format
 msgid "Opening balance: %(currency)s %(balance)s"
 msgstr "Saldo inicial: %(currency)s %(balance)s"
 
-#: templates/banking/detail.html:37
+#: templates/banking/detail.html:36
 msgid "Debit cards"
 msgstr "Cartões de débito"
 
-#: templates/banking/detail.html:38
+#: templates/banking/detail.html:37
 msgid "No debit cards."
 msgstr "Nenhum cartão de débito."
 
-#: templates/banking/detail.html:40
-#, python-format
-msgid "closes %(closing_day)s, due %(due_day)s"
-msgstr "fecha no dia %(closing_day)s, vence no dia %(due_day)s"
-
-#: templates/banking/detail.html:40
-msgid "No credit cards."
-msgstr "Nenhum cartão de crédito."
-
-#: templates/banking/detail.html:47
-msgid "Loyalty programs"
-msgstr "Programas de fidelidade"
-
-#: templates/banking/detail.html:52
+#: templates/banking/detail.html:49
 msgid "Add entry"
 msgstr "Adicionar lançamento"
 
-#: templates/banking/detail.html:61
+#: templates/banking/detail.html:58
 msgid "Reward redemptions"
 msgstr "Resgates de pontos"
 
-#: templates/banking/detail.html:69
+#: templates/banking/detail.html:66
 msgid "Credited to"
 msgstr "Creditado em"
 
-#: templates/banking/detail.html:75
+#: templates/banking/detail.html:72
 #, python-format
 msgid "Included in invoice %(month)s · Due %(due_date)s"
 msgstr "Incluído na fatura de %(month)s · Vence em %(due_date)s"
 
-#: templates/banking/detail.html:77
+#: templates/banking/detail.html:74
 msgid "Debited from"
 msgstr "Debitado de"
 
-#: templates/banking/detail.html:82
+#: templates/banking/detail.html:79
 msgid "No IOF charged."
 msgstr "Sem cobrança de IOF."
 
-#: templates/banking/detail.html:85 templates/banking/detail.html:95
+#: templates/banking/detail.html:82 templates/banking/detail.html:92
 msgid "Edit redemption"
 msgstr "Editar resgate"
 
-#: templates/banking/detail.html:90 templates/banking/form.html:48
+#: templates/banking/detail.html:87 templates/banking/form.html:48
 #: templates/categories/form.html:38 templates/investments/form.html:95
 #: templates/investments/guided_form.html:23
 #: templates/investments/price_form.html:13
@@ -3845,20 +3855,20 @@ msgstr "Editar resgate"
 msgid "Save"
 msgstr "Salvar"
 
-#: templates/banking/detail.html:105
+#: templates/banking/detail.html:102
 msgid "Credit card invoices"
 msgstr "Faturas de cartão de crédito"
 
-#: templates/banking/detail.html:109
+#: templates/banking/detail.html:106
 #, python-format
 msgid "Due %(due_date)s - %(status)s"
 msgstr "Vence em %(due_date)s - %(status)s"
 
-#: templates/banking/detail.html:110
+#: templates/banking/detail.html:107
 msgid "Add points"
 msgstr "Adicionar pontos"
 
-#: templates/banking/detail.html:119
+#: templates/banking/detail.html:116
 msgid "Recent balance movements"
 msgstr "Movimentações recentes do saldo"
 
@@ -3880,28 +3890,40 @@ msgid ""
 "conversion evidence saved in your operations."
 msgstr "Estas taxas locais de referência não substituem os valores efetivos e as evidências de conversão salvos nas operações."
 
-#: templates/banking/exchange_rates.html:12 templates/banking/invoices.html:9
-#: templates/categories/list.html:73
+#: templates/banking/exchange_rates.html:14 templates/banking/invoices.html:13
+#: templates/transactions/list.html:76
+msgid "Filters"
+msgstr "Filtros"
+
+#: templates/banking/exchange_rates.html:14 templates/banking/invoices.html:13
+#, python-format
+msgid "%(count)s active"
+msgid_plural "%(count)s active"
+msgstr[0] "%(count)s ativo"
+msgstr[1] "%(count)s ativos"
+
+#: templates/banking/exchange_rates.html:22 templates/banking/invoices.html:22
+#: templates/categories/list.html:17 templates/ingestion/history.html:9
+#: templates/investments/_investment_movements.html:103
+#: templates/investments/list.html:23 templates/planning/goals.html:9
+#: templates/planning/signals.html:9 templates/transactions/list.html:111
+#: templates/transactions/list.html:224
+msgid "Clear filters"
+msgstr "Limpar filtros"
+
+#: templates/banking/exchange_rates.html:23 templates/banking/invoices.html:23
+#: templates/categories/list.html:75
 #: templates/investments/_investment_movements.html:97
 #: templates/investments/_investments_charts.html:8
 msgid "Filter"
 msgstr "Filtrar"
 
-#: templates/banking/exchange_rates.html:14
+#: templates/banking/exchange_rates.html:26
 #, python-format
 msgid "%(count)s rate"
 msgid_plural "%(count)s rates"
 msgstr[0] "%(count)s taxa"
 msgstr[1] "%(count)s taxas"
-
-#: templates/banking/exchange_rates.html:14 templates/banking/invoices.html:13
-#: templates/categories/list.html:17 templates/ingestion/history.html:9
-#: templates/investments/_investment_movements.html:103
-#: templates/investments/list.html:23 templates/planning/goals.html:9
-#: templates/planning/signals.html:9 templates/transactions/list.html:119
-#: templates/transactions/list.html:227
-msgid "Clear filters"
-msgstr "Limpar filtros"
 
 #: templates/banking/form.html:11
 msgid "Choose an entry type to see only the fields you need."
@@ -3996,7 +4018,7 @@ msgstr ""
 "Cartões automáticos liquidam na data de vencimento. No modo confirmado, "
 "registre os pagamentos efetivos; valores pendentes permanecem na previsão."
 
-#: templates/banking/invoices.html:13
+#: templates/banking/invoices.html:28
 #, python-format
 msgid "%(count)s invoice"
 msgid_plural "%(count)s invoices"
@@ -4011,16 +4033,16 @@ msgstr "Lançamento de pontos"
 msgid "Redeem points"
 msgstr "Resgatar pontos"
 
+#: templates/banking/list.html:22
+msgid "Clear"
+msgstr "Limpar"
+
 #: templates/banking/list.html:24
 #, python-format
 msgid "%(count)s bank"
 msgid_plural "%(count)s banks"
 msgstr[0] "%(count)s banco"
 msgstr[1] "%(count)s bancos"
-
-#: templates/banking/list.html:24
-msgid "Clear"
-msgstr "Limpar"
 
 #: templates/banking/payment_delete.html:2
 #: templates/banking/payment_delete.html:3
@@ -4035,13 +4057,13 @@ msgstr ""
 "Remover esta confirmação reverte seu movimento bancário e restabelece a "
 "obrigação da fatura."
 
-#: templates/base.html:99
+#: templates/base.html:100
 msgid "You have unsaved changes or a simulation result. Leave this page?"
 msgstr ""
 "Você tem alterações não salvas ou um resultado de simulação. Sair desta "
 "página?"
 
-#: templates/base.html:101
+#: templates/base.html:102
 msgid ""
 "Previous screen restored. Unsaved fields have not been submitted; "
 "recalculate simulations to update their results."
@@ -4049,28 +4071,77 @@ msgstr ""
 "Tela anterior restaurada. Os campos não salvos não foram enviados; recalcule "
 "as simulações para atualizar os resultados."
 
-#: templates/categories/_category_group.html:11
+#: templates/categories/_category_actions.html:7
+#: templates/categories/_graph.html:7
+msgid "Add subcategory"
+msgstr "Adicionar subcategoria"
+
+#: templates/categories/_category_group.html:9
 #, python-format
 msgid "%(count)s subcategory"
 msgid_plural "%(count)s subcategories"
 msgstr[0] "%(count)s subcategoria"
 msgstr[1] "%(count)s subcategorias"
 
-#: templates/categories/_category_group.html:17
-#, python-format
-msgid "%(count)s transaction"
-msgid_plural "%(count)s transactions"
-msgstr[0] "%(count)s transação"
-msgstr[1] "%(count)s transações"
+#: templates/categories/_category_group.html:9
+#: templates/categories/_graph.html:7
+msgid "Parent context"
+msgstr "Contexto da categoria pai"
 
 #: templates/categories/_category_group.html:18
 #, python-format
 msgid "Subcategory of %(parent_name)s"
 msgstr "Subcategoria de %(parent_name)s"
 
-#: templates/categories/_category_group.html:25
-msgid "Add subcategory"
-msgstr "Adicionar subcategoria"
+#: templates/categories/_graph.html:2
+msgid "Select category"
+msgstr "Selecionar categoria"
+
+#: templates/categories/_graph.html:4 templates/categories/_graph.html:5
+msgid "Category graph"
+msgstr "Grafo de categorias"
+
+#: templates/categories/_graph.html:4
+msgid "Zoom out"
+msgstr "Reduzir"
+
+#: templates/categories/_graph.html:4
+msgid "Zoom in"
+msgstr "Ampliar"
+
+#: templates/categories/_graph.html:4
+msgid "Fit graph"
+msgstr "Ajustar grafo"
+
+#: templates/categories/_graph.html:6
+msgid ""
+"Drag to move the view. Use zoom controls or pinch to resize it. Moving the "
+"view never changes category links."
+msgstr "Arraste para mover a visualização. Use os controles de zoom ou o gesto de pinça. Mover a visualização não altera os vínculos das categorias."
+
+#: templates/categories/_graph.html:6
+msgid "Use arrow keys to move between nodes, and Enter or Space to select."
+msgstr "Use as setas para navegar entre os nós e Enter ou Espaço para selecionar."
+
+#: templates/categories/_graph.html:7
+msgid "Selected category"
+msgstr "Categoria selecionada"
+
+#: templates/categories/_graph.html:7
+msgid "Select a node to see its details."
+msgstr "Selecione um nó para ver seus detalhes."
+
+#: templates/categories/_graph.html:9
+msgid "Accessible list"
+msgstr "Lista acessível"
+
+#: templates/categories/_hierarchy.html:3
+msgid "Collapse all"
+msgstr "Recolher tudo"
+
+#: templates/categories/_hierarchy.html:3
+msgid "Expand all"
+msgstr "Expandir tudo"
 
 #: templates/categories/confirm_delete.html:9
 #: templates/categories/confirm_delete.html:13
@@ -4186,53 +4257,50 @@ msgstr "Excluir tudo"
 msgid "Category name"
 msgstr "Nome da categoria"
 
-#: templates/categories/list.html:53
+#: templates/categories/list.html:52
+#: templates/investments/_investment_movements.html:46
+msgid "More filters"
+msgstr "Mais filtros"
+
+#: templates/categories/list.html:54
 msgid "Level"
 msgstr "Nível"
 
-#: templates/categories/list.html:56
+#: templates/categories/list.html:57
 msgid "All levels"
 msgstr "Todos os níveis"
 
-#: templates/categories/list.html:57
+#: templates/categories/list.html:58
 msgid "Top-level"
 msgstr "Nível principal"
 
-#: templates/categories/list.html:58
+#: templates/categories/list.html:59
 msgid "Subcategories"
 msgstr "Subcategorias"
 
-#: templates/categories/list.html:64
+#: templates/categories/list.html:65
 #: templates/investments/_investment_movements.html:39
 msgid "All types"
 msgstr "Todos os tipos"
 
-#: templates/categories/list.html:87
+#: templates/categories/list.html:89
 #, python-format
 msgid "%(count)s category"
 msgid_plural "%(count)s categories"
 msgstr[0] "%(count)s categoria"
 msgstr[1] "%(count)s categorias"
 
-#: templates/categories/list.html:88
+#: templates/categories/list.html:90
 msgid "Category view"
 msgstr "Visualização de categorias"
 
-#: templates/categories/list.html:89
+#: templates/categories/list.html:91
 msgid "List"
 msgstr "Lista"
 
-#: templates/categories/list.html:90
-msgid "Tree"
-msgstr "Árvore"
-
-#: templates/categories/list.html:98
-msgid "Collapse all"
-msgstr "Recolher tudo"
-
-#: templates/categories/list.html:99
-msgid "Expand all"
-msgstr "Expandir tudo"
+#: templates/categories/list.html:92
+msgid "Graph"
+msgstr "Grafo"
 
 #: templates/dashboard/_balance_evolution_help.html:3
 msgid "Your balance at the close of each month. Everything after"
@@ -4577,13 +4645,17 @@ msgstr ""
 #: templates/dashboard/_reports_charts.html:487
 #: templates/dashboard/index.html:23 templates/transactions/form.html:11
 #: templates/transactions/form.html:16 templates/transactions/list.html:43
-#: templates/transactions/list.html:232
+#: templates/transactions/list.html:229
 msgid "New Transaction"
 msgstr "Nova transação"
 
 #: templates/dashboard/index.html:31
 msgid "Awaiting your review"
 msgstr "Aguardando sua revisão"
+
+#: templates/dashboard/index.html:31
+msgid "Imports"
+msgstr "Importações"
 
 #: templates/dashboard/index.html:38
 msgid ""
@@ -5234,11 +5306,6 @@ msgstr "Produto, ativo, motivo ou observações"
 msgid "Operation type"
 msgstr "Tipo de operação"
 
-#: templates/investments/_investment_movements.html:46
-#: templates/transactions/list.html:97
-msgid "More filters"
-msgstr "Mais filtros"
-
 #: templates/investments/_investment_movements.html:64
 msgid "Investment product"
 msgstr "Produto de investimento"
@@ -5592,25 +5659,25 @@ msgstr "Seções de investimentos"
 msgid "My investments"
 msgstr "Minhas aplicações"
 
-#: templates/investments/_sections.html:4 templates/investments/list.html:16
+#: templates/investments/_sections.html:5 templates/investments/list.html:16
 msgid "History"
 msgstr "Histórico"
 
-#: templates/investments/_sections.html:5
+#: templates/investments/_sections.html:6
 msgid "More"
 msgstr "Mais"
 
-#: templates/investments/_sections.html:5
+#: templates/investments/_sections.html:6
 msgid "Analyses"
 msgstr "Análises"
 
-#: templates/investments/_sections.html:5 templates/investments/prices.html:3
+#: templates/investments/_sections.html:6 templates/investments/prices.html:3
 #: templates/investments/prices.html:6 templates/investments/prices.html:9
 #: templates/investments/settings/_asset_row.html:12
 msgid "Observed prices"
 msgstr "Cotações observadas"
 
-#: templates/investments/_sections.html:5
+#: templates/investments/_sections.html:6
 msgid "Full configuration"
 msgstr "Cadastros completos"
 
@@ -5745,7 +5812,6 @@ msgstr ""
 "Escolha um ativo e o tipo de operação para ver apenas os campos necessários."
 
 #: templates/investments/form.html:21
-#: templates/investments/position_update.html:6
 msgid ""
 "The asset is archived. You can edit this operation; restore the asset before "
 "recording new ones."
@@ -5897,6 +5963,7 @@ msgid "Review planning availability"
 msgstr "Revisar disponibilidade para planejar"
 
 #: templates/investments/position.html:12
+#: templates/investments/position_update.html:6
 #: templates/investments/setup_form.html:19
 msgid ""
 "This asset is archived. Restore it in Investment Settings to record new "
@@ -5906,6 +5973,7 @@ msgstr ""
 "para registrar novas operações."
 
 #: templates/investments/position.html:12
+#: templates/investments/position_update.html:6
 msgid "Review configuration"
 msgstr "Revisar cadastros"
 
@@ -6238,34 +6306,6 @@ msgid ""
 msgstr ""
 "Estime o salário líquido e planeje despesas mensais sem salvar o cenário."
 
-#: templates/pages/roadmap.html:3 templates/pages/roadmap.html:6
-#: templates/partials/navbar_app.html:15 templates/partials/navbar_app.html:32
-#: templates/partials/navbar_app.html:45
-#: templates/partials/project_menu.html:29
-msgid "Roadmap"
-msgstr "Roadmap"
-
-#: templates/pages/roadmap.html:6
-msgid "These areas are being redesigned to make everyday use simpler."
-msgstr "Estas áreas estão sendo redesenhadas para simplificar o uso no dia a dia."
-
-#: templates/pages/roadmap.html:11
-msgid "Temporarily unavailable. No release date is scheduled."
-msgstr "Temporariamente indisponível. Não há data de lançamento definida."
-
-#: templates/pages/roadmap.html:12
-msgid "View import history"
-msgstr "Ver histórico de importações"
-
-#: templates/pages/roadmap.html:15
-msgid "Future studies"
-msgstr "Estudos futuros"
-
-#: templates/pages/roadmap.html:15
-msgid ""
-"Optional bank connections and cloud hosting will be evaluated separately."
-msgstr "Conexões bancárias opcionais e hospedagem na nuvem serão avaliadas separadamente."
-
 #: templates/partials/app_bottom_navigation.html:2
 #: templates/partials/app_sidebar.html:7
 msgid "Main navigation"
@@ -6304,7 +6344,7 @@ msgid "Selected total"
 msgstr "Total selecionado"
 
 #: templates/partials/chart_selection.html:2
-#: templates/transactions/list.html:84 templates/transactions/list.html:93
+#: templates/transactions/list.html:67 templates/transactions/list.html:96
 msgid "Selected"
 msgstr "Selecionado"
 
@@ -6397,28 +6437,44 @@ msgstr "Explicar %(label)s"
 msgid "Language"
 msgstr "Idioma"
 
-#: templates/partials/navbar_app.html:12 templates/partials/navbar_app.html:30
+#: templates/partials/month_filter.html:3
+msgid "Year"
+msgstr "Ano"
+
+#: templates/partials/month_filter.html:3
+msgid "All months"
+msgstr "Todos os meses"
+
+#: templates/partials/month_filter.html:3
+msgid "Close"
+msgstr "Fechar"
+
+#: templates/partials/month_filter.html:3
+msgid "Choose a valid year."
+msgstr "Escolha um ano válido."
+
+#: templates/partials/navbar_app.html:12 templates/partials/navbar_app.html:29
 msgid "Account options"
 msgstr "Opções da conta"
 
-#: templates/partials/navbar_app.html:17 templates/partials/navbar_app.html:47
+#: templates/partials/navbar_app.html:16 templates/partials/navbar_app.html:44
 msgid "Project documentation"
 msgstr "Documentação do projeto"
 
-#: templates/partials/navbar_app.html:18 templates/partials/navbar_app.html:34
-#: templates/partials/navbar_app.html:48
+#: templates/partials/navbar_app.html:17 templates/partials/navbar_app.html:32
+#: templates/partials/navbar_app.html:45
 msgid "Log out"
 msgstr "Sair"
 
-#: templates/partials/navbar_app.html:26
+#: templates/partials/navbar_app.html:25
 msgid "Toggle menu"
 msgstr "Alternar menu"
 
-#: templates/partials/navbar_app.html:39
+#: templates/partials/navbar_app.html:37
 msgid "Navigation menu"
 msgstr "Menu de navegação"
 
-#: templates/partials/navbar_app.html:40
+#: templates/partials/navbar_app.html:38
 msgid "Close menu"
 msgstr "Fechar menu"
 
@@ -6443,6 +6499,10 @@ msgstr "Problemas / Sugestões"
 msgid "(opens GitHub in a new tab)"
 msgstr "(abre o GitHub em uma nova aba)"
 
+#: templates/partials/project_menu.html:29
+msgid "Roadmap"
+msgstr "Roadmap"
+
 #: templates/partials/project_menu.html:35
 msgid "Coming next"
 msgstr "Próximas implementações"
@@ -6461,11 +6521,6 @@ msgstr "Cotações e histórico de preços com fonte e data de avaliação."
 #: templates/partials/project_menu.html:39
 msgid "An integrated assistant for portfolio research and planning."
 msgstr "Um assistente integrado para pesquisa de carteira e planejamento."
-
-#: templates/partials/section_navigation.html:5
-#, python-format
-msgid "%(feature)s — under review in the roadmap"
-msgstr "%(feature)s — em revisão no roadmap"
 
 #: templates/partials/theme_toggle.html:14
 msgid "Toggle color theme"
@@ -7563,7 +7618,7 @@ msgstr ""
 "planilhas acrescenta um apóstrofo antes de textos que parecem fórmulas; não "
 "a use para reimportar sem alterar os dados."
 
-#: templates/transactions/list.html:29 templates/transactions/list.html:70
+#: templates/transactions/list.html:29 templates/transactions/list.html:56
 msgid "Billed month"
 msgstr "Mês da fatura"
 
@@ -7579,101 +7634,108 @@ msgstr "CSV para planilhas"
 msgid "Export selected month"
 msgstr "Exportar mês selecionado"
 
-#: templates/transactions/list.html:56
+#: templates/transactions/list.html:54
 msgid "Title, notes, category, bank, account or card"
 msgstr "Título, observações, categoria, banco, conta ou cartão"
 
-#: templates/transactions/list.html:61
-msgid "All categories"
-msgstr "Todas as categorias"
-
-#: templates/transactions/list.html:76 templates/transactions/list.html:77
-#: templates/transactions/list.html:79 transactions/forms.py:58
+#: templates/transactions/list.html:62 templates/transactions/list.html:71
+#: transactions/forms.py:58
 msgid "Transaction type"
 msgstr "Tipo de transação"
 
-#: templates/transactions/list.html:77
+#: templates/transactions/list.html:71
 msgid ""
 "Counts follow your search and dates, before category and recurrence filters."
 msgstr ""
 "As contagens consideram a busca e as datas, antes dos filtros de categoria e "
 "recorrência."
 
-#: templates/transactions/list.html:91
+#: templates/transactions/list.html:76
+#, python-format
+msgid "%(count)s active filter"
+msgid_plural "%(count)s active filters"
+msgstr[0] "%(count)s filtro ativo"
+msgstr[1] "%(count)s filtros ativos"
+
+#: templates/transactions/list.html:82
+msgid "All categories"
+msgstr "Todas as categorias"
+
+#: templates/transactions/list.html:94
 msgid "Recurrence"
 msgstr "Recorrência"
 
-#: templates/transactions/list.html:103
+#: templates/transactions/list.html:100
 msgid "Sort by"
 msgstr "Ordenar por"
 
-#: templates/transactions/list.html:105
+#: templates/transactions/list.html:102
 msgid "Newest first"
 msgstr "Mais recentes primeiro"
 
-#: templates/transactions/list.html:106
+#: templates/transactions/list.html:103
 msgid "Oldest first"
 msgstr "Mais antigas primeiro"
 
-#: templates/transactions/list.html:107
+#: templates/transactions/list.html:104
 msgid "Last updated"
 msgstr "Última atualização"
 
-#: templates/transactions/list.html:108
+#: templates/transactions/list.html:105
 msgid "Highest amount"
 msgstr "Maior valor"
 
-#: templates/transactions/list.html:109
+#: templates/transactions/list.html:106
 msgid "Lowest amount"
 msgstr "Menor valor"
 
-#: templates/transactions/list.html:118
+#: templates/transactions/list.html:117
 #, python-format
 msgid "%(total)s transaction"
 msgid_plural "%(total)s transactions"
 msgstr[0] "%(total)s transação"
 msgstr[1] "%(total)s transações"
 
-#: templates/transactions/list.html:142
+#: templates/transactions/list.html:139
 #, python-format
 msgid "Fixed &middot; until %(end_date)s"
 msgstr "Fixa &middot; até %(end_date)s"
 
-#: templates/transactions/list.html:171
+#: templates/transactions/list.html:168
 #, python-format
 msgid "%(installments)sx %(currency)s %(installment_amount)s / month"
 msgstr "%(installments)sx de %(currency)s %(installment_amount)s / mês"
 
-#: templates/transactions/list.html:177
+#: templates/transactions/list.html:174
 msgid "Managed by reward redemption"
 msgstr "Gerenciada pelo resgate de pontos"
 
-#: templates/transactions/list.html:178
+#: templates/transactions/list.html:175
 msgid "View redemption"
 msgstr "Ver resgate"
 
-#: templates/transactions/list.html:182
+#: templates/transactions/list.html:179
 msgid "Split"
 msgstr "Divisão"
 
-#: templates/transactions/list.html:211
+#: templates/transactions/list.html:208
 #, python-format
 msgid "Page %(page_number)s of %(total_pages)s"
 msgstr "Página %(page_number)s de %(total_pages)s"
 
-#: templates/transactions/list.html:225
+#: templates/transactions/list.html:222
 msgid "No matching transactions"
 msgstr "Nenhuma transação encontrada"
 
-#: templates/transactions/list.html:226
+#: templates/transactions/list.html:223
 msgid "Try different filters or clear them to see all your transactions."
 msgstr "Tente outros filtros ou limpe-os para ver todas as suas transações."
 
-#: templates/transactions/list.html:230
+#: templates/transactions/list.html:227
 msgid "No transactions yet"
 msgstr "Ainda não há transações"
 
-#: templates/transactions/list.html:231
+#: templates/transactions/list.html:228
 msgid "Record your first transaction to start tracking your cash flow."
 msgstr ""
 "Registre sua primeira transação para começar a acompanhar seu fluxo de caixa."
@@ -7888,44 +7950,90 @@ msgstr "Fatura de %(card_name)s de %(reference_month)s"
 msgid "Category split saved."
 msgstr "Divisão por categorias salva."
 
-#: transactions/views.py:248 transactions/views.py:253
+#: transactions/views.py:255 transactions/views.py:260
 msgid "All"
 msgstr "Todas"
 
-#: transactions/views.py:248
+#: transactions/views.py:255
 msgctxt "transaction type filter"
 msgid "Income"
 msgstr "Receitas"
 
-#: transactions/views.py:253
+#: transactions/views.py:260
 msgctxt "transaction recurrence filter"
 msgid "Fixed"
 msgstr "Fixas"
 
-#: transactions/views.py:254
+#: transactions/views.py:261
 msgctxt "transaction recurrence filter"
 msgid "Installments"
 msgstr "Parceladas"
 
-#: transactions/views.py:255
+#: transactions/views.py:262
 msgctxt "transaction recurrence filter"
 msgid "One-off"
 msgstr "Avulsas"
 
-#: transactions/views.py:421
+#: transactions/views.py:428
 #, python-format
 msgid "Transaction \"%(title)s\" created."
 msgstr "Transação \"%(title)s\" criada."
 
-#: transactions/views.py:455
+#: transactions/views.py:462
 #, python-format
 msgid "Transaction \"%(title)s\" updated."
 msgstr "Transação \"%(title)s\" atualizada."
 
-#: transactions/views.py:478
+#: transactions/views.py:485
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+#~ msgid ""
+#~ "A clearer view of recorded assets and debts, with understandable "
+#~ "historical limits."
+#~ msgstr ""
+#~ "Uma visão mais clara dos ativos e dívidas registrados, com limitações "
+#~ "históricas compreensíveis."
+
+#~ msgid ""
+#~ "A simpler statement review and reconciliation flow. Existing confirmed "
+#~ "import history remains available."
+#~ msgstr ""
+#~ "Um fluxo mais simples para revisar e conciliar extratos. O histórico de "
+#~ "importações confirmadas continua disponível."
+
+#~ msgid "Under review"
+#~ msgstr "Em revisão"
+
+#~ msgid "Loyalty:"
+#~ msgstr "Fidelidade:"
+
+#~ msgid "Tree"
+#~ msgstr "Árvore"
+
+#~ msgid "These areas are being redesigned to make everyday use simpler."
+#~ msgstr ""
+#~ "Estas áreas estão sendo redesenhadas para simplificar o uso no dia a dia."
+
+#~ msgid "Temporarily unavailable. No release date is scheduled."
+#~ msgstr "Temporariamente indisponível. Não há data de lançamento definida."
+
+#~ msgid "View import history"
+#~ msgstr "Ver histórico de importações"
+
+#~ msgid "Future studies"
+#~ msgstr "Estudos futuros"
+
+#~ msgid ""
+#~ "Optional bank connections and cloud hosting will be evaluated separately."
+#~ msgstr ""
+#~ "Conexões bancárias opcionais e hospedagem na nuvem serão avaliadas "
+#~ "separadamente."
+
+#, python-format
+#~ msgid "%(feature)s — under review in the roadmap"
+#~ msgstr "%(feature)s — em revisão no roadmap"
 
 #~ msgid ""
 #~ "Monthly expense limits, including subcategories. Credit expenses follow "
@@ -8666,9 +8774,6 @@ msgstr "Transação \"%(title)s\" excluída."
 #~ msgstr[0] "%(bank)s - %(count)s operação"
 #~ msgstr[1] "%(bank)s - %(count)s operações"
 
-#~ msgid "Click a bar to see its categories."
-#~ msgstr "Clique em uma barra para ver suas categorias."
-
 #~ msgid "Last month"
 #~ msgstr "Mês final"
 
@@ -8693,9 +8798,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "paid with"
 #~ msgstr "pagas com"
-
-#~ msgid "Close"
-#~ msgstr "Fechar"
 
 #~ msgid "No transactions used this card or account in the selected window."
 #~ msgstr "Nenhuma transação usou este cartão ou conta no período selecionado."

@@ -14,13 +14,14 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from categories.forms import CategoryForm, CategoryImportForm
 from categories.models import Category
 from core.csv import export_row
-from core.navigation import ReturnContextMixin
+from core.navigation import ReturnContextMixin, with_return_url
 
 
 class CategoryListView(LoginRequiredMixin, ListView):
@@ -38,8 +39,8 @@ class CategoryListView(LoginRequiredMixin, ListView):
         kind = self.request.GET.get('type', '')
         return kind if kind in (*Category.TransactionType.values, 'unclassified') else ''
 
-    def get_queryset(self):
-        queryset = Category.objects.filter(user=self.request.user).select_related(
+    def _owned_queryset(self):
+        return Category.objects.filter(user=self.request.user).select_related(
             'parent_category'
         ).annotate(
             usage_count=Count('transactions', filter=Q(transactions__user=self.request.user)),
@@ -47,6 +48,8 @@ class CategoryListView(LoginRequiredMixin, ListView):
             hierarchy_order=Case(When(parent_category__isnull=True, then=Value(0)), default=Value(1), output_field=IntegerField()),
         ).order_by('group_name', 'hierarchy_order', 'name')
 
+    def get_queryset(self):
+        queryset = self._owned_queryset()
         search = self.request.GET.get('q', '').strip()
         if search:
             queryset = queryset.filter(name__icontains=search)
@@ -71,12 +74,25 @@ class CategoryListView(LoginRequiredMixin, ListView):
         context['selected_view'] = 'tree' if self.request.GET.get('view') == 'tree' else 'list'
         context['has_filters'] = bool(context['search_query'] or context['selected_level'] or context['selected_type'])
         context['has_categories'] = Category.objects.filter(user=self.request.user).exists()
-        # Group only visible results: a matching child whose parent was filtered
-        # out must remain visible. Walk iteratively so legacy cycles cannot lose
-        # records or cause infinite recursion while constructing the forest.
+        # Matching descendants retain owned ancestors as navigation context,
+        # not extra matches. Never infer or expose a foreign parent relationship.
         categories = list(context['categories'])
         context['result_count'] = len(categories)
+        matched_ids = {category.pk for category in categories}
+        if context['has_filters'] and categories:
+            owned = {category.pk: category for category in self._owned_queryset()}
+            visible = set(matched_ids)
+            for category in categories:
+                parent_id = category.parent_category_id
+                while parent_id in owned and parent_id not in visible:
+                    visible.add(parent_id)
+                    parent_id = owned[parent_id].parent_category_id
+            categories = [category for category in owned.values() if category.pk in visible]
         visible_ids = {category.pk for category in categories}
+        for category in categories:
+            category.display_parent_name = category.parent_category.name if (
+                category.parent_category_id and category.parent_category.user_id == self.request.user.pk
+            ) else ''
         children = defaultdict(list)
         roots = []
         for category in categories:
@@ -92,11 +108,30 @@ class CategoryListView(LoginRequiredMixin, ListView):
                 if current.pk in visited:
                     continue
                 visited.add(current.pk)
-                group = {'category': current, 'children': []}
+                group = {'category': current, 'children': [], 'context_only': current.pk not in matched_ids,
+                         'expanded': context['has_filters']}
                 siblings.append(group)
                 pending.extend((child, group['children']) for child in reversed(children[current.pk]))
         context['category_groups'] = groups
         context['has_category_groups'] = any(group['children'] for group in groups)
+        graph_nodes = []
+        pending = [(group, None, 0) for group in reversed(groups)] if context['selected_view'] == 'tree' else []
+        while pending:
+            group, parent_id, depth = pending.pop()
+            category = group['category']
+            graph_nodes.append({
+                'id': str(category.pk), 'parent': parent_id, 'depth': depth,
+                'name': category.name, 'kind': category.get_transaction_type_display() if category.transaction_type else _('Unclassified'),
+                'usage': category.usage_count, 'context': group['context_only'],
+                'usage_label': ngettext('%(count)s transaction', '%(count)s transactions', category.usage_count) % {'count': category.usage_count},
+                'edit': with_return_url(str(reverse_lazy('categories:update', args=[category.pk])),
+                    self.request.get_full_path(), fragment=f'category-graph-node-{category.pk}'),
+                'add': with_return_url(str(reverse_lazy('categories:create')) + f'?parent={category.pk}',
+                    self.request.get_full_path(), fragment=f'category-graph-node-{category.pk}') if not category.parent_category_id else '',
+                'delete': str(reverse_lazy('categories:delete', args=[category.pk])),
+            })
+            pending.extend((child, str(category.pk), depth + 1) for child in reversed(group['children']))
+        context['category_graph'] = graph_nodes
         return context
 
 

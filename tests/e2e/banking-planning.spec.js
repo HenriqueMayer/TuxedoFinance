@@ -69,6 +69,8 @@ test('bank controls and category options remain usable without JavaScript', asyn
         await page.goto('/categories/');
         await page.locator('main').getByText('More options', { exact: true }).press('Enter');
         await expect(page.getByRole('link', { name: 'Export CSV for spreadsheets', exact: true })).toBeVisible();
+        await page.locator('main').getByText('More filters', { exact: true }).press('Enter');
+        await expect(page.getByLabel('Type', { exact: true })).toBeVisible();
         await page.getByLabel('Type', { exact: true }).selectOption('unclassified');
         await page.getByRole('button', { name: 'Filter', exact: true }).click();
         await expect(page).toHaveURL(/type=unclassified/);

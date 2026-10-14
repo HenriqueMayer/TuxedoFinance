@@ -464,7 +464,7 @@ class BankSearchForm(forms.Form):
 
 class InvoiceFilterForm(forms.Form):
     q = forms.CharField(required=False, label=_('Search'),
-                        widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': ''}))
+                        widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': '', 'placeholder': _('Card, account or bank')}))
     month = forms.CharField(required=False, label=_('Invoice month'),
                             widget=forms.TextInput(attrs={'type': 'month', 'min': '1901-01', 'max': '9988-12', 'data-live-change': ''}))
     bank = forms.ModelChoiceField(required=False, queryset=Bank.objects.none(), label=_('Bank'), empty_label=_('All banks'))
@@ -491,7 +491,7 @@ class InvoiceFilterForm(forms.Form):
 
 class ExchangeRateFilterForm(forms.Form):
     q = forms.CharField(required=False, label=_('Search'),
-                        widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': ''}))
+                        widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': '', 'placeholder': _('Currency or notes')}))
     from_currency = forms.ChoiceField(required=False, label=_('From currency'), choices=[('', _('All currencies')), *ExchangeRate._meta.get_field('from_currency').choices])
     to_currency = forms.ChoiceField(required=False, label=_('To currency'), choices=[('', _('All currencies')), *ExchangeRate._meta.get_field('to_currency').choices])
     date_from = forms.DateField(required=False, label=_('From date'))

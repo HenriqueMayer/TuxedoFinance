@@ -194,8 +194,8 @@ at that limit.
 
 ## Net-worth interface review
 
-The net-worth page is paused by a route-level review gate and its section status
-links to Roadmap. `wealth_snapshot` and financial calculations remain available
+The net-worth interface is absent from navigation; its route-level review gate
+returns old requests to Dashboard. Its redesign is tracked in documentation. `wealth_snapshot` and financial calculations remain available
 to their existing consumers. Dashboard and Reports retain their organization;
 paused pending-import calls to action are not shown while review is unavailable.
 Per-position cash participation changes planning availability, preserving actual

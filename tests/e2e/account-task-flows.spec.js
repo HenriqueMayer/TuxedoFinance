@@ -48,7 +48,7 @@ test(`account tasks keep context and invoice recovery (${width}, ${theme})`, asy
     await expect(page).toHaveURL(new RegExp('/banking/\\?q=Task$'));
     await summary.press('Enter');
     await expect(menu.getByRole('link', { name: 'Import statement', exact: true })).toHaveCount(0);
-    await expect(menu.getByRole('link', { name: 'Imports · Under review', exact: true })).toHaveAttribute('href', '/roadmap/#imports');
+    await expect(menu.locator('a[href*="roadmap"], a[href*="imports"]')).toHaveCount(0);
     await summary.press('Escape');
     await page.getByRole('link', { name: 'Invoices for Daily card', exact: true }).click();
     await page.locator('main').getByRole('link', { name: /^Daily card/ }).click();
@@ -89,7 +89,8 @@ test('account update choices work natively on mobile without JavaScript', async 
         await page.goto('/banking/?q=Task');
         const menu = page.locator('details[name="account-updates"]').first();
         await menu.locator('summary').press('Enter');
-        await expect(menu.getByRole('link', { name: 'Imports · Under review', exact: true })).toHaveAttribute('href', '/roadmap/#imports');
+        await expect(menu.getByRole('link', { name: 'Import statement', exact: true })).toHaveCount(0);
+        await expect(menu.locator('a[href*="roadmap"]')).toHaveCount(0);
         await menu.getByRole('link', { name: 'New transaction', exact: true }).click();
         await expect(page.locator('#id_bank_account')).toHaveValue(account);
         await page.getByRole('link', { name: 'Cancel', exact: true }).click();

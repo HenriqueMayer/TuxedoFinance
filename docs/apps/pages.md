@@ -46,11 +46,11 @@ keyboard-search enhancement. See the
 [form contract](../frontend.md#keyboard-and-choice-contract).
 
 
-## Authenticated roadmap
+## Planned features outside the interface
 
-`/roadmap/` explains the Net worth and Import statements usability review gates,
-without a promised release date. Paused section labels remain visible; their
-status links go directly to the relevant roadmap anchor. Account options also
-expose Roadmap. Only an owned existence query decides whether to offer confirmed
-import history. The roadmap never displays another user's records or runs an
-import, valuation write, subscription or deployment.
+The feature roadmap lives in [../roadmap.md](../roadmap.md). `/roadmap/` is not
+an application route. Navigation and account options contain only available
+areas; no disabled Net worth/Import tabs or review badges are shown. Existing
+review gates still stop old GET/POST operation URLs before execution, returning
+to the owning Dashboard or Transactions workspace. Owned posted import
+provenance remains available through its read-only history URLs.

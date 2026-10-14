@@ -45,10 +45,11 @@ function toggle(page, id) {
     return page.locator(`summary[data-category-toggle][aria-controls="category-children-${id}"]`);
 }
 function children(page, id) { return page.locator(`#category-children-${id}`); }
+function optionsLink(page, id) { return page.locator(`[data-category-group="${id}"] > div.absolute`).getByRole('link', {name: 'Add subcategory', exact: true}); }
 function edit(page, id) { return page.locator(`a[href^="/categories/${id}/edit/"]`); }
 async function tree(page, expanded = false) {
-    await page.locator('#category-view-tree').click();
-    await expect(page.locator('#category-view-tree')).toHaveAttribute('aria-current', 'true');
+    await page.locator('#category-view-list').click();
+    await expect(page.locator('#category-view-list')).toHaveAttribute('aria-current', 'true');
     if (expanded) {
         await page.locator('button[data-category-action="expand"]').click();
     }
@@ -73,8 +74,11 @@ for (const theme of ['light', 'dark']) {
         await page.setViewportSize({ width: 1440, height: 1000 });
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         const ids = await prepare(page, testInfo);
+        await toggle(page, ids.living).press('Enter');
         const first = page.locator('summary[aria-label="More options: Living costs"]');
-        const neighbor = page.locator('summary[aria-label="More options: Water"]');
+        // The parent's deliberate popup overlaps its indented child rows.
+        // Exercise hover across another group outside that popup's hit area.
+        const neighbor = page.locator('summary[aria-label="More options: Transport"]');
         const firstMenu = first.locator('..');
         const neighborMenu = neighbor.locator('..');
         const openMenus = page.locator('details.compact-menu[open]');
@@ -109,6 +113,7 @@ for (const theme of ['light', 'dark']) {
         expect(await page.evaluate(() => window.rowMenuNavigationMarker)).toBe(true);
         await page.locator('#category-clear-filters').click();
         await expect(page).toHaveURL(/\/categories\/$/);
+        await toggle(page, ids.living).press('Enter');
         await neighbor.hover();
         await expect(openMenus).toHaveCount(0);
         await first.click();
@@ -121,12 +126,24 @@ for (const theme of ['light', 'dark']) {
         await neighbor.press('Enter');
         await expect(neighborMenu).toHaveAttribute('open', '');
         await page.keyboard.press('Tab');
-        await expect(neighborMenu.getByRole('link', { name: 'Delete', exact: true })).toBeFocused();
+        const addNeighbor = neighborMenu.getByRole('link', { name: 'Add subcategory', exact: true });
+        await expect(addNeighbor).toBeFocused();
+        const target = new URL(await addNeighbor.getAttribute('href'), page.url());
+        expect(target.pathname).toBe('/categories/create/');
+        expect(target.searchParams.get('parent')).toBe(ids.transport);
+        expect(target.searchParams.get('next')).toBe('/categories/');
+        await page.keyboard.press('Tab');
+        const deleteNeighbor = neighborMenu.getByRole('link', { name: 'Delete', exact: true });
+        await expect(deleteNeighbor).toBeFocused();
+        await expect(deleteNeighbor).toHaveAttribute('href', `/categories/${ids.transport}/delete/`);
         await page.keyboard.press('Escape');
         await expect(neighbor).toBeFocused();
         await expect(openMenus).toHaveCount(0);
         await page.keyboard.press('Space');
         await page.keyboard.press('Tab');
+        await expect(addNeighbor).toBeFocused();
+        await page.keyboard.press('Tab');
+        await expect(deleteNeighbor).toBeFocused();
         await page.keyboard.press('Tab');
         await expect(openMenus).toHaveCount(0);
         await neighbor.click();
@@ -141,7 +158,8 @@ for (const javaScriptEnabled of [true, false]) {
             viewport: { width: javaScriptEnabled ? 390 : 1440, height: 1000 } });
         const page = await context.newPage();
         try {
-            await prepare(page, testInfo);
+            const ids = await prepare(page, testInfo);
+            await toggle(page, ids.living).press('Enter');
             const first = page.locator('summary[aria-label="More options: Living costs"]');
             const second = page.locator('summary[aria-label="More options: Water"]');
             const openMenus = page.locator('details.compact-menu[open]');
@@ -207,8 +225,8 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
 
         // Row actions do not act as disclosure triggers.
         await page.locator('summary[aria-label="More options: Living costs"]').click();
-        await page.locator(`a[href="/categories/create/?parent=${ids.living}"]`).click();
-        await expect(page).toHaveURL(new RegExp(`/categories/create/\\?parent=${ids.living}$`));
+        await optionsLink(page, ids.living).click();
+        await expect(page).toHaveURL(url => url.pathname === '/categories/create/' && url.searchParams.get('parent') === ids.living && url.searchParams.get('next') === '/categories/');
         await expect(page.locator('#id_parent_category')).toHaveValue(ids.living);
         await page.goBack();
         await allExpanded(page, ids);
@@ -253,9 +271,10 @@ test('category filtering exposes matching descendants and history restores discl
     expect(await page.evaluate(() => window.categoryHistoryMarker)).toBe('same-document');
     await expect(edit(page, ids.heating)).toBeVisible();
     await expect(page.getByText('Subcategory of Living costs', { exact: true })).toBeVisible();
-    await expect(edit(page, ids.living)).toHaveCount(0);
+    await expect(edit(page, ids.living)).toBeVisible();
+    await expect(page.locator(`[data-category-group="${ids.living}"]`)).toHaveAttribute('data-category-context', '');
     await expect(edit(page, ids.solar)).toHaveCount(0);
-    await expect(page.locator('[data-category-toggle]')).toHaveCount(0);
+    await expect(toggle(page, ids.living)).toHaveAttribute('aria-expanded', 'true');
 
     await page.getByRole('link', { name: 'Clear filters', exact: true }).click();
     await page.locator('button[data-category-action="expand"]').click();
@@ -266,7 +285,7 @@ test('category filtering exposes matching descendants and history restores discl
     await page.locator('main nav').getByRole('link', { name: 'Transactions', exact: true }).click();
     await expect(page).toHaveURL(/\/transactions\/$/);
     await page.goBack();
-    await expect(page).toHaveURL(/\/categories\/\?view=tree$/);
+    await expect(page).toHaveURL(/\/categories\/$/);
     await expect(living).toHaveAttribute('aria-expanded', 'false');
     await expect(edit(page, ids.heating)).toBeHidden();
     await living.press('Enter');
@@ -283,8 +302,12 @@ test('all category levels stay readable and searchable without JavaScript on mob
     const page = await context.newPage();
     try {
         const ids = await prepare(page, testInfo);
+        for (const id of [ids.living, ids.transport, ids.salary]) await expect(edit(page, id)).toBeVisible();
+        await expect(edit(page, ids.solar)).toBeHidden();
+        await toggle(page, ids.living).press('Enter');
+        await toggle(page, ids.heating).press('Space');
+        await toggle(page, ids.transport).press('Enter');
         for (const id of Object.values(ids)) await expect(edit(page, id)).toBeVisible();
-        await expect(page.locator('[data-category-toggle]')).toHaveCount(0);
         const solarName = page.locator(`#category-name-${ids.solar}`);
         await expect(solarName).toBeVisible();
         await expect(solarName).toContainText('Solar servicing');
@@ -296,7 +319,8 @@ test('all category levels stay readable and searchable without JavaScript on mob
         await page.locator('#filter-search').fill('Solar servicing');
         await page.getByRole('button', { name: 'Filter', exact: true }).click();
         await expect(edit(page, ids.solar)).toBeVisible();
-        await expect(edit(page, ids.heating)).toHaveCount(0);
+        await expect(edit(page, ids.heating)).toBeVisible();
+        await expect(page.locator(`[data-category-group="${ids.heating}"]`)).toHaveAttribute('data-category-context', '');
         await expect(page.getByText('Subcategory of Heating', { exact: true })).toBeVisible();
         await page.locator('#category-clear-filters').click();
         await page.locator('#category-view-tree').click();

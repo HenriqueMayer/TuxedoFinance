@@ -85,17 +85,19 @@ class CategoryListFilterTests(TestCase):
         self.assertEqual(self.response_names(response), ['Food Delivery'])
         self.assertEqual(response.context['search_query'], 'DELIVERY')
 
-    def test_disclosure_groups_keep_matching_children_visible_without_their_parent(self):
+    def test_disclosure_groups_keep_matching_children_in_owned_parent_context(self):
         response = self.client.get(reverse('categories:list'), {'view': 'tree'})
         groups = response.context['category_groups']
         groceries = next(group for group in groups if group['category'] == self.groceries)
         self.assertEqual([group['category'] for group in groceries['children']], [self.delivery])
         self.assertContains(response, f'aria-controls="category-children-{self.groceries.pk}"')
-        self.assertContains(response, '<details data-category-branch >')
+        self.assertContains(response, '<details data-category-branch>')
 
         filtered = self.client.get(reverse('categories:list'), {'q': 'Delivery'})
-        self.assertEqual([group['category'] for group in filtered.context['category_groups']], [self.delivery])
-        self.assertFalse(filtered.context['has_category_groups'])
+        self.assertEqual([group['category'] for group in filtered.context['category_groups']], [self.groceries])
+        self.assertEqual(filtered.context['category_groups'][0]['children'][0]['category'], self.delivery)
+        self.assertTrue(filtered.context['has_category_groups'])
+        self.assertEqual(filtered.context['result_count'], 1)
         self.assertContains(filtered, 'Food Delivery')
         self.assertNotContains(filtered, 'Private Delivery')
 

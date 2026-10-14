@@ -83,6 +83,7 @@ def _decorate_banks(banks, availability):
         bank.reserved_rows = [row for row in bank.planning_rows if not row['account'].planning_enabled]
         bank.included_pots = [row for row in bank.cash_pots if row['planning_enabled']]
         bank.reserved_pots = [row for row in bank.cash_pots if not row['planning_enabled']]
+        bank.has_credit_cards = any(account.credit_cards.all() for account in bank.accounts.all())
 
 
 def _canonical_id(value):
@@ -461,8 +462,14 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         return invoices.order_by('-reference_month', 'card__account__bank__name', 'card__name', 'pk')
 
     def get_context_data(self, **kwargs):
+        # Active means applied, while raw bound input stays available for
+        # validation recovery and Clear even when the criteria are rejected.
+        active_filter_count = (sum(bool(self.filter_form.cleaned_data.get(name))
+            for name in self.filter_form.fields if name != 'q')
+            if self.filter_form.is_bound and self.filter_form.is_valid() else 0)
         return super().get_context_data(**kwargs) | {'selected_card': getattr(self, 'card', None),
-            'filter_form': self.filter_form, 'has_filters': any(self.request.GET.get(name) for name in self.filter_form.fields)}
+            'filter_form': self.filter_form, 'has_filters': any(self.request.GET.get(name) for name in self.filter_form.fields),
+            'active_filter_count': active_filter_count}
 
 
 def _payment_errors(form, error):
@@ -795,8 +802,12 @@ class ExchangeRateListView(LoginRequiredMixin, ListView):
         return rates.order_by('-effective_date', 'from_currency', 'to_currency', '-pk')
 
     def get_context_data(self, **kwargs):
+        active_filter_count = (sum(bool(self.filter_form.cleaned_data.get(name))
+            for name in self.filter_form.fields if name != 'q')
+            if self.filter_form.is_bound and self.filter_form.is_valid() else 0)
         return super().get_context_data(**kwargs) | {'filter_form': self.filter_form,
-            'has_filters': any(self.request.GET.get(name) for name in self.filter_form.fields)}
+            'has_filters': any(self.request.GET.get(name) for name in self.filter_form.fields),
+            'active_filter_count': active_filter_count}
 
 
 class ExchangeRateFormMixin(OwnedFormMixin):

@@ -98,3 +98,12 @@ browser Back/Forward. Retain an ordinary GET submit fallback without JavaScript
 or after request failure. Keep POST writes and simulations explicitly submitted.
 Follow the [live consultation contract](docs/frontend.md#live-consultation-filters)
 and test real keyboard interactions, both themes, mobile, and native fallback.
+
+Consultation bars keep one primary text search and optional criteria in a deliberate
+native `details.filter-disclosure`, with active counts and Clear beside it. Use
+`partials/month_filter.html` for named-month consultation: retain the native ISO
+field/no-JavaScript submission and reuse the shared choice enhancement. Direct
+Enter confirmation of a unique textual match is an explicit month-only opt-in;
+ordinary financial record selectors retain their existing arrow-selection rule.
+Planned, unavailable resources stay out of app navigation and account shortcuts;
+track their redesign in documentation while preserving their server-side gates.

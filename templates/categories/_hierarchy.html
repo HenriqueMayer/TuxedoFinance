@@ -1,0 +1,5 @@
+{% load i18n %}
+<div class="surface-panel" data-category-tree>
+    {% if has_category_groups %}<div hidden data-category-actions class="mb-2 flex flex-wrap justify-end gap-2 border-b border-forest/10 pb-3 dark:border-cream/10"><button type="button" data-category-action="collapse" class="quiet-action">{% translate 'Collapse all' %}</button><button type="button" data-category-action="expand" class="quiet-action">{% translate 'Expand all' %}</button></div>{% endif %}
+    <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for group in category_groups %}{% include 'categories/_category_group.html' with group=group category=group.category request=request only %}{% endfor %}</ul>
+</div>

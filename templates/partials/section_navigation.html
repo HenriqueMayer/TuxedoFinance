@@ -2,8 +2,7 @@
 {% if APP_SECTIONS %}
 <nav class="section-nav mb-6" aria-label="{{ APP_SECTION_LABEL }}">
     {% for section in APP_SECTIONS %}
-    {% if section.paused %}<div class="section-paused"><span aria-disabled="true">{{ section.label }}</span><a href="{{ section.roadmap_url }}" class="roadmap-badge" aria-label="{% blocktranslate with feature=section.label %}{{ feature }} — under review in the roadmap{% endblocktranslate %}">{% translate 'Under review' %}</a></div>
-    {% else %}<a href="{{ section.url }}"{% if section.active %} aria-current="page"{% endif %}>{{ section.label }}</a>{% endif %}
+    <a href="{{ section.url }}"{% if section.active %} aria-current="page"{% endif %}>{{ section.label }}</a>
     {% endfor %}
 </nav>
 {% elif request.resolver_match.namespace == 'planning' %}

@@ -261,8 +261,26 @@ and cash positions appear inside a separate Reserves disclosure, with explicit
 include/exclude POST actions. Same-record refreshes preserve disclosure state,
 focus and position. Available cash differs from balances and must remain labelled.
 
+An open bank separates accounts, cash pots, reserves, credit cards and loyalty
+with section titles and thin dividers. Add account and Bank details remain
+visible; bank editing and marker color use a deliberate options menu. Bank detail
+shows each credit card once: invoice and purchase shortcuts share the card row
+with its type, closing/due days, settlement mode and administrative options.
+Account instruments retain opening balances, debit cards, card creation and
+account actions. This organization changes neither balances nor invoice policy.
+
 Invoices and local exchange rates use the shared dynamic search/filter contract,
 owner-scoped choices and native fallback. Invoice rows keep reference month, due
 amount, paid/remaining amounts and settlement mode visible. Rate forms use the
 shared form renderer, deliberate Save/Cancel and contextual origins; local
 reference rates do not rewrite evidence saved in financial operations.
+
+Accounts, invoices and exchange rates share a compact consultation bar. Search
+stays visible, and optional invoice/rate criteria use a native Filters disclosure
+with an active-criteria count; search text does not increase this count. Clear
+remains beside the bar. Criteria stay in the stable GET form while the live
+helper replaces results and status only. Invalid initial responses open the
+criteria and retain bound values and field errors. Complete native submissions
+remain available without JavaScript. Invoice month uses the shared searchable
+month-name/year enhancement over its original ISO month field; malformed native
+month text retains a plain, recoverable field rather than becoming an empty date.

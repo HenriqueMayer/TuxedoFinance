@@ -20,19 +20,21 @@ class CategoryLiveFilterTests(TestCase):
     def setUp(self):
         self.client.force_login(self.user)
 
-    def test_default_list_exposes_every_owned_row_without_a_disclosure(self):
+    def test_default_list_groups_owned_rows_with_native_collapsed_descendants(self):
         response = self.client.get(reverse('categories:list'))
         self.assertEqual(response.context['selected_view'], 'list')
         self.assertEqual(response.context['result_count'], 2)
         for category in (self.parent, self.child):
             self.assertContains(response, f'data-category-group="{category.pk}"', count=1)
         self.assertNotContains(response, 'House private')
-        self.assertNotContains(response, 'data-category-branch')
+        self.assertContains(response, '<details data-category-branch>')
         self.assertNotContains(response, 'id="category-clear-filters"')
 
     def test_tree_uses_native_collapsed_details_and_preserves_view_when_clearing(self):
         response = self.client.get(reverse('categories:list'), {'view': 'tree'})
-        self.assertContains(response, '<details data-category-branch >')
+        self.assertContains(response, '<details data-category-branch>')
+        self.assertContains(response, 'data-category-graph hidden')
+        self.assertContains(response, 'data-category-graph-fallback open')
         self.assertContains(response, f'<summary id="category-toggle-{self.parent.pk}"')
         summary = response.content.decode().split(f'<summary id="category-toggle-{self.parent.pk}"', 1)[1].split('>', 1)[0]
         self.assertNotIn('aria-expanded', summary)  # Native state remains accurate without JS.
@@ -48,8 +50,9 @@ class CategoryLiveFilterTests(TestCase):
         response = self.client.get(reverse('categories:list'), {'view': 'tree', 'q': 'heating'})
         self.assertEqual(list(response.context['categories']), [self.child])
         self.assertContains(response, 'House heating')
-        self.assertNotContains(response, f'data-category-group="{self.parent.pk}"')
-        self.assertNotContains(response, 'data-category-branch')
+        self.assertContains(response, f'data-category-group="{self.parent.pk}"')
+        self.assertContains(response, '<details data-category-branch open>')
+        self.assertTrue(response.context['category_groups'][0]['context_only'])
         self.assertContains(response, '1 category')
 
     def test_invalid_choices_do_not_activate_clear_and_native_filters_combine(self):
@@ -73,3 +76,4 @@ class CategoryLiveFilterTests(TestCase):
         self.assertIn('data-live-change', form)
         self.assertIn('type="submit" data-live-submit', form)
         self.assertNotIn('type="submit" data-live-submit hidden', form)
+        self.assertIn('class="filter-disclosure"', form)

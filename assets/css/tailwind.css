@@ -283,3 +283,46 @@
   .reserve-disclosure-summary::-webkit-details-marker { display: none; }
   .reserve-disclosure { @apply border-t border-forest/15 dark:border-cream/15; }
 }
+
+/* Compact consultation controls share one rail; optional criteria stay grouped. */
+@layer components {
+  .consultation-bar { @apply flex flex-wrap items-center gap-3 rounded-2xl border border-forest/15 bg-white p-3 dark:border-cream/15 dark:bg-night-surface; }
+  .consultation-primary { flex: 1 1 22rem; }
+  .consultation-search { @apply min-w-0 flex-1; flex-basis: 16rem; }
+  .consultation-search label { @apply sr-only; }
+  .consultation-search input[type='search'] { @apply min-h-11 w-full rounded-xl px-3 py-2; margin-block-start: 0; }
+  .consultation-actions { @apply flex flex-wrap items-center gap-2; }
+  .filter-disclosure { @apply min-w-0; }
+  .filter-disclosure > summary { @apply inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-forest/25 px-3 py-2 text-sm font-medium dark:border-cream/25; }
+  .filter-disclosure > summary::-webkit-details-marker { display: none; }
+  .filter-disclosure > summary svg { @apply h-4 w-4 shrink-0; }
+  .filter-disclosure[open] > summary { @apply border-caramel bg-caramel/10; }
+  .filter-disclosure-panel { @apply mt-3 w-full border-t border-forest/10 pt-4 dark:border-cream/10; }
+  .filter-disclosure[open] { @apply w-full; }
+  .month-filter-panel { @apply fixed z-50 w-80 space-y-2 overflow-y-auto rounded-2xl border border-forest/20 bg-white p-4 shadow-xl dark:border-cream/20 dark:bg-night-surface; max-width: calc(100vw - 1.5rem); overscroll-behavior: contain; }
+  .month-filter-panel .search-choice-results { position: relative; max-height: 12rem; }
+  .month-filter-icon { @apply text-lg text-caramel-ink dark:text-caramel-light; }
+}
+@layer components {
+  .consultation-actions:has(.filter-disclosure[open]) { flex-basis: 100%; width: 100%; }
+}
+
+/* Local category graph: transforms never change financial/category records. */
+.category-graph-canvas { display:block; width:100%; height:clamp(22rem,52vh,36rem); border:1px solid rgb(26 46 38 / .15); border-radius:1rem; background:radial-gradient(rgb(26 46 38 / .12) 1px,transparent 1px) 0 0 / 20px 20px; touch-action:none; cursor:grab; overflow:hidden; }
+.category-graph-canvas.is-panning { cursor:grabbing; }
+.category-graph-edge { fill:none; stroke:rgb(26 46 38 / .35); stroke-width:1.5; vector-effect:non-scaling-stroke; }
+.category-graph-node { cursor:pointer; outline:none; }
+.category-graph-node rect { fill:#fff; stroke:rgb(26 46 38 / .25); stroke-width:1.5; vector-effect:non-scaling-stroke; }
+.category-graph-node[data-context="true"] rect { stroke-dasharray:4 3; }
+.category-graph-node-name { fill:#1a2e26; font-size:14px; font-weight:600; }
+.category-graph-node-meta { fill:rgb(26 46 38 / .7); font-size:11px; }
+.category-graph-node[aria-pressed="true"] rect { fill:#fbf0df; stroke:#b88a59; stroke-width:2; }
+.category-graph-node:focus-visible rect { stroke:#b88a59; stroke-width:4; }
+.dark .category-graph-canvas { border-color:rgb(250 248 243 / .2); background-image:radial-gradient(rgb(250 248 243 / .14) 1px,transparent 1px); }
+.dark .category-graph-edge { stroke:rgb(250 248 243 / .35); }
+.dark .category-graph-node rect { fill:#1b1b1b; stroke:rgb(250 248 243 / .3); }
+.dark .category-graph-node-name { fill:#f6f3eb; }
+.dark .category-graph-node-meta { fill:rgb(250 248 243 / .7); }
+.dark .category-graph-node[aria-pressed="true"] rect { fill:#3b3129; stroke:#d4ad86; }
+.dark .category-graph-node:focus-visible rect { stroke:#d4ad86; }
+@media (max-width:639px) { .category-graph-canvas { height:25rem; } }

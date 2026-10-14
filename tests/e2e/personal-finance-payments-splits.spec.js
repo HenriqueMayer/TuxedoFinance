@@ -76,8 +76,8 @@ test(`split categories and confirmed invoice payment preserve keyboard errors ($
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({path:testInfo.outputPath(`invoice-${theme}.png`), fullPage:true});
     await page.goto('/dashboard/wealth/');
-    await expect(page).toHaveURL(/\/roadmap\/#wealth$/);
-    await expect(page.locator('#wealth')).toContainText('Under review');
+    await expect(page).toHaveURL(/\/dashboard\/$/);
+    await expect(page.locator('a[href="/dashboard/wealth/"]')).toHaveCount(0);
     expect(externalRequests).toEqual([]);
 });
 }

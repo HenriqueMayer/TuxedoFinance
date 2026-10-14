@@ -69,10 +69,9 @@ for (const theme of ['light', 'dark']) for (const language of ['en', 'pt-br']) f
         await page.goto('/planning/tools/');
         for (const href of ['/planning/signals/', '/sandbox/', '/sandbox/simulation/', '/sandbox/drafts/']) await expect(page.locator(`main a[href="${href}"]`)).toBeVisible();
         await page.goto('/imports/');
-        await expect(page).toHaveURL(/\/roadmap\/#imports$/);
-        await expect(page.locator('#imports')).toContainText(language === 'en' ? 'Under review' : 'Em revisão');
+        await expect(page).toHaveURL(/\/transactions\/$/);
         await page.goto('/dashboard/wealth/');
-        await expect(page).toHaveURL(/\/roadmap\/#wealth$/);
+        await expect(page).toHaveURL(/\/dashboard\/$/);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         expect(dialogs).toEqual([]); expect(errors).toEqual([]);
     });
@@ -92,6 +91,6 @@ test.describe('native monthly consultation', () => {
         await page.getByRole('button', { name: 'Apply filters', exact: true }).press('Enter');
         await expect(page.locator('#goal-results')).toContainText('Travel fund');
         await expect(page.locator('#goal-results')).not.toContainText('Emergency reserve');
-        await page.goto('/imports/'); await expect(page).toHaveURL(/\/roadmap\/#imports$/);
+        await page.goto('/imports/'); await expect(page).toHaveURL(/\/transactions\/$/);
     });
 });

@@ -7,11 +7,23 @@
 <div class="space-y-6">
     <header class="workspace-header"><div><h1 class="page-title">{% translate "Exchange rates" %}</h1><p class="subtle-copy mt-2">{% translate "Historical rates consolidate account and investment values into the base currency." %}</p></div>{% url 'banking:exchange_rate_create' as rate_create_url %}<a href="{% contextual_url rate_create_url %}" class="action-primary">{% translate "New rate" %}</a></header>
     <p class="subtle-copy">{% translate 'These local reference rates do not replace the effective amounts and conversion evidence saved in your operations.' %}</p>
-    <form id="rate-filter-form" method="get" hx-boost="false" novalidate data-live-filters data-live-results="rate-results" class="surface-panel grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {% for field in filter_form %}{% include 'partials/form_field.html' %}{% endfor %}
-        <div class="flex items-end"><button type="submit" data-live-submit class="action-link">{% translate 'Filter' %}</button></div>
+    <form id="rate-filter-form" method="get" hx-boost="false" novalidate data-live-filters data-live-results="rate-results" class="consultation-bar">
+        <div class="consultation-search">{% include 'partials/form_field.html' with field=filter_form.q %}</div>
+        <div class="consultation-actions">
+            <details id="rate-extra-filters" class="filter-disclosure" {% if filter_form.errors %}open{% endif %}>
+                <summary>{% translate 'Filters' %} <span id="rate-active-filter-count" data-live-fragment="rate-filter-form" aria-live="polite">{% if active_filter_count %}{% blocktranslate count count=active_filter_count %}{{ count }} active{% plural %}{{ count }} active{% endblocktranslate %}{% endif %}</span>{% include 'partials/chevron_down.html' %}</summary>
+                <div class="filter-disclosure-panel grid gap-4 sm:grid-cols-2">
+                    {% include 'partials/form_field.html' with field=filter_form.from_currency %}
+                    {% include 'partials/form_field.html' with field=filter_form.to_currency %}
+                    {% include 'partials/form_field.html' with field=filter_form.date_from %}
+                    {% include 'partials/form_field.html' with field=filter_form.date_to %}
+                </div>
+            </details>
+            <span id="rate-clear-control" data-live-fragment="rate-filter-form">{% if has_filters %}<a class="quiet-action" href="{% url 'banking:exchange_rates' %}" data-live-reset data-live-link="rate-filter-form">{% translate 'Clear filters' %}</a>{% endif %}</span>
+            <button type="submit" data-live-submit class="action-link">{% translate 'Filter' %}</button>
+        </div>
     </form>
-    <div id="rate-result-meta" data-live-fragment="rate-filter-form" class="space-y-3">{% include 'banking/_filter_errors.html' %}<div class="flex flex-wrap items-center gap-3"><p class="subtle-copy">{% blocktranslate count count=paginator.count %}{{ count }} rate{% plural %}{{ count }} rates{% endblocktranslate %}</p>{% if has_filters %}<a class="quiet-action" href="{% url 'banking:exchange_rates' %}" data-live-reset data-live-link="rate-filter-form">{% translate 'Clear filters' %}</a>{% endif %}</div></div>
+    <div id="rate-result-meta" data-live-fragment="rate-filter-form" class="space-y-3">{% include 'banking/_filter_errors.html' %}<p class="subtle-copy">{% blocktranslate count count=paginator.count %}{{ count }} rate{% plural %}{{ count }} rates{% endblocktranslate %}</p></div>
     {% include 'banking/_rate_results.html' %}
 </div>
 {% endblock %}

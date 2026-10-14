@@ -52,6 +52,14 @@ for (const theme of ['light', 'dark']) {
             await bankGroup.locator(':scope > summary').focus();
             await page.keyboard.press('Enter');
             await expect(bankGroup.getByRole('link', { name: 'Add account', exact: true })).toBeVisible();
+            await expect(page.locator(`#bank-accounts-${bank}`)).toBeVisible();
+            await expect(page.locator(`#bank-cards-${bank}`)).toBeVisible();
+            const bankOptions = page.locator(`#bank-options-${bank}`);
+            await expect(bankOptions.getByRole('link', { name: 'Edit bank', exact: true })).toBeHidden();
+            await bankOptions.locator(':scope > summary').press('Enter');
+            await expect(bankOptions.getByRole('link', { name: 'Change marker color', exact: true })).toBeVisible();
+            await bankOptions.locator(':scope > summary').press('Escape');
+            await expect(bankOptions).not.toHaveAttribute('open', '');
             await page.locator(`#position-planning-${product}-${asset}`).press('Enter');
             const reserves = page.locator(`#bank-reserves-${bank}`);
             await expect(reserves).toHaveAttribute('open', '');
@@ -61,7 +69,7 @@ for (const theme of ['light', 'dark']) {
             await expect(reserves.locator(`#account-row-${account}`)).toBeVisible();
             await expect(reserves.locator(`#account-row-${account}`)).toContainText(/1[.,\s]000[,.]00/);
             await page.locator(`#planning-toggle-${account}`).press('Enter');
-            await expect(page.locator(`#bank-positions-${bank} > [role="region"] #account-row-${account}`)).toBeVisible();
+            await expect(page.locator(`#bank-positions-${bank} > section[aria-labelledby="bank-accounts-${bank}"] #account-row-${account}`)).toBeVisible();
             if (width < 768) {
                 const labelColor = await page.locator(`#account-row-${account} td[data-label]`).first()
                     .evaluate(cell => getComputedStyle(cell, '::before').color);
@@ -80,10 +88,36 @@ for (const theme of ['light', 'dark']) {
             await expect(search).toHaveValue('');
             await expect(bankGroup).not.toHaveAttribute('open', '');
 
+            await bankGroup.locator(':scope > summary').press('Enter');
+            await bankGroup.getByRole('link', { name: 'Bank details', exact: true }).press('Enter');
+            const cardRow = page.locator(`#credit-card-${card}`);
+            await expect(cardRow).toHaveCount(1);
+            await expect(cardRow).toContainText('closes 31, due 30');
+            await expect(cardRow.getByRole('link', { name: 'Invoices for Daily card', exact: true })).toBeVisible();
+            const cardOptions = cardRow.locator('details.compact-menu');
+            await expect(cardOptions.getByRole('link', { name: 'Edit', exact: true })).toBeHidden();
+            await cardOptions.locator('summary').press('Enter');
+            await expect(cardOptions.getByRole('link', { name: 'Edit', exact: true })).toBeVisible();
+            await expect(cardOptions.getByRole('link', { name: 'Delete', exact: true })).toBeVisible();
+            await cardOptions.locator('summary').press('Escape');
+            await expect(cardOptions).not.toHaveAttribute('open', '');
+            await page.screenshot({ path: info.outputPath(`bank-detail-${width}-${theme}.png`), fullPage: true });
+
             await page.goto('/banking/invoices/');
+            const invoiceCriteria = page.locator('#invoice-extra-filters');
+            await expect(invoiceCriteria).not.toHaveAttribute('open', '');
+            await invoiceCriteria.locator(':scope > summary').press('Enter');
             await selectChoice(page.locator('#invoice-filter-card'), card);
             await expect(page).toHaveURL(new RegExp(`card=${card}`));
             await expect(page.locator('#invoice-results')).toContainText('Daily card');
+            await page.locator('#invoice-filter-month-trigger').press('Space');
+            const invoiceMonth = new Date().toISOString().slice(0, 7);
+            await page.locator('#invoice-filter-month-year').fill(invoiceMonth.slice(0, 4));
+            await page.locator('#invoice-filter-month-year').press('Enter');
+            await selectChoice(page.locator('#invoice-filter-month-choice'), invoiceMonth.slice(5));
+            await expect(page).toHaveURL(new RegExp(`month=${invoiceMonth}`));
+            await expect(page.locator('#invoice-filter-month')).toHaveValue(invoiceMonth);
+            await expect(page.locator('#invoice-active-filter-count')).toHaveText('2 active');
             await page.locator('#invoice-filter-status').selectOption('PAID');
             await expect(page.locator('#invoice-results')).toContainText('No matching invoices.');
             await page.locator('#invoice-filter-status').selectOption('');
@@ -93,14 +127,21 @@ for (const theme of ['light', 'dark']) {
             await expect(page.locator('#invoice-filter-q')).toBeFocused();
             await page.locator('[data-live-link="invoice-filter-form"]').press('Enter');
             await expect(page.locator('#invoice-filter-card')).toHaveValue('');
+            await expect(page.locator('#invoice-filter-month')).toHaveValue('');
+            await expect(page.locator('#invoice-active-filter-count')).toBeEmpty();
+            await expect(invoiceCriteria).toHaveAttribute('open', '');
             await expect(page.locator('#invoice-results')).toContainText('Daily card');
             await page.screenshot({ path: info.outputPath(`invoice-filters-${width}-${theme}.png`), fullPage: true });
 
             await page.goto('/banking/exchange-rates/');
+            const rateCriteria = page.locator('#rate-extra-filters');
+            await expect(rateCriteria).not.toHaveAttribute('open', '');
+            await rateCriteria.locator(':scope > summary').press('Enter');
             await page.locator('#rate-filter-from_currency').selectOption('USD');
             await page.locator('#rate-filter-to_currency').selectOption('BRL');
             await expect(page.locator('#rate-results')).toContainText('USD');
             await expect(page.locator('#rate-results')).not.toContainText('EUR');
+            await expect(page.locator('#rate-active-filter-count')).toHaveText('2 active');
             await page.locator('#rate-filter-date_from').fill('2026-10-03');
             await page.locator('#rate-filter-date_from').press('Tab');
             await expect(page.locator('#rate-results')).toContainText('No matching exchange rates.');
@@ -144,10 +185,13 @@ test('bank reserves and financial filters keep a complete mobile native path', a
         await expect(page.locator(`#bank-reserves-${bank}`)).toHaveAttribute('open', '');
         await expect(page.locator(`#cash-position-${product}-${asset}`)).toContainText(/300[,.]00/);
         await page.goto('/banking/invoices/');
+        await page.locator('#invoice-extra-filters > summary').press('Enter');
+        await page.locator('#invoice-filter-month').fill(new Date().toISOString().slice(0, 7));
         await page.locator('#invoice-filter-card').selectOption(card);
         await page.locator('#invoice-filter-form').getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(page.locator('#invoice-results')).toContainText('Daily card');
         await page.goto('/banking/exchange-rates/');
+        await page.locator('#rate-extra-filters > summary').press('Enter');
         await page.locator('#rate-filter-from_currency').selectOption('USD');
         await page.locator('#rate-filter-form').getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(page.locator('#rate-results')).not.toContainText('EUR');

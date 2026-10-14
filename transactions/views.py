@@ -224,6 +224,12 @@ class TransactionListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         kind = self.filters.get('type', '')
         recurrence = self.filters.get('recurrence', '')
+        extra_filter_count = sum((
+            bool(self.filters.get('category')),
+            bool(recurrence),
+            bool(self.filters.get('date')),
+            self.filters['sort'] != 'newest',
+        ))
         context.update({
             'filter_params': self.filters,
             'search_query': self.filters.get('q', ''),
@@ -234,6 +240,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
             'selected_sort': self.filters['sort'],
             'selected_category': self.filters.get('category', ''),
             'selected_recurrence': recurrence,
+            'extra_filter_count': extra_filter_count,
             'category_choices': self.category_choices,
             'has_transactions': self.has_transactions,
             'has_filters': any(key != 'sort' for key in self.filters) or self.filters['sort'] != 'newest',

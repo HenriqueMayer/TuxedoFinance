@@ -89,17 +89,22 @@ filters. Unclassified categories retain their existing compatibility with both
 income and expenses. Add subcategory supplies an owned parent as explicit form
 context. Existing category names are never changed by translation or filtering.
 
-Groups start expanded. Clicking a parent name (or activating its disclosure with
+Groups start collapsed. Clicking a parent name (or activating its disclosure with
 Enter/Space) hides only its descendants; its Edit, Add subcategory and secondary
 actions stay available. Collapse all / Expand all affect every displayed group,
-including nested ones. A fresh page load starts expanded; browser history restores
+including nested ones. A fresh page load starts collapsed; browser history restores
 the state of the previous page without storing a user preference.
 
-Grouping uses the already-filtered, user-scoped results without extra per-category
-queries. A matching child whose parent is filtered out remains a visible result.
+Grouping uses user-scoped results without extra per-category queries. Filters
+retain the owned ancestors of matching descendants as labelled parent context;
+the result count includes matches only. Matching paths open automatically and
+unrelated branches are omitted. An ancestor is context rather than another
+search match. Foreign parent references are never exposed, even in legacy data.
 The forest builder visits each record once, including legacy cyclic relationships.
-Without JavaScript, all categories and actions remain visible and the enhancement
-controls stay hidden. Filtering and editing still work through native navigation.
+Without JavaScript, native disclosures still reveal every category and its
+actions; global enhancement controls stay hidden. Parent actions are siblings
+of the disclosure, so collapsing descendants does not hide the parent's Edit
+or secondary menu. Filtering and editing work through native navigation.
 
 Import, export and Delete all are secondary options. Default CSV export preserves
 the import contract. `?format=spreadsheet` selects the separately named spreadsheet
@@ -113,7 +118,40 @@ origin. Ownership and duplicate-name/hierarchy checks remain on the server.
 
 ## List and tree views
 
-Categories default to a compact List and expose an explicit Tree choice. The tree
-uses native nested details/summary, supports keyboard and no JavaScript, and
-expands matching branches during search. Search/type filters and view switches
-use the shared live-filter contract, with selected view retained by Clear.
+Categories default to the grouped List. Search stays in the compact consultation
+bar; level and type are native short choices inside More filters. Controls stay
+mounted during live updates. List/Graph switches and Clear preserve compatible
+query state through the shared live-filter contract; old `?view=tree` URLs select
+the Graph view.
+
+Graph is a local SVG with deterministic, connected parent/child placement.
+The initial viewport keeps labels at a readable scale and starts at the first
+connected branch; it does not shrink a lifelong catalogue into unreadable text.
+Every node remains in the graph. Fit deliberately shows the complete overview,
+while panning and keyboard navigation reach the other branches. Zoom in/out
+and Fit are ordinary keyboard-accessible buttons. Pointer/touch
+drag pans the entire view, and two-finger pinch changes its scale. These gestures
+modify only the SVG transform: they never reparent categories, change financial
+records, send a POST, or persist coordinates. Selecting a node shows its full
+name, classification, direct transaction count and existing owned actions.
+Long names may be shortened in the canvas; the selection panel and native list
+retain the complete stored text.
+
+The canvas supports arrow navigation, Home/End and Enter/Space selection with
+one node in the Tab order. Keyboard selection centres the node at a readable
+scale and exposes visible focus. Editor links retain the exact filtered Graph
+origin and selected-node fragment through validated local `next`; native
+Save/Cancel and browser Back/Forward remain authoritative navigation. A valid
+explicit node fragment takes priority, including an ancestor retained as search
+context. Without that origin, a single name-search match is selected and centred;
+multiple matches start at the first match at a readable scale without choosing a
+record on the user's behalf. Live replacements reconcile against the applied URL
+after its history commit, preserving search focus and page scroll rather than
+restoring a stale node fragment from the preceding result.
+
+The complete Accessible list is a native disclosure below the enhanced graph.
+It starts open without JavaScript, while the empty SVG enhancement stays hidden.
+Owned graph data is embedded with Django `json_script`; labels are rendered
+through `textContent`, without executing user text or contacting external graph
+services. Forest construction visits every record once and cuts legacy cycles
+for presentation only, preserving stored relationships.

@@ -147,7 +147,7 @@ Read/write responses retain their existing owner scope and `never_cache`.
 ## Interface review gate
 
 Statement upload, mapping, review, confirmation and undo are paused by
-`core.features.review_gate`. Both direct GETs and stale POSTs go to Roadmap before
+`core.features.review_gate`. Both direct GETs and stale POSTs return to Transactions before
 any service executes. The source model, parser, deduplication and posted ledgers
 remain intact. `/imports/history/` and owned confirmed/undone detail are read-only,
 uncached provenance; pending batches cannot enter the review UI. Core default

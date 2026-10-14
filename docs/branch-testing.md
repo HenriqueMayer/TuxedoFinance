@@ -54,33 +54,66 @@ blocks the connection, review those settings before enabling only the chosen
 local port/interface; the helper never changes them.
 
 For the area-by-area simplification, check these tasks in both themes on computer
-and phone, in English or Portuguese:
+and phone, in English or Portuguese. These are acceptance tasks for the current
+branch; automated validation is reported separately by iteration below.
 
-1. Keep Dashboard/Reports usable; Net worth and Import statements explain their
-   pause through Roadmap. Confirm old import URLs cannot post or undo anything.
-   Posted import provenance is available as read-only history when it exists.
-2. Type and delete transaction search text; choose filters and ordering without
-   Apply. Clear is near active controls. Check caret, keyboard, scroll and
-   Back/Forward; Save/Cancel return to the currently filtered list. Repeat with
-   JavaScript disabled, using the ordinary submit fallback.
-3. Switch Categories between List and Tree, expand/collapse with Enter/Space,
-   search a child and clear without losing the selected view.
-4. Collapse a bank to its name/color, reopen it, move an account or emergency
-   cash pot into Reserves and check available money. Its real balance/history
-   stays recorded. Restore participation and check the aggregate again.
-5. Find a specific invoice with live bank/card/month/status filters. Record a
-   partial confirmed payment and recover an invalid amount. Search local rates,
-   create one using the ordinary Save/Cancel flow and inspect date errors.
-6. Add an application through the guided form, including a zero opening, a
+1. Keep Dashboard/Reports usable. Net worth, Import statements and Roadmap must
+   not occupy navigation or menu entries while paused. Open an old statement
+   operation URL and confirm it returns to Transactions; an old Net worth URL
+   returns to Home. Stale import POSTs cannot confirm or undo anything. Posted
+   import provenance remains available as owned read-only history when it exists;
+   the roadmap remains in project documentation.
+2. Check the compact transaction bar: search, billed month and the All/Income/
+   Expenses choices remain visible. Search a category name, then open Filters
+   with Enter/Space to refine an exact category, recurrence, event date and
+   ordering. The active indicator and Clear stay near the controls. Type/delete
+   search text and change choices without Apply; check caret, focus, scroll and
+   Back/Forward. Save/Cancel return to the currently filtered list. Repeat with
+   JavaScript disabled, opening the native disclosure and submitting Apply.
+3. Open the consultation month panel, set its year, type `sete` in Portuguese
+   (or `sept` in English) and press Enter to select September. An ambiguous month
+   prefix needs an explicit choice. Try a blank/out-of-range year: the panel must
+   keep the error and entered choices without applying a month. Clear an applied
+   month, including with an invalid unused draft year, and check its caption,
+   results and ISO URL agree. Escape and Tab-away close the panel; ordinary
+   category/account searches still require arrow selection before Enter. Without
+   JavaScript, the original month input and GET submit remain usable.
+4. Categories opens a grouped List with descendants initially collapsed. Use a
+   parent name with Enter/Space to expand/retract only its descendants; the
+   parent's Edit and secondary actions remain available. Test Expand all and
+   Collapse all, including nested groups. Search a child: its owned ancestors
+   appear as parent context, matching paths open, and the count includes matches
+   rather than the extra ancestors. Clear retains the selected List/Graph view.
+5. Switch Categories to Graph, including through an old `?view=tree` bookmark.
+   Select nodes with arrows, Home/End and Enter/Space; check visible focus, full
+   details and existing editor actions. Pan, zoom, Fit and two-finger pinch must
+   change only the view, preserving names, parent links and transaction totals.
+   Open an editor and Cancel back to the filtered graph and selected node. With
+   JavaScript disabled, the Accessible list starts open and its native hierarchy
+   still exposes every category and action.
+6. Collapse a bank to its name/color and reopen it. Accounts, monetary cash,
+   credit cards and loyalty programs have distinct sections; each credit-card
+   group identifies its account. Find Invoices and New transaction on the card,
+   and its edit/delete actions in bank details. Move an account or emergency cash
+   pot into Reserves and check available money. Its real balance/history stays
+   recorded. Restore participation and check the aggregate again. Search and
+   clear without losing the open bank/reserve state during live updates.
+7. Find an invoice with the compact search and bank/card/month/status criteria
+   inside Filters. Record a partial confirmed payment and recover an invalid
+   amount. Search local rates, open pair/date criteria and recover invalid dates
+   beside the original control. Criteria show their active indicator and Clear;
+   returned field errors reopen a closed disclosure without moving focus or
+   replacing the input. Create a rate using the ordinary Save/Cancel flow.
+8. Add an application through the guided form, including a zero opening, a
    monetary reserve and units with acquisition cost. If you need a classification,
    choose it in Advanced before the first operation (existing history locks it).
    Open Update and record an
    operation or local price; History and detailed metrics remain accessible.
-7. Plan opens the selected month, available cash after known commitments and
+9. Plan opens the selected month, available cash after known commitments and
    budgets. Distinguish the recorded cutoff from projection and reservations.
    Create/edit a category limit; open Goals or Tools for the less frequent tasks.
-8. Create a split transaction or a goal with a real reserve, including invalid
-   sums/capacity. Errors keep entered choices and never create partial records.
+10. Create a split transaction or a goal with a real reserve, including invalid
+    sums/capacity. Errors keep entered choices and never create partial records.
 
 The public static tour still represents the published release. This branch's
 interactive preview is the acceptance environment; no integration, bank
@@ -103,7 +136,8 @@ created in the disposable preview without affecting the installation.
    remaining cost. Record a dated local price and inspect historical valuations;
    removing it uses the preceding observation or remaining cost. Declaring fees
    in the asset currency changes cost/results, never the actual bank amount.
-3. **Imports (paused):** opening upload/review/confirm/undo redirects to Roadmap.
+3. **Imports (paused):** opening upload/review/confirm/undo returns to Transactions.
+   No paused import shortcut is offered in tabs or account actions.
    Posted confirmed/undone history is read-only, user-owned and never offers an
    undo while paused. Existing posted movements remain inspectable at source.
 4. **Budgets:** set an expense-category limit and copy it to the next month.
@@ -121,8 +155,8 @@ created in the disposable preview without affecting the installation.
    parts must add up exactly, including installment cents. The source still
    generates one payment or invoice obligation. Inspect filters, reports, budget
    consumption and the `category_splits` field in transaction CSV exports.
-8. **Wealth (paused):** its section is labelled under review and opens Roadmap;
-   underlying calculations remain available to their other consumers.
+8. **Wealth (paused):** its navigation section is hidden and old direct URLs
+   return to Home; underlying calculations remain available to their other consumers.
 9. **Confirmed invoices:** set today as the start date in a card's settings and
    use an invoice due on or after it. Record a partial payment from an account
    in the invoice currency. Inspect the
@@ -189,8 +223,8 @@ Cloudflare, deployment and integration into `main` remain outside this iteration
 
 ### Area-by-area simplification — 14 October 2026
 
-The subsequent simplification described in the area checklist above was verified
-with synthetic or disposable databases:
+The completed area-by-area simplification was verified with synthetic or
+disposable databases, before the later compact-control and category-graph changes:
 
 - All 563 Django tests passed with 94% combined coverage in the existing scope
   (including executed test modules and migrations). All 17 repository-tool tests
@@ -223,6 +257,38 @@ Browser checks use Chromium and simulated desktop/mobile viewports; acceptance
 on the owner's actual computer, phone and data remains pending. No merge into
 `main`, publication, bank connection or Cloudflare deployment is authorized by
 these automated checks.
+
+### Compact consultation and category graph — 14 October 2026
+
+- The full Django run passed all 571 tests with 94% combined coverage in the
+  existing scope (including executed test modules and migrations). Follow-up
+  checks passed all 33 category/localization tests after the graph-origin
+  refinement and all eight banking-organization tests after the bank changes,
+  against disposable databases.
+- All 230 active interactive browser scenarios were verified across the broad
+  run and focused reruns. Six statement-operation scenarios remain intentionally
+  skipped while their interface is suspended. The broad executor was terminated
+  near its end; the final 47-scenario group completed the remaining layouts and
+  verified the corrected category menus, graph origins, Portuguese graph, live
+  filters, asset refresh and transaction keyboard/viewport behavior.
+- The graph initially reproduced a stale parent selection after a new child
+  search. The final regressions require the unique matching node to be selected
+  and entirely visible, retain search focus/page scroll, and preserve deliberate
+  ancestor fragments through editor Cancel. Real touch pan/pinch and the complete
+  native hierarchy are covered separately.
+- All 17 repository-tool tests and all six static-tour tests passed. Django
+  checks, migration dry run, version consistency, executable lint, JavaScript
+  syntax, translation format/compiled-output checks, reproducible CSS and
+  `git diff --check` passed. npm and the locked Python runtime audits reported
+  no known vulnerabilities.
+
+This iteration adds no migrations, dependencies or version change. The
+published static tour remains unchanged; container lifecycle checks were not
+repeated. Browser checks use Chromium and simulated desktop/mobile viewports,
+with English/Portuguese, both themes, real keyboard events, touch and native
+submissions. Acceptance on the owner's actual devices and data remains pending.
+The roadmap exists only in documentation. No merge into `main`, publication,
+bank connection or Cloudflare deployment is authorized by these checks.
 
 ## Performance evidence
 

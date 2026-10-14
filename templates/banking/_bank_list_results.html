@@ -3,16 +3,21 @@
     {% for bank in banks %}
     <details id="bank-{{ bank.pk|stringformat:'d' }}" class="surface-panel bank-panel bank-disclosure" {% if bank.is_open %}open{% endif %}>
         <summary class="bank-disclosure-summary panel-heading cursor-pointer"><span class="bank-bookmark" style="--bank-color: {{ bank.color|default:'#B88D57' }}" aria-hidden="true"></span><span class="section-title min-w-0 flex-1">{{ bank.name }}</span>{% include 'partials/chevron_down.html' %}</summary>
-        <div class="bank-disclosure-content space-y-5 pt-5">
-            <div class="flex flex-wrap items-center gap-3">
-                <a href="{% url 'banking:detail' bank.pk %}" class="quiet-action">{% translate 'Bank details' %}</a>
+        <div class="bank-disclosure-content">
+            <div class="flex flex-wrap items-center gap-3 border-t border-forest/15 pt-4 dark:border-cream/15">
                 {% url 'banking:account_create' as account_create %}{% with bank_id=bank.pk|stringformat:'d' %}<a href="{% contextual_url account_create|add:'?bank='|add:bank_id %}" class="action-link">{% translate 'Add account' %}</a>{% endwith %}
-                {% url 'banking:color' bank.pk as color_url %}<a href="{% contextual_url color_url %}" class="quiet-action">{% translate 'Change marker color' %}</a>
-                {% url 'banking:update' bank.pk as edit_url %}<a href="{% contextual_url edit_url %}" class="quiet-action">{% translate 'Edit bank' %}</a>
+                <a href="{% url 'banking:detail' bank.pk %}" class="quiet-action">{% translate 'Bank details' %}</a>
+                <details id="bank-options-{{ bank.pk|stringformat:'d' }}" class="secondary-actions compact-menu" name="bank-options">
+                    <summary class="text-sm" aria-label="{% blocktranslate with bank=bank.name %}Options for {{ bank }}{% endblocktranslate %}">{% translate 'More options' %}</summary>
+                    <div class="secondary-actions-panel">
+                        {% url 'banking:update' bank.pk as edit_url %}<a href="{% contextual_url edit_url %}">{% translate 'Edit bank' %}</a>
+                        {% url 'banking:color' bank.pk as color_url %}<a href="{% contextual_url color_url %}">{% translate 'Change marker color' %}</a>
+                    </div>
+                </details>
             </div>
             {% include 'banking/_bank_positions.html' with return_to='list' %}
             {% include 'banking/_cards.html' %}
-            {% if bank.loyalty_programs.all %}<p class="subtle-copy">{% translate 'Loyalty:' %} {% for program in bank.loyalty_programs.all %}<a class="quiet-action" href="{% url 'banking:program_update' program.pk %}">{{ program.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+            {% if bank.loyalty_programs.all %}<section class="space-y-2 border-t border-forest/15 pt-5 dark:border-cream/15" aria-labelledby="bank-loyalty-{{ bank.pk|stringformat:'d' }}"><h3 id="bank-loyalty-{{ bank.pk|stringformat:'d' }}" class="section-title">{% translate 'Loyalty programs' %}</h3><div class="flex flex-wrap gap-2">{% for program in bank.loyalty_programs.all %}<a class="quiet-action" href="{% url 'banking:program_update' program.pk %}">{{ program.name }}</a>{% endfor %}</div></section>{% endif %}
         </div>
     </details>
     {% empty %}<p class="subtle-copy border-y border-forest/15 py-8 dark:border-cream/15">{% if search_query %}{% translate 'No matching banks' %}{% else %}{% translate 'No banks yet' %}. {% translate 'Add a bank, then create its currency-specific accounts and cards.' %}{% endif %}</p>{% endfor %}

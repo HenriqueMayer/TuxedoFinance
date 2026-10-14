@@ -1,17 +1,23 @@
 {% load i18n navigation %}
-{% for account in bank.accounts.all %}{% if account.credit_cards.all %}
-<div class="space-y-2">
-    <h3 class="font-medium">{% translate 'Credit cards' %} · {{ account.name }}</h3>
-    <ul class="divide-y divide-forest/10 dark:divide-cream/10">
-    {% for card in account.credit_cards.all %}
-        <li class="flex flex-wrap items-center justify-between gap-3 py-3">
-            <div class="min-w-0"><p class="font-medium">{{ card.name }}</p><p class="subtle-copy">{% if card.manual_settlement_from %}{% blocktranslate with date=card.manual_settlement_from|date:USER_DATE_FORMAT %}Confirmed payments from {{ date }}{% endblocktranslate %}{% else %}{% translate 'Automatic settlement on due date' %}{% endif %}</p></div>
-            <div class="flex flex-wrap gap-2">
-                {% url 'transactions:create' as transaction_url %}{% with card_id=card.pk|stringformat:'d' %}{% with target=transaction_url|add:'?credit_card='|add:card_id %}<a class="quiet-action" href="{% contextual_url target %}" aria-label="{% blocktranslate with card=card.name %}New transaction on {{ card }}{% endblocktranslate %}">{% translate 'New transaction' %}</a>{% endwith %}{% endwith %}
-                {% url 'banking:invoices' as invoices_url %}{% with card_id=card.pk|stringformat:'d' %}{% with target=invoices_url|add:'?card='|add:card_id %}<a class="action-link" href="{% contextual_url target %}" aria-label="{% blocktranslate with card=card.name %}Invoices for {{ card }}{% endblocktranslate %}">{% translate 'Invoices' %}</a>{% endwith %}{% endwith %}
-            </div>
-        </li>
-    {% endfor %}
-    </ul>
-</div>
-{% endif %}{% endfor %}
+{% if bank.has_credit_cards %}
+<section class="space-y-4 border-t border-forest/15 pt-5 dark:border-cream/15" aria-labelledby="bank-cards-{{ bank.pk|stringformat:'d' }}">
+    <h3 id="bank-cards-{{ bank.pk|stringformat:'d' }}" class="section-title">{% translate 'Credit cards' %}</h3>
+    {% for account in bank.accounts.all %}{% if account.credit_cards.all %}
+    <div class="space-y-2">
+        <h4 class="subtle-copy">{{ account.name }} · {{ account.currency }}</h4>
+        <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+        {% for card in account.credit_cards.all %}
+            <li id="credit-card-{{ card.pk|stringformat:'d' }}" class="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div class="min-w-0"><p class="font-medium">{{ card.name }}</p>{% if manage_cards %}<p class="subtle-copy">{{ card.get_card_type_display }} · {% blocktranslate with closing_day=card.closing_day due_day=card.due_day %}closes {{ closing_day }}, due {{ due_day }}{% endblocktranslate %}</p>{% endif %}<p class="subtle-copy">{% if card.manual_settlement_from %}{% blocktranslate with date=card.manual_settlement_from|date:USER_DATE_FORMAT %}Confirmed payments from {{ date }}{% endblocktranslate %}{% else %}{% translate 'Automatic settlement on due date' %}{% endif %}</p></div>
+                <div class="flex flex-wrap items-center gap-2">
+                    {% url 'banking:invoices' as invoices_url %}{% with card_id=card.pk|stringformat:'d' %}{% with target=invoices_url|add:'?card='|add:card_id %}<a class="action-link" href="{% contextual_url target %}" aria-label="{% blocktranslate with card=card.name %}Invoices for {{ card }}{% endblocktranslate %}">{% translate 'Invoices' %}</a>{% endwith %}{% endwith %}
+                    {% url 'transactions:create' as transaction_url %}{% with card_id=card.pk|stringformat:'d' %}{% with target=transaction_url|add:'?credit_card='|add:card_id %}<a class="quiet-action" href="{% contextual_url target %}" aria-label="{% blocktranslate with card=card.name %}New transaction on {{ card }}{% endblocktranslate %}">{% translate 'New transaction' %}</a>{% endwith %}{% endwith %}
+                    {% if manage_cards %}<details class="secondary-actions compact-menu" name="card-options"><summary class="text-sm" aria-label="{% blocktranslate with card=card.name %}Options for {{ card }}{% endblocktranslate %}">{% translate 'More options' %}</summary><div class="secondary-actions-panel">{% url 'banking:credit_card_update' card.pk as edit_card_url %}<a href="{% contextual_url edit_card_url %}">{% translate 'Edit' %}</a>{% url 'banking:credit_card_delete' card.pk as delete_card_url %}<a href="{% contextual_url delete_card_url %}" class="text-expense dark:text-expense-light">{% translate 'Delete' %}</a></div></details>{% endif %}
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}{% endfor %}
+</section>
+{% elif manage_cards %}<section class="space-y-3 border-t border-forest/15 pt-5 dark:border-cream/15"><h3 class="section-title">{% translate 'Credit cards' %}</h3><p class="subtle-copy">{% translate 'No credit cards.' %}</p></section>{% endif %}

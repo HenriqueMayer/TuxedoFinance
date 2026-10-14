@@ -225,6 +225,7 @@
             if (event.key === 'Enter') {
                 event.preventDefault();
                 if (!multiple && !list.hidden && active >= 0) choose(matches[active]);
+                else if (!multiple && !list.hidden && select.hasAttribute('data-search-auto-single') && editing && matches.length === 1) choose(matches[0]);
                 return;
             }
             if (!multiple && ['ArrowDown', 'ArrowUp'].includes(event.key)) {

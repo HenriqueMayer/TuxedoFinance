@@ -79,6 +79,7 @@ for (const theme of ['light', 'dark']) {
         await page.keyboard.type('House');
         await search.press('Enter');
         await expect(page.locator('#category-results-status')).toHaveText('2 categories');
+        await page.locator('#category-filters .filter-disclosure > summary').press('Enter');
         await page.locator('#filter-level').selectOption('sub');
         await expect(page).toHaveURL(/level=sub/);
         await expect(page.getByText('No matching categories', {exact: true})).toBeVisible();
@@ -104,7 +105,8 @@ for (const theme of ['light', 'dark']) {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await prepare(page, info);
         await page.goto('/transactions/');
-        await page.getByText('More filters', {exact: true}).click();
+        await page.locator('#transaction-extra-filters > summary').focus();
+        await page.keyboard.press('Enter');
         const date = page.locator('#filter-date');
         await page.evaluate(() => { window.liveDateControl = document.getElementById('filter-date'); });
         await date.fill('32/01/2026');
@@ -193,7 +195,7 @@ for (const theme of ['light', 'dark']) {
         await page.goBack();
         await expect(page).toHaveURL(/\/banking\/\?q=Other$/);
         await expect(query).toHaveValue('Other');
-        await page.locator('#bank-result-meta a[data-live-link]').click();
+        await page.locator('#bank-filter-form a[data-live-reset]').click();
         await expect(page.locator('#bank-results form[method="post"]')).toHaveCount(1);
         await page.locator('#app-desktop-transactions-link').click();
         await expect(page).toHaveURL(/\/transactions\/$/);

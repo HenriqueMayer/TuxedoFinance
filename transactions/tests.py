@@ -576,7 +576,7 @@ class TransactionNavigationTests(TransactionFixture):
         self.assertEqual([card['count'] for card in response.context['type_cards']], [1, 0, 1])
         self.assertEqual(list(response.context['transactions']), [self.plan])
         self.assertEqual(response.context['selected_date'], '2026-01-26')
-        self.assertContains(response, '<details open>')
+        self.assertContains(response, 'id="transaction-extra-filters" class="filter-disclosure" open')
 
     def test_category_is_exact_and_oneoff_excludes_fixed_and_plans(self):
         response = self.listing(category=self.category.pk)

@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from banking.models import Bank, BankAccount, BankMovement, CardInvoice, CreditCard, ExchangeRate
+from banking.models import Bank, BankAccount, BankMovement, CardInvoice, CreditCard, DebitCard, ExchangeRate
 from banking.services import get_planning_availability
 from investments.models import Asset, InvestmentProduct, PositionPlanningSetting
 
@@ -40,6 +40,79 @@ class BankingWorkspaceOrganizationTests(TestCase):
         self.assertEqual(list(searched.context['banks'])[0], self.bank)
         self.assertTrue(list(searched.context['banks'])[0].is_open)
         self.assertContains(searched, 'data-live-filters')
+
+    def test_bank_sections_keep_primary_actions_and_consolidate_card_management(self):
+        debit_card = DebitCard.objects.create(user=self.user, account=self.account, name='Daily debit')
+        before = list(CreditCard.objects.values())
+        response = self.client.get(reverse('banking:list'))
+        self.assertContains(response, f'id="bank-accounts-{self.bank.pk}"')
+        self.assertContains(response, f'id="bank-cards-{self.bank.pk}"')
+        self.assertContains(response, f'<details id="bank-options-{self.bank.pk}" class="secondary-actions compact-menu" name="bank-options">')
+        self.assertNotContains(response, '/roadmap/')
+        with patch('banking.views.sync_user_ledger'):
+            detail = self.client.get(reverse('banking:detail', args=[self.bank.pk]))
+        # One credit-card presentation retains daily and administrative actions.
+        self.assertContains(detail, f'id="credit-card-{self.card.pk}"', count=1)
+        self.assertContains(detail, f'<p class="font-medium">{self.card.name}</p>', count=1, html=True)
+        self.assertContains(detail, 'closes 1, due 10')
+        self.assertContains(detail, 'Automatic settlement on due date')
+        for name, pk in [('credit_card_update', self.card.pk), ('credit_card_delete', self.card.pk),
+                         ('debit_card_update', debit_card.pk), ('debit_card_delete', debit_card.pk)]:
+            self.assertContains(detail, reverse('banking:' + name, args=[pk]))
+        self.assertContains(detail, 'Invoices for Daily card')
+        self.assertContains(detail, 'New transaction on Daily card')
+        self.assertContains(detail, 'Add debit card')
+        self.assertContains(detail, 'Add credit card')
+        self.assertRegex(detail.content.decode(), r'Opening balance: BRL 1[.,\s]000[.,]00')
+        self.assertEqual(list(CreditCard.objects.values()), before)
+        self.assertFalse(BankMovement.objects.exists())
+
+    def test_compact_filter_criteria_are_native_complete_and_reveal_invalid_values(self):
+        with patch('banking.views.sync_user_ledger'):
+            unfiltered = self.client.get(reverse('banking:invoices'))
+            filtered = self.client.get(reverse('banking:invoices'), {'q': 'Daily', 'bank': self.bank.pk, 'card': self.card.pk, 'month': '2026-10', 'status': 'PAID'})
+            invalid = self.client.get(reverse('banking:invoices'), {'month': 'not-a-month'})
+            empty_month = self.client.get(reverse('banking:invoices'), {'month': '  '})
+        self.assertContains(unfiltered, '<details id="invoice-extra-filters" class="filter-disclosure" >')
+        self.assertEqual(unfiltered.context['active_filter_count'], 0)
+        self.assertEqual(filtered.context['active_filter_count'], 4)
+        self.assertContains(filtered, '4 active')
+        self.assertContains(filtered, 'id="invoice-clear-control"')
+        self.assertContains(filtered, 'data-live-reset')
+        for name in ('q', 'month', 'bank', 'card', 'status'):
+            self.assertContains(unfiltered, f'name="{name}"')
+        self.assertContains(unfiltered, 'data-month-filter')
+        self.assertContains(unfiltered, 'id="invoice-filter-month"', count=1)
+        self.assertContains(invalid, '<details id="invoice-extra-filters" class="filter-disclosure" open>')
+        self.assertContains(invalid, 'value="not-a-month"')
+        self.assertContains(invalid, 'id="invoice-filter-month-error-1"')
+        self.assertContains(invalid, 'data-field-error')
+        self.assertEqual(invalid.context['active_filter_count'], 0)
+        self.assertTrue(invalid.context['has_filters'])
+        self.assertContains(invalid, 'Clear filters')
+        self.assertFalse(empty_month.context['filter_form'].errors)
+        self.assertIsNone(empty_month.context['filter_form'].cleaned_data['month'])
+        self.assertEqual(empty_month.context['active_filter_count'], 0)
+        self.assertEqual(empty_month.context['filter_form']['month'].value(), '  ')
+        self.assertTrue(empty_month.context['has_filters'])
+        self.assertContains(empty_month, 'Clear filters')
+        rate_url = reverse('banking:exchange_rates')
+        rates = self.client.get(rate_url)
+        selected = self.client.get(rate_url, {'q': 'evidence', 'from_currency': 'USD', 'to_currency': 'BRL'})
+        bad_dates = self.client.get(rate_url, {'from_currency': 'USD', 'date_from': '2026-10-03', 'date_to': '2026-10-01'})
+        self.assertContains(rates, '<details id="rate-extra-filters" class="filter-disclosure" >')
+        self.assertEqual(selected.context['active_filter_count'], 2)
+        self.assertContains(selected, '2 active')
+        for name in ('q', 'from_currency', 'to_currency', 'date_from', 'date_to'):
+            self.assertContains(rates, f'name="{name}"')
+        self.assertContains(bad_dates, '<details id="rate-extra-filters" class="filter-disclosure" open>')
+        self.assertContains(bad_dates, 'id="rate-filter-date_to-error-1"')
+        self.assertEqual(bad_dates.context['active_filter_count'], 0)
+        self.assertEqual(bad_dates.context['filter_form']['from_currency'].value(), 'USD')
+        self.assertEqual(bad_dates.context['filter_form']['date_to'].value(), '2026-10-01')
+        self.assertTrue(bad_dates.context['has_filters'])
+        self.assertContains(bad_dates, 'Clear filters')
+        self.assertFalse(BankMovement.objects.exists())
 
     def test_account_and_position_native_or_fragment_toggle_moves_rows_and_keeps_money(self):
         origin = reverse('banking:list') + '?q=Real'

@@ -15,7 +15,7 @@
                 <summary aria-label="{% blocktranslate with account=row.account.name %}Update {{ account }}{% endblocktranslate %}">{% translate 'Update account' %}</summary>
                 <div class="secondary-actions-panel">
                     {% url 'transactions:create' as transaction_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=transaction_url|add:'?account='|add:account_id %}<a href="{% contextual_url target %}">{% translate 'New transaction' %}</a>{% endwith %}{% endwith %}
-                    {% if IMPORTS_AVAILABLE %}{% url 'ingestion:index' as import_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=import_url|add:'?account='|add:account_id %}<a href="{% contextual_url target %}">{% translate 'Import statement' %}</a>{% endwith %}{% endwith %}{% else %}<a href="{% url 'pages:roadmap' %}#imports">{% translate 'Imports' %} · {% translate 'Under review' %}</a>{% endif %}
+                    {% if IMPORTS_AVAILABLE %}{% url 'ingestion:index' as import_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=import_url|add:'?account='|add:account_id %}<a href="{% contextual_url target %}">{% translate 'Import statement' %}</a>{% endwith %}{% endwith %}{% endif %}
                     {% url 'banking:transfer_create' as transfer_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=transfer_url|add:'?source_account='|add:account_id %}<a href="{% contextual_url target %}">{% translate 'Own transfer' %}</a>{% endwith %}{% endwith %}
                 </div>
             </details>

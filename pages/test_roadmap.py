@@ -22,8 +22,8 @@ class ReviewGateTests(TestCase):
         for name in ['index', 'mapping', 'review', 'confirmation', 'undo']:
             url = reverse('ingestion:' + name, args=[] if name == 'index' else [self.batch.pk])
             for method in [self.client.get, self.client.post]:
-                self.assertRedirects(method(url, {'action': 'CREATE'}), reverse('pages:roadmap') + '#imports')
-        self.assertRedirects(self.client.get(reverse('dashboard:wealth')), reverse('pages:roadmap') + '#wealth')
+                self.assertRedirects(method(url, {'action': 'CREATE'}), reverse('transactions:list'))
+        self.assertRedirects(self.client.get(reverse('dashboard:wealth')), reverse('dashboard:index'))
         self.batch.refresh_from_db()
         self.assertEqual(self.batch.status, 'CONFIRMED')
         self.assertEqual(ImportBatch.objects.count(), 1)
@@ -48,9 +48,10 @@ class ReviewGateTests(TestCase):
         self.assertEqual(self.client.post(history).status_code, 405)
         self.assertEqual(self.client.get(reverse('ingestion:detail', args=[foreign.pk])).status_code, 404)
 
-    def test_navigation_explains_the_pause_and_roadmap_requires_login(self):
-        response = self.client.get(reverse('dashboard:index'))
-        self.assertContains(response, 'aria-disabled="true"')
-        self.assertContains(response, reverse('pages:roadmap') + '#wealth')
-        self.client.logout()
-        self.assertEqual(self.client.get(reverse('pages:roadmap')).status_code, 302)
+    def test_hidden_features_have_no_navigation_entries_or_roadmap_page(self):
+        for route in ['dashboard:index', 'transactions:list', 'banking:list']:
+            response = self.client.get(reverse(route))
+            self.assertNotContains(response, '/roadmap/')
+            self.assertNotContains(response, 'Under review')
+            self.assertNotContains(response, 'section-paused')
+        self.assertEqual(self.client.get('/roadmap/').status_code, 404)

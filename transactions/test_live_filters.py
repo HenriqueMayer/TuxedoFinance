@@ -23,6 +23,42 @@ class TransactionLiveFilterTests(TransactionFixture):
         self.assertNotIn('id="transaction-sort"', html)
         self.assertNotContains(response, 'id="transaction-clear-filters"')
 
+    def test_compact_bar_keeps_primary_controls_visible_and_groups_refinements(self):
+        response = self.client.get(reverse('transactions:list'))
+        html = response.content.decode()
+        start = html.index('<details id="transaction-extra-filters"')
+        end = html.index('</details>', start)
+        disclosure = html[start:end]
+        self.assertNotIn('open', disclosure.split('>')[0])
+        for marker in ('id="filter-category"', 'id="transaction-recurrence-options"',
+                       'id="filter-date"', 'id="filter-sort"'):
+            self.assertIn(marker, disclosure)
+        for marker in ('id="filter-search"', 'id="filter-month"',
+                       'id="transaction-type-options"', 'id="transaction-apply-filters"'):
+            self.assertNotIn(marker, disclosure)
+        self.assertEqual(response.context['extra_filter_count'], 0)
+
+    def test_additional_criteria_open_disclosure_and_count_without_changing_filters(self):
+        self.make_transaction(title='Monthly', is_fixed=True)
+        response = self.client.get(reverse('transactions:list'), {
+            'q': 'Monthly', 'type': 'EXPENSE', 'month': '2026-01',
+            'category': str(self.category.pk), 'recurrence': 'fixed',
+            'date': '2026-01-15', 'sort': 'oldest',
+        })
+        self.assertEqual(response.context['paginator'].count, 1)
+        self.assertEqual(response.context['extra_filter_count'], 4)
+        self.assertContains(response, 'id="transaction-extra-filters" class="filter-disclosure" open')
+        self.assertContains(response, '4 active filters')
+        self.assertContains(response, 'id="transaction-clear-filters"', count=1)
+        self.assertEqual(response.context['selected_category'], str(self.category.pk))
+
+    def test_primary_criteria_do_not_count_as_hidden_refinements(self):
+        response = self.client.get(reverse('transactions:list'), {
+            'q': 'Heating', 'type': 'EXPENSE', 'month': '2026-01',
+        })
+        self.assertEqual(response.context['extra_filter_count'], 0)
+        self.assertContains(response, 'id="transaction-clear-filters"', count=1)
+
     def test_combined_get_search_and_sort_keep_server_ownership_and_one_clear(self):
         response = self.client.get(reverse('transactions:list'), {'q': 'Heating', 'sort': 'oldest', 'type': 'EXPENSE'})
         self.assertEqual(response.context['paginator'].count, 2)
@@ -38,3 +74,5 @@ class TransactionLiveFilterTests(TransactionFixture):
         self.assertContains(response, 'value="32/01/2026"')
         self.assertContains(response, 'data-field-error')
         self.assertEqual(response.context['paginator'].count, 1)
+        self.assertEqual(response.context['extra_filter_count'], 0)
+        self.assertContains(response, 'id="transaction-extra-filters" class="filter-disclosure" open')

@@ -274,6 +274,7 @@ test('bank color palette, arbitrary color and marker edit preserve the bank',asy
     await expect(panel.locator('.bank-bookmark')).toHaveCSS('background-color','rgb(110, 66, 161)');
     await page.screenshot({path:info.outputPath('bank-list-marker.png')});
     await panel.locator(':scope > summary').press('Enter');
+    await panel.locator('details[name="bank-options"] > summary').press('Enter');
     await panel.getByRole('link',{name:'Change marker color',exact:true}).press('Enter');
     await page.locator('#id_color').fill('#1278ab');await page.getByRole('button',{name:'Save',exact:true}).click();
     await expect(panel.locator('.bank-bookmark')).toHaveCSS('background-color','rgb(18, 120, 171)');
@@ -335,6 +336,7 @@ test('touch selection, held composition, and native bank colors remain usable on
         const panel=p.locator('details.bank-disclosure').filter({has:p.locator('summary.bank-disclosure-summary').filter({hasText:'Native color'})});
         await expect(panel.locator('.bank-bookmark')).toHaveCSS('background-color','rgb(171, 205, 239)');
         await panel.locator(':scope > summary').press('Enter');
+        await panel.locator('details[name="bank-options"] > summary').press('Enter');
         await expect(panel.getByRole('link',{name:'Change marker color',exact:true})).toBeVisible();
         await p.goto('/dashboard/reports/');await expect(p.locator('[data-balance-range] svg[data-selection-surface]')).toBeVisible();
         await expect(p.locator('[data-selection-start], #id_range_start')).toHaveCount(0);

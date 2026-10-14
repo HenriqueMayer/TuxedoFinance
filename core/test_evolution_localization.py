@@ -3,20 +3,24 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import translation
 
+from categories.models import Category
+
 
 class EvolutionLocalizationTests(TestCase):
     def test_new_workspaces_render_their_portuguese_interface(self):
         self.addCleanup(translation.activate, translation.get_language())
         user = get_user_model().objects.create_user('local-language-review')
+        Category.objects.create(user=user, name='Graph language review')
         self.client.force_login(user)
         self.client.cookies['django_language'] = 'pt-br'
         for path, heading in (
-            ('/imports/', 'Em revisão'),
+            ('/imports/', 'Transações'),
             ('/planning/', 'Planejar este mês'),
             ('/planning/goals/', 'Metas'),
             ('/planning/signals/', 'Sinais locais'),
-            ('/dashboard/wealth/', 'Em revisão'),
+            ('/dashboard/wealth/', 'Dashboard'),
             ('/banking/invoices/', 'Faturas'),
+            ('/categories/?view=tree', 'Grafo de categorias'),
             ('/investments/prices/', 'Cotações observadas'),
         ):
             with self.subTest(path=path):

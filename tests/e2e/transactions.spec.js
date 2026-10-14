@@ -47,6 +47,29 @@ async function prepare(page, testInfo) {
 
 function typeCards(page) { return page.locator('nav[aria-describedby="type-count-help"]'); }
 
+async function openFilters(page) {
+    const disclosure = page.locator('#transaction-extra-filters');
+    if (!await disclosure.evaluate(element => element.open)) {
+        await disclosure.locator('summary').focus();
+        await page.keyboard.press('Enter');
+    }
+    await expect(disclosure).toHaveAttribute('open', '');
+}
+
+async function chooseBilledMonth(page, value) {
+    const canonical = page.locator('#filter-month');
+    if (await canonical.isVisible()) {
+        await canonical.fill(value);
+        await canonical.press('Tab');
+        return;
+    }
+    await page.locator('#filter-month-trigger').focus();
+    await page.keyboard.press('Enter');
+    await page.locator('#filter-month-year').fill(value.slice(0, 4));
+    await selectChoice(page.locator('#filter-month-choice'), value.slice(5));
+    await expect(canonical).toHaveValue(value);
+}
+
 async function assertFits(page) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const cards = await typeCards(page).getByRole('link').all();
@@ -54,20 +77,16 @@ async function assertFits(page) {
     expect(Math.max(...boxes.map(box => box.height))).toBeLessThanOrEqual(48);
     expect(Math.max(...boxes.map(box => box.y)) - Math.min(...boxes.map(box => box.y))).toBeLessThanOrEqual(1);
 
-    const apply = page.locator('#transaction-filters button[type="submit"]');
-    const category = page.locator('#filter-category-search, #filter-category:not([hidden])');
-    const b = await category.boundingBox();
-    if (await apply.isVisible()) {
-        const a = await apply.boundingBox();
-        expect(a.y >= b.y + b.height - 1 || a.x >= b.x + b.width - 1).toBe(true);
+    const width = page.viewportSize().width;
+    for (const control of await page.locator('#transaction-filters input:not([type="hidden"]), #transaction-filters select, #transaction-filters summary, #transaction-clear-filters, #transaction-apply-filters').all()) {
+        if (!await control.isVisible()) continue;
+        const box = await control.boundingBox();
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(width + 1);
     }
-    const search = await page.locator('#filter-search').boundingBox();
-    if (page.viewportSize().width >= 640) {
-        expect(Math.abs(search.y - b.y)).toBeLessThanOrEqual(2);
-        expect(b.x).toBeGreaterThan(search.x);
-    } else {
-        expect(b.y).toBeGreaterThan(search.y);
-        expect(b.y).toBeLessThan((await page.locator('#filter-month').boundingBox()).y);
+    if (width >= 1024 && !await page.locator('#transaction-extra-filters').evaluate(element => element.open)) {
+        // The desktop overview stays compact while refinements remain available.
+        expect((await page.locator('#transaction-filters').boundingBox()).height).toBeLessThanOrEqual(180);
     }
 }
 
@@ -75,7 +94,7 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     const category = await prepare(page, testInfo);
-    await page.locator('#filter-search').focus();
+    await openFilters(page);
     await page.keyboard.press('Tab');
     await expect(page.locator('#filter-category-search')).toBeFocused();
     await expect(typeCards(page).getByRole('link', { name: /^All/ })).toContainText('3');
@@ -98,10 +117,8 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await page.goBack();
     await expect(page.locator('#filter-category')).toHaveValue(category);
     await expect(page.locator('#transaction-results-status')).toHaveText('1 transaction');
-    await page.locator('#filter-month').fill('2026-02');
-    await page.locator('#filter-month').press('Tab');
+    await chooseBilledMonth(page, '2026-02');
     await expect(typeCards(page).getByRole('link', { name: /^All/ })).toContainText('1');
-    await page.getByText('More filters', { exact: true }).click();
     await page.locator('#filter-date').fill('2026-01-15');
     await page.locator('#filter-date').press('Tab');
     // Sorting uses the applied filter state after the localized date redirect.
@@ -130,11 +147,22 @@ for (const theme of ['light', 'dark']) {
             }
             await expect(page.getByRole('heading', { level: 1 })).toHaveText(mobile ? 'Transações' : 'Transactions');
             await expect(typeCards(page).getByRole('link').nth(1)).toContainText(mobile ? 'Receitas' : 'Income');
+            await expect(page.locator('#transaction-extra-filters')).not.toHaveAttribute('open', '');
+            await expect(page.locator('#filter-category-search')).toBeHidden();
+            await expect(page.locator('#filter-sort')).toBeHidden();
             await expect(page.locator('#filter-date')).toBeHidden();
             await expect(page.locator('#transaction-apply-filters')).toBeHidden();
             await expect(page.locator('#transaction-sort')).toHaveCount(0);
             await assertFits(page);
             await page.screenshot({ path: testInfo.outputPath('transactions.png'), fullPage: true });
+            await openFilters(page);
+            await page.keyboard.press('Tab');
+            await expect(page.locator('#filter-category-search')).toBeFocused();
+            await expect(page.locator('#filter-date')).toBeVisible();
+            await expect(page.locator('#filter-sort')).toBeVisible();
+            await expect(page.locator('#transaction-recurrence-options')).toBeVisible();
+            await assertFits(page);
+            await page.screenshot({ path: testInfo.outputPath('transactions-filters.png'), fullPage: true });
         });
     }
 }
@@ -145,6 +173,7 @@ test('transaction filtering works without JavaScript on mobile', async ({ browse
     try {
         await prepare(page, testInfo);
         await typeCards(page).getByRole('link', { name: /^Expenses/ }).click();
+        await openFilters(page);
         await page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ }).click();
         await page.locator('#filter-month').fill('2026-03');
         await page.getByRole('button', { name: 'Apply filters' }).click();
@@ -184,6 +213,7 @@ test(`transaction updates retain viewport and focus at ${width}px`, async ({ pag
     await page.evaluate(() => window.scrollTo(0, 240));
     await keepsPosition(typeCards(page).getByRole('link', { name: /^Expenses/ }));
     await expect(page.locator('#transaction-results-status')).toHaveText('2 transactions');
+    await openFilters(page);
     await keepsPosition(page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ }));
     await keepsPosition(page.locator('#filter-sort'), true, () => page.locator('#filter-sort').selectOption('oldest'));
     await keepsPosition(page.getByRole('link', { name: 'Clear filters', exact: true }), false);

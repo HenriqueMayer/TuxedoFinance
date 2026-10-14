@@ -94,7 +94,13 @@
         incoming.querySelectorAll('[data-field-error]').forEach(error => {
             const field = document.getElementById(error.id.split('-error-')[0]);
             const group = field?.closest('[data-preferred-date-field]') || field?.parentElement;
-            if (group && form.contains(group)) group.append(error.cloneNode(true));
+            if (group && form.contains(group)) {
+                group.append(error.cloneNode(true));
+                // A newly returned error must remain discoverable even if the
+                // user folded the optional filters while the GET was pending.
+                const disclosure = group.closest('details.filter-disclosure');
+                if (disclosure) disclosure.open = true;
+            }
         });
         window.TuxedoForms?.refresh(form);
     }

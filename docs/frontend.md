@@ -551,9 +551,10 @@ and test configuration is documented in
 ## Planning workspaces and shared presentation
 
 The primary navigation is **Home / Transactions / Accounts / Investments / Plan**.
-Home contains Dashboard and Reports; Net worth is visibly paused for review.
-Transactions contains the ledger and Categories; Imports is also paused. The
-Roadmap explains both gates and retains read-only confirmed import provenance.
+Home contains Dashboard and Reports. Transactions contains the ledger and
+Categories. Planned Net worth and Imports have no tabs, review badges or account
+menu entries; their roadmap lives in documentation. Old operation URLs still
+stop at server gates; owned confirmed import provenance remains read-only.
 Accounts includes Invoices and Exchange rates. Investments opens a simple list
 of holdings with Update beside each row; history, analyses and full configuration
 remain secondary. Plan opens the monthly cash outlook and budgets, with three
@@ -796,3 +797,31 @@ their applied URL and fresh history response own the controls and results.
 Leaving during a pending search and returning therefore restores the last
 applied query, while unsent POST drafts and simulation rows keep their existing
 restoration behavior.
+
+
+## Compact consultation bars and month names
+
+Transactions, Categories and Banking use `consultation-bar`, `consultation-search`
+and `consultation-actions`. Keep one primary text search; place less frequent
+criteria in a deliberate native `details.filter-disclosure`. Its active count
+and nearby Clear refresh independently of the controls. Newly returned field
+errors reopen the disclosure without moving focus or page position. Criteria
+stay complete in native GET submissions. Transaction search already includes
+category names and split-category names; exact category selection remains in
+Filters and does not change the broad search semantics.
+
+`partials/month_filter.html` retains the native ISO month input and optionally
+uses the shared Django field renderer. `month-filter.js` enhances only marked
+consultation controls: open a bounded panel deliberately, type a translated
+month name, inspect/edit its year and confirm with Enter. A unique textual match
+may confirm directly only on this month choice (`data-search-auto-single`);
+ambiguous input needs explicit arrow selection. Ordinary financial record
+pickers retain their existing keyboard contract. Both clear actions reset the
+canonical ISO value without validating an unused draft year. Closed draft-year
+controls are disabled so their native constraints cannot block fallback GET
+submission. Escape, outside activation and Tab-away dismiss the panel;
+background updates preserve controls.
+No JavaScript keeps the native month input and ordinary submit fallback.
+
+Dashboard/Reports period navigation and Investment/Planning workspaces retain
+their current controls and presentation in this iteration.
