@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 from datetime import date
 from decimal import Decimal
+import re
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -65,6 +66,23 @@ class BankingWorkspaceOrganizationTests(TestCase):
         self.assertContains(detail, 'Add credit card')
         self.assertRegex(detail.content.decode(), r'Opening balance: BRL 1[.,\s]000[.,]00')
         self.assertEqual(list(CreditCard.objects.values()), before)
+        self.assertFalse(BankMovement.objects.exists())
+
+    def test_compact_row_actions_keep_owned_post_state_and_available_value_separate(self):
+        response = self.client.get(reverse('banking:list'), {'q': 'Real'})
+        html = response.content.decode()
+        row = html.split(f'<tr id="account-row-{self.account.pk}"', 1)[1].split('</tr>', 1)[0]
+        cells = re.findall(r'<td\b[^>]*>(.*?)</td>', row, flags=re.DOTALL)
+        self.assertNotIn('<form', cells[3])
+        self.assertIn(f'id="planning-toggle-{self.account.pk}"', cells[4])
+        self.assertIn('name="enabled" value="0"', cells[4])
+        self.assertIn('name="next" value="/banking/?q=Real"', cells[4])
+        self.assertIn(reverse('banking:account_planning', args=[self.account.pk]), cells[4])
+        self.assertIn('aria-label="Update Current"', cells[4])
+        self.assertIn('<span aria-hidden="true">⋯</span>', cells[4])
+        self.assertIn('class="sr-only">Update account</span>', cells[4])
+        self.assertEqual(response.context['availability']['available_total'], Decimal('1000'))
+        self.assertEqual(self.account.current_balance(), Decimal('1000'))
         self.assertFalse(BankMovement.objects.exists())
 
     def test_compact_filter_criteria_are_native_complete_and_reveal_invalid_values(self):

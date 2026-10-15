@@ -122,13 +122,26 @@ event date and ordering. Its badge counts these additional criteria; Clear stays
 next to the controls whenever any filter or nondefault ordering is active.
 Applied additional criteria and invalid dates open the disclosure on a fresh GET.
 Live updates preserve its mounted controls and the user's disclosure choice.
+At each responsive breakpoint the bar uses fixed grid tracks for its primary
+controls and action slots: one rail on wide desktop viewports, two rows on
+smaller desktops, and explicit stacked tracks on mobile. An empty Clear slot
+remains reserved when its link is
+absent; there is no inactive control or extra keyboard stop. Month captions and
+count badges cannot resize the search or move the type choices. The disclosure
+summary stays in its action slot while its native content expands below the
+toolbar; the native Apply fallback has its own row. Only the transaction
+workspace reserves the viewport's scrollbar gutter, so shorter filtered lists
+do not change the available horizontal space. Other workspaces retain their
+existing layout.
 All controls work through ordinary GET requests, including without JavaScript.
 Enhanced filtering, card/recurrence
 selection, sorting and pagination preserve viewport position and keyboard focus
 through the [shared navigation contract](../frontend.md#preserve-the-users-location).
 
-**All**, **Income** and **Expenses** use compact cards in a single horizontal
-row, with each label and count side by side. They count records matching search, billed
+**All**, **Income** and **Expenses** use equal compact cells in a single horizontal
+row. On smaller screens, labels and counts stack inside the same 44px target
+instead of changing the row's geometry as values change. They count records
+matching search, billed
 month and exact date, before category and recurrence refinements. A fixed
 transaction or installment plan counts once, not once per occurrence. Cards do
 not total monetary amounts.

@@ -239,7 +239,8 @@ POST; the same change works with a normal form submission without JavaScript.
 ## Contextual daily actions
 
 Accounts remain grouped by institution, but the workspace is named Accounts.
-Each row has an activation-only Update account disclosure for a new transaction,
+Each row has an activation-only ellipsis disclosure, named for that account,
+for a new transaction,
 statement import or owned transfer. Validated account shortcuts and local `next`
 origins preserve the search and return destination through Save/Cancel and errors.
 Credit cards expose a purchase shortcut and a card-scoped invoice list alongside
@@ -284,3 +285,17 @@ criteria and retain bound values and field errors. Complete native submissions
 remain available without JavaScript. Invoice month uses the shared searchable
 month-name/year enhancement over its original ISO month field; malformed native
 month text retains a plain, recoverable field rather than becoming an empty date.
+
+Banking density is scoped to `.banking-workspace`, covering account and bank
+details, invoice consultation/payment, exchange rates and form containers/actions.
+Row menus use a decorative ellipsis with a record-specific accessible name; their
+contents retain every existing action. Secondary actions use 14px text and local
+spacing rather than repeated outlined pills. The account planning status/action
+stays visible in the actions cell, leaving Available as an uninterrupted amount.
+Its CSRF-protected POST, stable focus ID and contextual origin are unchanged.
+
+The closed bank summary keeps its original size. Interior titles and dividers
+use a tighter hierarchy; balances, currency, reserve deficits, invoice totals and
+payment evidence retain their labels. Touch targets stay at least 44px, including
+menu items. Fine-pointer desktops may use 36px actions. Native fields and shared
+pickers keep their existing sizing, validation and no-JavaScript contracts.

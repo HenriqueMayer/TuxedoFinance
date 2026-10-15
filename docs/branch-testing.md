@@ -66,7 +66,10 @@ branch; automated validation is reported separately by iteration below.
 2. Check the compact transaction bar: search, billed month and the All/Income/
    Expenses choices remain visible. Search a category name, then open Filters
    with Enter/Space to refine an exact category, recurrence, event date and
-   ordering. The active indicator and Clear stay near the controls. Type/delete
+   ordering. The active indicator and Clear stay near the controls. Alternate
+   All/Income/Expenses and a long named month: search and controls must keep their position
+   and size, including when a long list becomes one result. Expanded criteria
+   appear below the rail. Type/delete
    search text and change choices without Apply; check caret, focus, scroll and
    Back/Forward. Save/Cancel return to the currently filtered list. Repeat with
    JavaScript disabled, opening the native disclosure and submitting Apply.
@@ -78,7 +81,9 @@ branch; automated validation is reported separately by iteration below.
    results and ISO URL agree. Escape and Tab-away close the panel; ordinary
    category/account searches still require arrow selection before Enter. Without
    JavaScript, the original month input and GET submit remain usable.
-4. Categories opens a grouped List with descendants initially collapsed. Use a
+4. Categories opens a compact grouped List with descendants initially collapsed.
+   Parent/leaf names, types and counts align in desktop columns; smaller screens
+   put metadata below names and keep comfortable actions. Use a
    parent name with Enter/Space to expand/retract only its descendants; the
    parent's Edit and secondary actions remain available. Test Expand all and
    Collapse all, including nested groups. Search a child: its owned ancestors
@@ -86,12 +91,17 @@ branch; automated validation is reported separately by iteration below.
    rather than the extra ancestors. Clear retains the selected List/Graph view.
 5. Switch Categories to Graph, including through an old `?view=tree` bookmark.
    Select nodes with arrows, Home/End and Enter/Space; check visible focus, full
-   details and existing editor actions. Pan, zoom, Fit and two-finger pinch must
-   change only the view, preserving names, parent links and transaction totals.
+   details and existing editor actions. The network groups real parent/child
+   connections around their roots and its short opening motion settles. Reduced motion skips the animation. Drag a node
+   with mouse/touch, or hold Shift with arrows repeatedly; its links follow it,
+   and keyboard focus remains inside the canvas. Pan, zoom, Fit and two-finger
+   pinch must change only the view, preserving names, parent links and totals.
    Open an editor and Cancel back to the filtered graph and selected node. With
    JavaScript disabled, the Accessible list starts open and its native hierarchy
    still exposes every category and action.
-6. Collapse a bank to its name/color and reopen it. Accounts, monetary cash,
+6. Collapse a bank to its name/color and reopen it. Check compact headings,
+   amounts and actions, comfortable phone targets and fully visible options menus
+   in English and Portuguese. Accounts, monetary cash,
    credit cards and loyalty programs have distinct sections; each credit-card
    group identifies its account. Find Invoices and New transaction on the card,
    and its edit/delete actions in bank details. Move an account or emergency cash
@@ -289,6 +299,43 @@ with English/Portuguese, both themes, real keyboard events, touch and native
 submissions. Acceptance on the owner's actual devices and data remains pending.
 The roadmap exists only in documentation. No merge into `main`, publication,
 bank connection or Cloudflare deployment is authorized by these checks.
+
+### Stable controls, organic network and compact Banking — 14 October 2026
+
+This iteration was checked using synthetic or disposable databases:
+
+- All 572 Django tests passed. A final 49-test category, localization and Banking
+  run also passed after the last markup refinements; Django checks and the
+  migration dry run reported no issues or pending model changes.
+- All 106 selected interactive browser scenarios passed across the scoped runs:
+  61 cover Transactions, category disclosures/network, Banking organization and
+  consultation months; 35 cover live filters, contextual actions, FX, reserves,
+  payments/splits, rewards, asset refresh and navigation; ten cover shared form
+  choices, conditional transitions, error recovery and native submissions.
+- The two explicit classic-scrollbar cases launch Chromium without hidden or
+  overlay scrollbars. Their JSON evidence records identical toolbar boxes and
+  a retained 8px layout gutter in this local browser, while the rendered
+  scrollbar disappears for the short list. Every compared control keeps its
+  position and dimensions within 1px. The tests measure actual layout width:
+  root `clientWidth` excludes only a rendered scrollbar and cannot alone measure
+  a reserved empty gutter.
+- Graph checks exercise settling/reduced motion, visual mouse/touch/keyboard node
+  arrangement, real links, exact unchanged JSON sources and no financial POSTs.
+  Repeated Shift+arrows retain visible focus inside the canvas. Month checks
+  include a 390×480 viewport, internal result scrolling and deliberate dismissal
+  by an outside wheel gesture. Native controls remain available without JavaScript.
+- All 17 repository-tool tests and six static-tour tests passed. JavaScript
+  syntax, executable lint, version consistency, translation format and compiled
+  output, reproducible CSS and `git diff --check` passed.
+
+No migrations, dependencies or version changes were introduced in this iteration.
+The shared picker change is an explicit opt-in for fixed month popups; ordinary
+form choices retain their existing scrolling contract. Dashboard, Reports,
+Investments and Plan retain their existing implementation. The public static tour
+is unchanged, and Docker lifecycle checks were not repeated. Automated browser
+checks use Chromium and simulated desktop/mobile input; acceptance on the owner's
+actual devices and data remains pending. No merge, publication, bank connection
+or Cloudflare deployment is authorized by these checks.
 
 ## Performance evidence
 

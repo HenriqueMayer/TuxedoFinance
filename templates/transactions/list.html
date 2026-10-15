@@ -44,10 +44,10 @@
         </div>
     </div>
 
-    <form id="transaction-filters" method="get" action="{{ list_url }}" data-live-filters data-live-results="transaction-results" data-live-url="{{ list_url }}{% querystring filter_params %}" hx-boost="false" class="surface-panel consultation-bar">
+    <form id="transaction-filters" method="get" action="{{ list_url }}" data-live-filters data-live-results="transaction-results" data-live-url="{{ list_url }}{% querystring filter_params %}" hx-boost="false" class="surface-panel consultation-bar transaction-consultation">
         <input type="hidden" name="type" value="{{ selected_type }}">
         <input type="hidden" name="recurrence" value="{{ selected_recurrence }}">
-        <div class="consultation-primary flex min-w-0 flex-wrap items-end gap-3">
+        <div class="consultation-primary transaction-consultation-primary">
             <div class="consultation-search min-w-0 flex-1 space-y-1.5">
                 <label for="filter-search" class="field-label">{% translate "Search" %}</label>
                 <input type="search" id="filter-search" name="q" data-live-search value="{{ search_query }}" placeholder="{% translate 'Title, notes, category, bank, account or card' %}" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
@@ -56,20 +56,20 @@
             {% include 'partials/month_filter.html' with month_id='filter-month' month_name='month' month_value=selected_month month_label=billed_month_label %}
         </div>
 
-        <div class="consultation-actions">
-            <div class="flex min-w-0 items-center gap-2">
-                <nav id="transaction-type-options" data-live-fragment="transaction-filters" aria-label="{% translate 'Transaction type' %}" aria-describedby="type-count-help" class="flex w-fit max-w-full flex-nowrap gap-1 sm:gap-2">
+        <div class="consultation-actions transaction-consultation-actions">
+            <div class="transaction-type-control">
+                <nav id="transaction-type-options" data-live-fragment="transaction-filters" aria-label="{% translate 'Transaction type' %}" aria-describedby="type-count-help" class="transaction-type-options">
                     {% for card in type_cards %}
                         <a id="transaction-type-{{ card.value|default:'all' }}" href="{{ card.url }}" data-live-link="transaction-filters" data-live-set="type" data-live-value="{{ card.value }}" data-live-clear="category" {% if card.selected %}aria-current="true"{% endif %} class="inline-flex min-h-11 min-w-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-2 py-2 sm:gap-2 sm:px-4 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel focus-visible:outline-offset-2 {% if card.selected %}border-caramel bg-caramel/10 dark:bg-caramel/10{% else %}border-transparent bg-white dark:bg-night-surface hover:border-forest/30 dark:hover:border-cream/30{% endif %}">
                             <span class="text-xs font-medium sm:text-sm {% if card.value == 'INCOME' %}text-income dark:text-income-light{% elif card.value == 'EXPENSE' %}text-expense dark:text-expense-light{% else %}text-forest dark:text-cream{% endif %}">{{ card.label }}</span>
-                            <span class="rounded-md bg-forest/5 px-1.5 py-0.5 text-xs font-semibold tabular-nums dark:bg-cream/10">{{ card.count }}</span>
+                            <span class="transaction-type-count rounded-md bg-forest/5 px-1.5 py-0.5 text-xs font-semibold tabular-nums dark:bg-cream/10">{{ card.count }}</span>
                             {% if card.selected %}<span class="sr-only"> — {% translate "Selected" %}</span>{% endif %}
                         </a>
                     {% endfor %}
                 </nav>
                 {% translate 'Transaction type' as type_label %}{% translate 'Counts follow your search and dates, before category and recurrence filters.' as type_help %}{% include 'partials/help_popover.html' with help_id='type-count-help' help_label=type_label help_text=type_help only %}
             </div>
-            {% comment %}Only the badge refreshes: the native disclosure and its controls retain focus and the user's open/closed choice during live filtering.{% endcomment %}
+            {% comment %}The summary occupies a fixed toolbar slot; its native content expands in the next grid row. Only metadata refreshes, preserving the mounted controls and disclosure choice.{% endcomment %}
             <details id="transaction-extra-filters" class="filter-disclosure" {% if extra_filter_count or date_filter_form.errors %}open{% endif %}>
                 <summary>{% translate 'Filters' %}<span id="transaction-extra-filter-indicator" data-live-fragment="transaction-filters">{% if extra_filter_count %}<span class="rounded-md bg-caramel/15 px-1.5 py-0.5 text-xs font-semibold tabular-nums">{{ extra_filter_count }}<span class="sr-only"> — {% blocktranslate count count=extra_filter_count %}{{ count }} active filter{% plural %}{{ count }} active filters{% endblocktranslate %}</span></span>{% endif %}</span></summary>
                 <div class="filter-disclosure-panel space-y-4">
@@ -105,6 +105,7 @@
                     </div>
                 </div>
             </details>
+            {% comment %}Keep this empty layout slot when Clear is unavailable; never expose an inactive link or extra Tab stop.{% endcomment %}
             <span id="transaction-clear-control" data-live-fragment="transaction-filters">{% if has_filters %}<a id="transaction-clear-filters" href="{{ list_url }}" data-live-reset data-live-link="transaction-filters" class="quiet-action text-caramel-ink dark:text-caramel-light">{% translate "Clear filters" %}</a>{% endif %}</span>
             <button id="transaction-apply-filters" type="submit" data-live-submit class="quiet-action">{% translate "Apply filters" %}</button>
         </div>

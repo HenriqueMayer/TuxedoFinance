@@ -1,6 +1,6 @@
 {% load i18n %}
 {% if pots %}
-<section class="space-y-3 border-t border-forest/15 pt-5 dark:border-cream/15">
+<section class="space-y-3 border-t border-forest/15 pt-4 dark:border-cream/15">
     <h3 class="section-title">{% translate 'Cash pots to redeem' %}</h3>
     <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for pot in pots %}{% include 'banking/_cash_pot_row.html' %}{% endfor %}</ul>
 </section>

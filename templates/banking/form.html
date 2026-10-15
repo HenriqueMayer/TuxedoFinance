@@ -4,7 +4,7 @@
 {% block title %}{{ form_title }} - Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-lg space-y-6">
+<div class="banking-workspace mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="page-title">{{ form_title }}</h1>
         {% if form_variant == 'loyalty_entry' %}
@@ -46,7 +46,7 @@
         {% endif %}
         <div class="flex gap-3">
             <button type="submit" class="action-primary">{% translate "Save" %}</button>
-            <a href="{{ cancel_url }}" class="action-link">{% translate "Cancel" %}</a>
+            <a href="{{ cancel_url }}" class="quiet-action">{% translate "Cancel" %}</a>
         </div>
     </form>
 </div>

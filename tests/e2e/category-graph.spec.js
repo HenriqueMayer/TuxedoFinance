@@ -34,6 +34,20 @@ async function expectNodeInside(node) {
     })).toBe(true);
 }
 
+async function backgroundPoint(canvas) {
+    await canvas.scrollIntoViewIfNeeded();
+    return canvas.evaluate(svg => {
+        const bounds = svg.getBoundingClientRect();
+        for (let y = Math.min(bounds.bottom - 90, innerHeight - 150); y >= Math.max(bounds.top + 90, 90); y -= 40) {
+            for (let x = bounds.right - 90; x >= bounds.left + 90; x -= 40) {
+                const hit = document.elementFromPoint(x, y);
+                if (hit && svg.contains(hit) && !hit.closest('[data-node-id]')) return {x, y};
+            }
+        }
+        throw new Error('No visible empty graph surface for a real pan gesture');
+    });
+}
+
 for (const theme of ['light', 'dark']) {
     for (const width of [390, 1440]) {
         test(`category hierarchy and graph keep financial links unchanged (${width}, ${theme})`, async ({page}, info) => {
@@ -86,18 +100,23 @@ for (const theme of ['light', 'dark']) {
             await page.keyboard.press('Space');
             await expect(page.locator('[data-graph-name]')).toHaveText('Heating');
             await expect(heating).toHaveAttribute('aria-pressed', 'true');
-            const focusedStroke = await heating.locator('rect').evaluate(node => getComputedStyle(node).strokeWidth);
+            const focusedStroke = await heating.locator('.category-graph-focus').evaluate(node => getComputedStyle(node).strokeWidth);
             expect(parseFloat(focusedStroke)).toBeGreaterThanOrEqual(3);
             const beforeZoom = Number(await canvas.getAttribute('data-scale'));
             await page.getByRole('button', {name: 'Zoom in', exact: true}).press('Enter');
             await expect.poll(async () => Number(await canvas.getAttribute('data-scale'))).toBeGreaterThan(beforeZoom);
             await page.getByRole('button', {name: 'Fit graph', exact: true}).press('Enter');
+            const hit = await living.locator('circle.category-graph-hit').boundingBox();
+            expect(hit.width).toBeGreaterThanOrEqual(43.9);
+            expect(hit.height).toBeGreaterThanOrEqual(43.9);
+            const label = await living.locator('.category-graph-node-name').first().boundingBox();
+            expect(label.height).toBeGreaterThanOrEqual(13);
             const layer = canvas.locator('[data-graph-layer]');
             const beforePan = await layer.getAttribute('transform');
-            const box = await canvas.boundingBox();
-            await page.mouse.move(box.x + box.width - 20, box.y + box.height - 30);
+            const empty = await backgroundPoint(canvas);
+            await page.mouse.move(empty.x, empty.y);
             await page.mouse.down();
-            await page.mouse.move(box.x + box.width - 100, box.y + box.height - 100, {steps: 8});
+            await page.mouse.move(empty.x - 70, empty.y - 50, {steps: 8});
             await page.mouse.up();
             await expect(layer).not.toHaveAttribute('transform', beforePan);
             expect(posts).toEqual([]);
@@ -231,6 +250,107 @@ test('Portuguese mobile graph keeps translated actions and the selected parent o
     expect(posts).toEqual([]);
 });
 
+for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
+    test(`organic graph settles and node arrangement never changes stored categories (${theme}, ${width})`, async ({page}, info) => {
+        await page.setViewportSize({width, height: 900});
+        await page.emulateMedia({reducedMotion: 'no-preference'});
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        const ids = await seed(page, info);
+        const posts = [];
+        page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
+        await page.goto('/categories/?view=tree', {waitUntil: 'domcontentloaded'});
+        const canvas = page.locator('[data-graph-canvas]');
+        const living = canvas.locator(`[data-node-id="${ids.living}"]`);
+        const heating = canvas.locator(`[data-node-id="${ids.heating}"]`);
+        const source = await page.locator('#category-graph-data').textContent();
+        await expect(canvas).toHaveAttribute('data-motion', 'settling');
+        const initial = await living.getAttribute('transform');
+        await expect(living).not.toHaveAttribute('transform', initial);
+        await expect(canvas).toHaveAttribute('data-motion', 'settled');
+        const settled = await living.getAttribute('transform');
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        await expect(living).toHaveAttribute('transform', settled);
+        await canvas.scrollIntoViewIfNeeded();
+        const layer = canvas.locator('[data-graph-layer]');
+        const camera = await layer.getAttribute('transform');
+        const neighbor = await heating.getAttribute('transform');
+        const edge = canvas.locator(`[data-source="${ids.living}"][data-target="${ids.heating}"]`);
+        const edgeX = await edge.getAttribute('x1');
+        const point = await living.locator('circle.category-graph-hit').boundingBox();
+        await page.mouse.move(point.x + point.width / 2, point.y + point.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(point.x + point.width / 2 + 45, point.y + point.height / 2 + 30, {steps: 8});
+        await page.mouse.up();
+        await expect(living).not.toHaveAttribute('transform', settled);
+        await expect(heating).toHaveAttribute('transform', neighbor);
+        await expect(edge).not.toHaveAttribute('x1', edgeX);
+        await expect(layer).toHaveAttribute('transform', camera);
+        await expect(living).toHaveAttribute('aria-pressed', 'true');
+        const dragged = await living.getAttribute('transform');
+        await page.keyboard.press('Shift+ArrowRight');
+        await expect(living).not.toHaveAttribute('transform', dragged);
+        await expect(living).toBeFocused();
+        await expect.poll(() => page.locator('#category-graph-data').textContent()).toBe(source);
+        await page.screenshot({path: info.outputPath(`category-graph-organic-node-drag-${width}-${theme}.png`), fullPage: true});
+        await page.reload({waitUntil: 'domcontentloaded'});
+        await expect.poll(() => page.locator('#category-graph-data').textContent()).toBe(source);
+        // Deliberate interaction interrupts the introductory movement, so a
+        // dragged node cannot drift back after the pointer has been released.
+        await expect(canvas).toHaveAttribute('data-motion', 'settling');
+        await canvas.scrollIntoViewIfNeeded();
+        const moving = await living.locator('circle.category-graph-hit').boundingBox();
+        await page.mouse.move(moving.x + 22, moving.y + 22);
+        await page.mouse.down();
+        await expect(canvas).toHaveAttribute('data-motion', 'settled');
+        await page.mouse.move(moving.x + 72, moving.y + 42, {steps: 5});
+        await page.mouse.up();
+        const frozen = await living.getAttribute('transform');
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        await expect(living).toHaveAttribute('transform', frozen);
+        expect(posts).toEqual([]);
+    });
+}
+
+test('reduced motion keeps the graph still and preserves a keyboard-arranged node', async ({page}, info) => {
+    await page.setViewportSize({width: 390, height: 900});
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    await page.addInitScript(() => localStorage.setItem('theme', 'dark'));
+    const ids = await seed(page, info);
+    const posts = [];
+    page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
+    await page.goto('/categories/?view=tree', {waitUntil: 'domcontentloaded'});
+    const source = await page.locator('#category-graph-data').textContent();
+    const canvas = page.locator('[data-graph-canvas]');
+    const living = canvas.locator(`[data-node-id="${ids.living}"]`);
+    await expect(canvas).toHaveAttribute('data-motion', 'settled');
+    const initial = await living.getAttribute('transform');
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await expect(living).toHaveAttribute('transform', initial);
+    await living.press('Space');
+    await page.keyboard.press('Shift+ArrowDown');
+    await expect(living).not.toHaveAttribute('transform', initial);
+    const arranged = await living.getAttribute('transform');
+    await page.emulateMedia({reducedMotion: 'no-preference'});
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    await expect(living).toHaveAttribute('transform', arranged);
+    await expect(living).toBeFocused();
+    await expectNodeInside(living);
+    const camera = await canvas.locator('[data-graph-layer]').getAttribute('transform');
+    const top = await page.evaluate(() => scrollY);
+    // Repeated real keys cross both viewport edges. A node that is already
+    // focused must remain visible even though focusin will not fire again.
+    for (let index = 0; index < 18; index++) {
+        await page.keyboard.press('Shift+ArrowRight');
+        await page.keyboard.press('Shift+ArrowDown');
+        await expect(living).toBeFocused();
+        await expectNodeInside(living);
+    }
+    await expect(canvas.locator('[data-graph-layer]')).not.toHaveAttribute('transform', camera);
+    expect(await page.evaluate(() => scrollY)).toBe(top);
+    await expect.poll(() => page.locator('#category-graph-data').textContent()).toBe(source);
+    expect(posts).toEqual([]);
+});
+
 test('category graph supports real touch selection, pan and pinch', async ({browser}, info) => {
     const context = await browser.newContext({hasTouch: true, isMobile: true, viewport: {width: 390, height: 844}});
     const page = await context.newPage();
@@ -242,14 +362,25 @@ test('category graph supports real touch selection, pan and pinch', async ({brow
         await canvas.getByRole('button', {name: 'Select category: Living costs', exact: true}).tap();
         await expect(page.locator('[data-graph-name]')).toHaveText('Living costs');
         await canvas.scrollIntoViewIfNeeded();
-        const box = await canvas.boundingBox();
         const session = await context.newCDPSession(page);
-        const x = box.x + box.width / 2, y = box.y + box.height / 2;
         const touch = async (type, points) => session.send('Input.dispatchTouchEvent', {type,
             touchPoints: points.map(([id, px, py]) => ({id, x: px, y: py, radiusX: 4, radiusY: 4}))});
+        const living = canvas.getByRole('button', {name: 'Select category: Living costs', exact: true});
+        const beforeDrag = await living.getAttribute('transform');
+        const camera = await canvas.locator('[data-graph-layer]').getAttribute('transform');
+        const source = await page.locator('#category-graph-data').textContent();
+        const point = await living.locator('circle.category-graph-hit').boundingBox();
+        await touch('touchStart', [[1, point.x + 22, point.y + 22]]);
+        await touch('touchMove', [[1, point.x + 62, point.y + 42]]);
+        await touch('touchEnd', []);
+        await expect(living).not.toHaveAttribute('transform', beforeDrag);
+        await expect(canvas.locator('[data-graph-layer]')).toHaveAttribute('transform', camera);
+        await expect.poll(() => page.locator('#category-graph-data').textContent()).toBe(source);
+        const empty = await backgroundPoint(canvas);
+        const x = empty.x, y = empty.y;
         const original = await canvas.locator('[data-graph-layer]').getAttribute('transform');
         await touch('touchStart', [[1, x, y]]);
-        await touch('touchMove', [[1, x + 50, y + 40]]);
+        await touch('touchMove', [[1, x - 45, y - 35]]);
         await touch('touchEnd', []);
         await expect(canvas.locator('[data-graph-layer]')).not.toHaveAttribute('transform', original);
         const scale = Number(await canvas.getAttribute('data-scale'));
@@ -293,7 +424,7 @@ test('graph bookmarks retain the complete native hierarchy without JavaScript', 
         await expect(page).toHaveURL(/view=tree$/);
         await expect(page.locator('[data-category-graph]')).toBeHidden();
         await expect(page.locator('[data-category-graph-fallback]')).toHaveAttribute('open', '');
-        await expect(page.locator(`[data-category-group="${ids.living}"] > div.absolute`)).toBeVisible();
+        await expect(page.locator(`[data-category-actions-for="${ids.living}"]`)).toBeVisible();
         await branch(page, ids.living).press('Enter');
         await branch(page, ids.heating).press('Space');
         await expect(page.getByText('Solar servicing', {exact: true})).toBeVisible();

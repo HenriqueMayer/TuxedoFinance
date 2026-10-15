@@ -307,22 +307,278 @@
   .consultation-actions:has(.filter-disclosure[open]) { flex-basis: 100%; width: 100%; }
 }
 
-/* Local category graph: transforms never change financial/category records. */
-.category-graph-canvas { display:block; width:100%; height:clamp(22rem,52vh,36rem); border:1px solid rgb(26 46 38 / .15); border-radius:1rem; background:radial-gradient(rgb(26 46 38 / .12) 1px,transparent 1px) 0 0 / 20px 20px; touch-action:none; cursor:grab; overflow:hidden; }
-.category-graph-canvas.is-panning { cursor:grabbing; }
-.category-graph-edge { fill:none; stroke:rgb(26 46 38 / .35); stroke-width:1.5; vector-effect:non-scaling-stroke; }
-.category-graph-node { cursor:pointer; outline:none; }
-.category-graph-node rect { fill:#fff; stroke:rgb(26 46 38 / .25); stroke-width:1.5; vector-effect:non-scaling-stroke; }
-.category-graph-node[data-context="true"] rect { stroke-dasharray:4 3; }
-.category-graph-node-name { fill:#1a2e26; font-size:14px; font-weight:600; }
-.category-graph-node-meta { fill:rgb(26 46 38 / .7); font-size:11px; }
-.category-graph-node[aria-pressed="true"] rect { fill:#fbf0df; stroke:#b88a59; stroke-width:2; }
-.category-graph-node:focus-visible rect { stroke:#b88a59; stroke-width:4; }
-.dark .category-graph-canvas { border-color:rgb(250 248 243 / .2); background-image:radial-gradient(rgb(250 248 243 / .14) 1px,transparent 1px); }
-.dark .category-graph-edge { stroke:rgb(250 248 243 / .35); }
-.dark .category-graph-node rect { fill:#1b1b1b; stroke:rgb(250 248 243 / .3); }
-.dark .category-graph-node-name { fill:#f6f3eb; }
-.dark .category-graph-node-meta { fill:rgb(250 248 243 / .7); }
-.dark .category-graph-node[aria-pressed="true"] rect { fill:#3b3129; stroke:#d4ad86; }
-.dark .category-graph-node:focus-visible rect { stroke:#d4ad86; }
-@media (max-width:639px) { .category-graph-canvas { height:25rem; } }
+/* Parent and leaf rows share their grid; controls stay outside native details. */
+.category-list { padding: .75rem 1rem; }
+.category-list-tools { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.25rem; padding-block:0 .5rem; }
+.category-list-tools .quiet-action { min-height:2.25rem; font-size:.75rem; }
+.category-row-main { display:grid; grid-template-columns:1rem minmax(0,1fr) 7.5rem 5.5rem 6rem; align-items:center; column-gap:.75rem; min-height:3.25rem; padding-inline-end:6.25rem; font-size:.875rem; }
+.category-row-main.category-disclosure { display:grid; margin:0; width:100%; padding-block:0; border-radius:.375rem; }
+.category-row-chevron { display:flex; width:1rem; align-items:center; justify-content:center; }
+.category-row-name { min-width:0; overflow-wrap:anywhere; font-weight:500; line-height:1.4; }
+.category-row-information { display:contents; }
+.category-row-kind { width:fit-content; max-width:100%; padding:.125rem .375rem; border-radius:.375rem; background:rgb(26 46 38 / .05); font-size:.75rem; color:rgb(26 46 38 / .75); }
+.category-row-kind[data-kind="INCOME"] { color:#176b52; background:rgb(23 107 82 / .08); }
+.category-row-kind[data-kind="EXPENSE"] { color:#b42318; background:rgb(180 35 24 / .06); }
+.category-row-count { text-align:right; font-size:.8125rem; font-variant-numeric:tabular-nums; color:rgb(26 46 38 / .7); }
+.category-count-label { display:none; }
+.category-row-context { margin-inline-start:.375rem; font-size:.6875rem; font-weight:400; color:rgb(26 46 38 / .65); }
+.category-row-actions { inset-inline-end:0; top:0; display:flex; align-items:center; height:3.25rem; }
+.category-row-actions .quiet-action, .category-row-actions .compact-menu > summary { min-height:2.25rem; padding:.375rem; }
+.category-row-actions .compact-menu > summary { min-width:2.25rem; }
+.category-row-actions .secondary-actions-panel > a { min-height:2.25rem; display:flex; align-items:center; }
+.category-list-heading { min-height:2rem; border-bottom:1px solid rgb(26 46 38 / .12); color:rgb(26 46 38 / .65); font-size:.6875rem; }
+.category-list-heading .category-row-information > span:not(:first-child) { text-align:right; }
+.category-children { margin-inline-start:.625rem; padding-inline-start:.625rem; border-inline-start:1px solid rgb(26 46 38 / .15); }
+.category-children > li { border-top:1px solid rgb(26 46 38 / .08); }
+.dark .category-row-kind { color:rgb(250 248 243 / .8); background:rgb(250 248 243 / .06); }
+.dark .category-row-kind[data-kind="INCOME"] { color:#64d8b1; background:rgb(100 216 177 / .07); }
+.dark .category-row-kind[data-kind="EXPENSE"] { color:#ff8a80; background:rgb(255 138 128 / .07); }
+.dark .category-row-count, .dark .category-row-context, .dark .category-list-heading { color:rgb(250 248 243 / .68); }
+.dark .category-list-heading, .dark .category-children { border-color:rgb(250 248 243 / .15); }
+.dark .category-children > li { border-color:rgb(250 248 243 / .08); }
+@media (max-width:899px) {
+  .category-list-heading { display:none; }
+  .category-row-main { grid-template-columns:1rem minmax(0,1fr); grid-template-rows:minmax(2.75rem,auto) auto; gap:0 .5rem; padding-block-end:.5rem; padding-inline-end:5.75rem; }
+  .category-row-chevron { grid-column:1; grid-row:1; }
+  .category-row-name { grid-column:2; grid-row:1; }
+  .category-row-information { grid-column:2; grid-row:2; display:flex; align-items:center; flex-wrap:wrap; gap:.25rem .5rem; }
+  .category-row-kind, .category-row-count { font-size:.75rem; }
+  .category-count-label { display:inline; }
+  /* Zero child counts remain announced without adding an empty mobile line. */
+  .category-row-count[data-category-child-count="0"] { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; padding:0; border-width:0; }
+  .category-row-actions { height:2.75rem; }
+  .category-row-actions .quiet-action, .category-row-actions .compact-menu > summary, .category-list-tools .quiet-action, .category-row-actions .secondary-actions-panel > a { min-height:2.75rem; }
+  .category-row-actions .compact-menu > summary { min-width:2.75rem; }
+}
+
+/* Local organic category graph: positions and gestures never change records. */
+.category-graph-canvas { display:block; width:100%; height:clamp(26rem,56vh,38rem); border:1px solid rgb(26 46 38 / .18); border-radius:1rem; background:radial-gradient(rgb(26 46 38 / .12) 1px,transparent 1px) 0 0 / 24px 24px; touch-action:none; cursor:grab; overflow:hidden; }
+.category-graph-canvas.is-panning,.category-graph-canvas.is-node-dragging { cursor:grabbing; }
+.category-graph-controls { display:flex; flex-wrap:wrap; gap:.5rem; }
+.category-graph-edge { fill:none; stroke:#71867b; stroke-width:1.5; vector-effect:non-scaling-stroke; pointer-events:none; }
+.category-graph-edge[data-related='true'] { stroke:#365c50; stroke-width:2.5; }
+.category-graph-node { cursor:grab; outline:none; }
+.category-graph-canvas.is-node-dragging .category-graph-node { cursor:grabbing; }
+.category-graph-hit { fill:transparent; stroke:none; pointer-events:all; }
+.category-graph-point { fill:#365c50; stroke:#fff; stroke-width:2; pointer-events:none; }
+.category-graph-node[data-cluster='1'] .category-graph-point { fill:#8c6039; }
+.category-graph-node[data-cluster='2'] .category-graph-point { fill:#4b697f; }
+.category-graph-node[data-cluster='3'] .category-graph-point { fill:#75596f; }
+.category-graph-node[data-context='true'] .category-graph-point { fill:#fff; stroke:#365c50; stroke-width:2; }
+.category-graph-focus { fill:none; stroke:#936332; stroke-width:2; opacity:0; pointer-events:none; }
+.category-graph-node:hover .category-graph-focus,.category-graph-node[aria-pressed='true'] .category-graph-focus { opacity:1; }
+.category-graph-node:focus-visible .category-graph-focus { opacity:1; stroke-width:4; }
+.category-graph-node-name { fill:#1a2e26; font-family:inherit; font-size:14px; font-weight:500; stroke:#fff; stroke-width:4; stroke-linejoin:round; paint-order:stroke fill; }
+.category-graph-node[aria-pressed='true'] .category-graph-node-name { font-weight:700; }
+.category-graph-selection { border-top:1px solid rgb(26 46 38 / .12); padding-top:1rem; }
+.category-graph-help > summary { cursor:pointer; }
+.dark .category-graph-canvas { border-color:rgb(250 248 243 / .2); background-image:radial-gradient(rgb(250 248 243 / .12) 1px,transparent 1px); }
+.dark .category-graph-edge { stroke:#849b90; }
+.dark .category-graph-edge[data-related='true'] { stroke:#b9d6c9; }
+.dark .category-graph-point { fill:#8fb8a9; stroke:#1b1b1b; }
+.dark .category-graph-node[data-cluster='1'] .category-graph-point { fill:#d8b086; }
+.dark .category-graph-node[data-cluster='2'] .category-graph-point { fill:#8fb4cf; }
+.dark .category-graph-node[data-cluster='3'] .category-graph-point { fill:#bea4c4; }
+.dark .category-graph-node[data-context='true'] .category-graph-point { fill:#1b1b1b; stroke:#b9d6c9; }
+.dark .category-graph-focus { stroke:#d4ad86; }
+.dark .category-graph-node-name { fill:#f6f3eb; stroke:#1b1b1b; }
+.dark .category-graph-selection { border-color:rgb(250 248 243 / .15); }
+@media (max-width:639px) { .category-graph-canvas { height:30rem; } }
+@media (forced-colors:active) { .category-graph-edge,.category-graph-point { stroke:CanvasText; } .category-graph-point { fill:CanvasText; } .category-graph-node-name { fill:CanvasText; stroke:Canvas; } .category-graph-focus { stroke:Highlight; } }
+
+/* Banking density is local: ordinary fields and the closed bank summary retain
+   their shared contracts. These scoped rules intentionally follow utilities. */
+.banking-workspace .page-title { font-size: 1.5rem; line-height: 1.875rem; }
+.banking-workspace .surface-panel:not(.bank-disclosure) { padding: 1rem; }
+.banking-workspace .bank-disclosure-content .section-title,
+.banking-workspace section > .section-title,
+.banking-workspace form > .section-title { font-size: 1rem; line-height: 1.5rem; }
+.banking-workspace details:not(.bank-disclosure) > summary { font-size: .875rem; }
+.banking-workspace .bank-disclosure-content { margin-top: 1rem; }
+.banking-workspace .bank-disclosure-content > :not(:last-child) { margin-block: 0 1rem; }
+.banking-workspace .bank-disclosure-content > :first-child { padding-top: .75rem; }
+.banking-workspace .action-primary,
+.banking-workspace .action-link,
+.banking-workspace .quiet-action,
+.banking-workspace .planning-visibility,
+.banking-workspace .secondary-actions > summary {
+  min-height: 2.75rem;
+  font-size: .875rem;
+  line-height: 1.25rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.banking-workspace .action-primary,
+.banking-workspace .action-link { border-radius: .5rem; padding: .375rem .75rem; }
+.banking-workspace .quiet-action { min-width: 2.75rem; padding: .25rem .5rem; }
+.banking-workspace .planning-visibility { padding: .25rem .375rem; }
+.banking-workspace .secondary-actions.compact-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0;
+  border-radius: .5rem;
+}
+.banking-workspace .secondary-actions-panel {
+  width: max-content;
+  min-width: 12rem;
+  max-width: min(17rem, calc(100vw - 2rem));
+  padding: .375rem;
+}
+.banking-workspace .secondary-actions-panel > a,
+.banking-workspace .secondary-actions-panel > form > button {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-size: .875rem;
+  line-height: 1.25rem;
+  padding: .375rem .625rem;
+}
+.banking-workspace .banking-row-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .25rem; }
+.banking-workspace .data-table th { padding-block: .5rem; }
+.banking-workspace .data-table td { padding-block: .625rem; }
+.banking-workspace .account-table td:first-child > a { display: inline-flex; min-height: 2.75rem; align-items: center; }
+.banking-workspace .cash-position-row,
+.banking-workspace #invoice-results li,
+.banking-workspace #rate-results li { padding-block: .625rem; gap: .75rem; }
+.banking-workspace .status-badge { padding: .125rem .5rem; }
+.banking-workspace #planning-availability > div { gap: 1rem; }
+@media (max-width: 767px) {
+  .banking-workspace .account-table tbody tr { padding-block: .875rem; gap: .75rem; }
+  .banking-workspace .account-table td { padding: 0; }
+  .banking-workspace .banking-row-actions { justify-content: flex-start; }
+}
+/* Fine-pointer desktops can be denser without shrinking touch controls. */
+@media (min-width: 768px) and (pointer: fine) and (hover: hover) {
+  .banking-workspace .action-primary,
+  .banking-workspace .action-link,
+  .banking-workspace .quiet-action,
+  .banking-workspace .planning-visibility,
+  .banking-workspace .secondary-actions > summary,
+  .banking-workspace .secondary-actions-panel > a,
+  .banking-workspace .secondary-actions-panel > form > button,
+  .banking-workspace .account-table td:first-child > a { min-height: 2.25rem; }
+  .banking-workspace .secondary-actions.compact-menu > summary { width: 2.25rem; min-width: 2.25rem; }
+}
+
+/* Transaction consultation owns stable tracks, even when metadata is absent.
+   Scope the gutter to this workspace; other page layouts are unchanged. */
+html:has(#transaction-filters) { scrollbar-gutter: stable; }
+#transaction-filters.transaction-consultation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .75rem;
+  --transaction-filter-slot: 7rem;
+  --transaction-clear-slot: 7.5rem;
+  --transaction-action-gap: .75rem;
+}
+#transaction-filters .transaction-consultation-primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .5rem;
+  min-width: 0;
+  width: 100%;
+  align-items: end;
+}
+#transaction-filters .consultation-search { width: 100%; }
+/* Match the 44px month and action rail without changing shared inputs. */
+#transaction-filters #filter-search { height: 2.75rem; }
+#transaction-filters [data-month-filter] { width: 12rem; min-width: 0; }
+#transaction-filters .month-filter-trigger { width: 100%; height: 2.75rem; white-space: nowrap; }
+#transaction-filters .transaction-consultation-actions {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--transaction-clear-slot);
+  grid-template-rows: 2.75rem 3.25rem auto;
+  column-gap: var(--transaction-action-gap);
+  row-gap: 0;
+  width: 100%;
+  min-width: 0;
+}
+#transaction-filters .transaction-type-control {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 27rem) 1.75rem;
+  gap: .5rem;
+  align-items: center;
+  min-width: 0;
+}
+#transaction-filters .transaction-type-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .25rem;
+  min-width: 0;
+}
+#transaction-filters .transaction-type-options > a {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  height: 2.75rem;
+  padding: .25rem;
+}
+#transaction-filters .transaction-type-options > a > span:first-child { font-size: .75rem; line-height: 1rem; }
+#transaction-filters .transaction-type-count {
+  min-width: calc(6ch + .5rem);
+  padding: 0 .25rem;
+  text-align: center;
+  font-size: .75rem;
+  line-height: 1rem;
+}
+#transaction-filters #transaction-extra-filters { grid-column: 1 / -1; grid-row: 3; min-width: 0; width: 100%; }
+/* Position only the native summary. Its fields stay in document flow below the
+   rail, so expanding them never redistributes the search, types or Clear. */
+#transaction-filters #transaction-extra-filters > summary {
+  position: absolute;
+  top: 3.25rem;
+  left: 0;
+  box-sizing: border-box;
+  width: var(--transaction-filter-slot);
+  height: 2.75rem;
+  justify-content: center;
+  white-space: nowrap;
+}
+#transaction-filters #transaction-extra-filters > summary:focus-visible { outline: 2px solid var(--color-caramel); outline-offset: 2px; }
+#transaction-filters #transaction-extra-filter-indicator { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 1.5rem; width: 1.5rem; height: 1.5rem; }
+#transaction-filters #transaction-clear-control {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  display: block;
+  width: var(--transaction-clear-slot);
+  min-height: 2.75rem;
+}
+#transaction-filters #transaction-clear-filters { width: 100%; white-space: nowrap; }
+#transaction-filters #transaction-apply-filters { grid-column: 1 / -1; grid-row: 4; justify-self: end; margin-top: .75rem; }
+@media (min-width: 640px) {
+  #transaction-filters .transaction-consultation-primary { grid-template-columns: minmax(0, 1fr) 12rem; gap: .75rem; }
+}
+@media (min-width: 768px) {
+  #transaction-filters .transaction-consultation-actions { grid-template-columns: minmax(0, 1fr) var(--transaction-filter-slot) var(--transaction-clear-slot); grid-template-rows: 2.75rem auto; }
+  #transaction-filters .transaction-type-control { grid-column: 1; }
+  #transaction-filters .transaction-type-options { gap: .5rem; }
+  #transaction-filters .transaction-type-options > a { flex-direction: row; gap: .25rem; }
+  #transaction-filters .transaction-type-options > a > span:first-child { font-size: .875rem; line-height: 1.25rem; }
+  #transaction-filters #transaction-extra-filters { grid-row: 2; }
+  #transaction-filters #transaction-extra-filters > summary { top: 0; left: auto; right: calc(var(--transaction-clear-slot) + var(--transaction-action-gap)); }
+  #transaction-filters #transaction-clear-control { grid-column: 3; grid-row: 1; }
+  #transaction-filters #transaction-apply-filters { grid-row: 3; }
+}
+@media (min-width: 1440px) {
+  /* Wide workspaces keep one rail without letting optional metadata shrink it.
+     The real details content alone occupies the next full-width grid row. */
+  #transaction-filters.transaction-consultation { position: relative; grid-template-columns: minmax(0, 1fr) 25rem var(--transaction-filter-slot) var(--transaction-clear-slot); column-gap: var(--transaction-action-gap); row-gap: 0; align-items: center; }
+  #transaction-filters .transaction-consultation-primary { grid-column: 1; grid-row: 1; }
+  #transaction-filters .transaction-consultation-actions { display: contents; position: static; }
+  #transaction-filters .transaction-type-control { grid-column: 2; grid-row: 1; grid-template-columns: minmax(0, 1fr) 1.75rem; }
+  #transaction-filters .transaction-type-options { gap: .25rem; }
+  #transaction-filters .transaction-type-options > a > span:first-child { font-size: .75rem; line-height: 1rem; }
+  #transaction-filters #transaction-extra-filters { grid-column: 1 / -1; grid-row: 2; }
+  #transaction-filters #transaction-extra-filters > summary { top: .75rem; right: calc(.75rem + var(--transaction-clear-slot) + var(--transaction-action-gap)); }
+  #transaction-filters #transaction-clear-control { grid-column: 4; grid-row: 1; align-self: center; }
+  #transaction-filters #transaction-apply-filters { grid-column: 1 / -1; grid-row: 3; }
+  #transaction-filters [data-month-fallback] input { height: 2.75rem; }
+  #transaction-filters [data-month-fallback] label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+}

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const { selectChoice } = require('./helpers/forms');
-const { test, expect } = require('@playwright/test');
+const { test, expect, chromium } = require('@playwright/test');
+const { writeFile } = require('node:fs/promises');
 const { requestPath, expectContextualDestination } = require('./helpers/navigation');
 
 async function postForm(page, path, fields) {
@@ -14,7 +15,7 @@ async function postForm(page, path, fields) {
     expect(saved.status(), (await saved.text()).match(/<ul class="errorlist[^>]*>[\s\S]*?<\/ul>/g)?.join(' ') || path).toBe(302);
 }
 
-async function prepare(page, testInfo) {
+async function prepare(page, testInfo, extraExpenses = 0) {
     const username = `txn-${testInfo.workerIndex}-${Date.now()}`;
     await postForm(page, '/accounts/signup/', {
         username, email: `${username}@example.test`,
@@ -41,6 +42,9 @@ async function prepare(page, testInfo) {
     await postForm(page, '/transactions/create/', {
         ...defaults, title: 'Salary', transaction_type: 'INCOME', category: salaryCategory,
     });
+    for (let index = 0; index < extraExpenses; index++) {
+        await postForm(page, '/transactions/create/', { ...defaults, title: `Stable expense ${index + 1}` });
+    }
     await page.goto('/transactions/');
     return category;
 }
@@ -233,4 +237,251 @@ test(`transaction updates retain viewport and focus at ${width}px`, async ({ pag
     await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });
+}
+
+async function toolbarGeometry(page, native = false) {
+    await page.evaluate(async () => { await document.fonts.ready; });
+    return page.evaluate(({native}) => {
+        const selectors = {
+            bar: '#transaction-filters', search: '#filter-search',
+            month: native ? '#filter-month' : '#filter-month-trigger',
+            types: '#transaction-type-options', all: '#transaction-type-all',
+            income: '#transaction-type-INCOME', expenses: '#transaction-type-EXPENSE',
+            allCount: '#transaction-type-all .transaction-type-count',
+            incomeCount: '#transaction-type-INCOME .transaction-type-count',
+            expensesCount: '#transaction-type-EXPENSE .transaction-type-count',
+            filters: '#transaction-extra-filters > summary',
+            indicator: '#transaction-extra-filter-indicator', clearSlot: '#transaction-clear-control',
+        };
+        if (native) selectors.apply = '#transaction-apply-filters';
+        const boxes = Object.fromEntries(Object.entries(selectors).map(([key, selector]) => {
+            const box = document.querySelector(selector).getBoundingClientRect();
+            return [key, {x: box.x + scrollX, y: box.y + scrollY, width: box.width, height: box.height}];
+        }));
+        return {boxes, clientWidth: document.documentElement.clientWidth,
+            layoutWidth: document.querySelector('.app-layout').getBoundingClientRect().width,
+            overflowing: document.documentElement.scrollHeight > document.documentElement.clientHeight};
+    }, {native});
+}
+
+function expectSameToolbar(before, after, expanded = false) {
+    // Root clientWidth excludes only a rendered scrollbar, not an empty stable
+    // gutter (CSSOM View #dom-element-clientwidth). Compare the actual layout.
+    expect(after.layoutWidth).toBe(before.layoutWidth);
+    for (const [name, box] of Object.entries(before.boxes)) {
+        for (const dimension of ['x', 'y', 'width', 'height']) {
+            // Deliberately expanding criteria changes only the form's height.
+            if (expanded && name === 'bar' && dimension === 'height') continue;
+            expect(Math.abs(after.boxes[name][dimension] - box[dimension]), `${name}.${dimension}`).toBeLessThanOrEqual(1);
+        }
+    }
+}
+
+async function applyTypeWithKeyboard(page, kind) {
+    const target = page.locator(`#transaction-type-${kind || 'all'}`);
+    await target.focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(url => (url.searchParams.get('type') || '') === kind);
+    await expect(target).toHaveAttribute('aria-current', 'true');
+    return target;
+}
+
+async function scrollbarLayout(page) {
+    return page.evaluate(() => {
+        const root = document.documentElement;
+        const app = document.querySelector('.app-layout');
+        const rootStyle = getComputedStyle(root);
+        return {
+            innerWidth, innerHeight,
+            rootClientWidth: root.clientWidth, rootRectWidth: root.getBoundingClientRect().width,
+            bodyClientWidth: document.body.clientWidth, bodyRectWidth: document.body.getBoundingClientRect().width,
+            appLayoutWidth: app.getBoundingClientRect().width,
+            mainWidth: document.querySelector('main').getBoundingClientRect().width,
+            computedGutter: rootStyle.scrollbarGutter, rootOverflowX: rootStyle.overflowX, rootOverflowY: rootStyle.overflowY,
+            renderedScrollbarWidth: innerWidth - root.clientWidth,
+            reservedLayoutGutter: innerWidth - app.getBoundingClientRect().width,
+        };
+    });
+}
+
+for (const theme of ['light', 'dark']) {
+    for (const [width, height, language] of [[1536, 900, 'en'], [1440, 900, 'pt-br'], [1100, 900, 'pt-br'], [390, 1200, 'pt-br'], [320, 1200, 'en']]) {
+        test(`transaction toolbar geometry stays stable across live states (${width}, ${language}, ${theme})`, async ({page}, info) => {
+            await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+            await page.setViewportSize({width, height});
+            await prepare(page, info, 10);
+            await page.context().addCookies([{name: 'django_language', value: language, url: info.project.use.baseURL}]);
+            await page.goto('/transactions/');
+            await expect(page.locator('#transaction-results-status')).toHaveText(language === 'pt-br' ? '13 transações' : '13 transactions');
+            await expect(page.locator('#transaction-clear-filters')).toHaveCount(0);
+            const baseline = await toolbarGeometry(page);
+            expect(baseline.overflowing).toBe(true);
+            if (width >= 1440) {
+                expect(baseline.boxes.bar.height).toBeLessThanOrEqual(74);
+                for (const name of ['month', 'types', 'filters', 'clearSlot']) {
+                    expect(Math.abs(baseline.boxes[name].y - baseline.boxes.search.y), name).toBeLessThanOrEqual(1);
+                }
+            }
+            await page.screenshot({path: info.outputPath('toolbar-all.png')});
+
+            for (const kind of ['INCOME', 'EXPENSE', '']) {
+                const target = await applyTypeWithKeyboard(page, kind);
+                await expect(target).toBeFocused();
+                const geometry = await toolbarGeometry(page);
+                expectSameToolbar(baseline, geometry);
+                if (kind === 'INCOME') expect(geometry.overflowing).toBe(false);
+                await expect(page.locator('#transaction-clear-filters')).toHaveCount(kind ? 1 : 0);
+                await page.screenshot({path: info.outputPath(`toolbar-${kind || 'all-again'}.png`)});
+            }
+            await page.goBack();
+            await expect(page).toHaveURL(url => url.searchParams.get('type') === 'EXPENSE');
+            expectSameToolbar(baseline, await toolbarGeometry(page));
+            await page.goForward();
+            await expect(page).toHaveURL(url => !url.searchParams.has('type'));
+            expectSameToolbar(baseline, await toolbarGeometry(page));
+
+            const search = page.locator('#filter-search');
+            await search.focus();
+            await page.keyboard.type('Monthly');
+            await page.keyboard.press('Enter');
+            await expect(page).toHaveURL(url => url.searchParams.get('q') === 'Monthly');
+            await expect(page.locator('#transaction-results-status')).toHaveText(language === 'pt-br' ? '1 transação' : '1 transaction');
+            await expect(search).toBeFocused();
+            expect(await search.evaluate(input => input.selectionStart)).toBe(7);
+            expectSameToolbar(baseline, await toolbarGeometry(page));
+            await page.locator('#transaction-clear-filters').press('Enter');
+            await expect(page).toHaveURL(url => !url.searchParams.has('q'));
+            expectSameToolbar(baseline, await toolbarGeometry(page));
+
+            await page.locator('#filter-month-trigger').press('Enter');
+            const year = page.locator('#filter-month-year');
+            await year.focus(); await page.keyboard.press('ControlOrMeta+A');
+            await page.keyboard.type('2026'); await page.keyboard.press('Enter');
+            await page.keyboard.type(language === 'en' ? 'sep' : 'sete');
+            await page.keyboard.press('Enter');
+            await expect(page).toHaveURL(url => url.searchParams.get('month') === '2026-09');
+            await expect(page.locator('#filter-month-trigger')).toBeFocused();
+            expectSameToolbar(baseline, await toolbarGeometry(page));
+            await page.locator('#transaction-clear-filters').press('Enter');
+            await expect(page).toHaveURL(url => !url.searchParams.has('month'));
+
+            await openFilters(page);
+            expectSameToolbar(baseline, await toolbarGeometry(page), true);
+            const panel = await page.locator('#transaction-extra-filters > .filter-disclosure-panel').boundingBox();
+            const summary = await page.locator('#transaction-extra-filters > summary').boundingBox();
+            expect(panel.y).toBeGreaterThanOrEqual(summary.y + summary.height);
+            await applyTypeWithKeyboard(page, 'INCOME');
+            expectSameToolbar(baseline, await toolbarGeometry(page), true);
+            await applyTypeWithKeyboard(page, 'EXPENSE');
+            expectSameToolbar(baseline, await toolbarGeometry(page), true);
+            const sort = page.locator('#filter-sort');
+            await sort.focus(); await page.keyboard.press('Home'); await page.keyboard.press('ArrowDown');
+            await expect(page).toHaveURL(url => url.searchParams.get('sort') === 'oldest');
+            await page.locator('#transaction-extra-filters > summary').press('Enter');
+            await expect(page.locator('#transaction-extra-filters')).not.toHaveAttribute('open', '');
+            expectSameToolbar(baseline, await toolbarGeometry(page));
+            await page.locator('#transaction-clear-filters').press('Enter');
+            await expect(page).toHaveURL(url => !url.searchParams.has('sort') && !url.searchParams.has('type'));
+            expectSameToolbar(baseline, await toolbarGeometry(page));
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            for (const label of await typeCards(page).locator('a > span:first-child').all()) {
+                expect(await label.evaluate(node => node.scrollWidth <= node.clientWidth), await label.textContent()).toBe(true);
+            }
+        });
+    }
+}
+
+for (const [width, language] of [[1366, 'en'], [1440, 'pt-br'], [390, 'pt-br']]) {
+    test(`transaction toolbar geometry remains stable with native GET (${width}, ${language})`, async ({browser}, info) => {
+        const context = await browser.newContext({javaScriptEnabled: false, viewport: {width, height: 1200}});
+        try {
+            const page = await context.newPage();
+            await prepare(page, info, 10);
+            await context.addCookies([{name: 'django_language', value: language, url: info.project.use.baseURL}]);
+            await page.goto('/transactions/');
+            await expect(page.locator('#filter-month-trigger')).toHaveCount(0);
+            await expect(page.locator('#transaction-apply-filters')).toBeVisible();
+            const baseline = await toolbarGeometry(page, true);
+            if (width >= 1440) {
+                for (const name of ['month', 'types', 'filters', 'clearSlot']) {
+                    expect(Math.abs(baseline.boxes[name].y - baseline.boxes.search.y), name).toBeLessThanOrEqual(1);
+                }
+            }
+            for (const kind of ['INCOME', 'EXPENSE', '']) {
+                await applyTypeWithKeyboard(page, kind);
+                expectSameToolbar(baseline, await toolbarGeometry(page, true));
+                await expect(page.locator('#transaction-clear-filters')).toHaveCount(kind ? 1 : 0);
+            }
+            await page.locator('#filter-month').fill('2026-09');
+            await page.locator('#transaction-apply-filters').press('Enter');
+            await expect(page).toHaveURL(url => url.searchParams.get('month') === '2026-09');
+            expectSameToolbar(baseline, await toolbarGeometry(page, true));
+            await page.locator('#transaction-clear-filters').press('Enter');
+            await expect(page.locator('#filter-month')).toHaveValue('');
+            expectSameToolbar(baseline, await toolbarGeometry(page, true));
+        } finally { await context.close(); }
+    });
+}
+
+
+for (const theme of ['light', 'dark']) {
+    test(`transaction toolbar reserves a real classic scrollbar gutter (${theme})`, async ({baseURL}, info) => {
+        // Headless Chromium normally hides scrollbars. This independent launch
+        // must expose a measured gutter, rather than certify overlay geometry.
+        const classicBrowser = await chromium.launch({
+            headless: true, ignoreDefaultArgs: ['--hide-scrollbars'],
+            args: ['--disable-features=OverlayScrollbar,FluentOverlayScrollbar'],
+        });
+        try {
+            const context = await classicBrowser.newContext({baseURL, viewport: {width: 1440, height: 900}});
+            const measurements = [];
+            try {
+                const page = await context.newPage();
+                await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+                await prepare(page, info, 10);
+                await context.addCookies([{name: 'django_language', value: 'pt-br', url: baseURL}]);
+                await page.goto('/transactions/');
+                await expect(page.locator('#transaction-results-status')).toHaveText('13 transações');
+                const baseline = await toolbarGeometry(page);
+                const baselineLayout = await scrollbarLayout(page);
+                measurements.push({state: 'long', ...baselineLayout, geometry: baseline});
+                expect(baselineLayout.renderedScrollbarWidth, 'the long list must render a real classic scrollbar').toBeGreaterThan(0);
+                expect(baselineLayout.reservedLayoutGutter).toBeGreaterThan(0);
+                expect(baselineLayout.computedGutter).toBe('stable');
+                expect(baseline.overflowing).toBe(true);
+                expect(baseline.boxes.bar.height).toBeLessThanOrEqual(74);
+                for (const name of ['month', 'types', 'filters', 'clearSlot']) {
+                    expect(Math.abs(baseline.boxes[name].y - baseline.boxes.search.y), name).toBeLessThanOrEqual(1);
+                }
+                await page.screenshot({path: info.outputPath(`toolbar-classic-${theme}-long.png`)});
+
+                for (const [kind, count] of [['INCOME', '1 transação'], ['EXPENSE', '12 transações'], ['', '13 transações']]) {
+                    const target = await applyTypeWithKeyboard(page, kind);
+                    await expect(target).toBeFocused();
+                    await expect(page.locator('#transaction-results-status')).toHaveText(count);
+                    const geometry = await toolbarGeometry(page);
+                    const layout = await scrollbarLayout(page);
+                    measurements.push({state: kind || 'all', ...layout, geometry});
+                    // A short list has no rendered scrollbar. Its reserved gutter
+                    // still reduces body.app-layout, unlike root.clientWidth.
+                    expect(layout.reservedLayoutGutter, 'the short list must retain the classic gutter').toBeGreaterThan(0);
+                    expect(layout.reservedLayoutGutter).toBe(baselineLayout.reservedLayoutGutter);
+                    expect(layout.mainWidth).toBe(baselineLayout.mainWidth);
+                    expect(layout.computedGutter).toBe('stable');
+                    expect(geometry.overflowing).toBe(kind !== 'INCOME');
+                    expectSameToolbar(baseline, geometry);
+                    await expect(page.locator('#transaction-clear-filters')).toHaveCount(kind ? 1 : 0);
+                    if (kind === 'INCOME') {
+                        await page.screenshot({path: info.outputPath(`toolbar-classic-${theme}-short.png`)});
+                    }
+                }
+            } finally {
+                try {
+                    const path = info.outputPath('classic-scrollbar-measurements.json');
+                    await writeFile(path, JSON.stringify(measurements, null, 2));
+                    await info.attach('classic-scrollbar-measurements', {path, contentType: 'application/json'});
+                } finally { await context.close(); }
+            }
+        } finally { await classicBrowser.close(); }
+    });
 }

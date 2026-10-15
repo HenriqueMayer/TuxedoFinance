@@ -4,7 +4,7 @@
 {% block title %}{% translate "Exchange rates" %} - Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="banking-workspace space-y-4">
     <header class="workspace-header"><div><h1 class="page-title">{% translate "Exchange rates" %}</h1><p class="subtle-copy mt-2">{% translate "Historical rates consolidate account and investment values into the base currency." %}</p></div>{% url 'banking:exchange_rate_create' as rate_create_url %}<a href="{% contextual_url rate_create_url %}" class="action-primary">{% translate "New rate" %}</a></header>
     <p class="subtle-copy">{% translate 'These local reference rates do not replace the effective amounts and conversion evidence saved in your operations.' %}</p>
     <form id="rate-filter-form" method="get" hx-boost="false" novalidate data-live-filters data-live-results="rate-results" class="consultation-bar">

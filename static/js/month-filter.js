@@ -36,6 +36,7 @@
             const caption = element('span'); button.append(icon, caption);
             const panel = element('div', 'month-filter-panel');
             panel.id = `${native.id}-panel`; panel.hidden = true;
+            panel.setAttribute('data-search-choice-viewport', '');
             panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', root.dataset.monthLabel);
             button.setAttribute('aria-controls', panel.id);
             const heading = element('div', 'flex items-center justify-between gap-3 mb-4');

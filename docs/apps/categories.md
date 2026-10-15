@@ -89,6 +89,15 @@ filters. Unclassified categories retain their existing compatibility with both
 income and expenses. Add subcategory supplies an owned parent as explicit form
 context. Existing category names are never changed by translation or filtering.
 
+The compact list uses a common row grid for parents and leaves: name, type,
+direct transaction count and displayed child count align in columns on desktop.
+Every row reserves the same action space, and nested rows indent only their name
+area. Small screens place metadata below the name and retain 44px action targets.
+Zero child counts are visually omitted on small screens but remain available to
+assistive technology; direct transaction counts retain their ordinary display.
+Parent context remains available to assistive technology without repeating a
+visual parent line for every child.
+
 Groups start collapsed. Clicking a parent name (or activating its disclosure with
 Enter/Space) hides only its descendants; its Edit, Add subcategory and secondary
 actions stay available. Collapse all / Expand all affect every displayed group,
@@ -124,18 +133,36 @@ mounted during live updates. List/Graph switches and Clear preserve compatible
 query state through the shared live-filter contract; old `?view=tree` URLs select
 the Graph view.
 
-Graph is a local SVG with deterministic, connected parent/child placement.
-The initial viewport keeps labels at a readable scale and starts at the first
-connected branch; it does not shrink a lifelong catalogue into unreadable text.
-Every node remains in the graph. Fit deliberately shows the complete overview,
-while panning and keyboard navigation reach the other branches. Zoom in/out
-and Fit are ordinary keyboard-accessible buttons. Pointer/touch
-drag pans the entire view, and two-finger pinch changes its scale. These gestures
-modify only the SVG transform: they never reparent categories, change financial
-records, send a POST, or persist coordinates. Selecting a node shows its full
-name, classification, direct transaction count and existing owned actions.
-Long names may be shortened in the canvas; the selection panel and native list
-retain the complete stored text.
+Graph is a local SVG network of points and real parent/child connections.
+Independent root categories form separate clusters; the renderer never invents a
+central category or cross-category links. A seeded sunflower placement and a
+bounded spatial-grid collision pass make the layout deterministic without adding
+a graph dependency or running perpetual physics. A brief introductory movement
+settles within 700 ms and stops immediately on interaction. Reduced motion skips
+that movement, as do catalogues above 400 nodes. Detached HTMX/live-result graphs
+release their animation, resize observer and motion-preference listener.
+
+Names, visible focus circles and 44px pointer/touch hit areas remain at a constant
+screen size while zoom changes the space between positions. The initial viewport
+starts around the first connected root or search match at a readable scale. Fit
+shows an overview without shrinking labels; large catalogues can still require
+zoom and panning to distinguish dense regions. Every category remains available
+through keyboard navigation and the complete native list. A selection shows the
+full stored name, classification, direct transaction count and existing owned
+actions. Canvas names may wrap onto two lines and shorten very long names; the
+selection panel, accessible label, native title and list retain the full name.
+
+Dragging a node changes only its coordinates in this rendered SVG and redraws its
+real incident connections. Dragging empty space pans the view; two-finger pinch
+zooms it. Shift+Arrow moves the current node visually in 20px screen steps as a
+keyboard alternative to node dragging. Repeated keyboard movement reveals the
+focused node inside the SVG whenever it would be clipped, preserving DOM focus
+and page scroll. Arranged coordinates are not stored,
+submitted, or restored after a new GET. Neither arrangement nor view gestures
+reparent a category, change transactions, or send a POST. Using zoom/pan does not
+produce unsaved-operation warnings. The native How to use the graph disclosure
+keeps the complete interaction instructions available without adding permanent
+text above or below the network.
 
 The canvas supports arrow navigation, Home/End and Enter/Space selection with
 one node in the Tab order. Keyboard selection centres the node at a readable

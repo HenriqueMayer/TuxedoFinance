@@ -1,5 +1,5 @@
 {% load i18n navigation %}
-<div class="flex shrink-0 flex-wrap items-center gap-3">
+<div class="flex shrink-0 items-center gap-1">
     {% url 'categories:update' item.pk as edit_url %}<a href="{% contextual_url edit_url %}" class="quiet-action">{% translate 'Edit' %}</a>
     <details class="secondary-actions compact-menu" name="category-row-actions">
         <summary aria-label="{% translate 'More options' %}: {{ item.name }}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'More options' %}: {{ item.name }}</span></summary>

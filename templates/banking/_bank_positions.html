@@ -1,11 +1,11 @@
 {% load i18n %}
-<div id="bank-positions-{{ bank.pk|stringformat:'d' }}" class="space-y-5" data-preserve-view>
-    {% if bank.included_rows %}<section class="space-y-3 border-t border-forest/15 pt-5 dark:border-cream/15" aria-labelledby="bank-accounts-{{ bank.pk|stringformat:'d' }}"><h3 id="bank-accounts-{{ bank.pk|stringformat:'d' }}" class="section-title">{% translate 'Accounts' %}</h3>{% include 'banking/_account_table.html' with rows=bank.included_rows %}</section>{% endif %}
+<div id="bank-positions-{{ bank.pk|stringformat:'d' }}" class="space-y-4" data-preserve-view>
+    {% if bank.included_rows %}<section class="space-y-3 border-t border-forest/15 pt-4 dark:border-cream/15" aria-labelledby="bank-accounts-{{ bank.pk|stringformat:'d' }}"><h3 id="bank-accounts-{{ bank.pk|stringformat:'d' }}" class="section-title">{% translate 'Accounts' %}</h3>{% include 'banking/_account_table.html' with rows=bank.included_rows %}</section>{% endif %}
     {% include 'banking/_cash_pots.html' with pots=bank.included_pots %}
     {% if bank.reserved_rows or bank.reserved_pots %}
     <details id="bank-reserves-{{ bank.pk|stringformat:'d' }}" class="reserve-disclosure" {% if reserve_open or bank.reserve_open %}open{% endif %}>
         <summary class="reserve-disclosure-summary cursor-pointer py-3 font-medium">{% translate 'Reserves' %} {% include 'partials/chevron_down.html' %}</summary>
-        <div class="space-y-5 pt-3"><p class="subtle-copy">{% translate 'Set aside from planning. Balances, history and net worth are preserved; negative balances still reduce availability.' %}</p>
+        <div class="space-y-4 pt-3"><p class="subtle-copy">{% translate 'Set aside from planning. Balances, history and net worth are preserved; negative balances still reduce availability.' %}</p>
             {% if bank.reserved_rows %}<section class="space-y-3"><h3 class="section-title">{% translate 'Accounts' %}</h3>{% include 'banking/_account_table.html' with rows=bank.reserved_rows %}</section>{% endif %}
             {% include 'banking/_cash_pots.html' with pots=bank.reserved_pots %}
         </div>

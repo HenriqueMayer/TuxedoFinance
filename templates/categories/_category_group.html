@@ -1,23 +1,19 @@
 {% load i18n %}
 {% with item=category %}
-<li class="relative" data-category-group="{{ item.pk|stringformat:'s' }}"{% if group.context_only %} data-category-context{% endif %}>
+<li class="category-group relative" data-category-group="{{ item.pk|stringformat:'s' }}"{% if group.context_only %} data-category-context{% endif %}>
     {% if group.children %}
-    {# Parent actions are siblings of details: collapsing hides descendants only. #}
+    {# Native details owns descendants; sibling actions stay reachable when closed. #}
     <details data-category-branch{% if group.expanded %} open{% endif %}>
-        <summary id="category-toggle-{{ item.pk|stringformat:'s' }}" data-category-toggle aria-controls="category-children-{{ item.pk|stringformat:'s' }}" class="category-disclosure min-h-11 w-full py-3 pr-28">
-            {% include 'partials/chevron_down.html' %}
-            <span class="min-w-0"><span id="category-name-{{ item.pk|stringformat:'s' }}" class="block break-words text-sm font-medium">{{ item.name }}</span><span class="subtle-copy block mt-1">{% if item.transaction_type %}{{ item.get_transaction_type_display }}{% else %}{% translate 'Unclassified' %}{% endif %} · {% blocktranslate count count=item.usage_count %}{{ count }} transaction{% plural %}{{ count }} transactions{% endblocktranslate %} · {% blocktranslate count count=group.children|length %}{{ count }} subcategory{% plural %}{{ count }} subcategories{% endblocktranslate %}{% if group.context_only %} · {% translate 'Parent context' %}{% endif %}</span></span>
+        <summary id="category-toggle-{{ item.pk|stringformat:'s' }}" data-category-toggle aria-controls="category-children-{{ item.pk|stringformat:'s' }}" class="category-row-main category-disclosure">
+            {% include 'categories/_category_row_content.html' %}
         </summary>
-        <ul id="category-children-{{ item.pk|stringformat:'s' }}" aria-labelledby="category-name-{{ item.pk|stringformat:'s' }}" class="ml-3 divide-y divide-forest/10 border-t border-forest/10 pl-3 dark:divide-cream/10 dark:border-cream/10">
+        <ul id="category-children-{{ item.pk|stringformat:'s' }}" aria-labelledby="category-name-{{ item.pk|stringformat:'s' }}" class="category-children">
             {% for child_group in group.children %}{% include 'categories/_category_group.html' with group=child_group category=child_group.category request=request only %}{% endfor %}
         </ul>
     </details>
-    <div class="absolute right-0 top-3">{% include 'categories/_category_actions.html' with item=item request=request only %}</div>
     {% else %}
-    <div class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="min-w-0"><p id="category-name-{{ item.pk|stringformat:'s' }}" class="break-words text-sm font-medium">{{ item.name }}</p><p class="subtle-copy mt-1">{% if item.transaction_type %}{{ item.get_transaction_type_display }}{% else %}{% translate 'Unclassified' %}{% endif %} · {% blocktranslate count count=item.usage_count %}{{ count }} transaction{% plural %}{{ count }} transactions{% endblocktranslate %}</p>{% if item.display_parent_name %}<p class="subtle-copy">{% blocktranslate with parent_name=item.display_parent_name %}Subcategory of {{ parent_name }}{% endblocktranslate %}</p>{% endif %}</div>
-        {% include 'categories/_category_actions.html' with item=item request=request only %}
-    </div>
+    <div class="category-row-main">{% include 'categories/_category_row_content.html' %}</div>
     {% endif %}
+    <div class="absolute category-row-actions" data-category-actions-for="{{ item.pk|stringformat:'s' }}">{% include 'categories/_category_actions.html' with item=item request=request only %}</div>
 </li>
 {% endwith %}

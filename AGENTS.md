@@ -17,6 +17,8 @@ Every new or changed form must follow the [shared form contract](docs/frontend.m
 - When a user reaches or opens a searchable choice, keep its input and results
   in the viewport without moving focus. Scroll long results internally; preserve
   page position during initialization and background refreshes.
+  Fixed popups opt into `data-search-choice-viewport` so shared choices reveal
+  their results by scrolling inside the popup instead of moving the document.
 - Start new conditional choices empty, and conditional checkboxes unchecked.
   Preserve bound POSTs, edited records and explicitly selected shortcut context.
 - Reveal dependent controls only after the relevant choice. Keep inactive

@@ -8,7 +8,7 @@
                 {% url 'banking:account_create' as account_create %}{% with bank_id=bank.pk|stringformat:'d' %}<a href="{% contextual_url account_create|add:'?bank='|add:bank_id %}" class="action-link">{% translate 'Add account' %}</a>{% endwith %}
                 <a href="{% url 'banking:detail' bank.pk %}" class="quiet-action">{% translate 'Bank details' %}</a>
                 <details id="bank-options-{{ bank.pk|stringformat:'d' }}" class="secondary-actions compact-menu" name="bank-options">
-                    <summary class="text-sm" aria-label="{% blocktranslate with bank=bank.name %}Options for {{ bank }}{% endblocktranslate %}">{% translate 'More options' %}</summary>
+                    <summary aria-label="{% blocktranslate with bank=bank.name %}Options for {{ bank }}{% endblocktranslate %}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'More options' %}</span></summary>
                     <div class="secondary-actions-panel">
                         {% url 'banking:update' bank.pk as edit_url %}<a href="{% contextual_url edit_url %}">{% translate 'Edit bank' %}</a>
                         {% url 'banking:color' bank.pk as color_url %}<a href="{% contextual_url color_url %}">{% translate 'Change marker color' %}</a>

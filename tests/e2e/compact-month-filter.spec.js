@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const {test, expect} = require('@playwright/test');
+const {selectChoice} = require('./helpers/forms');
 async function post(page, path, values) {
     const response=await page.request.get(path);
     const csrf=(await response.text()).match(/name="csrfmiddlewaretoken" value="([^"]+)"/)[1];
@@ -153,5 +154,49 @@ for (const theme of ['light', 'dark']) {
             await expect(page.locator('#transaction-results')).toContainText('September record');
             await expect(page.locator('#transaction-results')).not.toContainText('October record');
         }
+    });
+}
+
+for (const theme of ['light', 'dark']) {
+    test(`fixed invoice month keeps picker scroll inside a short viewport (${theme})`, async ({page}, info) => {
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        await prepare(page, info);
+        await page.setViewportSize({width: 390, height: 480});
+        await page.goto('/banking/invoices/');
+        await page.locator('#invoice-extra-filters > summary').press('Enter');
+        const card = await page.locator('#invoice-filter-card option').last().getAttribute('value');
+        await selectChoice(page.locator('#invoice-filter-card'), card);
+        await expect(page).toHaveURL(url => url.searchParams.get('card') === card);
+        await expect(page.locator('#invoice-results')).toContainText('Widget card');
+        const trigger = page.locator('#invoice-filter-month-trigger');
+        await trigger.focus();
+        const top = await page.evaluate(() => scrollY);
+        await trigger.press('Space');
+        const panel = page.locator('#invoice-filter-month-panel');
+        const search = page.locator('#invoice-filter-month-choice-search');
+        const results = panel.locator('.search-choice-results');
+        await expect(search).toBeFocused();
+        await expect(panel).toBeVisible();
+        for (let index = 0; index < 12; index++) await search.press('ArrowDown');
+        const active = panel.getByRole('option').last();
+        await expect(active).toHaveAttribute('aria-selected', 'true');
+        await expect(search).toBeFocused();
+        await expect(panel).toBeVisible();
+        expect(Math.abs(await page.evaluate(() => scrollY) - top)).toBeLessThan(2);
+        const dockTop = await page.locator('[data-app-navigation="mobile"]').evaluate(node => node.getBoundingClientRect().top);
+        for (const control of [search, results, active]) {
+            const bounds = await control.boundingBox();
+            expect(bounds.y).toBeGreaterThanOrEqual(0);
+            expect(bounds.y + bounds.height).toBeLessThanOrEqual(dockTop);
+        }
+        expect(await results.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+        await page.screenshot({path: info.outputPath(`invoice-month-contained-${theme}.png`)});
+        // A real wheel gesture outside the popup retains deliberate dismissal.
+        await page.mouse.move(4, 180);
+        await page.mouse.wheel(0, 120);
+        await expect(panel).toBeHidden();
+        await expect(page.locator('#invoice-filter-month-year')).toBeDisabled();
+        await expect(page.locator('#invoice-filter-month')).toHaveValue('');
+        await expect(page.locator('#invoice-filter-card')).toHaveValue(card);
     });
 }

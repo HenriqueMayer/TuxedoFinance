@@ -2,11 +2,11 @@
 {% load i18n navigation %}
 {% block title %}{% translate 'Accounts' %} - Tuxedo Finance{% endblock %}
 {% block content %}
-<div class="space-y-6">
+<div class="banking-workspace space-y-4">
     <header class="workspace-header">
         <h1 class="page-title">{% translate 'Accounts' %}</h1>
         <div class="flex flex-wrap gap-2">
-            <a href="{% url 'banking:transfer_create' %}" class="action-link">{% translate 'Transfer' %}</a>
+            <a href="{% url 'banking:transfer_create' %}" class="quiet-action">{% translate 'Transfer' %}</a>
             <details class="secondary-actions"><summary>{% translate 'More options' %}</summary><div class="secondary-actions-panel">
                 <a href="{% url 'banking:entry_create' %}">{% translate 'Points entry' %}</a>
                 <a href="{% url 'banking:redemption_create' %}">{% translate 'Redeem points' %}</a>

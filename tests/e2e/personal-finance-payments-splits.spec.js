@@ -13,7 +13,9 @@ async function post(page, path, values) {
 
 async function prepare(page, testInfo) {
     const username = `personal-${testInfo.workerIndex}-${Date.now()}`;
-    await post(page, '/accounts/signup/', {username, email: `${username}@example.test`, password1: 'Personal-E2E-2026!', password2: 'Personal-E2E-2026!'});
+    // Keep credentials unrelated to the generated username/email: timestamps
+    // must not change the password-similarity validator's fixture outcome.
+    await post(page, '/accounts/signup/', {username, email: `${username}@example.test`, password1: 'M8!qL4@vZ7#rT2', password2: 'M8!qL4@vZ7#rT2'});
     await post(page, '/banking/create/', {name: 'Personal bank'});
     await page.goto('/banking/accounts/create/');
     const bank = await page.locator('#id_bank option').last().getAttribute('value');

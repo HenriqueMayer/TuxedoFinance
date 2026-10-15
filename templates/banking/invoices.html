@@ -1,7 +1,7 @@
 {% extends 'base.html' %}{% load i18n navigation %}
 {% block title %}{% translate 'Invoices' %} — Tuxedo Finance{% endblock %}
 {% block content %}
-<div class="space-y-6"><header class="workspace-header"><h1 class="page-title">{% translate 'Invoices' %}</h1></header>
+<div class="banking-workspace space-y-4"><header class="workspace-header"><h1 class="page-title">{% translate 'Invoices' %}</h1></header>
 {% if selected_card %}<p class="subtle-copy">{{ selected_card.account.bank.name }} · {{ selected_card.name }}</p>{% endif %}
 <p class="subtle-copy">{% translate 'Automatic cards settle on their due date. For confirmed mode, record the actual payments; outstanding amounts remain in the forecast.' %}</p>
 <form id="invoice-filter-form" method="get" hx-boost="false" novalidate data-live-filters data-live-results="invoice-results" class="consultation-bar">

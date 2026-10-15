@@ -69,6 +69,26 @@ async function screenshot(page, testInfo, name) {
     await page.screenshot({ path: testInfo.outputPath(name), fullPage: true });
 }
 
+async function expectCompactAlignment(page, ids, width) {
+    const cells = [];
+    for (const id of [ids.living, ids.heating, ids.water, ids.salary]) {
+        const row = page.locator(`[data-category-group="${id}"]`).locator(':scope > details > .category-row-main, :scope > .category-row-main');
+        const name = row.locator('.category-row-name > span').first();
+        const actions = page.locator(`[data-category-actions-for="${id}"]`);
+        const [label, editBox] = await Promise.all([name.boundingBox(), actions.getByRole('link', {name: 'Edit', exact: true}).boundingBox()]);
+        expect(Math.abs(label.y + label.height / 2 - editBox.y - editBox.height / 2)).toBeLessThan(1.5);
+        if (width < 900) {
+            expect(editBox.height).toBeGreaterThanOrEqual(44);
+            expect((await actions.locator('summary').boundingBox()).width).toBeGreaterThanOrEqual(44);
+        } else {
+            cells.push(await row.locator('[data-category-usage]').boundingBox());
+        }
+    }
+    if (cells.length) {
+        for (const cell of cells) expect(Math.abs(cell.x + cell.width - cells[0].x - cells[0].width)).toBeLessThan(1.5);
+    }
+}
+
 for (const theme of ['light', 'dark']) {
     test(`row ellipsis menus require activation across adjacent rows (${theme})`, async ({ page }, testInfo) => {
         await page.setViewportSize({ width: 1440, height: 1000 });
@@ -161,7 +181,9 @@ for (const javaScriptEnabled of [true, false]) {
             const ids = await prepare(page, testInfo);
             await toggle(page, ids.living).press('Enter');
             const first = page.locator('summary[aria-label="More options: Living costs"]');
-            const second = page.locator('summary[aria-label="More options: Water"]');
+            // The open parent popup covers its child-row triggers on mobile.
+            // Switch by a real tap on another group outside that hit area.
+            const second = page.locator('summary[aria-label="More options: Transport"]');
             const openMenus = page.locator('details.compact-menu[open]');
             const activate = async control => javaScriptEnabled ? control.tap() : control.press('Enter');
             await first.hover();
@@ -186,6 +208,8 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
         await tree(page, true);
         await expect(page.locator('[data-category-tree]')).toBeVisible();
         await allExpanded(page, ids);
+
+        await expectCompactAlignment(page, ids, width);
 
         const living = toggle(page, ids.living);
         await living.click();
@@ -270,7 +294,7 @@ test('category filtering exposes matching descendants and history restores discl
     await expect(page).toHaveURL(/q=Heating/);
     expect(await page.evaluate(() => window.categoryHistoryMarker)).toBe('same-document');
     await expect(edit(page, ids.heating)).toBeVisible();
-    await expect(page.getByText('Subcategory of Living costs', { exact: true })).toBeVisible();
+    await expect(page.getByText('Subcategory of Living costs', { exact: true })).toHaveClass('sr-only');
     await expect(edit(page, ids.living)).toBeVisible();
     await expect(page.locator(`[data-category-group="${ids.living}"]`)).toHaveAttribute('data-category-context', '');
     await expect(edit(page, ids.solar)).toHaveCount(0);
@@ -321,7 +345,7 @@ test('all category levels stay readable and searchable without JavaScript on mob
         await expect(edit(page, ids.solar)).toBeVisible();
         await expect(edit(page, ids.heating)).toBeVisible();
         await expect(page.locator(`[data-category-group="${ids.heating}"]`)).toHaveAttribute('data-category-context', '');
-        await expect(page.getByText('Subcategory of Heating', { exact: true })).toBeVisible();
+        await expect(page.getByText('Subcategory of Heating', { exact: true })).toHaveClass('sr-only');
         await page.locator('#category-clear-filters').click();
         await page.locator('#category-view-tree').click();
         const living = toggle(page, ids.living);

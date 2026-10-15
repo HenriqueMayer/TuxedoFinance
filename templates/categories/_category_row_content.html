@@ -1,0 +1,10 @@
+{% load i18n %}
+<span class="category-row-chevron" aria-hidden="true">{% if group.children %}{% include 'partials/chevron_down.html' %}{% endif %}</span>
+<span id="category-name-{{ item.pk|stringformat:'s' }}" class="category-row-name"><span>{{ item.name }}</span>{% if group.context_only %}<span class="category-row-context">{% translate 'Parent context' %}</span>{% endif %}{% if item.display_parent_name %}<span class="sr-only"> {% blocktranslate with parent_name=item.display_parent_name %}Subcategory of {{ parent_name }}{% endblocktranslate %}</span>{% endif %}</span>
+<span class="category-row-information">
+    <span class="category-row-kind" data-kind="{{ item.transaction_type|default:'unclassified' }}">{% if item.transaction_type %}{{ item.get_transaction_type_display }}{% else %}{% translate 'Unclassified' %}{% endif %}</span>
+    {% blocktranslate count count=item.usage_count asvar usage_label %}{{ count }} transaction{% plural %}{{ count }} transactions{% endblocktranslate %}
+    <span class="category-row-count" data-category-usage title="{{ usage_label }}"><span aria-hidden="true">{{ item.usage_count }}<span class="category-count-label"> {% translate 'trans.' %}</span></span><span class="sr-only">{{ usage_label }}</span></span>
+    {% blocktranslate count count=group.children|length asvar children_label %}{{ count }} subcategory{% plural %}{{ count }} subcategories{% endblocktranslate %}
+    <span class="category-row-count" data-category-child-count="{{ group.children|length }}" title="{{ children_label }}"><span aria-hidden="true">{% if group.children %}{{ group.children|length }}{% else %}—{% endif %}<span class="category-count-label"> {% translate 'sub.' %}</span></span><span class="sr-only">{{ children_label }}</span></span>
+</span>

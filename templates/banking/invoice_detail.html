@@ -1,7 +1,7 @@
 {% extends 'base.html' %}{% load i18n navigation %}
 {% block title %}{{ invoice.card.name }} — {% translate 'Invoice' %}{% endblock %}
 {% block content %}
-<div class="mx-auto max-w-3xl space-y-6">
+<div class="banking-workspace mx-auto max-w-3xl space-y-4">
 <header class="workspace-header"><h1 class="page-title">{{ invoice.card.name }} · {{ invoice.reference_month|date:'M Y' }}</h1>
 {% url 'banking:credit_card_update' invoice.card_id as settings_url %}<a class="quiet-action" href="{% contextual_url settings_url %}">{% translate 'Card settings' %}</a></header>
 <section id="invoice-summary" class="surface-panel space-y-4" aria-label="{% translate 'Invoice summary' %}">
@@ -28,7 +28,7 @@
     {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
     {% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert">{{ error }}</p>{% endfor %}{% endfor %}
     {% for field in form.visible_fields %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
-    <div class="flex flex-wrap gap-3"><button class="action-primary" type="submit">{% translate 'Confirm payment' %}</button><a class="action-link" href="{{ return_url }}">{% translate 'Cancel' %}</a></div>
+    <div class="flex flex-wrap gap-3"><button class="action-primary" type="submit">{% translate 'Confirm payment' %}</button><a class="quiet-action" href="{{ return_url }}">{% translate 'Cancel' %}</a></div>
 </form>
 <section id="invoice-payments" class="surface-panel space-y-4"><h2 class="section-title">{% translate 'Confirmed payments' %}</h2>
     {% for payment in invoice.payments.all %}<div class="flex flex-wrap items-center justify-between gap-3 border-b border-forest/10 py-3 dark:border-cream/10"><span class="min-w-0">{{ payment.date|date:USER_DATE_FORMAT }} · {{ payment.account }} · {{ invoice.account.currency }} {{ payment.amount|floatformat:2 }}</span><div class="flex gap-2">{% url 'banking:invoice_payment_edit' payment.pk as edit_url %}<a class="quiet-action" href="{% contextual_url edit_url request.path 'invoice-payments' %}">{% translate 'Edit' %}</a><a class="quiet-action" href="{% url 'banking:invoice_payment_delete' payment.pk %}">{% translate 'Delete' %}</a></div></div>{% empty %}<p class="subtle-copy">{% translate 'No confirmed payments.' %}</p>{% endfor %}

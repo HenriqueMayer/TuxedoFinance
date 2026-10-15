@@ -48,12 +48,21 @@ for (const theme of ['light', 'dark']) {
             await page.goto('/banking/');
             const bankGroup = page.locator(`#bank-${bank}`);
             await expect(bankGroup).not.toHaveAttribute('open', '');
+            await expect(bankGroup.locator(':scope > summary')).toHaveCSS('min-height', '56px');
             await expect(bankGroup.getByRole('link', { name: 'Add account', exact: true })).toBeHidden();
             await bankGroup.locator(':scope > summary').focus();
             await page.keyboard.press('Enter');
             await expect(bankGroup.getByRole('link', { name: 'Add account', exact: true })).toBeVisible();
             await expect(page.locator(`#bank-accounts-${bank}`)).toBeVisible();
             await expect(page.locator(`#bank-cards-${bank}`)).toBeVisible();
+            const accountRow = page.locator(`#account-row-${account}`);
+            await expect(accountRow.locator('td:nth-child(4) form')).toHaveCount(0);
+            const accountActions = accountRow.locator('td:last-child');
+            await expect(accountActions.locator(`#planning-toggle-${account}`)).toBeVisible();
+            await expect(accountActions.locator('summary')).toHaveCSS('font-size', '14px');
+            const rowActionSize = await accountActions.locator('summary').boundingBox();
+            expect(rowActionSize.height).toBeGreaterThanOrEqual(width < 768 ? 44 : 36);
+            expect(rowActionSize.width).toBeGreaterThanOrEqual(width < 768 ? 44 : 36);
             const bankOptions = page.locator(`#bank-options-${bank}`);
             await expect(bankOptions.getByRole('link', { name: 'Edit bank', exact: true })).toBeHidden();
             await bankOptions.locator(':scope > summary').press('Enter');
@@ -91,6 +100,17 @@ for (const theme of ['light', 'dark']) {
             await bankGroup.locator(':scope > summary').press('Enter');
             await bankGroup.getByRole('link', { name: 'Bank details', exact: true }).press('Enter');
             const cardRow = page.locator(`#credit-card-${card}`);
+            const detailOptions = page.locator(`#bank-detail-options-${bank}`);
+            await detailOptions.locator(':scope > summary').press('Enter');
+            const detailPanel = detailOptions.locator('.secondary-actions-panel');
+            const detailBounds = await detailPanel.boundingBox();
+            expect(detailBounds.x).toBeGreaterThanOrEqual(0);
+            expect(detailBounds.x + detailBounds.width).toBeLessThanOrEqual(width);
+            for (const name of ['Edit bank', 'Change marker color', 'Add loyalty program', 'Delete']) {
+                await expect(detailPanel.getByRole('link', { name, exact: true })).toBeVisible();
+            }
+            await detailOptions.locator(':scope > summary').press('Escape');
+            await expect(detailOptions).not.toHaveAttribute('open', '');
             await expect(cardRow).toHaveCount(1);
             await expect(cardRow).toContainText('closes 31, due 30');
             await expect(cardRow.getByRole('link', { name: 'Invoices for Daily card', exact: true })).toBeVisible();
@@ -196,5 +216,73 @@ test('bank reserves and financial filters keep a complete mobile native path', a
         await page.locator('#rate-filter-form').getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(page.locator('#rate-results')).not.toContainText('EUR');
         await expect(page.locator('#rate-results')).toContainText('USD');
+        await context.addCookies([{ name: 'django_language', value: 'pt-br', url: info.project.use.baseURL }]);
+        await page.goto('/banking/?q=Organization');
+        await expect(page.locator('html')).toHaveAttribute('lang', 'pt-br');
+        const menu = page.locator('details[name="account-updates"]').first();
+        await menu.locator('summary').press('Enter');
+        await expect(menu.getByRole('link', { name: 'Nova transação', exact: true })).toBeVisible();
+        await expect(menu.locator('summary')).toHaveCSS('font-size', '14px');
+        await menu.getByRole('link', { name: 'Nova transação', exact: true }).press('Enter');
+        await expect(page.getByRole('link', { name: 'Cancelar', exact: true })).toHaveAttribute('href', '/banking/?q=Organization');
     } finally { await context.close(); }
 });
+
+for (const [theme, language] of [['light', 'en'], ['dark', 'pt-br']]) {
+    test(`compact account actions preserve touch, errors and origin (${theme}, ${language})`, async ({ browser }, info) => {
+        const context = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 800 } });
+        const page = await context.newPage();
+        try {
+            await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+            const username = `banking-touch-${info.workerIndex}-${Date.now()}`;
+            await post(page, '/accounts/signup/', { username, email: `${username}@example.test`, password1: 'Bank-E2E-2026!', password2: 'Bank-E2E-2026!' });
+            await post(page, '/banking/create/', { name: 'Touch bank', color: '#24594A' });
+            await page.goto('/banking/accounts/create/');
+            const bank = await page.locator('#id_bank option').last().getAttribute('value');
+            await post(page, '/banking/accounts/create/', { bank, name: 'Touch account', currency: 'BRL', opening_balance: '1000', opening_date: '2020-01-01', planning_enabled: 'on', reserved_amount: '0' });
+            await context.addCookies([{ name: 'django_language', value: language, url: info.project.use.baseURL }]);
+            const origin = '/banking/?q=Touch';
+            await page.goto(origin);
+            const row = page.locator('tr[id^="account-row-"]').first();
+            const account = (await row.getAttribute('id')).replace('account-row-', '');
+            const menu = row.locator('details[name="account-updates"]');
+            const summary = menu.locator('summary');
+            await expect(menu).not.toHaveAttribute('open', '');
+            await summary.tap();
+            await expect(menu).toHaveAttribute('open', '');
+            await expect(summary).toHaveCSS('font-size', '14px');
+            const purchase = menu.getByRole('link', { name: language === 'en' ? 'New transaction' : 'Nova transação', exact: true });
+            for (const control of [summary, purchase, row.locator(`#planning-toggle-${account}`)]) {
+                const bounds = await control.boundingBox();
+                expect(bounds.height).toBeGreaterThanOrEqual(44);
+                expect(bounds.width).toBeGreaterThanOrEqual(44);
+            }
+            await purchase.tap();
+            await expect(page.locator('#id_bank_account')).toHaveValue(account);
+            await page.locator('#id_amount').fill('0');
+            await page.getByRole('button', { name: language === 'en' ? 'Save' : 'Salvar', exact: true }).tap();
+            await expect(page.locator('#id_amount')).toHaveValue('0');
+            await expect(page.locator('#id_bank_account')).toHaveValue(account);
+            const cancel = page.getByRole('link', { name: language === 'en' ? 'Cancel' : 'Cancelar', exact: true });
+            await expect(cancel).toHaveAttribute('href', origin);
+            await cancel.tap();
+            await expect(page).toHaveURL(/\/banking\/\?q=Touch$/);
+            await expect(page.locator(`#account-row-${account}`)).toContainText(/1[.,\s]000[,.]00/);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            await page.locator(`#bank-${bank}`).getByRole('link', { name: language === 'en' ? 'Bank details' : 'Detalhes do banco', exact: true }).tap();
+            const detailOptions = page.locator(`#bank-detail-options-${bank}`);
+            await detailOptions.locator(':scope > summary').tap();
+            const panel = detailOptions.locator('.secondary-actions-panel');
+            const bounds = await panel.boundingBox();
+            expect(bounds.x).toBeGreaterThanOrEqual(0);
+            expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
+            const names = language === 'en'
+                ? ['Edit bank', 'Change marker color', 'Add loyalty program', 'Delete']
+                : ['Editar banco', 'Alterar cor do marcador', 'Adicionar programa de fidelidade', 'Excluir'];
+            for (const name of names) await expect(panel.getByRole('link', { name, exact: true })).toBeVisible();
+            await page.getByRole('heading', { name: 'Touch bank', exact: true }).tap();
+            await expect(detailOptions).not.toHaveAttribute('open', '');
+            await page.screenshot({ path: info.outputPath(`compact-bank-touch-${theme}-${language}.png`), fullPage: true });
+        } finally { await context.close(); }
+    });
+}

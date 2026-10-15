@@ -106,6 +106,22 @@
                 const header = document.querySelector('body > header');
                 const top = Math.max(viewportTop, header ? header.getBoundingClientRect().bottom : 0) + 16;
                 const inputTop = input.getBoundingClientRect().top;
+                const viewportOwner = input.closest('[data-search-choice-viewport]');
+                if (viewportOwner) {
+                    // A fixed consultation panel owns visibility scrolling.
+                    // Moving window here would dismiss the panel that opened us.
+                    const bounds = viewportOwner.getBoundingClientRect();
+                    const ownerTop = Math.max(top, bounds.top + viewportOwner.clientTop + 8);
+                    const ownerBottom = Math.min(bottom, bounds.top + viewportOwner.clientTop + viewportOwner.clientHeight - 8);
+                    const resultTop = list.getBoundingClientRect().top;
+                    list.style.maxHeight = `min(12rem, ${Math.max(44, ownerBottom - Math.max(ownerTop, resultTop))}px)`;
+                    if (active >= 0) markActive();
+                    const resultBottom = list.getBoundingClientRect().bottom;
+                    const distance = inputTop < ownerTop ? inputTop - ownerTop
+                        : Math.min(Math.max(0, resultBottom - ownerBottom), Math.max(0, inputTop - ownerTop));
+                    if (distance) viewportOwner.scrollBy({top: distance, behavior: 'instant'});
+                    return;
+                }
                 const gap = list.getBoundingClientRect().top - inputTop;
                 // Keep the search and results together, including in a short mobile viewport.
                 list.style.maxHeight = `min(12rem, ${Math.max(44, bottom - top - gap)}px)`;

@@ -226,6 +226,21 @@ banks. Accounts appear in tables grouped by institution, with native balance,
 set-aside funds, availability and a reversible planning toggle. Linked cash pots
 appear under their bank and link to the separate investment workspace.
 
+Banking templates mark their owning content with `.banking-workspace`. This is a
+local density exception to the general type and spacing defaults: page titles
+use 24/30px, inner section titles 16/24px and action text 14/20px, with reduced
+panel and row padding. These rules do not change other workspaces, ordinary form
+fields or the closed bank summary.
+
+Scoped actions and menu items default to a minimum height of 44px; row ellipsis
+triggers also retain a 44px width. Only at widths of at least 768px with
+`(pointer: fine) and (hover: hover)` do the listed actions, menu items and account
+links reduce to 36px, with 36px square ellipsis triggers. Coarse-pointer and
+smaller-screen controls retain the 44px targets. Preserve visible keyboard focus,
+deliberate menu activation, native links and complete no-JavaScript submission
+while adjusting density; global navigation and shared form controls retain their
+own contracts.
+
 Bank details reuse these account rows, then disclose account capabilities and
 cards. Invoices and dated movements remain visible below. Transfer and account
 actions stay contextual; loyalty and exchange-rate setup use secondary options.
@@ -277,6 +292,15 @@ input does not race an animation, including with reduced motion enabled.
 Initialization, background refreshes and merely revealing a conditional branch
 must not scroll the page. This targeted visibility adjustment applies when the
 user reaches the picker and does not change the HTMX location-preservation rule.
+
+A fixed, internally scrollable consultation panel may explicitly own a picker
+viewport with `data-search-choice-viewport`. The shared picker then clips its
+results to the panel, visual viewport and navigation bounds, scrolling the panel
+or results instead of the document. Month consultation opts in because document
+scrolling deliberately dismisses its popup. Ordinary form pickers retain their
+existing page-visibility adjustment. Test the open panel after a live response,
+with a short mobile viewport, unchanged page scroll and deliberate outside-scroll
+dismissal.
 
 All Django `ModelChoiceField` and `ModelMultipleChoiceField` controls rendered by
 `partials/form_field.html` receive `data-search-select` through the `form_control`
@@ -809,6 +833,54 @@ errors reopen the disclosure without moving focus or page position. Criteria
 stay complete in native GET submissions. Transaction search already includes
 category names and split-category names; exact category selection remains in
 Filters and does not change the broad search semantics.
+
+Transactions alone adds `.transaction-consultation` with stable grid tracks.
+At viewport widths of at least 1440px, search/month, type choices, Filters and
+Clear share one rail. Smaller desktop layouts use two rows, and mobile uses
+explicit stacked tracks rather than content-dependent wrapping. The month
+control reserves 12rem, Filters 7rem and Clear 7.5rem; type counts reserve at
+least six numeral widths and the criteria indicator keeps its own fixed box.
+Clear's empty slot remains when its link is absent, without rendering an inactive
+action or adding a Tab stop. Type choices occupy equal 44px-high cells; their
+labels and counts stack on smaller screens.
+
+Only the native Filters summary is positioned in its assigned action slot. Its
+fields remain in document flow in the following full-width grid row, so opening
+criteria increases the panel height without redistributing the search or other
+toolbar controls. Apply has its own row for native submission and request-failure
+recovery. Keep the same owned field names, canonical values, focus and history
+behavior when modifying this layout; stable slots are not a new filter API.
+
+`html:has(#transaction-filters)` alone sets `scrollbar-gutter: stable`. This
+reserves the viewport gutter for classic scrollbars across long and short
+transaction lists without forcing an always-visible scrollbar. Overlay scrollbars
+do not consume this space; see the
+[CSS Overflow gutter rules](https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property).
+The rule does not reserve gutters or promise stable toolbar geometry in other
+workspaces.
+
+Geometry regressions compare control dimensions and document coordinates, plus
+the actual `body.app-layout` width, across type changes, search counts, Clear,
+month captions,
+disclosure expansion and Back/Forward. An explicit expansion may change the
+form height; a shorter result set may legitimately clamp the viewport's scroll
+offset. Test keyboard input, both themes and languages, responsive breakpoints
+and native GET fallback, including the one-rail layout at 1440px without
+JavaScript. Two additional classic-scrollbar cases cover light and dark themes:
+they launch Chromium without its headless scrollbar-hiding argument, disable
+overlay scrollbars, and require a positive rendered scrollbar width on the long
+list. The reserved gutter is measured as
+`innerWidth - document.body.getBoundingClientRect().width` for both long and
+short lists, with unchanged main and toolbar geometry
+through keyboard type changes. Root `clientWidth` is diagnostic only:
+[CSSOM View](https://drafts.csswg.org/cssom-view/#dom-element-clientwidth) defines
+it as viewport width excluding a rendered scrollbar, so it may grow when that
+scrollbar disappears even while the empty gutter remains reserved. Each classic
+case attaches JSON with root/body/layout/main measurements and computed gutter
+values for the long list and each type state.
+These checks exercise the runner's bundled Chromium and viewport settings;
+retain acceptance on the owner's desktop and mobile browsers for their native
+scrollbar, scaling and input behavior.
 
 `partials/month_filter.html` retains the native ISO month input and optionally
 uses the shared Django field renderer. `month-filter.js` enhances only marked
