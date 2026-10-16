@@ -102,9 +102,10 @@ test('option buttons require activation, retain portal help and leave content ac
     await help.hover();
     const tooltip = page.getByRole('tooltip');
     await expect(tooltip).toBeVisible();
-    await tooltip.hover();
+    const textBounds = await tooltip.boundingBox();
+    await page.mouse.move(textBounds.x + 20, textBounds.y + 20);
     await expect(options).toHaveAttribute('open', '');
-    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toBeHidden();
     await page.locator('main h1').hover();
     await expect(options).toHaveAttribute('open', '');
     await page.locator('main h1').click();

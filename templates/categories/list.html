@@ -41,15 +41,14 @@ GET search plus top-level/subcategory filtering.
         </div>
     </div>
 
-    <form id="category-filters" method="get" action="{{ list_url }}" data-live-filters data-live-results="category-results" hx-boost="false" class="consultation-bar">
-        <input type="hidden" name="view" value="{{ selected_view }}" data-live-default="list">
+    <form id="category-filters" method="get" action="{{ list_url }}" data-live-filters data-live-results="category-results" hx-boost="false" class="consultation-bar consultation-stable">
         <div class="consultation-search space-y-1.5">
             <label for="filter-search" class="field-label">{% translate "Search" %}</label>
             <input type="search" id="filter-search" name="q" data-live-search value="{{ search_query }}"
                    placeholder="{% translate 'Category name' %}"
                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-night-muted focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
         </div>
-        <details class="filter-disclosure"{% if selected_level or selected_type %} open{% endif %}><summary>{% translate 'More filters' %}</summary><div class="grid gap-4 sm:grid-cols-2 mt-3">
+        <details id="category-extra-filters" class="filter-disclosure"{% if selected_level or selected_type %} open{% endif %}><summary>{% translate 'More filters' %}</summary><div class="filter-disclosure-panel grid gap-4 sm:grid-cols-2">
         <div class="min-w-0 basis-full space-y-1.5 sm:basis-32 sm:flex-1">
             <label for="filter-level" class="field-label">{% translate "Level" %}</label>
             <select id="filter-level" name="level" data-live-change
@@ -70,14 +69,14 @@ GET search plus top-level/subcategory filtering.
         </div>
         </div></details>
         <div class="consultation-actions">
-            <button type="submit" data-live-submit
+            <button id="category-apply-filters" type="submit" data-live-submit
                     class="quiet-action">
                  {% translate "Filter" %}
             </button>
-            <span id="category-clear-control" data-live-fragment="category-filters">
+            <span id="category-clear-control" class="consultation-clear-control" data-live-fragment="category-filters">
             {% if has_filters %}
-                <a id="category-clear-filters" href="{{ list_url }}{% if selected_view == 'tree' %}?view=tree{% endif %}" data-live-reset data-live-link="category-filters"
-                   class="rounded text-xs font-medium uppercase tracking-widest text-forest/70 dark:text-night-muted transition hover:text-forest dark:hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
+                <a id="category-clear-filters" href="{{ list_url }}" data-live-reset data-live-link="category-filters"
+                   class="quiet-action">
                      {{ clear_filters_label }}
                 </a>
             {% endif %}
@@ -85,16 +84,12 @@ GET search plus top-level/subcategory filtering.
         </div>
     </form>
 
-    <div id="category-view-controls" data-live-fragment="category-filters" class="flex flex-wrap items-center justify-between gap-3">
+    <div id="category-result-meta" data-live-fragment="category-filters">
         <p id="category-results-status" role="status" class="subtle-copy">{% blocktranslate count count=result_count %}{{ count }} category{% plural %}{{ count }} categories{% endblocktranslate %}</p>
-        <nav aria-label="{% translate 'Category view' %}" class="flex gap-2">
-            <a id="category-view-list" href="{% querystring view=None %}" data-live-link="category-filters" data-live-set="view" data-live-value="list" {% if selected_view == 'list' %}aria-current="true"{% endif %} class="quiet-action {% if selected_view == 'list' %}bg-caramel/10{% endif %}">{% translate 'List' %}</a>
-            <a id="category-view-tree" href="{% querystring view='tree' %}" data-live-link="category-filters" data-live-set="view" data-live-value="tree" {% if selected_view == 'tree' %}aria-current="true"{% endif %} class="quiet-action {% if selected_view == 'tree' %}bg-caramel/10{% endif %}">{% translate 'Graph' %}</a>
-        </nav>
     </div>
     <div id="category-results">
     {% if categories %}
-        {% if selected_view == 'tree' %}{% include 'categories/_graph.html' %}{% else %}{% include 'categories/_hierarchy.html' %}{% endif %}
+        {% include 'categories/_hierarchy.html' %}
     {% elif has_filters %}
         {% include 'partials/empty_state.html' with title=no_matching_title message=no_matching_message %}
     {% else %}
@@ -106,5 +101,4 @@ GET search plus top-level/subcategory filtering.
 
 {% block extra_js %}
 <script src="{% asset 'js/categories.js' %}" defer></script>
-<script src="{% asset 'js/categories-graph.js' %}" defer></script>
 {% endblock %}

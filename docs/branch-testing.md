@@ -88,26 +88,25 @@ branch; automated validation is reported separately by iteration below.
    parent's Edit and secondary actions remain available. Test Expand all and
    Collapse all, including nested groups. Search a child: its owned ancestors
    appear as parent context, matching paths open, and the count includes matches
-   rather than the extra ancestors. Clear retains the selected List/Graph view.
-5. Switch Categories to Graph, including through an old `?view=tree` bookmark.
-   Select nodes with arrows, Home/End and Enter/Space; check visible focus, full
-   details and existing editor actions. The network groups real parent/child
-   connections around their roots and its short opening motion settles. Reduced motion skips the animation. Drag a node
-   with mouse/touch, or hold Shift with arrows repeatedly; its links follow it,
-   and keyboard focus remains inside the canvas. Pan, zoom, Fit and two-finger
-   pinch must change only the view, preserving names, parent links and totals.
-   Open an editor and Cancel back to the filtered graph and selected node. With
-   JavaScript disabled, the Accessible list starts open and its native hierarchy
-   still exposes every category and action.
-6. Collapse a bank to its name/color and reopen it. Check compact headings,
-   amounts and actions, comfortable phone targets and fully visible options menus
-   in English and Portuguese. Accounts, monetary cash,
-   credit cards and loyalty programs have distinct sections; each credit-card
-   group identifies its account. Find Invoices and New transaction on the card,
-   and its edit/delete actions in bank details. Move an account or emergency cash
-   pot into Reserves and check available money. Its real balance/history stays
-   recorded. Restore participation and check the aggregate again. Search and
-   clear without losing the open bank/reserve state during live updates.
+   rather than the extra ancestors. Opening More filters must leave its trigger
+   and search in the same positions; choose criteria, collapse it, search and
+   Clear without the rail moving. The graph and view switch are absent; old
+   `?view=tree` bookmarks show the same list and filters.
+5. In light and dark mode, check the shared footer: small attribution and legal
+   text with a thin divider, without the large logo/banner. Hover a `?`: text is
+   visible only while the pointer stays on the icon and closes on entering the
+   explanation. Mouse clicks cannot pin it. Test Tab, Enter/Space, Escape,
+   touch toggling, unrelated background updates and native help without JavaScript.
+6. Open Accounts: all owned banks appear as compact name/color/count links,
+   without the old bank/account/card/pot search. Open a bank and check account
+   cards, the separate amount grid, New transaction and account options.
+   Credit-card invoices/purchases and editing belong to the owning account;
+   Account details retains opening balance and debit cards. Check menus fit on
+   phone screens in both languages. Move an account or cash pot into Reserves,
+   restore participation and check money/history are unchanged. After a planning
+   update, open an editor or transaction and Cancel back to the same bank page.
+   Open Recent activity for redemptions, invoices and movements; check a
+   redemption error remains visible there. Browser Back returns to the overview.
 7. Find an invoice with the compact search and bank/card/month/status criteria
    inside Filters. Record a partial confirmed payment and recover an invalid
    amount. Search local rates, open pair/date criteria and recover invalid dates
@@ -369,3 +368,41 @@ still serializes writers; the improvement does not introduce concurrent writes.
 
 After manual acceptance, the owner decides which adjustments remain and when to
 integrate the branch. A successful automated run does not replace that decision.
+
+
+### Bank pages, simpler categories and shared shell — 15 October 2026
+
+- All 574 Django tests passed; coverage measured with `--branch` was 94%. Django system checks and
+  migration-drift checks passed; a final 22-test Banking/category subset passed
+  after the fragment navigation adjustments. No schema or dependency changes
+  were introduced in this iteration.
+- Selected real-browser coverage passed 110 distinct scenarios across scoped
+  batches and focused rechecks. It covers desktop/mobile viewport sizes, both
+  themes, Portuguese/English, keyboard/touch, native GET/POST/help without
+  JavaScript, fixed category filter geometry, retained account/card actions,
+  reserves, invoice payments, FX, history and shared help/footer behavior.
+- Initial interaction runs exposed deferred horizontal scroll from a preceding
+  card search dismissing the month popup, and boosted record links failing to
+  reveal the collapsed bank history. Both received focused fixes and passed
+  rechecks. The action-only POST fixture now explicitly includes its account
+  in planning; history tests deliberately reopen the default-collapsed section
+  after reload instead of selecting inaccessible headings.
+- All 17 tooling tests, executable-correctness Ruff, version consistency,
+  `git diff --check`, local documentation links, CSS reproducibility and gettext
+  format/compiled-byte checks passed. The catalog has no fuzzy or untranslated
+  active Portuguese entries. Synthetic desktop/mobile screenshots were inspected
+  in both themes; generated screenshots remain local evidence.
+- Accounts now opens institution links and dedicated bank pages, with no
+  overview text search. Account amounts, daily card actions and configuration
+  are grouped by account; Recent activity is secondary. Categories retains one
+  collapsed native hierarchy and removes the graph. The shared footer is quiet,
+  and mouse help closes immediately at the question-mark boundary.
+- The local preview was restarted on loopback port 8768 from a verified backup
+  of its existing disposable database. Its saved test records were retained;
+  the installation database was not migrated or changed. No new demo data or
+  test accounts were inserted into that preview by the browser suite.
+- Acceptance on the owner's actual computer/phone and preferred browsers is
+  still pending. Dashboard, Reports, Investments and Plan domain/view templates
+  remain unchanged; the authorized shared footer/help changes apply there too.
+  Docker, integrations and deployment were outside this iteration. No merge,
+  main push, tag, release or publication was performed.

@@ -4,12 +4,12 @@
 <div class="banking-workspace space-y-4"><header class="workspace-header"><h1 class="page-title">{% translate 'Invoices' %}</h1></header>
 {% if selected_card %}<p class="subtle-copy">{{ selected_card.account.bank.name }} · {{ selected_card.name }}</p>{% endif %}
 <p class="subtle-copy">{% translate 'Automatic cards settle on their due date. For confirmed mode, record the actual payments; outstanding amounts remain in the forecast.' %}</p>
-<form id="invoice-filter-form" method="get" hx-boost="false" novalidate data-live-filters data-live-results="invoice-results" class="consultation-bar">
+<form id="invoice-filter-form" method="get" hx-boost="false" novalidate data-live-filters data-live-results="invoice-results" class="consultation-bar consultation-stable">
     <div class="consultation-search">{% include 'partials/form_field.html' with field=filter_form.q %}</div>
     <div class="consultation-actions">
         {% comment %}Keep criteria in the stable form; live responses replace only results, errors and status.{% endcomment %}
         <details id="invoice-extra-filters" class="filter-disclosure" {% if filter_form.errors %}open{% endif %}>
-            <summary>{% translate 'Filters' %} <span id="invoice-active-filter-count" data-live-fragment="invoice-filter-form" aria-live="polite">{% if active_filter_count %}{% blocktranslate count count=active_filter_count %}{{ count }} active{% plural %}{{ count }} active{% endblocktranslate %}{% endif %}</span>{% include 'partials/chevron_down.html' %}</summary>
+            <summary>{% translate 'Filters' %} <span id="invoice-active-filter-count" class="consultation-filter-count" data-live-fragment="invoice-filter-form" aria-live="polite">{% if active_filter_count %}<span aria-hidden="true">{{ active_filter_count }}</span><span class="sr-only">{% blocktranslate count count=active_filter_count %}{{ count }} active{% plural %}{{ count }} active{% endblocktranslate %}</span>{% endif %}</span>{% include 'partials/chevron_down.html' %}</summary>
             <div class="filter-disclosure-panel grid gap-4 sm:grid-cols-2">
                 {% translate 'Invoice month' as billed_month_label %}
                 {% if filter_form.month.errors %}{% include 'partials/form_field.html' with field=filter_form.month %}{% else %}{% include 'partials/month_filter.html' with month_id='invoice-filter-month' month_name='month' month_value=filter_form.month.value month_label=billed_month_label month_field=filter_form.month %}{% endif %}
@@ -18,7 +18,7 @@
                 {% include 'partials/form_field.html' with field=filter_form.status %}
             </div>
         </details>
-        <span id="invoice-clear-control" data-live-fragment="invoice-filter-form">{% if has_filters %}<a class="quiet-action" href="{% url 'banking:invoices' %}" data-live-reset data-live-link="invoice-filter-form">{% translate 'Clear filters' %}</a>{% endif %}</span>
+        <span id="invoice-clear-control" class="consultation-clear-control" data-live-fragment="invoice-filter-form">{% if has_filters %}<a class="quiet-action" href="{% url 'banking:invoices' %}" data-live-reset data-live-link="invoice-filter-form">{% translate 'Clear filters' %}</a>{% endif %}</span>
         <button type="submit" data-live-submit class="action-link">{% translate 'Filter' %}</button>
     </div>
 </form>

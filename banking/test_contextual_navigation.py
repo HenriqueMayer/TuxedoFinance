@@ -54,7 +54,7 @@ class ContextualBankNavigationTests(TestCase):
 
     def test_large_account_identifiers_keep_native_htmx_update_target(self):
         account = BankAccount.objects.create(pk=1700, user=self.user, bank=self.bank, name='Long lived account', currency='BRL', opening_balance=200, opening_date=date(2025, 1, 1))
-        response = self.client.get(reverse('banking:list'))
+        response = self.client.get(reverse('banking:detail', args=[account.bank_id]))
         self.assertContains(response, 'id="account-row-1700"')
         self.assertContains(response, '?account=1700')
         response = self.client.post(reverse('banking:account_planning', args=[account.pk]), {'enabled': '0', 'return_to': 'list'}, HTTP_HX_TARGET='account-row-1700')
@@ -62,6 +62,30 @@ class ContextualBankNavigationTests(TestCase):
         self.assertContains(response, 'id="account-row-1700"')
         account.refresh_from_db()
         self.assertFalse(account.planning_enabled)
+
+    def test_fragment_actions_keep_the_explicit_page_origin_after_planning_post(self):
+        origin = reverse('banking:detail', args=[self.bank.pk]) + '?reserves=1#account-row-' + str(self.account.pk)
+        for target in (f'bank-positions-{self.bank.pk}', f'account-row-{self.account.pk}'):
+            response = self.client.post(reverse('banking:account_planning', args=[self.account.pk]),
+                                        {'enabled': '1', 'next': origin}, HTTP_HX_TARGET=target)
+            self.assertEqual(response.status_code, 200)
+            from html.parser import HTMLParser
+
+            class Links(HTMLParser):
+                def __init__(self):
+                    super().__init__()
+                    self.urls = []
+
+                def handle_starttag(self, tag, attrs):
+                    if tag == 'a':
+                        self.urls.append(dict(attrs).get('href', ''))
+
+            links = Links()
+            links.feed(response.content.decode())
+            shortcuts = [url for url in links.urls if urlsplit(url).path == reverse('transactions:create')]
+            self.assertTrue(shortcuts)
+            for shortcut in shortcuts:
+                self.assertEqual(parse_qs(urlsplit(shortcut).query)['next'], [origin])
 
     def make_invoice(self, name='Card'):
         card = CreditCard.objects.create(user=self.user, account=self.account, name=name, closing_day=31, due_day=30, manual_settlement_from=date(2025, 1, 1))

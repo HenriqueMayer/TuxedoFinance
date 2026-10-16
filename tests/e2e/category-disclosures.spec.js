@@ -48,8 +48,8 @@ function children(page, id) { return page.locator(`#category-children-${id}`); }
 function optionsLink(page, id) { return page.locator(`[data-category-group="${id}"] > div.absolute`).getByRole('link', {name: 'Add subcategory', exact: true}); }
 function edit(page, id) { return page.locator(`a[href^="/categories/${id}/edit/"]`); }
 async function tree(page, expanded = false) {
-    await page.locator('#category-view-list').click();
-    await expect(page.locator('#category-view-list')).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('[data-category-tree]')).toBeVisible();
+    await expect(page.locator('#category-view-tree')).toHaveCount(0);
     if (expanded) {
         await page.locator('button[data-category-action="expand"]').click();
     }
@@ -205,6 +205,33 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
         await page.setViewportSize({ width, height: 844 });
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         const ids = await prepare(page, testInfo);
+        // The control rail is independent of the disclosed fields and result size.
+        const more = page.locator('#category-extra-filters > summary');
+        const search = page.locator('#filter-search');
+        const rail = await Promise.all([more.boundingBox(), search.boundingBox()]);
+        async function stableRail() {
+            for (const [index, control] of [more, search].entries()) {
+                const box = await control.boundingBox();
+                for (const key of ['x', 'y', 'width', 'height']) expect(Math.abs(box[key] - rail[index][key])).toBeLessThan(1.5);
+            }
+        }
+        await more.press('Enter');
+        await expect(page.locator('#filter-level')).toBeVisible();
+        await stableRail();
+        await page.locator('#filter-level').selectOption('sub');
+        await expect(page).toHaveURL(/level=sub/);
+        await stableRail();
+        await more.press('Space');
+        await expect(page.locator('#filter-level')).toBeHidden();
+        await stableRail();
+        await search.pressSequentially('Solar', { delay: 50 });
+        await expect(page).toHaveURL(/q=Solar/);
+        await stableRail();
+        await page.locator('#category-clear-filters').press('Enter');
+        await expect(page).toHaveURL(/\/categories\/$/);
+        await expect(search).toHaveValue('');
+        await stableRail();
+        await page.screenshot({ path: testInfo.outputPath(`category-filters-${theme}.png`), fullPage: true });
         await tree(page, true);
         await expect(page.locator('[data-category-tree]')).toBeVisible();
         await allExpanded(page, ids);
@@ -347,7 +374,8 @@ test('all category levels stay readable and searchable without JavaScript on mob
         await expect(page.locator(`[data-category-group="${ids.heating}"]`)).toHaveAttribute('data-category-context', '');
         await expect(page.getByText('Subcategory of Heating', { exact: true })).toHaveClass('sr-only');
         await page.locator('#category-clear-filters').click();
-        await page.locator('#category-view-tree').click();
+        await page.goto('/categories/?view=tree');
+        await expect(page.locator('[data-category-graph]')).toHaveCount(0);
         const living = toggle(page, ids.living);
         await expect(living).toBeVisible();
         await expect(children(page, ids.living)).toBeHidden();

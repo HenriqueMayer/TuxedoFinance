@@ -17,15 +17,15 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Add dated local investment price observations, weighted-average remaining cost, realized/unrealized results and explicit fee currency, plus underlying net-worth calculations that include incurred card debt and disclose incomplete valuation evidence. The net-worth interface remains under review.
 - Expand synthetic demo data with known opening dates, local prices, budgets, funded goals, review signals and overdue/partial confirmed invoices; future anchors keep unfunded targets instead of inventing current capacity or future confirmed payments.
 - Document isolated manual branch testing with a disposable SQLite backup and an owner acceptance checklist; no release, image or version change is published by these additions.
-- Add a local organic category network with real parent/child connections and root clusters, brief settling motion, visual node dragging, keyboard selection/arrangement, pan, zoom and touch pinch. Honor reduced motion and retain a complete native hierarchy; arranging the graph changes no category links or financial records.
 
 ### Changed
 
+- Replace the shared footer banner with a quiet theme-aware divider and legal attribution. Mouse help closes immediately on leaving its question-mark icon, including entry into the text; keyboard, touch and native access retain their separate behavior.
 - Apply consultation searches while typing/deleting and apply choices, dates and ordering immediately; retain stable keyboard focus, cursor, scroll, Back/Forward and native submit fallback.
 - Compact transaction consultation into search, billed month and type choices, with exact category, recurrence, date and ordering in one Filters disclosure. Reserve stable control tracks and Clear space so typing, type changes, long month labels and shorter results do not shift the rail. Preserve complete GET filters and native submission.
 - Select consultation months by localized name and explicit year, with Enter confirming a unique month match; preserve canonical ISO values, invalid-year recovery and native month inputs without JavaScript. Financial record choices keep their existing confirmation behavior.
-- Start grouped category lists collapsed, align parents and leaves in compact name/type/count columns and retain discreet actions and indented children. Open matching descendant paths with labelled ancestor context. List/Graph switches preserve filters and accept existing Tree bookmarks.
-- Clarify the bank hierarchy with distinct account, monetary cash, credit-card and loyalty sections inside native bank disclosures; cards identify their owning account, while collapsed banks show their name and color marker. Keep separate Reserves and exclude chosen monetary cash positions from spendable availability without hiding balances or debts.
+- Start grouped category lists collapsed, align parents and leaves in compact name/type/count columns and retain discreet actions and indented children. Open matching descendant paths with labelled ancestor context. Keep More filters fixed when its criteria open; legacy view bookmarks use the same list.
+- Open Accounts with a compact bank overview and dedicated bank pages. Group account balances, card actions and configuration together, keep recent activity secondary and remove the overview text filter. Keep separate Reserves and exclude chosen monetary cash positions from spendable availability without hiding balances or debts.
 - Open Investments with a compact holdings list and Update, guided atomic registration and contextual history; move analyses and full configuration into secondary options. Zero configured holdings create no opening cash movement.
 - Open Plan with the selected month's available-money outlook and budgets; keep Goals accessible and move signals, simulations and drafts into Tools. Distinguish recorded balances from known projections and show valuation limits.
 - Hide paused Net worth and statement entry points from navigation instead of exposing unavailable Roadmap screens. Old statement operations, including stale submissions, return to Transactions; Net worth URLs return to Home. Preserve owned posted import history as read-only provenance and keep the roadmap in documentation. No release date is promised.
@@ -39,6 +39,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Serve the interface font locally and reuse reporting and conversion context; incrementally synchronize unchanged ledger projections without repeated data writes. Document synthetic performance observations and their limits.
 - Add migrations for imports, category splits, budgets, goals, price observations, opening dates and confirmed payments. Existing financial records remain intact; legacy opening dates remain unknown until explicitly entered and existing cards retain automatic settlement until opted in.
 - Preserve shared keyboard, conditional-field, contextual-help, theme and no-JavaScript form behavior across the new workflows, with English and Brazilian Portuguese interface copy.
+
+### Removed
+
+- Remove the unreleased category graph and its view switch, retaining the native grouped list and compatible filters.
 
 ## [0.10.0] - 2026-10-09
 

@@ -1,25 +1,37 @@
 {% load i18n navigation %}
-<tr id="account-row-{{ row.account.pk|stringformat:'d' }}" role="row" data-preserve-view>
-    <td role="cell"><a href="{% url 'banking:detail' row.account.bank_id %}#account-row-{{ row.account.pk|stringformat:'d' }}" class="font-medium underline-offset-4 hover:underline">{{ row.account.name }}</a><p class="subtle-copy mt-1">{{ row.currency }}</p></td>
-    <td role="cell" data-label="{% translate 'Balance' %}" class="number whitespace-nowrap"><span class="account-currency">{{ row.currency }}</span> {{ row.balance|floatformat:2 }}</td>
-    <td role="cell" data-label="{% translate 'Set aside' %}" class="number whitespace-nowrap"><span class="account-currency">{{ row.currency }}</span> {{ row.reserved|floatformat:2 }}{% if row.shortfall %}<p class="mt-1 whitespace-normal text-xs text-expense dark:text-expense-light">{% blocktranslate with amount=row.shortfall|floatformat:2 %}Uncovered: {{ amount }}{% endblocktranslate %}</p>{% endif %}</td>
-    <td role="cell" data-label="{% translate 'Available' %}" class="number whitespace-nowrap"><span class="account-currency">{{ row.currency }}</span> <strong class="font-semibold">{{ row.available|floatformat:2 }}</strong></td>
-    <td role="cell">
-        {% comment %}Keep the status/action visible beside row actions, so a 44px touch target does not add a second line under the amount.{% endcomment %}
+<article id="account-row-{{ row.account.pk|stringformat:'d' }}" class="bank-account-card" data-preserve-view aria-labelledby="account-name-{{ row.account.pk|stringformat:'d' }}">
+    <header class="bank-account-header">
+        <div class="min-w-0"><h3 id="account-name-{{ row.account.pk|stringformat:'d' }}" class="text-sm font-semibold">{{ row.account.name }}</h3><p class="subtle-copy mt-1">{{ row.currency }}</p></div>
         <div class="banking-row-actions">
+            {% url 'transactions:create' as transaction_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=transaction_url|add:'?account='|add:account_id %}<a href="{% contextual_url target origin=account_origin %}" class="action-link">{% translate 'New transaction' %}</a>{% endwith %}{% endwith %}
+            <details class="secondary-actions compact-menu" name="account-updates">
+                <summary aria-label="{% blocktranslate with account=row.account.name %}Update {{ account }}{% endblocktranslate %}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'Update account' %}</span></summary>
+                <div class="secondary-actions-panel">
+                    {% url 'banking:account_update' row.account.pk as edit_url %}<a href="{% contextual_url edit_url origin=account_origin %}" aria-label="{% blocktranslate with account=row.account.name %}Edit {{ account }} and reserve{% endblocktranslate %}">{% translate 'Edit / reserve' %}</a>
+                    {% url 'banking:transfer_create' as transfer_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=transfer_url|add:'?source_account='|add:account_id %}<a href="{% contextual_url target origin=account_origin %}">{% translate 'Own transfer' %}</a>{% endwith %}{% endwith %}
+                    {% url 'banking:debit_card_create' as debit_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=debit_url|add:'?account='|add:account_id %}<a href="{% contextual_url target origin=account_origin %}">{% translate 'Add debit card' %}</a>{% endwith %}{% endwith %}
+                    {% url 'banking:credit_card_create' as credit_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=credit_url|add:'?account='|add:account_id %}<a href="{% contextual_url target origin=account_origin %}">{% translate 'Add credit card' %}</a>{% endwith %}{% endwith %}
+                    {% url 'banking:account_delete' row.account.pk as delete_url %}<a href="{% contextual_url delete_url origin=account_origin %}" class="text-expense dark:text-expense-light">{% translate 'Delete account' %}</a>
+                </div>
+            </details>
+        </div>
+    </header>
+    <dl class="account-balance-grid">
+        <div><dt>{% translate 'Balance' %}</dt><dd data-account-balance><span class="sr-only">{{ row.currency }} </span>{{ row.balance|floatformat:2 }}</dd></div>
+        <div><dt>{% translate 'Set aside' %}</dt><dd data-account-reserved><span class="sr-only">{{ row.currency }} </span>{{ row.reserved|floatformat:2 }}</dd>{% if row.shortfall %}<p class="mt-1 text-xs text-expense dark:text-expense-light">{% blocktranslate with amount=row.shortfall|floatformat:2 %}Uncovered: {{ amount }}{% endblocktranslate %}</p>{% endif %}</div>
+        <div><dt>{% translate 'Available' %}</dt><dd data-account-available class="font-semibold"><span class="sr-only">{{ row.currency }} </span>{{ row.available|floatformat:2 }}</dd></div>
+    </dl>
+    <div class="account-planning-action">
             <form method="post" action="{% url 'banking:account_planning' row.account.pk %}" hx-post="{% url 'banking:account_planning' row.account.pk %}" hx-target="#bank-positions-{{ row.account.bank_id|stringformat:'d' }}" hx-swap="outerHTML show:none" hx-request='{"noHeaders":false}' hx-boost="false">
                 {% csrf_token %}<input type="hidden" name="return_to" value="{{ return_to|default:'detail' }}"><input type="hidden" name="enabled" value="{% if row.account.planning_enabled %}0{% else %}1{% endif %}"><input type="hidden" name="next" value="{% if request.method == 'GET' %}{{ request.get_full_path }}{% else %}{{ planning_return_url }}{% endif %}">
                 <button id="planning-toggle-{{ row.account.pk|stringformat:'d' }}" type="submit" class="planning-visibility" aria-label="{% if row.account.planning_enabled %}{% blocktranslate with account=row.account.name %}Set aside {{ account }}{% endblocktranslate %}{% else %}{% blocktranslate with account=row.account.name %}Use {{ account }} in planning{% endblocktranslate %}{% endif %}"><svg aria-hidden="true" class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>{% if not row.account.planning_enabled %}<path d="m3 3 18 18"/>{% endif %}</svg><span>{% if row.account.planning_enabled %}{% translate 'Included' %}{% else %}{% translate 'Set aside' %}{% endif %}</span></button>
             </form>
-            {% url 'banking:account_update' row.account.pk as edit_url %}<a href="{% contextual_url edit_url %}" class="quiet-action" aria-label="{% blocktranslate with account=row.account.name %}Edit {{ account }} and reserve{% endblocktranslate %}">{% translate 'Edit / reserve' %}</a>
-            <details class="secondary-actions compact-menu" name="account-updates">
-                <summary aria-label="{% blocktranslate with account=row.account.name %}Update {{ account }}{% endblocktranslate %}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'Update account' %}</span></summary>
-                <div class="secondary-actions-panel">
-                    {% url 'transactions:create' as transaction_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=transaction_url|add:'?account='|add:account_id %}<a href="{% contextual_url target %}">{% translate 'New transaction' %}</a>{% endwith %}{% endwith %}
-                    {% if IMPORTS_AVAILABLE %}{% url 'ingestion:index' as import_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=import_url|add:'?account='|add:account_id %}<a href="{% contextual_url target %}">{% translate 'Import statement' %}</a>{% endwith %}{% endwith %}{% endif %}
-                    {% url 'banking:transfer_create' as transfer_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=transfer_url|add:'?source_account='|add:account_id %}<a href="{% contextual_url target %}">{% translate 'Own transfer' %}</a>{% endwith %}{% endwith %}
-                </div>
-            </details>
+    </div>
+    {% include 'banking/_credit_cards.html' with account=row.account %}
+    <details class="account-configuration">
+        <summary>{% translate 'Account details' %}</summary>
+        <div class="space-y-3 pt-3"><p class="subtle-copy">{% blocktranslate with currency=row.currency balance=row.account.opening_balance|floatformat:2 %}Opening balance: {{ currency }} {{ balance }}{% endblocktranslate %}</p>
+            {% if row.account.debit_cards.all %}<h4 class="text-sm font-medium">{% translate 'Debit cards' %}</h4><ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for card in row.account.debit_cards.all %}<li class="flex flex-wrap items-center justify-between gap-2 py-2"><span class="text-sm">{{ card.name }}</span><span class="flex gap-1">{% url 'banking:debit_card_update' card.pk as debit_edit %}<a href="{% contextual_url debit_edit origin=account_origin %}" class="quiet-action">{% translate 'Edit' %}</a>{% url 'banking:debit_card_delete' card.pk as debit_delete %}<a href="{% contextual_url debit_delete origin=account_origin %}" class="quiet-action text-expense dark:text-expense-light">{% translate 'Delete' %}</a></span></li>{% endfor %}</ul>{% endif %}
         </div>
-    </td>
-</tr>
+    </details>
+</article>

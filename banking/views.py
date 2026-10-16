@@ -23,7 +23,6 @@ from banking.forms import (
     BankTransferForm,
     BankForm,
     BankColorForm,
-    BankSearchForm,
     CreditCardForm,
     DebitCardForm,
     ExchangeRateForm,
@@ -70,6 +69,15 @@ def _programs(user):
     )
 
 
+def _accounts(user):
+    # Account cards are rendered by both full pages and planning fragments.
+    # Legacy cross-owner card references must stay private in either response.
+    return BankAccount.objects.filter(user=user).prefetch_related(
+        Prefetch('debit_cards', queryset=DebitCard.objects.filter(user=user)),
+        Prefetch('credit_cards', queryset=CreditCard.objects.filter(user=user)),
+    )
+
+
 def _decorate_banks(banks, availability):
     rows = {row['account'].pk: row for row in availability['account_rows']}
     for bank in banks:
@@ -83,7 +91,8 @@ def _decorate_banks(banks, availability):
         bank.reserved_rows = [row for row in bank.planning_rows if not row['account'].planning_enabled]
         bank.included_pots = [row for row in bank.cash_pots if row['planning_enabled']]
         bank.reserved_pots = [row for row in bank.cash_pots if not row['planning_enabled']]
-        bank.has_credit_cards = any(account.credit_cards.all() for account in bank.accounts.all())
+        bank.account_count = len(bank.planning_rows)
+        bank.card_count = sum(len(account.credit_cards.all()) + len(account.debit_cards.all()) for account in bank.accounts.all())
 
 
 def _canonical_id(value):
@@ -106,13 +115,13 @@ def _planning_destination(request, bank_id, anchor):
 
 
 def _position_response(request, bank_id, *, reserve_open=False):
-    bank = get_object_or_404(Bank.objects.prefetch_related(Prefetch('accounts',
-        queryset=BankAccount.objects.filter(user=request.user).prefetch_related('credit_cards', 'debit_cards'))), pk=bank_id, user=request.user)
+    bank = get_object_or_404(Bank.objects.prefetch_related(
+        Prefetch('accounts', queryset=_accounts(request.user))), pk=bank_id, user=request.user)
     availability = get_planning_availability(request.user)
     _decorate_banks([bank], availability)
     return render(request, 'banking/_positions_response.html', {'bank': bank, 'availability': availability,
         'return_to': request.POST.get('return_to', 'detail'), 'reserve_open': reserve_open,
-        'planning_return_url': return_url(request, '')})
+        'planning_return_url': return_url(request, reverse('banking:detail', args=[bank_id]))})
 
 
 @login_required
@@ -129,9 +138,12 @@ def account_planning(request, pk):
     if request.headers.get('HX-Target') == f'account-row-{account.pk}':
         availability = get_planning_availability(request.user)
         row = next(row for row in availability['account_rows'] if row['account'].pk == account.pk)
+        row['account'] = _accounts(request.user).get(pk=account.pk)
         return render(request, 'banking/_planning_response.html', {
             'row': row, 'availability': availability,
             'return_to': request.POST.get('return_to', 'detail'),
+            'account_origin': return_url(request, reverse('banking:detail', args=[account.bank_id])),
+            'planning_return_url': return_url(request, reverse('banking:detail', args=[account.bank_id])),
         })
     messages.success(request, _('Planning availability updated. The account balance is unchanged.'))
     return redirect(_planning_destination(request, account.bank_id, f'account-row-{account.pk}'))
@@ -167,17 +179,7 @@ class BankListView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        search = self.request.GET.get('q', '').strip()
-        accounts = BankAccount.objects.filter(user=self.request.user).prefetch_related(
-            Prefetch(
-                'debit_cards',
-                queryset=DebitCard.objects.filter(user=self.request.user),
-            ),
-            Prefetch(
-                'credit_cards',
-                queryset=CreditCard.objects.filter(user=self.request.user),
-            ),
-        )
+        accounts = _accounts(self.request.user)
         queryset = Bank.objects.filter(user=self.request.user).prefetch_related(
             Prefetch('accounts', queryset=accounts),
             Prefetch(
@@ -185,31 +187,13 @@ class BankListView(LoginRequiredMixin, ListView):
                 queryset=_programs(self.request.user),
             ),
         )
-        if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search)
-                | Q(accounts__name__icontains=search)
-                | Q(accounts__debit_cards__name__icontains=search)
-                | Q(accounts__credit_cards__name__icontains=search)
-                | Q(loyalty_programs__name__icontains=search)
-                | Q(investment_products__name__icontains=search)
-                | Q(investment_products__operations__asset__name__icontains=search)
-                | Q(investment_products__opening_balance_assets__name__icontains=search)
-            ).distinct()
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['search_query'] = self.request.GET.get('q', '').strip()
-        context['filter_form'] = BankSearchForm(self.request.GET or None, auto_id='bank-filter-%s')
         context['independent_programs'] = _programs(self.request.user).filter(bank__isnull=True).prefetch_related('cards')
-        if context['search_query']:
-            context['independent_programs'] = context['independent_programs'].filter(name__icontains=context['search_query'])
         context['availability'] = get_planning_availability(self.request.user)
         _decorate_banks(context['banks'], context['availability'])
-        for bank in context['banks']:
-            bank.is_open = bool(context['search_query']) or self.request.GET.get('open') == str(bank.pk)
-            bank.reserve_open = self.request.GET.get('reserves') == str(bank.pk)
         return context
 
 
@@ -224,16 +208,7 @@ class BankDetailView(LoginRequiredMixin, DetailView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        accounts = BankAccount.objects.filter(user=self.request.user).prefetch_related(
-            Prefetch(
-                'debit_cards',
-                queryset=DebitCard.objects.filter(user=self.request.user),
-            ),
-            Prefetch(
-                'credit_cards',
-                queryset=CreditCard.objects.filter(user=self.request.user),
-            ),
-        )
+        accounts = _accounts(self.request.user)
         return Bank.objects.filter(user=self.request.user).prefetch_related(
             Prefetch('accounts', queryset=accounts),
             Prefetch(

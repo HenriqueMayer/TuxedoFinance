@@ -232,20 +232,20 @@ The helper accepts an optional request-owned `ConversionContext` for shared FX
 lookups. Reservations are earmarks of existing cash, not withdrawals, expenses
 or new assets. They do not reduce net worth. See [planning](planning.md).
 
-Bank lists and detail tables consume grouped balances instead of calling an
+Bank overviews and account cards consume grouped balances instead of calling an
 aggregate for each account. The planning toggle uses an owned, CSRF-protected
 POST; the same change works with a normal form submission without JavaScript.
 
 ## Contextual daily actions
 
-Accounts remain grouped by institution, but the workspace is named Accounts.
-Each row has an activation-only ellipsis disclosure, named for that account,
-for a new transaction,
-statement import or owned transfer. Validated account shortcuts and local `next`
-origins preserve the search and return destination through Save/Cancel and errors.
-Credit cards expose a purchase shortcut and a card-scoped invoice list alongside
-their dated settlement mode. Invoice filters validate card ownership and keep
-the selection during pagination.
+The workspace is named Accounts. Its overview lists owned institutions as links;
+opening one gives each account a card with a visible New transaction shortcut.
+The deliberate account menu retains Edit / reserve, own transfer, card creation
+and deletion. Validated account shortcuts and explicit local `next` origins
+preserve the return destination through Save/Cancel, errors and planning POST
+fragments. Credit cards expose a purchase shortcut and scoped invoice list beside
+their dated settlement mode. Invoice filters validate ownership and keep the
+selection during pagination. Paused imports have no account shortcut.
 
 Home and bank details link directly to an invoice. Its due date, status, native
 total, confirmed amount and remaining amount precede payment entry and sources.
@@ -254,48 +254,51 @@ entry stays beside the invoice result; Cancel returns to the supplied local
 origin. Source editors and payment editors return to the same invoice section.
 
 
-## Compact accounts and dynamic consultation
+## Bank overview, details and dynamic consultation
 
-Banks use native details/summary with stable IDs: a closed group shows only its
-name, color bookmark and expansion affordance. Participation-excluded accounts
-and cash positions appear inside a separate Reserves disclosure, with explicit
-include/exclude POST actions. Same-record refreshes preserve disclosure state,
-focus and position. Available cash differs from balances and must remain labelled.
+The overview shows all owned banks, using one link per institution with its name,
+color marker and account/card counts. It has no text filter or inline account
+rows. Retired overview `q` parameters are ignored. The all-bank available-money
+summary stays on this overview; its native Balance details disclosure contains
+bank totals, monetary cash pots and set-aside amounts. Missing-rate and reserve
+shortfall warnings remain visible without opening that disclosure.
 
-An open bank separates accounts, cash pots, reserves, credit cards and loyalty
-with section titles and thin dividers. Add account and Bank details remain
-visible; bank editing and marker color use a deliberate options menu. Bank detail
-shows each credit card once: invoice and purchase shortcuts share the card row
-with its type, closing/due days, settlement mode and administrative options.
-Account instruments retain opening balances, debit cards, card creation and
-account actions. This organization changes neither balances nor invoice policy.
+Each bank page contains the institution's accounts, monetary cash pots, reserves
+and loyalty programs. An account card has three distinct layers: its name and
+daily actions, a labelled Balance / Set aside / Available grid, then its cards.
+The planning participation POST stays outside the amount grid. Account details
+contains opening-balance evidence and debit-card administration. Its ellipsis
+menu retains editing/reserving, own transfer, both card creation actions and
+account deletion. Each credit card appears once, with invoice/purchase links,
+closing/due days, settlement mode and deliberate Edit/Delete options.
 
-Invoices and local exchange rates use the shared dynamic search/filter contract,
-owner-scoped choices and native fallback. Invoice rows keep reference month, due
-amount, paid/remaining amounts and settlement mode visible. Rate forms use the
-shared form renderer, deliberate Save/Cancel and contextual origins; local
-reference rates do not rewrite evidence saved in financial operations.
+Participation-excluded accounts and cash positions appear inside Reserves with
+explicit include/exclude POST actions. Same-record updates preserve disclosure
+state, focus and position. Available money differs from real balances; exclusion
+never hides debts or removes financial history. Both full pages and planning
+fragments prefetch only the user's cards, including legacy cross-owner links.
+Fragment shortcuts retain the submitted validated page origin, never the POST
+endpoint. Complete native POSTs remain supported.
 
-Accounts, invoices and exchange rates share a compact consultation bar. Search
-stays visible, and optional invoice/rate criteria use a native Filters disclosure
-with an active-criteria count; search text does not increase this count. Clear
-remains beside the bar. Criteria stay in the stable GET form while the live
-helper replaces results and status only. Invalid initial responses open the
-criteria and retain bound values and field errors. Complete native submissions
-remain available without JavaScript. Invoice month uses the shared searchable
-month-name/year enhancement over its original ISO month field; malformed native
-month text retains a plain, recoverable field rather than becoming an empty date.
+Recent activity is a native secondary disclosure containing redemptions,
+invoices and ledger movements. Redemption edit/error responses open it; stable
+record anchors reveal the appropriate native disclosure after full and boosted
+page navigation. Unrelated background updates do not reopen it. The bank header keeps Add account and Invoices
+visible, with bank editing, color, loyalty creation and deletion in its menu.
 
-Banking density is scoped to `.banking-workspace`, covering account and bank
-details, invoice consultation/payment, exchange rates and form containers/actions.
-Row menus use a decorative ellipsis with a record-specific accessible name; their
-contents retain every existing action. Secondary actions use 14px text and local
-spacing rather than repeated outlined pills. The account planning status/action
-stays visible in the actions cell, leaving Available as an uninterrupted amount.
-Its CSRF-protected POST, stable focus ID and contextual origin are unchanged.
+Invoices and local exchange rates retain one primary live search and native
+Filters criteria, with fixed trigger/Clear slots. Opening criteria adds fields
+below the rail without moving the trigger. Active counts exclude text search.
+Controls remain mounted while results/status update; initial errors reopen
+criteria and retain bound values. Invoice month uses the shared named-month/year
+enhancement over the native ISO field; malformed month text stays recoverable.
+Every filter retains native GET submission without JavaScript.
 
-The closed bank summary keeps its original size. Interior titles and dividers
-use a tighter hierarchy; balances, currency, reserve deficits, invoice totals and
-payment evidence retain their labels. Touch targets stay at least 44px, including
-menu items. Fine-pointer desktops may use 36px actions. Native fields and shared
-pickers keep their existing sizing, validation and no-JavaScript contracts.
+Banking density is scoped to `.banking-workspace`, including invoice
+consultation/payment, exchange rates and form containers/actions. Headings,
+separators and record surfaces clarify hierarchy without changing financial
+values, native fields or shared searchable-choice behavior. Row menus use
+record-specific accessible names and deliberate activation. Touch targets stay
+at least 44px; fine-pointer desktops may use 36px actions. Rate forms retain
+Save/Cancel and explicit origins. Local reference rates never rewrite evidence
+already stored in financial operations.

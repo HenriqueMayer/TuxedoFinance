@@ -456,12 +456,6 @@ class ExchangeRateForm(OwnedModelForm):
         }
 
 
-class BankSearchForm(forms.Form):
-    q = forms.CharField(required=False, label=_('Search'), max_length=200,
-        widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': '',
-            'placeholder': _('Bank, account, card, program or cash pot'), 'class': INPUT_CLASSES}))
-
-
 class InvoiceFilterForm(forms.Form):
     q = forms.CharField(required=False, label=_('Search'),
                         widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': '', 'placeholder': _('Card, account or bank')}))

@@ -108,10 +108,6 @@
   .data-table th { @apply border-b border-forest/15 px-3 py-3 text-xs font-medium text-forest/70 dark:border-cream/15 dark:text-night-muted; }
   .data-table td { @apply border-b border-forest/10 px-3 py-4 align-top dark:border-cream/10; }
   .data-table .number { @apply text-right tabular-nums; }
-  .account-table { @apply table-fixed; min-width: 880px; }
-  .account-table td { @apply align-middle; }
-  .account-table tbody tr:last-child td { @apply border-b-0; }
-  .account-table tbody tr { @apply transition-colors hover:bg-forest/[0.02] dark:hover:bg-cream/[0.02]; }
   .account-currency { @apply text-xs font-medium text-forest/70 dark:text-cream/50; }
   .planning-visibility { @apply inline-flex min-h-11 items-center gap-1.5 rounded-lg text-xs text-forest/70 transition-colors hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream/60 dark:hover:text-caramel-light; }
   .planning-sheet { @apply w-full border-collapse text-left text-sm tabular-nums; }
@@ -126,24 +122,7 @@
   .category-disclosure[aria-expanded="false"] svg,
   details:not([open]) > summary.category-disclosure svg { transform: rotate(-90deg); }
   [data-category-tree] [hidden] { display: none; }
-  @media (max-width: 767px) {
-    .account-table { @apply block min-w-0; }
-    .account-table colgroup { display: none; }
-    .account-table thead { @apply sr-only; }
-    .account-table tbody { @apply block; }
-    .account-table tbody tr { @apply grid grid-cols-3 gap-x-3 gap-y-4 border-b border-forest/10 py-5 dark:border-cream/10; }
-    .account-table tbody tr:last-child { @apply border-b-0 pb-0; }
-    .account-table td { @apply block border-0 p-0 text-left; }
-    .account-table td:first-child, .account-table td:last-child { grid-column: 1 / -1; }
-    .account-table td[data-label]::before { content: attr(data-label); @apply mb-1.5 block text-xs font-normal text-forest/70; }
-    /* Dark variants after ::before cannot match a DOM element. Scope the
-       ancestor explicitly so mobile labels retain readable contrast. */
-    .dark .account-table td[data-label]::before { color: theme('colors.night.muted'); }
-    .account-table td .account-currency { @apply hidden; }
-    .account-table td:last-child > div { @apply justify-start; }
-    .account-table td:last-child .quiet-action { @apply px-0; }
-    .account-table td:last-child > div { column-gap: 1.5rem; }
-  }
+
 }
 
 @layer base {
@@ -189,6 +168,7 @@
 }
 
 @layer components {
+  .site-footer { @apply border-t border-forest/10 text-forest/65 dark:border-cream/10 dark:text-night-muted; }
   .help-popover { position: relative; display: inline-flex; flex-shrink: 0; }
   .help-trigger {
     @apply flex h-6 w-6 cursor-help list-none items-center justify-center rounded-full text-current hover:bg-caramel/15 dark:hover:bg-cream/10;
@@ -278,7 +258,6 @@
   .bank-disclosure-summary > svg, .reserve-disclosure-summary > svg { @apply h-5 w-5 shrink-0 transition-transform; }
   .bank-disclosure[open] > .bank-disclosure-summary > svg,
   .reserve-disclosure[open] > .reserve-disclosure-summary > svg { transform: rotate(180deg); }
-  .bank-disclosure-content { @apply mt-5 space-y-5; }
   .reserve-disclosure-summary { @apply flex min-h-11 list-none items-center justify-between gap-3; }
   .reserve-disclosure-summary::-webkit-details-marker { display: none; }
   .reserve-disclosure { @apply border-t border-forest/15 dark:border-cream/15; }
@@ -351,52 +330,13 @@
   .category-row-actions .compact-menu > summary { min-width:2.75rem; }
 }
 
-/* Local organic category graph: positions and gestures never change records. */
-.category-graph-canvas { display:block; width:100%; height:clamp(26rem,56vh,38rem); border:1px solid rgb(26 46 38 / .18); border-radius:1rem; background:radial-gradient(rgb(26 46 38 / .12) 1px,transparent 1px) 0 0 / 24px 24px; touch-action:none; cursor:grab; overflow:hidden; }
-.category-graph-canvas.is-panning,.category-graph-canvas.is-node-dragging { cursor:grabbing; }
-.category-graph-controls { display:flex; flex-wrap:wrap; gap:.5rem; }
-.category-graph-edge { fill:none; stroke:#71867b; stroke-width:1.5; vector-effect:non-scaling-stroke; pointer-events:none; }
-.category-graph-edge[data-related='true'] { stroke:#365c50; stroke-width:2.5; }
-.category-graph-node { cursor:grab; outline:none; }
-.category-graph-canvas.is-node-dragging .category-graph-node { cursor:grabbing; }
-.category-graph-hit { fill:transparent; stroke:none; pointer-events:all; }
-.category-graph-point { fill:#365c50; stroke:#fff; stroke-width:2; pointer-events:none; }
-.category-graph-node[data-cluster='1'] .category-graph-point { fill:#8c6039; }
-.category-graph-node[data-cluster='2'] .category-graph-point { fill:#4b697f; }
-.category-graph-node[data-cluster='3'] .category-graph-point { fill:#75596f; }
-.category-graph-node[data-context='true'] .category-graph-point { fill:#fff; stroke:#365c50; stroke-width:2; }
-.category-graph-focus { fill:none; stroke:#936332; stroke-width:2; opacity:0; pointer-events:none; }
-.category-graph-node:hover .category-graph-focus,.category-graph-node[aria-pressed='true'] .category-graph-focus { opacity:1; }
-.category-graph-node:focus-visible .category-graph-focus { opacity:1; stroke-width:4; }
-.category-graph-node-name { fill:#1a2e26; font-family:inherit; font-size:14px; font-weight:500; stroke:#fff; stroke-width:4; stroke-linejoin:round; paint-order:stroke fill; }
-.category-graph-node[aria-pressed='true'] .category-graph-node-name { font-weight:700; }
-.category-graph-selection { border-top:1px solid rgb(26 46 38 / .12); padding-top:1rem; }
-.category-graph-help > summary { cursor:pointer; }
-.dark .category-graph-canvas { border-color:rgb(250 248 243 / .2); background-image:radial-gradient(rgb(250 248 243 / .12) 1px,transparent 1px); }
-.dark .category-graph-edge { stroke:#849b90; }
-.dark .category-graph-edge[data-related='true'] { stroke:#b9d6c9; }
-.dark .category-graph-point { fill:#8fb8a9; stroke:#1b1b1b; }
-.dark .category-graph-node[data-cluster='1'] .category-graph-point { fill:#d8b086; }
-.dark .category-graph-node[data-cluster='2'] .category-graph-point { fill:#8fb4cf; }
-.dark .category-graph-node[data-cluster='3'] .category-graph-point { fill:#bea4c4; }
-.dark .category-graph-node[data-context='true'] .category-graph-point { fill:#1b1b1b; stroke:#b9d6c9; }
-.dark .category-graph-focus { stroke:#d4ad86; }
-.dark .category-graph-node-name { fill:#f6f3eb; stroke:#1b1b1b; }
-.dark .category-graph-selection { border-color:rgb(250 248 243 / .15); }
-@media (max-width:639px) { .category-graph-canvas { height:30rem; } }
-@media (forced-colors:active) { .category-graph-edge,.category-graph-point { stroke:CanvasText; } .category-graph-point { fill:CanvasText; } .category-graph-node-name { fill:CanvasText; stroke:Canvas; } .category-graph-focus { stroke:Highlight; } }
-
-/* Banking density is local: ordinary fields and the closed bank summary retain
-   their shared contracts. These scoped rules intentionally follow utilities. */
+/* Banking density is local; ordinary fields retain their shared contracts.
+   These scoped rules intentionally follow utilities. */
 .banking-workspace .page-title { font-size: 1.5rem; line-height: 1.875rem; }
-.banking-workspace .surface-panel:not(.bank-disclosure) { padding: 1rem; }
-.banking-workspace .bank-disclosure-content .section-title,
+.banking-workspace .surface-panel { padding: 1rem; }
 .banking-workspace section > .section-title,
 .banking-workspace form > .section-title { font-size: 1rem; line-height: 1.5rem; }
-.banking-workspace details:not(.bank-disclosure) > summary { font-size: .875rem; }
-.banking-workspace .bank-disclosure-content { margin-top: 1rem; }
-.banking-workspace .bank-disclosure-content > :not(:last-child) { margin-block: 0 1rem; }
-.banking-workspace .bank-disclosure-content > :first-child { padding-top: .75rem; }
+.banking-workspace details > summary { font-size: .875rem; }
 .banking-workspace .action-primary,
 .banking-workspace .action-link,
 .banking-workspace .quiet-action,
@@ -439,15 +379,11 @@
 .banking-workspace .banking-row-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .25rem; }
 .banking-workspace .data-table th { padding-block: .5rem; }
 .banking-workspace .data-table td { padding-block: .625rem; }
-.banking-workspace .account-table td:first-child > a { display: inline-flex; min-height: 2.75rem; align-items: center; }
 .banking-workspace .cash-position-row,
 .banking-workspace #invoice-results li,
 .banking-workspace #rate-results li { padding-block: .625rem; gap: .75rem; }
 .banking-workspace .status-badge { padding: .125rem .5rem; }
-.banking-workspace #planning-availability > div { gap: 1rem; }
 @media (max-width: 767px) {
-  .banking-workspace .account-table tbody tr { padding-block: .875rem; gap: .75rem; }
-  .banking-workspace .account-table td { padding: 0; }
   .banking-workspace .banking-row-actions { justify-content: flex-start; }
 }
 /* Fine-pointer desktops can be denser without shrinking touch controls. */
@@ -458,8 +394,7 @@
   .banking-workspace .planning-visibility,
   .banking-workspace .secondary-actions > summary,
   .banking-workspace .secondary-actions-panel > a,
-  .banking-workspace .secondary-actions-panel > form > button,
-  .banking-workspace .account-table td:first-child > a { min-height: 2.25rem; }
+  .banking-workspace .secondary-actions-panel > form > button { min-height: 2.25rem; }
   .banking-workspace .secondary-actions.compact-menu > summary { width: 2.25rem; min-width: 2.25rem; }
 }
 
@@ -582,3 +517,57 @@ html:has(#transaction-filters) { scrollbar-gutter: stable; }
   #transaction-filters [data-month-fallback] input { height: 2.75rem; }
   #transaction-filters [data-month-fallback] label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
 }
+
+/* Criteria expand below a stable rail; the trigger never joins the result row. */
+.consultation-stable { position:relative; display:grid; grid-template-columns:minmax(0,1fr) 7.5rem; gap:.75rem; align-items:center; }
+.consultation-stable .consultation-search { grid-column:1 / -1; width:100%; }
+.consultation-stable .consultation-search input { height:2.75rem; }
+.consultation-stable .consultation-actions { display:contents; }
+.consultation-stable .filter-disclosure { grid-column:1 / -1; grid-row:3; width:100%; min-width:0; }
+.consultation-stable .filter-disclosure > summary { position:absolute; top:4.25rem; left:.75rem; min-height:2.75rem; max-width:calc(100% - 9.75rem); }
+.consultation-stable .consultation-clear-control { grid-column:2; grid-row:2; min-height:2.75rem; width:7.5rem; }
+.consultation-stable .consultation-clear-control > a { width:100%; white-space:nowrap; }
+.consultation-stable [data-live-submit] { grid-column:1 / -1; grid-row:4; justify-self:end; }
+.consultation-stable::before { content:""; grid-column:1; grid-row:2; height:2.75rem; pointer-events:none; }
+.consultation-filter-count { display:inline-flex; align-items:center; justify-content:center; min-width:1.25rem; font-size:.75rem; }
+@media (min-width:640px) {
+  .consultation-stable { grid-template-columns:minmax(0,1fr) 8.5rem 7.5rem; row-gap:0; }
+  .consultation-stable .consultation-search { grid-column:1; grid-row:1; }
+  .consultation-stable::before { content:none; }
+  .consultation-stable .filter-disclosure { grid-row:2; }
+  .consultation-stable .filter-disclosure > summary { top:.75rem; left:auto; right:9rem; width:8.5rem; max-width:none; justify-content:center; }
+  .consultation-stable .consultation-clear-control { grid-column:3; grid-row:1; }
+  .consultation-stable [data-live-submit] { grid-row:3; margin-top:.75rem; }
+}
+
+/* Bank overview chooses an institution; details own every account action. */
+.bank-overview-grid { display:grid; gap:.75rem; }
+.bank-overview-card { display:flex; align-items:center; justify-content:space-between; gap:1rem; border:1px solid rgb(26 46 38 / .14); border-inline-start:4px solid var(--bank-color); border-radius:.75rem; padding:1rem; background:white; }
+.bank-overview-card:hover { border-color:var(--bank-color); }
+.bank-account-card,.banking-section,.bank-availability { border:1px solid rgb(26 46 38 / .12); border-radius:.75rem; padding:1rem; background:white; }
+.bank-account-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; }
+.account-balance-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; margin-block:1rem .5rem; padding-block:1rem; border-block:1px solid rgb(26 46 38 / .08); }
+.account-balance-grid dt { font-size:.75rem; line-height:1.25rem; color:rgb(26 46 38 / .65); }
+.account-balance-grid dd { font-size:1rem; line-height:1.5rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.account-planning-action { display:flex; justify-content:flex-end; }
+.account-credit-cards { margin-block-start:.75rem; padding-block-start:.75rem; border-top:1px solid rgb(26 46 38 / .12); }
+.credit-card-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; padding-block:.75rem; }
+.credit-card-row + .credit-card-row { border-top:1px solid rgb(26 46 38 / .08); }
+.account-configuration { margin-block-start:.5rem; }
+.account-configuration > summary,.bank-activity > summary { display:flex; align-items:center; min-height:2.75rem; width:fit-content; cursor:pointer; font-size:.875rem; gap:.5rem; list-style:none; }
+.account-configuration > summary::before,.bank-activity > summary::before { content:"›"; transition:transform .12s ease; }
+.account-configuration[open] > summary::before,.bank-activity[open] > summary::before { transform:rotate(90deg); }
+.account-configuration > summary::-webkit-details-marker,.bank-activity > summary::-webkit-details-marker { display:none; }
+.bank-activity { border-top:1px solid rgb(26 46 38 / .15); padding-top:.5rem; }
+.bank-availability-primary { display:flex; flex-wrap:wrap; align-items:start; justify-content:space-between; gap:.75rem; }
+.bank-availability-breakdown { flex:1 1 24rem; min-width:0; }
+.bank-availability-breakdown > summary { margin-inline-start:auto; }
+.bank-balance-breakdown { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); gap:.75rem; padding-top:.75rem; border-top:1px solid rgb(26 46 38 / .1); }
+.bank-balance-breakdown dt { font-size:.75rem; color:rgb(26 46 38 / .65); }
+.bank-balance-breakdown dd { font-size:.875rem; font-variant-numeric:tabular-nums; margin-top:.25rem; }
+.dark .bank-overview-card,.dark .bank-account-card,.dark .banking-section,.dark .bank-availability { background:#1b1b1b; border-color:rgb(250 248 243 / .15); }
+.dark .bank-overview-card { border-inline-start-color:var(--bank-color); }
+.dark .bank-overview-card:hover { border-color:var(--bank-color); }
+.dark .account-balance-grid,.dark .account-credit-cards,.dark .credit-card-row + .credit-card-row,.dark .bank-activity,.dark .bank-balance-breakdown { border-color:rgb(250 248 243 / .12); }
+.dark .account-balance-grid dt,.dark .bank-balance-breakdown dt { color:rgb(250 248 243 / .65); }
+@media (min-width:768px) { .bank-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }

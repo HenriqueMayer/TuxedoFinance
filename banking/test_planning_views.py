@@ -51,4 +51,7 @@ class PlanningAccountViewTests(TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
         self.assertLessEqual(len(many), len(single) + 1)
-        self.assertContains(response, 'Extra 23')
+        self.assertEqual(list(response.context['banks'])[0].account_count, 25)
+        self.assertNotContains(response, 'Extra 23')
+        detail = self.client.get(reverse('banking:detail', args=[self.bank.pk]))
+        self.assertContains(detail, 'Extra 23')

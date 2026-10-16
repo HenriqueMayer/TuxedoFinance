@@ -40,8 +40,9 @@ translations when their sources change.
 
 Every new or changed question-mark help icon must follow the
 [shared tooltip contract](docs/frontend.md#question-mark-help). Reuse
-`partials/help_popover.html`; open on hover or keyboard focus, dismiss on pointer
-exit/outside click/Escape, and never pin mouse-clicked help. Preserve touch and
+`partials/help_popover.html`; open on icon hover or keyboard focus; mouse help closes immediately when the
+pointer leaves the icon, including entry into its text. Dismiss on outside
+click/Escape, and never pin mouse-clicked help. Preserve touch and
 no-JavaScript access. Background updates outside the help owner must preserve
 open help. Use the shared readable width and structured copy; test
 real interactions, viewport bounds, both themes and HTMX initialization.
@@ -103,6 +104,8 @@ and test real keyboard interactions, both themes, mobile, and native fallback.
 
 Consultation bars keep one primary text search and optional criteria in a deliberate
 native `details.filter-disclosure`, with active counts and Clear beside it. Use
+stable slots for search, the filter trigger and Clear; optional criteria expand
+below without redistributing that control rail. Use
 `partials/month_filter.html` for named-month consultation: retain the native ISO
 field/no-JavaScript submission and reuse the shared choice enhancement. Direct
 Enter confirmation of a unique textual match is an explicit month-only opt-in;

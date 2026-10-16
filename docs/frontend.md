@@ -156,8 +156,9 @@ Home | Transactions | Accounts | Investments | Plan
 loyalty routes. `core.workspace_navigation` supplies the same five labels,
 destinations and active states to a persistent desktop sidebar at `lg` (1024px)
 and a fixed bottom navigation below that breakpoint. Primary links navigate
-directly, without hover submenus. Workspace section tabs keep reports, net
-worth, categories, imports, invoices and exchange rates discoverable.
+directly, without hover submenus. Workspace section tabs keep reports,
+categories, invoices and exchange rates discoverable. Paused net-worth and
+statement-import interfaces stay out of navigation.
 The body reserves room for the sidebar and bottom bar, including the mobile
 safe area. Searchable-choice viewport calculations also account for the bar.
 The bottom bar is the sole compact-label typography exception: its five full
@@ -219,31 +220,44 @@ Money rendering follows the authenticated user's base reporting currency.
 Historical transfer and investment totals identify their persisted FX snapshot;
 other current valuations show their valuation date and rate source.
 
+The shared footer uses a thin theme-aware divider, small text attribution and
+the retained copyright/author link. It has no logo image or contrasting brand
+banner; light and dark pages use the same quiet layout. It remains in normal
+flow, with the shell reserving space for fixed mobile navigation.
+
 ## Banking information architecture
 
-`/banking/` starts with the shared availability summary, explicitly covering all
-banks. Accounts appear in tables grouped by institution, with native balance,
-set-aside funds, availability and a reversible planning toggle. Linked cash pots
-appear under their bank and link to the separate investment workspace.
+`/banking/` starts with the all-bank availability summary and a grid of bank
+links. Each bank shows its name, color marker and account/card counts. There is
+no overview search or inline account disclosure. Open a bank's own page for its
+accounts, cards, monetary cash positions and loyalty programs; the existing
+workspace tabs and browser history provide navigation.
+
+Each account card keeps its name, currency and New transaction action together.
+Balance, set-aside funds and availability form a labelled amount grid without
+actions embedded in it. The planning participation control remains separate.
+Credit-card invoice/purchase shortcuts and administrative options belong to that
+account; Account details discloses its opening balance and debit cards. An
+account ellipsis retains editing/reserving, transfer, card creation and deletion.
+Reserves is a separate native disclosure. Recent activity discloses redemptions,
+related invoices and ledger movements; a bound redemption error opens it. Explicit record
+fragments reveal their containing native disclosures after full or boosted
+page navigation; unrelated background updates do not reopen them.
 
 Banking templates mark their owning content with `.banking-workspace`. This is a
-local density exception to the general type and spacing defaults: page titles
-use 24/30px, inner section titles 16/24px and action text 14/20px, with reduced
-panel and row padding. These rules do not change other workspaces, ordinary form
-fields or the closed bank summary.
+local density exception: page titles use 24/30px, section titles 16/24px and
+actions 14/20px, with compact panel and row padding. Ordinary form fields,
+global navigation and other workspaces retain their shared defaults.
 
 Scoped actions and menu items default to a minimum height of 44px; row ellipsis
 triggers also retain a 44px width. Only at widths of at least 768px with
-`(pointer: fine) and (hover: hover)` do the listed actions, menu items and account
-links reduce to 36px, with 36px square ellipsis triggers. Coarse-pointer and
-smaller-screen controls retain the 44px targets. Preserve visible keyboard focus,
-deliberate menu activation, native links and complete no-JavaScript submission
-while adjusting density; global navigation and shared form controls retain their
-own contracts.
+`(pointer: fine) and (hover: hover)` do actions and menu items reduce to 36px,
+with 36px square ellipsis triggers. Preserve visible keyboard focus, deliberate
+menu activation, native links and complete no-JavaScript submission.
 
-Bank details reuse these account rows, then disclose account capabilities and
-cards. Invoices and dated movements remain visible below. Transfer and account
-actions stay contextual; loyalty and exchange-rate setup use secondary options.
+Planning fragments reuse the same account/card presentation and owner-filtered
+prefetches. Contextual shortcuts retain the explicit validated page origin after
+POST updates instead of adopting the planning endpoint as their return target.
 
 Opening balance is clearly labeled as the ledger starting point, not an income
 transaction. Personal records remain editable; audit-grade reversal controls
@@ -476,7 +490,7 @@ do not add independent click-to-pin tooltips or use a native title as the only h
 
 | Interaction | Required behavior |
 |---|---|
-| Mouse hover | Open without clicking. Keep the help visible when moving from the icon into its text. Close after leaving both, with a 120 ms crossing allowance. |
+| Mouse hover | Open only over the question-mark trigger. Close immediately when the pointer leaves that trigger, including travel into the explanation. Moving between the trigger’s SVG children does not close it. |
 | Mouse click | Never pin help. Clicking outside dismisses it immediately. Only one help box may be open. |
 | Keyboard | Tab focus opens help; Enter/Space can reopen it. Escape dismisses without moving focus; Tab away closes it. Pointer clicks must not leave a focus-driven tooltip stuck open. |
 | Touch | Tap toggles help. Another tap, an outside tap or another help icon dismisses the previous box. |
@@ -825,7 +839,7 @@ restoration behavior.
 
 ## Compact consultation bars and month names
 
-Transactions, Categories and Banking use `consultation-bar`, `consultation-search`
+Transactions, Categories, Invoices and Exchange rates use `consultation-bar`, `consultation-search`
 and `consultation-actions`. Keep one primary text search; place less frequent
 criteria in a deliberate native `details.filter-disclosure`. Its active count
 and nearby Clear refresh independently of the controls. Newly returned field
@@ -834,7 +848,14 @@ stay complete in native GET submissions. Transaction search already includes
 category names and split-category names; exact category selection remains in
 Filters and does not change the broad search semantics.
 
-Transactions alone adds `.transaction-consultation` with stable grid tracks.
+Categories, Invoices and Exchange rates add `.consultation-stable`. Search,
+Filters and the reserved Clear slot share a rail on wider screens. Small screens
+keep search above a fixed action row. Only the native summary is positioned in
+its slot; opening the complete criteria adds a full-width row below it. Numeric
+active badges and screen-reader descriptions update independently. Keep the
+native submit fallback in its own row, including after a failed live request.
+
+Transactions adds `.transaction-consultation` with its existing stable tracks.
 At viewport widths of at least 1440px, search/month, type choices, Filters and
 Clear share one rail. Smaller desktop layouts use two rows, and mobile uses
 explicit stacked tracks rather than content-dependent wrapping. The month
@@ -885,7 +906,9 @@ scrollbar, scaling and input behavior.
 `partials/month_filter.html` retains the native ISO month input and optionally
 uses the shared Django field renderer. `month-filter.js` enhances only marked
 consultation controls: open a bounded panel deliberately, type a translated
-month name, inspect/edit its year and confirm with Enter. A unique textual match
+month name, inspect/edit its year and confirm with Enter. Internal popup
+scrolling and deferred scroll events from unrelated search inputs do not dismiss
+the panel; actual document/ancestor movement and outside interactions still do. A unique textual match
 may confirm directly only on this month choice (`data-search-auto-single`);
 ambiguous input needs explicit arrow selection. Ordinary financial record
 pickers retain their existing keyboard contract. Both clear actions reset the

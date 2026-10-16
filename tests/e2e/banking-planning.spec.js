@@ -16,14 +16,14 @@ async function seed(page, testInfo) {
     const bank = await page.locator('#id_bank option').last().getAttribute('value');
     await post(page, '/banking/accounts/create/', { bank, name: 'Monthly account', currency: 'BRL', opening_date: '2025-01-01', opening_balance: '5000', pix_enabled: 'on', planning_enabled: 'on', reserved_amount: '2000' });
     await page.goto('/banking/');
-    await page.locator(`#bank-${bank} > summary`).press('Enter');
+    await page.locator(`#bank-${bank}`).press('Enter');
     return bank;
 }
 for (const dark of [false, true]) {
     test(`bank reserves and account toggle preserve money, focus and position (${dark ? 'dark' : 'light'})`, async ({ page }, testInfo) => {
         await seed(page, testInfo);
         await page.evaluate(value => { document.documentElement.classList.toggle('dark', value); localStorage.setItem('theme', value ? 'dark' : 'light'); }, dark);
-        const row = page.locator('tr[data-preserve-view]').first();
+        const row = page.locator('article.bank-account-card[data-preserve-view]').first();
         await expect(row).toContainText('3.000,00');
         const toggle = row.getByRole('button', { name: 'Set aside Monthly account', exact: true });
         await toggle.focus();
@@ -31,26 +31,27 @@ for (const dark of [false, true]) {
         const top = await page.evaluate(() => window.scrollY);
         await toggle.press('Enter');
         await expect(row.getByRole('button', { name: 'Use Monthly account in planning', exact: true })).toBeFocused();
-        await expect(row.locator('td').nth(1)).toContainText('5.000,00');
-        await expect(row.locator('td').nth(3)).toContainText('0,00');
+        await expect(row.locator('[data-account-balance]')).toContainText('5.000,00');
+        await expect(row.locator('[data-account-available]')).toContainText('0,00');
         // Focus is restored after swap; viewport restoration also runs after
         // HTMX settles attributes and the browser performs its final reflow.
         await expect.poll(async () => page.evaluate(previous => Math.abs(window.scrollY - Math.min(previous,
             document.documentElement.scrollHeight - innerHeight)), top)).toBeLessThan(4);
-        await expect(page.locator('#planning-availability')).toContainText('BRL 0,00');
+        await expect(page.locator('#planning-availability')).toHaveCount(0);
         await page.keyboard.press('Space');
         await expect(row.getByRole('button', { name: 'Set aside Monthly account', exact: true })).toBeFocused();
-        await expect(row.locator('td').nth(3)).toContainText('3.000,00');
+        await expect(row.locator('[data-account-available]')).toContainText('3.000,00');
         await page.screenshot({ path: testInfo.outputPath(`banks-${dark ? 'dark' : 'light'}.png`), fullPage: true });
         await page.setViewportSize({ width: 390, height: 844 });
-        await expect(row).toHaveCSS('display', 'grid');
+        await expect(row.locator('.account-balance-grid')).toHaveCSS('display', 'grid');
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-        for (const cell of await row.locator('td[data-label]').all()) {
+        for (const cell of await row.locator('.account-balance-grid > div').all()) {
             const bounds = await cell.boundingBox();
             expect(bounds.x).toBeGreaterThanOrEqual(16);
             expect(bounds.x + bounds.width).toBeLessThanOrEqual(374);
         }
         await page.screenshot({ path: testInfo.outputPath(`banks-mobile-${dark ? 'dark' : 'light'}.png`), fullPage: true });
+        await row.locator('details[name="account-updates"] > summary').press('Enter');
         await row.getByRole('link', { name: 'Edit Monthly account and reserve' }).click();
         await page.getByLabel('Reserved amount', { exact: true }).fill('-1');
         await page.getByRole('button', { name: 'Save', exact: true }).click();

@@ -25,7 +25,7 @@ async function seed(page, testInfo) {
     const card = await page.locator('#id_credit_card option').last().getAttribute('value');
     const category = await page.locator('#id_category option').filter({ hasText: /^Meals$/ }).getAttribute('value');
     await post(page, '/transactions/create/', { title: 'Card meal', amount: '100', category, transaction_type: 'EXPENSE', payment_channel: 'CREDIT_CARD', credit_card: card, date: today, installments: '1' });
-    return { account, today };
+    return { bank, account, today };
 }
 
 for (const theme of ['light', 'dark']) {
@@ -33,19 +33,19 @@ for (const width of [390, 1440]) {
 test(`account tasks keep context and invoice recovery (${width}, ${theme})`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 780 });
     await page.addInitScript(value => localStorage.setItem('theme', value), theme);
-    const { account, today } = await seed(page, testInfo);
-    const origin = '/banking/?q=Task';
+    const { bank, account, today } = await seed(page, testInfo);
+    const origin = `/banking/${bank}/`;
     await page.goto(origin);
     const menu = page.locator('details[name="account-updates"]').first();
     const summary = menu.locator('summary');
     await summary.focus();
     await expect(menu).not.toHaveAttribute('open', '');
     await summary.press('Enter');
-    await menu.getByRole('link', { name: 'New transaction', exact: true }).focus();
+    await page.locator(`#account-row-${account}`).getByRole('link', { name: 'New transaction', exact: true }).focus();
     await page.keyboard.press('Enter');
     await expect(page.locator('#id_bank_account')).toHaveValue(account);
     await page.getByRole('link', { name: 'Cancel', exact: true }).click();
-    await expect(page).toHaveURL(new RegExp('/banking/\\?q=Task$'));
+    await expect(page).toHaveURL(new RegExp(`/banking/${bank}/$`));
     await summary.press('Enter');
     await expect(menu.getByRole('link', { name: 'Import statement', exact: true })).toHaveCount(0);
     await expect(menu.locator('a[href*="roadmap"], a[href*="imports"]')).toHaveCount(0);
@@ -85,15 +85,15 @@ test('account update choices work natively on mobile without JavaScript', async 
     const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 780 } });
     const page = await context.newPage();
     try {
-        const { account } = await seed(page, testInfo);
-        await page.goto('/banking/?q=Task');
+        const { bank, account } = await seed(page, testInfo);
+        await page.goto(`/banking/${bank}/`);
         const menu = page.locator('details[name="account-updates"]').first();
         await menu.locator('summary').press('Enter');
         await expect(menu.getByRole('link', { name: 'Import statement', exact: true })).toHaveCount(0);
         await expect(menu.locator('a[href*="roadmap"]')).toHaveCount(0);
-        await menu.getByRole('link', { name: 'New transaction', exact: true }).click();
+        await page.locator(`#account-row-${account}`).getByRole('link', { name: 'New transaction', exact: true }).click();
         await expect(page.locator('#id_bank_account')).toHaveValue(account);
         await page.getByRole('link', { name: 'Cancel', exact: true }).click();
-        await expect(page).toHaveURL(/banking\/\?q=Task$/);
+        await expect(page).toHaveURL(new RegExp(`/banking/${bank}/$`));
     } finally { await context.close(); }
 });

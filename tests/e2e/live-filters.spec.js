@@ -174,29 +174,26 @@ for (const theme of ['light', 'dark']) {
         const bank = (await form.text()).match(/<option value="(\d+)"[^>]*>Live institution<\/option>/)[1];
         await post(page, '/banking/accounts/create/', {
             bank, name: 'Live account', currency: 'BRL', opening_balance: '100', opening_date: '2026-01-01',
+            planning_enabled: 'on',
         });
         await page.goto('/banking/');
         const dialogs = [];
         page.on('dialog', async dialog => { dialogs.push(dialog.message()); await dialog.dismiss(); });
-        const disclosure = page.locator(`#bank-${bank}`);
-        await disclosure.locator(':scope > summary').press('Enter');
-        await expect(disclosure).toHaveAttribute('open', '');
-        await expect(page.locator('#bank-results form[method="post"]')).toHaveCount(1);
-        const query = page.locator('#bank-filter-form input[name="q"]');
-        await query.fill('Live');
-        await query.press('Enter');
-        await expect(page).toHaveURL(/q=Live/);
-        await expect(disclosure).toHaveAttribute('open', '');
-        await query.fill('Other');
-        await query.press('Enter');
-        await expect(page.locator('#bank-results form[method="post"]')).toHaveCount(0);
+        await expect(page.locator('#bank-filter-form')).toHaveCount(0);
+        await page.locator(`#bank-${bank}`).press('Enter');
+        const origin = `/banking/${bank}/`;
+        const account = page.locator('article.bank-account-card');
+        await expect(account).toHaveCount(1);
+        const toggle = account.locator('button[id^="planning-toggle-"]');
+        await expect(toggle).toHaveAccessibleName('Set aside Live account');
+        await expect(toggle).toBeVisible();
+        await toggle.press('Enter');
+        await expect(account.getByRole('button', {name:'Use Live account in planning',exact:true})).toBeFocused();
         await page.locator('#app-desktop-transactions-link').click();
         await expect(page).toHaveURL(/\/transactions\/$/);
         await page.goBack();
-        await expect(page).toHaveURL(/\/banking\/\?q=Other$/);
-        await expect(query).toHaveValue('Other');
-        await page.locator('#bank-filter-form a[data-live-reset]').click();
-        await expect(page.locator('#bank-results form[method="post"]')).toHaveCount(1);
+        await expect(page).toHaveURL(new RegExp(origin+'$'));
+        await expect(account).toHaveCount(1);
         await page.locator('#app-desktop-transactions-link').click();
         await expect(page).toHaveURL(/\/transactions\/$/);
         expect(dialogs).toEqual([]);

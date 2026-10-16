@@ -17,11 +17,6 @@
         </div>
     </header>
     {% include 'banking/_availability.html' %}
-    <form id="bank-filter-form" method="get" hx-boost="false" novalidate data-live-filters data-live-results="bank-results" class="consultation-bar">
-        <div class="consultation-search">{% include 'partials/form_field.html' with field=filter_form.q %}</div>
-        <div class="consultation-actions"><span id="bank-clear-control" data-live-fragment="bank-filter-form">{% if search_query %}<a href="{% url 'banking:list' %}" data-live-reset data-live-link="bank-filter-form" class="quiet-action">{% translate 'Clear' %}</a>{% endif %}</span><button type="submit" data-live-submit class="action-link">{% translate 'Search' %}</button></div>
-    </form>
-    <div id="bank-result-meta" data-live-fragment="bank-filter-form"><p class="subtle-copy">{% blocktranslate count count=banks|length %}{{ count }} bank{% plural %}{{ count }} banks{% endblocktranslate %}</p></div>
     {% include 'banking/_bank_list_results.html' %}
 </div>
 {% endblock %}

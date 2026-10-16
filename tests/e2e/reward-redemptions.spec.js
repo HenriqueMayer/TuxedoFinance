@@ -87,13 +87,18 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         await edit.getByRole('button',{name:language==='en'?'Save':'Salvar',exact:true}).press('Enter');
         await expect(history.locator('form')).toHaveCount(0);await expect(history).toContainText(/USD 3[,.]75/);
         await page.goto(`/banking/${funding}/`);
+        await page.locator('#bank-activity > summary').press('Enter');
         await expect(page.locator('#reward-redemptions')).toContainText('IOF card');
         const invoices=page.locator('section').filter({has:page.getByRole('heading',{name:language==='en'?'Credit card invoices':'Faturas de cartão de crédito',exact:true})});
         await expect(invoices).toContainText(/USD 3[,.]75/);
-        await page.reload();await expect(invoices.locator('li')).toHaveCount(1);
+        await page.reload();
+        await expect(page.locator('#bank-activity')).not.toHaveAttribute('open', '');
+        await page.locator('#bank-activity > summary').press('Enter');
+        await expect(invoices.locator('li')).toHaveCount(1);
         const native=await browser.newContext({javaScriptEnabled:false,storageState:await page.context().storageState()});
         try{
             const p=await native.newPage();await p.goto(`/banking/${receiving}/`);
+            await p.locator('#bank-activity > summary').press('Enter');
             await expect(p.locator('#reward-redemptions')).toContainText('IOF card');
             await expect(p.locator('#reward-redemptions')).toContainText('28/10/2026');
             await p.getByRole('link',{name:language==='en'?'Edit redemption':'Editar resgate',exact:true}).click();

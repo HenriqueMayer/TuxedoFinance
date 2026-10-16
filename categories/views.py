@@ -14,14 +14,13 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
-from django.utils.translation import ngettext
 from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from categories.forms import CategoryForm, CategoryImportForm
 from categories.models import Category
 from core.csv import export_row
-from core.navigation import ReturnContextMixin, with_return_url
+from core.navigation import ReturnContextMixin
 
 
 class CategoryListView(LoginRequiredMixin, ListView):
@@ -71,7 +70,6 @@ class CategoryListView(LoginRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('q', '').strip()
         context['selected_level'] = self._selected_level()
         context['selected_type'] = self._selected_type()
-        context['selected_view'] = 'tree' if self.request.GET.get('view') == 'tree' else 'list'
         context['has_filters'] = bool(context['search_query'] or context['selected_level'] or context['selected_type'])
         context['has_categories'] = Category.objects.filter(user=self.request.user).exists()
         # Matching descendants retain owned ancestors as navigation context,
@@ -114,24 +112,6 @@ class CategoryListView(LoginRequiredMixin, ListView):
                 pending.extend((child, group['children']) for child in reversed(children[current.pk]))
         context['category_groups'] = groups
         context['has_category_groups'] = any(group['children'] for group in groups)
-        graph_nodes = []
-        pending = [(group, None, 0) for group in reversed(groups)] if context['selected_view'] == 'tree' else []
-        while pending:
-            group, parent_id, depth = pending.pop()
-            category = group['category']
-            graph_nodes.append({
-                'id': str(category.pk), 'parent': parent_id, 'depth': depth,
-                'name': category.name, 'kind': category.get_transaction_type_display() if category.transaction_type else _('Unclassified'),
-                'usage': category.usage_count, 'context': group['context_only'],
-                'usage_label': ngettext('%(count)s transaction', '%(count)s transactions', category.usage_count) % {'count': category.usage_count},
-                'edit': with_return_url(str(reverse_lazy('categories:update', args=[category.pk])),
-                    self.request.get_full_path(), fragment=f'category-graph-node-{category.pk}'),
-                'add': with_return_url(str(reverse_lazy('categories:create')) + f'?parent={category.pk}',
-                    self.request.get_full_path(), fragment=f'category-graph-node-{category.pk}') if not category.parent_category_id else '',
-                'delete': str(reverse_lazy('categories:delete', args=[category.pk])),
-            })
-            pending.extend((child, str(category.pk), depth + 1) for child in reversed(group['children']))
-        context['category_graph'] = graph_nodes
         return context
 
 

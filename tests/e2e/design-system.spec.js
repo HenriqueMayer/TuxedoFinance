@@ -362,8 +362,8 @@ test('report cards explain the month and chart window by keyboard and without Ja
     const desktopBox = await panel.boundingBox();
     expect(desktopBox.width).toBeGreaterThanOrEqual(320);
     expect(desktopBox.height).toBeLessThan(340);
-    await panel.hover();
-    await expect(panel).toBeVisible();
+    await page.mouse.move(desktopBox.x + 20, desktopBox.y + 20);
+    await expect(panel).toBeHidden();
     await page.getByRole('heading', { name: 'Reports', exact: true }).hover();
     await expect(panel).toBeHidden();
     await netHelp.hover();

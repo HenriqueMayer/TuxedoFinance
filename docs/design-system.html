@@ -143,13 +143,10 @@
     </div>
 
     <!-- APP FOOTER -->
-    <footer class="bg-forest text-cream/70 dark:bg-night-surface dark:text-night-muted lg:col-start-2">
-        <div class="mx-auto flex w-full max-w-7xl flex-col items-center gap-3 px-4 py-10 text-center sm:flex-row sm:justify-between sm:gap-4 sm:text-left sm:px-6 lg:px-8">
-            <div class="flex items-center gap-2">
-                <img src="../static/brand/tuxedo-mark-256.png" alt="" class="h-8 w-8 rounded-lg object-cover">
-                <span class="text-sm tracking-[0.2em] uppercase font-medium text-cream">Tuxedo <span class="text-caramel-light">Finance</span></span>
-            </div>
-            <p class="text-xs font-normal">&copy; 2026 <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-caramel-light">HenriqueMayer</a>. All rights reserved.</p>
+    <footer class="site-footer lg:col-start-2">
+        <div class="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 lg:px-8">
+            <span class="text-xs font-medium">Tuxedo Finance</span>
+            <p class="text-xs leading-5">&copy; 2026 <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer" class="rounded underline-offset-4 hover:underline">HenriqueMayer</a>. All rights reserved.</p>
         </div>
     </footer>
     <nav class="app-bottom-navigation" style="position:static" aria-label="Example mobile workspaces" data-catalogue-navigation="mobile"><a href="#dashboard" data-nav-item="home" class="app-navigation-link" aria-current="page"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7M5 9v11h5v-7h4v7h5V9" /></svg><span>Home</span></a>
@@ -935,7 +932,7 @@
             <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-6 w-6 text-income-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-19.5 0v6a2.25 2.25 0 002.25 2.25h15a2.25 2.25 0 002.25-2.25v-6m-19.5 0h4.5a2.25 2.25 0 011.591.659l1.09 1.09a2.25 2.25 0 001.591.659h4.5a2.25 2.25 0 001.591-.659l1.09-1.09a2.25 2.25 0 011.591-.659h4.5" /></svg><p class="mt-2 text-xs uppercase tracking-widest text-cream/70">inbox 1.5</p></div>
             <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg class="mx-auto h-6 w-6 text-caramel-ink dark:text-caramel-light dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg><p class="mt-2 text-xs uppercase tracking-widest text-cream/70">moon (light) 1.75</p></div>
             <div class="rounded-2xl border border-cream/15 p-5 text-center"><svg class="hidden mx-auto h-6 w-6 text-caramel-ink dark:text-caramel-light dark:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg><p class="mt-2 text-xs uppercase tracking-widest text-cream/70">sun (dark) 1.75</p></div>
-            <div class="rounded-2xl border border-cream/15 p-5 text-center col-span-2 sm:col-span-3 lg:col-span-5 text-left"><p class="font-sans text-lg text-cream">Brand mark</p><p class="mt-1 text-xs font-normal text-cream/70">Navbar and footer use ../static/brand/tuxedo-mark-256.png in a rounded-xl chip next to the two-line wordmark (TUXEDO / FINANCE in caramel) &mdash; replacing the old gradient-free text-only brand row.</p></div>
+            <div class="rounded-2xl border border-cream/15 p-5 text-center col-span-2 sm:col-span-3 lg:col-span-5 text-left"><p class="font-sans text-lg text-cream">Brand mark</p><p class="mt-1 text-xs font-normal text-cream/70">The navbar uses ../static/brand/tuxedo-mark-256.png beside the two-line wordmark (TUXEDO / FINANCE in caramel). The shared footer uses quiet text attribution and a thin divider, without repeating the logo.</p></div>
         </div>
     </div>
 </section>
@@ -943,23 +940,20 @@
 
 <section id="workspaces" class="scroll-mt-20 mt-16 border-t border-forest/15 py-10 dark:border-cream/15">
     <h2 class="text-3xl font-semibold tracking-tight">Planning workspaces and financial rows</h2>
-    <p class="mt-3 max-w-3xl text-sm leading-6 text-forest/70 dark:text-night-muted">Primary navigation: Overview, Activity, Banks, Investments, Planning. Reports sit under Overview; Categories under Activity. Preserve the original palette, typography, wordmark and shared control contracts. A workspace uses contrasting surface cards to separate reading groups. Keep tables and rows inside each group; avoid nesting cards. Explanations belong in shared question-mark help beside headings or labels, while errors and incomplete-value warnings remain visible.</p>
+    <p class="mt-3 max-w-3xl text-sm leading-6 text-forest/70 dark:text-night-muted">Primary navigation: Home, Transactions, Accounts, Investments, Plan. Reports sit under Home; Categories under Transactions. Preserve the original palette, typography, wordmark and shared control contracts. A workspace uses contrasting surface cards to separate reading groups. Keep tables and rows inside each group; avoid nesting cards. Explanations belong in shared question-mark help beside headings or labels, while errors and incomplete-value warnings remain visible.</p>
     <nav class="section-nav mt-6" aria-label="Example investment sections"><a href="#workspaces" aria-current="page">Portfolio</a><a href="#workspaces">Remunerated cash</a><a href="#workspaces">Operations</a><a href="#forms">Configuration</a><span class="unavailable-action-native"><button type="button" class="unavailable-action-trigger" aria-disabled="true" aria-describedby="example-simulation-notice">Simulate returns</button><span id="example-simulation-notice" role="tooltip" class="help-fallback-content action-notice">To simulate investment returns, open Planning → Yield simulation.</span></span></nav>
     <p class="subtle-copy mt-3">Incomplete investment setup highlights Configure investments and shows an ordered Bank → Product → Asset guide with Ready/Pending states and one next-step action. Configured products are grouped by bank; assets keep a separate catalog. An unavailable navigation item uses a gray, focusable text button and a compact neutral floating notice, with no question-mark icon and no navigation destination.</p>
-    <section class="surface-panel mt-6" aria-labelledby="bank-table-title">
-        <div class="panel-heading mb-4"><h3 id="bank-table-title" class="section-title">Everyday bank</h3><a href="#forms" class="action-link">Add account</a></div>
-        <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Example account table">
-            <table class="data-table account-table" role="table">
-                <colgroup><col class="w-[28%]"><col class="w-[18%]"><col class="w-[18%]"><col class="w-[18%]"><col class="w-[18%]"></colgroup>
-                <thead><tr role="row"><th scope="col">Account</th><th scope="col" class="number">Balance</th><th scope="col" class="number">Set aside</th><th scope="col" class="number">Available</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
-                <tbody>
-                    <tr role="row"><td role="cell"><a href="#bank-table-title" class="font-medium underline-offset-4 hover:underline">Everyday account</a><p class="subtle-copy mt-1">BRL</p></td><td role="cell" data-label="Balance" class="number whitespace-nowrap"><span class="account-currency">BRL</span> 5,000.00</td><td role="cell" data-label="Set aside" class="number whitespace-nowrap"><span class="account-currency">BRL</span> 2,000.00</td><td role="cell" data-label="Available" class="number whitespace-nowrap"><span class="account-currency">BRL</span> <strong class="font-semibold">3,000.00</strong><p class="mt-1 text-xs text-forest/60 dark:text-night-muted">Included</p></td><td role="cell"><div class="flex flex-wrap items-center justify-end gap-x-2"><a href="#forms" class="quiet-action" aria-label="Edit Everyday account and reserve">Edit / reserve</a></div></td></tr>
-                    <tr role="row"><td role="cell"><a href="#bank-table-title" class="font-medium underline-offset-4 hover:underline">International account</a><p class="subtle-copy mt-1">USD</p></td><td role="cell" data-label="Balance" class="number whitespace-nowrap"><span class="account-currency">USD</span> 800.00</td><td role="cell" data-label="Set aside" class="number whitespace-nowrap"><span class="account-currency">USD</span> 800.00</td><td role="cell" data-label="Available" class="number whitespace-nowrap"><span class="account-currency">USD</span> <strong class="font-semibold">0.00</strong><p class="mt-1 text-xs text-forest/60 dark:text-night-muted">Set aside</p></td><td role="cell"><div class="flex flex-wrap items-center justify-end gap-x-2"><a href="#forms" class="quiet-action" aria-label="Edit International account and reserve">Edit / reserve</a></div></td></tr>
-                </tbody>
-            </table>
-        </div>
+    <section class="banking-workspace mt-6 space-y-4" aria-labelledby="bank-card-title">
+        <div class="panel-heading"><h3 id="bank-card-title" class="section-title">Everyday bank</h3><a href="#forms" class="action-primary">Add account</a></div>
+        <article class="bank-account-card" aria-label="Example account card">
+            <header class="bank-account-header"><div><p class="text-sm font-medium">Everyday account</p><p class="subtle-copy">BRL</p></div><a href="#forms" class="action-link">New transaction</a></header>
+            <dl class="account-balance-grid"><div><dt>Balance</dt><dd>5,000.00</dd></div><div><dt>Set aside</dt><dd>2,000.00</dd></div><div><dt>Available</dt><dd class="font-semibold">3,000.00</dd></div></dl>
+            <div class="account-planning-action"><a href="#forms" class="planning-visibility">Included</a></div>
+            <details class="account-configuration"><summary>Account details</summary><p class="subtle-copy">Opening balance: BRL 5,000.00</p><a href="#forms" class="quiet-action">Edit / reserve</a></details>
+        </article>
+        <details class="reserve-disclosure"><summary class="reserve-disclosure-summary">Reserves</summary><p class="subtle-copy">Set-aside accounts and cash pots keep their real balances and history.</p></details>
     </section>
-    <p class="mt-3 subtle-copy">Below 768px, each account becomes a labelled group with three aligned figures. Native currency remains on the account heading. Desktop uses a fixed five-column table; intermediate widths scroll within the labelled region.</p>
+    <p class="mt-3 subtle-copy">Accounts opens a bank overview. Each bank has a dedicated page with account cards, linked cards, reserves and recent activity. Native currency belongs to the account heading; Balance, Set aside and Available retain three aligned figures on desktop and mobile. Daily actions and configuration remain separate from these amounts.</p>
     <section id="planning-sheet-example" class="surface-panel mt-6" aria-labelledby="planning-sheet-title">
         <div class="panel-heading mb-4"><h3 id="planning-sheet-title" class="section-title">Monthly overrides</h3><span class="subtle-copy">Illustrative inputs</span></div>
         <p class="subtle-copy mb-4">Empty cells inherit the scenario defaults. Enter an amount only for a deliberate override; this catalogue does not save or calculate financial records.</p>
@@ -974,7 +968,7 @@
         </div>
     </section>
     <p class="mt-3 subtle-copy">Reservation changes planning availability only. Debts and negative balances stay visible. Cash pots show that a redemption is needed before payment. Distinguish actual, hypothetical, historical and incomplete values with text, never color alone.</p>
-    <p class="mt-3 subtle-copy">Implementation: shared surface-panel, metric-panel, page-title, section-title, field-label, workspace-header, section-nav, action-link, action-primary, secondary-actions, data-table, account-table and planning-sheet classes. Use semantic headings, stable IDs and the shared form_field/help_popover partials in Django templates. Dates follow the user preference; technical representations remain ISO. HTMX updates preserve viewport and focus.</p>
+    <p class="mt-3 subtle-copy">Implementation: shared surface-panel, metric-panel, page-title, section-title, field-label, workspace-header, section-nav, action-link, action-primary, secondary-actions, data-table, bank-account-card, account-balance-grid and planning-sheet classes. Use semantic headings, stable IDs and the shared form_field/help_popover partials in Django templates. Dates follow the user preference; technical representations remain ISO. HTMX updates preserve viewport and focus.</p>
 </section>
 
 <footer class="py-10 text-center">
@@ -990,7 +984,7 @@
   <h2 class="section-title">Compact daily flow</h2>
   <p class="subtle-copy">Primary tasks stay visible. Less frequent analysis, configuration and explanations use deliberate native disclosures.</p>
   <div class="filter-panel"><label class="flex-1 space-y-2"><span class="block text-sm font-medium">Search</span><input type="search" class="form-input w-full" placeholder="Type to filter"></label><button type="button" class="action-link">Clear filters</button><span class="status-badge">Live consultation</span></div>
-  <details class="surface-panel bank-panel bank-disclosure"><summary class="bank-disclosure-summary"><span class="bank-bookmark" style="--bank-color:#24594A" aria-hidden="true"></span><span class="section-title flex-1">Institution</span><span aria-hidden="true">⌄</span></summary><div class="bank-disclosure-content"><p class="subtle-copy">Only name and color remain when collapsed. Accounts and actions stay inside.</p><details class="reserve-disclosure"><summary class="reserve-disclosure-summary">Reserves</summary><p class="subtle-copy py-3">Set aside from available money; balances and history stay recorded.</p></details></div></details>
+  <a href="#bank-card-title" class="bank-overview-card" style="--bank-color:#24594A"><div><h3 class="text-base font-semibold">Institution</h3><p class="subtle-copy">2 accounts · 1 card</p></div><span aria-hidden="true">›</span></a>
   <section class="surface-panel space-y-3"><div class="panel-heading"><h3 class="section-title">After known commitments</h3><span class="status-badge">Projection</span></div><p class="money-highlight tabular-nums">BRL 800.00</p><details class="explanation-disclosure"><summary>How is this calculated?</summary><p class="subtle-copy mt-3">Use dated registered cash and known obligations. Label incomplete values and keep reservations distinct from spending limits.</p></details></section>
 </section>
 </main>

@@ -117,6 +117,12 @@
                 if (!panel.hidden) { dismiss(); return; }
                 openState?.dismiss();
                 openState = {root, panel, dismiss, place};
+                // A preceding choice can emit a delayed horizontal input scroll.
+                // Only movement of our document/ancestors can detach this popup.
+                openState.scrolls = new Map([[document, [scrollX, scrollY]]]);
+                for (let owner = root.parentElement; owner; owner = owner.parentElement) {
+                    openState.scrolls.set(owner, [owner.scrollLeft, owner.scrollTop]);
+                }
                 const value = /^(\d{4})-(\d{2})$/.exec(native.value);
                 year.value = value?.[1] || String(new Date().getFullYear());
                 year.disabled = false;
@@ -144,7 +150,13 @@
     // One global owner avoids retaining disconnected month controls after
     // repeated HTMX navigation; each field's ordinary listeners die with it.
     document.addEventListener('pointerdown', event => { if (openState && !openState.root.contains(event.target)) openState.dismiss(); });
-    document.addEventListener('scroll', event => { if (openState && !openState.panel.contains(event.target)) openState.dismiss(); }, true);
+    document.addEventListener('scroll', event => {
+        if (!openState || openState.panel.contains(event.target)) return;
+        const before = openState.scrolls.get(event.target);
+        if (!before) return;
+        const now = event.target === document ? [scrollX, scrollY] : [event.target.scrollLeft, event.target.scrollTop];
+        if (now.some((value, index) => value !== before[index])) openState.dismiss();
+    }, true);
     window.addEventListener('resize', () => openState?.place());
     window.visualViewport?.addEventListener('resize', () => openState?.place());
     window.TuxedoMonthFilters = {init};

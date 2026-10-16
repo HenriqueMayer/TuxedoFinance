@@ -583,9 +583,12 @@ class BankingViewTests(TestCase):
             404,
         )
 
-    def test_search_matches_account_and_has_empty_state(self):
+    def test_retired_search_does_not_hide_banks_or_expose_another_owner(self):
         self.assertContains(self.client.get(reverse('banking:list'), {'q': 'Checking'}), 'Nubank')
-        self.assertContains(self.client.get(reverse('banking:list'), {'q': 'missing'}), 'No matching banks')
+        response = self.client.get(reverse('banking:list'), {'q': 'missing'})
+        self.assertContains(response, 'Nubank')
+        self.assertNotContains(response, 'Secret Bank')
+        self.assertNotContains(response, 'bank-filter-form')
 
     def test_bank_crud_and_duplicate_is_friendly(self):
         response = self.client.post(reverse('banking:create'), {'name': 'New Bank'})

@@ -46,8 +46,8 @@ async function checkHelp(page, label, id) {
     expect(box.width).toBeGreaterThanOrEqual(320);
     expect(box.x).toBeGreaterThanOrEqual(12);
     expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width - 12);
-    await panel.hover();
-    await expect(panel).toBeVisible();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(panel).toBeHidden();
     await page.mouse.move(4, 80);
     await expect(panel).toBeHidden();
     await trigger.hover();

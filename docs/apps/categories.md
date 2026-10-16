@@ -125,60 +125,15 @@ retain the list's search/type/level filters and invalid responses keep the same
 origin. Ownership and duplicate-name/hierarchy checks remain on the server.
 
 
-## List and tree views
+## Consultation layout
 
-Categories default to the grouped List. Search stays in the compact consultation
-bar; level and type are native short choices inside More filters. Controls stay
-mounted during live updates. List/Graph switches and Clear preserve compatible
-query state through the shared live-filter contract; old `?view=tree` URLs select
-the Graph view.
+Categories has one grouped list, initially collapsed. Search stays in the compact
+consultation bar; level and type are native short choices inside More filters.
+The summary and Clear reserve their own control slots. Opening criteria adds
+fields below the rail, without moving the summary or resizing the search.
+Controls stay mounted during live updates; Clear, native submissions and browser
+Back/Forward retain the shared live-filter behavior.
 
-Graph is a local SVG network of points and real parent/child connections.
-Independent root categories form separate clusters; the renderer never invents a
-central category or cross-category links. A seeded sunflower placement and a
-bounded spatial-grid collision pass make the layout deterministic without adding
-a graph dependency or running perpetual physics. A brief introductory movement
-settles within 700 ms and stops immediately on interaction. Reduced motion skips
-that movement, as do catalogues above 400 nodes. Detached HTMX/live-result graphs
-release their animation, resize observer and motion-preference listener.
-
-Names, visible focus circles and 44px pointer/touch hit areas remain at a constant
-screen size while zoom changes the space between positions. The initial viewport
-starts around the first connected root or search match at a readable scale. Fit
-shows an overview without shrinking labels; large catalogues can still require
-zoom and panning to distinguish dense regions. Every category remains available
-through keyboard navigation and the complete native list. A selection shows the
-full stored name, classification, direct transaction count and existing owned
-actions. Canvas names may wrap onto two lines and shorten very long names; the
-selection panel, accessible label, native title and list retain the full name.
-
-Dragging a node changes only its coordinates in this rendered SVG and redraws its
-real incident connections. Dragging empty space pans the view; two-finger pinch
-zooms it. Shift+Arrow moves the current node visually in 20px screen steps as a
-keyboard alternative to node dragging. Repeated keyboard movement reveals the
-focused node inside the SVG whenever it would be clipped, preserving DOM focus
-and page scroll. Arranged coordinates are not stored,
-submitted, or restored after a new GET. Neither arrangement nor view gestures
-reparent a category, change transactions, or send a POST. Using zoom/pan does not
-produce unsaved-operation warnings. The native How to use the graph disclosure
-keeps the complete interaction instructions available without adding permanent
-text above or below the network.
-
-The canvas supports arrow navigation, Home/End and Enter/Space selection with
-one node in the Tab order. Keyboard selection centres the node at a readable
-scale and exposes visible focus. Editor links retain the exact filtered Graph
-origin and selected-node fragment through validated local `next`; native
-Save/Cancel and browser Back/Forward remain authoritative navigation. A valid
-explicit node fragment takes priority, including an ancestor retained as search
-context. Without that origin, a single name-search match is selected and centred;
-multiple matches start at the first match at a readable scale without choosing a
-record on the user's behalf. Live replacements reconcile against the applied URL
-after its history commit, preserving search focus and page scroll rather than
-restoring a stale node fragment from the preceding result.
-
-The complete Accessible list is a native disclosure below the enhanced graph.
-It starts open without JavaScript, while the empty SVG enhancement stays hidden.
-Owned graph data is embedded with Django `json_script`; labels are rendered
-through `textContent`, without executing user text or contacting external graph
-services. Forest construction visits every record once and cuts legacy cycles
-for presentation only, preserving stored relationships.
+The graph and view switch have been removed. Legacy `?view=tree` and other view
+parameters render the same owned list and keep compatible filters. They do not
+change stored category relationships, transactions or financial values.

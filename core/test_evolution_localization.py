@@ -20,7 +20,7 @@ class EvolutionLocalizationTests(TestCase):
             ('/planning/signals/', 'Sinais locais'),
             ('/dashboard/wealth/', 'Dashboard'),
             ('/banking/invoices/', 'Faturas'),
-            ('/categories/?view=tree', 'Grafo de categorias'),
+            ('/categories/?view=tree', 'Categorias'),
             ('/investments/prices/', 'Cotações observadas'),
         ):
             with self.subTest(path=path):

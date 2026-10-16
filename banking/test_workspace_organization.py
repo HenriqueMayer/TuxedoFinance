@@ -26,35 +26,33 @@ class BankingWorkspaceOrganizationTests(TestCase):
         self.card = CreditCard.objects.create(user=self.user, account=self.account, name='Daily card', closing_day=1, due_day=10)
         self.client.force_login(self.user)
 
-    def test_bank_disclosures_and_separate_closed_reserves_keep_all_rows_reviewable(self):
+    def test_overview_links_to_owned_banks_and_details_keep_separate_reserves(self):
         response = self.client.get(reverse('banking:list'))
-        self.assertContains(response, f'<details id="bank-{self.bank.pk}" class="surface-panel bank-panel bank-disclosure" >')
-        self.assertContains(response, f'id="bank-reserves-{self.bank.pk}" class="reserve-disclosure" >')
-        self.assertContains(response, f'id="account-row-{self.account.pk}"', count=1)
-        self.assertContains(response, f'id="account-row-{self.reserve.pk}"', count=1)
-        self.assertContains(response, f'id="cash-position-{self.product.pk}-{self.asset.pk}"', count=1)
-        bank = list(response.context['banks'])[0]
-        self.assertEqual([row['account'] for row in bank.included_rows], [self.account])
-        self.assertEqual([row['account'] for row in bank.reserved_rows], [self.reserve])
+        self.assertContains(response, f'id="bank-{self.bank.pk}"')
+        self.assertContains(response, reverse('banking:detail', args=[self.bank.pk]))
+        self.assertNotContains(response, 'bank-filter-form')
+        self.assertNotContains(response, 'account-row-')
         self.assertEqual(response.context['availability']['available_total'], Decimal('1000'))
-        searched = self.client.get(reverse('banking:list'), {'q': self.asset.name})
-        self.assertEqual(list(searched.context['banks'])[0], self.bank)
-        self.assertTrue(list(searched.context['banks'])[0].is_open)
-        self.assertContains(searched, 'data-live-filters')
+        # Retired search links show the complete owned overview, never a hidden subset.
+        response = self.client.get(reverse('banking:list'), {'q': 'missing'})
+        self.assertEqual(list(response.context['banks']), [self.bank])
+        detail = self.client.get(reverse('banking:detail', args=[self.bank.pk]))
+        for marker in [f'account-row-{self.account.pk}', f'account-row-{self.reserve.pk}',
+                       f'cash-position-{self.product.pk}-{self.asset.pk}']:
+            self.assertContains(detail, f'id="{marker}"', count=1)
+        self.assertContains(detail, f'id="bank-reserves-{self.bank.pk}" class="reserve-disclosure" >')
+        self.assertNotContains(detail, 'id="planning-availability"')
 
     def test_bank_sections_keep_primary_actions_and_consolidate_card_management(self):
         debit_card = DebitCard.objects.create(user=self.user, account=self.account, name='Daily debit')
         before = list(CreditCard.objects.values())
         response = self.client.get(reverse('banking:list'))
-        self.assertContains(response, f'id="bank-accounts-{self.bank.pk}"')
-        self.assertContains(response, f'id="bank-cards-{self.bank.pk}"')
-        self.assertContains(response, f'<details id="bank-options-{self.bank.pk}" class="secondary-actions compact-menu" name="bank-options">')
         self.assertNotContains(response, '/roadmap/')
         with patch('banking.views.sync_user_ledger'):
             detail = self.client.get(reverse('banking:detail', args=[self.bank.pk]))
         # One credit-card presentation retains daily and administrative actions.
         self.assertContains(detail, f'id="credit-card-{self.card.pk}"', count=1)
-        self.assertContains(detail, f'<p class="font-medium">{self.card.name}</p>', count=1, html=True)
+        self.assertContains(detail, f'<p class="text-sm font-medium">{self.card.name}</p>', count=1, html=True)
         self.assertContains(detail, 'closes 1, due 10')
         self.assertContains(detail, 'Automatic settlement on due date')
         for name, pk in [('credit_card_update', self.card.pk), ('credit_card_delete', self.card.pk),
@@ -69,21 +67,35 @@ class BankingWorkspaceOrganizationTests(TestCase):
         self.assertFalse(BankMovement.objects.exists())
 
     def test_compact_row_actions_keep_owned_post_state_and_available_value_separate(self):
-        response = self.client.get(reverse('banking:list'), {'q': 'Real'})
+        origin = reverse('banking:detail', args=[self.bank.pk])
+        response = self.client.get(origin)
         html = response.content.decode()
-        row = html.split(f'<tr id="account-row-{self.account.pk}"', 1)[1].split('</tr>', 1)[0]
-        cells = re.findall(r'<td\b[^>]*>(.*?)</td>', row, flags=re.DOTALL)
-        self.assertNotIn('<form', cells[3])
-        self.assertIn(f'id="planning-toggle-{self.account.pk}"', cells[4])
-        self.assertIn('name="enabled" value="0"', cells[4])
-        self.assertIn('name="next" value="/banking/?q=Real"', cells[4])
-        self.assertIn(reverse('banking:account_planning', args=[self.account.pk]), cells[4])
-        self.assertIn('aria-label="Update Current"', cells[4])
-        self.assertIn('<span aria-hidden="true">⋯</span>', cells[4])
-        self.assertIn('class="sr-only">Update account</span>', cells[4])
+        row = html.split(f'<article id="account-row-{self.account.pk}"', 1)[1].split('</article>', 1)[0]
+        amounts = row.split('<dl class="account-balance-grid">', 1)[1].split('</dl>', 1)[0]
+        self.assertNotIn('<form', amounts)
+        self.assertIn(f'id="planning-toggle-{self.account.pk}"', row)
+        self.assertIn('name="enabled" value="0"', row)
+        self.assertIn(f'name="next" value="{origin}"', row)
+        self.assertIn(reverse('banking:account_planning', args=[self.account.pk]), row)
+        self.assertIn('aria-label="Update Current"', row)
+        self.assertIn('<span aria-hidden="true">⋯</span>', row)
+        self.assertIn('class="sr-only">Update account</span>', row)
         self.assertEqual(response.context['availability']['available_total'], Decimal('1000'))
         self.assertEqual(self.account.current_balance(), Decimal('1000'))
         self.assertFalse(BankMovement.objects.exists())
+
+    def test_card_details_never_leak_foreign_legacy_links_in_page_or_post_fragment(self):
+        CreditCard.objects.create(user=self.other, account=self.account, name='Private credit', closing_day=1, due_day=10)
+        DebitCard.objects.create(user=self.other, account=self.account, name='Private debit')
+        responses = [self.client.get(reverse('banking:detail', args=[self.bank.pk])),
+                     self.client.post(reverse('banking:account_planning', args=[self.account.pk]),
+                                      {'enabled': '1'}, HTTP_HX_TARGET=f'bank-positions-{self.bank.pk}'),
+                     self.client.post(reverse('banking:account_planning', args=[self.account.pk]),
+                                      {'enabled': '1'}, HTTP_HX_TARGET=f'account-row-{self.account.pk}')]
+        for response in responses:
+            self.assertContains(response, 'Daily card')
+            self.assertNotContains(response, 'Private credit')
+            self.assertNotContains(response, 'Private debit')
 
     def test_compact_filter_criteria_are_native_complete_and_reveal_invalid_values(self):
         with patch('banking.views.sync_user_ledger'):

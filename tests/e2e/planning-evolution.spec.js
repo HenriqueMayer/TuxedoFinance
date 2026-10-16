@@ -21,12 +21,12 @@ async function seed(page, testInfo) {
     await page.goto('/planning/budgets/create/');
     const category = await page.locator('#id_category option').filter({ hasText: 'Groceries' }).getAttribute('value');
     const goalUrl = await post(page, '/planning/goals/create/', { name: 'Study target', target_amount: '2000', currency: 'BRL', target_date: '2030-12-31' });
-    return { category, goalUrl };
+    return { bank, category, goalUrl };
 }
 
 for (const theme of ['light', 'dark']) {
     test(`personal planning keyboard, recovery and source reserves (${theme})`, async ({ page }, testInfo) => {
-        const { category, goalUrl } = await seed(page, testInfo);
+        const { bank, category, goalUrl } = await seed(page, testInfo);
         await page.addInitScript(theme => localStorage.setItem('theme', theme), theme);
         await page.goto('/planning/budgets/create/');
         await expect(page.locator('nav[aria-label="Planning sections"]')).toHaveCount(1);
@@ -101,8 +101,8 @@ for (const theme of ['light', 'dark']) {
         await page.getByRole('button', { name: 'Save', exact: true }).press('Enter');
         await expect(page).toHaveURL(goalUrl);
         await expect(page.locator('main')).toContainText('200,00');
-        await page.goto('/banking/');
-        const accountRow = page.locator('tr[data-preserve-view]').first();
+        await page.goto(`/banking/${bank}/`);
+        const accountRow = page.locator('article[id^="account-row-"]').first();
         await expect(accountRow).toContainText('1.000,00');
         await expect(accountRow).toContainText('300,00');
         await expect(accountRow).toContainText('700,00');

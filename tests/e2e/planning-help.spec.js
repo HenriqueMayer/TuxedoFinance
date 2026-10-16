@@ -41,8 +41,9 @@ for (const theme of ['light', 'dark']) {
         const headingHelp = page.getByRole('button', { name: 'Explain Salary Sandbox', exact: true });
         await headingHelp.hover();
         const tooltip = await readableHelp(page, '#salary-sandbox-help');
-        await tooltip.hover();
-        await expect(tooltip).toBeVisible();
+        const textBounds = await tooltip.boundingBox();
+        await page.mouse.move(textBounds.x + 20, textBounds.y + 20);
+        await expect(tooltip).toBeHidden();
         await headingHelp.click();
         await page.mouse.move(2, 2);
         await expect(tooltip).toBeHidden();

@@ -46,59 +46,34 @@ for (const theme of ['light', 'dark']) {
             await page.addInitScript(value => localStorage.setItem('theme', value), theme);
             const { bank, account, product, asset, card } = await seed(page, info);
             await page.goto('/banking/');
-            const bankGroup = page.locator(`#bank-${bank}`);
-            await expect(bankGroup).not.toHaveAttribute('open', '');
-            await expect(bankGroup.locator(':scope > summary')).toHaveCSS('min-height', '56px');
-            await expect(bankGroup.getByRole('link', { name: 'Add account', exact: true })).toBeHidden();
-            await bankGroup.locator(':scope > summary').focus();
-            await page.keyboard.press('Enter');
-            await expect(bankGroup.getByRole('link', { name: 'Add account', exact: true })).toBeVisible();
-            await expect(page.locator(`#bank-accounts-${bank}`)).toBeVisible();
-            await expect(page.locator(`#bank-cards-${bank}`)).toBeVisible();
+            const bankLink = page.locator(`#bank-${bank}`);
+            await expect(page.locator('#bank-filter-form')).toHaveCount(0);
+            await expect(page.locator('article[id^="account-row-"]')).toHaveCount(0);
+            await expect(bankLink).toContainText('1 account');
+            await expect(page.locator('#planning-availability')).toContainText(/1[.,\s]300[,.]00/);
+            await page.screenshot({path: info.outputPath(`bank-overview-${width}-${theme}.png`), fullPage:true});
+            await bankLink.press('Enter');
+            await expect(page).toHaveURL(new RegExp(`/banking/${bank}/$`));
             const accountRow = page.locator(`#account-row-${account}`);
-            await expect(accountRow.locator('td:nth-child(4) form')).toHaveCount(0);
-            const accountActions = accountRow.locator('td:last-child');
-            await expect(accountActions.locator(`#planning-toggle-${account}`)).toBeVisible();
-            await expect(accountActions.locator('summary')).toHaveCSS('font-size', '14px');
-            const rowActionSize = await accountActions.locator('summary').boundingBox();
-            expect(rowActionSize.height).toBeGreaterThanOrEqual(width < 768 ? 44 : 36);
-            expect(rowActionSize.width).toBeGreaterThanOrEqual(width < 768 ? 44 : 36);
-            const bankOptions = page.locator(`#bank-options-${bank}`);
-            await expect(bankOptions.getByRole('link', { name: 'Edit bank', exact: true })).toBeHidden();
-            await bankOptions.locator(':scope > summary').press('Enter');
-            await expect(bankOptions.getByRole('link', { name: 'Change marker color', exact: true })).toBeVisible();
-            await bankOptions.locator(':scope > summary').press('Escape');
-            await expect(bankOptions).not.toHaveAttribute('open', '');
+            await expect(accountRow.locator('dl form')).toHaveCount(0);
+            const accountActions = accountRow.locator('.bank-account-header .banking-row-actions');
+            const menu = accountActions.locator('details');
+            await expect(menu.locator('summary')).toHaveCSS('font-size', '14px');
+            const actionSize = await menu.locator('summary').boundingBox();
+            expect(actionSize.height).toBeGreaterThanOrEqual(width < 768 ? 44 : 36);
+            expect(actionSize.width).toBeGreaterThanOrEqual(width < 768 ? 44 : 36);
             await page.locator(`#position-planning-${product}-${asset}`).press('Enter');
             const reserves = page.locator(`#bank-reserves-${bank}`);
-            await expect(reserves).toHaveAttribute('open', '');
+            await expect(reserves).toHaveAttribute('open','');
             await expect(reserves.locator(`#cash-position-${product}-${asset}`)).toBeVisible();
-            await expect(page.locator('#planning-availability')).toContainText(/1[.,\s]000[,.]00/);
             await page.locator(`#planning-toggle-${account}`).press('Enter');
             await expect(reserves.locator(`#account-row-${account}`)).toBeVisible();
-            await expect(reserves.locator(`#account-row-${account}`)).toContainText(/1[.,\s]000[,.]00/);
+            await expect(accountRow.locator('[data-account-balance]')).toContainText(/1[.,\s]000[,.]00/);
+            await expect(accountRow.locator('[data-account-available]')).toContainText(/0[,.]00/);
             await page.locator(`#planning-toggle-${account}`).press('Enter');
             await expect(page.locator(`#bank-positions-${bank} > section[aria-labelledby="bank-accounts-${bank}"] #account-row-${account}`)).toBeVisible();
-            if (width < 768) {
-                const labelColor = await page.locator(`#account-row-${account} td[data-label]`).first()
-                    .evaluate(cell => getComputedStyle(cell, '::before').color);
-                if (theme === 'dark') expect(labelColor).toBe('rgb(184, 184, 184)');
-                else expect(labelColor).not.toBe('rgb(184, 184, 184)');
-            }
             await reserves.locator(':scope > summary').press('Space');
             await expect(reserves.locator(`#cash-position-${product}-${asset}`)).toBeHidden();
-            await page.screenshot({ path: info.outputPath(`bank-reserves-${width}-${theme}.png`), fullPage: true });
-            const search = page.locator('#bank-filter-q');
-            await search.fill('No matching bank');
-            await expect(page.locator('#bank-results')).toContainText('No matching banks');
-            await expect(search).toBeFocused();
-            await expect(page).toHaveURL(/q=No\+matching\+bank/);
-            await page.locator('[data-live-link="bank-filter-form"]').press('Enter');
-            await expect(search).toHaveValue('');
-            await expect(bankGroup).not.toHaveAttribute('open', '');
-
-            await bankGroup.locator(':scope > summary').press('Enter');
-            await bankGroup.getByRole('link', { name: 'Bank details', exact: true }).press('Enter');
             const cardRow = page.locator(`#credit-card-${card}`);
             const detailOptions = page.locator(`#bank-detail-options-${bank}`);
             await detailOptions.locator(':scope > summary').press('Enter');
@@ -131,13 +106,18 @@ for (const theme of ['light', 'dark']) {
             await expect(page).toHaveURL(new RegExp(`card=${card}`));
             await expect(page.locator('#invoice-results')).toContainText('Daily card');
             await page.locator('#invoice-filter-month-trigger').press('Space');
+            await expect(page.locator('#invoice-filter-month-year')).toBeVisible();
+            // A deferred scroll from the preceding card search is unrelated to
+            // the popup's anchor. Real keyboard activation must survive it.
+            await page.locator('#invoice-filter-card-search').evaluate(input => input.dispatchEvent(new Event('scroll')));
+            await expect(page.locator('#invoice-filter-month-year')).toBeVisible();
             const invoiceMonth = new Date().toISOString().slice(0, 7);
             await page.locator('#invoice-filter-month-year').fill(invoiceMonth.slice(0, 4));
             await page.locator('#invoice-filter-month-year').press('Enter');
             await selectChoice(page.locator('#invoice-filter-month-choice'), invoiceMonth.slice(5));
             await expect(page).toHaveURL(new RegExp(`month=${invoiceMonth}`));
             await expect(page.locator('#invoice-filter-month')).toHaveValue(invoiceMonth);
-            await expect(page.locator('#invoice-active-filter-count')).toHaveText('2 active');
+            await expect(page.locator('#invoice-active-filter-count .sr-only')).toHaveText('2 active');
             await page.locator('#invoice-filter-status').selectOption('PAID');
             await expect(page.locator('#invoice-results')).toContainText('No matching invoices.');
             await page.locator('#invoice-filter-status').selectOption('');
@@ -161,7 +141,7 @@ for (const theme of ['light', 'dark']) {
             await page.locator('#rate-filter-to_currency').selectOption('BRL');
             await expect(page.locator('#rate-results')).toContainText('USD');
             await expect(page.locator('#rate-results')).not.toContainText('EUR');
-            await expect(page.locator('#rate-active-filter-count')).toHaveText('2 active');
+            await expect(page.locator('#rate-active-filter-count .sr-only')).toHaveText('2 active');
             await page.locator('#rate-filter-date_from').fill('2026-10-03');
             await page.locator('#rate-filter-date_from').press('Tab');
             await expect(page.locator('#rate-results')).toContainText('No matching exchange rates.');
@@ -199,9 +179,9 @@ test('bank reserves and financial filters keep a complete mobile native path', a
     try {
         const { bank, product, asset, card } = await seed(page, info);
         await page.goto('/banking/');
-        await page.locator(`#bank-${bank} > summary`).press('Enter');
+        await page.locator(`#bank-${bank}`).press('Enter');
         await page.locator(`#position-planning-${product}-${asset}`).press('Enter');
-        await expect(page.locator(`#bank-${bank}`)).toHaveAttribute('open', '');
+        await expect(page).toHaveURL(new RegExp(`/banking/${bank}/`));
         await expect(page.locator(`#bank-reserves-${bank}`)).toHaveAttribute('open', '');
         await expect(page.locator(`#cash-position-${product}-${asset}`)).toContainText(/300[,.]00/);
         await page.goto('/banking/invoices/');
@@ -217,14 +197,15 @@ test('bank reserves and financial filters keep a complete mobile native path', a
         await expect(page.locator('#rate-results')).not.toContainText('EUR');
         await expect(page.locator('#rate-results')).toContainText('USD');
         await context.addCookies([{ name: 'django_language', value: 'pt-br', url: info.project.use.baseURL }]);
-        await page.goto('/banking/?q=Organization');
+        await page.goto(`/banking/${bank}/`);
         await expect(page.locator('html')).toHaveAttribute('lang', 'pt-br');
         const menu = page.locator('details[name="account-updates"]').first();
         await menu.locator('summary').press('Enter');
-        await expect(menu.getByRole('link', { name: 'Nova transação', exact: true })).toBeVisible();
+        await expect(page.locator('article[id^="account-row-"]').first().getByRole('link', {name:'Nova transação',exact:true})).toBeVisible();
         await expect(menu.locator('summary')).toHaveCSS('font-size', '14px');
-        await menu.getByRole('link', { name: 'Nova transação', exact: true }).press('Enter');
-        await expect(page.getByRole('link', { name: 'Cancelar', exact: true })).toHaveAttribute('href', '/banking/?q=Organization');
+        await menu.locator('summary').press('Escape');
+        await page.locator('article[id^="account-row-"]').first().getByRole('link', {name:'Nova transação',exact:true}).press('Enter');
+        await expect(page.getByRole('link', { name: 'Cancelar', exact: true })).toHaveAttribute('href', `/banking/${bank}/`);
     } finally { await context.close(); }
 });
 
@@ -241,9 +222,9 @@ for (const [theme, language] of [['light', 'en'], ['dark', 'pt-br']]) {
             const bank = await page.locator('#id_bank option').last().getAttribute('value');
             await post(page, '/banking/accounts/create/', { bank, name: 'Touch account', currency: 'BRL', opening_balance: '1000', opening_date: '2020-01-01', planning_enabled: 'on', reserved_amount: '0' });
             await context.addCookies([{ name: 'django_language', value: language, url: info.project.use.baseURL }]);
-            const origin = '/banking/?q=Touch';
+            const origin = `/banking/${bank}/`;
             await page.goto(origin);
-            const row = page.locator('tr[id^="account-row-"]').first();
+            const row = page.locator('article[id^="account-row-"]').first();
             const account = (await row.getAttribute('id')).replace('account-row-', '');
             const menu = row.locator('details[name="account-updates"]');
             const summary = menu.locator('summary');
@@ -251,12 +232,13 @@ for (const [theme, language] of [['light', 'en'], ['dark', 'pt-br']]) {
             await summary.tap();
             await expect(menu).toHaveAttribute('open', '');
             await expect(summary).toHaveCSS('font-size', '14px');
-            const purchase = menu.getByRole('link', { name: language === 'en' ? 'New transaction' : 'Nova transação', exact: true });
+            const purchase = row.getByRole('link', { name: language === 'en' ? 'New transaction' : 'Nova transação', exact: true });
             for (const control of [summary, purchase, row.locator(`#planning-toggle-${account}`)]) {
                 const bounds = await control.boundingBox();
                 expect(bounds.height).toBeGreaterThanOrEqual(44);
                 expect(bounds.width).toBeGreaterThanOrEqual(44);
             }
+            await summary.tap();
             await purchase.tap();
             await expect(page.locator('#id_bank_account')).toHaveValue(account);
             await page.locator('#id_amount').fill('0');
@@ -266,10 +248,9 @@ for (const [theme, language] of [['light', 'en'], ['dark', 'pt-br']]) {
             const cancel = page.getByRole('link', { name: language === 'en' ? 'Cancel' : 'Cancelar', exact: true });
             await expect(cancel).toHaveAttribute('href', origin);
             await cancel.tap();
-            await expect(page).toHaveURL(/\/banking\/\?q=Touch$/);
+            await expect(page).toHaveURL(new RegExp(`/banking/${bank}/$`));
             await expect(page.locator(`#account-row-${account}`)).toContainText(/1[.,\s]000[,.]00/);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-            await page.locator(`#bank-${bank}`).getByRole('link', { name: language === 'en' ? 'Bank details' : 'Detalhes do banco', exact: true }).tap();
             const detailOptions = page.locator(`#bank-detail-options-${bank}`);
             await detailOptions.locator(':scope > summary').tap();
             const panel = detailOptions.locator('.secondary-actions-panel');

@@ -1,4 +1,4 @@
-"""List/tree presentation, filter normalization and native GET fallback."""
+"""List presentation, filter normalization and native GET fallback."""
 import re
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -22,7 +22,6 @@ class CategoryLiveFilterTests(TestCase):
 
     def test_default_list_groups_owned_rows_with_native_collapsed_descendants(self):
         response = self.client.get(reverse('categories:list'))
-        self.assertEqual(response.context['selected_view'], 'list')
         self.assertEqual(response.context['result_count'], 2)
         for category in (self.parent, self.child):
             self.assertContains(response, f'data-category-group="{category.pk}"', count=1)
@@ -30,23 +29,23 @@ class CategoryLiveFilterTests(TestCase):
         self.assertContains(response, '<details data-category-branch>')
         self.assertNotContains(response, 'id="category-clear-filters"')
 
-    def test_tree_uses_native_collapsed_details_and_preserves_view_when_clearing(self):
+    def test_legacy_tree_query_uses_the_only_native_list_and_clears_to_default(self):
         response = self.client.get(reverse('categories:list'), {'view': 'tree'})
         self.assertContains(response, '<details data-category-branch>')
-        self.assertContains(response, 'data-category-graph hidden')
-        self.assertContains(response, 'data-category-graph-fallback open')
+        self.assertNotContains(response, 'category-graph')
+        self.assertNotContains(response, 'id="category-view-tree"')
         self.assertContains(response, f'<summary id="category-toggle-{self.parent.pk}"')
         summary = response.content.decode().split(f'<summary id="category-toggle-{self.parent.pk}"', 1)[1].split('>', 1)[0]
         self.assertNotIn('aria-expanded', summary)  # Native state remains accurate without JS.
         filtered = self.client.get(reverse('categories:list'), {'view': 'tree', 'q': 'House'})
         self.assertContains(filtered, '<details data-category-branch open>')
         clear = re.search(r'<a id="category-clear-filters"[^>]*>', filtered.content.decode()).group()
-        self.assertIn('href="/categories/?view=tree"', clear)
+        self.assertIn('href="/categories/"', clear)
         self.assertIn('data-live-link="category-filters"', clear)
         self.assertIn('data-live-reset', clear)
         self.assertEqual(filtered.context['result_count'], 2)
 
-    def test_tree_search_keeps_a_matching_child_whose_parent_is_not_a_result(self):
+    def test_list_search_keeps_a_matching_child_whose_parent_is_not_a_result(self):
         response = self.client.get(reverse('categories:list'), {'view': 'tree', 'q': 'heating'})
         self.assertEqual(list(response.context['categories']), [self.child])
         self.assertContains(response, 'House heating')
@@ -58,7 +57,6 @@ class CategoryLiveFilterTests(TestCase):
     def test_invalid_choices_do_not_activate_clear_and_native_filters_combine(self):
         response = self.client.get(reverse('categories:list'), {'view': 'unknown', 'type': 'invalid', 'level': 'bad'})
         self.assertFalse(response.context['has_filters'])
-        self.assertEqual(response.context['selected_view'], 'list')
         self.assertEqual(response.context['selected_type'], '')
         self.assertNotContains(response, 'id="category-clear-filters"')
         filtered = self.client.get(reverse('categories:list'), {'type': 'EXPENSE', 'level': 'sub', 'q': 'HOUSE'})

@@ -270,16 +270,13 @@ test('bank color palette, arbitrary color and marker edit preserve the bank',asy
     await page.getByRole('button',{name:'Use color #6E42A1',exact:true}).press('Enter');
     await expect(page.locator('#id_color')).toHaveValue('#6e42a1');
     await page.getByRole('button',{name:'Save',exact:true}).click();
-    const panel=page.locator('details.bank-disclosure').filter({has:page.locator('summary.bank-disclosure-summary').filter({hasText:'Colored bank'})});
-    await expect(panel.locator('.bank-bookmark')).toHaveCSS('background-color','rgb(110, 66, 161)');
+    const bankLink=page.locator('.bank-overview-card').filter({hasText:'Colored bank'});
+    await expect(bankLink).toHaveCSS('border-inline-start-color','rgb(110, 66, 161)');
     await page.screenshot({path:info.outputPath('bank-list-marker.png')});
-    await panel.locator(':scope > summary').press('Enter');
-    await panel.locator('details[name="bank-options"] > summary').press('Enter');
-    await panel.getByRole('link',{name:'Change marker color',exact:true}).press('Enter');
+    await bankLink.press('Enter');
+    await page.locator('[id^="bank-detail-options-"] > summary').press('Enter');
+    await page.getByRole('link',{name:'Change marker color',exact:true}).press('Enter');
     await page.locator('#id_color').fill('#1278ab');await page.getByRole('button',{name:'Save',exact:true}).click();
-    await expect(panel.locator('.bank-bookmark')).toHaveCSS('background-color','rgb(18, 120, 171)');
-    await panel.locator(':scope > summary').press('Enter');
-    await panel.getByRole('link',{name:'Bank details',exact:true}).press('Enter');
     await expect(page.getByRole('heading',{name:'Colored bank',exact:true})).toBeVisible();
     await expect(page.locator('.bank-marker')).toHaveCSS('background-color','rgb(18, 120, 171)');
     await page.screenshot({path:info.outputPath('bank-marker.png')});
@@ -333,11 +330,11 @@ test('touch selection, held composition, and native bank colors remain usable on
     try {
         const p=await native.newPage();await p.goto('/banking/create/');
         await p.locator('#id_name').fill('Native color');await p.locator('#id_color').fill('#abcdef');await p.getByRole('button',{name:'Save',exact:true}).click();
-        const panel=p.locator('details.bank-disclosure').filter({has:p.locator('summary.bank-disclosure-summary').filter({hasText:'Native color'})});
-        await expect(panel.locator('.bank-bookmark')).toHaveCSS('background-color','rgb(171, 205, 239)');
-        await panel.locator(':scope > summary').press('Enter');
-        await panel.locator('details[name="bank-options"] > summary').press('Enter');
-        await expect(panel.getByRole('link',{name:'Change marker color',exact:true})).toBeVisible();
+        const bankLink=p.locator('.bank-overview-card').filter({hasText:'Native color'});
+        await expect(bankLink).toHaveCSS('border-inline-start-color','rgb(171, 205, 239)');
+        await bankLink.press('Enter');
+        await p.locator('[id^="bank-detail-options-"] > summary').press('Enter');
+        await expect(p.getByRole('link',{name:'Change marker color',exact:true})).toBeVisible();
         await p.goto('/dashboard/reports/');await expect(p.locator('[data-balance-range] svg[data-selection-surface]')).toBeVisible();
         await expect(p.locator('[data-selection-start], #id_range_start')).toHaveCount(0);
     } finally {await native.close();}
