@@ -100,16 +100,16 @@ class BankingWorkspaceOrganizationTests(TestCase):
     def test_compact_filter_criteria_are_native_complete_and_reveal_invalid_values(self):
         with patch('banking.views.sync_user_ledger'):
             unfiltered = self.client.get(reverse('banking:invoices'))
-            filtered = self.client.get(reverse('banking:invoices'), {'q': 'Daily', 'bank': self.bank.pk, 'card': self.card.pk, 'month': '2026-10', 'status': 'PAID'})
+            filtered = self.client.get(reverse('banking:card_invoices', args=[self.card.pk]), {'q': 'Daily', 'bank': self.bank.pk, 'month': '2026-10', 'status': 'PAID'})
             invalid = self.client.get(reverse('banking:invoices'), {'month': 'not-a-month'})
             empty_month = self.client.get(reverse('banking:invoices'), {'month': '  '})
         self.assertContains(unfiltered, '<details id="invoice-extra-filters" class="filter-disclosure" >')
         self.assertEqual(unfiltered.context['active_filter_count'], 0)
-        self.assertEqual(filtered.context['active_filter_count'], 4)
-        self.assertContains(filtered, '4 active')
+        self.assertEqual(filtered.context['active_filter_count'], 3)
+        self.assertContains(filtered, '3 active')
         self.assertContains(filtered, 'id="invoice-clear-control"')
         self.assertContains(filtered, 'data-live-reset')
-        for name in ('q', 'month', 'bank', 'card', 'status'):
+        for name in ('q', 'month', 'bank', 'status'):
             self.assertContains(unfiltered, f'name="{name}"')
         self.assertContains(unfiltered, 'data-month-filter')
         self.assertContains(unfiltered, 'id="invoice-filter-month"', count=1)
@@ -177,7 +177,7 @@ class BankingWorkspaceOrganizationTests(TestCase):
         CardInvoice.objects.create(user=self.user, card=self.card, reference_month=date(2026, 9, 1), due_date=date(2026, 10, 10), amount=80, status='SCHEDULED')
         original = list(CardInvoice.objects.values())
         with patch('banking.views.sync_user_ledger'):
-            response = self.client.get(reverse('banking:invoices'), {'q': 'Daily', 'bank': self.bank.pk, 'card': self.card.pk, 'month': '2026-10', 'status': 'PARTIAL'})
+            response = self.client.get(reverse('banking:card_invoices', args=[self.card.pk]), {'q': 'Daily', 'bank': self.bank.pk, 'month': '2026-10', 'status': 'PARTIAL'})
         self.assertEqual(list(response.context['invoices']), [invoice])
         self.assertEqual(response.context['selected_card'], self.card)
         self.assertContains(response, 'data-live-results="invoice-results"')
@@ -186,7 +186,7 @@ class BankingWorkspaceOrganizationTests(TestCase):
         with patch('banking.views.sync_user_ledger'):
             for key, value in [('card', '9' * 5000), ('bank', '0' + str(self.bank.pk)), ('card', '١')]:
                 self.assertEqual(self.client.get(reverse('banking:invoices'), {key: value}).status_code, 404)
-            invalid = self.client.get(reverse('banking:invoices'), {'month': 'not-a-month'})
+            invalid = self.client.get(reverse('banking:card_invoices', args=[self.card.pk]), {'month': 'not-a-month'})
         self.assertIn('month', invalid.context['filter_form'].errors)
         self.assertContains(invalid, 'value="not-a-month"')
         self.assertEqual(list(invalid.context['invoices']), [])

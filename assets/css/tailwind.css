@@ -405,7 +405,7 @@ html:has(#transaction-filters) { scrollbar-gutter: stable; }
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: .75rem;
-  --transaction-filter-slot: 7rem;
+  --transaction-filter-slot: 8.75rem;
   --transaction-clear-slot: 7.5rem;
   --transaction-action-gap: .75rem;
 }
@@ -571,3 +571,48 @@ html:has(#transaction-filters) { scrollbar-gutter: stable; }
 .dark .account-balance-grid,.dark .account-credit-cards,.dark .credit-card-row + .credit-card-row,.dark .bank-activity,.dark .bank-balance-breakdown { border-color:rgb(250 248 243 / .12); }
 .dark .account-balance-grid dt,.dark .bank-balance-breakdown dt { color:rgb(250 248 243 / .65); }
 @media (min-width:768px) { .bank-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+/* Consultation choices keep identical geometry in every selected state. */
+#transaction-filters .transaction-type-options { background:rgb(26 46 38 / .035); border-radius:.75rem; }
+#transaction-filters .consultation-segment { display:inline-flex; min-height:2.75rem; align-items:center; gap:.375rem; border:1px solid transparent; border-radius:.625rem; padding:.5rem .75rem; font-size:.875rem; font-weight:500; white-space:nowrap; transition:background-color .15s,border-color .15s; }
+#transaction-filters .consultation-segment:hover { background:rgb(26 46 38 / .045); }
+#transaction-filters .consultation-segment[aria-current="true"] { background:rgb(184 138 89 / .12); border-color:rgb(184 138 89 / .35); }
+#transaction-filters .consultation-segment:focus-visible { outline:2px solid var(--color-caramel); outline-offset:2px; }
+#transaction-filters .transaction-type-count { background:transparent; font-weight:500; }
+#transaction-filters .transaction-type-options > a { padding:.25rem; }
+#transaction-filters #transaction-recurrence-options { gap:.375rem; }
+#transaction-filters #transaction-recurrence-options > a { color:rgb(26 46 38 / .72); background:rgb(26 46 38 / .035); }
+#transaction-filters #transaction-recurrence-options > a[aria-current="true"] { color:#1a2e26; background:rgb(184 138 89 / .12); }
+#transaction-filters input:not([type="hidden"]),#transaction-filters select,#transaction-filters .month-filter-trigger,#transaction-filters .filter-disclosure > summary { border-color:rgb(26 46 38 / .18); border-radius:.625rem; }
+#transaction-filters .filter-disclosure[open] > summary { border-color:rgb(184 138 89 / .5); }
+.dark #transaction-filters .transaction-type-options,.dark #transaction-filters #transaction-recurrence-options > a { background:rgb(250 248 243 / .035); }
+.dark #transaction-filters .consultation-segment:hover { background:rgb(250 248 243 / .07); }
+.dark #transaction-filters .consultation-segment[aria-current="true"],.dark #transaction-filters #transaction-recurrence-options > a[aria-current="true"] { background:rgb(184 138 89 / .14); border-color:rgb(212 173 134 / .45); }
+.dark #transaction-filters #transaction-recurrence-options > a { color:#b8b8b8; }
+.dark #transaction-filters #transaction-recurrence-options > a[aria-current="true"] { color:#faf8f3; }
+.dark #transaction-filters input:not([type="hidden"]),.dark #transaction-filters select,.dark #transaction-filters .month-filter-trigger,.dark #transaction-filters .filter-disclosure > summary { border-color:rgb(250 248 243 / .22); }
+.dark #transaction-filters .filter-disclosure[open] > summary { border-color:rgb(212 173 134 / .5); }
+
+/* Cash pots share account surfaces, with amounts distinct from participation. */
+.cash-pot-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:.75rem; }
+.cash-pot-card { min-width:0; border:1px solid rgb(26 46 38 / .12); border-radius:.75rem; padding:1rem; background:#fff; }
+.cash-pot-header { display:flex; align-items:start; justify-content:space-between; gap:.75rem; }
+.cash-pot-name { display:inline-flex; align-items:center; min-height:2.75rem; font-size:.875rem; font-weight:600; overflow-wrap:anywhere; border-radius:.25rem; }
+.cash-pot-name:hover { text-decoration:underline; text-underline-offset:3px; }
+.cash-pot-currency { font-size:.75rem; line-height:1.5rem; color:rgb(26 46 38 / .65); background:rgb(26 46 38 / .04); border-radius:.375rem; padding:.125rem .375rem; }
+.cash-pot-amounts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; padding-block:.875rem; margin-top:.75rem; border-block:1px solid rgb(26 46 38 / .08); }
+.cash-pot-amounts dt { font-size:.75rem; color:rgb(26 46 38 / .65); }
+.cash-pot-amounts dd { font-size:1rem; margin-top:.25rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.cash-pot-actions { display:flex; justify-content:flex-end; padding-top:.375rem; }
+.dark .cash-pot-card { background:#1b1b1b; border-color:rgb(250 248 243 / .15); }
+.dark .cash-pot-amounts { border-color:rgb(250 248 243 / .12); }
+.dark .cash-pot-amounts dt,.dark .cash-pot-currency { color:#b8b8b8; }
+.dark .cash-pot-currency { background:rgb(250 248 243 / .06); }
+@media (min-width:768px) { .cash-pot-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (min-width:1280px) { .cash-pot-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+.invoice-card-meta { display:flex; flex-wrap:wrap; gap:.5rem 1rem; font-size:.75rem; color:rgb(26 46 38 / .65); margin-top:.75rem; }
+.dark .invoice-card-meta { color:#b8b8b8; }
+
+/* Invalid financial date/choice feedback takes precedence over the softer rail. */
+#transaction-filters input[aria-invalid="true"],#transaction-filters select[aria-invalid="true"] { border-color:#b42318; }
+.dark #transaction-filters input[aria-invalid="true"],.dark #transaction-filters select[aria-invalid="true"] { border-color:#ff8a80; }

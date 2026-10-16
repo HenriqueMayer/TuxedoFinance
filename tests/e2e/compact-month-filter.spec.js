@@ -163,11 +163,12 @@ for (const theme of ['light', 'dark']) {
         await prepare(page, info);
         await page.setViewportSize({width: 390, height: 480});
         await page.goto('/banking/invoices/');
+        const cardLink = page.locator('.invoice-card').filter({hasText:'Widget card'});
+        const cardUrl = await cardLink.getAttribute('href');
+        await cardLink.press('Enter');
+        await expect(page).toHaveURL(new URL(cardUrl, info.project.use.baseURL).href);
         await page.locator('#invoice-extra-filters > summary').press('Enter');
-        const card = await page.locator('#invoice-filter-card option').last().getAttribute('value');
-        await selectChoice(page.locator('#invoice-filter-card'), card);
-        await expect(page).toHaveURL(url => url.searchParams.get('card') === card);
-        await expect(page.locator('#invoice-results')).toContainText('Widget card');
+        await expect(page.getByRole('heading', {name:'Widget card', exact:true})).toBeVisible();
         const trigger = page.locator('#invoice-filter-month-trigger');
         await trigger.focus();
         const top = await page.evaluate(() => scrollY);
@@ -197,6 +198,6 @@ for (const theme of ['light', 'dark']) {
         await expect(panel).toBeHidden();
         await expect(page.locator('#invoice-filter-month-year')).toBeDisabled();
         await expect(page.locator('#invoice-filter-month')).toHaveValue('');
-        await expect(page.locator('#invoice-filter-card')).toHaveValue(card);
+        await expect(page).toHaveURL(new URL(cardUrl, info.project.use.baseURL).href);
     });
 }

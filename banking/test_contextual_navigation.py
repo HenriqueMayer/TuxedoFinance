@@ -97,11 +97,10 @@ class ContextualBankNavigationTests(TestCase):
     def test_card_invoice_filter_is_owned_and_scoped(self):
         invoice = self.make_invoice()
         other_invoice = self.make_invoice('Other card')
-        response = self.client.get(reverse('banking:invoices'), {'card': invoice.card_id})
+        response = self.client.get(reverse('banking:card_invoices', args=[invoice.card_id]))
         self.assertEqual(list(response.context['invoices']), [invoice])
         self.assertEqual(response.context['selected_card'], invoice.card)
-        # Other owned cards remain selectable, but their invoice rows must not
-        # escape the explicit card filter.
+        # The card page must never include another owned card's invoices.
         self.assertNotContains(response, f'id="invoice-{other_invoice.pk}"')
         foreign_bank = Bank.objects.create(user=self.other, name='Foreign')
         foreign_account = BankAccount.objects.create(user=self.other, bank=foreign_bank, name='Foreign', currency='BRL')

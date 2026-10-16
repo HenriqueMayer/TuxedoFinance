@@ -60,7 +60,7 @@
             <div class="transaction-type-control">
                 <nav id="transaction-type-options" data-live-fragment="transaction-filters" aria-label="{% translate 'Transaction type' %}" aria-describedby="type-count-help" class="transaction-type-options">
                     {% for card in type_cards %}
-                        <a id="transaction-type-{{ card.value|default:'all' }}" href="{{ card.url }}" data-live-link="transaction-filters" data-live-set="type" data-live-value="{{ card.value }}" data-live-clear="category" {% if card.selected %}aria-current="true"{% endif %} class="inline-flex min-h-11 min-w-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-2 py-2 sm:gap-2 sm:px-4 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel focus-visible:outline-offset-2 {% if card.selected %}border-caramel bg-caramel/10 dark:bg-caramel/10{% else %}border-transparent bg-white dark:bg-night-surface hover:border-forest/30 dark:hover:border-cream/30{% endif %}">
+                        <a id="transaction-type-{{ card.value|default:'all' }}" href="{{ card.url }}" data-live-link="transaction-filters" data-live-set="type" data-live-value="{{ card.value }}" data-live-clear="category" {% if card.selected %}aria-current="true"{% endif %} class="consultation-segment">
                             <span class="text-xs font-medium sm:text-sm {% if card.value == 'INCOME' %}text-income dark:text-income-light{% elif card.value == 'EXPENSE' %}text-expense dark:text-expense-light{% else %}text-forest dark:text-cream{% endif %}">{{ card.label }}</span>
                             <span class="transaction-type-count rounded-md bg-forest/5 px-1.5 py-0.5 text-xs font-semibold tabular-nums dark:bg-cream/10">{{ card.count }}</span>
                             {% if card.selected %}<span class="sr-only"> — {% translate "Selected" %}</span>{% endif %}
@@ -71,7 +71,7 @@
             </div>
             {% comment %}The summary occupies a fixed toolbar slot; its native content expands in the next grid row. Only metadata refreshes, preserving the mounted controls and disclosure choice.{% endcomment %}
             <details id="transaction-extra-filters" class="filter-disclosure" {% if extra_filter_count or date_filter_form.errors %}open{% endif %}>
-                <summary>{% translate 'Filters' %}<span id="transaction-extra-filter-indicator" data-live-fragment="transaction-filters">{% if extra_filter_count %}<span class="rounded-md bg-caramel/15 px-1.5 py-0.5 text-xs font-semibold tabular-nums">{{ extra_filter_count }}<span class="sr-only"> — {% blocktranslate count count=extra_filter_count %}{{ count }} active filter{% plural %}{{ count }} active filters{% endblocktranslate %}</span></span>{% endif %}</span></summary>
+                <summary>{% translate 'More filters' %}<span id="transaction-extra-filter-indicator" data-live-fragment="transaction-filters">{% if extra_filter_count %}<span class="rounded-md bg-caramel/15 px-1.5 py-0.5 text-xs font-semibold tabular-nums">{{ extra_filter_count }}<span class="sr-only"> — {% blocktranslate count count=extra_filter_count %}{{ count }} active filter{% plural %}{{ count }} active filters{% endblocktranslate %}</span></span>{% endif %}</span></summary>
                 <div class="filter-disclosure-panel space-y-4">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="min-w-0 space-y-1.5">
@@ -90,7 +90,7 @@
                     </div>
                     <nav id="transaction-recurrence-options" data-live-fragment="transaction-filters" aria-label="{% translate 'Recurrence' %}" class="flex flex-wrap gap-2">
                         {% for link in recurrence_links %}
-                            <a id="transaction-recurrence-{{ forloop.counter0 }}" href="{{ link.url }}" data-live-link="transaction-filters" data-live-set="recurrence" data-live-clear="category" {% if link.selected %}aria-current="true"{% endif %} class="rounded-full border border-forest/30 dark:border-cream/30 px-4 py-2.5 text-sm font-medium hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel focus-visible:outline-offset-2 {% if link.selected %}bg-forest text-cream dark:bg-cream dark:text-night{% endif %}">{{ link.label }}{% if link.selected %}<span class="sr-only"> — {% translate "Selected" %}</span>{% endif %}</a>
+                            <a id="transaction-recurrence-{{ forloop.counter0 }}" href="{{ link.url }}" data-live-link="transaction-filters" data-live-set="recurrence" data-live-clear="category" {% if link.selected %}aria-current="true"{% endif %} class="consultation-segment">{{ link.label }}{% if link.selected %}<span class="sr-only"> — {% translate "Selected" %}</span>{% endif %}</a>
                         {% endfor %}
                     </nav>
                     <div class="min-w-0 sm:max-w-sm space-y-1.5">

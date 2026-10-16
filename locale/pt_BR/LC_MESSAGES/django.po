@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 00:12+0000\n"
+"POT-Creation-Date: 2026-10-16 02:51+0000\n"
 "PO-Revision-Date: 2026-10-16 00:12+0000\n"
 "Last-Translator: Tuxedo Finance contributors\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -390,11 +390,11 @@ msgstr ""
 "Quantas unidades da moeda de destino equivalem a uma unidade da moeda de "
 "origem."
 
-#: banking/forms.py:451 banking/forms.py:489
+#: banking/forms.py:451 banking/forms.py:486
 msgid "From currency"
 msgstr "Moeda de origem"
 
-#: banking/forms.py:452 banking/forms.py:490
+#: banking/forms.py:452 banking/forms.py:487
 msgid "To currency"
 msgstr "Moeda de destino"
 
@@ -407,7 +407,7 @@ msgstr "Taxa"
 msgid "Effective date"
 msgstr "Data de vigência"
 
-#: banking/forms.py:460 banking/forms.py:487 templates/categories/list.html:46
+#: banking/forms.py:460 banking/forms.py:484 templates/categories/list.html:46
 #: templates/ingestion/history.html:7 templates/investments/list.html:24
 #: templates/transactions/list.html:53
 msgid "Search"
@@ -425,39 +425,31 @@ msgstr "Mês da fatura"
 msgid "All banks"
 msgstr "Todos os bancos"
 
-#: banking/forms.py:465 transactions/forms.py:63 transactions/models.py:29
-msgid "Credit card"
-msgstr "Cartão de crédito"
-
-#: banking/forms.py:465
-msgid "All cards"
-msgstr "Todos os cartões"
-
-#: banking/forms.py:466 templates/sandbox/drafts.html:8
+#: banking/forms.py:465 templates/sandbox/drafts.html:8
 msgid "Status"
 msgstr "Situação"
 
-#: banking/forms.py:466
+#: banking/forms.py:465
 msgid "All statuses"
 msgstr "Todos os status"
 
-#: banking/forms.py:488
+#: banking/forms.py:485
 msgid "Currency or notes"
 msgstr "Moeda ou observações"
 
-#: banking/forms.py:489 banking/forms.py:490 investments/forms.py:133
+#: banking/forms.py:486 banking/forms.py:487 investments/forms.py:133
 msgid "All currencies"
 msgstr "Todas as moedas"
 
-#: banking/forms.py:491 investments/forms.py:136
+#: banking/forms.py:488 investments/forms.py:136
 msgid "From date"
 msgstr "Data inicial"
 
-#: banking/forms.py:492 investments/forms.py:137
+#: banking/forms.py:489 investments/forms.py:137
 msgid "To date"
 msgstr "Data final"
 
-#: banking/forms.py:505
+#: banking/forms.py:502
 msgid "Choose an end date on or after the start date."
 msgstr "Escolha uma data final igual ou posterior à data inicial."
 
@@ -822,78 +814,78 @@ msgstr "Novo cartão de crédito"
 msgid "Edit credit card"
 msgstr "Editar cartão de crédito"
 
-#: banking/views.py:470
+#: banking/views.py:512
 msgid "Invoice payment confirmed."
 msgstr "Pagamento da fatura confirmado."
 
-#: banking/views.py:494
+#: banking/views.py:536
 msgid "Edit confirmed payment"
 msgstr "Editar pagamento confirmado"
 
-#: banking/views.py:510
+#: banking/views.py:552
 msgid "New loyalty program"
 msgstr "Novo programa de fidelidade"
 
-#: banking/views.py:525
+#: banking/views.py:567
 msgid "Edit loyalty program"
 msgstr "Editar programa de fidelidade"
 
-#: banking/views.py:544
+#: banking/views.py:586
 msgid ""
 "This item cannot be deleted because financial records still reference it."
 msgstr ""
 "Este item não pode ser excluído porque ainda é referenciado por registros "
 "financeiros."
 
-#: banking/views.py:547
+#: banking/views.py:589
 msgid "Item deleted."
 msgstr "Item excluído."
 
-#: banking/views.py:600 ingestion/models.py:48
+#: banking/views.py:642 ingestion/models.py:48
 msgid "Transfer between my accounts"
 msgstr "Transferência entre minhas contas"
 
-#: banking/views.py:604
+#: banking/views.py:646
 msgid "Transfer recorded without changing income or expenses."
 msgstr "Transferência registrada sem alterar receitas ou despesas."
 
-#: banking/views.py:611
+#: banking/views.py:653
 msgid "New points or miles entry"
 msgstr "Novo lançamento de pontos ou milhas"
 
-#: banking/views.py:634
+#: banking/views.py:676
 msgid "Points entry recorded."
 msgstr "Lançamento de pontos registrado."
 
-#: banking/views.py:649
+#: banking/views.py:691
 msgid "Edit points or miles entry"
 msgstr "Editar lançamento de pontos ou milhas"
 
-#: banking/views.py:662
+#: banking/views.py:704
 msgid "Points entry updated."
 msgstr "Lançamento de pontos atualizado."
 
-#: banking/views.py:690
+#: banking/views.py:732
 msgid "Convert points or miles to account balance"
 msgstr "Converter pontos ou milhas em saldo da conta"
 
-#: banking/views.py:710
+#: banking/views.py:752
 msgid "Reward converted and IOF funding recorded."
 msgstr "Recompensa convertida e pagamento do IOF registrado."
 
-#: banking/views.py:740
+#: banking/views.py:782
 msgid "Reward redemption updated."
 msgstr "Resgate de pontos atualizado."
 
-#: banking/views.py:798
+#: banking/views.py:840
 msgid "New exchange rate"
 msgstr "Nova taxa de câmbio"
 
-#: banking/views.py:815
+#: banking/views.py:857
 msgid "Edit exchange rate"
 msgstr "Editar taxa de câmbio"
 
-#: banking/views.py:829
+#: banking/views.py:871
 msgid ""
 "This action cannot be undone. Current valuations may change or show missing "
 "rates. Conversions already saved in transfers and investments will be "
@@ -1266,7 +1258,7 @@ msgid "All time"
 msgstr "Todo o período"
 
 #: dashboard/views.py:268 templates/banking/_account_row.html:20
-#: templates/banking/_cash_pot_row.html:5
+#: templates/banking/_cash_pot_row.html:8
 msgid "Balance"
 msgstr "Saldo"
 
@@ -3496,18 +3488,17 @@ msgstr "Excluir conta"
 #: templates/banking/_account_row.html:21
 #: templates/banking/_account_row.html:27
 #: templates/banking/_availability.html:5
-#: templates/banking/_cash_pot_row.html:9
 msgid "Set aside"
 msgstr "Reservado"
 
 #: templates/banking/_account_row.html:21
-#: templates/banking/_cash_pot_row.html:6
+#: templates/banking/_cash_pot_row.html:11
 #, python-format
 msgid "Uncovered: %(amount)s"
 msgstr "Falta cobrir: %(amount)s"
 
 #: templates/banking/_account_row.html:22
-#: templates/banking/_cash_pot_row.html:6
+#: templates/banking/_cash_pot_row.html:9
 msgid "Available"
 msgstr "Disponível"
 
@@ -3609,6 +3600,7 @@ msgstr[0] "%(count)s conta"
 msgstr[1] "%(count)s contas"
 
 #: templates/banking/_bank_list_results.html:5
+#: templates/banking/invoices.html:27
 #, python-format
 msgid "%(count)s card"
 msgid_plural "%(count)s cards"
@@ -3648,13 +3640,17 @@ msgstr ""
 msgid "No accounts yet."
 msgstr "Ainda não há contas."
 
-#: templates/banking/_cash_pot_row.html:3
-msgid "Redeem to an account before paying."
-msgstr "Resgate para uma conta antes de pagar."
+#: templates/banking/_cash_pot_row.html:15
+msgid "Set balance aside"
+msgstr "Reservar saldo"
 
-#: templates/banking/_cash_pot_row.html:9
+#: templates/banking/_cash_pot_row.html:15
 msgid "Use in planning"
 msgstr "Usar no planejamento"
+
+#: templates/banking/_cash_pots.html:5
+msgid "Redeem to an account before paying."
+msgstr "Resgate para uma conta antes de pagar."
 
 #: templates/banking/_credit_cards.html:4
 msgid "Credit cards"
@@ -3675,6 +3671,7 @@ msgid "Automatic settlement on due date"
 msgstr "Liquidação automática no vencimento"
 
 #: templates/banking/_credit_cards.html:9
+#: templates/banking/_invoice_results.html:4
 #, python-format
 msgid "Invoices for %(card)s"
 msgstr "Faturas de %(card)s"
@@ -3689,41 +3686,31 @@ msgstr "Nova transação em %(card)s"
 msgid "Options for %(card)s"
 msgstr "Opções de %(card)s"
 
-#: templates/banking/_invoice_results.html:9
-msgid "Due"
-msgstr "Vencimento"
+#: templates/banking/_invoice_cards.html:6 templates/banking/invoices.html:27
+#, python-format
+msgid "%(count)s invoice"
+msgid_plural "%(count)s invoices"
+msgstr[0] "%(count)s fatura"
+msgstr[1] "%(count)s faturas"
 
-#: templates/banking/_invoice_results.html:10
-#: templates/banking/invoice_detail.html:10
-msgid "Invoice total"
-msgstr "Total da fatura"
+#: templates/banking/_invoice_cards.html:9
+msgid "No matching cards."
+msgstr "Nenhum cartão encontrado."
 
-#: templates/banking/_invoice_results.html:10
-#: templates/banking/invoice_detail.html:15 templates/dashboard/index.html:167
-#: templates/planning/_budget_row.html:4
-msgid "Remaining"
-msgstr "Restante"
+#: templates/banking/_invoice_cards.html:9
+msgid "No credit cards yet."
+msgstr "Nenhum cartão de crédito cadastrado."
 
-#: templates/banking/_invoice_results.html:10 templates/banking/detail.html:84
-msgid "View invoice"
-msgstr "Ver fatura"
-
+#: templates/banking/_invoice_cards.html:11
 #: templates/banking/_invoice_results.html:15
-msgid "No matching invoices."
-msgstr "Nenhuma fatura encontrada."
-
-#: templates/banking/_invoice_results.html:15
-msgid "No invoices yet."
-msgstr "Nenhuma fatura ainda."
-
-#: templates/banking/_invoice_results.html:16
 #: templates/banking/_rate_results.html:13 templates/ingestion/history.html:13
 #: templates/investments/_investment_movements.html:170
 #: templates/investments/prices.html:13 templates/transactions/list.html:199
 msgid "Pagination"
 msgstr "Paginação"
 
-#: templates/banking/_invoice_results.html:16
+#: templates/banking/_invoice_cards.html:11
+#: templates/banking/_invoice_results.html:15
 #: templates/banking/_rate_results.html:13 templates/ingestion/history.html:13
 #: templates/ingestion/index.html:15 templates/ingestion/review.html:42
 #: templates/investments/_investment_movements.html:177
@@ -3731,13 +3718,41 @@ msgstr "Paginação"
 msgid "Previous"
 msgstr "Anterior"
 
-#: templates/banking/_invoice_results.html:16
+#: templates/banking/_invoice_cards.html:11
+#: templates/banking/_invoice_results.html:15
 #: templates/banking/_rate_results.html:13 templates/ingestion/history.html:13
 #: templates/ingestion/index.html:15 templates/ingestion/review.html:42
 #: templates/investments/_investment_movements.html:193
 #: templates/investments/prices.html:13 templates/transactions/list.html:216
 msgid "Next"
 msgstr "Próxima"
+
+#: templates/banking/_invoice_results.html:8
+msgid "Due"
+msgstr "Vencimento"
+
+#: templates/banking/_invoice_results.html:9
+#: templates/banking/invoice_detail.html:10
+msgid "Invoice total"
+msgstr "Total da fatura"
+
+#: templates/banking/_invoice_results.html:9
+#: templates/banking/invoice_detail.html:15 templates/dashboard/index.html:167
+#: templates/planning/_budget_row.html:4
+msgid "Remaining"
+msgstr "Restante"
+
+#: templates/banking/_invoice_results.html:9 templates/banking/detail.html:84
+msgid "View invoice"
+msgstr "Ver fatura"
+
+#: templates/banking/_invoice_results.html:14
+msgid "No matching invoices."
+msgstr "Nenhuma fatura encontrada."
+
+#: templates/banking/_invoice_results.html:14
+msgid "No invoices yet."
+msgstr "Nenhuma fatura ainda."
 
 #: templates/banking/_rate_results.html:8 templates/banking/detail.html:11
 #: templates/banking/list.html:10 templates/categories/_category_actions.html:5
@@ -3878,7 +3893,6 @@ msgstr ""
 "evidências de conversão salvos nas operações."
 
 #: templates/banking/exchange_rates.html:14 templates/banking/invoices.html:13
-#: templates/transactions/list.html:76
 msgid "Filters"
 msgstr "Filtros"
 
@@ -3889,7 +3903,7 @@ msgid_plural "%(count)s active"
 msgstr[0] "%(count)s ativo"
 msgstr[1] "%(count)s ativos"
 
-#: templates/banking/exchange_rates.html:22 templates/banking/invoices.html:22
+#: templates/banking/exchange_rates.html:22 templates/banking/invoices.html:21
 #: templates/categories/list.html:17 templates/ingestion/history.html:9
 #: templates/investments/_investment_movements.html:103
 #: templates/investments/list.html:23 templates/planning/goals.html:9
@@ -3898,7 +3912,7 @@ msgstr[1] "%(count)s ativos"
 msgid "Clear filters"
 msgstr "Limpar filtros"
 
-#: templates/banking/exchange_rates.html:23 templates/banking/invoices.html:23
+#: templates/banking/exchange_rates.html:23 templates/banking/invoices.html:22
 #: templates/categories/list.html:74
 #: templates/investments/_investment_movements.html:97
 #: templates/investments/_investments_charts.html:8
@@ -3997,20 +4011,17 @@ msgstr ""
 "Nenhuma compra de origem editável. Compras de pontos também podem compor "
 "esta fatura."
 
-#: templates/banking/invoices.html:6
+#: templates/banking/invoices.html:4
+msgid "Choose a card to see its invoices."
+msgstr "Escolha um cartão para ver suas faturas."
+
+#: templates/banking/invoices.html:5
 msgid ""
 "Automatic cards settle on their due date. For confirmed mode, record the "
 "actual payments; outstanding amounts remain in the forecast."
 msgstr ""
 "Cartões automáticos liquidam na data de vencimento. No modo confirmado, "
 "registre os pagamentos efetivos; valores pendentes permanecem na previsão."
-
-#: templates/banking/invoices.html:28
-#, python-format
-msgid "%(count)s invoice"
-msgid_plural "%(count)s invoices"
-msgstr[0] "%(count)s fatura"
-msgstr[1] "%(count)s faturas"
 
 #: templates/banking/list.html:11
 msgid "Points entry"
@@ -4210,6 +4221,7 @@ msgstr "Nome da categoria"
 
 #: templates/categories/list.html:51
 #: templates/investments/_investment_movements.html:46
+#: templates/transactions/list.html:76
 msgid "More filters"
 msgstr "Mais filtros"
 
@@ -7764,6 +7776,10 @@ msgstr "Conta bancária (Conta ou PIX)"
 msgid "Debit card"
 msgstr "Cartão de débito"
 
+#: transactions/forms.py:63 transactions/models.py:29
+msgid "Credit card"
+msgstr "Cartão de crédito"
+
 #: transactions/forms.py:65
 msgid "Bill choice"
 msgstr "Escolha da fatura"
@@ -7968,6 +7984,9 @@ msgstr "Transação \"%(title)s\" atualizada."
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
 
+#~ msgid "All cards"
+#~ msgstr "Todos os cartões"
+
 #~ msgid "Bank, account, card, program or cash pot"
 #~ msgstr "Banco, conta, cartão, programa ou cofrinho"
 
@@ -7979,9 +7998,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "No matching banks"
 #~ msgstr "Nenhum banco encontrado"
-
-#~ msgid "No credit cards."
-#~ msgstr "Nenhum cartão de crédito."
 
 #~ msgid "Account instruments"
 #~ msgstr "Meios de pagamento da conta"

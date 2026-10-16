@@ -286,11 +286,30 @@ record anchors reveal the appropriate native disclosure after full and boosted
 page navigation. Unrelated background updates do not reopen it. The bank header keeps Add account and Invoices
 visible, with bank editing, color, loyalty creation and deletion in its menu.
 
+Cash pots use a responsive grid of compact record cards. Asset name, product
+and native currency precede Balance and Available; the participation POST stays
+below those amounts. A single redemption hint belongs to the group, rather than
+every row. Set balance aside explicitly names the action, while Use in planning
+restores participation. Reserves, actual balances and existing goals keep the
+same calculation and ownership rules.
+
+Invoices opens a paginated card overview. Every owned card remains discoverable
+without invoices; the block shows its institution, account, currency and matching
+invoice count. Month/status filters require matching invoice evidence, while
+search/bank filters can find empty cards. The count excludes foreign-user legacy
+invoice references. A deliberate card link opens its own paginated invoice
+history at `/banking/credit-cards/<id>/invoices/`, preserving criteria. Months,
+due dates, settlement status, total, remaining amount and payment links stay
+available there. Clear retains the owning card and any validated return origin.
+Legacy `?card=<id>` links redirect after ownership/canonical-ID validation; invalid
+or foreign IDs remain 404s. Card and invoice pagination are independent.
+
 Invoices and local exchange rates retain one primary live search and native
 Filters criteria, with fixed trigger/Clear slots. Opening criteria adds fields
 below the rail without moving the trigger. Active counts exclude text search.
 Controls remain mounted while results/status update; initial errors reopen
-criteria and retain bound values. Invoice month uses the shared named-month/year
+criteria and retain bound values. Card selection is page navigation through the overview, rather than another
+record picker in the filter panel. Invoice month uses the shared named-month/year
 enhancement over the native ISO field; malformed month text stays recoverable.
 Every filter retains native GET submission without JavaScript.
 

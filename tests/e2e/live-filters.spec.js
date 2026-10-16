@@ -112,6 +112,7 @@ for (const theme of ['light', 'dark']) {
         await date.fill('32/01/2026');
         await date.press('Tab');
         await expect(page.locator('#filter-date-error-1')).toBeVisible();
+        await expect(date).toHaveCSS('border-color', theme === 'dark' ? 'rgb(255, 138, 128)' : 'rgb(180, 35, 24)');
         await expect(date).toHaveValue('32/01/2026');
         await date.fill('15/01/2026');
         await date.press('Tab');

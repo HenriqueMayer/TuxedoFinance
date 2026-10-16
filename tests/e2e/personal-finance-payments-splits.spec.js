@@ -63,6 +63,7 @@ test(`split categories and confirmed invoice payment preserve keyboard errors ($
     await page.goto('/banking/invoices/');
     await page.getByRole('link', {name:/Confirmed card/}).focus();
     await page.keyboard.press('Enter');
+    await page.getByRole('link', {name:'View invoice', exact:true}).press('Enter');
     await expect(page.getByRole('heading', {name:'Confirm a payment'})).toBeVisible();
     await selectChoice(page.locator('#id_account'), account);
     await page.locator('#id_amount').fill('101');

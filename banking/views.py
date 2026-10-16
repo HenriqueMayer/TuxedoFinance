@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.db.models import Case, DecimalField, F, Prefetch, Q, Sum, When
+from django.db.models import Case, Count, DecimalField, F, Prefetch, Q, Sum, When
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import Http404, HttpResponseBadRequest
@@ -409,12 +409,14 @@ class InvoiceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         sync_user_ledger(self.request.user)
-        invoices = CardInvoice.objects.filter(user=self.request.user).select_related('card__account__bank').prefetch_related('payments')
-        card_id = self.request.GET.get('card', '')
-        if card_id:
-            if not _canonical_id(card_id):
-                raise Http404
-            self.card = get_object_or_404(CreditCard, user=self.request.user, pk=card_id)
+        invoices = CardInvoice.objects.filter(user=self.request.user, card__user=self.request.user,
+            card__account__user=self.request.user, card__account__bank__user=self.request.user
+        ).select_related('card__account__bank').prefetch_related('payments')
+        self.card = None
+        if 'card_pk' in self.kwargs:
+            self.card = get_object_or_404(CreditCard.objects.select_related('account__bank'),
+                user=self.request.user, account__user=self.request.user,
+                account__bank__user=self.request.user, pk=self.kwargs['card_pk'])
             invoices = invoices.filter(card=self.card)
         bank_id = self.request.GET.get('bank', '')
         if bank_id:
@@ -442,9 +444,49 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         active_filter_count = (sum(bool(self.filter_form.cleaned_data.get(name))
             for name in self.filter_form.fields if name != 'q')
             if self.filter_form.is_bound and self.filter_form.is_valid() else 0)
-        return super().get_context_data(**kwargs) | {'selected_card': getattr(self, 'card', None),
+        clear_url = (reverse('banking:card_invoices', args=[self.card.pk]) if self.card else reverse('banking:invoices'))
+        origin = return_url(self.request, '')
+        return super().get_context_data(**kwargs) | {'selected_card': self.card,
             'filter_form': self.filter_form, 'has_filters': any(self.request.GET.get(name) for name in self.filter_form.fields),
-            'active_filter_count': active_filter_count}
+            'active_filter_count': active_filter_count, 'invoice_clear_url': with_return_url(clear_url, origin),
+            'invoice_origin': origin}
+
+
+class InvoiceCardListView(InvoiceListView):
+    context_object_name = 'cards'
+
+    def get(self, request, *args, **kwargs):
+        # Existing card-filter bookmarks become explicit page navigation. Using
+        # distinct paths also keeps live-filter history within its owning view.
+        card_id = request.GET.get('card', '')
+        if card_id:
+            if not _canonical_id(card_id):
+                raise Http404
+            card = get_object_or_404(CreditCard, user=request.user, account__user=request.user,
+                account__bank__user=request.user, pk=card_id)
+            query = request.GET.copy()
+            query.pop('card')
+            target = reverse('banking:card_invoices', args=[card.pk])
+            return redirect(target + ('?' + query.urlencode() if query else ''))
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        invoices = super().get_queryset()
+        cards = CreditCard.objects.filter(user=self.request.user, account__user=self.request.user,
+            account__bank__user=self.request.user).select_related('account__bank').annotate(
+                invoice_count=Count('invoices', filter=Q(invoices__in=invoices)))
+        if self.filter_form.is_bound:
+            if not self.filter_form.is_valid():
+                return cards.none()
+            data = self.filter_form.cleaned_data
+            if data['bank']:
+                cards = cards.filter(account__bank=data['bank'])
+            if data['q']:
+                cards = cards.filter(Q(name__icontains=data['q']) | Q(account__name__icontains=data['q'])
+                                     | Q(account__bank__name__icontains=data['q']))
+            if data['month'] or data['status']:
+                cards = cards.filter(invoice_count__gt=0)
+        return cards.order_by('account__bank__name', 'account__name', 'name', 'pk')
 
 
 def _payment_errors(form, error):

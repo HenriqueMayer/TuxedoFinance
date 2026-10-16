@@ -239,6 +239,12 @@ actions embedded in it. The planning participation control remains separate.
 Credit-card invoice/purchase shortcuts and administrative options belong to that
 account; Account details discloses its opening balance and debit cards. An
 account ellipsis retains editing/reserving, transfer, card creation and deletion.
+Monetary cash pots reuse compact account surfaces in a responsive grid. Each
+shows the asset name, product, currency, balance and available amount; its
+participation POST is separate from the figures. The redemption instruction
+appears once per group. Set balance aside is an action, avoiding the ambiguous
+Portuguese state label previously used on included positions.
+
 Reserves is a separate native disclosure. Recent activity discloses redemptions,
 related invoices and ledger movements; a bound redemption error opens it. Explicit record
 fragments reveal their containing native disclosures after full or boosted
@@ -254,6 +260,20 @@ triggers also retain a 44px width. Only at widths of at least 768px with
 `(pointer: fine) and (hover: hover)` do actions and menu items reduce to 36px,
 with 36px square ellipsis triggers. Preserve visible keyboard focus, deliberate
 menu activation, native links and complete no-JavaScript submission.
+
+Invoices opens a paginated grid of owned cards, including cards without invoices.
+A card opens `/banking/credit-cards/<id>/invoices/`, where dated invoice rows,
+filters and payment/source links remain available. Month/status criteria on the
+overview show only matching cards; search/bank criteria also find empty cards.
+Counts include only the owner's invoices. The card page's Clear resets criteria
+while keeping the selected card and validated return context. The former
+`/banking/invoices/?card=<id>` address redirects to the owned card page, retaining
+other criteria. Both routes use native links and GET fallbacks.
+
+Pin the invoice form's action to its rendered path. An omitted action would
+follow `location` during Back and let a card-history form intercept an overview
+history entry. Distinct paths and fixed actions keep the shared live-filter and
+whole-page history responsibilities separate without another navigation runtime.
 
 Planning fragments reuse the same account/card presentation and owner-filtered
 prefetches. Contextual shortcuts retain the explicit validated page origin after
@@ -859,11 +879,14 @@ Transactions adds `.transaction-consultation` with its existing stable tracks.
 At viewport widths of at least 1440px, search/month, type choices, Filters and
 Clear share one rail. Smaller desktop layouts use two rows, and mobile uses
 explicit stacked tracks rather than content-dependent wrapping. The month
-control reserves 12rem, Filters 7rem and Clear 7.5rem; type counts reserve at
+control reserves 12rem, More filters 8.75rem and Clear 7.5rem; type counts reserve at
 least six numeral widths and the criteria indicator keeps its own fixed box.
 Clear's empty slot remains when its link is absent, without rendering an inactive
 action or adding a Tab stop. Type choices occupy equal 44px-high cells; their
-labels and counts stack on smaller screens.
+labels and counts stack on smaller screens. Type and recurrence choices use
+soft selected backgrounds and restrained outlines, keeping semantic income/
+expense text colors and unchanged control geometry. Invalid date/choice borders
+take precedence over the softer default outlines in both themes.
 
 Only the native Filters summary is positioned in its assigned action slot. Its
 fields remain in document flow in the following full-width grid row, so opening

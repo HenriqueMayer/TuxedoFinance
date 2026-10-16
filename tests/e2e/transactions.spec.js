@@ -152,6 +152,7 @@ for (const theme of ['light', 'dark']) {
             await expect(page.getByRole('heading', { level: 1 })).toHaveText(mobile ? 'Transações' : 'Transactions');
             await expect(typeCards(page).getByRole('link').nth(1)).toContainText(mobile ? 'Receitas' : 'Income');
             await expect(page.locator('#transaction-extra-filters')).not.toHaveAttribute('open', '');
+            await expect(page.locator('#transaction-extra-filters > summary')).toContainText(mobile ? 'Mais filtros' : 'More filters');
             await expect(page.locator('#filter-category-search')).toBeHidden();
             await expect(page.locator('#filter-sort')).toBeHidden();
             await expect(page.locator('#filter-date')).toBeHidden();

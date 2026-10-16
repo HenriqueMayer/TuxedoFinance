@@ -51,7 +51,7 @@ test(`account tasks keep context and invoice recovery (${width}, ${theme})`, asy
     await expect(menu.locator('a[href*="roadmap"], a[href*="imports"]')).toHaveCount(0);
     await summary.press('Escape');
     await page.getByRole('link', { name: 'Invoices for Daily card', exact: true }).click();
-    await page.locator('main').getByRole('link', { name: /^Daily card/ }).click();
+    await page.getByRole('link', { name: 'View invoice', exact: true }).click();
     await expect(page.locator('#invoice-summary')).toContainText('Remaining');
     await expect(page.getByText('Record a payment already made at your bank. This application does not send a payment.', { exact: true })).toBeVisible();
     await selectChoice(page.locator('#id_account'), account);

@@ -1,12 +1,18 @@
 {% load i18n navigation %}
-<li id="cash-position-{{ pot.product.pk|stringformat:'d' }}-{{ pot.asset.pk|stringformat:'d' }}" class="cash-position-row flex flex-wrap items-center justify-between gap-4 py-4" data-preserve-view>
-    <div class="min-w-0"><a href="{% url 'investments:position_detail' pot.product.pk pot.asset.pk %}" class="quiet-action">{{ pot.product.name }} · {{ pot.asset.name }}</a><p class="subtle-copy">{{ pot.currency }} · {% translate 'Redeem to an account before paying.' %}</p></div>
-    <div class="flex flex-wrap items-center gap-4">
-        <div class="text-right"><p class="subtle-copy">{% translate 'Balance' %}</p><strong class="tabular-nums">{{ pot.currency }} {{ pot.balance|floatformat:2 }}</strong></div>
-        <div class="text-right"><p class="subtle-copy">{% translate 'Available' %}</p><strong class="tabular-nums">{{ pot.currency }} {{ pot.available|floatformat:2 }}</strong>{% if pot.shortfall %}<p class="subtle-copy">{% blocktranslate with amount=pot.shortfall|floatformat:2 %}Uncovered: {{ amount }}{% endblocktranslate %}</p>{% endif %}</div>
+<li id="cash-position-{{ pot.product.pk|stringformat:'d' }}-{{ pot.asset.pk|stringformat:'d' }}" class="cash-pot-card" data-preserve-view>
+    <header class="cash-pot-header">
+        <div class="min-w-0"><a href="{% url 'investments:position_detail' pot.product.pk pot.asset.pk %}" class="cash-pot-name">{{ pot.asset.name }}</a><p class="subtle-copy mt-1">{{ pot.product.name }}</p></div>
+        <span class="cash-pot-currency">{{ pot.currency }}</span>
+    </header>
+    <dl class="cash-pot-amounts">
+        <div><dt>{% translate 'Balance' %}</dt><dd data-cash-balance><span class="sr-only">{{ pot.currency }} </span>{{ pot.balance|floatformat:2 }}</dd></div>
+        <div><dt>{% translate 'Available' %}</dt><dd data-cash-available class="font-semibold"><span class="sr-only">{{ pot.currency }} </span>{{ pot.available|floatformat:2 }}</dd></div>
+    </dl>
+    {% if pot.shortfall %}<p class="text-xs text-expense dark:text-expense-light">{% blocktranslate with amount=pot.shortfall|floatformat:2 %}Uncovered: {{ amount }}{% endblocktranslate %}</p>{% endif %}
+    <div class="cash-pot-actions">
         <form method="post" action="{% url 'banking:position_planning' pot.product.pk pot.asset.pk %}" hx-post="{% url 'banking:position_planning' pot.product.pk pot.asset.pk %}" hx-target="#bank-positions-{{ pot.product.bank_id|stringformat:'d' }}" hx-swap="outerHTML show:none" hx-request='{"noHeaders":false}' hx-boost="false">
             {% csrf_token %}<input type="hidden" name="return_to" value="{{ return_to|default:'detail' }}"><input type="hidden" name="enabled" value="{% if pot.planning_enabled %}0{% else %}1{% endif %}"><input type="hidden" name="next" value="{% if request.method == 'GET' %}{{ request.get_full_path }}{% else %}{{ planning_return_url }}{% endif %}">
-            <button id="position-planning-{{ pot.product.pk|stringformat:'d' }}-{{ pot.asset.pk|stringformat:'d' }}" type="submit" class="planning-visibility">{% if pot.planning_enabled %}{% translate 'Set aside' %}{% else %}{% translate 'Use in planning' %}{% endif %}<span class="sr-only"> · {{ pot.product.name }} · {{ pot.asset.name }}</span></button>
+            <button id="position-planning-{{ pot.product.pk|stringformat:'d' }}-{{ pot.asset.pk|stringformat:'d' }}" type="submit" class="planning-visibility">{% if pot.planning_enabled %}{% translate 'Set balance aside' %}{% else %}{% translate 'Use in planning' %}{% endif %}<span class="sr-only"> · {{ pot.product.name }} · {{ pot.asset.name }}</span></button>
         </form>
     </div>
 </li>

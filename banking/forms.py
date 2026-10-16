@@ -462,14 +462,11 @@ class InvoiceFilterForm(forms.Form):
     month = forms.CharField(required=False, label=_('Invoice month'),
                             widget=forms.TextInput(attrs={'type': 'month', 'min': '1901-01', 'max': '9988-12', 'data-live-change': ''}))
     bank = forms.ModelChoiceField(required=False, queryset=Bank.objects.none(), label=_('Bank'), empty_label=_('All banks'))
-    card = forms.ModelChoiceField(required=False, queryset=CreditCard.objects.none(), label=_('Credit card'), empty_label=_('All cards'))
     status = forms.ChoiceField(required=False, label=_('Status'), choices=[('', _('All statuses')), *CardInvoice.Status.choices])
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, auto_id='invoice-filter-%s', **kwargs)
         self.fields['bank'].queryset = Bank.objects.filter(user=user)
-        self.fields['card'].queryset = CreditCard.objects.filter(user=user, account__user=user, account__bank__user=user).select_related('account__bank')
-        self.fields['card'].label_from_instance = lambda card: f'{card.account.bank.name} · {card.account.name} · {card.name}'
         for name, field in self.fields.items():
             field.widget.attrs['class'] = INPUT_CLASSES
             if name != 'q':

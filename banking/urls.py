@@ -6,7 +6,8 @@ from banking import views
 app_name = 'banking'
 
 urlpatterns = [
-    path('invoices/', views.InvoiceListView.as_view(), name='invoices'),
+    path('invoices/', views.InvoiceCardListView.as_view(), name='invoices'),
+    path('credit-cards/<int:card_pk>/invoices/', views.InvoiceListView.as_view(), name='card_invoices'),
     path('invoices/<int:pk>/', views.invoice_detail, name='invoice_detail'),
     path('invoice-payments/<int:pk>/edit/', views.invoice_payment_edit, name='invoice_payment_edit'),
     path('invoice-payments/<int:pk>/delete/', views.invoice_payment_delete, name='invoice_payment_delete'),

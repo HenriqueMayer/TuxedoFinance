@@ -45,7 +45,7 @@ def workspace_navigation(request):
         ]
     elif active == 'accounts':
         section_label = _('Account sections')
-        invoice = url_name.startswith(('invoice_', 'invoices'))
+        invoice = url_name.startswith(('invoice_', 'invoices')) or url_name == 'card_invoices'
         exchange = url_name.startswith('exchange_rate')
         sections = [
             (_('Accounts'), 'banking:list', not invoice and not exchange),

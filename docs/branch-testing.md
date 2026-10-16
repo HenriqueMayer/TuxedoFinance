@@ -103,12 +103,17 @@ branch; automated validation is reported separately by iteration below.
    Credit-card invoices/purchases and editing belong to the owning account;
    Account details retains opening balance and debit cards. Check menus fit on
    phone screens in both languages. Move an account or cash pot into Reserves,
-   restore participation and check money/history are unchanged. After a planning
+   restore participation and check money/history are unchanged. Cash pots use
+   compact cards with aligned amounts, a separate participation action and one
+   redemption hint per group. After a planning
    update, open an editor or transaction and Cancel back to the same bank page.
    Open Recent activity for redemptions, invoices and movements; check a
    redemption error remains visible there. Browser Back returns to the overview.
-7. Find an invoice with the compact search and bank/card/month/status criteria
-   inside Filters. Record a partial confirmed payment and recover an invalid
+7. Open Invoices as a card grid. Search by card/account/bank, choose bank,
+   month or status in Filters, then open one card's dated invoice history. Empty
+   cards remain reachable without month/status criteria. Clear stays in that
+   card's history; Back returns to the filtered card grid. Try an old `?card=`
+   bookmark and check the scoped redirect, then repeat without JavaScript. Record a partial confirmed payment and recover an invalid
    amount. Search local rates, open pair/date criteria and recover invalid dates
    beside the original control. Criteria show their active indicator and Clear;
    returned field errors reopen a closed disclosure without moving focus or
@@ -406,3 +411,31 @@ integrate the branch. A successful automated run does not replace that decision.
   remain unchanged; the authorized shared footer/help changes apply there too.
   Docker, integrations and deployment were outside this iteration. No merge,
   main push, tag, release or publication was performed.
+
+
+### Refined filters, cash-pot cards and invoice navigation — 16 October 2026
+
+- All 579 Django tests passed with 94% coverage measured using `--branch`.
+  System checks and migration-drift checks passed. Five focused invoice tests
+  passed again after canonical card-link rendering was finalized.
+- Selected browser coverage passed 52 distinct scenarios across the scoped run
+  and focused rechecks: real keyboard/touch input, both themes, PT-BR/English,
+  native GET/POST, invoice payments, compact cash-pot cards, card overview and
+  history, invalid-date contrast and Back/Clear context. Transaction geometry
+  remained stable from 320 to 1536px and with classic desktop scrollbar gutters.
+- Initial fixture failures correctly rejected opening dates on zero-valued
+  configured assets. Those fixtures now omit the nonexistent opening date.
+  Search checks distinguish a card's full name from the shared account name;
+  canonical card links omit empty query markers. No financial validation was
+  relaxed. Final focused rechecks passed.
+- Cash-pot and invoice-overview screenshots were visually inspected on desktop
+  and mobile in both themes. Transaction selection/border screenshots and native
+  Portuguese labels were inspected too. Card counts, ownership, empty cards,
+  legacy card-filter redirects and independent card/history pagination have
+  dedicated server coverage.
+- Ruff, `git diff --check`, CSS reproducibility and gettext format/compiled-byte
+  checks passed. No migrations or dependencies changed. The manual preview was
+  restarted on loopback port 8768 from a verified backup of its active disposable
+  database, preserving its test records and leaving the installation untouched.
+- Actual device/browser acceptance remains with the owner. No merge, main push,
+  version/tag, image, release, bank integration or publication was performed.

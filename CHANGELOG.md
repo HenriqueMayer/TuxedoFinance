@@ -20,6 +20,9 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Refine transaction filter outlines and selected states without moving the rail; rename its disclosure More filters and preserve financial date-error contrast.
+- Present monetary cash pots as compact cards with distinct balance/available figures, one group redemption hint and an explicit Set balance aside action.
+- Open Invoices with an owned-card grid, including empty cards, and navigate to each card's filtered invoice history. Retain native navigation, independent pagination, confirmed payments, contextual origins and redirects for existing card-filter bookmarks.
 - Replace the shared footer banner with a quiet theme-aware divider and legal attribution. Mouse help closes immediately on leaving its question-mark icon, including entry into the text; keyboard, touch and native access retain their separate behavior.
 - Apply consultation searches while typing/deleting and apply choices, dates and ordering immediately; retain stable keyboard focus, cursor, scroll, Back/Forward and native submit fallback.
 - Compact transaction consultation into search, billed month and type choices, with exact category, recurrence, date and ordering in one Filters disclosure. Reserve stable control tracks and Clear space so typing, type changes, long month labels and shorter results do not shift the rail. Preserve complete GET filters and native submission.
