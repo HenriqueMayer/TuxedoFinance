@@ -3,12 +3,12 @@
 {% block title %}{% translate 'Investment operations' %} - Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="space-y-7">
+    {% include 'investments/_sections.html' %}
     <header class="workspace-header">
         <h1 class="page-title">{% translate 'Investment operations' %}</h1>
         {% include 'investments/_primary_action.html' %}
         {% if setup_complete %}{% url 'investments:create' as operation_url %}<a href="{% contextual_url operation_url %}" class="action-link">{% translate 'New operation' %}</a>{% endif %}
     </header>
-    {% include 'investments/_sections.html' %}
     {% include 'investments/_investment_movements.html' %}
 </div>
 {% endblock %}

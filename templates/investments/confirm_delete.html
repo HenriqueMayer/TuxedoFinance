@@ -10,9 +10,9 @@ the project — never a plain link/GET, always a POST from this page.
 
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate 'Delete Investment' %}</h1>
+    <h1 class="page-title">{% translate 'Delete Investment' %}</h1>
 
-    <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
+    <div class="surface-panel space-y-5">
         <p class="text-sm text-forest/80 dark:text-cream/80">
             {% translate 'Are you sure you want to delete' %}
             <span class="font-semibold text-forest dark:text-cream">{{ investment.get_kind_display }} {{ investment.asset.code }}</span>
@@ -28,8 +28,8 @@ the project — never a plain link/GET, always a POST from this page.
                     class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
                 {% translate 'Delete' %}
             </button>
-            <a href="{{ return_url }}"
-               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
+            <a hx-boost="false" href="{{ return_url }}"
+               class="quiet-action">
                 {% translate 'Cancel' %}
             </a>
         </form>

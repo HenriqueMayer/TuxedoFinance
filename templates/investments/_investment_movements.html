@@ -11,98 +11,25 @@
     </h2>
 
     <form id="investment-history-filters" method="get" novalidate hx-boost="false" hx-history="false"
-          data-live-filters data-live-results="investment-operation-results"
-          action="{{ list_url }}#investment-movements"
-          class="grid gap-3 border-y border-forest/15 py-5 sm:grid-cols-2 lg:grid-cols-6 dark:border-cream/15">
-        <div class="space-y-1.5 lg:col-span-2">
-            <label for="investment-purpose" class="block text-sm font-medium text-forest/70 dark:text-night-muted">{% translate 'Purpose' %}</label>
-            <select id="investment-purpose" data-live-change name="section" class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
-                <option value="">{% translate 'All purposes' %}</option>
-                <option value="portfolio" {% if selected_purpose == 'portfolio' %}selected{% endif %}>{% translate 'Portfolio' %}</option>
-                <option value="cash" {% if selected_purpose == 'cash' %}selected{% endif %}>{% translate 'Remunerated cash' %}</option>
-            </select>
-        </div>
-        <div class="space-y-1.5 lg:col-span-3">
-            <label for="investment-search" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
-                {% translate "Search investments" %}
-            </label>
-            <input id="investment-search" type="search" name="q" data-live-search value="{{ search_query }}"
-                   placeholder="{% translate 'Product, asset, reason or notes' %}"
-                   class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest placeholder:text-forest/70 focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream dark:placeholder:text-night-muted">
-        </div>
-        <div class="space-y-1.5">
-            <label for="investment-kind" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
-                {% translate "Operation type" %}
-            </label>
-            <select id="investment-kind" data-live-change name="kind"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
-                <option value="">{% translate 'All types' %}</option>
-                {% for value, label in kind_choices %}
-                    <option value="{{ value }}" {% if selected_kind == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <details id="investment-extra-filters" class="sm:col-span-2 lg:col-span-6"{% if has_extra_filters %} open{% endif %}>
-            <summary class="cursor-pointer text-sm font-medium">{% translate 'More filters' %}</summary>
-            <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6" data-live-change>
-        <div class="space-y-1.5 lg:col-span-2">
-            <label for="investment-bank" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
-                {% translate "Bank" %}
-            </label>
-            <select data-search-select id="investment-bank" data-live-change name="bank"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
-                <option value="">{% translate 'All banks' %}</option>
-                {% comment %}Record identifiers are strings, independent of currency number formatting.{% endcomment %}
-                {% for bank in bank_choices %}
-                    <option value="{{ bank.pk|stringformat:'s' }}" {% if selected_bank == bank.pk|stringformat:'s' %}selected{% endif %}>{{ bank.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="space-y-1.5 lg:col-span-2">
-            <label for="investment-product" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
-                {% translate "Investment product" %}
-            </label>
-            <select data-search-select id="investment-product" data-live-change name="product"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
-                <option value="">{% translate 'All products' %}</option>
-                {% for product in product_choices %}
-                    <option value="{{ product.pk|stringformat:'s' }}" {% if selected_product == product.pk|stringformat:'s' %}selected{% endif %}>{{ product.bank.name }} / {{ product.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="space-y-1.5 lg:col-span-2">
-            <label for="investment-asset" class="block text-sm font-medium text-forest/70 dark:text-night-muted">
-                {% translate "Asset" %}
-            </label>
-            <select data-search-select id="investment-asset" data-live-change name="asset"
-                    class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 text-forest focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:bg-night-surface dark:text-cream">
-                <option value="">{% translate 'All assets' %}</option>
-                {% for asset in asset_choices %}
-                    <option value="{{ asset.pk|stringformat:'s' }}" {% if selected_asset == asset.pk|stringformat:'s' %}selected{% endif %}>{{ asset.code }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        {# Errors keep advanced filters open; ordinary record context remains optional. #}
-                <div class="lg:col-span-2">{% include 'partials/form_field.html' with field=operation_filter.currency %}</div>
-                <div class="lg:col-span-2">{% include 'partials/form_field.html' with field=operation_filter.asset_class %}</div>
-                <div>{% include 'partials/form_field.html' with field=operation_filter.date_from %}</div>
-                <div>{% include 'partials/form_field.html' with field=operation_filter.date_to %}</div>
+          data-live-filters data-live-results="investment-operation-results" action="{{ list_url }}#investment-movements"
+          class="consultation-bar consultation-stable">
+        <div class="consultation-search"><label for="investment-search" class="field-label">{% translate 'Search investments' %}</label><input id="investment-search" type="search" name="q" data-live-search value="{{ search_query }}" placeholder="{% translate 'Product, asset, reason or notes' %}" class="form-input w-full"></div>
+        <details id="investment-extra-filters" class="filter-disclosure"{% if operation_filter.errors %} open{% endif %}>
+            <summary>{% translate 'More filters' %}<span id="investment-history-count" data-live-fragment="investment-history-filters" class="consultation-filter-count">{% if history_filter_count %}{{ history_filter_count }}{% endif %}</span></summary>
+            <div class="filter-disclosure-panel grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-live-change>
+                <div class="space-y-1.5"><label for="investment-purpose" class="field-label">{% translate 'Purpose' %}</label><select id="investment-purpose" data-live-change name="section" class="form-input w-full"><option value="">{% translate 'All purposes' %}</option><option value="portfolio"{% if selected_purpose == 'portfolio' %} selected{% endif %}>{% translate 'Portfolio' %}</option><option value="cash"{% if selected_purpose == 'cash' %} selected{% endif %}>{% translate 'Remunerated cash' %}</option></select></div>
+                <div class="space-y-1.5"><label for="investment-kind" class="field-label">{% translate 'Operation type' %}</label><select id="investment-kind" data-live-change name="kind" class="form-input w-full"><option value="">{% translate 'All types' %}</option>{% for value, label in kind_choices %}<option value="{{ value }}"{% if selected_kind == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="space-y-1.5"><label for="investment-bank" class="field-label">{% translate 'Bank' %}</label><select data-search-select id="investment-bank" data-live-change name="bank" class="form-input w-full"><option value="">{% translate 'All banks' %}</option>{% for bank in bank_choices %}<option value="{{ bank.pk|stringformat:'s' }}"{% if selected_bank == bank.pk|stringformat:'s' %} selected{% endif %}>{{ bank.name }}</option>{% endfor %}</select></div>
+                <div class="space-y-1.5"><label for="investment-product" class="field-label">{% translate 'Investment product' %}</label><select data-search-select id="investment-product" data-live-change name="product" class="form-input w-full"><option value="">{% translate 'All products' %}</option>{% for product in product_choices %}<option value="{{ product.pk|stringformat:'s' }}"{% if selected_product == product.pk|stringformat:'s' %} selected{% endif %}>{{ product.bank.name }} / {{ product.name }}</option>{% endfor %}</select></div>
+                <div class="space-y-1.5"><label for="investment-asset" class="field-label">{% translate 'Asset' %}</label><select data-search-select id="investment-asset" data-live-change name="asset" class="form-input w-full"><option value="">{% translate 'All assets' %}</option>{% for asset in asset_choices %}<option value="{{ asset.pk|stringformat:'s' }}"{% if selected_asset == asset.pk|stringformat:'s' %} selected{% endif %}>{{ asset.code }}</option>{% endfor %}</select></div>
+                {% include 'partials/form_field.html' with field=operation_filter.currency %}
+                {% include 'partials/form_field.html' with field=operation_filter.asset_class %}
+                {% include 'partials/form_field.html' with field=operation_filter.date_from %}
+                {% include 'partials/form_field.html' with field=operation_filter.date_to %}
             </div>
         </details>
-        <div class="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-6">
-            <button type="submit"
-                    id="investment-filter-submit" data-live-submit
-                    class="quiet-action">
-                {% translate 'Filter' %}
-            </button>
-            <span id="investment-history-clear" data-live-fragment="investment-history-filters">{% if search_query or selected_kind or selected_bank or selected_product or selected_asset or selected_purpose or has_extra_filters %}
-                <a href="{{ list_url }}#investment-movements"
-                   data-live-reset data-live-link="investment-history-filters"
-                   class="quiet-action">
-                    {% translate "Clear filters" %}
-                </a>
-            {% endif %}</span>
-        </div>
+        <span id="investment-history-clear" data-live-fragment="investment-history-filters" class="consultation-clear-control">{% if search_query or history_filter_count %}<a href="{{ list_url }}#investment-movements" data-live-reset data-live-link="investment-history-filters" class="quiet-action">{% translate 'Clear filters' %}</a>{% endif %}</span>
+        <button type="submit" id="investment-filter-submit" data-live-submit class="quiet-action">{% translate 'Filter' %}</button>
     </form>
 
     <div id="investment-operation-results">

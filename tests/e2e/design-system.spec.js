@@ -230,6 +230,7 @@ test('monetary yield previews a final balance and stores only the calculated yie
     await expect(page).toHaveURL(/\/investments\/operations\/$/);
     await expect(page.locator('#investment-movements')).toContainText('200,00');
     await page.getByRole('navigation', { name: 'Investment sections' }).getByRole('link', { name: 'My investments', exact: true }).click();
+    await page.locator('#position-extra-filters > summary').press('Enter');
     await page.locator('#position-scope').selectOption('portfolio');
     await expect(page).toHaveURL(url => url.searchParams.get('scope') === 'portfolio');
     const position = page.getByRole('region', { name: 'Positions', exact: true }).locator('article:visible')

@@ -6,10 +6,10 @@
 {% block content %}
 <div class="mx-auto max-w-md space-y-6">
     <div>
-        <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %}</h1>
+        <h1 class="page-title">{% if form.instance.pk %}{% translate 'Edit Operation' %}{% else %}{% translate 'New Operation' %}{% endif %}</h1>
         <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">{% translate 'Choose an asset and operation type to see only the fields you need.' %}</p>
     </div>
-    <form id="investment-operation-form" method="post" hx-boost="false" class="space-y-6 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
+    <form id="investment-operation-form" method="post" hx-boost="false" class="surface-panel space-y-6" novalidate>
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ return_url }}">
         {% if form.instance.pk %}<input type="hidden" name="operation_id" value="{{ form.instance.pk|unlocalize }}">{% endif %}
@@ -92,8 +92,8 @@
         </section>
         {% endif %}
         <div class="flex gap-3">
-            <button type="submit" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep">{% translate 'Save' %}</button>
-            <a href="{{ return_url }}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate 'Cancel' %}</a>
+            <button type="submit" class="action-primary">{% translate 'Save' %}</button>
+            <a hx-boost="false" href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a>
         </div>
     </form>
 </div>

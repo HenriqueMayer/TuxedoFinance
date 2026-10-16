@@ -1,6 +1,6 @@
 {% load i18n %}
 <dl class="grid grid-cols-2 gap-4 text-sm">
-    <div><dt class="subtle-copy">{% translate 'Target amount' %}</dt><dd class="mt-1 font-semibold tabular-nums">{{ row.goal.currency }} {{ row.goal.target_amount|floatformat:2 }}</dd></div>
+    <div><dt class="subtle-copy">{% translate 'Goal amount' %}</dt><dd class="mt-1 font-semibold tabular-nums">{{ row.goal.currency }} {{ row.goal.target_amount|floatformat:2 }}</dd></div>
     <div><dt class="subtle-copy">{% translate 'Backed progress' %}</dt><dd class="mt-1 font-semibold tabular-nums">{{ row.goal.currency }} {{ row.progress|floatformat:2 }}</dd></div>
     <div><dt class="subtle-copy">{% translate 'Remaining target' %}</dt><dd class="mt-1 tabular-nums">{{ row.goal.currency }} {{ row.remaining|floatformat:2 }}</dd></div>
     <div><dt class="subtle-copy">{% translate 'Target date' %}</dt><dd class="mt-1">{% if row.goal.target_date %}{{ row.goal.target_date|date:'SHORT_DATE_FORMAT' }}{% else %}{% translate 'No deadline' %}{% endif %}</dd></div>

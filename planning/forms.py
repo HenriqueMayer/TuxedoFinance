@@ -73,6 +73,7 @@ class FinancialGoalForm(forms.ModelForm):
     class Meta:
         model = FinancialGoal
         fields = ['name', 'target_amount', 'currency', 'target_date']
+        labels = {'target_amount': _('Goal amount')}
         help_texts = {'target_date': _('Optional deadline. Progress comes only from balances explicitly reserved for this goal.')}
 
     def __init__(self, *args, user, style=True, **kwargs):

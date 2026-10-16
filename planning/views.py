@@ -32,6 +32,7 @@ def index(request):
     budget_rows = budget_progress(request.user, month)
     return render(request, 'planning/index.html', {
         'section': 'overview', 'month': month, 'month_form': form, 'rows': budget_rows,
+        'current_month': timezone.localdate().strftime('%Y-%m'),
         'outlook': monthly_outlook(request.user, month), 'budget_count': len(budget_rows),
         'budget_attention_count': sum(row['over_budget'] or row['forecast_over_budget'] or not row['complete'] for row in budget_rows),
         'goal_count': FinancialGoal.objects.filter(user=request.user, is_archived=False).count(),

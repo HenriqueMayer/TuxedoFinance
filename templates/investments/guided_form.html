@@ -20,7 +20,7 @@
         </div>
         <details{% if form.code.errors or form.asset_class.errors or form.code.value or form.asset_class.value and form.asset_class.value != 'OTHER' %} open{% endif %}><summary class="quiet-action cursor-pointer">{% translate 'Advanced options' %}</summary><div class="mt-4 space-y-5">{% include 'partials/form_field.html' with field=form.code %}{% include 'partials/form_field.html' with field=form.asset_class %}</div></details>
         <p class="subtle-copy">{% translate 'Existing holdings are recorded without a bank debit. Leave the opening at zero to record the first operation later.' %}</p>
-        <div class="flex flex-wrap gap-3"><button type="submit" class="action-primary">{% translate 'Save' %}</button><a href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a></div>
+        <div class="flex flex-wrap gap-3"><button type="submit" class="action-primary">{% translate 'Save' %}</button><a hx-boost="false" href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a></div>
     </form>
 </div>{% endblock %}
 {% block extra_js %}<script>

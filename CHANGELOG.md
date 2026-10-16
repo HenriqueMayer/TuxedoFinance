@@ -20,6 +20,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Refactor Investments into aligned holding rows with contextual updates and compact optional history filters. Simplify Plan around its monthly cash outlook and budget rows, with compact backed-goal cards and grouped tools; keep financial calculations, warnings and complete native form paths.
+- Reuse localized month selection in Plan, with an explicit current-month reset for its required period; optional month filters keep their all-months behavior.
 - Refine transaction filter outlines and selected states without moving the rail; rename its disclosure More filters and preserve financial date-error contrast.
 - Present monetary cash pots as compact cards with distinct balance/available figures, one group redemption hint and an explicit Set balance aside action.
 - Open Invoices with an owned-card grid, including empty cards, and navigate to each card's filtered invoice history. Retain native navigation, independent pagination, confirmed payments, contextual origins and redirects for existing card-filter bookmarks.

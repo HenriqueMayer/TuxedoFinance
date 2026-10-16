@@ -4,9 +4,9 @@
 {% block content %}
 <div class="space-y-6">
     <header class="workspace-header"><div><h1 class="page-title">{% translate 'Local signals' %}</h1><p class="subtle-copy mt-2">{% translate 'Explained suggestions from recorded local data. Reviewing a signal changes only its review status.' %}</p></div><a href="{% url 'planning:signals_settings' %}" class="action-link">{% translate 'Signal settings' %}</a></header>
-    <p class="subtle-copy">{% translate 'Duplicate and increase checks use up to 1,000 expenses in the last 90 days. These patterns require review and never prove a duplicate or a subscription. Cash forecasts use recorded bank movements and unpaid confirmed-mode invoices within the configured horizon.' %}</p>
+
     {% for notice in notices %}<p role="status" class="subtle-copy">{{ notice }}</p>{% endfor %}
-<form id="signal-filters" method="get" data-live-filters data-live-results="signal-results" hx-boost="false" class="filter-panel"><label class="inline-flex items-center gap-2"><input type="checkbox" name="reviewed" value="1" data-live-change{% if include_reviewed %} checked{% endif %} class="h-5 w-5 accent-caramel">{% translate 'Include reviewed signals' %}</label><button data-live-submit class="action-link">{% translate 'Apply filters' %}</button><span id="signal-clear" data-live-fragment="signal-filters">{% if include_reviewed %}<a class="action-link" data-live-reset data-live-link="signal-filters" href="{% url 'planning:signals' %}">{% translate 'Clear filters' %}</a>{% endif %}</span></form>
+<form id="signal-filters" action="{% url 'planning:signals' %}" method="get" data-live-filters data-live-results="signal-results" hx-boost="false" class="consultation-bar"><label class="inline-flex min-h-11 items-center gap-2"><input type="checkbox" name="reviewed" value="1" data-live-change{% if include_reviewed %} checked{% endif %} class="h-5 w-5 accent-caramel">{% translate 'Include reviewed signals' %}</label><button data-live-submit class="action-link">{% translate 'Apply filters' %}</button><span id="signal-clear" data-live-fragment="signal-filters">{% if include_reviewed %}<a class="action-link" data-live-reset data-live-link="signal-filters" href="{% url 'planning:signals' %}">{% translate 'Clear filters' %}</a>{% endif %}</span></form>
     <div id="signal-results" class="space-y-4 mt-6">
     {% for signal in signals %}
     <article class="surface-panel space-y-4" aria-labelledby="signal-{{ forloop.counter }}">
@@ -21,5 +21,5 @@
         </form>
     </article>
     {% empty %}<p class="subtle-copy py-8">{% translate 'No pending signals in the available local evidence.' %}</p>{% endfor %}</div>
-</div>
+<details class="explanation-disclosure"><summary>{% translate 'About local signals' %}</summary><p class="subtle-copy">{% translate 'Duplicate and increase checks use up to 1,000 expenses in the last 90 days. These patterns require review and never prove a duplicate or a subscription. Cash forecasts use recorded bank movements and unpaid confirmed-mode invoices within the configured horizon.' %}</p></details></div>
 {% endblock %}

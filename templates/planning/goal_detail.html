@@ -5,8 +5,6 @@
 <div class="space-y-6">
     <header class="workspace-header"><h1 class="page-title">{{ goal.name }}</h1><div class="flex flex-wrap gap-3">{% url 'planning:goal_update' goal.pk as edit_url %}<a class="action-link" href="{% contextual_url edit_url %}">{% translate 'Edit goal' %}</a>{% if not goal.is_archived %}{% url 'planning:allocation_create' goal.pk as reserve_url %}<a class="action-primary" href="{% contextual_url reserve_url %}">{% translate 'Reserve a balance' %}</a>{% endif %}</div></header>
     <section class="surface-panel space-y-4">{% include 'planning/_goal_summary.html' %}</section>
-    <p class="subtle-copy">{% translate 'Reservations stay in their source currency. Target progress uses registered reference exchange rates as of today, not effective operation rates. When a balance falls, its backing is shared proportionally between active goals.' %}</p>
-    <p class="subtle-copy">{% translate 'Historical planning excludes reservations created later. Editing or archiving a reservation changes the current plan; past reserve edits are not a historical ledger.' %}</p>
     <section class="space-y-4" aria-labelledby="goal-reservations"><h2 id="goal-reservations" class="section-title">{% translate 'Reserved sources' %}</h2>
         {% for detail in row.allocations %}<article class="surface-panel space-y-4">
             <h3 class="font-semibold">{% if detail.source %}<a class="underline" href="{{ detail.source.url }}">{{ detail.allocation.source_label }}</a>{% else %}{{ detail.allocation.source_label }}{% endif %}</h3>
@@ -18,6 +16,7 @@
             <div class="flex flex-wrap gap-3">{% if not goal.is_archived %}{% url 'planning:allocation_update' goal.pk detail.allocation.pk as reserve_edit_url %}<a class="quiet-action" href="{% contextual_url reserve_edit_url %}">{% translate 'Edit reservation' %}</a>{% endif %}<form method="post" action="{% url 'planning:allocation_delete' detail.allocation.pk %}" hx-boost="false">{% csrf_token %}<button type="submit" class="quiet-action">{% translate 'Release reservation' %}</button></form></div>
         </article>{% empty %}<p class="subtle-copy">{% translate 'No balance reserved for this goal yet.' %}</p>{% endfor %}
     </section>
+    <details class="explanation-disclosure"><summary>{% translate 'About real reservations' %}</summary><div class="space-y-3 mt-2 subtle-copy"><p>{% translate 'Reservations stay in their source currency. Target progress uses registered reference exchange rates as of today, not effective operation rates. When a balance falls, its backing is shared proportionally between active goals.' %}</p><p>{% translate 'Historical planning excludes reservations created later. Editing or archiving a reservation changes the current plan; past reserve edits are not a historical ledger.' %}</p></div></details>
     <form method="post" action="{% url 'planning:goal_archive' goal.pk %}" hx-boost="false">{% csrf_token %}<button type="submit" class="action-link">{% if goal.is_archived %}{% translate 'Restore goal' %}{% else %}{% translate 'Archive goal' %}{% endif %}</button></form>
 </div>
 {% endblock %}

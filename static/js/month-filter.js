@@ -107,11 +107,14 @@
                 requestAnimationFrame(place);
                 return valid;
             }
-            function commit(month) {
-                if (month && !validYear()) { year.focus({preventScroll: true}); return; }
-                native.value = month ? `${year.value.padStart(4, '0')}-${month}` : '';
+            function apply(value) {
+                native.value = value;
                 native.dispatchEvent(new Event('change', {bubbles: true}));
                 sync(); dismiss(true);
+            }
+            function commit(month) {
+                if (month && !validYear()) { year.focus({preventScroll: true}); return; }
+                apply(month ? `${year.value.padStart(4, '0')}-${month}` : '');
             }
             button.addEventListener('click', () => {
                 if (!panel.hidden) { dismiss(); return; }
@@ -136,7 +139,9 @@
                 if (event.key === 'Enter') { event.preventDefault(); if (validYear()) search?.focus({preventScroll: true}); }
             });
             close.addEventListener('click', () => dismiss(true));
-            clear.addEventListener('click', () => commit(''));
+            // Required monthly workspaces reset to their explicit current month;
+            // optional consultation filters retain the ordinary all-months reset.
+            clear.addEventListener('click', () => apply(root.dataset.monthResetValue || ''));
             root.addEventListener('keydown', event => {
                 if (event.key === 'Escape' && !panel.hidden) { event.preventDefault(); dismiss(true); }
             });

@@ -3,6 +3,7 @@
 {% block title %}{% translate "Investment Settings" %} - Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="space-y-8">
+    {% include 'investments/_sections.html' %}
     <header class="workspace-header">
         <div>
         <div class="label-with-help mt-2">
@@ -15,7 +16,6 @@
         </div>
         {% if setup_complete %}{% include 'investments/_primary_action.html' %}{% endif %}
     </header>
-    {% include 'investments/_sections.html' %}
     {% if not setup_complete %}{% include 'investments/_setup_progress.html' %}{% endif %}
     {% if has_bank %}
     <section id="investment-products" class="surface-panel space-y-4">

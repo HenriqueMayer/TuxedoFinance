@@ -439,3 +439,50 @@ integrate the branch. A successful automated run does not replace that decision.
   database, preserving its test records and leaving the installation untouched.
 - Actual device/browser acceptance remains with the owner. No merge, main push,
   version/tag, image, release, bank integration or publication was performed.
+
+
+### Clearer Investments and Plan — 16 October 2026
+
+- Investments now uses one divided list with aligned holding, registered-value
+  and Update columns. The phone layout retains the same information and its
+  explicit row anchor. Purpose and history criteria remain available through a
+  stable More filters rail. Text search does not silently redefine the scoped
+  total, and acquisition-cost/missing-price warnings remain visible.
+- Update uses a compact action list. Native Cancel navigation honors the
+  validated position fragment instead of returning to the heading. Check both
+  Cancel from the chooser and Cancel from an operation form on a phone.
+- Plan puts the selected month beside its title and distinguishes the projected
+  month-end amount from recorded available cash and reserved balances. The month
+  picker resets to This month; optional month filters elsewhere still reset to
+  all months. Budgets share aligned rows with forecasts/options in context.
+- Goals show backed reserved progress against the goal, explicit goal-amount
+  labels and visible shortfall/FX notices. Tools groups simulations separately
+  from local signals and saved drafts. Existing fields, financial calculations,
+  date validation and owned return contexts retain their contracts.
+- Owner review: switch themes and months, type/delete a search, open/close More
+  filters, check Clear and Back/Forward, update a holding and cancel to its row,
+  edit/copy/remove a budget, and inspect a funded goal and each Tools destination.
+  The desktop and phone previews use the same branch; device acceptance remains
+  with the owner before any merge or publication.
+
+Validation for this iteration:
+
+- All 579 Django tests passed with 94% coverage measured using `--branch`;
+  system and migration-drift checks passed. All 42 Planning tests passed again
+  after the final goal-label changes.
+- Scoped browser runs and focused rechecks passed 50 distinct scenarios, with
+  no unresolved failures: keyboard/touch, 390/1440px, light/dark, English/PT-BR,
+  native forms, errors and conditional choices, owned row returns, live filters,
+  required/optional month resets, Back/Forward, budgets, goal backing, archive/
+  restore and existing calculation flows. Required label markers and deliberately
+  overlaid menus are accounted for in the interaction selectors.
+- Screenshot review covered desktop/phone holdings, monthly outlook, budgets,
+  funded-goal progress and grouped tools. Native progress styling now resolves
+  the configured caramel token explicitly within the financial workspace.
+- Ruff, `git diff --check`, compiled CSS reproducibility, gettext format and
+  compiled-byte checks passed; the catalog has no untranslated/fuzzy entries.
+  No migrations or dependencies changed.
+- The loopback preview on port 8768 uses the verified private backup of the
+  previous disposable preview and the current code/catalog. Its preserved test
+  records remain separate from the installation. No merge, main push, version,
+  tag, image, external integration or publication was performed.

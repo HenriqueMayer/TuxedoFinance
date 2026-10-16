@@ -650,6 +650,16 @@ cross-cutting rules to `AGENTS.md` so future changes preserve them.
 
 ### Shared workspace components
 
+Investment, Planning and Sandbox main regions receive `.finance-workspace`.
+This scope adopts the approved Accounts density for headings, surfaces and
+actions without changing shared field/choice geometry or reducing 44px touch
+targets. Holdings and category budgets use one divided surface with aligned
+desktop columns and a stacked phone layout. Keep values, evidence and actions
+distinct; never sum category limits into available cash or turn acquisition cost
+into a market quote. Goal cards and grouped tool links reuse these same tokens.
+Value/calculation disclosures retain stable IDs so live refresh preserves the
+reader's explicit open/closed state. Critical missing-data warnings stay visible.
+
 Use `surface-panel`, `metric-panel`, `label-with-help`, `workspace-header`, `section-nav`, `action-link`, `action-primary`,
 `secondary-actions`, `data-table`, and `subtle-copy` from the compiled stylesheet.
 Group banks, charts, input stages and results in distinct surface cards. Use
@@ -859,7 +869,8 @@ restoration behavior.
 
 ## Compact consultation bars and month names
 
-Transactions, Categories, Invoices and Exchange rates use `consultation-bar`, `consultation-search`
+Transactions, Categories, Invoices, Exchange rates, investment positions/history
+and financial goals use `consultation-bar`, `consultation-search`
 and `consultation-actions`. Keep one primary text search; place less frequent
 criteria in a deliberate native `details.filter-disclosure`. Its active count
 and nearby Clear refresh independently of the controls. Newly returned field
@@ -868,7 +879,8 @@ stay complete in native GET submissions. Transaction search already includes
 category names and split-category names; exact category selection remains in
 Filters and does not change the broad search semantics.
 
-Categories, Invoices and Exchange rates add `.consultation-stable`. Search,
+Categories, Invoices, Exchange rates, investment positions/history and financial
+goals add `.consultation-stable`. Search,
 Filters and the reserved Clear slot share a rail on wider screens. Small screens
 keep search above a fixed action row. Only the native summary is positioned in
 its slot; opening the complete criteria adds a full-width row below it. Numeric
@@ -900,8 +912,9 @@ reserves the viewport gutter for classic scrollbars across long and short
 transaction lists without forcing an always-visible scrollbar. Overlay scrollbars
 do not consume this space; see the
 [CSS Overflow gutter rules](https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property).
-The rule does not reserve gutters or promise stable toolbar geometry in other
-workspaces.
+Investment and Planning regions independently opt into the same stable gutter
+through `.finance-workspace`; Dashboard, Reports and the other workspaces retain
+their existing gutter rules.
 
 Geometry regressions compare control dimensions and document coordinates, plus
 the actual `body.app-layout` width, across type changes, search counts, Clear,
@@ -938,8 +951,11 @@ pickers retain their existing keyboard contract. Both clear actions reset the
 canonical ISO value without validating an unused draft year. Closed draft-year
 controls are disabled so their native constraints cannot block fallback GET
 submission. Escape, outside activation and Tab-away dismiss the panel;
-background updates preserve controls.
+background updates preserve controls. A required monthly workspace may explicitly
+provide `month_reset_value` and `month_clear_label` to the partial: Planning uses
+the current ISO month and the label This month. This opt-in changes only that
+reset action; optional filters elsewhere still clear to all months. Never apply
+an unused invalid year draft when resetting.
 No JavaScript keeps the native month input and ordinary submit fallback.
 
-Dashboard/Reports period navigation and Investment/Planning workspaces retain
-their current controls and presentation in this iteration.
+Dashboard and Reports retain their existing period controls and presentation.

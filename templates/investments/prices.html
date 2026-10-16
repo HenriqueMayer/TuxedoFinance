@@ -3,8 +3,8 @@
 {% block title %}{% translate 'Observed prices' %} — Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="space-y-7">
-    <header class="workspace-header"><h1 class="page-title">{% translate 'Observed prices' %}</h1><a href="{{ price_create_url }}" class="action-primary">{% translate 'New observation' %}</a></header>
     {% include 'investments/_sections.html' %}
+    <header class="workspace-header"><h1 class="page-title">{% translate 'Observed prices' %}</h1><a href="{{ price_create_url }}" class="action-primary">{% translate 'New observation' %}</a></header>
     <p class="subtle-copy">{% translate 'The latest observation on or before the valuation date prices the units you hold. Without an observation, the position shows its remaining acquisition cost. Sources are your own records; no external feed is contacted.' %}</p>
     <div class="surface-panel overflow-x-auto" tabindex="0" role="region" aria-label="{% translate 'Observed prices' %}">
         <table class="data-table"><thead><tr><th>{% translate 'Asset' %}</th><th>{% translate 'Date' %}</th><th>{% translate 'Unit price' %}</th><th>{% translate 'Source' %}</th><th>{% translate 'Actions' %}</th></tr></thead>

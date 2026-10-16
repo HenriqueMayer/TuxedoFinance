@@ -139,7 +139,9 @@ for (const theme of ['light', 'dark']) {
         await openMore(page);
         await trigger.hover();
         await expect(tooltip).toBeVisible();
-        await page.getByRole('heading', { level: 1 }).click();
+        // Section tabs precede the heading now; their open menu intentionally
+        // overlays it. Dismiss from the unoccupied main gutter instead.
+        await page.locator('main').click({ position: { x: 2, y: 2 } });
         await expect(tooltip).toBeHidden();
         await page.setViewportSize({ width: 1440, height: 900 });
         await page.getByRole('navigation', { name: 'Main navigation', exact: true }).getByRole('link', { name: 'Plan', exact: true }).click();
@@ -173,7 +175,7 @@ test('investment setup and simulation notice support Portuguese, touch and no Ja
             await expect(hint).toBeVisible();
             await expect(hint).toContainText('Planejar → Simulação de rendimentos');
             await expect(mobile).toHaveURL(/\/investments\/$/);
-            await mobile.getByRole('heading', { level: 1 }).tap();
+            await mobile.locator('main').tap({ position: { x: 2, y: 2 } });
             if (javaScriptEnabled) await expect(hint).toBeHidden();
             await openMore(mobile);
             await mobile.getByRole('link', { name: 'Cadastros completos', exact: true }).press('Enter');

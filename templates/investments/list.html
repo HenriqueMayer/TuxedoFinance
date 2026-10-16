@@ -2,32 +2,33 @@
 {% load i18n navigation %}
 {% block title %}{% translate 'My investments' %} — Tuxedo Finance{% endblock %}
 {% block content %}
-<div class="space-y-6">
-    <header class="workspace-header"><h1 class="page-title">{% translate 'My investments' %}</h1>{% include 'investments/_primary_action.html' %}</header>
+<div class="investing-workspace space-y-4">
     {% include 'investments/_sections.html' %}
-    <div id="position-value-summary" data-live-fragment="investment-position-filters" class="space-y-4">
-    <div class="panel-heading">
-        <div><p class="subtle-copy">{% if missing_rate_currencies %}{% translate 'Partial total' %}{% elif search_query %}{% translate 'Scoped total before search' %}{% else %}{% translate 'Registered value' %}{% endif %}</p><p id="investment-total" class="text-3xl font-semibold tabular-nums">{{ base_currency }} {{ simulated_total|floatformat:2 }}</p></div>
-        <p class="subtle-copy">{% blocktranslate with date=today|date:USER_DATE_FORMAT %}As of {{ date }}{% endblocktranslate %}</p>
+    <header class="workspace-header"><h1 class="page-title">{% translate 'My investments' %}</h1>{% include 'investments/_primary_action.html' %}</header>
+    <div id="position-value-summary" data-live-fragment="investment-position-filters" class="surface-panel space-y-3">
+    <div class="investment-summary-heading">
+        <div><p class="subtle-copy">{% if missing_rate_currencies %}{% translate 'Partial total' %}{% elif search_query %}{% translate 'Total before search' %}{% else %}{% translate 'Registered value' %}{% endif %}</p><p id="investment-total" class="text-2xl font-semibold tabular-nums mt-1">{{ base_currency }} {{ simulated_total|floatformat:2 }}</p><p class="subtle-copy mt-1">{% blocktranslate with date=today|date:USER_DATE_FORMAT %}As of {{ date }}{% endblocktranslate %}</p></div>
+        <details id="position-value-details" class="investment-value-details explanation-disclosure"><summary>{% translate 'Value details' %}</summary><div class="space-y-3 mt-3">
+            {% for currency, amount in native_totals %}<p class="tabular-nums">{{ currency }} {{ amount|floatformat:2 }}</p>{% endfor %}
+            {% for rate in valuation_rates %}<p><a class="quiet-action" href="{% url 'banking:exchange_rate_update' rate.pk %}">{{ rate.from_currency }}/{{ rate.to_currency }} · {{ rate.rate.normalize }} · {{ rate.effective_date|date:USER_DATE_FORMAT }}</a></p>{% endfor %}
+            {% if search_query %}<p class="subtle-copy">{% translate 'The total includes all holdings in the selected group, before the text search.' %}</p>{% endif %}
+            <p class="subtle-copy">{% translate 'Local prices or remaining acquisition cost value units. Currency conversion uses registered reference rates. Bank cash and realized results remain separate.' %}</p>
+        </div></details>
     </div>
     {% if missing_rate_currencies %}<p id="investment-fx-warning" role="status" class="text-sm text-expense dark:text-expense-light">{% blocktranslate with currencies=missing_rate_currencies|join:', ' %}Current total incomplete: exchange rates are missing for {{ currencies }}.{% endblocktranslate %} <a class="quiet-action" href="{% url 'banking:exchange_rates' %}">{% translate 'Manage exchange rates' %}</a></p>{% endif %}
     {% if portfolio_snapshot.missing_prices %}<p id="investment-price-warning" role="status" class="subtle-copy">{% translate 'Some unit positions use acquisition cost because no local price is available.' %}</p>{% endif %}
     {% if portfolio_snapshot.unknown_baselines %}<p id="investment-baseline-warning" role="status" class="text-sm text-expense dark:text-expense-light">{% translate 'Some opening dates are unknown. Current holdings are retained; earlier ownership cannot be established.' %}</p>{% endif %}
     {% if portfolio_snapshot.history_errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{% translate 'Existing operation history needs review before its results can be relied on.' %} <a class="quiet-action" href="{% url 'investments:operations' %}">{% translate 'History' %}</a></p>{% endif %}
     </div>
-    <form id="investment-position-filters" method="get" hx-history="false" action="{% url 'investments:list' %}" hx-boost="false" data-live-filters data-live-results="investment-position-list" class="surface-panel space-y-4">
-        <div class="grid gap-4 sm:grid-cols-2">
-            <div class="space-y-1.5"><label for="position-search" class="field-label">{% translate 'Search investments' %}</label><input id="position-search" type="search" name="q" value="{{ search_query }}" data-live-search placeholder="{% translate 'Name, institution or identifier' %}" class="form-input w-full"></div>
+    <form id="investment-position-filters" method="get" hx-history="false" action="{% url 'investments:list' %}" hx-boost="false" data-live-filters data-live-results="investment-position-list" class="consultation-bar consultation-stable">
+        <div class="consultation-search"><label for="position-search" class="field-label">{% translate 'Search investments' %}</label><input id="position-search" type="search" name="q" value="{{ search_query }}" data-live-search placeholder="{% translate 'Name, institution or identifier' %}" class="form-input w-full"></div>
+        <details id="position-extra-filters" class="filter-disclosure"><summary>{% translate 'More filters' %}<span id="position-filter-count" data-live-fragment="investment-position-filters" class="consultation-filter-count">{% if position_scope != 'all' %}1{% endif %}</span></summary><div class="filter-disclosure-panel">
             <div class="space-y-1.5"><label for="position-scope" class="field-label">{% translate 'Show' %}</label><select id="position-scope" name="scope" data-live-change data-live-default="all" class="form-input w-full"><option value="all"{% if position_scope == 'all' %} selected{% endif %}>{% translate 'All my investments' %}</option><option value="portfolio"{% if position_scope == 'portfolio' %} selected{% endif %}>{% translate 'Investments' %}</option><option value="cash"{% if position_scope == 'cash' %} selected{% endif %}>{% translate 'Remunerated cash' %}</option></select></div>
-        </div>
-        <div id="position-filter-summary" data-live-fragment="investment-position-filters" class="flex flex-wrap items-center gap-3"><span id="position-results-status" role="status">{% blocktranslate count count=position_count %}{{ count }} position{% plural %}{{ count }} positions{% endblocktranslate %}</span>{% if search_query or position_scope != 'all' %}<a href="{% url 'investments:list' %}" data-live-reset data-live-link="investment-position-filters" class="quiet-action">{% translate 'Clear filters' %}</a>{% endif %}</div>
+        </div></details>
+        <span id="position-filter-clear" data-live-fragment="investment-position-filters" class="consultation-clear-control">{% if search_query or position_scope != 'all' %}<a href="{% url 'investments:list' %}" data-live-reset data-live-link="investment-position-filters" class="quiet-action">{% translate 'Clear filters' %}</a>{% endif %}</span>
         <button type="submit" data-live-submit class="action-link">{% translate 'Search' %}</button>
     </form>
+    <p id="position-results-status" data-live-fragment="investment-position-filters" role="status" class="subtle-copy">{% blocktranslate count count=position_count %}{{ count }} position{% plural %}{{ count }} positions{% endblocktranslate %}</p>
     {% include 'investments/_position_list.html' %}
-    <details id="position-value-details" data-live-fragment="investment-position-filters" class="surface-panel"><summary class="quiet-action cursor-pointer">{% translate 'Value details' %}</summary><div class="mt-4 space-y-3">
-        {% for currency, amount in native_totals %}<p>{{ currency }} {{ amount|floatformat:2 }}</p>{% endfor %}
-        {% for rate in valuation_rates %}<p><a class="quiet-action" href="{% url 'banking:exchange_rate_update' rate.pk %}">{{ rate.from_currency }}/{{ rate.to_currency }} · {{ rate.rate.normalize }} · {{ rate.effective_date|date:USER_DATE_FORMAT }}</a></p>{% endfor %}
-        <p class="subtle-copy">{% translate 'Local prices or remaining acquisition cost value units. Currency conversion uses registered reference rates. Bank cash and realized results remain separate.' %}</p>
-    </div></details>
 </div>
 {% endblock %}

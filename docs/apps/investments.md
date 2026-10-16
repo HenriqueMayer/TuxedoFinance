@@ -294,6 +294,21 @@ withdrawal or yield. This rule deliberately keeps archiving distinct from
 removing holdings or rewriting history.
 
 My investments opens a compact holdings list with registered value and Update.
+Positions share one divided surface with aligned name/value/action columns on
+desktop and stacked readable rows on phones. Native/base values, valuation
+evidence and unknown-opening/history warnings remain associated with each
+position. The total is scoped by purpose, before text search; its label and
+value details disclose that boundary. Search and the optional purpose filter
+reuse the stable consultation rail; History uses the same rail for its existing
+criteria. No record fields or financial definitions change with this layout.
+Update presents a compact action list with short names and explanatory accessible
+descriptions. Save/Cancel retain the existing visible desktop/mobile row anchors.
+Cancel links use native navigation so an explicit return fragment is honored
+instead of inheriting the boosted shell's heading/top behavior. Native POST
+redirects preserve the same validated destination; this does not weaken departure
+warnings for edited forms.
+Analyses, observations and configuration share the compact presentation but
+retain their domain-specific data and form contracts.
 The guided Add investment workflow saves an owned institution, product and asset
 atomically. It starts purpose and valuation choices empty, asks the user whether
 remunerated cash participates in planning, and separates money from units/cost.

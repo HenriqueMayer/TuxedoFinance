@@ -126,6 +126,30 @@ See [banking availability](banking.md#monthly-planning-availability),
 section; signals, monthly/yield simulations and saved drafts live in Tools.
 Budget links preserve the selected month.
 
+The month selector sits beside the page title, using the shared localized-name
+picker. A required monthly workspace cannot mean "all months": its explicit
+reset returns to the current month, while optional month filters elsewhere keep
+their empty reset. Invalid native month values remain editable with server
+errors and a complete no-JavaScript GET submission.
+
+The available-money surface keeps its recorded/projected status visible beside
+the main amount. Recorded available cash and projected reserves are separately
+labelled; unpaid confirmed invoices and calculation explanations are accessible
+in a deliberate disclosure. Missing conversions, unknown openings and unsupported
+forecast horizons remain visible. Budgets occupy one divided list with aligned
+recorded spending, limit, remaining value and Edit action; forecasts and removal
+stay with the relevant row. Opening these details does not create a reservation.
+
+Goals use compact progress cards with explicitly backed amounts and targets,
+their deadlines and visible shortfall/FX warnings. Their search and archived
+criterion use the same stable consultation rail as Investments. Tools separates
+simulations from local review and saved drafts; all four existing destinations
+remain ordinary links. Form fields, reservations and scenario calculations retain
+their existing semantics.
+Goal forms and summaries explicitly label the goal amount, avoiding the generic
+target/destination terminology used by unrelated financial forms. Reserved/goal
+cards still display backed progress, not an unbacked allocation claim.
+
 A new goal can optionally reserve an existing bank/cash-pot balance during the
 same submission. The checkbox begins unchecked; selecting it reveals an empty
 owned source choice, then the amount. New form fields use the shared renderer,

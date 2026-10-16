@@ -10,7 +10,7 @@
         <input type="hidden" name="next" value="{{ return_url }}">
         {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         {% for field in form %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
-        <div class="flex flex-wrap gap-3"><button type="submit" class="action-primary">{% translate 'Save' %}</button><a href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a></div>
+        <div class="flex flex-wrap gap-3"><button type="submit" class="action-primary">{% translate 'Save' %}</button><a hx-boost="false" href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a></div>
     </form>
 </div>
 {% endblock %}

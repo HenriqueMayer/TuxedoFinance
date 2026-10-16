@@ -71,8 +71,10 @@ for (const theme of ['light', 'dark']) {
         await page.getByRole('button', { name: 'Save', exact: true }).press('Enter');
         await expect(page).toHaveURL(/planning\/\?month=/);
         await expect(page.locator('main')).toContainText('250,00');
-        await page.locator('#id_month').press('Tab');
-        await page.locator('#id_month').press('Enter');
+        await page.locator('#id_month-trigger').press('Enter');
+        await expect(page.locator('#id_month-choice-search')).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#id_month-trigger')).toBeFocused();
         await expect(page.locator('main')).toContainText('250,00');
 
         await page.goto(goalUrl);

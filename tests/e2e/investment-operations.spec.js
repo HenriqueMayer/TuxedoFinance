@@ -68,6 +68,7 @@ for (const theme of ['light', 'dark']) {
         await expect(history).toContainText('Operation 01');
         await expect(page.locator('#investment-search')).toBeFocused();
         await page.locator('#investment-search').fill('');
+        await page.locator('#investment-extra-filters > summary').press('Enter');
         await page.locator('#investment-purpose').focus();
         await page.keyboard.press('End');
         await page.keyboard.press('Tab');
@@ -90,6 +91,7 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('body')).not.toHaveClass(/htmx-settling/);
         await expect(page).toHaveURL(/\/investments\/operations\/$/);
         await tabs.getByRole('link', { name: 'My investments', exact: true }).press('Enter');
+        await page.locator('#position-extra-filters > summary').press('Enter');
         await page.locator('#position-scope').selectOption('cash');
         await expect(page).toHaveURL(url => url.searchParams.get('scope') === 'cash');
         await page.locator('#investment-operations-link').press('Enter');
@@ -109,6 +111,7 @@ test('operations remain usable on mobile without JavaScript', async ({ page, bro
         await mobile.goto('/investments/');
         await mobile.locator('#investment-operations-link').press('Enter');
         await expect(mobile).toHaveURL(/\/investments\/operations\/$/);
+        await mobile.locator('#investment-extra-filters > summary').press('Enter');
         await mobile.locator('#investment-purpose').selectOption('cash');
         await mobile.getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(mobile.locator('#investment-movements')).toContainText('Pot yield');

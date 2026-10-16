@@ -502,6 +502,8 @@ class InvestmentOperationsView(LoginRequiredMixin, ListView):
             'search_query': self.request.GET.get('q', '').strip(),
             'operation_filter': self.operation_filter,
             'has_extra_filters': any(self.request.GET.get(name) for name in self.operation_filter.fields),
+            'history_filter_count': sum(bool(self.request.GET.get(name)) for name in
+                ('section', 'kind', 'bank', 'product', 'asset', *self.operation_filter.fields)),
         })
         return context
 

@@ -1,8 +1,8 @@
 {% extends 'base.html' %}{% load i18n navigation %}
 {% block title %}{{ position.name }} — Tuxedo Finance{% endblock %}
 {% block content %}<div class="space-y-6">
-    <header class="workspace-header"><div><h1 class="page-title">{{ position.name }}</h1><p class="subtle-copy mt-2">{{ product.bank.name }}{% if product.name != position.name %} · {{ product.name }}{% endif %} · {{ position.currency }}</p></div>{% if not position.is_archived %}<a href="{{ update_url }}" class="action-primary">{% translate 'Update' %}</a>{% endif %}</header>
     {% include 'investments/_sections.html' %}
+    <header class="workspace-header"><div><h1 class="page-title">{{ position.name }}</h1><p class="subtle-copy mt-2">{{ product.bank.name }}{% if product.name != position.name %} · {{ product.name }}{% endif %} · {{ position.currency }}</p></div>{% if not position.is_archived %}<a href="{{ update_url }}" class="action-primary">{% translate 'Update' %}</a>{% endif %}</header>
     <section class="surface-panel space-y-3">
         <p class="subtle-copy">{% translate 'Registered value' %}</p><p class="text-3xl font-semibold tabular-nums">{{ position.currency }} {{ position.valuation|floatformat:2 }}</p>
         {% if position.valuation_mode == 'UNITS' %}<p class="subtle-copy">{% blocktranslate with quantity=position.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% if position.price_observation %} · {% translate 'Local unit price' %}{% else %} · {% translate 'At remaining acquisition cost' %}{% endif %}</p>{% else %}<p class="subtle-copy">{% translate 'Recorded balance' %}</p>{% endif %}

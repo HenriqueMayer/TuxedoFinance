@@ -1,11 +1,17 @@
 {% extends 'base.html' %}{% load i18n %}
 {% block title %}{% translate 'Planning tools' %} — Tuxedo Finance{% endblock %}
 {% block content %}
-<div class="space-y-6"><header><h1 class="page-title">{% translate 'Planning tools' %}</h1><p class="subtle-copy mt-2">{% translate 'Explore scenarios and review signals when you need them.' %}</p></header>
-<div class="grid gap-4 md:grid-cols-2">
-<a href="{% url 'sandbox:index' %}" class="surface-panel tool-card" aria-labelledby="tool-monthly-label" aria-describedby="tool-monthly-description"><h2 id="tool-monthly-label" class="section-title">{% translate 'Monthly plan' %}</h2><p id="tool-monthly-description" class="subtle-copy mt-2">{% translate 'Try a monthly distribution before changing your recorded data.' %}</p></a>
-<a href="{% url 'sandbox:simulation' %}" class="surface-panel tool-card" aria-labelledby="tool-yield-label" aria-describedby="tool-yield-description"><h2 id="tool-yield-label" class="section-title">{% translate 'Yield simulation' %}</h2><p id="tool-yield-description" class="subtle-copy mt-2">{% translate 'Compare hypothetical contributions and returns.' %}</p></a>
-<a href="{% url 'planning:signals' %}" class="surface-panel tool-card" aria-labelledby="tool-signals-label" aria-describedby="tool-signals-description"><h2 id="tool-signals-label" class="section-title">{% translate 'Local signals' %}</h2><p id="tool-signals-description" class="subtle-copy mt-2">{% translate 'Review explained suggestions without changing their financial sources.' %}</p></a>
-<a href="{% url 'sandbox:drafts' %}" class="surface-panel tool-card" aria-labelledby="tool-drafts-label" aria-describedby="tool-drafts-description"><h2 id="tool-drafts-label" class="section-title">{% translate 'Saved drafts' %}</h2><p id="tool-drafts-description" class="subtle-copy mt-2">{% translate 'Resume or remove a saved scenario.' %}</p></a>
-</div></div>
+<div class="planning-workspace space-y-5">
+    <header><h1 class="page-title">{% translate 'Planning tools' %}</h1><p class="subtle-copy mt-2">{% translate 'Explore scenarios and review signals when you need them.' %}</p></header>
+    <div class="planning-tool-groups">
+        <section aria-labelledby="tools-simulate" class="space-y-3"><h2 id="tools-simulate" class="section-title">{% translate 'Simulate' %}</h2><div class="surface-panel planning-tool-list">
+            <a href="{% url 'sandbox:index' %}" class="planning-tool" aria-labelledby="tool-monthly-label" aria-describedby="tool-monthly-description"><div><h3 id="tool-monthly-label" class="font-semibold">{% translate 'Monthly plan' %}</h3><p id="tool-monthly-description" class="subtle-copy mt-1">{% translate 'Try a monthly distribution before changing your recorded data.' %}</p></div><span aria-hidden="true">→</span></a>
+            <a href="{% url 'sandbox:simulation' %}" class="planning-tool" aria-labelledby="tool-yield-label" aria-describedby="tool-yield-description"><div><h3 id="tool-yield-label" class="font-semibold">{% translate 'Yield simulation' %}</h3><p id="tool-yield-description" class="subtle-copy mt-1">{% translate 'Compare hypothetical contributions and returns.' %}</p></div><span aria-hidden="true">→</span></a>
+        </div></section>
+        <section aria-labelledby="tools-review" class="space-y-3"><h2 id="tools-review" class="section-title">{% translate 'Review and resume' %}</h2><div class="surface-panel planning-tool-list">
+            <a href="{% url 'planning:signals' %}" class="planning-tool" aria-labelledby="tool-signals-label" aria-describedby="tool-signals-description"><div><h3 id="tool-signals-label" class="font-semibold">{% translate 'Local signals' %}</h3><p id="tool-signals-description" class="subtle-copy mt-1">{% translate 'Review explained suggestions without changing their financial sources.' %}</p></div><span aria-hidden="true">→</span></a>
+            <a href="{% url 'sandbox:drafts' %}" class="planning-tool" aria-labelledby="tool-drafts-label" aria-describedby="tool-drafts-description"><div><h3 id="tool-drafts-label" class="font-semibold">{% translate 'Saved drafts' %}</h3><p id="tool-drafts-description" class="subtle-copy mt-1">{% translate 'Resume or remove a saved scenario.' %}</p></div><span aria-hidden="true">→</span></a>
+        </div></section>
+    </div>
+</div>
 {% endblock %}
