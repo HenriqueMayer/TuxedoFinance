@@ -427,6 +427,9 @@ class Investment(models.Model):
         for field, obj in owned.items():
             if obj and self.user_id and obj.user_id != self.user_id:
                 errors[field] = _('This selection must belong to the operation owner.')
+            if (field in ('source_account', 'destination_account') and obj
+                    and obj.predates_opening(self.date)):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
         if self.product_id and self.user_id and self.product.bank.user_id != self.user_id:
             errors['product'] = _('The product bank must belong to the operation owner.')
         # Archiving changes availability for new entries, never existing history.

@@ -117,8 +117,10 @@ source records.
 The list opens on the full history. Search covers title, notes, category and split
 category, bank, account and card labels. The compact consultation bar keeps search,
 billed month and the **All**, **Income** and **Expenses** choices visible. A single
-native **Filters** disclosure contains the exact category choice, recurrence,
-event date and ordering. Its badge counts these additional criteria; Clear stays
+native **More filters** disclosure contains event date, recurrence and ordering
+on one compact row where space permits, wrapping at narrower widths. Category
+lookup uses the general search instead of a second category picker. Its badge
+counts additional criteria; Clear stays
 next to the controls whenever any filter or nondefault ordering is active.
 Applied additional criteria and invalid dates open the disclosure on a fresh GET.
 Live updates preserve its mounted controls and the user's disclosure choice.
@@ -146,10 +148,13 @@ month and exact date, before category and recurrence refinements. A fixed
 transaction or installment plan counts once, not once per occurrence. Cards do
 not total monetary amounts.
 
-Category choices contain only owned categories with records matching the search,
-dates, type and recurrence. Parent names appear as `Parent › Child`; selecting a
-category matches that exact parent/fallback or allocated category, not its
-descendants. Recurrence shortcuts
+Existing `category=<id>` URLs retain their exact owned parent/fallback or
+allocated-category meaning, without including descendants. The GET form carries
+that criterion as an unlocalized hidden identifier and names the active category
+inside the disclosure, with an individual Clear action. This preserves old links,
+pagination and editor return context without an invisible restriction or a second
+search widget. Other institution/product selectors in the application remain
+available because exact record identity differs from matching text. Recurrence shortcuts
 are All, Fixed (`is_fixed=True`), Installments (`is_fixed=False`, `installments>1`)
 and One-off (`is_fixed=False`, `installments=1`). Income hides Installments and
 clears an incompatible installment selection.
@@ -209,6 +214,19 @@ Category splitting begins unchecked and reveals allocation rows only when
 selected. Split choices share the same type compatibility, owned selectors,
 bound-error recovery and complete native submission as the parent form.
 
+With JavaScript, the allocation editor distributes exact integer cents across
+automatic rows. Editing an amount fixes that row; clearing it makes it automatic
+again. The remaining total is shared among automatic rows, with indivisible
+cents assigned in row order. Adding/removing a category or changing the total
+recalculates only automatic amounts. Existing allocations and bound POST values
+are preserved until the user deliberately changes them. Limits/errors prevent
+over-allocation without silently truncating entered values; each active category
+still requires at least one cent. Remove category changes the formset DELETE
+control rather than deleting a transaction. Without JavaScript, the labelled
+DELETE checkbox and Add category submission retain the complete server path.
+Classification still conserves one transaction, one payment and installment
+category cents. The automatic/fixed UI state is not a financial source of truth.
+
 Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
 
 ## Contextual transaction entry
@@ -226,10 +244,12 @@ structural parent category, while reports continue using the actual allocations.
 The standalone split editor and legacy submissions remain available. No extra
 bank movement is created by classification.
 
-Save is the first native submit button in the form. Enter from an ordinary
+Save is the first native submit button in the server HTML. Enter from an ordinary
 text/amount field therefore validates and saves, even when category splitting
-is active or its controls are hidden. Add category follows the primary actions
-and requires explicit activation; it adds a bound row without saving the parent.
+is active or its controls are hidden. The native Add category fallback follows
+the primary actions and requires explicit activation; it adds a bound row without saving the parent.
 Its wrapper follows the same type/split visibility and error-recovery rules as
 the allocation rows. Both actions remain native submissions without JavaScript;
 searchable-choice Enter still only confirms the highlighted choice.
+With JavaScript, Add category becomes a non-submit action immediately after the
+allocation rows, before payment controls, in both visual and keyboard order.

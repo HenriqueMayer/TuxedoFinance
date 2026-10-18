@@ -5,12 +5,23 @@ from unittest.mock import patch
 
 from django.urls import reverse
 
+from core.navigation import with_return_url
 from dashboard.tests import DashboardFixture
 from transactions.models import Transaction
 
 
 @patch('django.utils.timezone.localdate', return_value=date(2026, 9, 20))
 class InstrumentMonthTests(DashboardFixture):
+    def test_empty_report_shortcut_preserves_period_after_full_and_partial_gets(self, localdate):
+        origin = reverse('dashboard:reports') + '?charts_offset=-1&instrument_month=2026-07&installment_month=ALL'
+        target = with_return_url(reverse('transactions:create'), origin, fragment='instrument-activity')
+        for htmx in (False, True):
+            with self.subTest(htmx=htmx):
+                response = self.client.get(origin, **({'HTTP_HX_REQUEST': 'true'} if htmx else {}))
+                self.assertContains(response, f'href="{target}"')
+                editor = self.client.get(target)
+                self.assertEqual(editor.context['return_url'], origin + '#instrument-activity')
+
     def test_default_month_is_independent_of_other_chart_offsets(self, localdate):
         self.transaction(date=date(2026, 8, 31), amount='10')
         self.transaction(date=date(2026, 9, 1), amount='35')
@@ -57,6 +68,7 @@ class InstrumentMonthTests(DashboardFixture):
             self.assertContains(response, 'September 2026')
 
     def test_all_and_invalid_instrument_months_keep_visible_scope_consistent(self, localdate):
+        self.transaction(date=date(2025, 9, 30), amount='99')
         self.transaction(date=date(2026, 1, 1), amount='10')
         self.transaction(date=date(2026, 9, 1), amount='35')
         for period, selected, expected in [('ALL', 'ALL', '45'),
@@ -69,6 +81,24 @@ class InstrumentMonthTests(DashboardFixture):
                 self.assertEqual(response.context['instrument_month_param'], selected)
                 self.assertEqual(response.context['instrument_activity']['expense_total'], Decimal(expected))
                 self.assertContains(response, 'id="instrument-window"')
+                if period == 'ALL':
+                    self.assertEqual(response.context['instrument_window_label'], 'Last 12 months')
+                    self.assertNotContains(response, '>All time<')
+
+    def test_rolling_year_label_matches_recurrence_and_composition_scope(self, localdate):
+        self.transaction(date=date(2025, 9, 30), amount='99')
+        self.transaction(date=date(2025, 10, 1), amount='12')
+        self.transaction(date=date(2026, 9, 1), amount='35')
+        response = self.client.get(reverse('dashboard:reports'), {
+            'instrument_month': 'ALL', 'installment_month': 'ALL',
+        })
+        self.assertEqual(response.context['instrument_activity']['expense_total'], Decimal('47'))
+        self.assertEqual(response.context['recurrence_breakdown']['total'], Decimal('47'))
+        self.assertEqual(response.context['installment_window_label'], 'Last 12 months')
+        for selection in ('instrument_selection', 'recurrence_selection'):
+            endpoint = response.context[selection]['points'][0]['details'][0]
+            detail = self.client.get(endpoint).json()
+            self.assertEqual(sum(int(row['cents']) for row in detail['rows']), 4700)
 
     def test_future_months_and_year_boundaries_keep_totals_and_details_aligned(self, localdate):
         self.transaction(date=date(2026, 12, 31), amount='20')

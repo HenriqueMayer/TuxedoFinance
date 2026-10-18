@@ -4,16 +4,26 @@ from django.urls import reverse
 
 
 class LandingBrandTests(TestCase):
-    def test_landing_has_factual_content_and_cat_portrait(self):
+    def test_landing_has_factual_content_and_paper_layer_map(self):
         response = self.client.get('/')
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<title>Tuxedo Finance</title>', html=True)
-        self.assertContains(response, 'brand/tuxedo-hero.jpg')
-        self.assertContains(response, 'A black-and-white cat wearing a bow tie at a desk.')
+        self.assertContains(response, 'data-paper-bowtie')
+        self.assertContains(response, 'Your finances,<br> made <span>clear</span>.')
+        self.assertContains(response, 'A ledger-paper bow tie that reveals the workspace map.')
+        self.assertContains(response, 'js/paper-layers.js')
+        self.assertContains(response, 'id="public-bowtie-map"')
+        self.assertContains(response, 'data-bowtie-map-link=', count=5)
+        self.assertContains(response, 'href="#feature-transactions"')
+        self.assertContains(response, 'href="#feature-accounts"')
+        self.assertContains(response, 'href="#feature-investments"')
+        self.assertNotContains(response, 'Unfold map')
+        self.assertNotContains(response, 'data-bowtie-fragment')
         self.assertContains(response, 'A local application to record income and expenses')
         for label in ('Transactions and categories', 'Accounts and cards',
-                      'Recurrences and installments', 'Investments', 'Reports', 'Salary sandbox'):
+                      'Recurrences and installments', 'Investments', 'Reports',
+                      'Budgets and goals', 'Salary sandbox'):
             self.assertContains(response, label)
         for removed in ('Sample dashboard preview', 'Understand your cash flow',
                         'Clear money, elegantly presented.', 'Ready to see your cash flow clearly?',
@@ -27,6 +37,7 @@ class LandingBrandTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Language'], 'pt-br')
+        self.assertContains(response, 'Suas finanças<br> de forma <span>clara</span>.')
         self.assertContains(response, 'Aplicação local para registrar receitas e despesas')
         self.assertContains(response, 'Transações e categorias')
         self.assertContains(response, 'Funcionalidades')
@@ -54,6 +65,9 @@ class LandingBrandTests(TestCase):
         self.assertContains(response, 'Open dashboard')
         self.assertNotContains(response, reverse('accounts:signup'))
         self.assertNotContains(response, reverse('accounts:login'))
+        for route in ('dashboard:index', 'transactions:list', 'banking:list',
+                      'investments:list', 'planning:index'):
+            self.assertContains(response, f'href="{reverse(route)}"')
 
     def test_shared_shell_exposes_wordmark_and_favicon(self):
         response = self.client.get('/')
@@ -66,12 +80,7 @@ class LandingBrandTests(TestCase):
         )
         self.assertContains(
             response,
-            '<span class="block text-sm tracking-[0.2em] uppercase font-medium">Tuxedo</span>',
-            html=True,
-        )
-        self.assertContains(
-            response,
-            '<span class="block text-xs tracking-[0.15em] uppercase text-caramel-ink dark:text-caramel-light mt-0.5">Finance</span>',
+            '<span class="block text-sm font-semibold tracking-tight">Tuxedo Finance</span>',
             html=True,
         )
 

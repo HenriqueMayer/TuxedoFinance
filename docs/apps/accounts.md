@@ -49,3 +49,8 @@ English or Portuguese interface language.
 Templates use the shared field partial, error messages, and the normal
 server-rendered form path. The login template retains `next` after a validation
 failure. Public signup links reflect the server's registration policy.
+
+Authentication controls retain their explicit native autocomplete semantics.
+Private preference forms and browser restoration follow the shared
+[private-history contract](../frontend.md#private-history); changing accounts
+must never restore another user's unsent financial fields.

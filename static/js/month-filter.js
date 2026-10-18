@@ -145,9 +145,14 @@
             root.addEventListener('keydown', event => {
                 if (event.key === 'Escape' && !panel.hidden) { event.preventDefault(); dismiss(true); }
             });
-            root.addEventListener('focusout', () => queueMicrotask(() => {
-                if (!root.contains(document.activeElement)) dismiss();
-            }));
+            root.addEventListener('focusout', event => {
+                // Native Tab/Shift+Tab briefly exposes body as activeElement
+                // before focusing the next control. Keep an internal move open.
+                if (event.relatedTarget && root.contains(event.relatedTarget)) return;
+                queueMicrotask(() => {
+                    if (!root.contains(document.activeElement)) dismiss();
+                });
+            });
             native.addEventListener('input', sync); native.addEventListener('change', sync);
             states.set(root, {sync}); sync();
         });

@@ -115,8 +115,8 @@ for (const theme of ['light', 'dark']) {
             await page.locator(`#invoice-card-${card}`).press('Enter');
             await expect(page).toHaveURL(new RegExp(`/credit-cards/${card}/invoices/$`));
             const invoiceCriteria = page.locator('#invoice-extra-filters');
-            await expect(invoiceCriteria).not.toHaveAttribute('open', '');
-            await invoiceCriteria.locator(':scope > summary').press('Enter');
+            await expect(invoiceCriteria).toBeVisible();
+            await expect(invoiceCriteria.locator('summary')).toHaveCount(0);
             await expect(page.getByRole('heading', {name:'Daily card', exact:true})).toBeVisible();
             await selectChoice(page.locator('#invoice-filter-bank'), bank);
             await expect(page).toHaveURL(new RegExp(`bank=${bank}`));
@@ -144,14 +144,14 @@ for (const theme of ['light', 'dark']) {
             await expect(page.locator('#invoice-filter-bank')).toHaveValue('');
             await expect(page.locator('#invoice-filter-month')).toHaveValue('');
             await expect(page.locator('#invoice-active-filter-count')).toBeEmpty();
-            await expect(invoiceCriteria).toHaveAttribute('open', '');
+            await expect(invoiceCriteria).toBeVisible();
             await expect(page.locator('#invoice-results li[id^="invoice-"]')).toHaveCount(1);
             await page.screenshot({ path: info.outputPath(`invoice-filters-${width}-${theme}.png`), fullPage: true });
 
             await page.goto('/banking/exchange-rates/');
             const rateCriteria = page.locator('#rate-extra-filters');
-            await expect(rateCriteria).not.toHaveAttribute('open', '');
-            await rateCriteria.locator(':scope > summary').press('Enter');
+            await expect(rateCriteria).toBeVisible();
+            await expect(rateCriteria.locator('summary')).toHaveCount(0);
             await page.locator('#rate-filter-from_currency').selectOption('USD');
             await page.locator('#rate-filter-to_currency').selectOption('BRL');
             await expect(page.locator('#rate-results')).toContainText('USD');
@@ -200,7 +200,7 @@ test('bank reserves and financial filters keep a complete mobile native path', a
         await expect(page.locator(`#bank-reserves-${bank}`)).toHaveAttribute('open', '');
         await expect(page.locator(`#cash-position-${product}-${asset}`)).toContainText(/300[,.]00/);
         await page.goto('/banking/invoices/');
-        await page.locator('#invoice-extra-filters > summary').press('Enter');
+        await expect(page.locator('#invoice-extra-filters')).toBeVisible();
         await page.locator('#invoice-filter-month').fill(new Date().toISOString().slice(0, 7));
         await page.locator('#invoice-filter-form').getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(page).toHaveURL(/month=/);
@@ -208,7 +208,7 @@ test('bank reserves and financial filters keep a complete mobile native path', a
         await expect(page).toHaveURL(url => url.pathname === `/banking/credit-cards/${card}/invoices/` && url.searchParams.has('month'));
         await expect(page.locator('#invoice-results li[id^="invoice-"]')).toHaveCount(1);
         await page.goto('/banking/exchange-rates/');
-        await page.locator('#rate-extra-filters > summary').press('Enter');
+        await expect(page.locator('#rate-extra-filters')).toBeVisible();
         await page.locator('#rate-filter-from_currency').selectOption('USD');
         await page.locator('#rate-filter-form').getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(page.locator('#rate-results')).not.toContainText('EUR');
@@ -265,7 +265,7 @@ for (const [theme, language] of [['light', 'en'], ['dark', 'pt-br']]) {
             await expect(page.locator('#id_bank_account')).toHaveValue(account);
             await page.locator('#id_amount').fill('0');
             await page.getByRole('button', { name: language === 'en' ? 'Save' : 'Salvar', exact: true }).tap();
-            await expect(page.locator('#id_amount')).toHaveValue('0');
+            await expect(page.locator('#id_amount')).toHaveValue(language === 'en' ? '0.00' : '0,00');
             await expect(page.locator('#id_bank_account')).toHaveValue(account);
             const cancel = page.getByRole('link', { name: language === 'en' ? 'Cancel' : 'Cancelar', exact: true });
             await expect(cancel).toHaveAttribute('href', origin);

@@ -421,6 +421,20 @@ class PlanningDraftTests(TestCase):
         self.assertEqual(self.client.get(reverse('sandbox:compare'), {'draft': draft.pk}).status_code, 404)
         self.assertNotContains(self.client.get(reverse('sandbox:drafts')), 'Foreign secret scenario')
 
+    def test_draft_comparison_and_duplicate_controls_keep_machine_ids_unlocalized(self):
+        from django.utils import translation
+
+        draft = ScenarioDraft.objects.create(pk=1001, user=self.user, name='Precise saved plan', kind='budget')
+        with translation.override('pt-br'):
+            response = self.client.get(reverse('sandbox:drafts'))
+        self.assertContains(response, 'name="draft" value="1001"')
+        self.assertContains(response, 'form="duplicate-1001"')
+        self.assertContains(response, 'id="duplicate-1001"')
+        self.assertNotContains(response, 'value="1.001"')
+        compared = self.client.get(reverse('sandbox:compare'), {'draft': str(draft.pk)})
+        self.assertEqual(compared.status_code, 200)
+        self.assertEqual(compared.context['scenarios'][0]['draft'], draft)
+
     def test_mixed_draft_normalizes_valid_inputs_and_retains_invalid_source_format(self):
         from accounts.models import UserPreference
         self.client.post(reverse('sandbox:index'), {

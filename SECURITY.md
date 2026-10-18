@@ -30,6 +30,20 @@ the expected result and the observed impact.
 - Dependencies are audited in CI. A clean audit only means no known advisory
   was found in that run; it does not certify an installation or its host.
 
+## Browser history
+
+Authenticated HTML is private and marked `no-store`. HTMX does not save DOM
+history snapshots, and the runtime clears legacy entries left by older versions.
+History restoration requests fresh authorized content; persisted native browser
+documents are hidden and replaced through GET before restoring same-user draft
+and location state. POSTs are never replayed by this recovery.
+Editable private POST forms disable native autocomplete/history restoration;
+only identity-checked workspace snapshots restore drafts with JavaScript.
+
+This protects history navigation after logout or an account change. It does not
+remotely revoke a page already displayed, a screenshot or an old offline tab.
+Protect the host/browser profile as part of the installation's local data.
+
 ## CSV exports
 
 Default CSV is a faithful interchange format: text is unchanged, including

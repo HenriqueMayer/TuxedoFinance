@@ -1,8 +1,8 @@
 {% load i18n static %}
 <aside class="app-sidebar">
     <a href="{% url 'dashboard:index' %}" class="app-brand">
-        <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="" class="h-10 w-10 rounded-xl object-cover">
-        <span class="text-left leading-tight"><span class="block text-sm font-medium tracking-[0.2em]">TUXEDO</span><span class="mt-0.5 block text-xs font-medium tracking-[0.15em] text-caramel-ink dark:text-caramel-light">FINANCE</span></span>
+        <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="" class="app-brand-mark">
+        <span>Tuxedo Finance</span>
     </a>
     <nav class="app-navigation-list" aria-label="{% translate 'Main navigation' %}" data-app-navigation="desktop">
         {% include 'partials/navigation_links.html' with nav_variant='desktop' %}

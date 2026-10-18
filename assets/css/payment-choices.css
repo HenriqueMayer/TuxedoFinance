@@ -1,0 +1,32 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Payment artwork decorates the shared searchable control; names and bank
+   context stay on the neutral surface, independently of custom card colors. */
+body.tuxedo-ui .search-choice--payment > input { width: min(100%, 30rem); min-height: 44px; padding-block: 10px; }
+body.tuxedo-ui .search-choice--payment > button { height: 44px; right: auto; left: min(calc(100% - 44px), calc(30rem - 44px)); }
+body.tuxedo-ui .payment-choice-art { display: flex; align-items: center; justify-content: center; flex: 0 0 54px; width: 54px; height: 36px; border: 1px solid var(--ui-line); border-radius: 7px; background: var(--ui-ground); color: var(--ui-ink); }
+body.tuxedo-ui .payment-choice-art[data-choice-kind="card"] { justify-content: flex-end; align-items: flex-end; padding: 6px; color: #FFFFFF; }
+body.tuxedo-ui .payment-choice-icon { width: 23px; height: 23px; flex-shrink: 0; }
+body.tuxedo-ui .payment-choice-art[data-choice-kind="card"] .payment-choice-icon { width: 18px; height: 14px; }
+body.tuxedo-ui .payment-choice-copy { display: grid; gap: 3px; min-width: 0; text-align: left; }
+body.tuxedo-ui .payment-choice-name { color: var(--ui-ink); font-size: 14px; font-weight: 500; line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.tuxedo-ui .payment-choice-detail { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--ui-muted); font-size: 12px; line-height: 18px; }
+body.tuxedo-ui .payment-choice-detail-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.tuxedo-ui .payment-choice-bank-dot { flex: 0 0 7px; width: 7px; height: 7px; border: 1px solid rgb(128 128 128 / .4); border-radius: 50%; }
+body.tuxedo-ui .search-choice--payment .search-choice-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 2px; max-height: 192px; border: 0; background: transparent; }
+body.tuxedo-ui .search-choice--payment .search-choice-option { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 68px; padding: 10px; border: 1px solid var(--ui-line); border-radius: 8px; cursor: pointer; }
+body.tuxedo-ui .search-choice--payment .search-choice-option:hover { background: var(--ui-paper); border-color: var(--ui-control); }
+body.tuxedo-ui .search-choice--payment .search-choice-option[aria-selected="true"] { background: var(--ui-ground); outline: 2px solid var(--ui-accent); outline-offset: -2px; }
+body.tuxedo-ui .search-choice--payment .search-choice-option[data-active] { box-shadow: inset 0 0 0 2px var(--ui-ink); }
+body.tuxedo-ui .search-choice--payment .search-choice-results > [role="status"] { grid-column: 1 / -1; }
+/* Multiple-card announcements retain complete native names, including valid
+   names without spaces; keep their text inside the containing form. */
+body.tuxedo-ui .search-choice--payment > [aria-live="polite"] { min-width: 0; overflow-wrap: anywhere; }
+/* Multiple selections retain native checkboxes and their Space/Tab behavior. */
+body.tuxedo-ui .search-choice--payment .search-choice-option > input[type="checkbox"] { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: 0; accent-color: var(--ui-accent); }
+body.tuxedo-ui .search-choice--payment .search-choice-option:has(input:checked) { background: var(--ui-ground); outline: 2px solid var(--ui-accent); outline-offset: -2px; }
+body.tuxedo-ui .search-choice--payment .search-choice-option:has(input:focus-visible) { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+body.tuxedo-ui .search-choice--payment > button { position: absolute; top: 0; width: 44px; min-height: 44px; margin: 0; padding: 0; border-radius: 8px; font-size: 0; color: var(--ui-muted); }
+body.tuxedo-ui .search-choice--payment > button::after { content: '×'; font-size: 20px; line-height: 1; }
+@media (max-width: 767px) {
+    body.tuxedo-ui .search-choice--payment .search-choice-results { grid-template-columns: minmax(0, 1fr); }
+}

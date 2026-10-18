@@ -1,0 +1,106 @@
+{% load i18n navigation assets %}
+<section id="bank-workspace-panel" class="bank-workspace-panel bank-workspace-window space-y-6" aria-labelledby="bank-detail-title-{{ bank.pk|stringformat:'d' }}" style="--bank-color:{{ bank.color|default:'#B88D57' }}">
+    <div class="bank-workspace-windowbar">
+        <div class="bank-workspace-windowtitle"><span class="bank-marker" aria-hidden="true"></span><h2 id="bank-detail-title-{{ bank.pk|stringformat:'d' }}" class="section-title line-clamp-2" title="{{ bank.name }}" tabindex="-1">{{ bank.name }}</h2></div>
+        <a href="{% url 'banking:list' %}" hx-get="{% url 'banking:list' %}" hx-target="#banking-workspace" hx-select="#banking-workspace" hx-swap="outerHTML show:none" hx-push-url="true" hx-sync="#banking-workspace:replace" class="action-link bank-workspace-minimize" data-bank-minimize="{{ bank.pk|stringformat:'d' }}" aria-label="{% blocktranslate with bank=bank.name %}Minimize {{ bank }}{% endblocktranslate %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14"/></svg><span>{% translate 'Minimize' %}</span></a>
+    </div>
+    <header class="workspace-header bank-workspace-panel-header">
+        <p class="subtle-copy">{% blocktranslate count count=bank.account_count %}{{ count }} account{% plural %}{{ count }} accounts{% endblocktranslate %}</p>
+        <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            {% url 'banking:account_create' as account_create %}{% with bank_id=bank.pk|stringformat:'d' %}{% with target=account_create|add:'?bank='|add:bank_id %}<a href="{% contextual_url target %}" class="action-primary">{% translate 'Add account' %}</a>{% endwith %}{% endwith %}
+            {% url 'banking:invoices' as invoices_url %}{% with bank_id=bank.pk|stringformat:'d' %}{% with target=invoices_url|add:'?bank='|add:bank_id %}<a href="{% contextual_url target %}" class="quiet-action">{% translate 'Invoices' %}</a>{% endwith %}{% endwith %}
+            <details id="bank-detail-options-{{ bank.pk|stringformat:'d' }}" class="secondary-actions compact-menu ml-auto sm:ml-0"><summary aria-label="{% blocktranslate with bank=bank.name %}Options for {{ bank }}{% endblocktranslate %}"><span aria-hidden="true">⋯</span><span class="sr-only">{% translate 'More options' %}</span></summary><div class="secondary-actions-panel">{% url 'banking:update' bank.pk as edit_url %}<a href="{% contextual_url edit_url %}">{% translate 'Edit bank' %}</a>{% url 'banking:color' bank.pk as color_url %}<a href="{% contextual_url color_url %}">{% translate 'Change marker color' %}</a>{% url 'banking:program_create' as program_url %}{% with bank_id=bank.pk|stringformat:'d' %}{% with target=program_url|add:'?bank='|add:bank_id %}<a href="{% contextual_url target %}">{% translate 'Add loyalty program' %}</a>{% endwith %}{% endwith %}{% url 'banking:delete' bank.pk as delete_url %}<a href="{% contextual_url delete_url %}" class="text-expense dark:text-expense-light">{% translate 'Delete' %}</a></div></details>
+        </div>
+    </header>
+    {% include 'banking/_bank_positions.html' %}
+    {% if bank.loyalty_programs.all %}
+        <section class="banking-section">
+            <h2 class="section-title">{% translate "Loyalty programs" %}</h2>
+            <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
+                {% for program in bank.loyalty_programs.all %}
+                    <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <div class="min-w-0"><span class="font-medium">{{ program.name }}</span><p class="text-sm tabular-nums text-forest/70 dark:text-night-muted">{{ program.displayed_balance|floatformat:2 }} {{ program.unit_name }}</p></div>
+                        <div class="flex shrink-0 flex-wrap items-center gap-2"><a href="{% url 'banking:entry_create' %}?program={{ program.pk }}" class="action-link">{% translate "Add entry" %}</a><a href="{% url 'banking:program_update' program.pk %}" class="quiet-action">{% translate "Edit" %}</a><a href="{% url 'banking:program_delete' program.pk %}" class="quiet-action text-expense dark:text-expense-light">{% translate "Delete" %}</a></div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    {% if redemptions or invoices or movements %}
+    <details id="bank-activity" class="bank-activity"{% if editing_redemption %} open{% endif %}>
+        <summary>{% translate 'Recent activity' %}</summary>
+        <div class="space-y-5 break-words pt-4">
+    {% if redemptions %}
+        <section id="reward-redemptions" class="banking-section" aria-labelledby="reward-redemptions-title">
+            <h2 id="reward-redemptions-title" class="section-title">{% translate 'Reward redemptions' %}</h2>
+            <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
+                {% for redemption in redemptions %}
+                    <li id="reward-redemption-{{ redemption.pk|stringformat:'d' }}" class="space-y-3 py-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0"><span class="font-medium">{{ redemption.program.name }}</span><p class="subtle-copy">{{ redemption.date|date:USER_DATE_FORMAT }} · {{ redemption.points|floatformat:2 }} {{ redemption.program.unit_name }}</p></div>
+                            <span class="whitespace-nowrap font-semibold tabular-nums text-income dark:text-income-light">+{{ redemption.target_account.currency }} {{ redemption.target_amount|floatformat:2 }}</span>
+                        </div>
+                        <p class="subtle-copy">{% translate 'Credited to' %}: {{ redemption.target_account.bank.name }} · {{ redemption.target_account.name }}</p>
+                        {% if redemption.iof_amount %}
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0"><span class="font-medium">{% translate 'IOF on reward redemption' %}</span>
+                                    {% if redemption.iof_credit_card_id %}
+                                        <p class="subtle-copy">{{ redemption.iof_credit_card.account.bank.name }} · {{ redemption.iof_credit_card.name }}</p>
+                                        <p class="subtle-copy">{% blocktranslate with month=redemption.iof_reference_month|date:'M Y' due_date=redemption.iof_due_date|date:USER_DATE_FORMAT %}Included in invoice {{ month }} · Due {{ due_date }}{% endblocktranslate %}</p>
+                                    {% else %}
+                                        <p class="subtle-copy">{% translate 'Debited from' %}: {{ redemption.iof_account.bank.name }} · {{ redemption.iof_account.name }}</p>
+                                    {% endif %}
+                                </div>
+                                <span class="whitespace-nowrap font-semibold tabular-nums text-expense dark:text-expense-light">{% if redemption.iof_credit_card_id %}{{ redemption.iof_credit_card.account.currency }}{% else %}{{ redemption.iof_account.currency }}{% endif %} {{ redemption.iof_amount|floatformat:2 }}</span>
+                            </div>
+                        {% else %}<p class="subtle-copy">{% translate 'No IOF charged.' %}</p>{% endif %}
+                        {% if redemption.notes %}<p class="subtle-copy break-words">{{ redemption.notes }}</p>{% endif %}
+                        {% if editing_redemption.pk == redemption.pk %}
+                            <form autocomplete="off" method="post" action="{% url 'banking:redemption_update' redemption.pk %}" hx-boost="false" class="workspace-form finance-entry-form space-y-5 rounded-xl border border-forest/20 dark:border-cream/20" novalidate aria-label="{% translate 'Edit redemption' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ redemption_origin }}">
+                                {% for error in redemption_form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+                                {% include 'banking/_redemption_fields.html' with form=redemption_form %}
+                                <div class="form-actions">
+                                    <button type="submit" class="action-primary">{% translate 'Save' %}</button>
+                                    <a href="{{ redemption_cancel_url }}" class="quiet-action">{% translate 'Cancel' %}</a>
+                                </div>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'banking:detail' bank.pk %}?edit_redemption={{ redemption.pk|stringformat:'d' }}#reward-redemption-{{ redemption.pk|stringformat:'d' }}" class="quiet-action">{% translate 'Edit redemption' %}</a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    {% if invoices %}
+        <section class="banking-section">
+            <h2 class="section-title">{% translate "Credit card invoices" %}</h2>
+            <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
+                {% for invoice in invoices %}
+                    <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0"><span class="font-medium">{{ invoice.card.name }} - {{ invoice.reference_month|date:'M Y' }}</span><p class="text-sm text-forest/70 dark:text-night-muted">{% blocktranslate with due_date=invoice.due_date|date:USER_DATE_FORMAT status=invoice.get_status_display %}Due {{ due_date }} - {{ status }}{% endblocktranslate %}{% if invoice.is_overdue %} <strong class="text-caramel-ink dark:text-caramel-light">{% translate "Overdue" %}</strong>{% endif %}</p></div>
+                        <div class="flex items-center gap-3"><span class="shrink-0 whitespace-nowrap tabular-nums font-semibold">{{ invoice.account.currency }} {{ invoice.amount }}</span><a href="{% url 'banking:invoice_detail' invoice.pk %}" class="quiet-action">{% translate 'View invoice' %}</a><a href="{% url 'banking:entry_create' %}?invoice={{ invoice.pk }}" class="text-sm text-caramel-ink dark:text-caramel-light">{% translate "Add points" %}</a></div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    {% if movements %}
+        <section class="banking-section">
+            <h2 class="section-title">{% translate "Recent balance movements" %}</h2>
+            <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
+                {% for movement in movements %}
+                    <li class="flex flex-col items-start justify-between gap-2 py-4 sm:flex-row sm:items-center sm:gap-4"><div class="min-w-0 max-w-full"><span class="font-medium">{{ movement.description|default:movement.get_kind_display }}</span><p class="text-sm text-forest/70 dark:text-night-muted">{{ movement.account.name }} - {{ movement.effective_date|date:USER_DATE_FORMAT }}</p></div><span class="shrink-0 whitespace-nowrap tabular-nums font-semibold {% if movement.kind == 'TRANSFER' %}text-forest/70 dark:text-night-muted{% elif movement.direction == 'DEBIT' %}text-expense dark:text-expense-light{% else %}text-income dark:text-income-light{% endif %}">{% if movement.direction == 'DEBIT' %}-{% else %}+{% endif %}{{ movement.account.currency }} {{ movement.amount|floatformat:2 }}</span></li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+        </div>
+    </details>
+    {% endif %}
+</section>

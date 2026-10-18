@@ -25,13 +25,13 @@ for (const language of ['en', 'pt-br']) {
             await page.reload();
             await expect(page.locator('html')).toHaveAttribute('lang', language);
             const navigation = page.getByRole('navigation', { name: language === 'en' ? 'Main navigation' : 'Navegação principal', exact: true });
-            const labels = await navigation.getByRole('link').allTextContents();
+            const labels = await navigation.locator('.app-navigation-label').allTextContents();
             expect(labels).toHaveLength(5);
             for (const width of [320, 390, 768, 1023, 1024, 1280, 1440, 1920]) {
                 await page.setViewportSize({ width, height: 900 });
                 await expect(navigation).toHaveCount(1);
                 await expect(navigation).toHaveAttribute('data-app-navigation', width < 1024 ? 'mobile' : 'desktop');
-                await expect(navigation.getByRole('link')).toHaveText(labels);
+                await expect(navigation.locator('.app-navigation-label')).toHaveText(labels);
                 await expect(navigation.locator('summary, details')).toHaveCount(0);
                 const geometry = await navigation.getByRole('link').evaluateAll(elements => elements.map(link => {
                     const box = link.getBoundingClientRect();

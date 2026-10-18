@@ -1,23 +1,20 @@
 {% extends 'base.html' %}{% load i18n navigation %}
 {% block title %}{% translate 'Invoices' %} — Tuxedo Finance{% endblock %}
 {% block content %}
-<div class="banking-workspace space-y-4"><header class="workspace-header"><div>{% if selected_card %}<p class="subtle-copy mb-1">{% translate 'Invoices' %}</p><h1 class="page-title">{{ selected_card.name }}</h1><p class="subtle-copy mt-2">{{ selected_card.account.bank.name }} · {{ selected_card.account.name }} · {{ selected_card.account.currency }}</p>{% else %}<h1 class="page-title">{% translate 'Invoices' %}</h1><p class="subtle-copy mt-2">{% translate 'Choose a card to see its invoices.' %}</p>{% endif %}</div></header>
+<div class="banking-workspace space-y-4"><header class="workspace-header"><div class="min-w-0">{% if selected_card %}<p class="subtle-copy mb-1">{% translate 'Invoices' %}</p><h1 class="page-title break-words">{{ selected_card.name }}</h1><p class="subtle-copy mt-2 break-words">{{ selected_card.account.bank.name }} · {{ selected_card.account.name }} · {{ selected_card.account.currency }}</p>{% else %}<h1 class="page-title">{% translate 'Invoices' %}</h1><p class="subtle-copy mt-2">{% translate 'Choose a card to see its invoices.' %}</p>{% endif %}</div></header>
 {% if selected_card %}<p class="subtle-copy">{% translate 'Automatic cards settle on their due date. For confirmed mode, record the actual payments; outstanding amounts remain in the forecast.' %}</p>{% endif %}
 {% comment %}Pin the endpoint: an omitted action follows location during Back, confusing overview and card-history restoration.{% endcomment %}
-<form id="invoice-filter-form" action="{{ request.path }}" method="get" hx-boost="false" novalidate data-live-filters data-live-results="invoice-results" class="consultation-bar consultation-stable">
+<form id="invoice-filter-form" action="{{ request.path }}" method="get" hx-boost="false" novalidate data-live-filters data-live-results="invoice-results" class="consultation-bar bank-consultation bank-invoice-consultation">
     {% if invoice_origin %}<input type="hidden" name="next" value="{{ invoice_origin }}">{% endif %}
-    <div class="consultation-search">{% include 'partials/form_field.html' with field=filter_form.q %}</div>
-    <div class="consultation-actions">
-        {% comment %}Keep criteria in the stable form; live responses replace only results, errors and status.{% endcomment %}
-        <details id="invoice-extra-filters" class="filter-disclosure" {% if filter_form.errors %}open{% endif %}>
-            <summary>{% translate 'Filters' %} <span id="invoice-active-filter-count" class="consultation-filter-count" data-live-fragment="invoice-filter-form" aria-live="polite">{% if active_filter_count %}<span aria-hidden="true">{{ active_filter_count }}</span><span class="sr-only">{% blocktranslate count count=active_filter_count %}{{ count }} active{% plural %}{{ count }} active{% endblocktranslate %}</span>{% endif %}</span>{% include 'partials/chevron_down.html' %}</summary>
-            <div class="filter-disclosure-panel grid gap-4 sm:grid-cols-2">
-                {% translate 'Invoice month' as billed_month_label %}
-                {% if filter_form.month.errors %}{% include 'partials/form_field.html' with field=filter_form.month %}{% else %}{% include 'partials/month_filter.html' with month_id='invoice-filter-month' month_name='month' month_value=filter_form.month.value month_label=billed_month_label month_field=filter_form.month %}{% endif %}
-                {% include 'partials/form_field.html' with field=filter_form.bank %}
-                {% include 'partials/form_field.html' with field=filter_form.status %}
-            </div>
-        </details>
+    <div class="consultation-search bank-consultation-search">{% include 'partials/form_field.html' with field=filter_form.q %}</div>
+    {% comment %}These three short criteria stay mounted and visible; live GET replaces only results/errors/counts.{% endcomment %}
+    <div id="invoice-extra-filters" class="bank-consultation-criteria">
+        <div class="bank-invoice-month">{% translate 'Invoice month' as billed_month_label %}{% if filter_form.month.errors %}{% include 'partials/form_field.html' with field=filter_form.month %}{% else %}{% include 'partials/month_filter.html' with month_id='invoice-filter-month' month_name='month' month_value=filter_form.month.value month_label=billed_month_label month_field=filter_form.month %}{% endif %}</div>
+        <div class="bank-invoice-bank">{% include 'partials/form_field.html' with field=filter_form.bank %}</div>
+        <div class="bank-invoice-status">{% include 'partials/form_field.html' with field=filter_form.status %}</div>
+    </div>
+    <div class="bank-consultation-actions">
+        <span id="invoice-active-filter-count" class="consultation-filter-count" data-live-fragment="invoice-filter-form" aria-live="polite">{% if active_filter_count %}<span aria-hidden="true">{{ active_filter_count }}</span><span class="sr-only">{% blocktranslate count count=active_filter_count %}{{ count }} active{% plural %}{{ count }} active{% endblocktranslate %}</span>{% endif %}</span>
         <span id="invoice-clear-control" class="consultation-clear-control" data-live-fragment="invoice-filter-form">{% if has_filters %}<a class="quiet-action" href="{{ invoice_clear_url }}" data-live-reset data-live-link="invoice-filter-form">{% translate 'Clear filters' %}</a>{% endif %}</span>
         <button type="submit" data-live-submit class="action-link">{% translate 'Filter' %}</button>
     </div>

@@ -41,7 +41,7 @@ class BankingWorkspaceOrganizationTests(TestCase):
                        f'cash-position-{self.product.pk}-{self.asset.pk}']:
             self.assertContains(detail, f'id="{marker}"', count=1)
         self.assertContains(detail, f'id="bank-reserves-{self.bank.pk}" class="reserve-disclosure" >')
-        self.assertNotContains(detail, 'id="planning-availability"')
+        self.assertContains(detail, 'id="planning-availability"', count=1)
 
     def test_bank_sections_keep_primary_actions_and_consolidate_card_management(self):
         debit_card = DebitCard.objects.create(user=self.user, account=self.account, name='Daily debit')
@@ -103,7 +103,7 @@ class BankingWorkspaceOrganizationTests(TestCase):
             filtered = self.client.get(reverse('banking:card_invoices', args=[self.card.pk]), {'q': 'Daily', 'bank': self.bank.pk, 'month': '2026-10', 'status': 'PAID'})
             invalid = self.client.get(reverse('banking:invoices'), {'month': 'not-a-month'})
             empty_month = self.client.get(reverse('banking:invoices'), {'month': '  '})
-        self.assertContains(unfiltered, '<details id="invoice-extra-filters" class="filter-disclosure" >')
+        self.assertContains(unfiltered, '<div id="invoice-extra-filters" class="bank-consultation-criteria">')
         self.assertEqual(unfiltered.context['active_filter_count'], 0)
         self.assertEqual(filtered.context['active_filter_count'], 3)
         self.assertContains(filtered, '3 active')
@@ -113,7 +113,7 @@ class BankingWorkspaceOrganizationTests(TestCase):
             self.assertContains(unfiltered, f'name="{name}"')
         self.assertContains(unfiltered, 'data-month-filter')
         self.assertContains(unfiltered, 'id="invoice-filter-month"', count=1)
-        self.assertContains(invalid, '<details id="invoice-extra-filters" class="filter-disclosure" open>')
+        self.assertContains(invalid, '<div id="invoice-extra-filters" class="bank-consultation-criteria">')
         self.assertContains(invalid, 'value="not-a-month"')
         self.assertContains(invalid, 'id="invoice-filter-month-error-1"')
         self.assertContains(invalid, 'data-field-error')
@@ -130,12 +130,12 @@ class BankingWorkspaceOrganizationTests(TestCase):
         rates = self.client.get(rate_url)
         selected = self.client.get(rate_url, {'q': 'evidence', 'from_currency': 'USD', 'to_currency': 'BRL'})
         bad_dates = self.client.get(rate_url, {'from_currency': 'USD', 'date_from': '2026-10-03', 'date_to': '2026-10-01'})
-        self.assertContains(rates, '<details id="rate-extra-filters" class="filter-disclosure" >')
+        self.assertContains(rates, '<div id="rate-extra-filters" class="bank-consultation-criteria">')
         self.assertEqual(selected.context['active_filter_count'], 2)
         self.assertContains(selected, '2 active')
         for name in ('q', 'from_currency', 'to_currency', 'date_from', 'date_to'):
             self.assertContains(rates, f'name="{name}"')
-        self.assertContains(bad_dates, '<details id="rate-extra-filters" class="filter-disclosure" open>')
+        self.assertContains(bad_dates, '<div id="rate-extra-filters" class="bank-consultation-criteria">')
         self.assertContains(bad_dates, 'id="rate-filter-date_to-error-1"')
         self.assertEqual(bad_dates.context['active_filter_count'], 0)
         self.assertEqual(bad_dates.context['filter_form']['from_currency'].value(), 'USD')

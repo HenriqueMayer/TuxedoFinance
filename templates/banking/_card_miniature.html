@@ -1,0 +1,4 @@
+{% comment %}Appearance fields are model-validated colors/angles; identity stays on the ordinary readable surface beside this decorative miniature.{% endcomment %}
+<span class="card-miniature" aria-hidden="true" style="--card-start:{{ card.color }};--card-end:{{ card.gradient_end|default:card.color }};--card-angle:{{ card.gradient_angle|stringformat:'d' }}deg">
+    <svg viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="20" height="14" rx="3"/><path d="M2 8h20M9 2v14M15 2v14"/></svg>
+</span>

@@ -135,10 +135,11 @@ for (const theme of ['light', 'dark']) {
         await page.goto('/investments/settings/');
         const unused = page.locator('#investment-active-assets > li').filter({ hasText: 'Unused 1 (' });
         const unusedId = await unused.getAttribute('id');
+        await unused.locator('details.compact-menu > summary').press('Enter');
         await unused.getByRole('link', { name: 'Delete', exact: true }).press('Enter');
         await expect(page.locator('main')).toContainText('This action cannot be undone.');
         await page.getByRole('button', { name: 'Delete', exact: true }).press('Enter');
-        await expect(page).toHaveURL(/\/investments\/settings\/$/);
+        await expect(page).toHaveURL(/\/investments\/settings\/#investment-assets$/);
         await expect(page.locator(`#${unusedId}`)).toHaveCount(0);
     });
 }
@@ -188,6 +189,7 @@ test('investment asset archive and restore use native Portuguese mobile forms', 
         await mobile.goto('/investments/settings/');
         const unused = mobile.locator('#investment-active-assets > li').filter({ hasText: 'Unused 1 (' });
         const unusedId = await unused.getAttribute('id');
+        await unused.locator('details.compact-menu > summary').press('Enter');
         await unused.getByRole('link', { name: 'Excluir', exact: true }).press('Enter');
         await mobile.getByRole('button', { name: 'Excluir', exact: true }).press('Enter');
         await expect(mobile.locator(`#${unusedId}`)).toHaveCount(0);

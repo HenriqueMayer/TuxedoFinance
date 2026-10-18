@@ -37,7 +37,7 @@ for (const dark of [false, true]) {
         // HTMX settles attributes and the browser performs its final reflow.
         await expect.poll(async () => page.evaluate(previous => Math.abs(window.scrollY - Math.min(previous,
             document.documentElement.scrollHeight - innerHeight)), top)).toBeLessThan(4);
-        await expect(page.locator('#planning-availability')).toHaveCount(0);
+        await expect(page.locator('#planning-availability')).toBeVisible();
         await page.keyboard.press('Space');
         await expect(row.getByRole('button', { name: 'Set aside Monthly account', exact: true })).toBeFocused();
         await expect(row.locator('[data-account-available]')).toContainText('3.000,00');
@@ -65,14 +65,22 @@ test('bank controls and category options remain usable without JavaScript', asyn
     const page = await context.newPage();
     try {
         await seed(page, testInfo);
+        // Native navigation can finish before the brief panel-entry animation;
+        // wait for actual geometry, without forcing a click through movement.
+        await expect(page.locator('#bank-workspace-panel')).toHaveCSS('transform', 'none');
         await page.getByRole('button', { name: 'Set aside Monthly account', exact: true }).click();
         await expect(page.getByRole('button', { name: 'Use Monthly account in planning', exact: true })).toBeVisible();
         await page.goto('/categories/');
         await page.locator('main').getByText('More options', { exact: true }).press('Enter');
         await expect(page.getByRole('link', { name: 'Export CSV for spreadsheets', exact: true })).toBeVisible();
-        await page.locator('main').getByText('More filters', { exact: true }).press('Enter');
-        await expect(page.getByLabel('Type', { exact: true })).toBeVisible();
-        await page.getByLabel('Type', { exact: true }).selectOption('unclassified');
+        await page.locator('main').getByText('More options', { exact: true }).press('Enter');
+        // Category criteria are deliberately visible native radio groups, even
+        // without the live-filter enhancement; the GET submit stays explicit.
+        await expect(page.locator('#category-filters .filter-disclosure')).toHaveCount(0);
+        await expect(page.getByRole('group', { name: 'Level', exact: true })).toBeVisible();
+        await expect(page.getByRole('group', { name: 'Type', exact: true })).toBeVisible();
+        await page.locator('#filter-type-unclassified').press('Space');
+        await expect(page.locator('#filter-type-unclassified')).toBeChecked();
         await page.getByRole('button', { name: 'Filter', exact: true }).click();
         await expect(page).toHaveURL(/type=unclassified/);
         await page.setViewportSize({ width: 390, height: 740 });

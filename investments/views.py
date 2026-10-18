@@ -22,7 +22,8 @@ from banking.services import MissingExchangeRate, convert, latest_exchange_rate
 from dashboard.selection import selection_data, attach_details
 from dashboard.charts import build_bar_chart, build_line_chart
 from investments.forms import (AssetForm, InvestmentForm, InvestmentProductForm,
-                               InvestmentChartFilterForm, InvestmentOperationFilterForm, PriceObservationForm)
+                               InvestmentChartFilterForm, InvestmentOperationFilterForm, PriceObservationForm,
+                               PriceObservationFilterForm)
 from investments.forms import GuidedInvestmentForm
 from investments.models import Asset, Investment, InvestmentProduct, PriceObservation, PositionPlanningSetting
 from investments.positions import get_portfolio_valuation, validate_position_history
@@ -81,7 +82,8 @@ def _position_row(user, product, asset):
 
 def _asset_configuration_url(request, asset):
     # Restoration belongs to the owned configuration list, with its archived
-    # disclosure opened before navigating to the precise asset anchor.
+    # disclosure opened before navigating to the precise asset anchor. Its
+    # links let the fragment scroll instead of the boosted shell's page top.
     target = reverse('investments:settings') + '?' + urlencode({'archived': asset.pk}) + f'#asset-{asset.pk}'
     return with_return_url(target, request.get_full_path())
 
@@ -528,6 +530,19 @@ class InvestmentFormMixin(ReturnContextMixin, LoginRequiredMixin):
         kwargs['user'] = self.request.user
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context['form']
+        if 'capture_missing_fx' in form.fields:
+            target = reverse('banking:exchange_rate_create') + '?' + urlencode({
+                'from_currency': form.instance.currency,
+                'to_currency': UserPreference.for_user(self.request.user).base_currency,
+                'effective_date': form.instance.date.isoformat() if form.instance.date else '',
+            })
+            context['exchange_rate_create_url'] = with_return_url(
+                target, self.request.get_full_path(), fragment='investment-operation-form')
+        return context
+
     def form_valid(self, form):
         refresh_snapshot = not self.object or bool(
             set(form.changed_data)
@@ -671,7 +686,7 @@ class ProductFormMixin(SetupFormMixin):
     model = InvestmentProduct
     form_class = InvestmentProductForm
     entity_label = gettext_lazy('investment product')
-    setup_description = gettext_lazy('Name a product and assign it to a bank you manage in Banking.')
+    setup_description = gettext_lazy('Name a product and assign it to a bank registered in Accounts.')
     duplicate_message = gettext_lazy('This bank already has a product with this name.')
 
     def get_queryset(self):
@@ -812,15 +827,22 @@ class PriceObservationListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         rows = PriceObservation.objects.filter(user=self.request.user).select_related('asset')
-        asset = self.request.GET.get('asset', '')
-        return rows.filter(asset_id=asset) if asset.isdigit() else rows
+        self.price_filter = PriceObservationFilterForm(self.request.GET, user=self.request.user)
+        if not self.price_filter.is_valid():
+            # Invalid or foreign identifiers must never broaden a financial view.
+            return rows.none()
+        asset = self.price_filter.cleaned_data.get('asset')
+        return rows.filter(asset=asset) if asset else rows
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['selected_section'] = 'prices'
-        context['selected_asset'] = self.request.GET.get('asset', '')
+        context['price_filter'] = self.price_filter
+        context['selected_price_asset'] = self.price_filter.cleaned_data.get('asset')
+        context['selected_asset'] = (str(context['selected_price_asset'].pk)
+            if context['selected_price_asset'] else '')
         target = reverse('investments:create_price')
-        if context['selected_asset'].isdigit():
+        if context['selected_asset']:
             target += '?' + urlencode({'asset': context['selected_asset']})
         context['price_create_url'] = with_return_url(target, self.request.get_full_path())
         return context

@@ -6,6 +6,10 @@ copyright and license notices.
 
 ## Development principles
 
+- Reuse the approved [design catalogue](docs/design-system.html) and shared
+  components listed in the [interface map](docs/interface-map.md). Keep that map
+  current when adding a route or interaction; presentation must preserve domain
+  precision, native fallbacks and paused-feature gates.
 - All new or changed forms must follow the mandatory
   [keyboard and choice contract](docs/frontend.md#keyboard-and-choice-contract):
   shared searchable record choices, native short choices, explicit conditional
@@ -56,26 +60,38 @@ On Linux, Playwright may also require system libraries; CI installs them with
 
 ## Python checks
 
-The following commands use a temporary data directory and an empty environment
-file, so Django checks cannot open the installation's database. Run this block
-in a subshell; the trap disposes of its temporary directory.
+The following block uses a temporary data directory and an empty environment
+file, so Django checks cannot open the installation's database. Python disposes
+of the directory on success or failure; do not replace it with an installation
+path.
 
 ```bash
-(
-  check_dir=$(mktemp -d)
-  trap 'rm -f "$check_dir"/db.sqlite3 "$check_dir"/db.sqlite3-wal "$check_dir"/db.sqlite3-shm "$check_dir"/db.sqlite3-journal; rmdir "$check_dir"' EXIT
-  export TUXEDO_DATA_DIR="$check_dir" TUXEDO_ENV_FILE=/dev/null
-  export SECRET_KEY=local-validation-only DEBUG=True HTTPS=False ALLOW_SIGNUPS=True
-  uv run python scripts/check_version.py &&
-  uv run python -m unittest discover -s tests/tooling &&
-  uv run python manage.py check &&
-  uv run python manage.py makemigrations --check --dry-run &&
-  uv run coverage run --branch manage.py test &&
-  uv run coverage report --show-missing --fail-under=70
-)
+uv run python - <<'PY'
+import os
+import subprocess
+import tempfile
+
+with tempfile.TemporaryDirectory(prefix="tuxedo-check.") as check_data:
+    env = os.environ.copy()
+    env.update(
+        TUXEDO_DATA_DIR=check_data, TUXEDO_ENV_FILE="/dev/null",
+        SECRET_KEY="local-validation-only", DEBUG="True", HTTPS="False",
+        ALLOW_SIGNUPS="True", DJANGO_SETTINGS_MODULE="core.settings",
+    )
+    commands = [
+        ["python", "scripts/check_version.py"],
+        ["python", "-m", "unittest", "discover", "-s", "tests/tooling"],
+        ["python", "manage.py", "check"],
+        ["python", "manage.py", "makemigrations", "--check", "--dry-run"],
+        ["coverage", "run", "--branch", "manage.py", "test"],
+        ["coverage", "report", "--show-missing", "--fail-under=70"],
+    ]
+    for command in commands:
+        subprocess.run(["uv", "run", *command], env=env, check=True)
+PY
 ```
 
-The Django suite uses its own test database. The trap also removes any SQLite
+The Django suite uses its own test database. The context also removes any SQLite
 files created by the migration check in that temporary directory. Coverage
 outputs are ignored local artifacts.
 See [coverage-baseline.md](docs/coverage-baseline.md) for policy and measurements.
@@ -119,12 +135,26 @@ it also verifies the pinned checksum of vendored HTMX.
 After changing translatable UI copy:
 
 ```bash
-uv run python manage.py makemessages -l pt_BR
+uv run python - <<'PY'
+import os
+import subprocess
+import tempfile
+
+with tempfile.TemporaryDirectory(prefix="tuxedo-messages.") as message_data:
+    env = os.environ.copy()
+    env.update(TUXEDO_DATA_DIR=message_data, TUXEDO_ENV_FILE="/dev/null",
+               SECRET_KEY="local-validation-only", DJANGO_SETTINGS_MODULE="core.settings")
+    subprocess.run(["uv", "run", "python", "manage.py", "makemessages",
+                    "-l", "pt_BR", "--no-wrap"], env=env, check=True)
+PY
 # Translate new entries in locale/pt_BR/LC_MESSAGES/django.po.
-uv run python manage.py compilemessages
+msgfmt --check-format locale/pt_BR/LC_MESSAGES/django.po \
+  -o locale/pt_BR/LC_MESSAGES/django.mo
 ```
 
-Commit the updated `.po` and `.mo` files together. CI checks that recompilation
+Compile the project catalog directly so dependency catalogs are not modified.
+Commit the updated `.po` and
+`.mo` files together. CI checks that recompilation
 leaves the committed `.mo` unchanged. The
 [frontend guide](docs/frontend.md#translation-convention) defines which strings
 to mark and how the interface retains its no-JavaScript behavior.
@@ -162,6 +192,15 @@ users and financial records, so never point that direct command at personal data
 a separate operation, `npm run preview:capture`, documented in
 [preview maintenance](.github/preview/README.md).
 
+## Reporting performance
+
+`uv run python scripts/benchmark_reporting.py --samples 20 --output test-results/reporting.json`
+measures 0, 1,000 and 10,000 synthetic sources in separate disposable processes.
+It never accepts an installation database or server. See the
+[measurement method and limits](docs/reviews/project-health-2026-10-16.md#reproducible-reporting-measurements)
+before comparing results. Benchmark observations guide focused changes; they
+are not timing assertions in the test suite.
+
 ## Docker validation
 
 The Docker workflow validates the single-instance SQLite image on Linux amd64
@@ -187,6 +226,15 @@ Run the applicable checks above and `git diff --check`. Review the diff for
 unintended generated files and private data. For documentation changes, verify
 relative links, section anchors, images, and rendered layout; compare both
 READMEs for equivalent commands, features, and version badges.
+
+The [documentation index](docs/README.md) identifies each guide's owner. Keep
+current instructions in that guide and dated findings, test counts and benchmark
+evidence in [reviews](docs/reviews/README.md). Historical reviews must state their
+date and point to the current contract; retain their evidence and limitations.
+Do not copy the same detailed interaction protocol into several app guides:
+link to the shared frontend contract and describe only the app's domain behavior
+and deliberate exceptions. Keep `AGENTS.md` as the implementation checklist,
+with setup and executable commands here.
 
 The single application CI job uses the same lockfiles and isolated browser
 executor as local development. It checks the supported SQLite configuration;

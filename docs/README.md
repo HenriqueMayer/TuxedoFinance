@@ -17,15 +17,17 @@ releases, persistent volumes and isolated restore rehearsals.
 | [demo-data.md](demo-data.md) | Explicit creation of separate English and Portuguese demo accounts, date options and a presentation walkthrough. |
 | [Preview maintenance](../.github/preview/README.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and release compatibility. |
+| [branch-testing.md](branch-testing.md) | Owner walkthrough using an isolated disposable copy; computer/phone acceptance and native fallbacks. |
+| [roadmap.md](roadmap.md) | Paused interfaces and future studies; no implied availability or scheduled release. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and migration compatibility. |
 | [frontend.md](frontend.md) | Server-rendered design system, viewport/focus preservation, mandatory keyboard/searchable-choice form contract, progressive disclosure and banking UI structure. |
-| [design-system.html](design-system.html) | Canonical visual tokens and component catalog. |
+| [interface-map.md](interface-map.md) | Application routes, screen/form/filter/action families, shared components, financial presentation exceptions and paused-feature boundaries for consistent design adoption. |
+| [design-system.html](design-system.html) | Visual catalogue with the approved tokens, Paper Layers homepage, one workspace shell and compact editorial component specimens; application adoption is tracked in the interface map. |
 | [operations.md](operations.md) | Native source/dependency updates, required migrations and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
 | [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |
 | [coverage-baseline.md](coverage-baseline.md) | Dated measurements, 70% combined line/branch floor, and report artifacts. |
-| [implementation-review.md](implementation-review.md) | Planning evolution review, financial corrections, validation evidence and deployment boundaries. |
-| [Investment review and Pierre comparison](reviews/investments-and-pierre-2026-10-09.md) | Current versus historical FX corrections, investment limitations, sourced competitor findings and priorities. |
+| [Review and validation archive](reviews/README.md) | Dated investigations, delivery evidence, measured baselines and superseded interface iterations with current pointers. |
 
 ## Per-app reference
 
@@ -38,14 +40,14 @@ releases, persistent volumes and isolated restore rehearsals.
 - [apps/transactions.md](apps/transactions.md) — categorized economic events, progressive list
   filters and settlement behavior.
 - [apps/dashboard.md](apps/dashboard.md) — cash, cash-flow, liabilities,
-  investments and net-worth read models.
+  investments and net-worth read models; the net-worth interface is paused.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
   banks/accounts for provider and cash endpoints, with asset lifecycle and
   archived-position visibility rules, weighted cost and local dated quotes.
 - [apps/planning.md](apps/planning.md) — category budgets, goals backed by
   existing cash, reservations and deterministic local review signals.
-- [apps/ingestion.md](apps/ingestion.md) — explicit local CSV/OFX statement
-  mapping, review, matching, confirmation, reconciliation and guarded undo.
+- [apps/ingestion.md](apps/ingestion.md) — paused local CSV/OFX operations,
+  retained underlying services and available owned read-only posted history.
 - [apps/sandbox.md](apps/sandbox.md) — private planning drafts, salary/budget
   scenarios, commitment snapshots and contribution/yield simulations.
 
@@ -68,6 +70,25 @@ application and static preview:
 Root configuration files remain at the repository root because Django, `uv`,
 npm, Tailwind, Playwright and CI discover or share them there. The application
 and preview use the same locked frontend toolchain.
+
+## Canonical references
+
+Keep each rule with its owner instead of copying the same instructions into
+every guide:
+
+| Question | Source of truth |
+|---|---|
+| How do I install this version? | The matching release's root README and [operations](operations.md)/[Docker guide](docker.md). |
+| How do I contribute or validate a change? | [Contributing](../CONTRIBUTING.md); [AGENTS.md](../AGENTS.md) adds the agent-facing entry contract. |
+| How should a control look and behave? | [Visual catalogue](design-system.html), [frontend contracts](frontend.md) and [route/component map](interface-map.md). |
+| Which financial rules and service boundaries apply? | [Architecture](architecture.md), [data model](data-model.md) and the owning app guide. |
+| Is an interface available or paused? | [Roadmap](roadmap.md), the owning app guide and its code-level feature gate. |
+| What was measured or approved in an earlier iteration? | The [dated archive](reviews/README.md); its test counts and screenshots do not certify the present checkout. |
+
+When changing a workflow, update its owning guide and link the shared contract.
+Keep historical reports dated and clearly labelled, with pointers to the current
+guide. Do not turn local logs, copied credentials, database contents or transient
+preview paths into installation instructions.
 
 ## Documentation status
 

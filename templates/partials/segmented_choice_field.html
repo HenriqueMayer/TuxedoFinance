@@ -1,0 +1,7 @@
+{% load form_ui %}
+<fieldset class="entry-choice-field" data-entry-choice="{{ field.name }}" id="{{ field.auto_id }}-field">
+    <legend class="field-label">{{ field.label }}{% if field.field.required %} <span class="text-expense dark:text-expense-light">*</span>{% endif %}</legend>
+    {% if field.help_text %}{% include 'partials/help_popover.html' with help_id=field.auto_id|add:'-help' help_label=field.label help_text=field.help_text only %}{% endif %}
+    {% form_control field %}
+    {% for error in field.errors %}<p id="{{ field.auto_id }}-error-{{ forloop.counter }}" role="alert" data-field-error class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+</fieldset>

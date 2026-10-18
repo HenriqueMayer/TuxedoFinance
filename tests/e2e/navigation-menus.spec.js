@@ -26,7 +26,7 @@ for (const dark of [false, true]) {
         }, dark);
         const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
         await expect(navigation).toHaveAttribute('data-app-navigation', 'desktop');
-        await expect(navigation.getByRole('link')).toHaveText(destinations);
+        await expect(navigation.locator('.app-navigation-label')).toHaveText(destinations);
         await expect(navigation.locator('details, summary')).toHaveCount(0);
         for (const name of destinations) {
             await navigation.getByRole('link', { name, exact: true }).hover();
@@ -148,7 +148,7 @@ test('mobile bottom destinations remain direct and account dialog preserves focu
         await createAccount(page, testInfo);
         const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
         await expect(navigation).toHaveAttribute('data-app-navigation', 'mobile');
-        await expect(navigation.getByRole('link')).toHaveText(destinations);
+        await expect(navigation.locator('.app-navigation-label')).toHaveText(destinations);
         const dock = await navigation.boundingBox();
         expect(dock.y + dock.height).toBeCloseTo(740, 0);
         await navigation.getByRole('link', { name: 'Home', exact: true }).tap();
@@ -198,7 +198,7 @@ for (const width of [1440, 390]) {
         try {
             await createAccount(page, testInfo);
             const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
-            await expect(navigation.getByRole('link')).toHaveText(destinations);
+            await expect(navigation.locator('.app-navigation-label')).toHaveText(destinations);
             await navigation.getByRole('link', { name: 'Home', exact: true }).press('Enter');
             await page.getByRole('navigation', { name: 'Home sections' }).getByRole('link', { name: 'Reports', exact: true }).click();
             await expect(page).toHaveURL(/\/dashboard\/reports\/$/);

@@ -49,7 +49,7 @@ class AssetLifecycleTests(TestCase):
         self.assertFalse(asset.is_archived)
         url = reverse('investments:delete_asset', args=[asset.pk])
         self.assertContains(self.client.get(reverse('investments:settings')),
-                            f'href="{with_return_url(url, reverse("investments:settings"))}"')
+                            f'href="{with_return_url(url, reverse("investments:settings"), fragment="investment-assets")}"')
         response = self.client.get(url)
         self.assertContains(response, 'This action cannot be undone.')
         self.assertTrue(Asset.objects.filter(pk=asset.pk).exists())

@@ -218,13 +218,13 @@ def goal_sources(user, as_of=None):
         key = f'account:{account.pk}'
         result[key] = {'key': key, 'account': account, 'product': None, 'asset': None,
                        'label': str(account), 'currency': account.currency, 'balance': row['balance'],
-                       'url': reverse('banking:account_update', args=[account.pk])}
+                       'url': reverse('banking:detail', args=[account.bank_id]) + f'#account-row-{account.pk}'}
     for row in get_monthly_cash_positions(user, as_of=as_of):
         product, asset = row['product'], row['asset']
         key = f'pot:{product.pk}:{asset.pk}'
         result[key] = {'key': key, 'account': None, 'product': product, 'asset': asset,
                        'label': f'{product} · {asset}', 'currency': asset.currency, 'balance': row['balance'],
-                       'url': reverse('investments:update_product', args=[product.pk])}
+                       'url': reverse('investments:position_detail', args=[product.pk, asset.pk])}
     return result
 
 
@@ -352,7 +352,11 @@ def _signal(kind, evidence, title, explanation, sources, **extra):
 
 
 def _transaction_source(operation):
-    return {'url': reverse('transactions:update', args=[operation.pk]), 'label': f'{operation.title} · {operation.date.isoformat()}'}
+    # Presentation metadata stays outside the evidence fingerprint. Editors
+    # receive the consultation origin; dates follow the reader's preference.
+    return {'url': reverse('transactions:update', args=[operation.pk]),
+            'label': f'{operation.title} · {operation.date.isoformat()}',
+            'title': operation.title, 'date': operation.date, 'editable': True}
 
 
 def _fingerprint(operation):

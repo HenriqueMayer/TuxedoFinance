@@ -30,6 +30,23 @@ The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
 HTMX progressive enhancement.
 
+### Current delivery status
+
+Requirements below describe approved domain capabilities as well as retained
+implementation; they are not all navigation destinations or published features.
+
+| Surface | Current source-checkout status |
+|---|---|
+| Home/Reports, Transactions/Categories, Accounts, Investments and Plan | Available under the current shared interface contracts. Unreleased changes still need owner acceptance and a separate release decision. |
+| Local statement operations (FR34) | Paused: upload, mapping, review, confirmation and undo are gated on GET/POST. Owned confirmed/undone provenance remains read-only. |
+| Dated net-worth interface (FR38) | Paused: old screen requests return to Home; calculations and source data remain available to their existing consumers. |
+
+The [roadmap](roadmap.md) records paused/future work, the
+[interface map](interface-map.md) records current screens, and the
+[owning app guides](README.md#per-app-reference) define current service behavior.
+Checked acceptance items record implemented capability, not automatic release
+availability or permission to re-enable a paused workflow.
+
 ## 2. Goals
 
 | # | Goal | Expected result |
@@ -40,7 +57,7 @@ HTMX progressive enhancement.
 | G4 | Multicurrency reporting | Preserve currency-specific account data with per-user reporting and historical FX evidence. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
 | G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
-| G7 | Support isolated planning | Compare gross salary with a selected month's existing expense forecast and optionally save private named scenarios without posting or changing financial records. |
+| G7 | Support isolated planning | Estimate CLT take-home pay from gross salary, compare it with the selected month's expenses and optionally save private scenarios without changing financial records. |
 | G8 | Support daily personal decisions | Review category limits, explicitly reserved goals and local evidence without inventing money or automatically correcting records. |
 | G9 | Import settlement evidence safely | Match or create canonical cash sources only after explicit review, preserving recurring, installment, transfer and invoice semantics. |
 | G10 | Explain dated wealth and investment results | Separate weighted cost, local valuation, incurred debt, card credit and incomplete baseline/FX evidence. |
@@ -127,7 +144,7 @@ HTMX progressive enhancement.
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories. Optional synthetic financial data requires the explicit `insert_demo` command and a new, separate account; no demo database, shared account or fixed credential is shipped. |
 | FR28 | Local database ownership | The repository does not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. |
-| FR29 | Planning sandbox | Users compare gross salary with the selected month's existing expense forecast, add missing fixed expenses and optionally save a named draft. Simulations never post financial movements. |
+| FR29 | Planning sandbox | Estimate CLT net salary from gross input, compare the selected month's expense forecast, add missing BRL/percentage expenses and optionally save a named draft. Simulations never post financial movements. |
 | FR30 | Exact category splits | Allocate a source across distinct compatible owned categories whose positive amounts sum exactly; installments reconcile cents per month and across the full plan without new sources or cash rows. |
 | FR31 | Operational budgets | Persist positive monthly category/currency limits, including descendants without overlapping branches; compare recorded and known forecast spending and retain missing-FX status. |
 | FR32 | Backed goals | Reserve existing account or monetary monthly-cash balances explicitly, prevent active over-allocation, show later backing shortfalls and release availability on archive without adding an asset or movement. |
@@ -234,14 +251,18 @@ serve explicitly labeled current or selected-date valuations elsewhere.
 
 ### 5.7 Planning sandbox
 
-- Salary planning uses the entered gross salary, the selected month's existing
-  expense forecast and optional additional fixed BRL expenses. Missing inputs are
+- Salary planning derives ordinary monthly CLT net pay from the entered gross
+  salary and payroll parameters, then deducts the selected month's existing
+  expense forecast and additional BRL or gross-salary-percentage expenses. The
+  explicit rule-year limitation is documented in the [sandbox guide](apps/sandbox.md).
+  Missing inputs are
   not interpreted as zero or a valid completed plan.
 - Scenarios are saved only through an explicit action, never by autosave or a
   background request. They do not create or modify financial ledger entries.
-- The month card reads one-off, recurring and installment expenses by payment
-  date. Card purchases and invoice settlement are counted once. A saved draft
-  retains the forecast used when it was saved.
+- New month forecasts use the economic reference month, including card
+  installments and recurrences; invoice settlement is not another expense.
+  Saved legacy drafts retain their captured payment-month basis until explicit
+  recalculation. Opening or comparing a draft does not silently rewrite it.
 - Monthly contribution/yield simulations accept editable amounts and rates and
   display their assumptions. External price/history feeds and agent integration
   remain outside the implemented local scope.
@@ -305,7 +326,6 @@ Navigation and financial relationships use the current banking concepts.
 flowchart TD
     Login --> Overview
     Overview --> Reports
-    Reports --> Wealth[Dated wealth]
     Overview --> Banking[Banks]
     Overview --> Transactions[Activity]
     Overview --> Investments
@@ -323,7 +343,6 @@ flowchart TD
     Account --> PIX
     Account --> DebitCard
     Account --> CreditCard
-    Account --> Imports[Local statement review]
     CreditCard --> Invoice
     Invoice --> ManualPayment[Optional payment confirmation]
     Transactions --> Immediate[PIX / debit / account movement]
@@ -338,6 +357,9 @@ Banking setup leads with bank and account creation. PIX requires no separate
 payment-method record because it is an account capability. Transaction forms
 show only instruments compatible with the selected account/currency and owned by
 the logged-in user.
+
+This navigation diagram intentionally omits paused statement and net-worth
+interfaces; their retained domain requirements do not restore application links.
 
 ## 9. Dashboard and Reports
 
@@ -364,52 +386,37 @@ adding the opening balance. A keyboard-accessible question-mark disclosure
 explains the full-window dates and incomplete totals when exchange rates are
 missing. Do not show the former best-month summary card.
 
-The dated wealth screen uses month-end cutoffs, capped at today, with a
+The retained, currently gated dated wealth view uses month-end cutoffs, capped at today, with a
 start-month GET filter limited to the last ten years. Unknown baselines and
 missing FX/prices are explicit limitations. It is reconstructed editable
 financial history, not an immutable bank statement or return percentage.
 
 ## 10. Frontend Requirements
 
-- Question-mark icons follow the [shared help contract](frontend.md#question-mark-help):
-  one readable tooltip opens on hover or keyboard focus and closes on pointer
-  exit, outside click or Escape. Mouse clicks never pin it. Preserve touch and
-  no-JavaScript access, structured translated copy and viewport-safe placement.
-- Preserve the cream/forest light palette and use neutral black/graphite dark
-  foundations with accessible semantic colors,
-  Inter-only typography, reusable partials and mobile-first behavior. Normal
-  text maintains WCAG AA contrast and user-facing labels never render below
-  12px.
-- Keep banking as the navigation and settlement domain.
-- Banking screens expose hierarchy without hiding accounting consequences:
-  bank, accounts/currencies/balances, capabilities/cards, ledger and invoices.
-- Credit transaction forms explain that cash moves at invoice payment; debit and
-  PIX forms explain immediate settlement.
-- Own transfers use a neutral visual treatment.
-- Native and base amounts are never shown without currency codes/symbols.
-- Missing FX, overdue invoices and incomplete totals receive explicit
-  accessible status text, not color-only signaling.
-- The public navbar and authenticated desktop/mobile navbars expose the same
-  English/Brazilian Portuguese selector. The initial visit may use the browser
-  language; subsequent requests use the native Django language cookie.
-- Interface labels and system messages are translated. The nine system-provided
-  categories are materialized in the interface language active when the account
-  is created. From that point onward, categories and all other user-entered or
-  persisted domain data are displayed verbatim and are not translated
-  automatically.
-- Every form and record filter must follow the
-  [mandatory keyboard and choice contract](frontend.md#keyboard-and-choice-contract).
-  Record choices use shared searchable controls with arrows/Enter and explicit
-  confirmation. Short choices remain native; Tab, Space and advanced-section
-  activation must work throughout. Reaching or opening a search keeps the input
-  and results visible below the sticky header without moving focus; long results
-  scroll internally and adapt to the available viewport. Creation choices begin empty and conditional
-  checkboxes unchecked; preserve edits, invalid submissions and shortcut context.
-- Progressive disclosure applies to every conditional form, filter, picker,
-  menu and categorized flow: show only the branch relevant to the current
-  selection, clear stale inactive values after deliberate changes, preserve
-  errored branches for recovery, and keep server validation plus a complete
-  no-JavaScript path.
+- Use the approved [visual catalogue](design-system.html) and
+  [route/component map](interface-map.md). Shared editorial components retain
+  Inter typography, the cream/forest light palette, neutral black/graphite dark
+  foundations, accessible semantic colors and mobile-first behavior. Ordinary
+  text maintains WCAG AA contrast; user-facing labels do not render below 12px.
+- The same five workspace destinations appear in desktop and mobile navigation.
+  Secondary work stays in its owning section; paused resources are not links or
+  disabled promotional entries. Native navigation remains available.
+- Forms, help, filters, menus, dates, period controls and departure/history
+  handling follow the [canonical frontend contracts](frontend.md). Reuse shared
+  partials and enhancements, preserve keyboard/focus/error recovery and complete
+  native fallbacks, and keep ownership/accounting validation on the server.
+- Explain cash versus economic activity where the user makes the choice:
+  credit purchases belong to invoices, while account/PIX/debit settle directly.
+  Own transfers retain a neutral treatment. Totals identify their currency,
+  valuation cutoff, actual/projected scope and missing evidence with text.
+- Interface labels and system messages have English and Brazilian Portuguese
+  translations. Django's language cookie is independent of the reporting
+  currency and preferred date order. Stored user data remains verbatim; default
+  categories are translated once when the account is created.
+- The [contribution guide](../CONTRIBUTING.md) owns build, translation and isolated
+  validation commands. Changed financial interactions need focused regression
+  evidence, including native forms, keyboard use, both themes and phone layouts;
+  historical test counts are not current acceptance evidence.
 
 ## 11. Non-Functional Requirements
 

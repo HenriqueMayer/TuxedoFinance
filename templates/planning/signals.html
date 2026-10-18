@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n navigation %}
 {% block title %}{% translate 'Local signals' %} — Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="space-y-6">
-    <header class="workspace-header"><div><h1 class="page-title">{% translate 'Local signals' %}</h1><p class="subtle-copy mt-2">{% translate 'Explained suggestions from recorded local data. Reviewing a signal changes only its review status.' %}</p></div><a href="{% url 'planning:signals_settings' %}" class="action-link">{% translate 'Signal settings' %}</a></header>
+    <header class="workspace-header"><div><h1 class="page-title">{% translate 'Local signals' %}</h1><p class="subtle-copy mt-2">{% translate 'Explained suggestions from recorded local data. Reviewing a signal changes only its review status.' %}</p></div>{% url 'planning:signals_settings' as settings_url %}<a href="{% contextual_url settings_url %}" class="action-link">{% translate 'Signal settings' %}</a></header>
 
     {% for notice in notices %}<p role="status" class="subtle-copy">{{ notice }}</p>{% endfor %}
-<form id="signal-filters" action="{% url 'planning:signals' %}" method="get" data-live-filters data-live-results="signal-results" hx-boost="false" class="consultation-bar"><label class="inline-flex min-h-11 items-center gap-2"><input type="checkbox" name="reviewed" value="1" data-live-change{% if include_reviewed %} checked{% endif %} class="h-5 w-5 accent-caramel">{% translate 'Include reviewed signals' %}</label><button data-live-submit class="action-link">{% translate 'Apply filters' %}</button><span id="signal-clear" data-live-fragment="signal-filters">{% if include_reviewed %}<a class="action-link" data-live-reset data-live-link="signal-filters" href="{% url 'planning:signals' %}">{% translate 'Clear filters' %}</a>{% endif %}</span></form>
+<form id="signal-filters" action="{% url 'planning:signals' %}" method="get" data-live-filters data-live-results="signal-results" hx-boost="false" class="consultation-bar"><label class="inline-flex min-h-11 items-center gap-2"><input type="checkbox" name="reviewed" value="1" data-live-change{% if include_reviewed %} checked{% endif %} class="h-5 w-5 accent-caramel">{% translate 'Include reviewed signals' %}</label><button data-live-submit class="action-link">{% translate 'Apply filters' %}</button><span id="signal-clear" class="consultation-clear-control" data-live-fragment="signal-filters">{% if include_reviewed %}<a class="action-link" data-live-reset data-live-link="signal-filters" href="{% url 'planning:signals' %}">{% translate 'Clear filters' %}</a>{% endif %}</span></form>
     <div id="signal-results" class="space-y-4 mt-6">
     {% for signal in signals %}
     <article class="surface-panel space-y-4" aria-labelledby="signal-{{ forloop.counter }}">
-        <h2 id="signal-{{ forloop.counter }}" class="section-title">{{ signal.title }}</h2>
+        <header class="workspace-header"><h2 id="signal-{{ forloop.counter }}" class="section-title">{{ signal.title }}</h2>{% if signal.decision %}<span class="status-badge">{{ signal.decision.get_action_display }}</span>{% endif %}</header>
         <p class="text-sm leading-relaxed">{{ signal.explanation }}</p>
         {% if signal.partial %}<p class="text-sm text-expense dark:text-expense-light">{% translate 'Some expenses have missing exchange rates; these totals are partial.' %}</p>{% endif %}
-        <div class="flex flex-wrap gap-3">{% for source in signal.sources %}<a href="{{ source.url }}" class="text-sm underline">{{ source.label }}</a>{% endfor %}</div>
-        <form method="post" action="{% url 'planning:signal_decision' %}" hx-boost="false" class="flex flex-wrap items-center gap-3">
-            {% csrf_token %}<input type="hidden" name="key" value="{{ signal.key }}">
-            {% if signal.decision %}<p class="subtle-copy">{{ signal.decision.get_action_display }}</p><button type="submit" name="action" value="REOPEN" class="action-link">{% translate 'Reopen signal' %}</button>
+        <ul class="divide-y divide-forest/10 dark:divide-cream/10" aria-label="{% translate 'Sources' %}">{% for source in signal.sources %}<li><a href="{% if source.editable %}{% contextual_url source.url %}{% else %}{{ source.url }}{% endif %}" class="planning-tool"><span>{% if source.date %}{{ source.title }} <span class="subtle-copy">· {{ source.date|date:USER_DATE_FORMAT }}</span>{% else %}{{ source.label }}{% endif %}</span><span aria-hidden="true">↗</span></a></li>{% endfor %}</ul>
+        <form method="post" action="{% url 'planning:signal_decision' %}" hx-boost="false" class="form-actions border-t border-forest/10 dark:border-cream/10">
+            {% csrf_token %}<input type="hidden" name="key" value="{{ signal.key }}"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+            {% if signal.decision %}<button type="submit" name="action" value="REOPEN" class="action-link">{% translate 'Reopen signal' %}</button>
             {% else %}<button type="submit" name="action" value="ACK" class="action-link">{% translate 'Acknowledge' %}</button><button type="submit" name="action" value="DISMISS" class="quiet-action">{% translate 'Dismiss signal' %}</button>{% endif %}
         </form>
     </article>

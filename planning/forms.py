@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+from collections import Counter
 from decimal import Decimal
 
 from django import forms
@@ -31,6 +32,40 @@ def style_fields(form):
             if getattr(field.widget, 'input_type', None) == 'month':
                 # Native month widgets drop invalid bound text instead of allowing recovery.
                 field.widget = forms.TextInput(attrs={key: value for key, value in field.widget.attrs.items() if key != 'type'})
+
+
+def reservation_source_choices(user, sources, *, instance=None):
+    """Present the same remaining capacity used by reservation validation.
+
+    Editing keeps the saved reservation available to itself; manual account
+    reserves are the same money, rather than another claim to subtract here.
+    """
+    reserves = reserved_by_source(user)
+    # Start with the selected source, not a potentially long institution name.
+    # Guided pots often repeat product/asset names; codes disambiguate collisions.
+    labels = {}
+    for key, source in sources.items():
+        if source['account']:
+            account = source['account']
+            labels[key] = f'{account.name} · {account.bank.name}'
+        else:
+            product, asset = source['product'], source['asset']
+            name = asset.name if product.name == asset.name else f'{asset.name} · {product.name}'
+            labels[key] = f'{name} · {product.bank.name}'
+    counts = Counter((labels[key], source['currency']) for key, source in sources.items())
+    choices = [('', _('Select a cash source'))]
+    for key, source in sources.items():
+        named = (reserves['accounts'].get(source['account'].pk, Decimal('0'))
+                 if source['account'] else reserves['cash_pots'].get(
+                     (source['product'].pk, source['asset'].pk), Decimal('0')))
+        if instance and instance.pk and instance.source_key == key and not instance.goal.is_archived:
+            named -= instance.amount
+        available = max(Decimal('0'), source['balance'] - named)
+        label = labels[key]
+        if source['asset'] and counts[(label, source['currency'])] > 1:
+            label += f" ({source['asset'].code})"
+        choices.append((key, f"{label} · {source['currency']} {available:.2f}"))
+    return choices
 
 
 class MonthForm(forms.Form):
@@ -105,13 +140,7 @@ class GoalCreationForm(FinancialGoalForm):
                 kwargs['data'] = data
         super().__init__(*args, user=user, style=False, **kwargs)
         self.sources = goal_sources(user)
-        reserves = reserved_by_source(user)
-        choices = [('', _('Select a cash source'))]
-        for key, source in self.sources.items():
-            named = reserves['accounts'].get(source['account'].pk, Decimal('0')) if source['account'] else reserves['cash_pots'].get((source['product'].pk, source['asset'].pk), Decimal('0'))
-            available = max(Decimal('0'), source['balance'] - named)
-            choices.append((key, f"{source['label']} · {source['currency']} {available:.2f}"))
-        self.fields['source'].choices = choices
+        self.fields['source'].choices = reservation_source_choices(user, self.sources)
         self.allocation = None
         style_fields(self)
 
@@ -150,10 +179,7 @@ class GoalAllocationForm(forms.Form):
         self.goal = goal
         self.sources = goal_sources(user)
         super().__init__(*args, **kwargs)
-        self.fields['source'].choices = [('', _('Select a cash source'))] + [
-            (key, f"{source['label']} · {source['currency']} {source['balance']:.2f}")
-            for key, source in self.sources.items()
-        ]
+        self.fields['source'].choices = reservation_source_choices(user, self.sources, instance=self.instance)
         if self.instance.pk and self.instance.source_key not in self.sources:
             # An existing reservation stays editable when its pot no longer
             # appears in the current ledger; server validation still rejects funding it.
@@ -196,3 +222,14 @@ class SignalSettingsForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.instance.user = user
         style_fields(self)
+
+    @property
+    def review_groups(self):
+        # A disabled rule retains its threshold for the next review. These
+        # settings are not conditional financial inputs and must still submit.
+        return [
+            {'enabled': self['duplicates_enabled'], 'threshold': self['duplicate_days']},
+            {'enabled': self['subscriptionincrease_enabled'], 'threshold': self['subscription_increase_percent']},
+            {'enabled': self['futurecashshortage_enabled'], 'threshold': self['forecast_days']},
+            {'enabled': self['budgetoverspend_enabled'], 'threshold': None},
+        ]

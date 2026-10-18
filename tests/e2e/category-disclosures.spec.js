@@ -205,24 +205,23 @@ for (const [theme, width] of [['light', 1440], ['dark', 390]]) {
         await page.setViewportSize({ width, height: 844 });
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         const ids = await prepare(page, testInfo);
-        // The control rail is independent of the disclosed fields and result size.
-        const more = page.locator('#category-extra-filters > summary');
+        // Search and both persistent choice groups stay in place as results change.
         const search = page.locator('#filter-search');
-        const rail = await Promise.all([more.boundingBox(), search.boundingBox()]);
+        const controls = [search, page.locator('#filter-level'), page.locator('#filter-type')];
+        const rail = await Promise.all(controls.map(control => control.boundingBox()));
         async function stableRail() {
-            for (const [index, control] of [more, search].entries()) {
+            for (const [index, control] of controls.entries()) {
                 const box = await control.boundingBox();
                 for (const key of ['x', 'y', 'width', 'height']) expect(Math.abs(box[key] - rail[index][key])).toBeLessThan(1.5);
             }
         }
-        await more.press('Enter');
+        await expect(page.locator('#category-extra-filters')).toHaveCount(0);
         await expect(page.locator('#filter-level')).toBeVisible();
+        await expect(page.locator('#filter-type')).toBeVisible();
         await stableRail();
-        await page.locator('#filter-level').selectOption('sub');
+        await page.locator('#filter-level-sub').press('Space');
         await expect(page).toHaveURL(/level=sub/);
-        await stableRail();
-        await more.press('Space');
-        await expect(page.locator('#filter-level')).toBeHidden();
+        await expect(page.locator('#filter-level-sub')).toBeChecked();
         await stableRail();
         await search.pressSequentially('Solar', { delay: 50 });
         await expect(page).toHaveURL(/q=Solar/);

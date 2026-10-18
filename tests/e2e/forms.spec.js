@@ -39,10 +39,21 @@ async function tabTo(page, locator) {
     throw new Error('Control not reachable using Tab');
 }
 
+async function tabToRadioChoice(page, group, value) {
+    const selected = group.locator('input[type="radio"]:checked');
+    await tabTo(page, await selected.count() ? selected : group.getByRole('radio').first());
+    for (let index = 0; index < await group.getByRole('radio').count(); index++) {
+        if (await page.locator(':focus').inputValue() === value) break;
+        await page.keyboard.press('ArrowRight');
+    }
+    await page.keyboard.press('Space');
+    await expect(group.locator(`input[value="${value}"]`)).toBeChecked();
+}
+
 test('category keyboard choice has visible active state, cancellation and no implicit submit', async ({ page }, testInfo) => {
     await fixture(page, testInfo);
     await expect(page.locator('#category-fields')).toBeHidden();
-    await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
+    await selectChoice(page.locator('#id_transaction_type'), 'EXPENSE');
     const search = page.locator('#category-search');
     // Keyboard instructions remain accessible without changing the form's
     // geometry on blur and moving a clicked button before pointerup.
@@ -75,7 +86,7 @@ test('category keyboard choice has visible active state, cancellation and no imp
     await expect(search).toHaveValue('Aplicativo Transporte');
     await search.focus();
     await search.fill('missing-category');
-    await expect(page.getByText('No matching options', { exact: true })).toBeVisible();
+    await expect(search.locator('..').getByRole('status')).toHaveText('No matching options');
     await search.press('Enter');
     await search.press('Escape');
     await expect(search).toHaveValue('Aplicativo Transporte');
@@ -85,7 +96,7 @@ test('category keyboard choice has visible active state, cancellation and no imp
     await search.locator('..').getByRole('button').click();
     await expect(page.locator('#id_category')).toHaveValue('');
     await selectChoice(search, { label: 'Aplicativo Comida' });
-    await page.getByLabel(/^\s*Transaction type/).selectOption('INCOME');
+    await selectChoice(page.locator('#id_transaction_type'), 'INCOME');
     await expect(search).toHaveValue('');
     await search.fill('aplicati');
     await expect(options).toHaveCount(0);
@@ -106,14 +117,14 @@ for (const viewport of [
         }
         await page.reload();
         await page.evaluate(dark => document.documentElement.classList.toggle('dark', dark), viewport.dark);
-        await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
+        await selectChoice(page.locator('#id_transaction_type'), 'EXPENSE');
         await selectChoice(page.locator('#category-search'), { label: 'Aplicativo Comida' });
-        const channel = page.getByLabel(/^\s*Payment channel/);
+        const channel = page.locator('#id_payment_channel input[value="CREDIT_CARD"]');
         await channel.focus();
         // Begin with the controlling field at the bottom, as in a long form.
         await channel.evaluate(element => window.scrollBy(0,
-            element.getBoundingClientRect().bottom - window.innerHeight + 24));
-        await page.keyboard.press('c');
+            element.closest('label').getBoundingClientRect().bottom - window.innerHeight + 24));
+        await page.keyboard.press('Space');
         await page.keyboard.press('Tab');
         const search = page.locator('#id_credit_card-search');
         const list = page.locator('#id_credit_card-search-results');
@@ -134,7 +145,8 @@ for (const viewport of [
         const scrollY = await page.evaluate(() => window.scrollY);
         for (let i = 1; i < 8; i++) await page.keyboard.press('ArrowDown');
         const last = list.getByRole('option').last();
-        await expect(last).toHaveAttribute('aria-selected', 'true');
+        await expect(last).toHaveAttribute('data-active', '');
+        await expect(last).toHaveAttribute('aria-selected', 'false');
         await expect(last).toBeInViewport({ ratio: 1 });
         expect(await list.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
         expect(await page.evaluate(() => window.scrollY)).toBeCloseTo(scrollY, 0);
@@ -150,7 +162,8 @@ for (const viewport of [
         await page.keyboard.press('ArrowDown');
         await expect.poll(fullyVisible).toBe(true);
         await page.keyboard.press('Enter');
-        await expect(search).toHaveValue(/Keyboard card A/);
+        await expect(search).toHaveValue('');
+        await expect(list.getByRole('option', {selected: true})).toHaveAccessibleName(/Keyboard card A/);
         await expect(page.getByLabel(/^\s*Installments/)).toBeVisible();
         await expect(search).toBeFocused();
 
@@ -158,19 +171,21 @@ for (const viewport of [
         await expect(list.getByRole('status')).toHaveText('No matching options');
         await expect.poll(fullyVisible).toBe(true);
         await page.keyboard.press('Tab');
-        await expect(search).toHaveValue(/Keyboard card A/);
-        await expect(list).toBeHidden();
+        await expect(search).toHaveValue('no-matching-card');
+        await expect(list).toBeVisible();
+        await expect(page.locator('#id_credit_card option:checked')).toHaveText(/Keyboard card A/);
     });
 }
 
 test('a recurring credit transaction can be completed with keyboard only', async ({ page }, testInfo) => {
     await fixture(page, testInfo);
+    await tabToRadioChoice(page, page.locator('#id_transaction_type'), 'EXPENSE');
     await tabTo(page, page.locator('#id_title'));
     await page.keyboard.type('Keyboard recurring');
-    await page.keyboard.press('Tab');
-    await page.keyboard.type('25');
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('e');
+    await tabTo(page, page.locator('#id_amount'));
+    await page.keyboard.type('2500');
+    await tabTo(page, page.getByLabel(/^\s*Transaction date/));
+    await page.keyboard.type('07/09/2026');
     await page.keyboard.press('Tab');
     await tabTo(page, page.locator('#category-search'));
     await expect(page.locator('#id_split_categories')).not.toBeChecked();
@@ -179,8 +194,7 @@ test('a recurring credit transaction can be completed with keyboard only', async
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    await tabTo(page, page.getByLabel(/^\s*Payment channel/));
-    await page.keyboard.press('c');
+    await tabToRadioChoice(page, page.locator('#id_payment_channel'), 'CREDIT_CARD');
     await page.keyboard.press('Tab');
     await tabTo(page, page.locator('#id_credit_card-search'));
     await expect(page.locator('#id_credit_card-search')).toBeFocused();
@@ -189,8 +203,6 @@ test('a recurring credit transaction can be completed with keyboard only', async
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
     await expect(page.getByLabel(/^\s*Installments/)).toBeVisible();
-    await tabTo(page, page.getByLabel(/^\s*Transaction date/));
-    await page.keyboard.type('07/09/2026');
     const advanced = page.locator('summary').filter({ hasText: 'Advanced options' });
     await tabTo(page, advanced);
     await page.keyboard.press('Enter');
@@ -243,20 +255,20 @@ test('multi-select search keeps checked values and keyboard focus while filterin
 test('conditional branches preserve server errors, clear inactive values and skip hidden controls', async ({ page }, testInfo) => {
     await fixture(page, testInfo);
     await page.locator('#id_title').fill('Invalid payment');
-    await page.locator('#id_amount').fill('50');
-    await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
+    await page.locator('#id_amount').fill('50.00');
+    await selectChoice(page.locator('#id_transaction_type'), 'EXPENSE');
     await selectChoice(page.locator('#category-search'), { label: 'Aplicativo Comida' });
-    await page.getByLabel(/^\s*Payment channel/).selectOption('CREDIT_CARD');
+    await selectChoice(page.locator('#id_payment_channel'), 'CREDIT_CARD');
     await selectChoice(page.locator('#id_credit_card-search'), { label: 'Keyboard card A - Keyboard bank > Keyboard account (BRL)' });
     await page.getByLabel(/^\s*Installments/).fill('0');
     await page.getByLabel(/^\s*Transaction date/).fill('07/09/2026');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.locator('#id_installments-error-1')).toBeVisible();
-    await page.getByLabel(/^\s*Payment channel/).selectOption('PIX');
+    await selectChoice(page.locator('#id_payment_channel'), 'PIX');
     await expect(page.locator('#credit-card-fields')).toBeHidden();
     await expect(page.locator('#id_installments')).toHaveValue('1');
     await expect(page.locator('#id_installments-error-1')).toHaveCount(0);
-    await page.getByLabel(/^\s*Payment channel/).focus();
+    await page.locator('#id_payment_channel input[value="PIX"]').focus();
     await page.keyboard.press('Tab');
     await expect(page.locator('#id_bank_account-search')).toBeFocused();
     await expect(page.locator('#id_credit_card')).toHaveValue('');
@@ -285,7 +297,7 @@ test('IOF and loyalty purchases wait for their controlling choices', async ({ pa
 test('pickers initialize once after HTMX navigation and keep native options scoped', async ({ page }, testInfo) => {
     await fixture(page, testInfo);
     await page.goto('/categories/');
-    await page.getByRole('link', { name: 'New Category', exact: true }).click();
+    await page.getByRole('link', { name: 'New category', exact: true }).click();
     await expect(page.locator('#parent-category-search')).toHaveCount(1);
     await page.evaluate(() => {
         document.body.dispatchEvent(new Event('htmx:load', { bubbles: true }));
@@ -297,6 +309,9 @@ test('pickers initialize once after HTMX navigation and keep native options scop
     expect(await page.evaluate(() => window.selectionChanges)).toBe(1);
     await expect(page.locator('#parent-category-search')).toHaveCount(1);
     await page.getByRole('link', { name: 'Cancel', exact: true }).click();
+    await expect(page.locator('#departure-confirm')).toBeVisible();
+    await page.locator('#departure-confirm').getByRole('button', {name: 'Leave page', exact: true}).press('Enter');
+    await expect(page).toHaveURL(/\/categories\/$/);
     await page.goBack();
     await expect(page.locator('#parent-category-search')).toHaveCount(1);
     await selectChoice(page.locator('#parent-category-search'), { label: 'Aplicativo Transporte' });
@@ -312,10 +327,10 @@ test('native forms and conditional fields remain usable without JavaScript', asy
         await expect(page.getByLabel(/^\s*Installments/)).toBeVisible();
         await page.locator('#id_title').fill('Native transaction');
         await page.locator('#id_amount').fill('10');
-        await page.getByLabel(/^\s*Transaction type/).selectOption('EXPENSE');
+        await selectChoice(page.locator('#id_transaction_type'), 'EXPENSE');
         await page.locator('#id_category').selectOption({ label: 'Aplicativo Comida' });
         await expect(page.locator('#id_split_categories')).not.toBeChecked();
-        await page.getByLabel(/^\s*Payment channel/).selectOption('ACCOUNT');
+        await selectChoice(page.locator('#id_payment_channel'), 'ACCOUNT');
         await page.locator('#id_bank_account').selectOption(account);
         await page.getByLabel(/^\s*Transaction date/).fill('31/02/2026');
         await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -477,7 +492,7 @@ test('Portuguese mobile form keeps translated keyboard help and visible focus', 
         headers: { Referer: page.url() },
     });
     await page.reload();
-    await page.locator('#id_transaction_type').selectOption('EXPENSE');
+    await selectChoice(page.locator('#id_transaction_type'), 'EXPENSE');
     await page.locator('#category-search').fill('aplicati');
     await page.locator('#category-search').press('ArrowDown');
     await expect(page.locator('#category-search-help')).toHaveText('Digite para pesquisar. Use ↑/↓ para navegar, Enter para selecionar, Escape para fechar e Tab para continuar.');

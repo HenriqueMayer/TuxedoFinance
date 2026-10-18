@@ -42,6 +42,39 @@ async function tabTo(page, control) {
     throw new Error('Control not reachable by keyboard');
 }
 
+async function commitDateFilterAtKeyboardLocation(page, control) {
+    let release, intercepted, completed;
+    let hasRequest = false;
+    const responseGate = new Promise(resolve => { release = resolve; });
+    const requestSeen = new Promise(resolve => { intercepted = resolve; });
+    const requestHandled = new Promise(resolve => { completed = resolve; });
+    const matches = url => url.pathname === '/investments/operations/' && url.searchParams.has('date_to');
+    const hold = async route => {
+        hasRequest = true;
+        intercepted();
+        try {
+            await responseGate;
+            await route.continue();
+        } finally { completed(); }
+    };
+    await page.route(matches, hold);
+    try {
+        // Native Tab reveals the adjacent calendar control and may scroll to
+        // it. Measure that user-selected location before releasing the GET;
+        // the assertion below then isolates background-update preservation.
+        await control.press('Tab');
+        await page.keyboard.press('Shift+Tab');
+        await requestSeen;
+        return await page.evaluate(() => scrollY);
+    } finally {
+        release();
+        // Unrouting an active handler can automatically continue it. Wait for
+        // our continuation before removal so each real GET is handled once.
+        if (hasRequest) await requestHandled;
+        await page.unroute(matches, hold);
+    }
+}
+
 for (const theme of ['light', 'dark']) {
     test(`current FX, dated history recovery and position shortcuts (${theme})`, async ({ page }, info) => {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
@@ -128,11 +161,13 @@ for (const theme of ['light', 'dark']) {
         await page.locator('#investment-extra-filters summary').press('Enter');
         await page.locator('#investment-currency').selectOption('USD');
         await page.locator('#investment-asset-class').selectOption('LIQUIDITY');
+        await expect(page).toHaveURL(url => url.searchParams.get('asset_class') === 'LIQUIDITY');
         await page.locator('#investment-date-from').fill(data.today);
+        await page.locator('#investment-date-from').press('Tab');
+        await expect(page).toHaveURL(url => url.searchParams.get('date_from') === data.today);
         await page.locator('#investment-date-to').fill(data.yesterday);
-        const scrollBefore = await page.evaluate(() => scrollY);
+        const scrollBefore = await commitDateFilterAtKeyboardLocation(page, page.locator('#investment-date-to'));
         expect(scrollBefore).toBeGreaterThan(0);
-        await page.locator('#investment-date-to').press('Enter');
         await expect(page.getByRole('alert')).toContainText('The end date must be on or after the start date.');
         await expect(page.locator('#investment-date-to')).toBeFocused();
         await expect(page.locator('#investment-movements')).not.toHaveClass(/htmx-settling/);
@@ -141,7 +176,8 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('#investment-currency')).toHaveValue('USD');
         await expect(page.locator('#investment-extra-filters')).toHaveAttribute('open');
         await page.locator('#investment-date-from').fill(data.yesterday);
-        await page.locator('#investment-date-to').press('Enter');
+        await page.locator('#investment-date-to').press('Tab');
+        await page.keyboard.press('Shift+Tab');
         await expect(page.getByRole('alert')).toHaveCount(0);
         await expect(page.locator('#investment-movements li')).toHaveCount(1);
         await page.locator('#investment-currency').selectOption('BRL');

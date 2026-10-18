@@ -61,13 +61,19 @@ test(`simple finance workspaces keep data, keyboard, filters and context (${widt
         await expect(page.locator('#investment-total')).toContainText(/BRL 200[,.]00/);
         await expect(page.locator('#investment-price-warning')).toBeVisible();
         const filter = page.locator('#position-extra-filters > summary');
+        // Touch activation first scrolls its target into view using the control's
+        // viewport margins. Establish the rail baseline after that preparation,
+        // then verify opening the disclosure itself changes neither rail nor scroll.
+        await filter.scrollIntoViewIfNeeded();
         const before = await filter.boundingBox();
+        const filterScroll = await page.evaluate(() => window.scrollY);
         if (width === 390) await filter.tap();
         else await filter.press('Enter');
         await expect(page.locator('#position-scope')).toBeVisible();
         const after = await filter.boundingBox();
         expect(Math.abs(before.x - after.x)).toBeLessThan(1);
         expect(Math.abs(before.y - after.y)).toBeLessThan(1);
+        expect(await page.evaluate(() => window.scrollY)).toBeCloseTo(filterScroll, 0);
         await page.locator('#position-scope').focus();
         await page.keyboard.press('End');
         await page.keyboard.press('Tab');

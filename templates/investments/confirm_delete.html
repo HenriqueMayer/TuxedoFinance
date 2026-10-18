@@ -16,16 +16,16 @@ the project — never a plain link/GET, always a POST from this page.
         <p class="text-sm text-forest/80 dark:text-cream/80">
             {% translate 'Are you sure you want to delete' %}
             <span class="font-semibold text-forest dark:text-cream">{{ investment.get_kind_display }} {{ investment.asset.code }}</span>
-            ({% blocktranslate with quantity=investment.quantity|floatformat:8 gross=investment.gross_value|floatformat:2 currency=investment.currency %}{{ quantity }} units, gross {{ gross }} {{ currency }}{% endblocktranslate %})?
+            ({% if investment.asset.valuation_mode == 'MONETARY' %}{% include 'partials/money.html' with currency=investment.currency amount=investment.gross_value %}{% else %}{% blocktranslate with quantity=investment.quantity|floatformat:8 gross=investment.gross_value|floatformat:2 currency=investment.currency %}{{ quantity }} units, gross {{ gross }} {{ currency }}{% endblocktranslate %}{% endif %})?
             {% translate 'This action cannot be undone.' %}
         </p>
 
         {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
-        <form method="post" hx-boost="false" class="flex items-center gap-3" novalidate>
+        <form method="post" hx-boost="false" class="form-actions flex items-center gap-3" novalidate>
             {% csrf_token %}
         <input type="hidden" name="next" value="{{ return_url }}">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-expense/10 dark:bg-expense/15 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30 transition hover:bg-expense/20 focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
+                    class="action-danger">
                 {% translate 'Delete' %}
             </button>
             <a hx-boost="false" href="{{ return_url }}"

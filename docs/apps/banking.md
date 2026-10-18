@@ -32,6 +32,14 @@ invented historical baseline. Current balances retain them, while dated wealth
 discloses that their baseline is unknown. Statement confirmation requires the
 owner to resolve a nonzero unknown account baseline first.
 
+`BankAccount.predates_opening()` supplies the common date guard for transactions,
+confirmed payments, both transfer endpoints, investment cash endpoints, points
+funding and redemption/IOF endpoints. New or edited operations cannot precede a
+known account opening. Unknown legacy dates stay unknown. Existing conflicts
+can be inspected with the owner-scoped, read-only
+`banking.services.movements_before_opening(user)` queryset; no migration or
+automatic rewrite repairs them. See [local review](../operations.md#review-opening-date-conflicts).
+
 Bank list and account detail views synchronize derived transactions and invoices
 before reading balances. These requests may write to the ledger; the balance
 helpers themselves only query it. The synchronization service lives in
@@ -54,6 +62,11 @@ helpers themselves only query it. The synchronization service lives in
   with its immediate ledger movement. PIX is not synonymous with transfer.
 
 ## Transfers
+
+Source and destination amounts must be equal when the accounts use the same
+currency. A transfer cannot create an unexplained gain or loss; record fees or
+other financial activity separately. Cross-currency amounts and captured FX
+evidence retain their existing contract.
 
 A transfer between the user's own accounts produces two linked movements: an
 outflow in the source account and an inflow in the destination account. The pair
@@ -124,6 +137,15 @@ redemption entries reveal neither conditional branch. Changing the entry kind
 clears values from the branch that became inactive, while server validation
 remains authoritative and the no-JavaScript form remains complete.
 
+Instrument choices reuse the illustrated board from Transactions. Linked cards
+are a searchable group of native checkboxes with saved card colors/gradients,
+nickname, account, institution marker and currency. Filtering does not remove
+selected cards from the submission. Points-purchase funding, invoice awards and
+redemption/IOF fields use the same account/card identity; an invoice option also
+identifies its reference month. This is presentation of the existing owned
+choices, not a new eligibility, settlement or points-valuation rule. See the
+[shared choice contract](../frontend.md#keyboard-and-choice-contract).
+
 `RewardRedemption` coordinates a redemption rather than replacing the points
 ledger. It records the points used, target account and monetary amount, IOF, and
 an optional IOF funding instrument. The service links it to a debit
@@ -161,6 +183,13 @@ count each charge once, preserving existing `iof:<id>` scenario identities.
 Setting IOF to zero removes the derived expense and previous IOF funding.
 An explicitly selected older redemption remains visible for editing beyond the
 usual twenty-row history limit.
+
+An explicit local origin also survives the redemption editor's redirect into
+bank history, bound errors and its inline Save/Cancel. A chart source can
+therefore return to its original filtered report and anchor. Only the explicit
+origin is posted; without one, saving retains the original receiving-bank
+fallback, using the updated bank if the receiving account changes. External
+origins are rejected and the source record remains owner-scoped.
 
 ## Multicurrency
 
@@ -257,11 +286,29 @@ origin. Source editors and payment editors return to the same invoice section.
 ## Bank overview, details and dynamic consultation
 
 The overview shows all owned banks, using one link per institution with its name,
-color marker and account/card counts. It has no text filter or inline account
-rows. Retired overview `q` parameters are ignored. The all-bank available-money
-summary stays on this overview; its native Balance details disclosure contains
-bank totals, monetary cash pots and set-aside amounts. Missing-rate and reserve
-shortfall warnings remain visible without opening that disclosure.
+color marker and account/card counts. It has no text filter. Retired overview
+`q` parameters are ignored. Bank totals, monetary cash pots and set-aside amounts
+stay visible beside the all-bank available-money summary, without a disclosure.
+Missing-rate and reserve shortfall warnings remain visible.
+
+Opening an institution replaces the bank grid with one broad internal work
+surface while retaining the consolidated summary. Its compact tab bar names
+the institution and keeps a labelled Minimize action available. The bar stays
+within the workspace's document scroll. The overview remains the complete
+colored institution index; minimize the current bank to choose another one.
+Forty banks therefore add no rows above the selected bank's accounts.
+
+HTMX replaces only `#banking-workspace` and pushes the existing canonical bank
+URL. Opening a bank focuses the surface heading; Minimize restores
+the corresponding overview link and, for the same bank, its prior position.
+This small location state stays in memory and is scoped to the authenticated
+user. Browser Back/Forward keeps the shared authorized-GET history contract.
+The existing departure guard still protects edited inline POSTs before
+Minimize or other navigation. Overview and Minimize links retain complete
+native GET navigation without JavaScript. Legacy owned `?open=` destinations
+still redirect to the canonical bank URL. A completed workspace GET updates
+the navigation baseline. Inner planning and reward updates retain their
+existing fragments and validation contracts.
 
 Each bank page contains the institution's accounts, monetary cash pots, reserves
 and loyalty programs. An account card has three distinct layers: its name and
@@ -304,20 +351,55 @@ available there. Clear retains the owning card and any validated return origin.
 Legacy `?card=<id>` links redirect after ownership/canonical-ID validation; invalid
 or foreign IDs remain 404s. Card and invoice pagination are independent.
 
-Invoices and local exchange rates retain one primary live search and native
-Filters criteria, with fixed trigger/Clear slots. Opening criteria adds fields
-below the rail without moving the trigger. Active counts exclude text search.
-Controls remain mounted while results/status update; initial errors reopen
-criteria and retain bound values. Card selection is page navigation through the overview, rather than another
+Invoices and local exchange rates retain one primary live search with compact,
+always-visible criteria and a reserved Clear area. Invoices shows month, bank
+and status; exchange rates shows currencies and date bounds. Active counts
+exclude text search. Controls remain mounted while results/status update;
+initial errors and bound values stay visible. Card selection is page navigation through the overview, rather than another
 record picker in the filter panel. Invoice month uses the shared named-month/year
 enhancement over the native ISO field; malformed month text stays recoverable.
-Every filter retains native GET submission without JavaScript.
+Every filter retains native GET submission without JavaScript. On phones the
+invoice month occupies a full row, with Bank and Status paired below it; a long
+localized month must not make the control taller than its 44px peers.
+FX criteria align their labelled controls at the top, so a field error does not
+push the neighbouring date/currency control down to the error's baseline.
 
 Banking density is scoped to `.banking-workspace`, including invoice
 consultation/payment, exchange rates and form containers/actions. Headings,
 separators and record surfaces clarify hierarchy without changing financial
 values, native fields or shared searchable-choice behavior. Row menus use
 record-specific accessible names and deliberate activation. Touch targets stay
-at least 44px; fine-pointer desktops may use 36px actions. Rate forms retain
+at least 44px for all pointer types. Rate forms retain
 Save/Cancel and explicit origins. Local reference rates never rewrite evidence
 already stored in financial operations.
+
+Complete account, card, transfer, loyalty, redemption and payment editors reuse
+the shared `finance-entry-page` sheet, named native fieldsets and responsive
+field grid. Bank/account selectors and descriptions keep the full reading
+width; short related fields share rows on desktop and stack on phones. The
+appearance editor, gradient handle and conditional funding owners retain their
+IDs, input types, precision and server error recovery. Ordinary result labels
+wrap their full text in the shared choice list, including names without spaces.
+The selected bank's sticky title is limited to two visual lines so it cannot
+cover the phone's controls; its full name remains in the accessible heading,
+native title and overview.
+
+An invoice retains its explicit consultation origin when opening a purchase or
+confirmed-payment editor. The nested editor returns to the invoice section with
+that outer origin intact. Payment edit/delete Save/Cancel and invalid responses
+validate and retain the explicit local `next`; they never infer it from Referer.
+Ownership, overpayment limits and atomic movement reconciliation remain in the
+existing server services.
+
+Record deletion also preserves the explicit local origin for Cancel, protected
+references and successful removal when that destination survives. Removing an
+empty bank returns to the overview rather than its deleted workspace; Cancel
+and a protected bank deletion keep the still-existing bank open. FX deletion
+keeps its exchange-rate-list fallback. These navigation rules do not bypass
+ownership or reference protection.
+
+Exchange-rate labels state the direction explicitly: one unit of the source
+currency is worth the entered value in the target currency. A visible example
+(`1 USD = 5.12 BRL`) explains the list and editor without requiring a help
+popover. Rates retain eight decimal places; transaction cents formatting never
+applies to reference prices.

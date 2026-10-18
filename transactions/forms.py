@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from core.dates import configure_date_fields, date_order
+from core.widgets import SegmentedChoice, SelectWithMetadata
 from banking.models import BankAccount, CreditCard, DebitCard
 from categories.models import Category
 from transactions.models import Transaction, TransactionSplit
@@ -18,16 +19,8 @@ CHECKBOX_CLASSES = (
 )
 
 
-class TransactionSelect(forms.Select):
+class TransactionSelect(SelectWithMetadata):
     """Expose safe, server-scoped choice metadata to the progressive UI."""
-
-    choice_data = None
-
-    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
-        option = super().create_option(name, value, label, selected, index, subindex, attrs)
-        if self.choice_data and value:
-            option['attrs'].update(self.choice_data.get(str(value), {}))
-        return option
 
 
 class TransactionForm(forms.ModelForm):
@@ -126,12 +119,29 @@ class TransactionForm(forms.ModelForm):
         )
         self._set_choice_data(
             'bank_account',
-            {str(account.pk): {'data-pix-enabled': str(account.pix_enabled).lower()} for account in accounts},
+            {
+                str(account.pk): {
+                    'data-pix-enabled': str(account.pix_enabled).lower(),
+                    'data-choice-name': account.name,
+                    'data-choice-detail': f'{account.bank.name} · {account.currency}',
+                    'data-bank-color': account.bank.color,
+                }
+                for account in accounts
+            },
         )
         self._set_choice_data(
             'debit_card',
             {
-                str(card.pk): {'data-account-label': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})'}
+                str(card.pk): {
+                    'data-account-label': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})',
+                    'data-card-name': card.name,
+                    'data-choice-name': card.name,
+                    'data-choice-detail': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})',
+                    'data-bank-color': card.account.bank.color,
+                    'data-card-color': card.color,
+                    'data-card-gradient-end': card.gradient_end,
+                    'data-card-gradient-angle': str(card.gradient_angle),
+                }
                 for card in debit_cards
             },
         )
@@ -140,6 +150,13 @@ class TransactionForm(forms.ModelForm):
             {
                 str(card.pk): {
                     'data-account-label': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})',
+                    'data-card-name': card.name,
+                    'data-choice-name': card.name,
+                    'data-choice-detail': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})',
+                    'data-bank-color': card.account.bank.color,
+                    'data-card-color': card.color,
+                    'data-card-gradient-end': card.gradient_end,
+                    'data-card-gradient-angle': str(card.gradient_angle),
                     'data-best-purchase-day': str(card.best_purchase_day),
                     'data-settlement-description': (
                         _('New invoices due on or after %(date)s require confirmed payments. Existing invoices retain their recorded mode. The app does not pay the bank.')
@@ -164,6 +181,23 @@ class TransactionForm(forms.ModelForm):
                 )
             if described_by:
                 field.widget.attrs['aria-describedby'] = ' '.join(described_by)
+        for name in ('transaction_type', 'payment_channel'):
+            field = self.fields[name]
+            field.choices = [(value, label) for value, label in field.choices if value]
+            field.widget = SegmentedChoice(attrs={
+                key: value for key, value in field.widget.attrs.items() if key != 'class'
+            })
+            field.widget.attrs['class'] = 'entry-segment-options'
+            field.widget.choices = field.choices
+        self.fields['amount'].widget.attrs['data-money-input'] = ''
+        for name in ('bank_account', 'debit_card', 'credit_card'):
+            self.fields[name].widget.attrs.update({
+                'data-payment-choices': 'true',
+                'data-payment-kind': 'account' if name == 'bank_account' else 'card',
+            })
+        for name, field in self.fields.items():
+            if name not in ('transaction_type', 'payment_channel'):
+                field.widget.attrs['class'] = CHECKBOX_CLASSES if name in ('is_fixed', 'split_categories') else 'entry-input'
 
     def _set_choice_data(self, field_name, choice_data):
         field = self.fields[field_name]
@@ -211,6 +245,17 @@ class TransactionSplitForm(forms.ModelForm):
         self.fields['category'].widget = widget
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+        if self.is_bound:
+            raw_amount = self.data.get(self.add_prefix('amount'))
+            if raw_amount not in (None, ''):
+                try:
+                    self.fields['amount'].clean(raw_amount)
+                except forms.ValidationError:
+                    # Inspect only the decimal field here. Full form validation
+                    # must wait until the formset adds its owned hidden IDs.
+                    self.fields['amount'].widget = forms.TextInput(attrs={
+                        **self.fields['amount'].widget.attrs, 'inputmode': 'decimal',
+                    })
 
     def validate_constraints(self):
         if not self.allow_type_changes:
@@ -230,6 +275,7 @@ class BaseTransactionSplitFormSet(forms.BaseInlineFormSet):
         super().add_fields(form, index)
         # A hidden identifier cannot select another transaction's allocation.
         form.fields['id'].queryset = self.get_queryset()
+        form.fields['DELETE'].label = _('Remove category')
         form.fields['DELETE'].widget.attrs['class'] = CHECKBOX_CLASSES
 
     def clean(self):
@@ -243,6 +289,12 @@ class BaseTransactionSplitFormSet(forms.BaseInlineFormSet):
             raise forms.ValidationError(_('Choose each category only once.'))
         if any(row['category'].transaction_type and row['category'].transaction_type != self.instance.transaction_type for row in rows):
             raise forms.ValidationError(_('Choose categories compatible with the transaction type.'))
+        if self.instance.amount is not None:
+            for form in self.forms:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE') and form.cleaned_data['amount'] > self.instance.amount:
+                    form.add_error('amount', _('Category amount cannot exceed the transaction total.'))
+            if any(self.errors):
+                return
         if sum((row.get('amount', 0) for row in rows), 0) != self.instance.amount:
             raise forms.ValidationError(_('Category amounts must add up to the transaction total.'))
 

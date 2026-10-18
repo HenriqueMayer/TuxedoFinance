@@ -2,7 +2,7 @@
 {% block title %}{{ invoice.card.name }} — {% translate 'Invoice' %}{% endblock %}
 {% block content %}
 <div class="banking-workspace mx-auto max-w-3xl space-y-4">
-<header class="workspace-header"><h1 class="page-title">{{ invoice.card.name }} · {{ invoice.reference_month|date:'M Y' }}</h1>
+<header class="workspace-header"><h1 class="page-title min-w-0 flex-1 break-words">{{ invoice.card.name }} · {{ invoice.reference_month|date:'M Y' }}</h1>
 {% url 'banking:credit_card_update' invoice.card_id as settings_url %}<a class="quiet-action" href="{% contextual_url settings_url %}">{% translate 'Card settings' %}</a></header>
 <section id="invoice-summary" class="surface-panel space-y-4" aria-label="{% translate 'Invoice summary' %}">
     <div class="flex flex-wrap items-start justify-between gap-4">
@@ -21,21 +21,21 @@
     {% endif %}
 </section>
 {% if invoice.manual_settlement %}
-<form id="invoice-payment" method="post" hx-boost="false" novalidate class="surface-panel space-y-5">
+<form id="invoice-payment" autocomplete="off" method="post" hx-boost="false" novalidate class="workspace-form surface-panel finance-entry-form space-y-5">
     <h2 class="section-title">{% translate 'Confirm a payment' %}</h2>
     <p class="subtle-copy">{% translate 'Record a payment already made at your bank. This application does not send a payment.' %}</p>
     {% csrf_token %}<input type="hidden" name="next" value="{{ return_url }}">
     {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
     {% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert">{{ error }}</p>{% endfor %}{% endfor %}
-    {% for field in form.visible_fields %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
-    <div class="flex flex-wrap gap-3"><button class="action-primary" type="submit">{% translate 'Confirm payment' %}</button><a class="quiet-action" href="{{ return_url }}">{% translate 'Cancel' %}</a></div>
+    <div class="finance-entry-grid">{% for field in form.visible_fields %}<div{% if field.name == 'account' or field.name == 'notes' %} class="finance-entry-wide"{% endif %}>{% include 'partials/form_field.html' with field=field %}</div>{% endfor %}</div>
+    <div class="form-actions"><button class="action-primary" type="submit">{% translate 'Confirm payment' %}</button><a class="quiet-action" href="{{ return_url }}">{% translate 'Cancel' %}</a></div>
 </form>
 <section id="invoice-payments" class="surface-panel space-y-4"><h2 class="section-title">{% translate 'Confirmed payments' %}</h2>
-    {% for payment in invoice.payments.all %}<div class="flex flex-wrap items-center justify-between gap-3 border-b border-forest/10 py-3 dark:border-cream/10"><span class="min-w-0">{{ payment.date|date:USER_DATE_FORMAT }} · {{ payment.account }} · {{ invoice.account.currency }} {{ payment.amount|floatformat:2 }}</span><div class="flex gap-2">{% url 'banking:invoice_payment_edit' payment.pk as edit_url %}<a class="quiet-action" href="{% contextual_url edit_url request.path 'invoice-payments' %}">{% translate 'Edit' %}</a><a class="quiet-action" href="{% url 'banking:invoice_payment_delete' payment.pk %}">{% translate 'Delete' %}</a></div></div>{% empty %}<p class="subtle-copy">{% translate 'No confirmed payments.' %}</p>{% endfor %}
+    {% for payment in invoice.payments.all %}<div class="flex flex-wrap items-center justify-between gap-3 border-b border-forest/10 py-3 dark:border-cream/10"><span class="min-w-0 break-words">{{ payment.date|date:USER_DATE_FORMAT }} · {{ payment.account }} · {{ invoice.account.currency }} {{ payment.amount|floatformat:2 }}</span><div class="flex gap-2">{% url 'banking:invoice_payment_edit' payment.pk as edit_url %}<a class="quiet-action" href="{% contextual_url edit_url invoice_context_url 'invoice-payments' %}">{% translate 'Edit' %}</a>{% url 'banking:invoice_payment_delete' payment.pk as delete_url %}<a class="quiet-action" href="{% contextual_url delete_url invoice_context_url 'invoice-payments' %}">{% translate 'Delete' %}</a></div></div>{% empty %}<p class="subtle-copy">{% translate 'No confirmed payments.' %}</p>{% endfor %}
 </section>
 {% endif %}
 <section class="surface-panel space-y-3"><h2 class="section-title">{% translate 'Invoice sources' %}</h2>
-    {% for item, amount in sources %}{% url 'transactions:update' item.pk as edit_url %}<p class="flex flex-wrap justify-between gap-3 border-b border-forest/10 py-3 dark:border-cream/10"><a class="quiet-action" href="{% contextual_url edit_url request.path 'invoice-summary' %}">{{ item.display_title }}</a><span class="tabular-nums">{{ invoice.account.currency }} {{ amount|floatformat:2 }}</span></p>{% empty %}<p class="subtle-copy">{% translate 'No editable purchase sources. Loyalty purchases may also contribute to this invoice.' %}</p>{% endfor %}
+    {% for item, amount in sources %}{% url 'transactions:update' item.pk as edit_url %}<p class="flex flex-wrap justify-between gap-3 border-b border-forest/10 py-3 dark:border-cream/10"><a class="quiet-action" href="{% contextual_url edit_url invoice_context_url 'invoice-summary' %}">{{ item.display_title }}</a><span class="tabular-nums">{{ invoice.account.currency }} {{ amount|floatformat:2 }}</span></p>{% empty %}<p class="subtle-copy">{% translate 'No editable purchase sources. Loyalty purchases may also contribute to this invoice.' %}</p>{% endfor %}
 </section>
 </div>
 {% endblock %}

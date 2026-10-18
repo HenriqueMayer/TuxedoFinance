@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.translation import override
 
 from banking.models import Bank, BankAccount, BankMovement, ExchangeRate
 from banking.services import ConversionContext
@@ -181,6 +182,20 @@ class PositionValuationTests(TestCase):
         self.asset.valuation_mode = 'MONETARY'
         with self.assertRaises(ValidationError):
             self.asset.full_clean()
+
+    def test_price_editor_translates_asset_and_preserves_bound_precision_errors(self):
+        values = {'asset': self.asset.pk, 'date': '2026-09-10',
+                  'unit_price': '118.23456789', 'source': ''}
+        with override('pt-br'):
+            form = PriceObservationForm(values, user=self.user)
+            self.assertEqual(str(form.fields['asset'].label), 'Ativo')
+            self.assertFalse(form.is_valid())
+            self.assertIn('source', form.errors)
+            self.assertEqual(form.cleaned_data['unit_price'], Decimal('118.23456789'))
+            self.assertEqual(form['unit_price'].value(), '118.23456789')
+            self.assertEqual(form.fields['unit_price'].widget.attrs['step'], '0.00000001')
+        with override('en'):
+            self.assertEqual(str(PriceObservationForm(user=self.user).fields['asset'].label), 'Asset')
 
     def test_current_value_survives_missing_historical_result_fx(self):
         self.asset.currency = 'EUR'

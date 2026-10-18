@@ -8,6 +8,8 @@
         <noscript><button class="action-link" type="submit">{% translate 'Filter' %}</button></noscript>
     </form>
     {% endif %}
+    {# Scope changes replace this whole island, including current results and their evidence warnings. #}
+    {% include 'investments/_performance.html' %}
     {% include 'investments/_fx_issues.html' %}
     {% if chart_unknown_baselines %}<p role="status" class="subtle-copy">{% translate 'Opening dates are unknown for part of this history. Holdings before the first recorded operation are assumed rather than dated evidence.' %}</p>{% endif %}
     {% if chart_missing_prices %}<p role="status" class="subtle-copy">{% translate 'Some historical unit positions have no dated price and are shown at remaining cost. This curve is not a complete market return series.' %}</p>{% endif %}
@@ -18,7 +20,7 @@
     {# {{ CURRENCY_SYMBOL }}, FX rate-at-time. Mirrors the Reports       #}
     {# chart-1 visual contract (neutral zero-line, investment stroke). #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 surface-panel" data-chart-selection>
+    <section id="investment-evolution" class="space-y-4 surface-panel" data-chart-selection>
         <div class="panel-heading items-start">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
                 <div class="label-with-help">
@@ -28,18 +30,18 @@
                     {% include 'partials/help_popover.html' with help_id='investment-evolution-help' help_label=chart_label help_text=chart_help %}
                 </div>
             </div>
-            <div class="flex min-w-0 flex-col gap-2 sm:items-end">
-                <div class="flex items-center gap-3">
+            <div class="period-navigation" data-period-navigation>
+                <div class="period-navigation-rail">
                 <a href="{% querystring total_offset=total_previous_offset_param %}"
                    hx-get="{% querystring total_offset=total_previous_offset_param %}"
                    hx-target="#investments-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Previous window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="icon-action">
                     &larr;
                 </a>
-                <div>
+                <div class="period-navigation-caption">
                     <p class="text-sm font-semibold text-forest dark:text-cream">
                         {{ total_window_start_date|date:'M Y' }} &ndash; {{ total_window_end_date|date:'M Y' }}
                     </p>
@@ -55,10 +57,11 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Next window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="icon-action">
                     &rarr;
                 </a>
                 </div>
+                <div class="period-navigation-reset">
                 {% if not is_total_anchored_today %}
                     <a href="{% querystring total_offset=0 %}"
                        hx-get="{% querystring total_offset=0 %}"
@@ -69,6 +72,7 @@
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
+                </div>
             </div>
         </div>
 
@@ -165,7 +169,7 @@
     {# Chart 2 — monthly flow (grouped bars): deposits, yields, withdrawals #}
     {# per month, both in {{ CURRENCY_SYMBOL }}, per-entry FX.          #}
     {# ---------------------------------------------------------------- #}
-    <section class="space-y-4 surface-panel" data-chart-selection>
+    <section id="investment-cashflow" class="space-y-4 surface-panel" data-chart-selection>
         <div class="panel-heading items-start">
             <div class="sm:max-w-md lg:max-w-lg xl:max-w-xl">
                 <div class="label-with-help">
@@ -174,18 +178,18 @@
                     {% include 'partials/help_popover.html' with help_id='investment-flow-help' help_label=chart_label help_template='investments/_flow_help.html' %}
                 </div>
             </div>
-            <div class="flex min-w-0 flex-col gap-2 sm:items-end">
-                <div class="flex items-center gap-3">
+            <div class="period-navigation" data-period-navigation>
+                <div class="period-navigation-rail">
                 <a href="{% querystring flow_offset=flow_previous_offset_param %}"
                    hx-get="{% querystring flow_offset=flow_previous_offset_param %}"
                    hx-target="#investments-charts"
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Previous window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="icon-action">
                     &larr;
                 </a>
-                <div>
+                <div class="period-navigation-caption">
                     <p class="text-sm font-semibold text-forest dark:text-cream">
                         {{ flow_window_start_date|date:'M Y' }} &ndash; {{ flow_window_end_date|date:'M Y' }}
                     </p>
@@ -201,10 +205,11 @@
                    hx-swap="outerHTML"
                    hx-push-url="true"
                    aria-label="{% translate 'Next window' %}"
-                   class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="icon-action">
                     &rarr;
                 </a>
                 </div>
+                <div class="period-navigation-reset">
                 {% if not is_flow_anchored_today %}
                     <a href="{% querystring flow_offset=0 %}"
                        hx-get="{% querystring flow_offset=0 %}"
@@ -215,6 +220,7 @@
                          {% translate 'Back to today' %}
                     </a>
                 {% endif %}
+                </div>
 
             </div>
         </div>

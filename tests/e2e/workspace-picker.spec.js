@@ -22,12 +22,13 @@ for (const theme of ['light', 'dark']) {
             await post(page, '/categories/create/', { name: `Keyboard category ${index}`, transaction_type: 'EXPENSE' });
         }
         await page.goto('/transactions/create/');
-        const kind = page.locator('#id_transaction_type');
-        await kind.selectOption('EXPENSE');
+        const kind = page.locator('#id_transaction_type input[value="EXPENSE"]');
+        await kind.press('Space');
         await kind.focus();
         const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
         const dockTop = (await navigation.boundingBox()).y;
-        await kind.evaluate((el, bottom) => window.scrollBy(0, el.getBoundingClientRect().bottom - bottom + 12), dockTop);
+        await kind.evaluate((el, bottom) => window.scrollBy(0,
+            el.closest('label').getBoundingClientRect().bottom - bottom + 12), dockTop);
         const input = page.locator('#category-search');
         // The optional split checkbox and contextual help also retain Tab
         // access; reach the picker through those controls without focusing it.

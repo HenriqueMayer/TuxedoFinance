@@ -40,7 +40,7 @@
                     <li class="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <div class="flex gap-2">
-                                <strong class="text-base font-semibold">{{ investment.asset.code }}</strong>
+                                <span class="bank-marker shrink-0" style="--bank-color:{{ investment.product.bank.color|default:'#B88D57' }}" aria-hidden="true"></span><strong class="text-base font-semibold">{{ investment.asset.code }}</strong>
                                 <span class="text-sm">{{ investment.get_kind_display }}</span>
                             </div>
                             <p class="text-xs text-forest/70 dark:text-night-muted">{{ investment.product.bank.name }} / {{ investment.product.name }} - {{ investment.date|date:USER_DATE_FORMAT }}</p>

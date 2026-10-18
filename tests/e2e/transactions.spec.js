@@ -100,7 +100,7 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     const category = await prepare(page, testInfo);
     await openFilters(page);
     await page.keyboard.press('Tab');
-    await expect(page.locator('#filter-category-search')).toBeFocused();
+    await expect(page.locator('#filter-date')).toBeFocused();
     await expect(typeCards(page).getByRole('link', { name: /^All/ })).toContainText('3');
     const expenses = typeCards(page).getByRole('link', { name: /^Expenses/ });
     await expenses.focus();
@@ -112,8 +112,16 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await expect(page).toHaveURL(/recurrence=fixed/);
     await expect(fixed).toHaveAttribute('aria-current', 'true');
     await expect(page.locator('#transaction-results-status')).toHaveText('1 transaction');
-    await selectChoice(page.locator('#filter-category'), category);
+    const legacyCategory = new URL(page.url());
+    legacyCategory.searchParams.set('category', category);
+    await page.goto(legacyCategory.pathname + legacyCategory.search);
     await expect(page).toHaveURL(new RegExp(`category=${category}`));
+    await expect(page.locator('#transaction-category-context')).toContainText('Navigation subscriptions');
+    await page.locator('#transaction-clear-category').press('Enter');
+    await expect(page).not.toHaveURL(/category=/);
+    await expect(page).toHaveURL(/recurrence=fixed/);
+    await page.goBack();
+    await expect(page.locator('#filter-category')).toHaveValue(category);
     await typeCards(page).getByRole('link', { name: /^Income/ }).click();
     await expect(page).not.toHaveURL(/category=/);
     await expect(page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByText('Installments')).toHaveCount(0);
@@ -136,6 +144,10 @@ test('transaction navigation preserves GET state, keyboard selection and browser
     await page.getByRole('link', { name: 'Clear filters', exact: true }).click();
     await expect(page).toHaveURL(/\/transactions\/$/);
     await expect(page.locator('#transaction-results-status')).toHaveText('3 transactions');
+    await page.locator('#filter-search').fill('Navigation subscriptions');
+    await expect(page.locator('#transaction-results-status')).toHaveText('2 transactions');
+    await page.locator('#filter-search').fill('Navigation bank');
+    await expect(page.locator('#transaction-results-status')).toHaveText('3 transactions');
     expect(errors).toEqual([]);
 });
 
@@ -153,7 +165,8 @@ for (const theme of ['light', 'dark']) {
             await expect(typeCards(page).getByRole('link').nth(1)).toContainText(mobile ? 'Receitas' : 'Income');
             await expect(page.locator('#transaction-extra-filters')).not.toHaveAttribute('open', '');
             await expect(page.locator('#transaction-extra-filters > summary')).toContainText(mobile ? 'Mais filtros' : 'More filters');
-            await expect(page.locator('#filter-category-search')).toBeHidden();
+            await expect(page.locator('#filter-category-search')).toHaveCount(0);
+            await expect(page.locator('#filter-category')).toBeHidden();
             await expect(page.locator('#filter-sort')).toBeHidden();
             await expect(page.locator('#filter-date')).toBeHidden();
             await expect(page.locator('#transaction-apply-filters')).toBeHidden();
@@ -162,10 +175,19 @@ for (const theme of ['light', 'dark']) {
             await page.screenshot({ path: testInfo.outputPath('transactions.png'), fullPage: true });
             await openFilters(page);
             await page.keyboard.press('Tab');
-            await expect(page.locator('#filter-category-search')).toBeFocused();
+            await expect(page.locator('#filter-date')).toBeFocused();
             await expect(page.locator('#filter-date')).toBeVisible();
             await expect(page.locator('#filter-sort')).toBeVisible();
             await expect(page.locator('#transaction-recurrence-options')).toBeVisible();
+            await expect(page.locator('#filter-month-trigger')).toHaveCSS('background-color',
+                await page.locator('#filter-search').evaluate(element => getComputedStyle(element).backgroundColor));
+            if (!mobile) {
+                const date = await page.locator('#filter-date').boundingBox();
+                const recurrence = await page.locator('#transaction-recurrence-options').boundingBox();
+                const sort = await page.locator('#filter-sort').boundingBox();
+                expect(Math.abs(date.y - recurrence.y)).toBeLessThanOrEqual(2);
+                expect(Math.abs(date.y - sort.y)).toBeLessThanOrEqual(2);
+            }
             await assertFits(page);
             await page.screenshot({ path: testInfo.outputPath('transactions-filters.png'), fullPage: true });
         });
@@ -176,7 +198,13 @@ test('transaction filtering works without JavaScript on mobile', async ({ browse
     const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     try {
-        await prepare(page, testInfo);
+        const category = await prepare(page, testInfo);
+        await page.goto(`/transactions/?category=${category}&type=EXPENSE`);
+        await page.locator('#filter-sort').selectOption('oldest');
+        await page.getByRole('button', {name: 'Apply filters'}).press('Enter');
+        await expect(page).toHaveURL(url => url.searchParams.get('category') === category && url.searchParams.get('sort') === 'oldest');
+        await page.locator('#transaction-clear-category').press('Enter');
+        await expect(page).toHaveURL(url => !url.searchParams.has('category') && url.searchParams.get('type') === 'EXPENSE');
         await typeCards(page).getByRole('link', { name: /^Expenses/ }).click();
         await openFilters(page);
         await page.getByRole('navigation', { name: 'Recurrence', exact: true }).getByRole('link', { name: /^Fixed/ }).click();
@@ -231,7 +259,7 @@ test(`transaction updates retain viewport and focus at ${width}px`, async ({ pag
 
     // Deliberate navigation to another page still starts at that destination.
     const origin = requestPath(page.url());
-    await page.getByRole('link', { name: 'New Transaction', exact: true })
+    await page.getByRole('link', { name: 'New transaction', exact: true })
         .evaluate(element => element.focus({ preventScroll: true }));
     await page.keyboard.press('Enter');
     await expectContextualDestination(page, '/transactions/create/', origin);

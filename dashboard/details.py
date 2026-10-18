@@ -38,6 +38,7 @@ def composition(user, query, *, conversion=None):
         year, month = map(int, period.split('-'))
         targets = [(year, month)]
     last = _month_end(*max(targets))
+    cutoff = date.fromisoformat(query['cutoff']) if query.get('cutoff') else None
     missing = set()
     totals = defaultdict(lambda: Decimal('0'))
     sources = defaultdict(dict)
@@ -96,10 +97,11 @@ def composition(user, query, *, conversion=None):
                 continue
             # A position is wealth remaining at the plotted cutoff, not the
             # sum of purchase/resale proceeds. Its context includes all owned
-            # operations for this pair rather than an arbitrary single editor.
+            # operations through the plotted cutoff for this pair rather than
+            # an arbitrary editor or later activity outside the shown value.
             url = reverse('investments:operations') + '?' + urlencode({
                 'section': 'cash' if product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH else 'portfolio',
-                'product': product.pk, 'asset': asset.pk,
+                'product': product.pk, 'asset': asset.pk, 'date_to': last.isoformat(),
             })
             add(f'{product.bank.name} > {product.name} > {asset.name}', value,
                 f'position:{product.pk}:{asset.pk}', asset.name, url, _('Open investment operations'))
@@ -158,12 +160,12 @@ def composition(user, query, *, conversion=None):
                 url = reverse('transactions:update', args=[item.pk])
                 action = _('Open transaction')
             for year, month in targets:
-                if query.get('cutoff'):
+                if cutoff is not None:
                     occurrence = _transaction_occurrence_date(item, year, month)
-                    if occurrence is None or occurrence > date.fromisoformat(query['cutoff']):
+                    if occurrence is None or occurrence > cutoff:
                         continue
                 for category, value in _transaction_category_values(
-                    user, item, year, month, missing, conversion=conversion,
+                    user, item, year, month, missing, cutoff=cutoff, conversion=conversion,
                 ):
                     if query.get('category') and category.pk != query['category']:
                         continue
@@ -173,7 +175,7 @@ def composition(user, query, *, conversion=None):
             for year, month in targets:
                 bank_sources = []
                 _total, absent = _banking_expenses_for_month(user, year, month,
-                    sources=bank_sources, conversion=conversion)
+                    cutoff=cutoff, sources=bank_sources, conversion=conversion)
                 for item, value in bank_sources:
                     if isinstance(item, LoyaltyEntry):
                         name = _('Points purchase: %(name)s') % {'name': item.program.name}

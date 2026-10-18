@@ -3,6 +3,7 @@ from hashlib import sha256
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 
 from django.contrib.staticfiles import finders
 from django.http import HttpResponse
@@ -120,3 +121,15 @@ class FrontendAssetTests(SimpleTestCase):
 
         response = FrontendAssetsMiddleware(declared_redirect)(self.factory.get('/draft/'))
         self.assertEqual(response['HX-Redirect'], '/saved-draft/')
+
+    def test_authenticated_html_is_private_and_not_stored_in_http_caches(self):
+        middleware = FrontendAssetsMiddleware(lambda request: HttpResponse('private financial HTML'))
+        for request in (self.factory.get('/banking/'), self.factory.post('/transactions/', {'amount': 'invalid'})):
+            request.user = SimpleNamespace(is_authenticated=True)
+            response = middleware(request)
+            for directive in ('no-cache', 'no-store', 'private'):
+                self.assertIn(directive, response['Cache-Control'])
+            self.assertNotIn('public', response['Cache-Control'])
+        public = middleware(self.factory.get('/'))
+        self.assertNotIn('no-store', public['Cache-Control'])
+        self.assertNotIn('private', public['Cache-Control'])

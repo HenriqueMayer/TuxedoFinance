@@ -6,6 +6,65 @@
     const disclosures = new WeakMap();
     const normalize = value => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase();
 
+    function paymentChoice(option, kind, selected = false) {
+        const hex = value => /^#[0-9a-f]{6}$/i.test(value || '') ? value : null;
+        const svgElement = (name, attributes = {}) => {
+            const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+            Object.entries(attributes).forEach(([attribute, value]) => node.setAttribute(attribute, value));
+            return node;
+        };
+        const art = document.createElement('span');
+        art.className = 'payment-choice-art';
+        art.dataset.choiceKind = kind;
+        art.setAttribute('aria-hidden', 'true');
+        const icon = svgElement('svg', {
+            viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+            'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+            'aria-hidden': 'true', focusable: 'false', class: 'payment-choice-icon',
+        });
+        if (kind === 'card') {
+            const start = hex(option.dataset.cardColor) || '#253330';
+            const end = hex(option.dataset.cardGradientEnd) || start;
+            const angle = Number(option.dataset.cardGradientAngle);
+            const direction = Number.isFinite(angle) && angle >= 0 && angle <= 359 ? angle : 135;
+            art.style.background = `linear-gradient(${direction}deg, ${start}, ${end})`;
+            if (selected) art.classList.add('entry-card-art');
+            icon.append(svgElement('rect', {x: 3, y: 5, width: 18, height: 14, rx: 3}),
+                svgElement('path', {d: 'M9 5v14m6-14v14M3 10h6m6 0h6M3 14h6m6 0h6'}));
+        } else if (kind === 'pix') {
+            icon.append(svgElement('path', {d: 'm12 3 4.5 4.5h-2L12 10 9.5 7.5h-2L12 3Zm0 18-4.5-4.5h2L12 14l2.5 2.5h2L12 21Z'}),
+                svgElement('path', {d: 'm6 9-3 3 3 3h3l3-3 3 3h3l3-3-3-3h-3l-3 3-3-3H6Z'}));
+        } else {
+            icon.append(svgElement('path', {d: 'M3 9h18L12 3 3 9Zm2 3v6m7-6v6m7-6v6M3 21h18'}));
+        }
+        art.append(icon);
+        const copy = document.createElement('span');
+        copy.className = 'payment-choice-copy';
+        const name = document.createElement('span');
+        name.className = 'payment-choice-name';
+        name.textContent = option.dataset.choiceName || option.text;
+        const detail = document.createElement('span');
+        detail.className = 'payment-choice-detail';
+        const bankColor = hex(option.dataset.bankColor);
+        if (bankColor) {
+            const marker = document.createElement('span');
+            marker.className = 'payment-choice-bank-dot';
+            marker.style.backgroundColor = bankColor;
+            marker.setAttribute('aria-hidden', 'true');
+            detail.append(marker);
+        }
+        const detailText = document.createElement('span');
+        detailText.className = 'payment-choice-detail-text';
+        detailText.textContent = option.dataset.choiceDetail || '';
+        detail.append(detailText);
+        if (selected && kind === 'card') {
+            name.dataset.entryCardName = '';
+            detail.dataset.entryCardContext = '';
+        }
+        copy.append(name, detail);
+        return [art, copy];
+    }
+
     function setHidden(group, hidden, preserveErrors = true) {
         if (!group) return;
         if (hidden && !preserveErrors) {
@@ -41,21 +100,23 @@
         labels.forEach(label => { label.htmlFor = select.id; });
         if (select.disabled) { select.hidden = false; return; }
         const multiple = select.multiple;
+        const paymentChoices = select.hasAttribute('data-payment-choices');
         const label = labels[0];
         const name = select.getAttribute('aria-label') || (label && label.textContent.trim()) || select.name;
         const root = document.createElement('div');
         root.className = 'search-choice space-y-2';
+        if (paymentChoices) root.classList.add('search-choice--payment');
         const input = document.createElement('input');
         input.id = searchId;
         input.type = 'search';
         input.autocomplete = 'off';
         input.className = select.className;
-        input.placeholder = strings.search;
+        input.placeholder = paymentChoices ? strings.paymentSearch : strings.search;
         if (!label) input.setAttribute('aria-label', name);
         const help = document.createElement('p');
         help.id = `${input.id}-help`;
         help.className = 'search-choice-help';
-        help.textContent = multiple ? strings.multipleHelp : strings.help;
+        help.textContent = multiple ? strings.multipleHelp : paymentChoices ? strings.paymentHelp : strings.help;
         const status = document.createElement('p');
         status.id = `${input.id}-selection`;
         // A single choice already shows its value in the input. Keep its live
@@ -89,6 +150,19 @@
         let items = [];
         let editing = false;
         let revealFrame;
+        let paymentAvailable = false;
+        let paymentKind = select.dataset.paymentKind || 'account';
+        function syncPaymentSelection() {
+            if (!paymentChoices) return;
+            const kind = select.dataset.paymentKind || 'account';
+            items.forEach((item, index) => {
+                if (!multiple) {
+                    const selected = matches[index].selected;
+                    item.setAttribute('aria-selected', String(selected));
+                    item.toggleAttribute('data-entry-card-preview', kind === 'card' && selected);
+                }
+            });
+        }
 
         function revealResults() {
             cancelAnimationFrame(revealFrame);
@@ -137,12 +211,16 @@
             return Array.from(select.selectedOptions).filter(option => option.value).map(option => option.text).join(', ');
         }
         function close() {
-            list.hidden = !multiple;
-            if (!multiple) input.setAttribute('aria-expanded', 'false');
+            // Payment instruments are a persistent choice board. Focus only
+            // controls its keyboard cursor; it never hides available records.
+            list.hidden = !multiple && !paymentChoices;
+            if (!multiple) input.setAttribute('aria-expanded', String(paymentChoices));
             input.removeAttribute('aria-activedescendant');
             active = -1;
             editing = false;
-            if (!multiple) input.value = committedText();
+            if (!multiple && !paymentChoices) input.value = committedText();
+            if (paymentChoices) markActive();
+            syncPaymentSelection();
         }
         function sync() {
             const text = committedText();
@@ -155,10 +233,14 @@
             const describedBy = (select.getAttribute('aria-describedby') || '').split(/\s+/)
                 .filter(id => id && document.getElementById(id));
             input.setAttribute('aria-describedby', [...describedBy, help.id, status.id].join(' '));
-            if (!multiple && !editing) input.value = text;
+            if (!multiple && !paymentChoices && !editing) input.value = text;
+            syncPaymentSelection();
         }
         function markActive() {
-            items.forEach((item, index) => item.setAttribute('aria-selected', String(index === active)));
+            items.forEach((item, index) => {
+                if (paymentChoices) item.toggleAttribute('data-active', index === active);
+                else item.setAttribute('aria-selected', String(index === active));
+            });
             if (active < 0) input.removeAttribute('aria-activedescendant');
             else {
                 const item = items[active];
@@ -174,12 +256,17 @@
         function choose(option) {
             if (!option || option.hidden || option.disabled) return;
             select.value = option.value;
+            if (paymentChoices) {
+                input.value = '';
+                editing = false;
+                render();
+            }
             close();
             select.dispatchEvent(new Event('change', { bubbles: true }));
             sync();
         }
         function matchingOptions() {
-            const query = normalize(editing || multiple ? input.value.trim() : '');
+            const query = normalize(editing || multiple || paymentChoices ? input.value.trim() : '');
             return Array.from(select.options).filter(option => option.value && !option.hidden && !option.disabled
                 && !option.closest('optgroup[disabled]')
                 && normalize(option.dataset.search || option.text).includes(query));
@@ -198,9 +285,15 @@
                     checkbox.type = 'checkbox';
                     checkbox.checked = option.selected;
                     checkbox.className = 'h-4 w-4 accent-caramel';
-                    const text = document.createElement('span');
-                    text.textContent = option.text;
-                    item.append(checkbox, text);
+                    if (paymentChoices) {
+                        // Native checkboxes remain the only selection controls.
+                        checkbox.setAttribute('aria-label', option.text);
+                        item.append(checkbox, ...paymentChoice(option, select.dataset.paymentKind || 'account'));
+                    } else {
+                        const text = document.createElement('span');
+                        text.textContent = option.text;
+                        item.append(checkbox, text);
+                    }
                     checkbox.addEventListener('change', () => {
                         option.selected = checkbox.checked;
                         select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -209,7 +302,12 @@
                 } else {
                     item.role = 'option';
                     item.setAttribute('aria-selected', 'false');
-                    item.textContent = option.text;
+                    if (paymentChoices) {
+                        // Decorative payment artwork does not alter the native
+                        // record label or the shared combobox keyboard contract.
+                        item.setAttribute('aria-label', option.text);
+                        item.append(...paymentChoice(option, select.dataset.paymentKind || 'account', option.selected));
+                    } else item.textContent = option.text;
                     item.addEventListener('pointerdown', event => event.preventDefault());
                     item.addEventListener('click', () => choose(option));
                 }
@@ -225,6 +323,7 @@
             }
             list.hidden = false;
             if (!multiple) input.setAttribute('aria-expanded', 'true');
+            syncPaymentSelection();
         }
         input.addEventListener('focus', () => {
             if (!multiple) { input.select(); render(); }
@@ -235,6 +334,7 @@
             if (event.isComposing) return;
             if (event.key === 'Escape' || (!multiple && event.key === 'Tab')) {
                 if (event.key === 'Escape') event.preventDefault();
+                if (paymentChoices && event.key === 'Escape') { input.value = ''; render(); }
                 close();
                 return;
             }
@@ -259,13 +359,27 @@
             Array.from(select.options).forEach(option => { option.selected = false; });
             if (!multiple) select.value = '';
             close();
-            if (multiple) { input.value = ''; render(); }
+            if (multiple || paymentChoices) { input.value = ''; render(); }
             select.dispatchEvent(new Event('change', { bubbles: true }));
             sync();
             input.focus();
+            if (paymentChoices) { render(); revealResults(); }
         });
         const api = { sync, close, revealResults, refresh: () => {
             sync();
+            if (paymentChoices) {
+                const available = Boolean(root.getClientRects().length && !select.disabled);
+                const kind = select.dataset.paymentKind || 'account';
+                // A deliberately changed channel starts with its complete
+                // compatible board; ordinary blur/background refresh keeps
+                // the current query and committed native record untouched.
+                if (available && (!paymentAvailable || kind !== paymentKind)) {
+                    input.value = '';
+                    editing = false;
+                }
+                paymentAvailable = available;
+                paymentKind = kind;
+            }
             if (multiple) {
                 const next = matchingOptions();
                 if (next.length !== matches.length || next.some((option, index) => option !== matches[index])) render();
@@ -278,7 +392,8 @@
         } };
         pickers.set(select, api);
         sync();
-        if (multiple) render(); else close();
+        if (multiple || paymentChoices) render(); else close();
+        if (paymentChoices) api.refresh();
     }
 
     function init() {

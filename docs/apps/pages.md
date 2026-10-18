@@ -9,17 +9,19 @@ appropriate public or authenticated navigation.
 
 The homepage contains two sections:
 
-1. **Introduction:** Tuxedo Finance, one factual description, access links, and
-   the existing horizontal cat photograph, shown in full without stretching.
-   A double rounded frame uses thin forest/cream borders, a translucent glass
-   mat, and a subtle caramel ambient glow. The frame is 4:3 on mobile and 16:10
-   from `sm` upward; the photograph keeps its native 2814:1536 ratio inside it.
-   Padding accommodates a gentle 1.02 hover zoom without clipping the image;
-   reduced-motion preferences disable that animation. Text and image sit side
-   by side at desktop widths and stack with text first on smaller screens.
-2. **Features:** six definition-list rows separated by subtle lines, covering
+1. **Introduction:** product identity, factual description, access links and the
+   approved Paper Layers bow tie. Its five planes reveal a workspace index on
+   hover or deliberate click, touch, Enter or Space activation. The index links
+   to feature descriptions for visitors and the corresponding workspace for
+   authenticated users. The shared `static/js/paper-layers.js` engine handles
+   focus, motion preferences and HTMX cleanup; without JavaScript, the static
+   illustration and native index links remain visible. Text and illustration
+   sit side by side on desktop and stack on smaller screens.
+   The headline is “Your finances, made clear.” / “Suas finanças de forma clara.”;
+   the restrained underline remains on “clear” / “clara”.
+2. **Features:** seven definition-list items separated by subtle lines, covering
    transactions/categories, accounts/cards, recurrences/installments,
-   investments, reports, and salary planning. Investment operations are
+   investments, reports, budgets/goals and salary planning. Investment operations are
    described separately from income and expenses.
 
 The page copy contains no invented balances, promotional cards, motivational slogans,
@@ -32,7 +34,7 @@ Visitors see Log in and, only when `ALLOW_SIGNUPS=True`, Create account.
 Authenticated users see Open dashboard. Signup enforcement remains in the
 accounts view. Logging out still redirects here.
 
-All fixed copy and the image alternative text are translated in English and
+All fixed copy and the illustration's accessible labels are translated in English and
 Brazilian Portuguese. Both themes use the shared design system; the light
 palette is unchanged and the dark theme uses black/graphite foundations.
 Navigation and access links work without JavaScript.
@@ -40,9 +42,11 @@ Navigation and access links work without JavaScript.
 ## Shared form rendering
 
 The presentation helper `pages.templatetags.form_ui.form_control` supports the
-shared form-field partial across apps. It preserves native Django widgets and
-error/help associations, automatically marking model choices for the shared
-keyboard-search enhancement. See the
+shared form-field partial across apps. It adds the common `entry-input` style to
+ordinary fields while preserving native widget types, values, precision and
+error/help associations. Specialized controls retain their own presentation;
+model choices are automatically marked for the shared keyboard-search
+enhancement. See the
 [form contract](../frontend.md#keyboard-and-choice-contract).
 
 

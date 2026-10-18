@@ -2,11 +2,27 @@
 
 The current design-system release preserves the server-rendered Django
 Template Language and precompiled Tailwind CSS visual system. There is no SPA, JavaScript
-framework or client-side chart library. Theme persistence, boosted link
-navigation and HTMX chart-island swaps remain the deliberately narrow JavaScript
-layer. User-submitted mutations use CSRF-protected POSTs, and filters have
+framework or client-side chart library. Shared JavaScript progressively enhances
+navigation/history, record choices, dates, live filters, payment appearance,
+category allocation, chart inspection and the homepage illustration. Native
+controls and server-rendered responses remain the source of truth.
+User-submitted mutations use CSRF-protected POSTs, and filters have
 plain GET fallbacks. Some page reads synchronize derived ledger records before
 rendering; see [request-time synchronization](architecture.md#request-time-synchronization).
+
+Use the [interface map](interface-map.md) for routes and component ownership.
+This guide owns interaction protocols; app guides describe their financial
+meaning and exceptions. Dated audit outcomes belong in [reviews](reviews/README.md).
+
+| Working on | Start here |
+|---|---|
+| Application styling and layout | [Editorial adoption](#editorial-application-adoption), [visual language](#visual-language), [responsive behavior](#responsiveness-and-accessibility) |
+| Fields, conditional groups and errors | [Keyboard and choices](#keyboard-and-choice-contract), [conditional recovery](#conditional-fields-and-recovery), [complete dates](#shared-complete-date-dialog) |
+| Search, filtering and months | [Live filters](#live-consultation-filters), [consultation bars](#compact-consultation-bars-and-month-names) |
+| Navigation, return context and drafts | [Root navigation](#root-layout-and-navigation), [location](#preserve-the-users-location), [previous-screen continuity](#previous-screen-continuity-and-balance-ranges), [private history](#private-history) |
+| Help, menus and charts | [Question-mark help](#question-mark-help), [row actions](#compact-row-action-menus), [reports/charts](#reports-and-charts) |
+| Visual examples and local interactions | [Canonical catalogue](#canonical-design-catalogue) |
+| Build, translation and verification commands | [Contributing](../CONTRIBUTING.md) |
 
 Tailwind CSS is generated ahead of time into `static/css/app.css`, so full-page
 navigation never waits for browser-side class discovery or CSS compilation. The
@@ -49,6 +65,401 @@ investment movement island updates filters independently while preserving scroll
 and focus. Explicit pagination links return to the beginning of the movement
 section instead of the top of the page; plain GET links and the section anchor
 provide the no-JavaScript fallback.
+
+### Private history
+
+The shell disables HTMX DOM snapshots with `hx-history="false"` and requests
+full HTML on history restoration (`historyRestoreAsHxRequest=false`). An HTML
+snapshot indexed only by URL can reveal the previous account after logout and
+another login in the same tab. The runtime discards the legacy HTMX session
+cache at initialization and before history traversal. Cache-miss requests carry
+the document's asset revision, and login/asset redirects finish with native GETs
+so the URL, document head and form targets remain coherent.
+
+Authenticated HTML also uses `Cache-Control: private, no-store, no-cache`.
+The browser's separate BFCache can restore a frozen document without loading
+scripts again: on a persisted page hide, the document is hidden; on a persisted
+page show, a native replacement GET reauthorizes it. A GET is deliberate because
+reloading a frozen POST validation response could resubmit that operation.
+
+Back/Forward therefore reauthorizes through the server. The small form/location
+snapshots owned by `previous-workspace.js` remain scoped to user, date format,
+language and asset revision and apply over freshly authorized content. They do
+not replay POSTs. The native persisted-return path restores them only after that
+fresh GET and a matching identity. The contract does not promise remote
+revocation of content already displayed or of an old offline document.
+
+Browsers can also restore live form values onto fresh HTML, independently of
+both caches. Editable private POST forms use `autocomplete="off"` to prevent
+that native draft restoration, including without JavaScript. History recovery
+resets controls to the authorized HTML defaults before applying a matching
+workspace snapshot; bound server errors and values remain the defaults.
+Without JavaScript, Back/autofill no longer recovers private unsent drafts;
+ordinary submissions and server-rendered validation recovery still work.
+Login/signup retain their explicit authentication autocomplete behavior.
+
+## Editorial application adoption
+
+The validated catalogue direction applies across the public homepage,
+authentication, five workspaces and their secondary editors. The
+[interface map](interface-map.md) records every route family, shared control and
+domain exception. Django templates, owned records, financial validation and
+existing URLs continue to define the application; styling does not enable
+features still behind a review gate.
+
+`assets/css/interface.css` supplies the product-wide presentation under
+`body.tuxedo-ui`: neutral surfaces with 14px corners, thin ledger dividers,
+44px actions with balanced 12px corners, compact fields with 8px corners and
+readable focus/error states in both themes. `workspace-form`,
+`workspace-form-page` and `form-actions` organize secondary editors without
+changing their controls or submission behavior. `form_control` adds `entry-input`
+to ordinary widgets while retaining their original types, attributes, precision,
+names and IDs. Hidden controls, native radio/checkbox groups, files and color
+widgets keep their separate presentation. Handwritten controls use the same
+shared classes. Do not copy a competing picker or add per-page pill actions.
+Investment and planning editors additionally use `finance-entry-page` and
+`finance-entry-form` for a shared sheet up to 56rem. `finance-entry-grid` groups
+related short fields in two columns from 640px and stacks them on smaller
+screens; `finance-entry-wide` keeps descriptions and record choices readable.
+`finance-entry-section` separates funding, initial values and reservations with
+a thin divider. Preserve DOM reading order, conditional owners and errors;
+layout must never reveal a hidden group or change a submitted identifier.
+Long user-entered names must wrap within headings and flex/grid children without
+displacing their adjacent action. Ordinary record-choice results wrap the full
+label inside the list and retain 44px targets; the committed search input stays
+single-line; payment miniatures retain their separate compact presentation.
+Small-screen row menus must fit the viewport, including when a
+long row name moves its actions onto another line.
+Complete registrations use named `finance-entry-group` fieldsets for identity,
+valuation/opening and funding. Their native legends replace extra nested cards;
+optional details remain deliberate disclosures, open when errors need recovery.
+Planning tools reuse the same entry width while comparison tables keep the full
+workspace width and scroll within labelled, keyboard-accessible regions.
+Single boolean fields use the existing `entry-checkbox-choice` row automatically:
+the native checkbox sits beside its label and contextual help, with a 44px row
+and unchanged checked values, keyboard behavior and rendered error recovery.
+Secondary editor Cancel links use `quiet-action`; destructive confirmations
+group their explanation and original POST actions in one shared surface panel.
+Feedback that quotes a user-entered record name wraps inside its notice panel,
+including names without spaces; it must not widen the document on a phone.
+Keep the measure in confirmation summaries appropriate to the record: monetary
+operations show money, unit operations retain their quantity precision, and
+loyalty entries use translated directions with their program's unit name.
+
+The application shell uses the same five direct destinations on its desktop
+sidebar and mobile bottom navigation: Home, Transactions, Accounts, Investments
+and Plan. Icons, labels, quieter surfaces and restrained active/hover feedback
+follow the Workspace specimen; decorative destination numbers are omitted.
+Section tabs retain each workspace's
+secondary destinations. Deliberate user menus, native links, shared Back/Forward,
+HTMX focus/scroll recovery and private-history reauthorization keep their
+existing contracts. Bank-colored markers continue to identify institutions;
+navigation styling never substitutes color for a destination or financial state.
+
+The transaction sheet follows the catalogue's compact reading order and uniform
+controls while retaining category splits, recurrence, installments, invoice
+selection, account/card metadata, contextual Save/Cancel and rendered Django
+errors. Only `transaction_type` and `payment_channel` use the native
+`SegmentedChoice` radio widget. Their fieldsets have real legends and individual
+option labels; visual selection and focus do not resize their targets. New
+groups remain unselected unless an owned shortcut explicitly supplies context.
+Bound invalid POSTs and edited records retain their choices. Native form POSTs
+remain complete without JavaScript.
+
+With JavaScript, Add category sits immediately after its allocation rows and
+before payment controls in both visual and Tab order. It is a non-submit action.
+The server HTML keeps its native Add fallback after Save, so Enter in an ordinary
+field still submits Save when JavaScript is unavailable.
+
+Categories, accounts, debit cards and credit cards remain owned Django model
+choices enhanced by the existing `static/js/forms.js` searchable picker. The
+payment fields opt in with `data-payment-choices`: revealing a channel shows
+that same listbox as persistent illustrated options, without moving
+focus or scrolling. Account and PIX options use their respective icons plus the
+bank's color marker, account name, institution and currency. Card options use
+their saved colors/gradient, nickname and account context. A separate compact
+44px search field filters these options; blur and Tab keep its query and results
+visible. Arrow/Enter selects explicitly, clears the filter and shows the complete
+compatible board. Escape clears only the filter and keyboard cursor, preserving
+the selected record. `aria-selected` identifies the committed payment option;
+`data-active` and `aria-activedescendant` identify its separate keyboard cursor.
+Ordinary model pickers keep their existing close-on-blur contract. Channel
+changes retain PIX eligibility filtering and clear incompatible card choices.
+The illustrations never introduce a second picker or automatically choose a
+record. Text remains on a neutral surface, independently of custom colors;
+native option labels, identifiers, ownership and no-JavaScript POSTs are intact.
+Custom gradients use the shared contrast protection described under
+[card appearance](#card-appearance).
+
+The same opt-in applies to banking editors, including linked loyalty cards,
+points-purchase funding, invoice selection and redemption/IOF instruments.
+`assets/css/payment-choices.css` owns the shared artwork and board presentation;
+it is not restricted to the transaction sheet. A multiple-card field retains a
+labelled group of native checkboxes, rather than becoming a single-choice
+listbox. Tab reaches each visible checkbox and Space toggles it; filtering and
+clearing the query preserve selected records outside the results. An explicit
+Clear selection action retains its separate meaning. Full native option labels,
+safe server-provided metadata and unlocalized identifiers remain the submitted
+source of truth.
+
+### Transaction amount entry
+
+Only the transaction total opts in with `data-money-input` to
+`static/js/money-input.js`. With JavaScript, digits fill cents from the right:
+`1234` becomes `12.34` in English or `12,34` in Brazilian Portuguese. Existing
+amounts and explicit decimal pastes retain their monetary value. Formatting uses
+decimal strings, never floating-point financial arithmetic. The same named
+control remains the form's value and history field; native form-data creation
+converts valid display text to the canonical decimal expected by Django.
+Invalid text stays available for server validation. Without JavaScript, the
+original native number field accepts ordinary decimal amounts. Split allocation
+amounts and unrelated financial forms retain their current entry behavior.
+Enhancement runs before the navigation snapshot records a swapped form, so
+formatting alone cannot trigger an unsaved-operation warning. Exact parsing and
+editing cases run with `node --test tests/tooling/money-input.test.cjs`; real
+keyboard, native POST and visual-choice coverage lives in
+`tests/e2e/payment-choice-visuals.spec.js`.
+
+### Shared complete-date dialog
+
+`static/js/date-picker.js` is the single calendar engine for both the application
+and catalogue. Every complete-date field configured through
+`core.dates.configure_date_fields` opts in with `data-date-picker="true"`.
+Month-only consultation retains its dedicated component. The original
+preferred-date text input, its name, invalid bound
+text and the user's DMY/MDY format remain intact. The existing helper continues
+to hold an ISO date, and server parsing still accepts the preferred format or
+ISO. Calendar arithmetic uses UTC components without converting stored calendar
+dates between time zones.
+
+A click anywhere in an opted-in field, Enter, Space, Alt+ArrowDown or the existing
+Select date button opens one native modal `dialog#date-picker`. Tab arrival does
+not open it, and ordinary text editing remains available. The trigger intercepts
+the native helper only for enhanced fields; without JavaScript or modal-dialog
+support, the original preferred-date/native-helper behavior remains available.
+The 42-day grid, month/year jumps, roving keyboard focus, missing-day clamping,
+min/max bounds, Today and Clear use the same behavior as the catalogue calendar.
+Committing a choice updates preferred text and the ISO helper, then emits `input`
+and `change`; POST forms still require Save, while consultation retains its
+existing live GET behavior. Escape, outside dismissal and
+Close preserve the entered value and restore usable owner focus without
+scrolling. Hiding, disabling, resetting or replacing the owner closes its dialog.
+
+Initialization is idempotent after full loads, HTMX loads and history recovery.
+Unrelated HTMX updates preserve an open owner, while a swap replacing that field
+closes its dialog. Closed calendars retain no selected-day grid, and no calendar
+state is stored in browser storage. Application labels come from the translated
+`partials/form_ui_strings.html`; month/day names follow the document language.
+`assets/css/date-picker.css` is compiled with the application stylesheet and
+provides both themes, viewport bounds, touch targets and reduced motion. Browser
+coverage does not certify assistive-technology interoperability; separate manual
+screen-reader checks remain necessary.
+
+<a id="catalogue-visual-experiment"></a>
+
+## Canonical design catalogue
+
+The [visual catalogue](design-system.html#public-homepage) contains the approved
+public homepage, workspace frame and entry sheet alongside component specimens.
+It uses adjacent `design-system.css`, `design-system.js`,
+`design-system-layers.js` and the compatibility wrapper
+`design-system-calendar.js`; the application does not load these catalogue
+files. The calendar wrapper delegates to `static/js/date-picker.js`; the Paper
+Layers wrapper delegates to `static/js/paper-layers.js`, also used by the public
+homepage. Their catalogue IDs and styles stay independent. Inter and the semantic
+palette remain unchanged. Award
+references and adaptation notes are
+linked inside the catalogue; their historical recognition is not a claim about
+the projects' current versions. The static HTML references these assets with
+their first 12 SHA-256 digits as a query version; refresh those values when the
+assets change to avoid stale review sessions.
+
+Paper Layers is the sole homepage illustration. Five complete local SVG planes
+rotate smoothly from a large, centered horizontal bow tie into a vertical
+workspace structure: left paper, ledger rules, knot, contour rings and right
+paper correspond to Home, Transactions, Accounts, Investments and Plan. Hovering
+the painted bow tie reveals the five workspace descriptions and native preview
+links; empty illustration space does not activate a hover preview. A stable,
+invisible folded silhouette keeps rotation from losing the entering pointer.
+The index retains its layout space while closed, but is invisible, inert and
+excluded from accessibility navigation. Pointer travel from the drawing to its
+links keeps it open. Leaving the combined region closes a mouse-only preview;
+deliberate activation or focus inside the index keeps it open. This homepage
+hover disclosure does not change the primary application's deliberate navigation
+contract.
+
+With JavaScript, the SVG itself becomes a focusable, labelled `role="button"`
+control. Click, touch, Enter and Space toggle the map; there is no separate
+textual toggle. Its `aria-expanded` reflects actual map visibility,
+`aria-pressed` reflects deliberate pinning and `aria-controls` identifies the
+index. Escape returns focus from an index link to the SVG before closing the map. Size and motion
+preference resets preserve visible keyboard focus without scrolling. Offscreen
+navigation to a chosen workspace leaves focus alone so it cannot pull the page
+back to the artwork. Deliberate closure cannot immediately reopen under a
+stationary pointer while the drawing folds.
+
+The desktop composition moves the drawing beside the stationary index; compact
+layouts keep it centered above the links. Link hover/focus highlights the matching
+plane and connector, with visible keyboard focus taking precedence over a parked
+mouse. A short index fade and bounded pointer parallax do not move link text or
+hit targets. Native preview links reveal their destination before normal anchor
+navigation, preserving URLs, history and modified-click behavior. Connector
+endpoints are cached with a ResizeObserver. One bounded `requestAnimationFrame`
+loop updates SVG transforms and paths, stopping when settled, offscreen or on
+window deactivation. Reduced motion keeps a static diagram and instant map
+revelation through hover or SVG activation, without animation frames. Without
+JavaScript the complete drawing and a native five-link workspace index remain
+available. Copy describes features and actions directly; the accent under
+“clear” remains decorative.
+
+The validated [Workspace example](design-system.html#navigation) is the only
+catalogue shell. The former `#shell` destination remains an alias of
+`#navigation`; the obsolete shell and mobile overlay specimen are removed.
+Five native links choose contained Home, Transactions, Accounts, Investments and
+Plan examples with JavaScript and retain their anchor destinations without it.
+The account options use a deliberate native `details.lab-account-menu`
+disclosure. The toolbar calls this section Workspace and the shared component
+examples Patterns; section numbering runs from 00 / Homepage through 13 / Design
+decisions. These catalogue labels do not rename application workspaces.
+During native Back/Forward, the catalogue reveals the selected view on
+`popstate`, before the browser restores its persisted position; `hashchange`
+also handles ordinary fragment navigation. This follows the browser's
+[history event order](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event#when_popstate_is_sent)
+and avoids restoring against a hidden example. The catalogue does not force a
+scroll position or replace native history restoration.
+
+The catalogue represents components through their meaningful states, variants
+and local interactions. A quieter presentation must retain domain information,
+institution identity, financial warnings and usable controls rather than reduce
+each workspace to generic cards. The Accounts example uses native
+`details.bank-overview-card.lab-bank-overview` disclosures to reveal each bank's
+accounts and cash totals. The existing `--bank-color` edge and `.bank-marker`
+accompany a textual bank name; `.bank-bookmark` identifies the bank on the
+separate invoice example. These markers convey institution identity, not payment
+status, and never replace readable labels. Synthetic cash balances and card debt
+remain distinct. Opening a bank disclosure shows local sample detail; it does
+not navigate, settle an invoice or imply a backend write. Application bank
+overview links retain their existing navigation.
+
+Catalogue CTAs center their label/icon group, use a 12px radius and retain a 44px
+minimum target. Brief color, border and click feedback may move only the arrow by
+up to 2px. Hover/focus never changes a button's shape, dimensions or surrounding
+layout. Workspace navigation adds color/opacity feedback, a 1px icon response and
+a short content fade only in the enhanced example. Reduced motion disables these
+transitions and spatial responses while retaining visible focus and selected states.
+
+The catalogue entry sheet, `#lab-transaction-form`, has a maximum width of 960px
+and no instructional sidebar. Its text/date/select fields and choice targets
+share a 44px minimum height for both pointer types. Description, Amount, Date
+and Category form a responsive reading grid. Other catalogue specimens, including
+login, monthly overrides and daily consultation, retain 40px fields for fine
+pointers and 44px for coarse pointers. The login example remains read-only and
+fictitious; these presentation choices do not change application forms.
+
+Type (`#lab-entry-type`) and Payment method (`#lab-entry-payment`) use native
+radio inputs in labelled fieldsets, styled as segmented choices without an
+initial selection. A quiet shared track holds stable 44px targets; the selected
+surface, stronger text and short underline distinguish selection without
+resizing a segment. Only these short-choice groups hide the native circular
+indicator visually. Their inputs remain focusable, with a visible outline on
+the containing segment, rather than using `display: none`. Tab/Shift+Tab, Space
+and arrow keys retain native radio behavior in both themes. Colored card tiles
+and appearance presets retain their own native checked indicators and colors.
+The payment values match the transaction model: `ACCOUNT`, `PIX`, `DEBIT_CARD`
+and `CREDIT_CARD`.
+Income offers only Account/PIX. Account and PIX reveal the shared searchable
+account selector; PIX excludes accounts without PIX enabled. Debit reveals its
+own card choices, while Credit reveals the local credit-card tiles. Names,
+bank/account context and a native checked indicator identify each card; color
+never replaces those labels. Credit purchases are described as invoice activity,
+not an immediate account debit.
+
+`design-system-calendar.js` initializes the shared calendar engine for
+`input[type="date"][data-lab-calendar]` in this catalogue. It serves
+the entry Date (`#lab-entry-date`) and the card editor's optional Manual
+settlement from (`#lab-card-manual`). Each field keeps its native type, name,
+form association and ISO `YYYY-MM-DD` value. Without JavaScript or native modal
+dialog support, the original date input remains usable. The `.lab-date-field`
+calendar icon is decorative and shown only after enhancement. A click anywhere
+in the field, Enter, Space or Alt+ArrowDown opens the calendar; ordinary focus
+or Tab arrival does not open it.
+
+One native modal `dialog#lab-calendar`, labelled Choose date, is reused by the
+two fields. Its native Month and Year controls accompany a 42-day grid running
+Monday through Sunday. One enabled day participates in the Tab sequence; arrow
+keys move by day/week, Home/End reach the current week's boundaries, PageUp/Down
+change month and Shift+PageUp/Down change year. Month/year changes clamp missing
+days, including leap days, and respect the owning input's `min`/`max` limits.
+Enter, Space or a day click commits the ISO value and emits bubbling `input`
+and `change` events. Today and Clear are explicit actions. Close, Escape and
+outside dismissal leave the value unchanged and restore focus without scrolling;
+reset closes the calendar before the owning form restores its native defaults.
+Hiding or disabling an owner closes its popup without moving focus back to an
+inactive field. Selecting a date never submits either form.
+
+The compact calendar fits the viewport, follows both catalogue themes and keeps
+its keyboard and selected states with reduced motion. Its interaction reference
+is the [WAI-ARIA date-picker dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/);
+the [native date-input contract](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/date)
+remains the value and fallback boundary. Browser regression coverage is not
+assistive-technology certification; screen-reader interoperability still needs
+separate manual validation.
+
+Categories, accounts and the card editor's bank/account fields continue to reuse
+`static/js/forms.js` and the [shared searchable-choice contract](#keyboard-and-choice-contract).
+The user explicitly authorized record selection through native radio tiles for
+the catalogue's small debit/credit card examples. This is a local visual exception;
+it does not change the application-wide record-picker contract or `AGENTS.md`.
+Conditional choices begin empty. Deliberate type, payment or bank changes clear
+incompatible values and remove inactive controls from the Tab order without
+discarding compatible input. Invalid entry submission focuses the first invalid
+control and reveals it below the sticky catalogue header, including shared search
+choices. Existing search confirmation, cancellation and viewport behavior remain
+unchanged.
+
+The native `details#lab-card-editor` contains a local credit-card editor. Its
+controls explicitly use `form="lab-card-form"`, which identifies an independent
+GET form beside the entry form; opening or submitting the editor cannot submit
+its fields as a transaction. The sequence is Bank (`#lab-card-bank`), an account
+filtered to that bank (`#lab-card-account`), then an editable Nickname
+(`#lab-card-name`). New previews offer Graphite, Plum, Copper and Forest color
+presets. Graphite is the appearance default. The billing-cycle disclosure keeps
+required Closing day and Due
+day empty, constrained to 1–31; Card type defaults to Physical and the manual
+settlement start date is optional. These controls represent the real credit-card
+fields; the nickname corresponds to its existing `name` field.
+
+Editing a local card additionally exposes a native base-color input
+(`#lab-card-color`) and an optional gradient with a second color (`#lab-card-end`)
+and direction (`#lab-card-angle`). The preview protects text contrast when custom
+colors or gradients would make labels unreadable. Catalogue colors and gradients
+are local preview data; the application's persisted card appearance is described
+under [card appearance](#card-appearance). Creating or
+updating a preview changes only the current document's card data and never selects
+a card on the user's behalf. Enhanced entry/card previews use no database,
+browser storage or network requests. Without JavaScript their independent forms
+submit read-only GETs to this catalogue; no financial record or card is saved.
+Real Django validation, authorization, accounting and POST recovery remain
+authoritative. The application adoption above preserves its shared record
+selectors rather than promoting the catalogue's local card-radio exception.
+
+The same editorial frame extends to data, components, layout, motion, icons and
+workspace patterns: consistent two-part headings, fine rules, quiet specimens and
+sentence-case action labels. These specimen styles preserve the approved
+type/palette examples and financial meaning in labels and amounts. Semantic-color,
+outlook and planning tables use labelled, keyboard-focusable inner horizontal
+scrolling regions instead of widening the page. Print styling fits the tables to
+the printed page instead of retaining their screen minimum widths or clipped
+scroll containers.
+
+Component previews isolate their stacking contexts so their navigation cannot
+paint over the catalogue header. Internal anchor targets also leave room for
+that header. Review desktop/mobile, both themes, keyboard/touch, invalid recovery,
+reduced motion and native fallback with
+`npm run test:e2e -- tests/e2e/catalogue-*.spec.js`.
+The application adopts the common presentation through shared components;
+catalogue examples remain synthetic and never write application data. See the
+interface map for the retained framework and paused-feature boundaries.
 
 ## Preserve the user's location
 
@@ -95,6 +506,15 @@ and 32px on desktop; section titles use 18px and 20px. Body copy starts at
 16/24px, labels and supporting copy at 14/20px, and compact table labels never
 fall below 12px. Bound chart heights preserve readable proportions on wide screens.
 
+`assets/css/reporting.css` owns the Home/report refinements. Dense time-series
+charts retain their readable canvas width inside named, focusable horizontal
+scroll regions, with a short phone hint; do not compress away months or change
+their datasets to fit the viewport. Category marks have at least 44px targets,
+and full record names and selected-period summaries wrap inside their panels.
+Period presets keep the same 44px geometry in active and linked states, with
+`aria-current` on the selected preset. These are presentation rules; chart
+cutoffs, aggregation and Decimal amounts remain in the existing services.
+
 | Role | Semantic treatment |
 |---|---|
 | Income / account credit | `income` #176B52; dark `income-light` #64D8B1 |
@@ -111,10 +531,10 @@ Color is never the only carrier of status. Monetary labels always include a
 currency symbol or ISO code, especially when native and base values are shown
 together.
 
-The navigation brand combines `tuxedo-mark-256.png` with a two-line uppercase
-wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. It always
+The navigation brand combines the local Tuxedo mark with a compact, ordinary-case
+wordmark. It always
 links to Home for authenticated users and the public landing page for anonymous visitors. Primary
-actions are solid caramel pills with forest-deep text; `caramel-ink` carries
+actions use balanced 12px corners and solid caramel with forest-deep text; `caramel-ink` carries
 brand links over light surfaces. Shared outline and quiet actions use subtle
 neutral hover surfaces. Titles, labels, controls and tabular monetary figures all use Inter.
 Secondary text uses forest/70 in light mode and neutral night-muted in dark mode.
@@ -134,11 +554,11 @@ footers, mobile menus, and salary results. Native controls inherit dark
 errors retain their semantic styling. Theme initialization and persistence are
 shared across full navigation and HTMX swaps.
 
-The public homepage uses factual copy, six separated feature rows, and the full
-horizontal cat photograph in a translucent double rounded frame with a subtle
-caramel glow. Its 4:3 mobile / 16:10 larger frame preserves the image's native
-ratio; padded hover zoom respects reduced motion. It has no promotional feature
-cards or example balances.
+The public homepage pairs factual copy and access links with the Paper Layers
+bow tie and its five-workspace index. Seven separated feature descriptions cover
+the available product areas. The illustration supports pointer, keyboard and
+touch, respects reduced motion, and retains native links without JavaScript.
+The page shows no example balances.
 Authenticated workspaces follow the shared composition below. See
 [pages](apps/pages.md) for the composition and authentication behavior.
 
@@ -229,9 +649,17 @@ flow, with the shell reserving space for fixed mobile navigation.
 
 `/banking/` starts with the all-bank availability summary and a grid of bank
 links. Each bank shows its name, color marker and account/card counts. There is
-no overview search or inline account disclosure. Open a bank's own page for its
-accounts, cards, monetary cash positions and loyalty programs; the existing
-workspace tabs and browser history provide navigation.
+no overview search. Bank, cash-pot and set-aside totals remain exposed beside
+the consolidated available amount. Open an institution to reveal its accounts,
+cards, monetary cash positions and loyalty in one full-width internal workspace
+in place of the grid. Its window header contains the current bank and a visible
+Minimize action with text and icon; long bank indexes never push the selected
+accounts down the page. Minimize restores the overview, its location and the
+originating bank's focus. Choose another bank from that overview.
+The existing bank URLs, native links and browser history remain authoritative,
+with a complete page fallback.
+The whole-workspace HTMX swap establishes a fresh navigation baseline; inner
+POST/result updates must not clear an edited form's departure protection.
 
 Each account card keeps its name, currency and New transaction action together.
 Balance, set-aside funds and availability form a labelled amount grid without
@@ -250,16 +678,17 @@ related invoices and ledger movements; a bound redemption error opens it. Explic
 fragments reveal their containing native disclosures after full or boosted
 page navigation; unrelated background updates do not reopen them.
 
-Banking templates mark their owning content with `.banking-workspace`. This is a
-local density exception: page titles use 24/30px, section titles 16/24px and
-actions 14/20px, with compact panel and row padding. Ordinary form fields,
-global navigation and other workspaces retain their shared defaults.
+Banking templates mark their owning content with `.banking-workspace`. Compact
+panel/row padding and 16/24px section titles retain the ledger's density, while
+page titles follow the catalogue's shared 28/35px mobile and 32/40px desktop
+scale. Ordinary fields, global navigation and actions use the common components.
 
-Scoped actions and menu items default to a minimum height of 44px; row ellipsis
-triggers also retain a 44px width. Only at widths of at least 768px with
-`(pointer: fine) and (hover: hover)` do actions and menu items reduce to 36px,
-with 36px square ellipsis triggers. Preserve visible keyboard focus, deliberate
-menu activation, native links and complete no-JavaScript submission.
+Actions and menu items retain a minimum height of 44px for all pointer types;
+row ellipsis triggers also retain a 44px width and 8px corners. Header option
+summaries use the same balanced 12px action geometry. Native color fields use
+the common 44px height, and gradient checkboxes keep their label beside the
+control. Preserve visible keyboard focus, deliberate menu activation, native
+links and complete no-JavaScript submission.
 
 Invoices opens a paginated grid of owned cards, including cards without invoices.
 A card opens `/banking/credit-cards/<id>/invoices/`, where dated invoice rows,
@@ -343,7 +772,9 @@ assets, investment products, programs and invoices. Handwritten record filters
 must also carry that attribute and a stable unique ID. Serialize record keys in
 option values without localization (for example, `pk|stringformat:'s'`); thousands
 separators belong in displayed amounts, never in submitted identifiers. Short
-enumeration choices remain native selects. Disabled fields remain native and disabled.
+enumeration choices remain native controls: transaction type/payment use native
+radio groups; other existing enumerations retain selects. Disabled fields remain
+native and disabled.
 
 `static/js/forms.js` progressively enhances these controls, using the original
 scoped options and preserving their names, values, metadata and `change` events.
@@ -393,9 +824,10 @@ E2E executor; inspect light/dark focus and active-state contrast. The contributo
 and agent instructions make this a review requirement,
 with regression tests included in the existing CI browser suite.
 
-Forms use the established `form_field.html`, validation summary, forest/cream
-inputs with caramel focus, and the Save/Cancel pill action pattern. Checkboxes
-use `accent-caramel`. Server-side validation remains authoritative.
+Forms use the established `form_field.html`, validation summary and forest/cream
+inputs with caramel focus. Save/Cancel and destructive confirmations use the
+same centered, compact action components across the application.
+Checkboxes use `accent-caramel`. Server-side validation remains authoritative.
 
 - PIX/account/debit choices state `Affects account balance immediately`.
 - Credit card choices distinguish automatic due-date settlement from the
@@ -424,9 +856,11 @@ amounts remain unchanged. Transfer/investment historical snapshots and current
 valuations are visibly distinct, and missing rates are shown explicitly as
 incomplete.
 
-Inputs remain dot-decimal HTML number fields. Display localization follows each
-currency's formatting metadata; SVG coordinates and CSS percentages remain
-unlocalized.
+Native decimal controls retain dot-decimal submission. Only explicitly opted-in
+[transaction cents entry](#transaction-amount-entry) uses a formatted text field
+with canonical decimal submission; quantities, rates and empty overrides keep
+their own native precision. Display localization follows each currency's
+formatting metadata; SVG coordinates and CSS percentages remain unlocalized.
 
 UI language does not choose currency formatting. `core/formats/en/` and
 `core/formats/pt_BR/` both delegate separators to the selected currency, so a
@@ -464,9 +898,12 @@ settled. Own transfers may appear in activity but are visually neutral and
 absent from income/expense charts. Projected figures are labeled and never
 presented as posted cash. A compact top-six category breakdown follows the same
 month-to-date, completed-month, or planned-month context as the metrics. Live bank
-accounts and upcoming invoices are limited to five rows each. Accounts link
-directly to their bank row; invoices link to their source detail and show the
-remaining amount in confirmed mode. A separate owned, staged-import queue
+accounts and outstanding invoices are limited to five rows each. Accounts link
+directly to their bank row without the shell's generic scroll-to-top override.
+Outstanding invoices include overdue obligations, independently of the selected
+performance month; All invoices explicitly opens the complete card overview.
+Invoice rows link to their source detail and show the remaining amount in
+confirmed mode. A separate owned, staged-import queue
 highlights decisions waiting for review without counting them as posted cash.
 
 ## Reports and charts
@@ -492,12 +929,14 @@ have an independent monthly cursor. Both start at the current month and use
 previous/next month arrows to navigate past and future months. Do not replace
 these controls with month dropdowns or a shared multi-month window. Keep native
 links, stable control IDs, scroll and keyboard focus across HTMX updates. Each
-Current month or All time action changes only its own chart; All time retains
-the existing trailing-twelve-month aggregation. In All time mode the arrows
+Current month or Last 12 months action changes only its own chart; Last 12 months
+retains the current calendar month and the previous eleven months. Its legacy
+`ALL` query value is preserved, but must not be labelled as the full ledger.
+In this twelve-month mode the arrows
 resume monthly navigation from the current month. Totals and composition details
 must always resolve to the same scope. Invalid or obsolete account/card months
-recover to the current month, while invalid installment months recover to All
-time. Test month boundaries, past/future navigation, All time and current-month
+recover to the current month, while invalid installment months recover to Last
+12 months. Test month boundaries, past/future navigation, Last 12 months and current-month
 return, invalid query recovery, focus and scroll preservation, no-JavaScript
 links, and both themes.
 
@@ -680,8 +1119,9 @@ moving focus or rewriting every keystroke. The user's DMY/MDY setting controls
 visible date fields and complete dates throughout the application. Native
 calendar helpers, storage, existing CSV formats, and URL parameters use ISO;
 month-only labels remain localized month/year labels. An invalid bound value is
-retained for recovery. Calendar dates are not converted through JavaScript
-`Date` objects or time zones.
+retained for recovery. Stored calendar dates are not shifted through browser
+time zones; the shared dialog uses UTC components only for day/month
+arithmetic.
 
 HTMX regions with `data-preserve-view` use the common navigation handler to
 restore focus and scroll. Account participation updates also replace the
@@ -737,7 +1177,9 @@ own explicit actions rather than duplicating page navigation.
 When HTMX replaces the page body, update the active workspace at `afterSwap`:
 the next link can be activated before `afterSettle`. Apply the saved fields on
 `historyRestore` even when the browser's URL already matches the tracked URL;
-the HTMX history cache can contain older form values.
+the tab-local form snapshot may contain unsent values from the previous visit.
+Financial HTML is never restored from HTMX's DOM cache; the
+[private-history contract](#private-history) requires an authorized GET first.
 Do not recapture the form baseline at `afterSettle`: users can edit the new
 page during the settle delay, and those edits still require a departure warning.
 Passwords, uploaded files, hidden fields/CSRF tokens and account settings are
@@ -749,14 +1191,29 @@ Confirm departure when a POST form has been edited or a simulation result is
 visible. GET filters and chart selections are read-only view state: preserve them
 for Back/Forward without treating them as unsaved operations. This applies to
 clicked navigation, history traversal and native refresh/tab-close warnings.
-For HTMX navigation and clicked links use the translated confirmation; for
-browser-owned navigation, refresh and tab close use `beforeunload` so the browser
-can display its native warning. Canceling a history traversal leaves the current
+For internal links and same-document history traversal, use the shared translated native
+`dialog` with the application's visual tokens. Keep editing receives initial
+focus; Tab stays in the dialog and Escape or backdrop activation cancels and
+returns focus. Leave page continues the original authorized GET/HTMX navigation.
+Modified/new-tab clicks keep their normal behavior. An anchor on the current
+path/query is not a departure; a link to another screen with a record fragment
+still uses the dialog and preserves that fragment on approval. Refresh, tab
+close, cross-document history and external browser-owned navigation use
+`beforeunload`; that warning's appearance
+and wording belong to the browser. Canceling either direction of history
+traversal leaves the current
 page and its unsaved state intact. An explicit form submission does not prompt.
 Successful and invalid POSTs are handled by the server; do not preserve a
 submitted form as an unsent history snapshot. The restored inputs remain unsaved
 and simulations must be recalculated after restoring edited inputs. This is navigation recovery, not financial undo or a
 saved draft.
+
+Period controls use `period-navigation`: previous/next keep fixed slots around
+the caption, including disabled bounds. Reset actions occupy a permanent second
+row. Do not place reset beside the rail in a content-sized flex group: revealing
+it must never move the previous arrow into the old next-arrow position. The same
+rule applies to dashboard, report and investment chart periods and catalogue
+examples. Preserve each control's original date scope and query parameters.
 
 Charts use direct manipulation without manual range selectors. Drag either way
 on time series, or select endpoints with Enter/Space. Shift-click and Shift with
@@ -804,6 +1261,13 @@ preserving its transaction edit lock. Links retain native modified-click behavio
 and shared browser Back/Forward. Opening an editor does not submit a financial
 change. Close the panel before navigation, remove cached panel copies on HTMX
 history restoration, and retain the report's period and scroll context.
+On Home, Reports and Investment analyses, the shared source-link renderer adds an explicit `next`
+containing the current query and stable owning-chart anchor. Only server-reversed
+consultation origins and same-origin HTTP(S) targets participate; existing
+destination validation and ownership checks still apply. Save/Cancel use that
+context, while modified clicks and browser Back/Forward remain native.
+Source links with record fragments also disable the inherited boosted-body
+scroll-to-top so the account row is actually revealed, including in Reserves.
 All links come from owned records in the same signed scope as the displayed
 amount; missing FX values never become an operation link. Fractional FX cents
 are allocated by remainder across displayed source amounts so they reconcile
@@ -814,6 +1278,46 @@ preset swatches. Existing banks receive the neutral caramel marker. The list use
 a slim corner marker; the marker next to the detail title links to a color-only
 edit form. Native submissions work without JavaScript and updates enforce bank
 ownership. Color does not carry financial meaning.
+
+### Card appearance
+
+Debit and credit cards persist three presentation fields: `color`, optional
+`gradient_end` and `gradient_angle`. Existing cards receive Graphite (`#253330`),
+no second stop and an angle of 135 degrees. Colors require six-digit hex values;
+the angle is bounded to 0–359 by form/model validation and database constraints.
+Apply the banking migration before serving code that reads these fields. These
+presentation values do not change balances, currencies, billing cycles, card
+ownership or recorded invoice settlement modes.
+
+Creation offers four native appearance presets: Graphite, Plum, Copper and
+Forest; editing exposes a custom native base-color control. Both flows offer an
+explicit Use a gradient checkbox with a second color and angle. Turning it off clears its
+second stop; older clients posting only the original card fields preserve the
+stored appearance. Account selection, duplicate-name checks and the prohibition
+on moving cards with existing activity to another account remain authoritative.
+Native POSTs, bound validation recovery and ordinary card editing remain usable
+without JavaScript.
+
+`static/js/card-appearance.js` progressively updates the local appearance preview
+and optional gradient controls without saving a card. With JavaScript, the
+angle uses a rotary handle: drag clockwise/counterclockwise to rotate the
+gradient directly, with 0 degrees at the top, 90 at the right, 180 at the bottom
+and 270 at the left. The single-focus slider supports arrow keys by one degree,
+Shift+arrows or Page Up/Down by fifteen degrees, and Home/End for 0/359. Its
+degree reading and preview follow the actual field value without animation lag.
+The original named numeric input remains the native submission/fallback;
+invalid server-bound angles stay visible for correction rather than being
+silently clamped by enhancement. Disabling the gradient removes the dial from
+the Tab order and ends any pointer drag. Reset, authorized history restoration
+and HTMX initialization reuse the same controller.
+
+The transaction sheet
+receives appearance metadata only for its owned card choices and presents the
+selected card alongside the existing searchable selector. Readable name and
+bank/account text use a protected text surface, so arbitrary custom colors and
+gradients cannot become the sole background behind essential labels. Decorative
+colors identify the card; they do not communicate financial status or replace
+the native selected record.
 
 
 ### Planning parameter controls
@@ -872,20 +1376,49 @@ restoration behavior.
 Transactions, Categories, Invoices, Exchange rates, investment positions/history
 and financial goals use `consultation-bar`, `consultation-search`
 and `consultation-actions`. Keep one primary text search; place less frequent
-criteria in a deliberate native `details.filter-disclosure`. Its active count
+criteria in a deliberate native `details.filter-disclosure`, except for the
+approved always-visible families below. Its active count
 and nearby Clear refresh independently of the controls. Newly returned field
 errors reopen the disclosure without moving focus or page position. Criteria
 stay complete in native GET submissions. Transaction search already includes
-category names and split-category names; exact category selection remains in
-Filters and does not change the broad search semantics.
+category and split-category names, so the disclosure does not repeat a category
+picker. Existing exact-category URLs retain a named, individually clearable
+context and their original GET semantics. Date, recurrence and ordering share
+one compact row when space permits, then wrap at narrow widths. Month triggers
+use the same paper background as the adjacent consultation fields.
 
-Categories, Invoices, Exchange rates, investment positions/history and financial
+Investment positions/history and financial
 goals add `.consultation-stable`. Search,
 Filters and the reserved Clear slot share a rail on wider screens. Small screens
 keep search above a fixed action row. Only the native summary is positioned in
 its slot; opening the complete criteria adds a full-width row below it. Numeric
 active badges and screen-reader descriptions update independently. Keep the
 native submit fallback in its own row, including after a failed live request.
+
+Read-only import history has no optional criteria. Its
+`consultation-search-only` variant reserves a narrow Clear slot beside the search
+instead of leaving an empty Filters track. The input's width and position stay
+fixed when Clear appears; native GET submission keeps its separate fallback row.
+This presentation does not enable the paused statement-import workflow.
+
+Invoices and Exchange rates use `bank-consultation`, exposing their short
+criteria in a compact responsive grid. Invoices keeps month, bank and status
+visible; Exchange rates keeps source/target currencies and date bounds visible.
+Search, field IDs, active counts and Clear retain the same live GET and native
+fallback contracts; no disclosure must be opened to reach these criteria.
+
+Categories are the deliberate exception to the optional-criteria disclosure:
+Level and Type remain visible as native segmented radio groups beneath the name
+search. Their GET names/values are unchanged (`level`: empty, `top`, `sub`;
+`type`: empty, `INCOME`, `EXPENSE`, `unclassified`). Each group has a real legend,
+one checked choice and native arrow/Space navigation. `live-filters.js` applies
+changes immediately and restores choice state by name, type and stable value;
+Clear selects the explicit empty-value All choices. Search, focus, caret,
+history, hierarchy context and contextual action URLs keep the shared live
+contract. The reserved Clear slot does not change the rail when its link appears.
+The groups stack on narrower screens and use two columns on mobile; All levels
+spans the first row so longer labels remain readable.
+An ordinary GET submit remains available without JavaScript or after failure.
 
 Transactions adds `.transaction-consultation` with its existing stable tracks.
 At viewport widths of at least 1440px, search/month, type choices, Filters and
@@ -951,7 +1484,9 @@ pickers retain their existing keyboard contract. Both clear actions reset the
 canonical ISO value without validating an unused draft year. Closed draft-year
 controls are disabled so their native constraints cannot block fallback GET
 submission. Escape, outside activation and Tab-away dismiss the panel;
-background updates preserve controls. A required monthly workspace may explicitly
+internal Tab/Shift+Tab moves keep it open. Use the focus event's `relatedTarget`
+for internal moves: `activeElement` can briefly be the document body while native
+focus is transferring. Background updates preserve controls. A required monthly workspace may explicitly
 provide `month_reset_value` and `month_clear_label` to the partial: Planning uses
 the current ISO month and the label This month. This opt-in changes only that
 reset action; optional filters elsewhere still clear to all months. Never apply

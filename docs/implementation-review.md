@@ -1,5 +1,13 @@
 # Planning evolution — implementation review
 
+**Historical delivery record:** behavior and measurements below describe the
+dated increments, including navigation and help interactions later replaced.
+Use the [documentation index](README.md), [frontend contract](frontend.md) and
+owning app guide for present behavior. The
+[review archive](reviews/README.md) distinguishes later dated evidence.
+Test counts, coverage and local image identifiers below
+are historical evidence, not the current checkout's validation status.
+
 This review records the work on `feat/finance-planning-evolution` on 2026-09-20.
 It records pre-release validation of the changes included in **v0.4.0**.
 Release publication and image availability are tracked by the

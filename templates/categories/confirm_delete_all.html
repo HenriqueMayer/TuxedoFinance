@@ -4,10 +4,10 @@
 {% block title %}{% translate "Delete all categories" %} — Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">{% translate "Delete all categories" %}</h1>
+<div class="workspace-form-page mx-auto max-w-md space-y-6">
+    <h1 class="page-title">{% translate "Delete all categories" %}</h1>
 
-    <div class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
+    <div class="surface-panel space-y-5">
         <div class="space-y-2">
             <p class="font-semibold text-expense dark:text-expense-light">{% translate "This action cannot be undone." %}</p>
             <p class="text-sm text-forest/80 dark:text-cream/80">
@@ -18,14 +18,15 @@
             </p>
         </div>
 
-        <form method="post" hx-boost="false" class="flex items-center gap-3">
+        <form method="post" hx-boost="false" class="form-actions">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ return_url }}">
             <button type="submit"
-                    class="inline-flex items-center rounded-full bg-expense px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-expense-light focus:outline-hidden focus:ring-2 focus:ring-expense/40 focus:ring-offset-2 dark:focus:ring-offset-night-surface">
+                    class="action-danger">
                 {% translate "Yes, delete all" %}
             </button>
-            <a href="{% url 'categories:list' %}"
-               class="inline-flex items-center rounded-full border border-forest/30 bg-white px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 transition hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface dark:text-cream/90 dark:hover:bg-cream dark:hover:text-night">
+            <a href="{{ return_url }}"
+               class="quiet-action">
                 {% translate "Cancel" %}
             </a>
         </form>

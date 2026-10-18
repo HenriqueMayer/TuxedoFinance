@@ -55,14 +55,14 @@ async function createMonetaryInvestment(page, testInfo) {
 
 test('landing keeps concise translated copy and local frontend dependencies', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tuxedo Finance');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Your finances\.\s*A clear overview\.$/);
     await expect(page.getByText('Tuxedo Finance replaces the single column')).toHaveCount(0);
     await expect(page.locator('script[src*="unpkg.com"]')).toHaveCount(0);
     await expect(page.locator('script[src*="/static/js/vendor/htmx.min.js"]')).toHaveCount(1);
 
     await page.locator('#language-select-public').selectOption('pt-br');
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tuxedo Finance');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Suas finanças\.\s*Uma visão clara\.$/);
     await expect(page.getByText('Aplicação local para registrar receitas e despesas', { exact: false })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Funcionalidades' })).toBeVisible();
     await expect(page.getByText('A local application', { exact: false })).toHaveCount(0);
@@ -457,13 +457,14 @@ for (const width of [390, 768, 1024, 1440]) {
             await page.setViewportSize({ width, height: 1000 });
             await page.addInitScript(value => localStorage.setItem('theme', value), theme);
             await page.goto('/');
-            await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tuxedo Finance');
-            await expect(page.locator('main dl > div')).toHaveCount(6);
+            await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Your finances\.\s*A clear overview\.$/);
+            await expect(page.locator('main dl > div')).toHaveCount(7);
             await expect(page.getByText('Sample dashboard preview')).toHaveCount(0);
             await expect(page.getByText('Your money, in black and white.')).toHaveCount(0);
-            const portrait = page.getByRole('img', { name: 'A black-and-white cat wearing a bow tie at a desk.' });
-            await expect(portrait).toBeVisible();
-            expect(await portrait.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+            const illustration = page.getByRole('button', { name: 'Explore workspaces', exact: true });
+            await expect(illustration).toBeVisible();
+            await expect(page.locator('[data-bowtie-layer]')).toHaveCount(5);
+            await expect(illustration).toHaveAttribute('aria-controls', 'public-bowtie-map');
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             const background = await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor);
             expect(background).toBe(theme === 'dark' ? 'rgb(16, 16, 16)' : 'rgb(250, 248, 243)');
@@ -484,15 +485,24 @@ test('dark forms, menus and charts retain contrast and keyboard interaction', as
     await expect(title).toBeVisible();
     const style = await title.evaluate(el => {
         const css = getComputedStyle(el);
-        return { background: css.backgroundColor, color: css.color, border: css.borderColor, scheme: css.colorScheme };
+        return { background: css.backgroundColor, color: css.color,
+            boundary: {color: css.borderTopColor, width: css.borderTopWidth, style: css.borderTopStyle},
+            underline: {color: css.borderBottomColor, width: css.borderBottomWidth, style: css.borderBottomStyle},
+            scheme: css.colorScheme };
     });
     expect(style.background).toBe('rgb(16, 16, 16)');
     expect(style.color).toBe('rgb(250, 248, 243)');
-    expect(style.border).toBe('rgb(128, 128, 128)');
+    expect(style.boundary).toEqual({color: 'rgba(250, 248, 243, 0.2)', width: '1px', style: 'solid'});
+    expect(style.underline.width).toBe('1px');
+    expect(style.underline.style).toBe('solid');
+    expect(style.underline.color).not.toBe(style.boundary.color);
+    expect(style.underline.color).not.toBe('rgba(0, 0, 0, 0)');
     expect(style.scheme).toBe('dark');
     await title.focus();
     await expect(title).toBeFocused();
-    expect(await title.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid');
+    await expect(title).toHaveCSS('outline-style', 'solid');
+    await expect(title).toHaveCSS('outline-width', '2px');
+    await expect(title).toHaveCSS('outline-color', 'rgb(212, 173, 134)');
     await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('button', { name: 'Toggle menu' }).click();
     const menu = page.getByRole('dialog', { name: 'Navigation menu' });
@@ -511,7 +521,7 @@ test('public access and language selection work without JavaScript', async ({ br
     const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     await page.goto('/');
-    await expect(page.locator('main dl > div')).toHaveCount(6);
+    await expect(page.locator('main dl > div')).toHaveCount(7);
     await page.locator('#language-select-public').selectOption('pt-br');
     await page.getByRole('button', { name: 'Apply', exact: true }).click();
     await expect(page.getByText('Aplicação local para registrar receitas e despesas', { exact: false })).toBeVisible();

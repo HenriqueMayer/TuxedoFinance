@@ -68,6 +68,14 @@ def account_balances(user, as_of=None):
     ]
 
 
+def movements_before_opening(user):
+    """Expose existing baseline conflicts for review without rewriting history."""
+    return BankMovement.objects.filter(
+        user=user, account__user=user, account__opening_date__isnull=False,
+        effective_date__lt=F('account__opening_date'),
+    ).select_related('account__bank').order_by('effective_date', 'pk')
+
+
 def get_planning_availability(user, as_of=None, *, conversion=None):
     """Cash usable for planning, without changing balances or hiding deficits.
 
@@ -93,6 +101,8 @@ def get_planning_availability(user, as_of=None, *, conversion=None):
     rates = {}
 
     def in_base(amount, currency):
+        if not amount:
+            return ZERO
         if currency not in rates:
             try:
                 rates[currency] = conversion.convert(Decimal('1'), currency, as_of=as_of)

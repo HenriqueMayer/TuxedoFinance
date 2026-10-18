@@ -44,9 +44,29 @@ for (const theme of ['light', 'dark']) for (const language of ['en', 'pt-br']) f
         await page.screenshot({ path: info.outputPath(`month-${theme}-${language}-${width}.png`), fullPage: true });
         const previous = new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 2, 1);
         const earlier = `${previous.getFullYear()}-${String(previous.getMonth() + 1).padStart(2, '0')}`;
-        await page.locator('#id_month').fill(earlier);
-        await page.locator('#id_month').press('Tab');
+        const monthTrigger = page.locator('#id_month-trigger');
+        const monthSearch = page.locator('#id_month-choice-search');
+        const monthPanel = page.locator('#id_month-panel');
+        const year = page.locator('#id_month-year');
+        await expect(page.locator('#id_month')).toBeHidden();
+        await monthTrigger.press('Enter');
+        await expect(monthSearch).toBeFocused();
+        // The native ISO field is only the no-JavaScript fallback. Exercise
+        // the shared month choice, including January's previous-year boundary.
+        await page.keyboard.press('Shift+Tab');
+        await expect(year).toBeFocused();
+        await page.keyboard.press('ControlOrMeta+A');
+        await page.keyboard.type(String(previous.getFullYear()));
+        await year.press('Enter');
+        await expect(monthSearch).toBeFocused();
+        await monthSearch.press('ControlOrMeta+A');
+        await monthSearch.pressSequentially(new Intl.DateTimeFormat(language, { month: 'long' }).format(previous));
+        await expect(monthPanel.getByRole('option')).toHaveCount(1);
+        await monthSearch.press('Enter');
         await expect(page).toHaveURL(url => url.searchParams.get('month') === earlier);
+        await expect(page.locator('#id_month')).toHaveValue(earlier);
+        await expect(monthPanel).toBeHidden();
+        await expect(monthTrigger).toBeFocused();
         await expect(page.locator('#budgets')).not.toContainText('Monthly groceries');
         await page.goBack();
         await expect(page.locator('#id_month')).toHaveValue(month);
@@ -62,6 +82,10 @@ for (const theme of ['light', 'dark']) for (const language of ['en', 'pt-br']) f
         await expect(search).toBeFocused();
         await search.press('ControlOrMeta+A'); await search.press('Backspace');
         await expect(page.locator('#goal-results')).toContainText('Travel fund');
+        await page.locator('#goal-extra-filters > summary').press('Enter');
+        await expect(page.locator('#goal-extra-filters')).toHaveAttribute('open', '');
+        await page.keyboard.press('Tab');
+        await expect(page.locator('input[name="archived"]')).toBeFocused();
         await page.locator('input[name="archived"]').press('Space');
         await expect(page).toHaveURL(/archived=1/);
         await page.locator('#goal-filter-clear a').press('Enter');

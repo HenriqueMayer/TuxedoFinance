@@ -56,7 +56,7 @@ for (const theme of ['light', 'dark']) {
         await page.keyboard.type(' heating', {delay: 20});
         await expect(page).toHaveURL(/q=House\+heating$/);
         await expect(page.locator('#category-results-status')).toHaveText('1 category');
-        await expect(page.getByRole('link', {name: 'New Category', exact: true})).toHaveAttribute('href', /next=%2Fcategories%2F%3Fq%3DHouse%2Bheating/);
+        await expect(page.getByRole('link', {name: 'New category', exact: true})).toHaveAttribute('href', /next=%2Fcategories%2F%3Fq%3DHouse%2Bheating/);
         expect(await page.locator('input[type="hidden"][name="next"]').first().inputValue()).toBe('/categories/?q=House+heating');
         expect(await page.evaluate(() => history.length)).toBe(initial + 1);
         expect(await page.evaluate(() => document.activeElement.selectionStart)).toBe('House heating'.length);
@@ -79,14 +79,14 @@ for (const theme of ['light', 'dark']) {
         await page.keyboard.type('House');
         await search.press('Enter');
         await expect(page.locator('#category-results-status')).toHaveText('2 categories');
-        await page.locator('#category-filters .filter-disclosure > summary').press('Enter');
-        await page.locator('#filter-level').selectOption('sub');
+        await expect(page.locator('#category-filters .filter-disclosure')).toHaveCount(0);
+        await page.locator('#filter-level-sub').press('Space');
         await expect(page).toHaveURL(/level=sub/);
         await expect(page.getByText('No matching categories', {exact: true})).toBeVisible();
         await expect(page.locator('#category-clear-filters')).toHaveCount(1);
         await page.locator('#category-clear-filters').click();
         await expect(search).toHaveValue('');
-        await expect(page.locator('#filter-level')).toHaveValue('');
+        await expect(page.locator('#filter-level-all')).toBeChecked();
         await expect(search).toBeFocused();
         await idle(page);
         await page.evaluate(() => window.scrollTo(0, 0));
@@ -94,7 +94,7 @@ for (const theme of ['light', 'dark']) {
         await search.fill('House');
         await search.press('Enter');
         await expect(page).toHaveURL(/q=House$/);
-        await page.getByRole('link', {name: 'New Category', exact: true}).click();
+        await page.getByRole('link', {name: 'New category', exact: true}).click();
         await expect(page).toHaveURL(url => url.pathname === '/categories/create/' && url.searchParams.get('next') === '/categories/?q=House');
         await page.getByRole('link', {name: 'Cancel', exact: true}).click();
         await expect(search).toHaveValue('House');
@@ -245,7 +245,7 @@ for (const theme of ['light', 'dark']) {
             await expect(page.locator(`#transaction-filters [name="${name}"]`)).toHaveValue('');
         }
         await expect(page.locator('#filter-sort')).toHaveValue('newest');
-        await expect(page.locator('#filter-category-search')).toHaveValue('');
+        await expect(page.locator('#filter-category')).toHaveValue('');
         await expect(page.locator('#transaction-filters [data-native-date-picker]')).toHaveValue('');
         const search = page.locator('#filter-search');
         await search.click();
@@ -287,7 +287,7 @@ for (const theme of ['light', 'dark']) {
         try {
             await search.press('ControlOrMeta+A');
             await page.keyboard.type('cooling');
-            await page.getByRole('link', {name: 'New Category', exact: true}).press('Enter');
+            await page.getByRole('link', {name: 'New category', exact: true}).press('Enter');
             await expect(page).toHaveURL(url => url.pathname === '/categories/create/' && url.searchParams.get('next') === '/categories/?q=heating');
             // Live forms opt out of the HTMX DOM cache. Back must retrieve the
             // applied URL, then restore presentation without replaying the draft.

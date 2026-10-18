@@ -26,7 +26,8 @@ for (const dark of [false, true]) {
         expect(top).toBeGreaterThan(0);
         await next.press('Enter');
         await expect(page).toHaveURL(/charts_offset=5/);
-        await expect(next).toHaveText('Forecast limit');
+        await expect(next).toHaveAttribute('aria-label', 'Forecast limit');
+        await expect(next).toHaveAttribute('aria-disabled', 'true');
         await expect(next).toBeFocused();
         await expect(page.getByRole('link', { name: 'Next window', exact: true })).toHaveCount(0);
         expect(Math.abs(await page.evaluate(() => window.scrollY) - top)).toBeLessThan(4);
@@ -68,7 +69,8 @@ test('report forecast limit works without JavaScript', async ({ browser }, testI
         await page.goto('/dashboard/reports/?charts_offset=4');
         await page.locator('#report-balance-next').press('Enter');
         await expect(page).toHaveURL(/charts_offset=5/);
-        await expect(page.locator('#report-balance-next')).toHaveText('Forecast limit');
+        await expect(page.locator('#report-balance-next')).toHaveAttribute('aria-label', 'Forecast limit');
+        await expect(page.locator('#report-balance-next')).toHaveAttribute('aria-disabled', 'true');
         await expect(page.getByRole('link', { name: 'Next window', exact: true })).toHaveCount(0);
         await page.locator('#report-balance-previous').press('Enter');
         await expect(page).toHaveURL(/charts_offset=4/);

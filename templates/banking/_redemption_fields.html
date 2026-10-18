@@ -1,13 +1,18 @@
 {% load i18n %}
+<fieldset class="finance-entry-group"><legend class="section-title">{% translate 'Redemption details' %}</legend>
+<div class="finance-entry-grid">
 {% for field in form.visible_fields %}
     {% if field.name == 'iof_account' or field.name == 'iof_credit_card' %}
-        <div data-form-when="{{ form.iof_amount.id_for_label }}" data-form-value="positive" data-has-errors="{{ field.errors|yesno:'true,false' }}">
+        <div class="finance-entry-wide" data-form-when="{{ form.iof_amount.id_for_label }}" data-form-value="positive" data-has-errors="{{ field.errors|yesno:'true,false' }}">
             {% include 'partials/form_field.html' with field=field %}
         </div>
     {% else %}
+        <div{% if field.name == 'program' or field.name == 'target_account' or field.name == 'notes' %} class="finance-entry-wide"{% endif %}>
         {% include 'partials/form_field.html' with field=field %}
+        </div>
     {% endif %}
 {% endfor %}
+</div></fieldset>
 <script>
     (() => {
         const account = document.getElementById('{{ form.iof_account.id_for_label }}');

@@ -41,6 +41,27 @@ For Docker installations, use the [Docker operations guide](docker.md) for
 volume-aware backup, restore and updates. Keep the Compose project identity and
 signing key across container recreation.
 
+## Review opening-date conflicts
+
+Validation rejects new or edited operations before a known account opening.
+It leaves existing financial history intact. For an explicit read-only owner
+review, use the normal installation's Django shell and select the intended user:
+
+```python
+from django.contrib.auth import get_user_model
+from banking.services import movements_before_opening
+
+owner = get_user_model().objects.get(username="YOUR_USERNAME")
+for movement in movements_before_opening(owner):
+    print(movement.pk, movement.account_id, movement.effective_date,
+          movement.account.opening_date, movement.source_key)
+```
+
+This prints identifiers and dates without posting, synchronizing or changing
+records. Keep the output private. Review the source and its actual baseline
+before deliberately editing either; do not mass-redate sources or invent a date
+for unknown legacy openings.
+
 ## Updating dependencies
 
 The application version is `[project].version` in `pyproject.toml`, with the

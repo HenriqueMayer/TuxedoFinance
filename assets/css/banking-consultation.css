@@ -1,0 +1,114 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* One owned bank opens inside the account workspace. Native URLs remain the
+   fallback and the browser history identity of the selected bank. */
+body.tuxedo-ui .bank-availability-primary { align-items: center; gap: 24px; }
+body.tuxedo-ui .bank-availability-primary > :first-child { flex: 0 1 auto; min-width: 0; }
+body.tuxedo-ui .bank-availability-primary > .bank-balance-breakdown {
+    flex: 1 1 30rem; min-width: 0; margin: 0; padding: 0;
+    border: 0; gap: 12px 24px;
+}
+body.tuxedo-ui .bank-workspace-tab {
+    min-width: 0; transition: background-color 180ms ease, border-color 180ms ease;
+    scroll-margin-top: 100px; scroll-margin-bottom: 100px;
+}
+body.tuxedo-ui .bank-workspace-tab:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; }
+body.tuxedo-ui .bank-workspace-panel {
+    min-width: 0; padding: 20px; border: 1px solid var(--ui-line);
+    border-top: 2px solid var(--bank-color); border-radius: 14px;
+    background: var(--ui-surface); animation: bank-panel-enter 180ms var(--ui-ease);
+    scroll-margin-top: 90px;
+}
+body.tuxedo-ui .bank-workspace-panel-header { padding-bottom: 16px; border-bottom: 1px solid var(--ui-line); }
+body.tuxedo-ui .bank-workspace-panel-header .section-title { font-size: 20px; line-height: 1.35; }
+/* One institution replaces the overview with an internal work surface. Only
+   its compact tab bar stays sticky; content uses the existing document scroll,
+   so shared calendars, choices, anchors and financial forms keep their bounds. */
+body.tuxedo-ui .bank-workspace-window { padding: 0; min-height: min(32rem, 65svh); }
+body.tuxedo-ui .bank-workspace-window > :not(.bank-workspace-windowbar) { margin-inline: 20px; }
+body.tuxedo-ui .bank-workspace-window > :last-child { margin-bottom: 20px; }
+body.tuxedo-ui .bank-workspace-windowbar {
+    position: sticky; top: 64px; z-index: 15;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center; gap: 16px; padding: 12px 20px;
+    background: var(--ui-paper); border-bottom: 1px solid var(--ui-line);
+    border-radius: 13px 13px 0 0;
+}
+body.tuxedo-ui .bank-workspace-windowtitle { display: flex; align-items: center; gap: 12px; min-width: 0; }
+body.tuxedo-ui .bank-workspace-windowtitle .section-title { font-size: 20px; line-height: 1.35; overflow-wrap: anywhere; scroll-margin-top: 90px; }
+body.tuxedo-ui .bank-workspace-windowtitle .section-title:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 4px; border-radius: 3px; }
+/* A labelled action makes the return to the overview explicit in both themes;
+   selecting another institution happens in that overview, not this title bar. */
+body.tuxedo-ui .bank-workspace-minimize {
+    justify-self: end; gap: 8px; min-height: 44px; padding-inline: 14px;
+    font-weight: 600; white-space: nowrap;
+    background: color-mix(in srgb, var(--ui-accent) 14%, var(--ui-surface));
+    border-color: color-mix(in srgb, var(--ui-accent) 55%, var(--ui-line));
+}
+body.tuxedo-ui .bank-workspace-minimize svg { width: 18px; height: 18px; color: var(--ui-accent); }
+body.tuxedo-ui .bank-workspace-minimize:is(:hover, :focus-visible) {
+    background: color-mix(in srgb, var(--ui-accent) 24%, var(--ui-surface));
+    border-color: var(--ui-accent);
+}
+@keyframes bank-panel-enter { from { opacity: .4; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+/* Exposed short criteria keep their native/shared controls and a stable Clear
+   slot. Display:contents changes layout only; fields and GET names stay put. */
+body.tuxedo-ui .bank-consultation {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end; gap: 12px; padding: 12px;
+}
+body.tuxedo-ui .bank-consultation > .bank-consultation-search { grid-column: 1 / -1; min-width: 0; }
+body.tuxedo-ui .bank-consultation-criteria { display: contents; }
+body.tuxedo-ui .bank-consultation-criteria > div { min-width: 0; }
+body.tuxedo-ui .bank-consultation .field-label { font-size: 12px; line-height: 18px; }
+/* Screen-reader helpers follow the enhanced input. Their shared spacing must
+   not add an invisible row below this otherwise 44px consultation control. */
+body.tuxedo-ui .bank-consultation .search-choice > input { margin-block: 0; }
+body.tuxedo-ui .bank-consultation .month-filter { width: 100%; min-width: 0; }
+body.tuxedo-ui .bank-consultation .month-filter-trigger { width: 100%; justify-content: space-between; }
+body.tuxedo-ui .bank-consultation-actions {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+    gap: 8px; min-width: 76px; min-height: 44px;
+}
+body.tuxedo-ui .bank-consultation-actions .consultation-clear-control { min-width: 0; }
+body.tuxedo-ui .bank-consultation-actions .quiet-action { padding-inline: 8px; }
+body.tuxedo-ui .bank-consultation-actions .consultation-filter-count { font-size: 11px; }
+body.tuxedo-ui .bank-rate-consultation > .bank-consultation-actions { grid-column: 1 / -1; }
+/* These criteria all have labels. Align their controls above field errors,
+   rather than pushing an unaffected neighbour down to the error's baseline. */
+body.tuxedo-ui .bank-rate-consultation .bank-consultation-criteria > div { align-self: start; }
+body.tuxedo-ui .bank-rate-example {
+    color: var(--ui-ink); font-size: 13px; line-height: 1.6;
+    padding: 10px 12px; border-left: 2px solid var(--ui-accent);
+    background: var(--ui-paper); border-radius: 0 8px 8px 0;
+}
+@media (min-width: 768px) {
+    body.tuxedo-ui .bank-invoice-consultation { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 1fr) auto; }
+    body.tuxedo-ui .bank-rate-consultation { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    body.tuxedo-ui .bank-rate-consultation > .bank-consultation-search { grid-column: 1 / 3; }
+    body.tuxedo-ui .bank-rate-consultation > .bank-consultation-actions { grid-column: 3 / -1; }
+}
+@media (min-width: 1280px) {
+    body.tuxedo-ui .bank-invoice-consultation { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.05fr) minmax(0, 1.15fr) minmax(0, .85fr) auto; }
+    body.tuxedo-ui .bank-invoice-consultation > .bank-consultation-search { grid-column: auto; }
+}
+@media (max-width: 767px) {
+    /* A localized month caption needs a complete row on a phone. Pair the two
+       shorter criteria below it instead of making the month button taller. */
+    body.tuxedo-ui .bank-invoice-month,
+    body.tuxedo-ui .bank-invoice-consultation > .bank-consultation-actions { grid-column: 1 / -1; }
+    body.tuxedo-ui .bank-invoice-bank { grid-column: 1; }
+    body.tuxedo-ui .bank-invoice-status { grid-column: 2; }
+    body.tuxedo-ui .bank-workspace-panel { padding: 12px; }
+    body.tuxedo-ui .bank-workspace-window { padding: 0; }
+    body.tuxedo-ui .bank-workspace-window > :not(.bank-workspace-windowbar) { margin-inline: 12px; }
+    body.tuxedo-ui .bank-workspace-window > :last-child { margin-bottom: 12px; }
+    body.tuxedo-ui .bank-workspace-windowbar { gap: 12px; padding: 12px; }
+    body.tuxedo-ui .bank-workspace-windowtitle .section-title { font-size: 18px; }
+    body.tuxedo-ui .bank-availability-primary > .bank-balance-breakdown { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    body.tuxedo-ui .bank-balance-breakdown dd { overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.tuxedo-ui .bank-workspace-panel { animation: none; }
+    body.tuxedo-ui .bank-workspace-tab { transition: none; }
+}

@@ -78,6 +78,21 @@ def _accounts(user):
     )
 
 
+def _bank_index(user):
+    """Owned identity/counts for the inline bank index, without loading balances twice."""
+    return Bank.objects.filter(user=user).annotate(
+        account_count=Count('accounts', filter=Q(accounts__user=user), distinct=True),
+        owned_credit_count=Count(
+            'accounts__credit_cards',
+            filter=Q(accounts__user=user, accounts__credit_cards__user=user), distinct=True,
+        ),
+        owned_debit_count=Count(
+            'accounts__debit_cards',
+            filter=Q(accounts__user=user, accounts__debit_cards__user=user), distinct=True,
+        ),
+    ).annotate(card_count=F('owned_credit_count') + F('owned_debit_count')).order_by('name', 'pk')
+
+
 def _decorate_banks(banks, availability):
     rows = {row['account'].pk: row for row in availability['account_rows']}
     for bank in banks:
@@ -176,6 +191,19 @@ class BankListView(LoginRequiredMixin, ListView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             sync_user_ledger(request.user)
+            # Older native planning returns use ?open=. Resolve that owned
+            # destination to the same canonical URL used by the inline tabs.
+            selected = request.GET.get('open') if request.method == 'GET' else None
+            if selected:
+                if not _canonical_id(selected):
+                    raise Http404
+                bank = get_object_or_404(Bank, pk=selected, user=request.user)
+                query = request.GET.copy()
+                query.pop('open')
+                destination = reverse('banking:detail', args=[bank.pk])
+                if query:
+                    destination += '?' + query.urlencode()
+                return redirect(destination)
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -187,7 +215,7 @@ class BankListView(LoginRequiredMixin, ListView):
                 queryset=_programs(self.request.user),
             ),
         )
-        return queryset
+        return queryset.order_by('name', 'pk')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -224,6 +252,8 @@ class BankDetailView(LoginRequiredMixin, DetailView):
         account_ids = [account.pk for account in self.object.accounts.all()]
         context['availability'] = get_planning_availability(self.request.user)
         _decorate_banks([self.object], context['availability'])
+        context['banks'] = _bank_index(self.request.user)
+        context['selected_bank'] = self.object
         context['reserve_open'] = self.request.GET.get('reserves') == str(self.object.pk)
         context['movements'] = BankMovement.objects.filter(
             user=self.request.user, account_id__in=account_ids
@@ -260,6 +290,11 @@ class BankDetailView(LoginRequiredMixin, DetailView):
             context['redemption_form'] = kwargs.get('redemption_form') or RewardRedemptionForm(
                 user=self.request.user, instance=editing, prefix='redemption',
             )
+            # Only an explicit origin is posted: without one, saving a changed
+            # target account must still return to its new receiving bank.
+            context['redemption_origin'] = return_url(self.request, '')
+            context['redemption_cancel_url'] = return_url(self.request,
+                reverse('banking:detail', args=[self.object.pk]) + f'#reward-redemption-{editing.pk}')
         return context
 
 
@@ -517,7 +552,11 @@ def invoice_detail(request, pk):
     from transactions.models import Transaction
     items = Transaction.objects.filter(user=request.user, credit_card=invoice.card).select_related('category')
     sources = [(item, item.amount_for_month(invoice.reference_month.year, invoice.reference_month.month)) for item in items]
+    # Nested editors return to this invoice with its explicit outer origin;
+    # request.path alone would discard the filtered consultation after an edit.
+    invoice_context_url = with_return_url(reverse('banking:invoice_detail', args=[pk]), return_url(request, ''))
     return render(request, 'banking/invoice_detail.html', {'invoice': invoice, 'form': form, 'sources': [(item, amount) for item, amount in sources if amount],
+        'invoice_context_url': invoice_context_url,
         'return_url': return_url(request, reverse('banking:invoices'))})
 
 
@@ -539,11 +578,11 @@ def invoice_payment_edit(request, pk):
 @login_required
 def invoice_payment_delete(request, pk):
     payment = get_object_or_404(InvoicePayment.objects.select_related('invoice__card__account'), pk=pk, user=request.user)
-    invoice_id = payment.invoice_id
+    destination = return_url(request, reverse('banking:invoice_detail', args=[payment.invoice_id]))
     if request.method == 'POST':
         delete_invoice_payment(payment)
-        return redirect('banking:invoice_detail', pk=invoice_id)
-    return render(request, 'banking/payment_delete.html', {'payment': payment})
+        return redirect(destination)
+    return render(request, 'banking/payment_delete.html', {'payment': payment, 'return_url': destination})
 
 
 class LoyaltyProgramCreateView(RelatedFormMixin, CreateView):
@@ -567,15 +606,20 @@ class LoyaltyProgramUpdateView(RelatedFormMixin, UpdateView):
     form_title = _('Edit loyalty program')
 
 
-class OwnedDeleteView(LoginRequiredMixin, DeleteView):
+class OwnedDeleteView(ReturnContextMixin, LoginRequiredMixin, DeleteView):
     template_name = 'banking/confirm_delete.html'
     context_object_name = 'item'
 
     def get_queryset(self):
         return self.model.objects.filter(user=self.request.user)
 
-    def get_success_url(self):
+    def get_return_fallback(self):
         return reverse('banking:list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = self.get_return_url()
+        return context
 
     def form_valid(self, form):
         try:
@@ -585,13 +629,21 @@ class OwnedDeleteView(LoginRequiredMixin, DeleteView):
                 self.request,
                 _('This item cannot be deleted because financial records still reference it.'),
             )
-            return redirect(self.get_success_url())
+            return redirect(self.get_return_url())
         messages.success(self.request, _('Item deleted.'))
         return response
 
 
 class BankDeleteView(OwnedDeleteView):
     model = Bank
+
+    def get_success_url(self):
+        destination = super().get_success_url()
+        # Cancel and a protected deletion retain the open bank. Successful
+        # removal must not send the user back to that now-deleted workspace.
+        if urlsplit(destination).path == reverse('banking:detail', args=[self.object.pk]):
+            return reverse('banking:list')
+        return destination
 
 
 class BankAccountDeleteView(OwnedDeleteView):
@@ -763,7 +815,8 @@ class RewardRedemptionUpdateView(OwnedFormMixin, UpdateView):
     def get(self, request, *args, **kwargs):
         redemption = self.get_object()
         url = reverse('banking:detail', args=[redemption.target_account.bank_id])
-        return redirect(f'{url}?edit_redemption={redemption.pk}#reward-redemption-{redemption.pk}')
+        target = f'{url}?edit_redemption={redemption.pk}#reward-redemption-{redemption.pk}'
+        return redirect(with_return_url(target, return_url(request, '')))
 
     def form_valid(self, form):
         try:
@@ -781,7 +834,7 @@ class RewardRedemptionUpdateView(OwnedFormMixin, UpdateView):
             return self.form_invalid(form)
         messages.success(self.request, _('Reward redemption updated.'))
         url = reverse('banking:detail', args=[self.object.target_account.bank_id])
-        return redirect(f'{url}#reward-redemption-{self.object.pk}')
+        return redirect(return_url(self.request, f'{url}#reward-redemption-{self.object.pk}'))
 
     def form_invalid(self, form):
         # Validation recovery stays inside the source section, with the bound
@@ -830,6 +883,7 @@ class ExchangeRateListView(LoginRequiredMixin, ListView):
 class ExchangeRateFormMixin(OwnedFormMixin):
     model = ExchangeRate
     form_class = ExchangeRateForm
+    form_variant = 'exchange_rate'
     success_url = reverse_lazy('banking:exchange_rates')
 
     def get_cancel_url(self):
@@ -860,13 +914,11 @@ class ExchangeRateUpdateView(ExchangeRateFormMixin, UpdateView):
 class ExchangeRateDeleteView(OwnedDeleteView):
     model = ExchangeRate
 
-    def get_success_url(self):
-        return return_url(self.request, reverse('banking:exchange_rates'))
+    def get_return_fallback(self):
+        return reverse('banking:exchange_rates')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['cancel_url'] = self.get_success_url()
-        context['return_url'] = self.get_success_url()
         context['delete_message'] = _(
             'This action cannot be undone. Current valuations may change or show missing rates. '
             'Conversions already saved in transfers and investments will be preserved.'

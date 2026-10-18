@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 from unittest.mock import patch
 
 from django.db import connection
+from django.contrib.auth import get_user_model
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
@@ -14,7 +15,9 @@ from banking.services import ConversionContext
 from banking.settlements import save_invoice_payment
 from categories.models import Category
 from dashboard.details import composition
-from dashboard.services import _expenses_by_category, _transactions, get_dashboard_summary, get_ledger_snapshot
+from dashboard.services import (_expenses_by_category, _transactions, get_account_evolution,
+                                get_dashboard_summary, get_expenses_by_recurrence,
+                                get_instrument_activity, get_ledger_snapshot)
 from dashboard.tests import DashboardFixture
 from investments.models import Asset, Investment, InvestmentProduct, PriceObservation
 from transactions.models import Transaction, TransactionSplit
@@ -23,6 +26,28 @@ from transactions.test_projection_efficiency import writes
 
 
 class ReportingEfficiencyTests(DashboardFixture):
+    def test_shared_report_sources_reject_foreign_and_mixed_ownership(self):
+        other = get_user_model().objects.create_user('foreign-reporting-owner')
+        own = self.transaction()
+        foreign = Transaction(user=other)
+        for service in (get_account_evolution, get_instrument_activity, get_expenses_by_recurrence):
+            for sources in ([foreign], [own, foreign]):
+                with self.subTest(service=service.__name__, mixed=len(sources) > 1):
+                    with self.assertRaisesRegex(ValueError, 'exactly one user'):
+                        service(self.user, transactions=sources)
+
+    def test_reports_share_one_owned_source_read_across_chart_islands(self):
+        self.transaction()
+        self.client.get(reverse('dashboard:reports'))
+        with CaptureQueriesContext(connection) as captured:
+            response = self.client.get(reverse('dashboard:reports'))
+        source_reads = [query for query in captured if 'FROM "transactions_transaction"' in query['sql']]
+        # One read reconciles the ledger; one loads categorized sources for all
+        # three report islands. Each island still applies its own date scope.
+        self.assertEqual(len(source_reads), 2)
+        self.assertEqual(response.context['instrument_activity']['expense_total'], Decimal('100'))
+        self.assertEqual(writes(captured), [])
+
     def test_summary_preference_queries_do_not_grow_per_event(self):
         UserPreference.for_user(self.user)
         self.transaction(date=date(2026, 9, 1))
@@ -120,4 +145,5 @@ class ReportingEfficiencyTests(DashboardFixture):
         self.assertEqual(source['cents'], row['cents'])
         parsed = urlparse(source['url'])
         self.assertEqual(parsed.path, reverse('investments:operations'))
-        self.assertEqual(parse_qs(parsed.query), {'section': ['portfolio'], 'product': [str(product.pk)], 'asset': [str(asset.pk)]})
+        self.assertEqual(parse_qs(parsed.query), {'section': ['portfolio'], 'product': [str(product.pk)],
+                                                'asset': [str(asset.pk)], 'date_to': ['2026-09-30']})

@@ -1,6 +1,6 @@
 {% load i18n navigation %}
 {% url 'investments:update_asset' asset.id as asset_url %}
-<details class="mt-3 text-sm">
+<details class="explanation-disclosure text-sm{% if not expand_details %} mt-3{% endif %}"{% if expand_details %} open{% endif %}>
     <summary class="quiet-action cursor-pointer">{% translate 'Cost, price and results' %}</summary>
     <dl class="mt-3 grid gap-3 sm:grid-cols-2">
         <div><dt class="subtle-copy">{% translate 'Remaining acquisition cost' %}</dt><dd>{{ asset.currency }} {{ asset.remaining_cost|floatformat:2 }}</dd></div>

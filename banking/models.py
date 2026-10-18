@@ -27,6 +27,7 @@ CURRENCY_CHOICES = [(code, CURRENCY_NAMES[code]) for code in CURRENCIES]
 ZERO = Decimal('0.00')
 POSITIVE = MinValueValidator(Decimal('0.01'))
 NON_NEGATIVE = MinValueValidator(ZERO)
+CARD_COLOR = RegexValidator(r'^#[0-9a-fA-F]{6}$', _('Enter a color in #RRGGBB format.'))
 
 
 class TimestampedModel(models.Model):
@@ -107,6 +108,13 @@ class BankAccount(TimestampedModel):
 
         return account_balance(self, as_of=as_of)
 
+    def predates_opening(self, effective_date):
+        """Unknown legacy baselines never acquire an inferred start date."""
+        return bool(
+            self.opening_date and isinstance(effective_date, date)
+            and effective_date < self.opening_date
+        )
+
 
 class DebitCard(TimestampedModel):
     user = models.ForeignKey(
@@ -116,13 +124,22 @@ class DebitCard(TimestampedModel):
         BankAccount, on_delete=models.PROTECT, related_name='debit_cards'
     )
     name = models.CharField(max_length=100)
+    color = models.CharField(max_length=7, default='#253330', validators=[CARD_COLOR])
+    gradient_end = models.CharField(max_length=7, blank=True, validators=[CARD_COLOR])
+    gradient_angle = models.PositiveSmallIntegerField(
+        default=135, validators=[MinValueValidator(0), MaxValueValidator(359)]
+    )
 
     class Meta:
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(
                 fields=['account', 'name'], name='banking_unique_debit_card_account_name'
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(gradient_angle__gte=0, gradient_angle__lte=359),
+                name='banking_debit_card_gradient_angle_range',
+            ),
         ]
 
     def __str__(self):
@@ -146,6 +163,11 @@ class CreditCard(TimestampedModel):
         BankAccount, on_delete=models.PROTECT, related_name='credit_cards'
     )
     name = models.CharField(max_length=100)
+    color = models.CharField(max_length=7, default='#253330', validators=[CARD_COLOR])
+    gradient_end = models.CharField(max_length=7, blank=True, validators=[CARD_COLOR])
+    gradient_angle = models.PositiveSmallIntegerField(
+        default=135, validators=[MinValueValidator(0), MaxValueValidator(359)]
+    )
     card_type = models.CharField(
         max_length=10, choices=CardType.choices, default=CardType.PHYSICAL
     )
@@ -165,7 +187,11 @@ class CreditCard(TimestampedModel):
         constraints = [
             models.UniqueConstraint(
                 fields=['account', 'name'], name='banking_unique_credit_card_account_name'
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(gradient_angle__gte=0, gradient_angle__lte=359),
+                name='banking_credit_card_gradient_angle_range',
+            ),
         ]
 
     def __str__(self):
@@ -345,6 +371,15 @@ class BankTransfer(TimestampedModel):
             account = getattr(self, field, None)
             if account and self.user_id and account.user_id != self.user_id:
                 errors[field] = _('The account must belong to the transfer owner.')
+            if account and account.predates_opening(self.date):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
+        if (self.source_account_id and self.destination_account_id
+                and self.source_account.currency == self.destination_account.currency
+                and self.source_amount is not None and self.destination_amount is not None
+                and self.source_amount != self.destination_amount):
+            # Own-account transfers cannot create an unexplained same-currency
+            # gain or loss. Record any fee as its own categorized expense.
+            errors['destination_amount'] = _('Transfers in the same currency require equal source and destination amounts.')
         if errors:
             raise ValidationError(errors)
 
@@ -458,7 +493,7 @@ class InvoicePayment(TimestampedModel):
             errors['invoice'] = _('This invoice uses automatic settlement.')
         if self.date and self.date > date.today():
             errors['date'] = _('Confirmed payments cannot be dated in the future.')
-        if self.account_id and self.account.opening_date and self.date and self.date < self.account.opening_date:
+        if self.account_id and self.account.predates_opening(self.date):
             errors['date'] = _('The payment cannot precede the account opening balance date.')
         if errors:
             raise ValidationError(errors)
@@ -624,6 +659,9 @@ class LoyaltyEntry(models.Model):
             instrument = getattr(self, field, None)
             if instrument and self.user_id and instrument.user_id != self.user_id:
                 errors[field] = _('The funding instrument must belong to the entry owner.')
+            account = instrument.account if field == 'funding_credit_card' and instrument else instrument
+            if account and account.predates_opening(self.date):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
         if errors:
             raise ValidationError(errors)
 
@@ -726,6 +764,11 @@ class RewardRedemption(TimestampedModel):
         for field, obj in owned.items():
             if obj and self.user_id and obj.user_id != self.user_id:
                 errors[field] = _('This funding instrument must belong to the redemption owner.')
+            if field == 'program':
+                continue
+            account = obj.account if field == 'iof_credit_card' and obj else obj
+            if account and account.predates_opening(self.date):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
         funding_count = int(self.iof_account_id is not None) + int(
             self.iof_credit_card_id is not None
         )

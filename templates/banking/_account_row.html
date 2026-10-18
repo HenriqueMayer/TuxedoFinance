@@ -1,7 +1,7 @@
 {% load i18n navigation %}
 <article id="account-row-{{ row.account.pk|stringformat:'d' }}" class="bank-account-card" data-preserve-view aria-labelledby="account-name-{{ row.account.pk|stringformat:'d' }}">
     <header class="bank-account-header">
-        <div class="min-w-0"><h3 id="account-name-{{ row.account.pk|stringformat:'d' }}" class="text-sm font-semibold">{{ row.account.name }}</h3><p class="subtle-copy mt-1">{{ row.currency }}</p></div>
+        <div class="min-w-0"><h3 id="account-name-{{ row.account.pk|stringformat:'d' }}" class="break-words text-sm font-semibold">{{ row.account.name }}</h3><p class="subtle-copy mt-1">{{ row.currency }}</p></div>
         <div class="banking-row-actions">
             {% url 'transactions:create' as transaction_url %}{% with account_id=row.account.pk|stringformat:'d' %}{% with target=transaction_url|add:'?account='|add:account_id %}<a href="{% contextual_url target origin=account_origin %}" class="action-link">{% translate 'New transaction' %}</a>{% endwith %}{% endwith %}
             <details class="secondary-actions compact-menu" name="account-updates">
@@ -31,7 +31,7 @@
     <details class="account-configuration">
         <summary>{% translate 'Account details' %}</summary>
         <div class="space-y-3 pt-3"><p class="subtle-copy">{% blocktranslate with currency=row.currency balance=row.account.opening_balance|floatformat:2 %}Opening balance: {{ currency }} {{ balance }}{% endblocktranslate %}</p>
-            {% if row.account.debit_cards.all %}<h4 class="text-sm font-medium">{% translate 'Debit cards' %}</h4><ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for card in row.account.debit_cards.all %}<li class="flex flex-wrap items-center justify-between gap-2 py-2"><span class="text-sm">{{ card.name }}</span><span class="flex gap-1">{% url 'banking:debit_card_update' card.pk as debit_edit %}<a href="{% contextual_url debit_edit origin=account_origin %}" class="quiet-action">{% translate 'Edit' %}</a>{% url 'banking:debit_card_delete' card.pk as debit_delete %}<a href="{% contextual_url debit_delete origin=account_origin %}" class="quiet-action text-expense dark:text-expense-light">{% translate 'Delete' %}</a></span></li>{% endfor %}</ul>{% endif %}
+            {% if row.account.debit_cards.all %}<h4 class="text-sm font-medium">{% translate 'Debit cards' %}</h4><ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for card in row.account.debit_cards.all %}<li class="flex flex-wrap items-center justify-between gap-2 py-2"><span class="card-miniature-heading">{% include 'banking/_card_miniature.html' with card=card only %}<span class="text-sm">{{ card.name }}</span></span><span class="flex gap-1">{% url 'banking:debit_card_update' card.pk as debit_edit %}<a href="{% contextual_url debit_edit origin=account_origin %}" class="quiet-action">{% translate 'Edit' %}</a>{% url 'banking:debit_card_delete' card.pk as debit_delete %}<a href="{% contextual_url debit_delete origin=account_origin %}" class="quiet-action text-expense dark:text-expense-light">{% translate 'Delete' %}</a></span></li>{% endfor %}</ul>{% endif %}
         </div>
     </details>
 </article>

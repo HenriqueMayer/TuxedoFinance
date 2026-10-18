@@ -5,9 +5,10 @@ from unittest.mock import patch
 
 from django.urls import reverse
 
+from accounts.models import UserPreference
 from banking.models import BankMovement
-from planning.forms import GoalAllocationForm
-from planning.models import CategoryBudget, FinancialGoal, GoalAllocation
+from planning.forms import GoalAllocationForm, GoalCreationForm
+from planning.models import CategoryBudget, FinancialGoal, GoalAllocation, SignalDecision
 from planning.services import goal_sources
 from planning.tests import PlanningFixture
 
@@ -111,3 +112,84 @@ class PlanningWorkspaceUXTests(PlanningFixture):
         self.assertContains(response, 'BRL 750.00')
         self.assertNotContains(response, 'Private cash')
         self.assertFalse(response.context['form']['reserve_now'].value())
+
+    def test_creation_and_standalone_reservation_show_the_same_remaining_capacity(self):
+        self.reserve(amount='250')
+        self.reserve(amount='100', bank_account=None, product=self.product, asset=self.asset)
+        goal = self.goal('Next goal')
+        created = GoalCreationForm(user=self.user)
+        standalone = GoalAllocationForm(user=self.user, goal=goal)
+        self.assertEqual(created.fields['source'].choices, standalone.fields['source'].choices)
+        choices = dict(standalone.fields['source'].choices)
+        self.assertIn('BRL 750.00', choices[f'account:{self.account.pk}'])
+        self.assertIn('BRL 400.00', choices[f'pot:{self.product.pk}:{self.asset.pk}'])
+        # A manual reserve already describes this cash; it is not deducted again.
+        self.assertFalse(BankMovement.objects.exists())
+
+    def test_editing_capacity_excludes_its_saved_claim_but_keeps_other_goals(self):
+        self.reserve(amount='250')
+        edited = self.reserve(amount='100')
+        form = GoalAllocationForm(user=self.user, goal=edited.goal, instance=edited)
+        self.assertIn('BRL 750.00', dict(form.fields['source'].choices)[edited.source_key])
+        bound = GoalAllocationForm({'source': edited.source_key, 'amount': '750.01'},
+                                   user=self.user, goal=edited.goal, instance=edited)
+        self.assertFalse(bound.is_valid())
+        self.assertIn('Available: BRL 750.00', str(bound.errors))
+        self.assertEqual(bound['amount'].value(), '750.01')
+        edited.refresh_from_db()
+        self.assertEqual(edited.amount, Decimal('100'))
+        self.assertFalse(BankMovement.objects.exists())
+
+    def test_goal_summary_uses_the_preferred_date_independently_of_language(self):
+        goal = self.goal(target_date=date(2031, 12, 24))
+        preference = UserPreference.for_user(self.user)
+        self.client.cookies['django_language'] = 'pt-br'
+        for order, expected, other in [('DMY', '24/12/2031', '12/24/2031'), ('MDY', '12/24/2031', '24/12/2031')]:
+            preference.date_format = order
+            preference.save(update_fields=['date_format'])
+            response = self.client.get(reverse('planning:goal_detail', args=[goal.pk]))
+            self.assertContains(response, expected)
+            self.assertNotContains(response, other)
+
+    def test_reservation_sources_open_the_exact_owned_balance_without_editing_it(self):
+        goal = self.goal()
+        self.reserve(goal=goal)
+        self.reserve(goal=goal, amount='100', bank_account=None, product=self.product, asset=self.asset)
+        sources = goal_sources(self.user)
+        bank_url = reverse('banking:detail', args=[self.bank.pk]) + f'#account-row-{self.account.pk}'
+        pot_url = reverse('investments:position_detail', args=[self.product.pk, self.asset.pk])
+        self.assertEqual(sources[f'account:{self.account.pk}']['url'], bank_url)
+        self.assertEqual(sources[f'pot:{self.product.pk}:{self.asset.pk}']['url'], pot_url)
+        response = self.client.get(reverse('planning:goal_detail', args=[goal.pk]))
+        self.assertContains(response, f'href="{bank_url}" hx-swap="innerHTML show:none"')
+        self.assertContains(response, f'href="{pot_url}"')
+        self.assertEqual(self.client.get(pot_url).status_code, 200)
+        self.assertNotIn(f'account:{self.private_account.pk}', sources)
+        self.assertFalse(BankMovement.objects.exists())
+
+    def test_signal_settings_and_reviews_keep_the_validated_reviewed_origin(self):
+        self.expense(title='Review source')
+        self.expense(title='Review source')
+        origin = reverse('planning:signals') + '?reviewed=1'
+        settings_url = reverse('planning:signals_settings')
+        payload = {'duplicates_enabled': 'on', 'subscriptionincrease_enabled': 'on',
+                   'budgetoverspend_enabled': 'on', 'futurecashshortage_enabled': 'on',
+                   'duplicate_days': '3', 'subscription_increase_percent': '10',
+                   'forecast_days': '30', 'next': origin}
+        response = self.client.get(settings_url, {'next': origin})
+        self.assertEqual(response.context['cancel_url'], origin)
+        response = self.client.post(settings_url, {**payload, 'duplicate_days': '99'})
+        self.assertEqual(response.context['return_url'], origin)
+        self.assertEqual(response.context['form']['duplicate_days'].value(), '99')
+        self.assertRedirects(self.client.post(settings_url, payload), origin)
+        response = self.client.get(origin)
+        key = next(row['key'] for row in response.context['signals'] if row['kind'] == 'duplicates')
+        review_url = reverse('planning:signal_decision')
+        self.assertRedirects(self.client.post(review_url, {'key': key, 'action': 'ACK', 'next': origin}), origin)
+        self.assertTrue(SignalDecision.objects.filter(user=self.user, key=key).exists())
+        self.assertContains(self.client.get(origin), f'name="next" value="{origin}"')
+        self.assertRedirects(self.client.post(review_url, {'key': key, 'action': 'REOPEN', 'next': origin}), origin)
+        self.assertFalse(SignalDecision.objects.filter(user=self.user, key=key).exists())
+        self.assertRedirects(self.client.post(settings_url, {**payload, 'next': '//outside.example/'}), reverse('planning:signals'))
+        self.assertRedirects(self.client.post(review_url, {'key': key, 'action': 'DISMISS', 'next': 'https://outside.example/'}), reverse('planning:signals'))
+        self.assertFalse(BankMovement.objects.exists())

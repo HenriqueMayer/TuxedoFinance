@@ -31,7 +31,10 @@
         controls(form).forEach(field => {
             const values = url.searchParams.getAll(field.name);
             if (['checkbox', 'radio'].includes(field.type)) {
-                field.checked = values.includes(field.value);
+                // Empty-value radio choices represent “All” when a filter is
+                // absent from the URL. Clear must restore that native choice.
+                field.checked = values.includes(field.value) || (field.type === 'radio' &&
+                    !values.length && field.value === (field.dataset.liveDefault ?? ''));
             } else if (field.tagName === 'SELECT' && field.multiple) {
                 Array.from(field.options).forEach(option => { option.selected = values.includes(option.value); });
             } else {
@@ -75,13 +78,17 @@
     function synchronize(form, incoming, restore) {
         const source = controls(incoming);
         controls(form).forEach(field => {
-            const other = source.find(item => item.name === field.name && item.type === field.type);
+            const choice = ['checkbox', 'radio'].includes(field.type);
+            // A choice group shares its name/type; its individual values remain
+            // stable while fresh GETs restore only the selected/checked state.
+            const other = source.find(item => item.name === field.name && item.type === field.type &&
+                (!choice || item.value === field.value));
             if (!other) return;
             if (field.matches('select[data-live-options]')) field.replaceChildren(...Array.from(other.children, node => node.cloneNode(true)));
             if (restore || field.type === 'hidden' || field.hasAttribute('data-live-options')) {
-                if (field.multiple) Array.from(field.options).forEach(option => { option.selected = Array.from(other.selectedOptions).some(item => item.value === option.value); });
+                if (choice) field.checked = other.checked;
+                else if (field.multiple) Array.from(field.options).forEach(option => { option.selected = Array.from(other.selectedOptions).some(item => item.value === option.value); });
                 else field.value = other.value;
-                if (['checkbox', 'radio'].includes(field.type)) field.checked = other.checked;
             }
             ['aria-invalid', 'aria-describedby'].forEach(name => {
                 if (other.hasAttribute(name)) field.setAttribute(name, other.getAttribute(name));
@@ -110,8 +117,10 @@
         if (destination === location.pathname + location.search) return;
         document.dispatchEvent(new CustomEvent('tuxedo:live-filters-before-history', {detail: {form, mode}}));
         const entry = {...history.state, htmx: true, tuxedoLiveFilters: form.id};
-        if (mode === 'text' && state.textPushed) history.replaceState(entry, '', destination);
+        const replacing = mode === 'text' && state.textPushed;
+        if (replacing) history.replaceState(entry, '', destination);
         else history.pushState(entry, '', destination);
+        document.dispatchEvent(new CustomEvent('tuxedo:history-entry', {detail: {replace: replacing}}));
         state.textPushed = mode === 'text';
     }
     async function update(form, url, mode) {

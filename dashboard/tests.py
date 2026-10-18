@@ -761,10 +761,7 @@ class DashboardPageContractTests(DashboardFixture):
         self.assertContains(response, 'remaining planned')
         self.assertContains(response, 'Expenses by category')
         self.assertContains(response, 'Groceries')
-        self.assertContains(
-            response,
-            f'category_month={timezone.localdate():%Y-%m}',
-        )
+        self.assertNotContains(response, 'Explore in Reports')
 
     def test_index_uses_period_appropriate_past_and_future_labels(self):
         today = timezone.localdate()
@@ -819,7 +816,7 @@ class DashboardPageContractTests(DashboardFixture):
         self.assertEqual(len(response.context['account_balances_preview']), 5)
         self.assertEqual(len(response.context['open_invoices_preview']), 5)
         self.assertContains(response, 'View Banking', count=1)
-        self.assertContains(response, 'href="/banking/invoices/" class="quiet-action shrink-0">Invoices</a>', count=1)
+        self.assertContains(response, 'href="/banking/invoices/" class="quiet-action shrink-0">All invoices</a>', count=1)
         self.assertContains(response, 'href="/banking/invoices/%s/?next=' % response.context['open_invoices_preview'][0].pk)
 
     def test_views_sync_before_render_and_show_current_headings(self):

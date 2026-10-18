@@ -1,8 +1,8 @@
-{% load i18n navigation %}
-<article class="budget-row" aria-labelledby="budget-{{ row.budget.pk }}">
+{% load i18n l10n navigation %}
+<article class="budget-row" aria-labelledby="budget-{{ row.budget.pk|stringformat:'d' }}">
     <div class="budget-row-main">
-        <h3 id="budget-{{ row.budget.pk }}" class="font-semibold text-sm">{{ row.budget.category }}</h3>
-        <div class="budget-spending"><p class="tabular-nums"><strong>{{ row.budget.currency }} {{ row.actual|floatformat:2 }}</strong> / {{ row.budget.amount|floatformat:2 }}</p><progress max="100" value="{{ row.actual_percent }}" aria-label="{% translate 'Budget used' %}">{{ row.actual_percent }}%</progress></div>
+        <h3 id="budget-{{ row.budget.pk|stringformat:'d' }}" class="font-semibold text-sm">{{ row.budget.category }}</h3>
+        <div class="budget-spending"><p class="tabular-nums"><strong>{{ row.budget.currency }} {{ row.actual|floatformat:2 }}</strong> / {{ row.budget.amount|floatformat:2 }}</p><progress max="100" value="{{ row.actual_percent|unlocalize }}" aria-label="{% translate 'Budget used' %}">{{ row.actual_percent }}%</progress></div>
         <p class="budget-remaining tabular-nums{% if row.remaining < 0 %} text-expense dark:text-expense-light{% endif %}"><span class="budget-mobile-label">{% translate 'Remaining' %}: </span>{{ row.budget.currency }} {{ row.remaining|floatformat:2 }}</p>
         {% url 'planning:budget_update' row.budget.pk as edit_url %}<a class="quiet-action budget-edit" href="{% contextual_url edit_url %}">{% translate 'Edit limit' %}</a>
     </div>

@@ -6,21 +6,22 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Case, Count, IntegerField, ProtectedError, Q, Value, When
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
-from categories.forms import CategoryForm, CategoryImportForm
-from categories.models import Category
+from categories.forms import CATEGORY_CSV_MAX_BYTES, CATEGORY_CSV_MAX_ROWS, CategoryForm, CategoryImportForm
+from categories.models import Category, validate_parent_hierarchy
 from core.csv import export_row
-from core.navigation import ReturnContextMixin
+from core.navigation import ReturnContextMixin, return_url
 
 
 class CategoryListView(LoginRequiredMixin, ListView):
@@ -150,7 +151,14 @@ class CategoryFormMixin(ReturnContextMixin, LoginRequiredMixin):
         database, and without this it surfaces as a 500.
         """
         try:
-            return super().form_valid(form)
+            # Recheck inside SQLite's write transaction: overlapping hierarchy
+            # edits must not validate against the same stale parent graph.
+            with transaction.atomic():
+                form.instance.full_clean()
+                return super().form_valid(form)
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
         except IntegrityError:
             form.add_error('name', _('You already have a category with this name.'))
             return self.form_invalid(form)
@@ -178,7 +186,7 @@ class CategoryUpdateView(CategoryFormMixin, SuccessMessageMixin, UpdateView):
     success_message = gettext_lazy('Category "%(name)s" updated.')
 
 
-class CategoryDeleteView(LoginRequiredMixin, DeleteView):
+class CategoryDeleteView(ReturnContextMixin, LoginRequiredMixin, DeleteView):
     """Delete a category with confirmation (PRD 4.2.4).
 
     `Transaction.category` uses `on_delete=PROTECT` (PRD §8.5), so deleting
@@ -204,7 +212,7 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
                 _('"%(name)s" cannot be deleted because it is still used by existing transactions or budgets.')
                 % {'name': name},
             )
-            return redirect('categories:list')
+            return redirect(self.get_return_url())
         messages.success(
             self.request,
             _('Category "%(name)s" deleted.') % {'name': name},
@@ -218,6 +226,7 @@ def delete_all_categories(request):
     """Confirm and atomically delete every unused category owned by the user."""
     categories = Category.objects.filter(user=request.user)
     category_count = categories.count()
+    destination = return_url(request, reverse('categories:list'))
 
     if request.method == 'POST':
         if categories.filter(Q(transactions__isnull=False) | Q(transaction_splits__isnull=False) | Q(budgets__isnull=False)).exists():
@@ -225,17 +234,17 @@ def delete_all_categories(request):
                 request,
                 _('Categories cannot be deleted while they are used by existing transactions or budgets.'),
             )
-            return redirect('categories:list')
+            return redirect(destination)
 
         with transaction.atomic():
             categories.delete()
         messages.success(request, _('All categories deleted.'))
-        return redirect('categories:list')
+        return redirect(destination)
 
     return render(
         request,
         'categories/confirm_delete_all.html',
-        {'category_count': category_count},
+        {'category_count': category_count, 'return_url': destination},
     )
 
 
@@ -260,13 +269,16 @@ def export_categories(request):
 
 def _read_category_csv(uploaded_file):
     try:
-        content = uploaded_file.read().decode('utf-8-sig')
+        content = uploaded_file.read(CATEGORY_CSV_MAX_BYTES + 1)
+        if len(content) > CATEGORY_CSV_MAX_BYTES:
+            raise ValueError(_('The category CSV must be no larger than 2 MiB.'))
+        content = content.decode('utf-8-sig')
     except UnicodeDecodeError as error:
         raise ValueError(_('The CSV file must use UTF-8 encoding.')) from error
 
-    reader = csv.DictReader(io.StringIO(content))
+    reader = csv.reader(io.StringIO(content, newline=''), strict=True)
     expected_columns = ['name', 'transaction_type', 'parent_category']
-    if reader.fieldnames != expected_columns:
+    if next(reader, None) != expected_columns:
         raise ValueError(
             _('The CSV header must be: name,transaction_type,parent_category.')
         )
@@ -275,9 +287,16 @@ def _read_category_csv(uploaded_file):
     names = set()
     valid_types = {choice for choice, _label in Category.TransactionType.choices}
     for line_number, row in enumerate(reader, start=2):
-        name = (row['name'] or '').strip()
-        category_type = (row['transaction_type'] or '').strip().upper()
-        parent_name = (row['parent_category'] or '').strip()
+        if line_number > CATEGORY_CSV_MAX_ROWS + 1:
+            raise ValueError(_('Import at most 500 category rows per CSV file.'))
+        # Entirely empty physical lines are harmless, but still count toward
+        # the bounded record budget. Every actual record needs three cells.
+        if not row:
+            continue
+        if len(row) != len(expected_columns):
+            raise ValueError(_('Line %(line)s must contain exactly three columns.') % {'line': line_number})
+        name, category_type, parent_name = (value.strip() for value in row)
+        category_type = category_type.upper()
         if not name and not category_type and not parent_name:
             continue
         if not name:
@@ -290,8 +309,6 @@ def _read_category_csv(uploaded_file):
             )
         if name in names:
             raise ValueError(_('The category "%(name)s" appears more than once.') % {'name': name})
-        if name == parent_name:
-            raise ValueError(_('The category "%(name)s" cannot be its own parent.') % {'name': name})
         names.add(name)
         rows.append((name, category_type, parent_name))
     return rows
@@ -300,37 +317,35 @@ def _read_category_csv(uploaded_file):
 @login_required
 @require_http_methods(['GET', 'POST'])
 def import_categories(request):
+    destination = return_url(request, reverse('categories:list'))
     form = CategoryImportForm(request.POST or None, request.FILES or None)
     if request.method == 'POST' and form.is_valid():
         try:
             rows = _read_category_csv(form.cleaned_data['file'])
-            existing = {
-                category.name: category
-                for category in Category.objects.filter(user=request.user)
-            }
-            available_names = set(existing) | {name for name, _type, _parent in rows}
-            missing_parents = sorted({
-                parent_name
-                for _name, _type, parent_name in rows
-                if parent_name and parent_name not in available_names
-            })
-            if missing_parents:
-                raise ValueError(
-                    _('Parent category not found: %(name)s.') % {'name': missing_parents[0]}
-                )
-
-            parent_by_name = {name: parent for name, _type, parent in rows if parent}
-            for name in parent_by_name:
-                visited = set()
-                current = name
-                while current in parent_by_name:
-                    if current in visited:
-                        raise ValueError(_('The CSV contains a circular category hierarchy.'))
-                    visited.add(current)
-                    current = parent_by_name[current]
-
             created = 0
             with transaction.atomic():
+                existing = {
+                    category.name: category
+                    for category in Category.objects.filter(user=request.user)
+                }
+                available_names = set(existing) | {name for name, _type, _parent in rows}
+                missing_parents = sorted({
+                    parent_name for _name, _type, parent_name in rows
+                    if parent_name and parent_name not in available_names
+                })
+                if missing_parents:
+                    raise ValueError(_('Parent category not found: %(name)s.') % {'name': missing_parents[0]})
+                owned_names = {category.pk: category.name for category in existing.values()}
+                parent_by_name = {
+                    name: owned_names.get(category.parent_category_id, category.parent_category_id)
+                    for name, category in existing.items()
+                }
+                # Existing names are skipped, so validate their real parents,
+                # not hypothetical replacements supplied in the imported rows.
+                parent_by_name.update({name: parent or None for name, _type, parent in rows if name not in existing})
+                for name, _type, parent_name in rows:
+                    if name not in existing:
+                        validate_parent_hierarchy(name, parent_name or None, parent_by_name)
                 categories = dict(existing)
                 for name, category_type, _parent_name in rows:
                     if name not in categories:
@@ -346,8 +361,12 @@ def import_categories(request):
                         continue
                     category.parent_category = categories[parent_name]
                     category.save(update_fields=['parent_category', 'updated_at'])
-        except ValueError as error:
+        except (ValueError, csv.Error) as error:
+            if isinstance(error, csv.Error):
+                error = _('The category CSV is malformed. Check its quoting and row structure.')
             form.add_error('file', error)
+        except ValidationError as error:
+            form.add_error('file', error.messages)
         else:
             skipped = len(rows) - created
             messages.success(
@@ -355,6 +374,6 @@ def import_categories(request):
                 _('%(created)s categories imported; %(skipped)s existing categories skipped.')
                 % {'created': created, 'skipped': skipped},
             )
-            return redirect('categories:list')
+            return redirect(destination)
 
-    return render(request, 'categories/import.html', {'form': form})
+    return render(request, 'categories/import.html', {'form': form, 'return_url': destination})

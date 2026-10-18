@@ -204,7 +204,13 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, 'aria-modal="true"')
         self.assertContains(
             response,
-            f'href="{reverse("dashboard:index")}" class="flex shrink-0 items-center gap-3 group',
+            f'<a href="{reverse("dashboard:index")}" class="app-brand">',
+        )
+        self.assertContains(response, '<span>Tuxedo Finance</span>', html=True)
+        self.assertContains(
+            response,
+            '<span class="app-current-workspace hidden lg:block">Home</span>',
+            html=True,
         )
         self.assertContains(response, 'data-app-navigation="desktop"')
         self.assertContains(response, 'data-app-navigation="mobile"')

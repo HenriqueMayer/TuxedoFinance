@@ -540,7 +540,8 @@ class TransactionNavigationTests(TransactionFixture):
                 self.client.cookies['django_language'] = language
                 response = self.listing(category=str(category.pk))
                 self.assertEqual(list(response.context['transactions']), [transaction])
-                self.assertContains(response, '<option value="12345" selected>Large identifier</option>')
+                self.assertContains(response, 'type="hidden" id="filter-category" name="category" value="12345"')
+                self.assertContains(response, 'Large identifier')
 
     def test_month_fold_drives_counts_categories_and_rows_once(self):
         from unittest.mock import patch

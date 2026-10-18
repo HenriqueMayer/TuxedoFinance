@@ -21,7 +21,7 @@ async function fixture(page, info) {
     await post(page, '/categories/create/', { name: 'Flow expense', transaction_type: 'EXPENSE' });
     await page.goto('/transactions/create/');
     const account = await page.locator('#id_bank_account option').filter({ hasText: 'Main cash' }).getAttribute('value');
-    return { account, origin: `/banking/?context=statement#account-row-${account}` };
+    return { bank, account, origin: `/banking/?context=statement#account-row-${account}` };
 }
 
 async function upload(page, account, origin, lines, name = 'flow.csv') {
@@ -64,7 +64,7 @@ async function confirm(page, origin) {
 for (const theme of ['light', 'dark']) {
     test(`planning overview and one-step goal reserve keep keyboard and context (${theme})`, async ({ page }, info) => {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
-        const { account } = await fixture(page, info);
+        const { bank, account } = await fixture(page, info);
         await page.goto('/planning/');
         await expect(page.getByRole('heading', { name: 'Category budgets', exact: true })).toBeVisible();
         await page.locator('nav[aria-label="Planning sections"]').getByRole('link', { name: 'Goals', exact: true }).press('Enter');
@@ -112,7 +112,13 @@ for (const theme of ['light', 'dark']) {
         const goal = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Flow goal', exact: true }) });
         await expect(goal).toContainText('250,00');
         await page.goto('/banking/');
-        await expect(page.locator(`#account-row-${account}`)).toContainText('1.000,00');
+        // The overview owns bank links; account rows belong to bank details.
+        // This fixture leaves its account outside planning, under Reserves.
+        await page.locator(`#bank-${bank}`).press('Enter');
+        await expect(page).toHaveURL(new RegExp(`/banking/${bank}/$`));
+        await page.locator(`#bank-reserves-${bank} > summary`).press('Enter');
+        await expect(page.locator(`#account-row-${account}`)).toBeVisible();
+        await expect(page.locator(`#account-row-${account} [data-account-balance]`)).toContainText('1.000,00');
     });
 
     test.skip(`compact paginated import, strong-ID bulk skip and mapping reuse (${theme})`, async ({ page }, info) => {

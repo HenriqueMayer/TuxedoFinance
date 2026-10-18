@@ -204,7 +204,7 @@ class Transaction(models.Model):
                     'The end month cannot precede the start month.'
                 )
         account = self.payment_account
-        if account and account.opening_date and self.date and self.date < account.opening_date:
+        if account and account.predates_opening(self.date):
             errors['date'] = _('The transaction cannot precede the account opening balance date.')
         if errors:
             raise ValidationError(errors)

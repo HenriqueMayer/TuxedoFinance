@@ -67,3 +67,16 @@ class CategorySplitTests(TestCase):
         self.assertEqual(self.item.splits.count(), 2)
         self.assertEqual(self.client.post(url, {'clear_split': '1'}).status_code, 302)
         self.assertFalse(self.item.splits.exists())
+
+    def test_invalid_decimal_and_excessive_category_keep_native_recovery_fields(self):
+        self.client.force_login(self.user)
+        url = reverse('transactions:split', args=[self.item.pk])
+        response = self.client.post(url, self.post_rows(**{'splits-0-amount': 'invalid'}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['formset'].forms[0]['amount'].value(), 'invalid')
+        self.assertEqual(response.context['formset'].forms[0].fields['amount'].widget.input_type, 'text')
+        self.assertContains(response, 'value="invalid"')
+        response = self.client.post(url, self.post_rows(**{'splits-0-amount': '100.02'}))
+        self.assertFormError(response.context['formset'].forms[0], 'amount', 'Category amount cannot exceed the transaction total.')
+        self.assertEqual(response.context['formset'].forms[0]['amount'].value(), '100.02')
+        self.assertFalse(self.item.splits.exists())

@@ -10,7 +10,7 @@
         {% translate 'Settings' as settings_label %}{% translate 'Choose how Tuxedo Finance presents consolidated totals for your account.' as settings_help %}{% include 'partials/help_popover.html' with help_id='settings-help' help_label=settings_label help_text=settings_help only %}
     </div>
 
-    <form method="post" hx-boost="false" class="surface-panel space-y-6" novalidate>
+    <form autocomplete="off" method="post" hx-boost="false" class="workspace-form surface-panel space-y-6" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -25,7 +25,7 @@
         {% translate 'Choose how complete dates are displayed throughout the application.' as date_help %}
         {% include 'partials/form_field.html' with field=form.date_format field_help_text=date_help %}
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="form-actions">
             <button type="submit"
                     class="action-primary">
                 {% translate "Save settings" %}

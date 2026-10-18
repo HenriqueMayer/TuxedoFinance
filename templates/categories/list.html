@@ -17,9 +17,9 @@ GET search plus top-level/subcategory filtering.
 {% translate "Clear filters" as clear_filters_label %}
 {% translate "No categories yet" as no_categories_title %}
 {% translate "Create your first category to start classifying transactions." as no_categories_message %}
-{% translate "New Category" as new_category_label %}
+{% translate "New category" as new_category_label %}
 <div class="space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="workspace-header">
         <div class="label-with-help">
             <h1 class="page-title">{% translate "Categories" %}</h1>
             {% translate 'Categories' as categories_label %}{% translate 'Organize your transactions with categories and subcategories.' as categories_help %}{% include 'partials/help_popover.html' with help_id='categories-help' help_label=categories_label help_text=categories_help only %}
@@ -28,10 +28,10 @@ GET search plus top-level/subcategory filtering.
             <details class="secondary-actions">
                 <summary>{% translate 'More options' %}</summary>
                 <div class="secondary-actions-panel">
-                    <a href="{% url 'categories:import' %}">{% translate 'Import CSV' %}</a>
+                    {% url 'categories:import' as import_url %}<a href="{% contextual_url import_url %}">{% translate 'Import CSV' %}</a>
                     <a href="{% url 'categories:export' %}" hx-boost="false">{% translate 'Export CSV for reimport' %}</a>
-                    <div class="flex items-center gap-1"><a href="{% url 'categories:export' %}?format=spreadsheet" hx-boost="false" class="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm hover:bg-cream dark:hover:bg-night">{% translate 'Export CSV for spreadsheets' %}</a>{% translate 'Export CSV for spreadsheets' as csv_label %}{% translate 'Spreadsheet export neutralizes formula-like text. Use the original CSV for faithful reimport.' as csv_help %}{% include 'partials/help_popover.html' with help_id='category-csv-help' help_label=csv_label help_text=csv_help only %}</div>
-                    {% if has_categories %}<a href="{% url 'categories:delete_all' %}" class="text-expense dark:text-expense-light">{% translate 'Delete all' %}</a>{% endif %}
+                    <div class="flex items-center gap-1"><a href="{% url 'categories:export' %}?format=spreadsheet" hx-boost="false" class="quiet-action min-w-0 flex-1 rounded-lg px-3 py-2 text-sm hover:bg-cream dark:hover:bg-night">{% translate 'Export CSV for spreadsheets' %}</a>{% translate 'Export CSV for spreadsheets' as csv_label %}{% translate 'Spreadsheet export neutralizes formula-like text. Use the original CSV for faithful reimport.' as csv_help %}{% include 'partials/help_popover.html' with help_id='category-csv-help' help_label=csv_label help_text=csv_help only %}</div>
+                    {% if has_categories %}{% url 'categories:delete_all' as delete_all_url %}<a href="{% contextual_url delete_all_url %}" class="text-expense dark:text-expense-light">{% translate 'Delete all' %}</a>{% endif %}
                 </div>
             </details>
             <a href="{% contextual_url create_url %}"
@@ -41,33 +41,33 @@ GET search plus top-level/subcategory filtering.
         </div>
     </div>
 
-    <form id="category-filters" method="get" action="{{ list_url }}" data-live-filters data-live-results="category-results" hx-boost="false" class="consultation-bar consultation-stable">
+    <form id="category-filters" method="get" action="{{ list_url }}" data-live-filters data-live-results="category-results" hx-boost="false" class="consultation-bar category-filters">
         <div class="consultation-search space-y-1.5">
             <label for="filter-search" class="field-label">{% translate "Search" %}</label>
             <input type="search" id="filter-search" name="q" data-live-search value="{{ search_query }}"
                    placeholder="{% translate 'Category name' %}"
-                   class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream placeholder:text-forest/70 dark:placeholder:text-night-muted focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
+                   class="entry-input">
         </div>
-        <details id="category-extra-filters" class="filter-disclosure"{% if selected_level or selected_type %} open{% endif %}><summary>{% translate 'More filters' %}</summary><div class="filter-disclosure-panel grid gap-4 sm:grid-cols-2">
-        <div class="min-w-0 basis-full space-y-1.5 sm:basis-32 sm:flex-1">
-            <label for="filter-level" class="field-label">{% translate "Level" %}</label>
-            <select id="filter-level" name="level" data-live-change
-                    class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
-                <option value="">{% translate "All levels" %}</option>
-                <option value="top" {% if selected_level == 'top' %}selected{% endif %}>{% translate "Top-level" %}</option>
-                <option value="sub" {% if selected_level == 'sub' %}selected{% endif %}>{% translate "Subcategories" %}</option>
-            </select>
+        {% comment %}These two short criteria stay visible; native radios retain GET submission and arrow-key navigation without a second filter controller.{% endcomment %}
+        <div class="category-filter-choices">
+            <fieldset id="filter-level" class="category-filter-group">
+                <legend class="field-label">{% translate 'Level' %}</legend>
+                <div class="entry-segment-options">
+                    <div><label for="filter-level-all"><input id="filter-level-all" type="radio" name="level" value="" data-live-change{% if not selected_level %} checked{% endif %}>{% translate 'All levels' %}</label></div>
+                    <div><label for="filter-level-top"><input id="filter-level-top" type="radio" name="level" value="top" data-live-change{% if selected_level == 'top' %} checked{% endif %}>{% translate 'Top-level' %}</label></div>
+                    <div><label for="filter-level-sub"><input id="filter-level-sub" type="radio" name="level" value="sub" data-live-change{% if selected_level == 'sub' %} checked{% endif %}>{% translate 'Subcategories' %}</label></div>
+                </div>
+            </fieldset>
+            <fieldset id="filter-type" class="category-filter-group">
+                <legend class="field-label">{% translate 'Type' %}</legend>
+                <div class="entry-segment-options">
+                    <div><label for="filter-type-all"><input id="filter-type-all" type="radio" name="type" value="" data-live-change{% if not selected_type %} checked{% endif %}>{% translate 'All types' %}</label></div>
+                    <div><label for="filter-type-income"><input id="filter-type-income" type="radio" name="type" value="INCOME" data-live-change{% if selected_type == 'INCOME' %} checked{% endif %}>{% translate 'Income' %}</label></div>
+                    <div><label for="filter-type-expense"><input id="filter-type-expense" type="radio" name="type" value="EXPENSE" data-live-change{% if selected_type == 'EXPENSE' %} checked{% endif %}>{% translate 'Expense' %}</label></div>
+                    <div><label for="filter-type-unclassified"><input id="filter-type-unclassified" type="radio" name="type" value="unclassified" data-live-change{% if selected_type == 'unclassified' %} checked{% endif %}>{% translate 'Unclassified' %}</label></div>
+                </div>
+            </fieldset>
         </div>
-        <div class="min-w-0 basis-full space-y-1.5 sm:basis-32 sm:flex-1">
-            <label for="filter-type" class="field-label">{% translate 'Type' %}</label>
-            <select id="filter-type" name="type" data-live-change class="w-full rounded-xl border border-forest/30 bg-white px-3.5 py-2.5 focus:outline-hidden focus:ring-2 focus:ring-caramel dark:border-cream/30 dark:bg-night-surface">
-                <option value="">{% translate 'All types' %}</option>
-                <option value="INCOME" {% if selected_type == 'INCOME' %}selected{% endif %}>{% translate 'Income' %}</option>
-                <option value="EXPENSE" {% if selected_type == 'EXPENSE' %}selected{% endif %}>{% translate 'Expense' %}</option>
-                <option value="unclassified" {% if selected_type == 'unclassified' %}selected{% endif %}>{% translate 'Unclassified' %}</option>
-            </select>
-        </div>
-        </div></details>
         <div class="consultation-actions">
             <button id="category-apply-filters" type="submit" data-live-submit
                     class="quiet-action">
@@ -76,8 +76,8 @@ GET search plus top-level/subcategory filtering.
             <span id="category-clear-control" class="consultation-clear-control" data-live-fragment="category-filters">
             {% if has_filters %}
                 <a id="category-clear-filters" href="{{ list_url }}" data-live-reset data-live-link="category-filters"
-                   class="quiet-action">
-                     {{ clear_filters_label }}
+                   class="quiet-action" aria-label="{{ clear_filters_label }}">
+                     {% translate 'Clear' %}
                 </a>
             {% endif %}
             </span>

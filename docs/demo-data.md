@@ -71,7 +71,9 @@ uv run python manage.py insert_demo en --username presentation_en --as-of 2026-0
 `--as-of` accepts an ISO date (`YYYY-MM-DD`) with a year from 1901 through 9988,
 matching the supported planning-form dates. It anchors the generated records;
 it does not change the application's clock. When using an older anchor, select
-that month or All time in the relevant reports to explore its activity. A saved
+that month or a historical chart window in the relevant reports to explore its
+activity. **Last 12 months** is a rolling window relative to today, not the entire
+ledger history. A saved
 monthly plan uses the application's current payroll rule set, not a historical
 tax table for the anchor year.
 
@@ -98,9 +100,7 @@ the record labels follow the chosen dataset language.
 |---|---|---|
 | Overview | `/dashboard/` | Current cash, monthly income and expenses, expense categories, investments, upcoming card settlements and the six-month outlook. Compare the current month with earlier months. |
 | Reports | `/dashboard/reports/` | Balance evolution, monthly cash flow, installment commitments and income/expenses by account or card. Change the period and select chart values. |
-| Net worth | `/dashboard/wealth/` | Compare dated bank balances, local investment valuations and incurred card debt. Named goal reserves do not add assets; missing evidence remains visible. |
 | Activity | `/transactions/` and `/categories/` | Salary and additional income, household expenses, one-off purchases, fixed recurrences and installments, with categories and subcategories. Filter by category and recurrence, export CSV, or split a transaction between categories without changing its payment. |
-| Imports | `/imports/` | Upload a small synthetic CSV or OFX file to try mapping, review, deduplication, matching and guarded undo. The generator does not upload files or seed import batches. |
 | Banks | `/banking/`, then select a bank | Accounts in BRL, USD and EUR; PIX, debit cards and physical/virtual/additional credit cards; planning exclusions and partial reserves. Open Transfer to try moving funds between owned accounts. |
 | Invoices | `/banking/invoices/` | Compare legacy automatic invoices with the synthetic confirmed-payment card: an overdue invoice and a partially paid invoice, with an explicit bank debit for its confirmed payment. |
 | Loyalty | `/banking/`, then select Aurora Demo Bank or More options | The bank-linked miles program and independent cashback program have seeded balances. Open Points entry to explore awards, purchases, adjustments, expiration and redemptions, or Redeem points for a monetary redemption. |
@@ -113,6 +113,13 @@ the record labels follow the chosen dataset language.
 | Signals | `/planning/signals/` | Review intentional duplicate examples, a subscription increase, an exceeded budget and a future debit shortfall. One duplicate is already acknowledged; reviewing signals never edits source records. |
 | Saved scenarios | `/sandbox/drafts/` | Open and compare the two monthly plans, then open the two-year yield simulation with monthly overrides and a planned withdrawal. Edit parameters and recalculate through Monthly plan or Yield simulation. Calculations do not post real salary or simulated returns to the ledger. |
 | Settings | `/accounts/settings/` | Date format and reporting currency. The interface language switch is in the account menu, and theme controls are in the navigation. |
+
+The [net-worth and statement interfaces remain paused](roadmap.md). Demonstration
+data does not enable them or add their navigation entries. Old operation URLs
+return to their owning workspace; owned confirmed/undone import history remains
+read-only when it exists. The generator does not upload files or seed import
+batches. Underlying valuation and ledger records remain available to the active
+screens described above.
 
 The loyalty examples include an invoice award, account-funded and card-funded
 points purchases, opening adjustments, expiration, and three monetary

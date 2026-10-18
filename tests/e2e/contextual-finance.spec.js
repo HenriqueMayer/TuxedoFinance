@@ -50,8 +50,8 @@ async function seed(page, info) {
 async function fillSplit(page, data) {
     await page.locator('#id_title').fill('Routine purchase');
     await page.locator('#id_amount').fill('45.10');
-    await page.locator('#id_transaction_type').focus();
-    await page.keyboard.press('End');
+    await page.locator('#id_transaction_type input[value="EXPENSE"]').focus();
+    await page.keyboard.press('Space');
     await page.keyboard.press('Tab');
     for (let step = 0; step < 8 && !(await page.locator('#id_split_categories').evaluate(element => element === document.activeElement)); step++) {
         await page.keyboard.press('Tab');
@@ -71,7 +71,8 @@ async function fillSplit(page, data) {
         await expect(content).toBeVisible();
         await help.press('Escape');
         await expect(content).toBeHidden();
-        await help.press('Tab');
+        // The inline choice precedes its explanatory icon in reading/Tab order.
+        await help.press('Shift+Tab');
         await expect(page.locator('#id_split_categories')).toBeFocused();
     }
     await page.keyboard.press('Space');
@@ -79,7 +80,7 @@ async function fillSplit(page, data) {
     await page.locator('#id_splits-0-amount').fill('15');
     await selectChoice(page.locator('#id_splits-1-category'), data.books);
     await page.locator('#id_splits-1-amount').fill('29.10');
-    await page.locator('#id_payment_channel').selectOption('ACCOUNT');
+    await selectChoice(page.locator('#id_payment_channel'), 'ACCOUNT');
     await selectChoice(page.locator('#id_bank_account'), data.account);
     await page.locator('#id_date').fill('10/01/2026');
 }
@@ -88,12 +89,15 @@ for (const theme of ['light', 'dark']) {
 for (const width of [390, 1440]) {
 test(`contextual finance returns and split keyboard recovery (${width}, ${theme})`, async ({ page }, info) => {
     page.on('dialog', dialog => dialog.accept());
+    await page.addLocatorHandler(page.locator('#departure-confirm[open]'), async () => {
+        await page.locator('[data-departure-leave]').click();
+    });
     await page.setViewportSize({ width, height: 780 });
     await page.addInitScript(value => localStorage.setItem('theme', value), theme);
     const data = await seed(page, info);
     const origin = '/transactions/?q=Routine&month=2026-01';
     await page.goto(origin);
-    await page.locator('main').getByRole('link', { name: 'New Transaction', exact: true }).first().press('Enter');
+    await page.locator('main').getByRole('link', { name: 'New transaction', exact: true }).first().press('Enter');
     await expect(page.locator('#category-split-choice')).toBeHidden();
     await expect(page.locator('#category-split-fields')).toBeHidden();
     await expect(page.getByRole('button', { name: 'Add category', exact: true })).toBeHidden();
@@ -102,13 +106,16 @@ test(`contextual finance returns and split keyboard recovery (${width}, ${theme}
     await page.getByRole('button', { name: 'Add category', exact: true }).press('Enter');
     await expect(page.locator('#id_splits-2-category')).toBeHidden();
     await expect(page.locator('#id_splits-2-category-search')).toBeVisible();
+    await expect(page.locator('#id_splits-2-amount')).toHaveValue('1.00');
     await expect(page.locator('#id_title')).toHaveValue('Routine purchase');
     await expect(page.getByText('Transaction "Routine purchase" created.', { exact: true })).toHaveCount(0);
     await page.locator('#id_title').press('Enter');
-    await expect(page.getByText('Category amounts must add up to the transaction total.', { exact: true })).toBeVisible();
+    await expect(page.locator('[data-split-row]').nth(2).locator('[data-field-error]')).toContainText('This field is required.');
     await expect(page.getByText('Transaction "Routine purchase" created.', { exact: true })).toHaveCount(0);
     await expect(page.locator('#id_splits-1-amount')).toHaveValue('29.10');
     await expect(page.locator('main input[name="next"]')).toHaveValue(origin);
+    await page.locator('[data-split-row]').nth(2).getByRole('button', {name: 'Remove category', exact: true}).press('Enter');
+    await expect(page.getByText('Category amounts must add up to the transaction total.', {exact: true})).toBeVisible();
     await page.locator('#id_splits-1-amount').focus();
     await page.screenshot({ path: info.outputPath(`contextual-split-error-${width}-${theme}.png`), fullPage: true });
     await page.locator('#id_splits-1-amount').fill('30.10');
@@ -123,14 +130,14 @@ test(`contextual finance returns and split keyboard recovery (${width}, ${theme}
     await expect(page.locator('#id_splits-0-amount')).toHaveValue('');
     await selectChoice(page.locator('#id_category'), data.food);
     await page.getByRole('link', { name: 'Cancel', exact: true }).press('Enter');
-    expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe(origin);
+    await expect(page).toHaveURL(/\/transactions\/\?q=Routine&month=2026-01$/);
 
-    await page.locator('main').getByRole('link', { name: 'New Transaction', exact: true }).first().press('Enter');
+    await page.locator('main').getByRole('link', { name: 'New transaction', exact: true }).first().press('Enter');
     await page.locator('#id_title').fill('Routine single purchase');
-    await page.locator('#id_amount').fill('5');
-    await page.locator('#id_transaction_type').selectOption('EXPENSE');
+    await page.locator('#id_amount').fill('5.00');
+    await selectChoice(page.locator('#id_transaction_type'), 'EXPENSE');
     await selectChoice(page.locator('#id_category'), data.food);
-    await page.locator('#id_payment_channel').selectOption('ACCOUNT');
+    await selectChoice(page.locator('#id_payment_channel'), 'ACCOUNT');
     await selectChoice(page.locator('#id_bank_account'), data.account);
     await page.locator('#id_date').fill('11/01/2026');
     await expect(page.locator('#id_split_categories')).not.toBeChecked();
@@ -193,7 +200,7 @@ test('category splits and contextual price links work without JavaScript', async
         const data = await seed(page, info);
         const origin = '/transactions/?q=Routine&month=2026-01';
         await page.goto(origin);
-        await page.locator('main').getByRole('link', { name: 'New Transaction', exact: true }).first().click();
+        await page.locator('main').getByRole('link', { name: 'New transaction', exact: true }).first().click();
         await fillSplit(page, data);
         await page.getByRole('button', { name: 'Add category', exact: true }).click();
         await expect(page.locator('#id_splits-2-category')).toBeVisible();

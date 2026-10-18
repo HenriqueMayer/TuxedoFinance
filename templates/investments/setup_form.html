@@ -4,7 +4,7 @@
 {% block title %}{{ setup_title }} — Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-md space-y-6">
+<div class="workspace-form-page finance-entry-page space-y-6">
     <div>
         <h1 class="page-title">{{ setup_title }}</h1>
         <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">
@@ -12,41 +12,55 @@
         </p>
     </div>
 
-    <form method="post" hx-boost="false" class="surface-panel space-y-5" novalidate>
+    <form autocomplete="off" method="post" hx-boost="false" class="workspace-form surface-panel finance-entry-form space-y-5" novalidate>
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ return_url }}">
         {% if form.instance.is_archived %}
             <p class="subtle-copy">{% translate 'This asset is archived. Restore it in Investment Settings to record new operations.' %}</p>
         {% endif %}
         {% if form.non_field_errors %}
-            {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+            {% for error in form.non_field_errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
         {% endif %}
         {% if form.valuation_mode %}
-            {% include 'partials/form_field.html' with field=form.name %}
-            {% include 'partials/form_field.html' with field=form.code %}
-            {% include 'partials/form_field.html' with field=form.asset_class %}
-            {% include 'partials/form_field.html' with field=form.currency %}
-            {% include 'partials/form_field.html' with field=form.valuation_mode %}
-            <div id="monetary-opening-fields"
-                 data-has-errors="{{ form.opening_balance.errors|yesno:'true,false' }}">
-                {% include 'partials/form_field.html' with field=form.opening_balance %}
+        <fieldset class="finance-entry-group">
+            <legend class="section-title">{% translate 'Investment details' %}</legend>
+            <div class="finance-entry-grid">
+                {% include 'partials/form_field.html' with field=form.name %}
+                {% include 'partials/form_field.html' with field=form.code %}
+                {% include 'partials/form_field.html' with field=form.asset_class %}
+                {% include 'partials/form_field.html' with field=form.currency %}
             </div>
-            <div id="unit-opening-fields"
-                 class="space-y-5"
-                 data-has-errors="{% if form.opening_quantity.errors or form.opening_unit_price.errors %}true{% else %}false{% endif %}">
-                {% include 'partials/form_field.html' with field=form.opening_quantity %}
-                <div id="opening-unit-price-fields" data-has-errors="{{ form.opening_unit_price.errors|yesno:'true,false' }}">
-                    {% include 'partials/form_field.html' with field=form.opening_unit_price %}
+        </fieldset>
+        <fieldset class="finance-entry-group finance-entry-section">
+            <legend class="section-title">{% translate 'Valuation and opening position' %}</legend>
+            <p class="subtle-copy mb-4">{% translate 'Existing holdings are recorded without a bank debit. Leave the opening at zero to record the first operation later.' %}</p>
+            <div class="finance-entry-grid">
+                <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.valuation_mode %}</div>
+                <div id="monetary-opening-fields" data-has-errors="{{ form.opening_balance.errors|yesno:'true,false' }}">
+                    {% include 'partials/form_field.html' with field=form.opening_balance %}
                 </div>
+                <div id="unit-opening-fields" class="finance-entry-wide finance-entry-grid"
+                     data-has-errors="{% if form.opening_quantity.errors or form.opening_unit_price.errors %}true{% else %}false{% endif %}">
+                    {% include 'partials/form_field.html' with field=form.opening_quantity %}
+                    <div id="opening-unit-price-fields" data-has-errors="{{ form.opening_unit_price.errors|yesno:'true,false' }}">
+                        {% include 'partials/form_field.html' with field=form.opening_unit_price %}
+                    </div>
+                </div>
+                <div id="opening-product-fields" data-has-errors="{{ form.opening_product.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_product %}</div>
+                <div id="opening-date-fields" data-has-errors="{{ form.opening_date.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_date %}</div>
             </div>
-            <div id="opening-product-fields" data-has-errors="{{ form.opening_product.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_product %}</div>
-            <div id="opening-date-fields" data-has-errors="{{ form.opening_date.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_date %}</div>
+        </fieldset>
         {% else %}
-            {% for field in form %}
-                {% include 'partials/form_field.html' with field=field %}
-            {% endfor %}
+        <fieldset class="finance-entry-group">
+            <legend class="section-title">{% translate 'Institution and purpose' %}</legend>
+            <div class="finance-entry-grid">
+                <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.bank %}</div>
+                {% include 'partials/form_field.html' with field=form.name %}
+                {% include 'partials/form_field.html' with field=form.purpose %}
+            </div>
+        </fieldset>
         {% endif %}
-        <div class="flex items-center gap-3">
+        <div class="form-actions flex items-center gap-3">
             <button type="submit" class="action-primary">{% translate 'Save' %}</button>
             <a hx-boost="false" href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a>
         </div>

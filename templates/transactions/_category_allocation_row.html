@@ -1,0 +1,14 @@
+{% load i18n %}
+<fieldset class="entry-split-row category-allocation-row" data-split-row data-has-errors="{% if row.errors or row.non_field_errors %}true{% else %}false{% endif %}">
+    <legend class="sr-only">{% translate 'Category' %} <span data-allocation-number>{{ number }}</span></legend>
+    {% for hidden in row.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert" class="allocation-wide text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}{% endfor %}
+    {% for error in row.non_field_errors %}<p role="alert" class="allocation-wide text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+    <div>{% include 'partials/form_field.html' with field=row.category %}</div>
+    <div class="category-allocation-amount">
+        {% include 'partials/form_field.html' with field=row.amount %}
+        <small data-allocation-remainder hidden>{% translate 'Remainder' %}</small>
+        <p data-allocation-row-error hidden class="text-sm text-expense dark:text-expense-light"></p>
+    </div>
+    <div data-allocation-delete>{% include 'partials/form_field.html' with field=row.DELETE %}</div>
+    <div data-allocation-row-actions hidden><button type="button" class="quiet-action category-allocation-remove" data-allocation-remove hidden>{% translate 'Remove category' %}</button></div>
+</fieldset>

@@ -5,23 +5,24 @@
         const fields = owner.querySelector('[data-goal-reserve-fields]');
         const source = owner.querySelector('[name="source"]');
         const amount = owner.querySelector('[data-goal-reserve-amount]');
+        const enabled = () => !toggle || toggle.checked;
         function update(deliberate) {
-            if (!toggle.checked && deliberate) {
+            if (!enabled() && deliberate) {
                 fields.querySelectorAll('select,input').forEach(control => {
                     if (control.closest('.search-choice')) return;
                     control.value = '';
                     control.dispatchEvent(new Event('change', { bubbles: true }));
                 });
             }
-            window.TuxedoForms.setHidden(fields, !toggle.checked, !deliberate);
-            window.TuxedoForms.setHidden(amount, !toggle.checked || !source.value, !deliberate);
+            window.TuxedoForms.setHidden(fields, !enabled(), !deliberate);
+            window.TuxedoForms.setHidden(amount, !enabled() || !source.value, !deliberate);
         }
         update(false);
-        toggle.addEventListener('change', () => update(true));
+        toggle?.addEventListener('change', () => update(true));
         source.addEventListener('change', () => {
             // A source transition can change currency and available backing.
             amount.querySelector('input').value = '';
-            window.TuxedoForms.setHidden(amount, !toggle.checked || !source.value, false);
+            window.TuxedoForms.setHidden(amount, !enabled() || !source.value, false);
         });
         owner.closest('form').addEventListener('tuxedo:restore', () => update(false));
     });

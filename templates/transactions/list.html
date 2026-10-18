@@ -11,35 +11,35 @@
 {% url 'transactions:list' as list_url %}
 {% url 'transactions:export' as export_url %}
 <div class="space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="workspace-header">
         <div class="label-with-help">
             <h1 class="page-title">{% translate "Transactions" %}</h1>
             {% translate 'Transactions' as transactions_label %}{% translate 'Your recorded income and expenses.' as transactions_help %}{% include 'partials/help_popover.html' with help_id='transactions-help' help_label=transactions_label help_text=transactions_help only %}
         </div>
         <div class="flex flex-wrap items-center gap-3">
-            <details class="relative" data-export-menu hx-boost="false">
-                <summary class="cursor-pointer list-none rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-hidden focus:ring-2 focus:ring-caramel">
+            <details class="secondary-actions" data-export-menu hx-boost="false">
+                <summary>
                     {% translate "Export CSV" %}
                 </summary>
-                <div class="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-xl bg-white p-4 shadow-lg ring-1 ring-forest/10 dark:bg-night-surface dark:ring-cream/10">
-                    <a href="{{ export_url }}" class="block text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light">{% translate "Export all transactions" %}</a>
-                    <div class="label-with-help"><a href="{{ export_url }}?format=spreadsheet" class="text-xs font-medium uppercase tracking-widest text-caramel-ink hover:underline dark:text-caramel-light">{% translate "Export for spreadsheets" %}</a>{% translate 'CSV format' as csv_label %}{% translate "Raw CSV preserves your text, including formulas. The spreadsheet version prefixes formula-like text with an apostrophe; do not use it for faithful re-import." as csv_help %}{% include 'partials/help_popover.html' with help_id='transaction-csv-help' help_label=csv_label help_text=csv_help only %}</div>
-                    <form action="{{ export_url }}" method="get" hx-boost="false" class="space-y-2">
+                <div class="secondary-actions-panel w-72 space-y-4">
+                    <a href="{{ export_url }}" class="action-link">{% translate "Export all transactions" %}</a>
+                    <div class="label-with-help"><a href="{{ export_url }}?format=spreadsheet" class="action-link">{% translate "Export for spreadsheets" %}</a>{% translate 'CSV format' as csv_label %}{% translate "Raw CSV preserves your text, including formulas. The spreadsheet version prefixes formula-like text with an apostrophe; do not use it for faithful re-import." as csv_help %}{% include 'partials/help_popover.html' with help_id='transaction-csv-help' help_label=csv_label help_text=csv_help only %}</div>
+                    <form action="{{ export_url }}" method="get" hx-boost="false" class="workspace-form space-y-3">
                         <label for="export-month" class="field-label">{% translate "Billed month" %}</label>
                         <input id="export-month" type="month" name="month" required
-                               class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3 py-2 text-forest dark:text-cream focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
-                        <label for="export-format" class="block text-xs font-medium text-forest/70 dark:text-night-muted">{% translate "CSV format" %}</label>
-                        <select id="export-format" name="format" class="w-full rounded-xl border border-forest/30 px-3 py-2 dark:border-cream/30 dark:bg-night-surface">
+                               class="entry-input">
+                        <label for="export-format" class="field-label">{% translate "CSV format" %}</label>
+                        <select id="export-format" name="format" class="entry-input">
                             <option value="raw">{% translate "Raw CSV" %}</option>
                             <option value="spreadsheet">{% translate "Spreadsheet CSV" %}</option>
                         </select>
-                        <button type="submit" class="w-full rounded-full bg-caramel px-3 py-2 text-xs font-medium uppercase tracking-widest text-forest-deep transition hover:bg-caramel-light focus:outline-hidden focus:ring-2 focus:ring-caramel">{% translate "Export selected month" %}</button>
+                        <button type="submit" class="action-primary w-full">{% translate "Export selected month" %}</button>
                     </form>
                 </div>
             </details>
             <a href="{{ create_url }}"
                class="action-primary">
-                {% translate "New Transaction" %}
+                {% translate "New transaction" %}
             </a>
         </div>
     </div>
@@ -47,10 +47,12 @@
     <form id="transaction-filters" method="get" action="{{ list_url }}" data-live-filters data-live-results="transaction-results" data-live-url="{{ list_url }}{% querystring filter_params %}" hx-boost="false" class="surface-panel consultation-bar transaction-consultation">
         <input type="hidden" name="type" value="{{ selected_type }}">
         <input type="hidden" name="recurrence" value="{{ selected_recurrence }}">
+        {% comment %}Exact category URLs remain valid; new category lookup belongs to the general search rather than a second picker.{% endcomment %}
+        <input type="hidden" id="filter-category" name="category" value="{{ selected_category }}">
         <div class="consultation-primary transaction-consultation-primary">
             <div class="consultation-search min-w-0 flex-1 space-y-1.5">
                 <label for="filter-search" class="field-label">{% translate "Search" %}</label>
-                <input type="search" id="filter-search" name="q" data-live-search value="{{ search_query }}" placeholder="{% translate 'Title, notes, category, bank, account or card' %}" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
+                <input type="search" id="filter-search" name="q" data-live-search value="{{ search_query }}" placeholder="{% translate 'Title, notes, category, bank, account or card' %}" class="entry-input">
             </div>
             {% translate 'Billed month' as billed_month_label %}
             {% include 'partials/month_filter.html' with month_id='filter-month' month_name='month' month_value=selected_month month_label=billed_month_label %}
@@ -72,36 +74,32 @@
             {% comment %}The summary occupies a fixed toolbar slot; its native content expands in the next grid row. Only metadata refreshes, preserving the mounted controls and disclosure choice.{% endcomment %}
             <details id="transaction-extra-filters" class="filter-disclosure" {% if extra_filter_count or date_filter_form.errors %}open{% endif %}>
                 <summary>{% translate 'More filters' %}<span id="transaction-extra-filter-indicator" data-live-fragment="transaction-filters">{% if extra_filter_count %}<span class="rounded-md bg-caramel/15 px-1.5 py-0.5 text-xs font-semibold tabular-nums">{{ extra_filter_count }}<span class="sr-only"> — {% blocktranslate count count=extra_filter_count %}{{ count }} active filter{% plural %}{{ count }} active filters{% endblocktranslate %}</span></span>{% endif %}</span></summary>
-                <div class="filter-disclosure-panel space-y-4">
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="min-w-0 space-y-1.5">
-                            <label for="filter-category" class="field-label">{% translate "Category" %}</label>
-                            <select data-search-select data-live-change data-live-options id="filter-category" name="category" class="w-full min-w-0 rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel">
-                                <option value="">{% translate "All categories" %}</option>
-                                {% comment %}Identifiers must not inherit monetary thousands separators.{% endcomment %}
-                                {% for category in category_choices %}
-                                    <option value="{{ category.pk|stringformat:'s' }}" {% if selected_category == category.pk|stringformat:'s' %}selected{% endif %}>{% if category.parent_category %}{{ category.parent_category.name }} › {% endif %}{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div data-live-change class="min-w-0 space-y-1.5">
+                <div class="filter-disclosure-panel">
+                    <div id="transaction-category-context" data-live-fragment="transaction-filters" class="transaction-category-context" {% if not selected_category %}hidden{% endif %}>
+                        {% if selected_category %}<span>{% translate 'Category' %}: {% for category in category_choices %}{% with category_id=category.pk|stringformat:'s' %}{% if selected_category == category_id %}{% if category.parent_category %}{{ category.parent_category.name }} › {% endif %}{{ category.name }}{% endif %}{% endwith %}{% endfor %}</span><a id="transaction-clear-category" href="{{ list_url }}{% querystring filter_params category=None %}" data-live-link="transaction-filters" data-live-set="category" data-live-value="" class="quiet-action">{% translate 'Clear' %}</a>{% endif %}
+                    </div>
+                    <div class="transaction-refinement-row">
+                        <div data-live-change class="transaction-refinement-date min-w-0">
                             {% include 'partials/form_field.html' with field=date_filter_form.date %}
                         </div>
-                    </div>
-                    <nav id="transaction-recurrence-options" data-live-fragment="transaction-filters" aria-label="{% translate 'Recurrence' %}" class="flex flex-wrap gap-2">
-                        {% for link in recurrence_links %}
-                            <a id="transaction-recurrence-{{ forloop.counter0 }}" href="{{ link.url }}" data-live-link="transaction-filters" data-live-set="recurrence" data-live-clear="category" {% if link.selected %}aria-current="true"{% endif %} class="consultation-segment">{{ link.label }}{% if link.selected %}<span class="sr-only"> — {% translate "Selected" %}</span>{% endif %}</a>
-                        {% endfor %}
-                    </nav>
-                    <div class="min-w-0 sm:max-w-sm space-y-1.5">
-                        <label for="filter-sort" class="field-label">{% translate "Sort by" %}</label>
-                        <select id="filter-sort" name="sort" data-live-change data-live-default="newest" class="w-full rounded-xl border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-3.5 py-2.5 text-forest dark:text-cream focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
-                            <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>{% translate "Newest first" %}</option>
-                            <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>{% translate "Oldest first" %}</option>
-                            <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>{% translate "Last updated" %}</option>
-                            <option value="highest" {% if selected_sort == 'highest' %}selected{% endif %}>{% translate "Highest amount" %}</option>
-                            <option value="lowest" {% if selected_sort == 'lowest' %}selected{% endif %}>{% translate "Lowest amount" %}</option>
-                        </select>
+                        <div class="transaction-refinement-recurrence min-w-0 space-y-1.5">
+                            <span class="field-label">{% translate 'Recurrence' %}</span>
+                            <nav id="transaction-recurrence-options" data-live-fragment="transaction-filters" aria-label="{% translate 'Recurrence' %}" class="flex flex-wrap gap-2">
+                                {% for link in recurrence_links %}
+                                    <a id="transaction-recurrence-{{ forloop.counter0 }}" href="{{ link.url }}" data-live-link="transaction-filters" data-live-set="recurrence" data-live-clear="category" {% if link.selected %}aria-current="true"{% endif %} class="consultation-segment">{{ link.label }}{% if link.selected %}<span class="sr-only"> — {% translate "Selected" %}</span>{% endif %}</a>
+                                {% endfor %}
+                            </nav>
+                        </div>
+                        <div class="transaction-refinement-sort min-w-0 space-y-1.5">
+                            <label for="filter-sort" class="field-label">{% translate "Sort by" %}</label>
+                            <select id="filter-sort" name="sort" data-live-change data-live-default="newest" class="entry-input">
+                                <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>{% translate "Newest first" %}</option>
+                                <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>{% translate "Oldest first" %}</option>
+                                <option value="updated" {% if selected_sort == 'updated' %}selected{% endif %}>{% translate "Last updated" %}</option>
+                                <option value="highest" {% if selected_sort == 'highest' %}selected{% endif %}>{% translate "Highest amount" %}</option>
+                                <option value="lowest" {% if selected_sort == 'lowest' %}selected{% endif %}>{% translate "Lowest amount" %}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </details>
@@ -121,9 +119,9 @@
             <ul class="divide-y divide-forest/10 dark:divide-cream/10">
                 {% for transaction in transactions %}
                     <li class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="space-y-1">
+                        <div class="min-w-0 flex-1 space-y-1">
                             <div class="flex flex-wrap items-center gap-2">
-                                <p class="text-base font-medium">{{ transaction.display_title }}</p>
+                                <p class="min-w-0 break-words text-base font-medium">{{ transaction.display_title }}</p>
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
                                     {% if transaction.transaction_type == 'INCOME' %}bg-income/10 dark:bg-income-light/15 text-income dark:text-income-light
                                     {% elif transaction.transaction_type == 'EXPENSE' %}bg-expense/10 dark:bg-expense/15 text-expense dark:text-expense-light
@@ -146,15 +144,16 @@
                                     </span>
                                 {% endif %}
                             </div>
-                            <p class="text-sm text-forest/70 dark:text-night-muted">
+                            <p class="break-words text-sm text-forest/70 dark:text-night-muted">
                                 {% if transaction.splits.all %}{% for split in transaction.splits.all %}{{ split.category.name }}{% if not forloop.last %} / {% endif %}{% endfor %}{% else %}{{ transaction.category.name }}{% endif %} &middot; {{ transaction.payment_label }}
                                 &middot; {{ transaction.get_payment_channel_display }}
                                 &middot; {{ transaction.date|date:USER_DATE_FORMAT }}
                             </p>
                         </div>
-                        <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
+                        {% comment %}Keep the signed amount together; long instrument context wraps in the description instead of separating currency from value.{% endcomment %}
+                        <div class="flex flex-col items-start gap-3 sm:shrink-0 sm:flex-row sm:items-center sm:gap-4">
                             <div class="sm:text-right">
-                                <p class="text-lg font-semibold tabular-nums
+                                <p class="whitespace-nowrap text-lg font-semibold tabular-nums
                                     {% if transaction.transaction_type == 'INCOME' %}text-income dark:text-income-light
                                     {% elif transaction.transaction_type == 'EXPENSE' %}text-expense dark:text-expense-light
                                     {% else %}text-investment dark:text-investment-light
@@ -224,7 +223,7 @@
     {% else %}
         {% translate "No transactions yet" as empty_title %}
         {% translate "Record your first transaction to start tracking your cash flow." as empty_message %}
-        {% translate "New Transaction" as empty_cta_label %}
+        {% translate "New transaction" as empty_cta_label %}
         {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=create_url cta_label=empty_cta_label %}
     {% endif %}
     </div>

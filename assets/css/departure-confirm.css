@@ -1,0 +1,37 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+.departure-confirm {
+    width: min(28rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    padding: 1.75rem;
+    overflow: auto;
+    border: 1px solid var(--ui-line);
+    border-radius: 16px;
+    background: var(--ui-surface);
+    color: var(--ui-ink);
+    box-shadow: 0 24px 80px rgb(16 30 24 / .18);
+}
+.departure-confirm:not([open]) { display: none; }
+.departure-confirm::backdrop { background: rgb(16 30 24 / .32); }
+.departure-confirm-mark {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--ui-line);
+    border-radius: 10px;
+    color: var(--ui-accent);
+    font-size: 20px;
+}
+.departure-confirm h2 { font-size: 1.375rem; line-height: 1.4; font-weight: 600; letter-spacing: -.03em; }
+.departure-confirm p { margin-top: .625rem; color: var(--ui-muted); font-size: .875rem; line-height: 1.7; }
+.departure-confirm-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .625rem; margin-top: 1.75rem; }
+@media (max-width: 479px) {
+    .departure-confirm { padding: 1.25rem; }
+    .departure-confirm-actions > button { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .departure-confirm[open] { animation: departure-confirm-enter 160ms ease-out; }
+    @keyframes departure-confirm-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+}

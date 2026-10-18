@@ -11,6 +11,7 @@ async function post(page,path,values){
 
 for(const [theme,language] of [['light','en'],['dark','pt-br']]){
     test(`card-funded redemption IOF is visible after save and without JavaScript (${theme}, ${language})`,async({page,browser},info)=>{
+        await page.setViewportSize({width:language==='pt-br'?390:1280,height:900});
         await page.addInitScript(value=>localStorage.setItem('theme',value),theme);
         const username=`redemption-${info.workerIndex}-${Date.now()}`;
         await post(page,'/accounts/signup/',{username,email:`${username}@example.test`,password1:'Tuxedo-Rewards-2026!',password2:'Tuxedo-Rewards-2026!'});
@@ -57,9 +58,22 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         const composition=page.getByRole('region',{name:language==='en'?'Composition details':'Detalhes da composição',exact:true});
         await expect(composition).toContainText('IOF');await expect(composition).toContainText(/BRL 12[,.]50/);
         const source=composition.getByRole('link');
-        await expect(source).toHaveAttribute('href',/\/banking\/rewards\/\d+\/edit\/$/);
+        const sourceUrl=new URL(await source.getAttribute('href'),page.url());
+        expect(sourceUrl.pathname).toMatch(/^\/banking\/rewards\/\d+\/edit\/$/);
+        expect(sourceUrl.searchParams.get('next')).toBe('/dashboard/reports/?instrument_month=2026-10#instrument-activity');
         await source.press('Enter');
-        await expect(page.getByRole('form',{name:language==='en'?'Edit redemption':'Editar resgate',exact:true})).toBeVisible();
+        const sourceEdit=page.getByRole('form',{name:language==='en'?'Edit redemption':'Editar resgate',exact:true});
+        const reportOrigin='/dashboard/reports/?instrument_month=2026-10#instrument-activity';
+        await expect(sourceEdit).toBeVisible();
+        await expect(sourceEdit.locator('input[name="next"]')).toHaveValue(reportOrigin);
+        await expect(sourceEdit.getByRole('link',{name:language==='en'?'Cancel':'Cancelar',exact:true})).toHaveAttribute('href',reportOrigin);
+        await sourceEdit.getByRole('link',{name:language==='en'?'Cancel':'Cancelar',exact:true}).press('Enter');
+        await expect(page).toHaveURL(url=>url.pathname+url.search+url.hash===reportOrigin);
+        await page.goBack();
+        await expect(sourceEdit).toBeVisible();
+        await expect(sourceEdit.locator('input[name="next"]')).toHaveValue(reportOrigin);
+        await sourceEdit.getByRole('button',{name:language==='en'?'Save':'Salvar',exact:true}).press('Enter');
+        await expect(page).toHaveURL(url=>url.pathname+url.search+url.hash===reportOrigin);
         await page.goto('/transactions/');
         const row=page.locator('li').filter({has:page.getByText(language==='en'?'IOF on reward redemption':'IOF sobre resgate de pontos',{exact:true})});
         await expect(row).toContainText(/USD 2[,.]50/);
@@ -89,13 +103,13 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         await page.goto(`/banking/${funding}/`);
         await page.locator('#bank-activity > summary').press('Enter');
         await expect(page.locator('#reward-redemptions')).toContainText('IOF card');
-        const invoices=page.locator('section').filter({has:page.getByRole('heading',{name:language==='en'?'Credit card invoices':'Faturas de cartão de crédito',exact:true})});
+        const invoices=page.locator('#bank-activity section.banking-section').filter({has:page.getByRole('heading',{name:language==='en'?'Credit card invoices':'Faturas de cartão de crédito',exact:true})});
         await expect(invoices).toContainText(/USD 3[,.]75/);
         await page.reload();
         await expect(page.locator('#bank-activity')).not.toHaveAttribute('open', '');
         await page.locator('#bank-activity > summary').press('Enter');
         await expect(invoices.locator('li')).toHaveCount(1);
-        const native=await browser.newContext({javaScriptEnabled:false,storageState:await page.context().storageState()});
+        const native=await browser.newContext({javaScriptEnabled:false,viewport:page.viewportSize(),storageState:await page.context().storageState()});
         try{
             const p=await native.newPage();await p.goto(`/banking/${receiving}/`);
             await p.locator('#bank-activity > summary').press('Enter');

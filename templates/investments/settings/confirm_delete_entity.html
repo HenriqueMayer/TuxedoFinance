@@ -14,7 +14,7 @@
             </form>
         {% endif %}
         <p class="text-sm text-forest/70 dark:text-night-muted">{% translate "Items used by investment operations are protected and will not be deleted." %}</p>
-        <form method="post" hx-boost="false" class="flex items-center gap-3" novalidate>{% csrf_token %}<input type="hidden" name="next" value="{{ return_url }}">{% if not delete_warning %}<button type="submit" class="inline-flex items-center rounded-full bg-expense/10 px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-expense dark:text-expense-light ring-1 ring-inset ring-expense/30">{% translate "Delete" %}</button>{% endif %}<a hx-boost="false" href="{{ return_url }}" class="quiet-action">{% translate "Cancel" %}</a></form>
+        <form method="post" hx-boost="false" class="form-actions flex items-center gap-3" novalidate>{% csrf_token %}<input type="hidden" name="next" value="{{ return_url }}">{% if not delete_warning %}<button type="submit" class="action-danger">{% translate "Delete" %}</button>{% endif %}<a hx-boost="false" href="{{ return_url }}" class="quiet-action">{% translate "Cancel" %}</a></form>
     </div>
 </div>
 {% endblock %}

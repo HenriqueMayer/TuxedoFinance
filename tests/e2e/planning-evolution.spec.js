@@ -38,7 +38,10 @@ for (const theme of ['light', 'dark']) {
         for (let stop = 0; stop < 4 && await page.locator('#id_month').evaluate(element => document.activeElement === element); stop++) {
             await page.keyboard.press('Tab');
         }
-        // The shared help control remains reachable between the month and category.
+        // The compact form reads month/currency, then category/limit. Native
+        // currency selection and the shared category help retain Tab access.
+        await expect(page.locator('#id_currency')).toBeFocused();
+        await page.keyboard.press('Tab');
         const categoryHelp = page.getByRole('button', { name: 'Explain Category', exact: true });
         await expect(categoryHelp).toBeFocused();
         await expect(page.locator('#id_category-help')).toBeVisible();
@@ -61,7 +64,7 @@ for (const theme of ['light', 'dark']) {
         await categorySearch.press('Tab');
         await expect(categoryClear).toBeFocused();
         await categoryClear.press('Tab');
-        await expect(page.locator('#id_currency')).toBeFocused();
+        await expect(page.locator('#id_amount')).toBeFocused();
         await page.locator('#id_amount').fill('-1');
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await expect(page.locator('[role="alert"]').first()).toBeVisible();

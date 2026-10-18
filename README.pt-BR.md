@@ -162,14 +162,14 @@ inglês, para testar uma cópia descartável antes de migrar uma instalação ex
 
 | Área | Novidades |
 |---|---|
-| Importação de extratos (em revisão) | Operações da interface indisponíveis, com revisão registrada na documentação; registros confirmados/desfeitos continuam acessíveis para consulta. Upload local de CSV/OFX, mapeamento explícito de colunas/data/decimais, revisão prévia, deduplicação por identificador estável, avisos de possíveis duplicatas, vínculo com movimentos bancários existentes, pagamentos confirmados de faturas e transferências entre contas próprias. Saldos finais são conciliados sem ajustes automáticos; desfazer recusa registros de origem alterados. |
+| Importação de extratos (pausada) | Upload, revisão, confirmação e desfazer estão indisponíveis; registros confirmados/desfeitos do usuário continuam em consulta somente leitura. O [guia do app](docs/apps/ingestion.md) descreve os serviços CSV/OFX preservados e o bloqueio da interface. |
 | Divisão por categorias | Distribuição de uma transação entre categorias com totais e centavos exatos nas parcelas; relatórios, orçamentos e exportações CSV preservam as divisões sem duplicar pagamentos. |
 | Faturas confirmadas | Opção por cartão para registrar pagamentos totais ou parciais a partir de uma conta real. Faturas automáticas anteriores mantêm seu comportamento; valores não pagos continuam visíveis como obrigações previstas. |
 | Orçamentos e metas | Limites mensais por categoria, cópia do mês anterior, gastos registrados e previsões conhecidas; metas com moeda/data e reservas respaldadas por saldos existentes em contas ou caixas monetários. Falta de saldo e limitações do câmbio de referência ficam visíveis. |
 | Sinais locais | Sugestões explicadas de duplicatas, aumentos de assinaturas, orçamento excedido e falta futura de caixa, com ações de ciência/descarte/reabertura que preservam os registros financeiros de origem. |
 | Avaliações e patrimônio | Cotações unitárias locais por data, custo médio ponderado remanescente, resultados realizados/não realizados, moeda explícita das taxas e cálculos de patrimônio líquido incluindo dívidas de cartão já contraídas; a interface de patrimônio está oculta para revisão. Histórico, datas de abertura, cotações e câmbio ausentes são sinalizados. |
 | Operação local | Fontes servidas localmente, reutilização do contexto de relatórios/conversões e sincronização incremental do razão, além de dados sintéticos de demonstração ampliados. |
-| Navegação diária | Os mesmos cinco destinos em menu lateral no computador e barra inferior no celular, abas locais, ações junto da conta/cartão/posição e retorno à origem dos formulários. Barras compactas com filtros dinâmicos, seleção do mês por nome, lista alinhada de categorias inicialmente recolhida, resumo dos bancos com detalhes próprios de contas/cartões/reservas, cofrinhos em cartões compactos e grade de cartões com acesso ao histórico de faturas, rodapé discreto e ajuda temporária nos ícones. Investimentos usa linhas alinhadas de aplicação/valor/Atualizar e filtros opcionais compactos; Planejar destaca o disponível mensal, com orçamentos alinhados, cartões de metas respaldadas e Ferramentas agrupadas. Valores registrados, projeções e dados ausentes ficam distintos. |
+| Navegação diária | Cinco áreas compartilhadas, abas locais, filtros dinâmicos compactos, ações financeiras em contexto e retorno à origem dos formulários. O [mapa da interface](docs/interface-map.md) registra as telas e os componentes atuais; valores registrados, projeções e dados ausentes permanecem distintos. |
 
 A branch não adiciona conexão bancária ao vivo, feed externo de cotações ou
 serviço de IA na nuvem. Cotações e decisões de revisão permanecem no banco local;
@@ -185,8 +185,9 @@ tipografia de alto contraste, ações em caramelo e cores com significado financ
 
 O tema escuro usa bases neutras em preto e grafite com as variantes semânticas
 mais claras documentadas no catálogo, preservando o contraste e o significado
-financeiro de cada cor. A página pública apresenta funções e links de acesso
-ao lado de uma fotografia horizontal do gato em moldura dupla translúcida.
+financeiro de cada cor. A página pública reúne links de acesso e uma gravata
+borboleta em camadas de papel que revela as cinco áreas da aplicação, seguida
+de sete descrições de funcionalidades. Há suporte a teclado, toque e movimento reduzido.
 
 O catálogo de componentes está em
 [`docs/design-system.html`](docs/design-system.html),
@@ -237,6 +238,8 @@ A suíte da prévia verifica separadamente a apresentação estática versionada
 A documentação técnica é mantida em inglês.
 
 - [Índice da documentação](docs/README.md) — estrutura do repositório e referências dos apps
+- [Roteiro de validação](docs/branch-testing.md) — prévia descartável e avaliação no computador/celular
+- [Roadmap](docs/roadmap.md) e [arquivo de revisões](docs/reviews/README.md) — funcionalidades pausadas e evidências datadas
 - [Requisitos do produto](docs/product-requirements.md) — comportamento suportado e critérios de aceitação
 - [Modelo de dados](docs/data-model.md) — entidades, relacionamentos e regras financeiras
 - [Frontend](docs/frontend.md) e [design system](docs/design-system.html) — convenções da interface e catálogo de componentes

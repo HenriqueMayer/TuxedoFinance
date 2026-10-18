@@ -5,6 +5,11 @@ changes. Supported releases preserve their financial rows through incremental
 migrations. Only unsupported pre-release legacy schemas lack automatic
 conversion; see [Breaking release](#breaking-release).
 
+Schema presence does not imply an available interface. Statement operations and
+the dated net-worth screen are currently paused; their stored provenance and
+underlying financial calculations are preserved. See the [roadmap](roadmap.md)
+and owning app guide for the active route contract.
+
 ## Entity-relationship diagram
 
 ```mermaid
@@ -169,6 +174,7 @@ behavior untouched.
 |---|---|
 | `user` | Owner; all names and relationships are user-scoped. |
 | `name` | Bank, broker, exchange, or other financial provider. |
+| `color` | Optional validated `#RRGGBB` identity marker; no financial meaning. |
 | timestamps | `created_at`, `updated_at`. |
 
 `Bank` is the shared provider entity used by banking, loyalty, and investments.
@@ -216,10 +222,12 @@ transaction, invoice, transfer, investment, or reward source changes.
 
 ### Cards and invoices
 
-`DebitCard(user, account, name)` and
-`CreditCard(user, account, name, card_type, closing_day, due_day,
-manual_settlement_from)` both belong to one
-account. A `CardInvoice` belongs to a credit card and records reference month,
+`DebitCard` and `CreditCard` both belong to one owned account and have a name.
+Both also store `color`, optional `gradient_end` and `gradient_angle` (0–359)
+for their shared miniatures. These presentation fields are independent of the
+bank's marker and do not alter currency, settlement or balances.
+`CreditCard` additionally stores `card_type`, `closing_day`, `due_day` and
+`manual_settlement_from`. A `CardInvoice` belongs to a credit card and records reference month,
 due date, amount, status, paid timestamp and sticky manual-settlement flag.
 
 A debit purchase creates a transaction and immediate debit movement. A credit
@@ -617,6 +625,11 @@ the optional manual card boundary, invoice mode/status support and payments.
 `investments.0009_position_valuation` adds nullable asset baselines, the false
 fee-currency declaration default and local price observations. Neither invents
 legacy dates, prices, fee currencies or confirmed payments.
+
+`banking.0009_card_appearance` adds card colors and optional gradients with a
+default graphite color, blank gradient end and 135-degree angle. Existing debit
+and credit cards retain their account links, amounts and settlement behavior;
+the migration introduces no financial posting.
 
 `transactions.0003_transactionsplit` adds optional allocations without changing
 old categories or source amounts. `planning.0001_initial` and

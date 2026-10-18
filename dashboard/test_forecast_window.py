@@ -25,7 +25,8 @@ class ForecastWindowTests(DashboardFixture):
         self.assertEqual(last['date'], date(2027, 8, 1))
         self.assertEqual(last['expenses'], Decimal('100.00'))
         self.assertEqual(last['closing_balance'], Decimal('-200.00'))
-        self.assertContains(response, 'Forecast limit', count=2)
+        self.assertContains(response, 'aria-disabled="true" aria-label="Forecast limit"', count=2)
+        self.assertContains(response, '<span class="subtle-copy mr-auto">Forecast limit</span>', count=2, html=True)
         self.assertNotContains(response, 'aria-label="Next window"')
 
     def test_reports_reject_partial_horizon_month_and_later_requests(self, localdate):
@@ -60,7 +61,8 @@ class ForecastWindowTests(DashboardFixture):
         self.assertEqual(last['date'], date(2027, 8, 1))
         self.assertEqual(last['expenses'], Decimal('100.00'))
         self.assertEqual(last['projected_balance'], Decimal('-200.00'))
-        self.assertContains(response, 'Forecast limit')
+        self.assertContains(response, 'aria-disabled="true" aria-label="Forecast limit"', count=1)
+        self.assertContains(response, '<span class="subtle-copy mr-auto">Forecast limit</span>', count=1, html=True)
 
         outside = self.client.get(reverse('dashboard:index'), {'month': '2027-04'})
         self.assertEqual(outside.context['selected_month_param'], '2026-09')

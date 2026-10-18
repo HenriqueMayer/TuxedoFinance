@@ -37,7 +37,8 @@ def monthly_outlook(user, month):
         return result
     projected = get_planning_availability(user, end, conversion=conversion)
     ledger = get_ledger_snapshot(user, end, conversion=conversion, projected=end >= today, forecast_from=cutoff)
-    missing = set(projected['missing_currencies']) | set(recorded['missing_currencies'])
+    missing = (set(projected['missing_currencies']) | set(recorded['missing_currencies'])
+               | set(ledger['missing_currencies']))
     accounts = {row['account'].pk: row for row in ledger['accounts']}
     available = sum((row['base_available'] or ZERO for row in projected['cash_pots']), ZERO)
     reserved = sum((row['base_reserved'] or ZERO for row in projected['cash_pots']), ZERO)
@@ -50,6 +51,12 @@ def monthly_outlook(user, month):
         # amount would otherwise invent a deficit backed by its reserved cash.
         reserve = min(row['reserved'], max(native, ZERO))
         row.update(balance=native, reserved=reserve, available=native - reserve)
+        if not native and not reserve:
+            # A zero cash result needs no rate; any nonzero bill's missing FX
+            # remains visible through the ledger's obligation metadata.
+            row.update(converted_balance=ZERO, converted_available=ZERO, converted_reserved=ZERO)
+            unpaid += sum((item['converted_amount'] or ZERO for item in forecast['invoice_obligations']), ZERO)
+            continue
         try:
             rate = conversion.convert(Decimal('1'), row['account'].currency, as_of=end)
         except MissingExchangeRate:

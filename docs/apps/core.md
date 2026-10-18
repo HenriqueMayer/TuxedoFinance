@@ -14,6 +14,12 @@ priority over `.env`, including in CI.
 | `core/settings.py` | Django settings and supported UI languages; no user-facing currency setting. |
 | `core/urls.py` | Root URLconf, including Django's `i18n/` routes and the domain apps. |
 | `core/context_processors.py` | The authenticated user's currency context, registered in `TEMPLATES[0]['OPTIONS']['context_processors']`. |
+| `core/dates.py` | Preferred complete-date widgets and parsing; machine dates remain ISO. |
+| `core/widgets.py` | Shared native segmented-choice rendering for approved short options. |
+| `core/navigation.py` | Explicit validated local return destinations; never inferred from Referer. |
+| `core/workspace_navigation.py` | The five shared desktop/mobile workspaces and their available secondary sections. |
+| `core/features.py` | Server review gates for paused interfaces, preserving their underlying records. |
+| `core/assets.py` / `core/middleware.py` | Content-versioned frontend assets, stale-document recovery and private HTML cache policy. |
 | `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR02A/FR16). |
 | `core/formats/en/formats.py` | Locale number-format override driven by the selected reporting currency (FR16). |
 | `core/formats/pt_BR/formats.py` | Portuguese locale counterpart that preserves the same currency-driven number format. |
@@ -31,19 +37,25 @@ financial records. The installation owner is responsible for file access,
 protection and backup; see
 [`../operations.md`](../operations.md) for the supported procedure.
 
+Settings use `TIME_ZONE = 'UTC'` with timezone-aware Django datetimes. This is a
+code-level setting, not an advertised `TIME_ZONE` environment variable or a
+per-user timezone preference. Complete-date presentation is a separate DMY/MDY
+setting; see the [shared date component](../frontend.md#shared-complete-date-dialog).
+
 ## Context processors
 
 ### `currency(request)`
 
-```python
-def currency(request):
-    return {
-        'CURRENCY_CODE': code,
-        'CURRENCY_SYMBOL': symbol,
-        'ALLOW_SIGNUPS': settings.ALLOW_SIGNUPS,
-        'USER_DATE_FORMAT': date_format,
-    }
-```
+The processor supplies presentation and navigation context:
+
+| Keys | Meaning |
+|---|---|
+| `CURRENCY_CODE`, `CURRENCY_SYMBOL` | Reporting denomination and display symbol. |
+| `ALLOW_SIGNUPS` | Installation registration policy, enforced in the signup view. |
+| `USER_DATE_FORMAT` | Preferred complete-date presentation. |
+| `IMPORTS_AVAILABLE` | Current server review-gate status. |
+| `APP_NAVIGATION`, `APP_AREA_LABEL`, `APP_SECTION_LABEL`, `APP_SECTIONS` | Owned workspace context from `core.workspace_navigation`; paused destinations are omitted. |
+
 
 For authenticated requests the context resolves the user's
 `UserPreference.base_currency`; anonymous requests use the BRL bootstrap default.

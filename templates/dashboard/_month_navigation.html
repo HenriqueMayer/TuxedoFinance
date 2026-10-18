@@ -1,12 +1,11 @@
 {% load i18n %}
-    <div role="group" aria-labelledby="selected-period-heading" class="min-w-0">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-3">
+    <div role="group" aria-labelledby="selected-period-heading" class="period-navigation" data-period-navigation>
+            <div class="period-navigation-rail">
                 {% if has_previous_month %}<a href="?month={{ previous_month_param }}" aria-label="{% translate 'Previous month' %}"
-                   class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="icon-action shrink-0">
                     &larr;
-                </a>{% endif %}
-                <div class="min-w-0 text-center sm:text-left">
+                </a>{% else %}<span aria-disabled="true" aria-label="{% translate 'Previous month' %}" class="period-navigation-unavailable">&larr;</span>{% endif %}
+                <div class="period-navigation-caption">
                     <p id="selected-period-heading" class="text-base font-semibold text-forest dark:text-cream">{{ selected_month_date|date:'F Y' }}</p>
                     <p class="text-sm text-forest/70 dark:text-night-muted">
                         {% if is_current_month %}{% blocktranslate with cutoff=period_cutoff|date:USER_DATE_FORMAT %}Progress through {{ cutoff }}{% endblocktranslate %}
@@ -15,15 +14,17 @@
                     </p>
                 </div>
                 {% if has_next_month %}<a href="?month={{ next_month_param }}" aria-label="{% translate 'Next month' %}"
-                   class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+                   class="icon-action shrink-0">
                     &rarr;
-                </a>{% else %}<span class="subtle-copy">{% translate 'Forecast limit' %}</span>{% endif %}
+                </a>{% else %}<span aria-disabled="true" aria-label="{% translate 'Forecast limit' %}" class="period-navigation-unavailable">&rarr;</span>{% endif %}
             </div>
+            <div class="period-navigation-reset">
+            {% if not has_next_month %}<span class="subtle-copy mr-auto">{% translate 'Forecast limit' %}</span>{% endif %}
             {% if not is_current_month %}
                 <a href="{% url 'dashboard:index' %}"
                    class="quiet-action">
                     {% translate "Back to this month" %}
                 </a>
             {% endif %}
-        </div>
+            </div>
     </div>

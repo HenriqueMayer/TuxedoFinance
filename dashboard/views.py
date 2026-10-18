@@ -22,6 +22,7 @@ from dashboard.services import (
     EVOLUTION_PAST_MONTHS,
     OUTLOOK_MONTHS,
     add_months,
+    _transactions,
     get_account_evolution,
     get_dashboard_summary,
     get_expenses_by_recurrence,
@@ -30,7 +31,8 @@ from dashboard.services import (
 from transactions.services import sync_user_ledger
 
 
-ALL_TIME_MONTHS = 12
+# The legacy ALL query value selects a rolling year, not the full ledger.
+HISTORY_MONTHS = 12
 
 
 def _selected_month(request, in_range):
@@ -148,7 +150,10 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         sync_user_ledger(self.request.user)
         conversion = ConversionContext(self.request.user)
         offset = _parse_charts_offset(self.request, _is_offset_window_safe)
-        evolution = get_account_evolution(self.request.user, offset=offset, conversion=conversion)
+        # All report islands read the same owned sources. Sharing this list
+        # avoids hydrating the full history and split relations three times.
+        transactions = _transactions(self.request.user)
+        evolution = get_account_evolution(self.request.user, offset=offset, conversion=conversion, transactions=transactions)
         months = evolution['months']
         context.update(
             {
@@ -209,8 +214,8 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         current_param = f'{today.year:04d}-{today.month:02d}'
         if raw_period == 'ALL':
             instrument_window = [add_months(today.year, today.month, -step)
-                                 for step in range(ALL_TIME_MONTHS)]
-            window_label = _('All time')
+                                 for step in range(HISTORY_MONTHS)]
+            window_label = _('Last 12 months')
         else:
             period_value = f'{period_year:04d}-{period_month:02d}'
             instrument_window = [(period_year, period_month)]
@@ -223,7 +228,7 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             context[f'instrument_{direction}_month'] = (
                 f'{year:04d}-{month:02d}' if _is_representable(year, month) else None
             )
-        activity = get_instrument_activity(self.request.user, window=instrument_window, conversion=conversion)
+        activity = get_instrument_activity(self.request.user, window=instrument_window, conversion=conversion, transactions=transactions)
         context['instrument_activity'] = activity
         context['instrument_chart'] = self._instrument_chart(activity)
 
@@ -244,11 +249,11 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             )
         if installment_value == 'ALL':
             recurrence = get_expenses_by_recurrence(
-                self.request.user, months=ALL_TIME_MONTHS, conversion=conversion,
+                self.request.user, months=HISTORY_MONTHS, conversion=conversion, transactions=transactions,
             )
-            context['installment_window_label'] = _('All time')
+            context['installment_window_label'] = _('Last 12 months')
         else:
-            recurrence = get_expenses_by_recurrence(self.request.user, year, month, conversion=conversion)
+            recurrence = get_expenses_by_recurrence(self.request.user, year, month, conversion=conversion, transactions=transactions)
             context['installment_window_label'] = date_format(date(year, month, 1), 'F Y')
         context['recurrence_breakdown'] = recurrence
         context['recurrence_chart'] = (

@@ -150,6 +150,38 @@ Goal forms and summaries explicitly label the goal amount, avoiding the generic
 target/destination terminology used by unrelated financial forms. Reserved/goal
 cards still display backed progress, not an unbacked allocation claim.
 
+Goal, budget and reservation editors use the shared compact finance-entry sheet,
+with related short values in responsive columns. A separate reservation reveals
+its amount only after an explicit source choice, just like the optional initial
+reservation. Both selectors show the remaining capacity after other active goal
+allocations; editing excludes the current allocation from that comparison.
+These labels explain the existing server validation and do not reserve money.
+Choice labels start with the account or asset name, followed by distinct product
+and institution context, currency and remaining capacity. Repeated pot names
+are not duplicated; asset codes distinguish otherwise identical choices.
+The full option wraps inside the shared picker, including on short phone screens.
+Source links open the exact account row or cash-pot position for consultation;
+editing the reservation remains a separate explicit action. Goal detail dates
+follow the owner's date preference in the same way as the list.
+
+Local-signal settings and review actions preserve the explicit consultation
+origin and reviewed filter. Settings Save/Cancel return to that origin; decisions
+still change only review state, never financial records.
+Each signal's enable checkbox stays beside its threshold in the complete
+settings form. Disabled rules retain and submit their previous thresholds;
+switching a review rule off does not erase its configuration. Signal source
+dates follow the owner's preference in presentation only, without changing
+evidence fingerprints. Editable source links carry the signal consultation as
+their explicit return context, including the reviewed filter.
+
+Goal detail leads with backed progress and keeps target, remainder and deadline
+beside it. Reserved sources share a divided surface with saved bank markers,
+readable account/asset names and separate Edit/Release actions. Initial
+reservation guidance uses the shared help beside its checkbox; the source and
+amount still follow the same explicit conditional selection and error recovery.
+Long goal names wrap within the header while Edit retains a separate action
+target; they must not widen the document or expose the off-canvas navigation.
+
 A new goal can optionally reserve an existing bank/cash-pot balance during the
 same submission. The checkbox begins unchecked; selecting it reveals an empty
 owned source choice, then the amount. New form fields use the shared renderer,

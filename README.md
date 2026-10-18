@@ -160,14 +160,14 @@ before migrating an existing installation.
 
 | Area | Additions |
 |---|---|
-| Statement imports (under review) | Interface operations are unavailable; redesign is tracked in documentation; confirmed/undone provenance remains readable. Dormant local CSV/OFX upload, explicit column/date/decimal mapping, staged review, stable-ID deduplication, possible-duplicate warnings, matching to existing bank evidence, confirmed invoice payments and owned-account transfers. Closing balances are reconciled without automatic adjustments; undo refuses changed source records. |
+| Statement imports (paused) | Upload, review, confirmation and undo are unavailable; owned confirmed/undone provenance remains read-only. The [app guide](docs/apps/ingestion.md) describes retained CSV/OFX services and the review gate. |
 | Category splits | Divide a transaction between categories with exact totals and installment cents; reports, budgets and CSV exports retain the allocations without duplicating payments. |
 | Confirmed invoices | Opt a card into recorded full or partial payments from an actual account. Earlier automatic invoices retain their behavior; unpaid amounts remain visible forecast obligations. |
 | Budgets and goals | Monthly category limits with previous-month copying, recorded spending and known forecasts; targets with currency/date and reservations backed by existing bank or monetary cash-pot balances. Insufficient backing and reference FX limitations remain visible. |
 | Local signals | Explained duplicate, subscription-increase, budget-overspend and future-cash-shortage suggestions, with acknowledge/dismiss/reopen actions that leave source finances unchanged. |
 | Valuations and wealth | Dated local unit-price observations, weighted-average remaining cost, realized/unrealized results, explicit fee currency and net-worth calculations including incurred card debt; the net-worth interface is hidden pending redesign. Missing history, opening dates, prices and FX are disclosed. |
 | Local operation | Locally served fonts, reused reporting/conversion context and incremental ledger synchronization, plus expanded synthetic demonstration data. |
-| Daily navigation | The same five destinations in a desktop sidebar and mobile bottom bar, local section tabs, contextual account/card/position actions and retained form origins. Compact live-search bars, named-month selection, an aligned, initially collapsed category list, a bank overview with dedicated account/card/reserve details, compact cash-pot cards and a card overview leading to invoice history, a discreet shared footer and transient icon help. Investments uses aligned holding/value/Update rows and compact optional filters; Plan highlights monthly available cash with aligned budgets, backed-goal cards and grouped Tools. Recorded values, projections and missing evidence stay distinct. |
+| Daily navigation | Five shared workspaces, local section tabs, compact live filters, contextual financial actions and retained form origins. The [interface map](docs/interface-map.md) records the current screens and shared components; recorded values, projections and missing evidence remain distinct. |
 
 The branch does not add a live bank connection, external quote feed or cloud AI
 service. Price observations and review decisions stay in the local database;
@@ -183,8 +183,9 @@ high-contrast typography, caramel actions, and semantic financial colors.
 
 The dark theme uses neutral black and graphite foundations with the lighter
 semantic companions documented in the canonical catalog, preserving contrast
-without changing financial meaning. The public homepage presents factual
-capabilities and access links beside a horizontal cat photograph in a translucent double frame.
+without changing financial meaning. The public homepage pairs factual access
+links with a Paper Layers bow tie that reveals the five workspaces, followed by
+seven feature descriptions. It supports keyboard, touch and reduced motion.
 
 The canonical component catalog lives in
 [`docs/design-system.html`](docs/design-system.html),
@@ -234,6 +235,8 @@ preview suite checks the committed static tour separately.
 Technical documentation is maintained in English.
 
 - [Documentation index](docs/README.md) — repository layout and per-app references
+- [Owner walkthrough](docs/branch-testing.md) — disposable preview and computer/phone acceptance
+- [Roadmap](docs/roadmap.md) and [review archive](docs/reviews/README.md) — paused work and dated evidence
 - [Product requirements](docs/product-requirements.md) — supported behavior and acceptance criteria
 - [Data model](docs/data-model.md) — entities, relationships, and accounting rules
 - [Frontend](docs/frontend.md) and [design system](docs/design-system.html) — interface conventions and component catalog

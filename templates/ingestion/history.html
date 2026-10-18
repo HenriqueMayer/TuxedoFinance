@@ -3,10 +3,10 @@
 {% block content %}
 <div class="space-y-6">
 <header><h1 class="page-title">{% translate 'Import history' %}</h1><p class="subtle-copy mt-2">{% translate 'Read-only records of confirmed and undone statements.' %}</p></header>
-<form id="import-history-filters" method="get" data-live-filters data-live-results="import-history-results" hx-boost="false" class="filter-panel">
-<div class="flex-1"><label for="import-history-query">{% translate 'Search' %}</label><input id="import-history-query" type="search" name="q" value="{{ query }}" data-live-search placeholder="{% translate 'File, account or bank' %}" class="form-input w-full"></div>
-<button type="submit" class="action-link" data-live-submit>{% translate 'Apply filters' %}</button>
-<span id="import-history-clear" data-live-fragment="import-history-filters">{% if query %}<a class="action-link" data-live-reset data-live-link="import-history-filters" href="{% url 'ingestion:history' %}">{% translate 'Clear filters' %}</a>{% endif %}</span>
+<form id="import-history-filters" method="get" data-live-filters data-live-results="import-history-results" hx-boost="false" class="consultation-bar consultation-search-only">
+<div class="consultation-search space-y-1.5"><label for="import-history-query" class="field-label">{% translate 'Search' %}</label><input id="import-history-query" type="search" name="q" value="{{ query }}" data-live-search placeholder="{% translate 'File, account or bank' %}" class="entry-input"></div>
+<div class="consultation-actions"><button type="submit" class="quiet-action" data-live-submit>{% translate 'Apply filters' %}</button>
+<span id="import-history-clear" class="consultation-clear-control" data-live-fragment="import-history-filters">{% if query %}<a class="quiet-action" data-live-reset data-live-link="import-history-filters" href="{% url 'ingestion:history' %}" aria-label="{% translate 'Clear filters' %}">{% translate 'Clear' %}</a>{% endif %}</span></div>
 </form>
 <div id="import-history-results" class="space-y-3" aria-live="polite">
 {% for batch in batches %}<article class="surface-panel flex flex-wrap items-center justify-between gap-3"><div><a class="font-semibold hover:underline" href="{% url 'ingestion:detail' batch.pk %}">{{ batch.file_name }}</a><p class="subtle-copy">{{ batch.account }} · {{ batch.created_at|date:USER_DATE_FORMAT }}</p></div><span class="status-badge">{{ batch.get_status_display }}</span></article>{% empty %}<p class="subtle-copy py-6">{% translate 'No confirmed import history found.' %}</p>{% endfor %}

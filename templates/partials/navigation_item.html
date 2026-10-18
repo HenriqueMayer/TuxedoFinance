@@ -1,4 +1,4 @@
 <a id="app-{{ nav_variant }}-{{ item.key }}-link" href="{{ item.url }}" data-nav-item="{{ item.key }}" class="app-navigation-link"{% if item.active %} aria-current="page"{% endif %}>
     {% include 'partials/navigation_icon.html' with area=item.key %}
-    <span>{{ item.label }}</span>
+    <span class="app-navigation-label">{{ item.label }}</span>
 </a>

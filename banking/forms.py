@@ -1,9 +1,12 @@
+import re
+
 from django import forms
 from django.utils import timezone
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 from core.dates import configure_date_fields
+from core.widgets import SegmentedChoice, SelectWithMetadata, SelectMultipleWithMetadata
 from sandbox.forms import parse_month
 
 from banking.models import (
@@ -37,6 +40,37 @@ class OwnedModelForm(forms.ModelForm):
             self.instance.user = user
         for field in self.fields.values():
             field.widget.attrs['class'] = INPUT_CLASSES
+
+    def _instrument_choice(self, name, kind):
+        field = self.fields[name]
+        widget_class = SelectMultipleWithMetadata if isinstance(field, forms.ModelMultipleChoiceField) else SelectWithMetadata
+        widget = widget_class(attrs={**field.widget.attrs,
+            'data-payment-choices': 'true', 'data-payment-kind': kind})
+
+        def card_label(card):
+            return f'{card.name} - {card.account.bank.name} > {card.account.name} ({card.account.currency})'
+
+        def metadata(record):
+            if kind == 'account':
+                return {'data-choice-name': record.name,
+                    'data-choice-detail': f'{record.bank.name} · {record.currency}',
+                    'data-bank-color': record.bank.color}
+            card = record.card if isinstance(record, CardInvoice) else record
+            period = f' · {record.reference_month:%Y-%m}' if isinstance(record, CardInvoice) else ''
+            return {'data-choice-name': card.name + period,
+                'data-choice-detail': f'{card.account.bank.name} > {card.account.name} ({card.account.currency})',
+                'data-bank-color': card.account.bank.color,
+                'data-card-color': card.color,
+                'data-card-gradient-end': card.gradient_end,
+                'data-card-gradient-angle': str(card.gradient_angle)}
+
+        if kind == 'card':
+            field.label_from_instance = lambda record: (
+                f'{card_label(record.card)} · {record.reference_month:%Y-%m}'
+                if isinstance(record, CardInvoice) else card_label(record))
+        widget.choice_data = metadata
+        widget.choices = field.choices
+        field.widget = widget
 
     def _duplicate(self, queryset):
         if self.instance.pk:
@@ -133,15 +167,96 @@ class BankAccountForm(OwnedModelForm):
 
 
 class CardForm(OwnedModelForm):
+    use_gradient = forms.BooleanField(required=False, label=_('Use a gradient'))
+    is_card_form = True
+    appearance_fields = ('color', 'use_gradient', 'gradient_end', 'gradient_angle')
+    color_presets = (
+        ('#253330', _('Graphite')),
+        ('#5B3E7C', _('Plum')),
+        ('#C6A173', _('Copper')),
+        ('#315D50', _('Forest')),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._instrument_choice('account', 'account')
         if self.user is not None:
             self.fields['account'].queryset = BankAccount.objects.filter(
                 user=self.user
             ).select_related('bank')
+        self.appearance_submitted = self.is_bound and any(
+            self.add_prefix(name) in self.data for name in self.appearance_fields
+        )
+        if not self.instance.pk:
+            self.fields['color'] = forms.ChoiceField(
+                choices=self.color_presets, required=False, label=_('Card color'),
+                initial='#253330', widget=SegmentedChoice(attrs={'class': 'entry-segment-options'}),
+            )
+        else:
+            self.fields['color'].required = False
+            self.fields['color'].label = _('Card color')
+            self.fields['color'].widget = forms.TextInput(attrs={
+                'type': 'color', 'class': INPUT_CLASSES,
+            })
+        self.fields['gradient_end'].label = _('Gradient end color')
+        self.fields['gradient_end'].widget = forms.TextInput(attrs={
+            'type': 'color', 'class': INPUT_CLASSES,
+        })
+        self.fields['gradient_angle'].label = _('Gradient angle')
+        self.fields['gradient_angle'].required = False
+        self.fields['gradient_angle'].widget.attrs.update({'min': 0, 'max': 359, 'step': 1})
+        self.initial['use_gradient'] = bool(self.instance.gradient_end)
+        self.initial['gradient_end'] = self.instance.gradient_end or self.instance.color
+        self.fields['use_gradient'].widget.attrs['class'] = 'card-gradient-toggle'
+
+    @property
+    def card_record_fields(self):
+        return [self[name] for name in self.fields if name not in self.appearance_fields]
+
+    @property
+    def card_preview_color(self):
+        value = self['color'].value() or self.instance.color
+        return value.upper() if re.fullmatch(r'#[0-9a-fA-F]{6}', str(value)) else '#253330'
+
+    @property
+    def card_preview_end(self):
+        if 'use_gradient' not in self.fields or not self['use_gradient'].value():
+            return self.card_preview_color
+        value = self['gradient_end'].value() or ''
+        return value.upper() if re.fullmatch(r'#[0-9a-fA-F]{6}', str(value)) else self.card_preview_color
+
+    @property
+    def card_preview_angle(self):
+        try:
+            value = int(self['gradient_angle'].value()) if 'gradient_angle' in self.fields else 135
+        except (TypeError, ValueError):
+            return 135
+        return value if 0 <= value <= 359 else 135
+
+    def clean_color(self):
+        return (self.cleaned_data.get('color') or self.instance.color or '#253330').upper()
+
+    def clean_gradient_angle(self):
+        value = self.cleaned_data.get('gradient_angle')
+        return self.instance.gradient_angle if value is None else value
 
     def clean(self):
         cleaned = super().clean()
+        if not self.appearance_submitted:
+            # Older integrations may still post the original financial form.
+            cleaned['gradient_end'] = self.instance.gradient_end
+            cleaned['gradient_angle'] = self.instance.gradient_angle
+        elif not cleaned.get('use_gradient'):
+            # Ignore inactive presentation inputs on create and edit, while
+            # keeping native fields available after an invalid POST without JS.
+            self._errors.pop('gradient_end', None)
+            self._errors.pop('gradient_angle', None)
+            cleaned['gradient_end'] = ''
+            cleaned['gradient_angle'] = self.instance.gradient_angle
+        elif not cleaned.get('gradient_end'):
+            self.add_error('gradient_end', _('Choose a gradient end color.'))
+        else:
+            cleaned['gradient_end'] = cleaned['gradient_end'].upper()
         account = cleaned.get('account')
         name = cleaned.get('name')
         if account and name and self._duplicate(
@@ -161,14 +276,14 @@ class CardForm(OwnedModelForm):
 class DebitCardForm(CardForm):
     class Meta:
         model = DebitCard
-        fields = ('account', 'name')
+        fields = ('account', 'name', 'color', 'gradient_end', 'gradient_angle')
         labels = {'account': _('Account'), 'name': _('Name')}
 
 
 class CreditCardForm(CardForm):
     class Meta:
         model = CreditCard
-        fields = ('account', 'name', 'card_type', 'closing_day', 'due_day', 'manual_settlement_from')
+        fields = ('account', 'name', 'card_type', 'closing_day', 'due_day', 'manual_settlement_from', 'color', 'gradient_end', 'gradient_angle')
         widgets = {
             'closing_day': forms.NumberInput(attrs={'min': '1', 'max': '31'}),
             'due_day': forms.NumberInput(attrs={'min': '1', 'max': '31'}),
@@ -205,6 +320,7 @@ class InvoicePaymentForm(OwnedModelForm):
 
     def __init__(self, *args, invoice, **kwargs):
         super().__init__(*args, **kwargs)
+        self._instrument_choice('account', 'account')
         self.instance.invoice = invoice
         self.initial['confirmation_key'] = self.instance.confirmation_key
         self.fields['account'].queryset = BankAccount.objects.filter(user=self.user, currency=invoice.account.currency).select_related('bank')
@@ -237,6 +353,7 @@ class LoyaltyProgramForm(OwnedModelForm):
     def __init__(self, *args, **kwargs):
         self.locked_bank = kwargs.pop('locked_bank', None)
         super().__init__(*args, **kwargs)
+        self._instrument_choice('cards', 'card')
         if self.user is not None:
             self.fields['bank'].queryset = Bank.objects.filter(user=self.user)
             cards = CreditCard.objects.filter(user=self.user).select_related('account__bank')
@@ -317,6 +434,8 @@ class BankTransferForm(OwnedModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for name in ('source_account', 'destination_account'):
+            self._instrument_choice(name, 'account')
         accounts = BankAccount.objects.none()
         if self.user is not None:
             accounts = BankAccount.objects.filter(user=self.user).select_related('bank')
@@ -365,11 +484,14 @@ class LoyaltyEntryForm(OwnedModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._instrument_choice('funding_account', 'account')
+        for name in ('funding_credit_card', 'invoice'):
+            self._instrument_choice(name, 'card')
         if self.user is not None:
             self.fields['program'].queryset = LoyaltyProgram.objects.filter(user=self.user)
             self.fields['invoice'].queryset = CardInvoice.objects.filter(
                 user=self.user
-            ).select_related('card').order_by('-reference_month')
+            ).select_related('card__account__bank').order_by('-reference_month')
             self.fields['funding_account'].queryset = BankAccount.objects.filter(
                 user=self.user
             ).select_related('bank')
@@ -417,6 +539,9 @@ class RewardRedemptionForm(OwnedModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for name in ('target_account', 'iof_account'):
+            self._instrument_choice(name, 'account')
+        self._instrument_choice('iof_credit_card', 'card')
         if self.user is not None:
             self.fields['program'].queryset = LoyaltyProgram.objects.filter(user=self.user)
             accounts = BankAccount.objects.filter(user=self.user).select_related('bank')
@@ -448,9 +573,9 @@ class ExchangeRateForm(OwnedModelForm):
         }
         help_texts = {'rate': _('How many target-currency units equal one source unit.')}
         labels = {
-            'from_currency': _('From currency'),
+            'from_currency': _('From currency (1 unit)'),
             'to_currency': _('To currency'),
-            'rate': _('Rate'),
+            'rate': _('Value in the target currency'),
             'effective_date': _('Effective date'),
             'notes': _('Notes'),
         }
@@ -483,7 +608,7 @@ class InvoiceFilterForm(forms.Form):
 class ExchangeRateFilterForm(forms.Form):
     q = forms.CharField(required=False, label=_('Search'),
                         widget=forms.TextInput(attrs={'type': 'search', 'data-live-search': '', 'placeholder': _('Currency or notes')}))
-    from_currency = forms.ChoiceField(required=False, label=_('From currency'), choices=[('', _('All currencies')), *ExchangeRate._meta.get_field('from_currency').choices])
+    from_currency = forms.ChoiceField(required=False, label=_('From currency (1 unit)'), choices=[('', _('All currencies')), *ExchangeRate._meta.get_field('from_currency').choices])
     to_currency = forms.ChoiceField(required=False, label=_('To currency'), choices=[('', _('All currencies')), *ExchangeRate._meta.get_field('to_currency').choices])
     date_from = forms.DateField(required=False, label=_('From date'))
     date_to = forms.DateField(required=False, label=_('To date'))

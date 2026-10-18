@@ -1,0 +1,197 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Product-wide presentation of the validated editorial catalogue. Keep domain
+   states and native control semantics in their owning components. */
+body.tuxedo-ui {
+    --ui-paper: #FAF8F3;
+    --ui-ground: #EBE7DE;
+    --ui-surface: #FFFFFF;
+    --ui-ink: #1A2E26;
+    --ui-muted: #52605A;
+    --ui-line: rgb(26 46 38 / .18);
+    --ui-control: #7C8982;
+    --ui-accent: #8A5A2F;
+    --ui-danger: #B42318;
+    --ui-danger-ground: #FCF1EF;
+    --ui-ease: cubic-bezier(.22, 1, .36, 1);
+}
+.dark body.tuxedo-ui {
+    --ui-paper: #101010;
+    --ui-ground: #262626;
+    --ui-surface: #1B1B1B;
+    --ui-ink: #FAF8F3;
+    --ui-muted: #B8B8B8;
+    --ui-line: rgb(250 248 243 / .20);
+    --ui-control: #808080;
+    --ui-accent: #D4AD86;
+    --ui-danger: #FF8A80;
+    --ui-danger-ground: #32211F;
+}
+body.tuxedo-ui :is(.surface-panel, .metric-panel, .filter-panel, .consultation-bar) {
+    border-radius: 14px;
+    border-color: var(--ui-line);
+    box-shadow: none;
+}
+body.tuxedo-ui :is(.surface-panel, .metric-panel) { background: var(--ui-surface); }
+/* Editors and confirmations may name a record with no word boundaries. */
+body.tuxedo-ui .page-title { font-size: 1.75rem; font-weight: 600; line-height: 1.25; letter-spacing: -.045em; overflow-wrap: anywhere; }
+@media (min-width: 640px) { body.tuxedo-ui .page-title { font-size: 2rem; } }
+body.tuxedo-ui :is(.field-label, .metric-label) { color: var(--ui-ink); font-weight: 500; }
+body.tuxedo-ui .workspace-form-page { width: 100%; }
+body.tuxedo-ui .workspace-form { min-width: 0; }
+body.tuxedo-ui .workspace-form > :is(h2, h3) { letter-spacing: -.025em; }
+/* Investments and Plan share a compact sheet. Group ordinary fields without
+   changing their native widgets, conditional owners or keyboard order. */
+body.tuxedo-ui .finance-entry-page { max-width: 56rem; margin-inline: auto; }
+body.tuxedo-ui .finance-entry-form { padding: clamp(20px, 3vw, 32px); }
+body.tuxedo-ui .finance-entry-grid:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px 24px; align-items: start; }
+body.tuxedo-ui .finance-entry-grid > * { min-width: 0; }
+/* Optional help must not push one of two neighbouring controls lower. */
+body.tuxedo-ui .finance-entry-grid [data-form-field] > .label-with-help { min-height: 24px; }
+body.tuxedo-ui .finance-entry-wide { grid-column: 1 / -1; }
+/* Named fieldsets separate complete setup steps without nesting another card.
+   Keep their native legend and DOM order for keyboard and screen-reader use. */
+body.tuxedo-ui .finance-entry-group { min-width: 0; margin-inline: 0; padding: 0; border: 0; }
+body.tuxedo-ui .finance-entry-group > legend { max-width: 100%; padding: 0; margin-bottom: 16px; }
+body.tuxedo-ui .finance-entry-section { border-top: 1px solid var(--ui-line); padding-top: 20px; }
+/* A fieldset's legend already supplies the space above its controls. */
+body.tuxedo-ui .finance-entry-group.finance-entry-section { padding-top: 0; }
+body.tuxedo-ui .finance-entry-form .form-actions { border-top: 1px solid var(--ui-line); padding-top: 20px; }
+@media (min-width: 640px) {
+    body.tuxedo-ui .finance-entry-grid:not([hidden]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+body.tuxedo-ui .form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 8px; }
+/* Single booleans share a readable row with their label and help; legacy
+   full-width field classes must never stretch the native checkbox. */
+body.tuxedo-ui .entry-checkbox-choice { display: flex; align-items: center; justify-content: flex-start; gap: 12px; min-height: 44px; }
+body.tuxedo-ui .entry-checkbox-choice > input[type="checkbox"] { width: 18px; height: 18px; min-height: 18px; flex: 0 0 18px; margin: 0; accent-color: var(--ui-accent); }
+body.tuxedo-ui .entry-checkbox-choice > div { min-width: 0; }
+body.tuxedo-ui :is(.action-primary, .action-link, .action-danger, .entry-button),
+body.tuxedo-ui .secondary-actions:not(.compact-menu) > summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid var(--ui-line);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22px;
+    letter-spacing: normal;
+    text-align: center;
+    text-transform: none;
+    text-decoration: none;
+    transition: background-color 180ms var(--ui-ease), border-color 180ms var(--ui-ease), box-shadow 180ms var(--ui-ease);
+}
+body.tuxedo-ui .action-primary { border-color: transparent; background: #B88A59; color: #101E18; }
+body.tuxedo-ui .action-primary:hover { background: #D4AD86; border-color: var(--ui-accent); }
+body.tuxedo-ui .action-link { background: transparent; color: var(--ui-ink); }
+body.tuxedo-ui .action-link:hover { background: var(--ui-ground); border-color: var(--ui-accent); }
+body.tuxedo-ui .secondary-actions:not(.compact-menu) > summary:hover { background: var(--ui-ground); border-color: var(--ui-accent); }
+body.tuxedo-ui .action-danger { border-color: color-mix(in srgb, var(--ui-danger) 40%, transparent); background: var(--ui-danger-ground); color: var(--ui-danger); }
+body.tuxedo-ui .action-danger:hover { border-color: var(--ui-danger); box-shadow: inset 0 0 0 1px var(--ui-danger); }
+/* Actions retain their contour and arrow position. Feedback comes from color
+   and a small inset press, so labels remain stable under the pointer. */
+body.tuxedo-ui :is(.action-primary, .action-link, .action-danger, .entry-button):active { box-shadow: inset 0 1px 3px rgb(16 30 24 / .14); }
+body.tuxedo-ui :is(.action-primary, .action-link, .action-danger, .entry-button) svg { flex-shrink: 0; }
+body.tuxedo-ui .quiet-action { min-height: 44px; border-radius: 8px; font-size: 14px; letter-spacing: normal; text-transform: none; }
+body.tuxedo-ui :is(.icon-action, .icon-action--danger) {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 44px; min-width: 44px; min-height: 44px; padding: 8px;
+    border: 1px solid var(--ui-line); border-radius: 10px;
+    background: transparent; color: var(--ui-muted); font-size: 16px; line-height: 1;
+    transition: background-color 160ms ease, border-color 160ms ease;
+}
+body.tuxedo-ui .icon-action:hover { border-color: var(--ui-accent); background: var(--ui-paper); color: var(--ui-ink); }
+body.tuxedo-ui .icon-action--danger { color: var(--ui-danger); }
+body.tuxedo-ui .icon-action--danger:hover { border-color: var(--ui-danger); background: var(--ui-danger-ground); }
+body.tuxedo-ui .icon-action svg { width: 18px; height: 18px; }
+body.tuxedo-ui :is(.action-primary, .action-link, .action-danger, .icon-action):focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; }
+body.tuxedo-ui :is(.action-primary, .action-link, .action-danger, .icon-action):disabled { opacity: .55; cursor: not-allowed; }
+/* Name the real controls to outrank the legacy generic dark-input boundary
+   without overriding specialized widgets, errors or the payment miniature. */
+body.tuxedo-ui :is(input.entry-input, select.entry-input, textarea.entry-input, input.form-input, select.form-input, textarea.form-input) {
+    min-height: 44px; padding: 10px 12px; border: 1px solid var(--ui-line);
+    border-bottom-color: var(--ui-control);
+    border-radius: 8px; background: var(--ui-paper); color: var(--ui-ink);
+    font-size: 14px; line-height: 22px;
+}
+body.tuxedo-ui textarea.entry-input { min-height: 96px; resize: vertical; }
+body.tuxedo-ui .entry-input::placeholder { color: var(--ui-muted); }
+body.tuxedo-ui .entry-input:focus { border-color: var(--ui-accent); outline: 2px solid var(--ui-accent); outline-offset: 2px; background: var(--ui-surface); }
+body.tuxedo-ui .entry-input[aria-invalid="true"] { border-color: var(--ui-danger); }
+/* The native date helper stays screen-reader-hidden; only the named preferred
+   text field receives the shared appearance and calendar dialog. */
+body.tuxedo-ui [data-entry-date] > .flex { position: relative; }
+body.tuxedo-ui [data-entry-date] .entry-input { padding-right: 48px; }
+body.tuxedo-ui [data-entry-date] [data-open-date-picker] {
+    position: absolute; right: 0; top: 0; width: 44px; height: 44px;
+    padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--ui-muted);
+}
+body.tuxedo-ui [data-entry-date] [data-open-date-picker] > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+body.tuxedo-ui [data-entry-date] [data-open-date-picker] svg { width: 18px; height: 18px; }
+body.tuxedo-ui [data-open-date-picker][hidden] { display: none; }
+body.tuxedo-ui .search-choice { position: relative; }
+body.tuxedo-ui .search-choice:not(.search-choice--payment) > input { padding-right: 48px; }
+body.tuxedo-ui .search-choice:not(.search-choice--payment) > button {
+    position: absolute; right: 0; top: 0; width: 44px; height: 44px; min-height: 44px;
+    margin: 0; padding: 0; border-radius: 8px; font-size: 0; color: var(--ui-muted);
+}
+body.tuxedo-ui .search-choice:not(.search-choice--payment) > button::after { content: '×'; font-size: 20px; line-height: 1; }
+/* The filter is an ordinary compact field; illustrated choices remain below
+   it regardless of focus and keep their own comfortable targets. */
+body.tuxedo-ui .search-choice--payment > input { min-height: 44px; padding-block: 10px; padding-right: 48px; }
+body.tuxedo-ui .search-choice-results { border-radius: 8px; }
+/* Full financial record labels must remain readable inside the result list;
+   long account/product names wrap locally instead of clipping or widening it. */
+body.tuxedo-ui .search-choice:not(.search-choice--payment) .search-choice-option { min-width: 0; min-height: 44px; white-space: normal; overflow-wrap: anywhere; }
+body.tuxedo-ui .search-choice:not(.search-choice--payment) .search-choice-option > span { min-width: 0; }
+body.tuxedo-ui :is(.secondary-actions-panel, .month-filter-panel, .help-content, .help-fallback-content, .chart-composition) { border-radius: 12px; }
+body.tuxedo-ui .secondary-actions-panel > :is(a, button),
+body.tuxedo-ui .secondary-actions-panel > form > button { min-height: 44px; display: flex; align-items: center; }
+body.tuxedo-ui .compact-menu > summary { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 8px; }
+body.tuxedo-ui .filter-disclosure > summary { border-radius: 12px; }
+/* Search-only consultations reserve Clear without an empty optional-filter
+   slot. GET fallback submits on its own row, so activating Clear never moves
+   the search field or its caret. */
+body.tuxedo-ui .consultation-search-only { display: grid; grid-template-columns: minmax(0, 1fr) 4rem; align-items: center; }
+body.tuxedo-ui .consultation-search-only .consultation-actions { display: contents; }
+body.tuxedo-ui .consultation-search-only .consultation-clear-control { grid-column: 2; grid-row: 1; width: 4rem; min-height: 44px; }
+body.tuxedo-ui .consultation-search-only .consultation-clear-control > a { width: 100%; white-space: nowrap; }
+body.tuxedo-ui .consultation-search-only [data-live-submit] { grid-column: 1 / -1; justify-self: end; }
+body.tuxedo-ui :is(.consultation-bar, .filter-panel) :is(input:not([type='hidden']):not([type='radio']):not([type='checkbox']), select) { border-radius: 8px; }
+/* Month enhancement is a field, although its accessible trigger is a button. */
+body.tuxedo-ui :is(.consultation-bar, .filter-panel) .month-filter-trigger { background: var(--ui-paper); border-bottom-color: var(--ui-control); }
+body.tuxedo-ui :is(.consultation-bar, .filter-panel) .month-filter-trigger:hover { background: var(--ui-surface); }
+body.tuxedo-ui .transaction-refinement-row { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+body.tuxedo-ui .transaction-refinement-date { flex: 0 1 12rem; }
+body.tuxedo-ui .transaction-refinement-recurrence { flex: 1 1 20rem; }
+body.tuxedo-ui .transaction-refinement-sort { flex: 0 1 14rem; }
+body.tuxedo-ui .transaction-category-context { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--ui-muted); font-size: 14px; }
+body.tuxedo-ui .transaction-category-context[hidden] { display: none; }
+@media (max-width: 639px) {
+    body.tuxedo-ui .transaction-refinement-row > div { flex: 1 1 100%; }
+}
+body.tuxedo-ui .data-table th { text-transform: none; letter-spacing: normal; }
+body.tuxedo-ui :is(.data-table, .planning-sheet) td { vertical-align: middle; }
+body.tuxedo-ui .card-miniature-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+body.tuxedo-ui .card-miniature-heading > :last-child { min-width: 0; overflow-wrap: anywhere; }
+body.tuxedo-ui .card-miniature { display: flex; align-items: flex-end; justify-content: flex-end; width: 64px; height: 40px; flex: 0 0 64px; padding: 6px; border-radius: 8px; overflow: hidden; color: #FFFFFF; background: linear-gradient(var(--card-angle), var(--card-start), var(--card-end)); box-shadow: inset 0 0 0 1px rgb(128 128 128 / .2); }
+body.tuxedo-ui .card-miniature svg { width: 18px; height: 14px; filter: drop-shadow(0 1px 1px rgb(0 0 0 / .25)); }
+body.tuxedo-ui .workspace-form input[type="file"] { width: 100%; max-width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--ui-line); border-radius: 8px; background: var(--ui-paper); font-size: 14px; }
+body.tuxedo-ui .workspace-form input[type="file"]::file-selector-button { margin-right: 12px; padding: 4px 8px; border: 0; border-radius: 5px; background: var(--ui-ground); color: var(--ui-ink); }
+body.tuxedo-ui .workspace-form input[type="color"] { width: 100%; height: 44px; min-height: 44px; padding: 5px; border: 1px solid var(--ui-line); border-radius: 8px; background: var(--ui-paper); }
+body.tuxedo-ui .empty-state { border: 1px dashed var(--ui-line); border-radius: 14px; padding: 40px 24px; }
+/* Feedback may quote a valid record name without spaces. Wrap the message
+   locally instead of letting a flex child's minimum width widen the page. */
+body.tuxedo-ui .notice-panel { border-radius: 12px; overflow-wrap: anywhere; }
+body.tuxedo-ui .notice-panel > * { min-width: 0; }
+body.tuxedo-ui [data-language-selector] { min-height: 44px; border-radius: 10px; font-size: 12px; letter-spacing: normal; }
+body.tuxedo-ui :is(.workspace-form, .consultation-bar) :is(input, select, textarea, button, summary, [tabindex]) { scroll-margin-top: 100px; scroll-margin-bottom: 104px; }
+@media (min-width: 1024px) {
+    body.tuxedo-ui :is(.workspace-form, .consultation-bar) :is(input, select, textarea, button, summary, [tabindex]) { scroll-margin-bottom: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.tuxedo-ui :is(.action-primary, .action-link, .action-danger, .entry-button, .quiet-action, .icon-action, .entry-input) { transition: none; }
+}

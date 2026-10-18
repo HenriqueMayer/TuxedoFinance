@@ -1,6 +1,6 @@
 {% load i18n %}
 <details class="relative" data-project-menu>
-    <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full border border-forest/20 hover:bg-forest/5 transition-colors focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/20 dark:hover:bg-cream/10 [&::-webkit-details-marker]:hidden"
+    <summary class="icon-action cursor-pointer list-none [&::-webkit-details-marker]:hidden"
              aria-label="{% translate 'Project links' %}"
              title="{% translate 'Project links' %}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -9,7 +9,7 @@
         <span class="sr-only">{% translate 'Open project links' %}</span>
     </summary>
 
-    <div class="absolute right-0 z-50 mt-2 w-72 space-y-1 rounded-3xl bg-white p-3 shadow-lg border border-forest/10 dark:bg-night-surface dark:border-cream/10">
+    <div class="absolute right-0 z-50 mt-2 w-72 space-y-1 rounded-xl bg-white p-3 shadow-lg border border-forest/10 dark:bg-night-surface dark:border-cream/10">
         <a href="https://github.com/HenriqueMayer/TuxedoFinance/issues/new"
            target="_blank"
            rel="noopener noreferrer"

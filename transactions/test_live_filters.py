@@ -18,7 +18,7 @@ class TransactionLiveFilterTests(TransactionFixture):
         end = html.index('</form>', start)
         self.assertLess(end, html.index('<div id="transaction-results"'))
         form = html[start:end]
-        for marker in ('data-live-search', 'data-live-options', 'name="sort" data-live-change', 'type="submit" data-live-submit'):
+        for marker in ('data-live-search', 'type="hidden" id="filter-category"', 'name="sort" data-live-change', 'type="submit" data-live-submit'):
             self.assertIn(marker, form)
         self.assertNotIn('id="transaction-sort"', html)
         self.assertNotContains(response, 'id="transaction-clear-filters"')
@@ -30,13 +30,25 @@ class TransactionLiveFilterTests(TransactionFixture):
         end = html.index('</details>', start)
         disclosure = html[start:end]
         self.assertNotIn('open', disclosure.split('>')[0])
-        for marker in ('id="filter-category"', 'id="transaction-recurrence-options"',
+        for marker in ('id="transaction-category-context"', 'id="transaction-recurrence-options"',
                        'id="filter-date"', 'id="filter-sort"'):
             self.assertIn(marker, disclosure)
+        self.assertNotRegex(disclosure, r'<select\b[^>]*(?:name="category"|id="filter-category")')
         for marker in ('id="filter-search"', 'id="filter-month"',
                        'id="transaction-type-options"', 'id="transaction-apply-filters"'):
             self.assertNotIn(marker, disclosure)
         self.assertEqual(response.context['extra_filter_count'], 0)
+
+    def test_legacy_category_is_named_and_preserved_without_another_picker(self):
+        response = self.client.get(reverse('transactions:list'), {
+            'category': str(self.category.pk), 'q': 'Heating', 'sort': 'oldest',
+        })
+        self.assertContains(response, f'type="hidden" id="filter-category" name="category" value="{self.category.pk}"')
+        self.assertNotContains(response, 'data-search-select')
+        self.assertContains(response, 'id="transaction-clear-category"')
+        self.assertContains(response, 'Category:')
+        self.assertContains(response, self.category.name)
+        self.assertEqual(response.context['paginator'].count, 2)
 
     def test_additional_criteria_open_disclosure_and_count_without_changing_filters(self):
         self.make_transaction(title='Monthly', is_fixed=True)

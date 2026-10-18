@@ -14,7 +14,7 @@
     <details><summary class="quiet-action cursor-pointer">{% translate 'Review guidance' %}</summary><p class="subtle-copy mt-3">{% translate 'For investments, rewards or IOF, register the financial source in its own workspace and then match its cash movement. Do not create an ordinary expense or income for that cash.' %}</p></details>
     {% if batch.file_format == 'CSV' %}{% url 'ingestion:mapping' batch.pk as mapping_url %}<a class="quiet-action" href="{% contextual_url mapping_url return_url %}">{% translate 'Change column mapping' %}</a>{% endif %}
 </section>
-<form method="post" hx-boost="false" novalidate class="space-y-4" data-import-review>
+<form autocomplete="off" method="post" hx-boost="false" novalidate class="workspace-form space-y-4" data-import-review>
 {% csrf_token %}<input type="hidden" name="next" value="{{ return_url }}"><input type="hidden" name="page" value="{{ page.number|unlocalize }}">
 {% if skippable_count %}<div class="surface-panel space-y-3"><p class="subtle-copy">{% translate 'Only entries on this page with an already confirmed bank identifier and no chosen action will be skipped. Other valid choices on this page are saved; similar descriptions are never skipped automatically.' %}</p><button class="action-link" type="submit" name="bulk_action" value="skip_confirmed">{% translate 'Skip confirmed identifiers on this page' %}</button></div>{% endif %}
 {% for entry in entries %}
@@ -37,7 +37,7 @@
     </div>
 </details>
 {% endfor %}
-<div class="flex flex-wrap gap-3"><button class="action-primary" type="submit">{% if page.paginator.num_pages > 1 %}{% translate 'Save page decisions' %}{% else %}{% translate 'Save review and inspect confirmation' %}{% endif %}</button><a class="action-link" href="{{ cancel_url }}">{% translate 'Cancel' %}</a></div>
+<div class="form-actions"><button class="action-primary" type="submit">{% if page.paginator.num_pages > 1 %}{% translate 'Save page decisions' %}{% else %}{% translate 'Save review and inspect confirmation' %}{% endif %}</button><a class="action-link" href="{{ cancel_url }}">{% translate 'Cancel' %}</a></div>
 </form>
 {% if page.paginator.num_pages > 1 %}<nav class="flex flex-wrap items-center gap-3" aria-label="{% translate 'Statement review pages' %}">{% if page.has_previous %}{% url 'ingestion:review' batch.pk as review_url %}{% with number=page.previous_page_number|stringformat:'s' %}<a class="action-link" href="{% contextual_url review_url|add:'?page='|add:number return_url %}">{% translate 'Previous' %}</a>{% endwith %}{% endif %}<span class="subtle-copy">{% blocktranslate with number=page.number total=page.paginator.num_pages %}Page {{ number }} of {{ total }}{% endblocktranslate %}</span>{% if page.has_next %}{% url 'ingestion:review' batch.pk as review_url %}{% with number=page.next_page_number|stringformat:'s' %}<a class="action-link" href="{% contextual_url review_url|add:'?page='|add:number return_url %}">{% translate 'Next' %}</a>{% endwith %}{% endif %}</nav>{% endif %}
 </div>

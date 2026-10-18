@@ -8,7 +8,10 @@ and the default-category signup signal. See the
 
 `CategoryForm` exposes `name`, optional `transaction_type`, and optional
 `parent_category`. Parent choices are scoped to the requesting user and exclude
-the edited category itself. Duplicate names are rejected with a field error;
+the edited category and its descendants. Shared model/import validation rejects
+cycles and foreign parents, including a forged POST and an existing cyclic
+ancestor chain. Clearing a parent can repair legacy relationships; listing
+remains tolerant of legacy cycles. Duplicate names are rejected with a field error;
 the view also handles a database uniqueness conflict if concurrent submissions
 pass validation. Model validation prevents incompatible transaction-type changes.
 
@@ -24,6 +27,11 @@ The category list combines a trimmed, case-insensitive `q` name search with an
 optional `level` filter (`top` or `sub`) and `type` filter (`INCOME`, `EXPENSE`
 or `unclassified`). Missing or invalid filters do not narrow the queryset.
 Filtering uses ordinary GET requests and has no pagination.
+Level and Type are always-visible native segmented radio groups rather than an
+optional filter disclosure. With JavaScript, choices apply immediately through
+the shared live-filter engine; search, keyboard focus, browser history and the
+reserved Clear slot stay stable. Clear restores the explicit All choices.
+Without JavaScript, the same controls submit through the native Filter button.
 
 A category may be classified as income or expense. Unclassified categories
 remain available for either transaction type. Existing incompatible transactions
@@ -120,19 +128,30 @@ the import contract. `?format=spreadsheet` selects the separately named spreadsh
 variant, which neutralizes formula-like text and is not intended for faithful
 reimport. Imports do not strip prefixes from names automatically.
 
-Category creation/editing can carry a validated local `next` origin. Save/Cancel
-retain the list's search/type/level filters and invalid responses keep the same
-origin. Ownership and duplicate-name/hierarchy checks remain on the server.
+Category CSV uploads are limited to 2 MiB and 500 data records, counting empty
+records toward that limit. The UTF-8/BOM header and every nonempty record must
+have exactly `name,transaction_type,parent_category`. Invalid quoting, extra or
+missing cells, overly long names and invalid/cyclic parent graphs return a file
+error without partial writes. Existing names are skipped, with their real stored
+parents retained when validating newly imported children. An entire exported
+catalog larger than 500 rows must be split into ordered batches with parent
+categories already present or included in the same batch.
+
+Category creation/editing, import, deletion and Delete all carry a validated
+local `next` origin. Save/Cancel retain the list's search/type/level filters;
+invalid uploads and protected deletion keep that origin for recovery. No origin
+is inferred from Referer, and external values fall back to the owned category
+list. Ownership, atomic CSV validation and duplicate-name/hierarchy checks remain
+on the server. Long valid names wrap inside rows, confirmations and messages.
 
 
 ## Consultation layout
 
 Categories has one grouped list, initially collapsed. Search stays in the compact
-consultation bar; level and type are native short choices inside More filters.
-The summary and Clear reserve their own control slots. Opening criteria adds
-fields below the rail, without moving the summary or resizing the search.
-Controls stay mounted during live updates; Clear, native submissions and browser
-Back/Forward retain the shared live-filter behavior.
+consultation bar; Level and Type remain visible as native segmented radio groups.
+The summary and Clear reserve their own control slots. Controls stay mounted
+during live updates; Clear, native submissions and browser Back/Forward follow
+the [shared live-filter contract](../frontend.md#live-consultation-filters).
 
 The graph and view switch have been removed. Legacy `?view=tree` and other view
 parameters render the same owned list and keep compatible filters. They do not

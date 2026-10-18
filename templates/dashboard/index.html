@@ -16,11 +16,11 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
 {% url 'transactions:create' as create_url %}
 {% url 'sandbox:index' as sandbox_url %}
 {% url 'banking:list' as banking_url %}
-<div class="space-y-7">
+<div class="home-workspace space-y-7">
     <header class="workspace-header">
         <h1 class="page-title">{% translate "Dashboard" %}</h1>
         <div class="flex flex-wrap items-center gap-3">
-            <a href="{% contextual_url create_url %}" class="action-primary">{% translate "New Transaction" %}</a>
+            <a href="{% contextual_url create_url %}" class="action-primary">{% translate "New transaction" %}</a>
         </div>
     </header>
 
@@ -34,7 +34,7 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
     {% endif %}
 
     {% if missing_currencies %}
-        <div role="status" class="rounded-3xl border border-caramel/40 bg-caramel/10 p-4 text-sm text-caramel-ink dark:border-caramel/40 dark:bg-caramel/10 dark:text-caramel-light">
+        <div role="status" class="rounded-xl border border-caramel/40 bg-caramel/10 p-4 text-sm text-caramel-ink dark:border-caramel/40 dark:bg-caramel/10 dark:text-caramel-light">
             {% translate "Not included in consolidated totals because an exchange rate to the configured currency is missing:" %}
             <strong>{{ missing_currencies|join:', ' }}</strong>.
         </div>
@@ -78,7 +78,7 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
     </section>
 
     <div class="grid items-start gap-6 xl:grid-cols-12">
-        <div class="space-y-6 xl:col-span-7">
+        <div class="min-w-0 space-y-6 xl:col-span-7">
             <section aria-labelledby="category-heading" class="surface-panel">
                 <div class="panel-heading">
                     <div>
@@ -88,18 +88,15 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
                             {% include 'partials/help_popover.html' with help_id='dashboard-category-help' help_label=category_label help_template='dashboard/_category_period_help.html' %}
                         </div>
                     </div>
-                    <a href="{% url 'dashboard:reports' %}?category_month={{ selected_month_param }}"
-                       class="quiet-action">
-                        {% translate "Explore in Reports" %}
-                    </a>
                 </div>
                 {% if expense_categories %}
-                    <div data-chart-selection><ol data-selection-surface class="mt-5 grid gap-x-10 gap-y-5 lg:grid-cols-2">
+                    {% comment %}One readable ledger column keeps category names and exact values legible inside the already split workspace layout.{% endcomment %}
+                    <div data-chart-selection><ol data-selection-surface class="mt-5 grid gap-3">
                         {% for category in expense_categories %}
-                            <li data-point="{{ forloop.counter0 }}" data-series="0">
-                                <div class="flex items-baseline justify-between gap-4 text-sm">
-                                    <span class="min-w-0 truncate font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</span>
-                                    <span class="shrink-0 tabular-nums text-forest/70 dark:text-night-muted">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }} &middot; {{ category.share|floatformat:1 }}%</span>
+                            <li class="home-category-mark" data-point="{{ forloop.counter0 }}" data-series="0">
+                                <div class="home-category-line text-sm">
+                                    <span class="home-category-label font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</span>
+                                    <span class="home-category-value tabular-nums text-forest/70 dark:text-night-muted">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }} &middot; {{ category.share|floatformat:1 }}%</span>
                                 </div>
                                 <div class="mt-2 h-2 overflow-hidden rounded-full bg-forest/10 dark:bg-cream/10" role="img" aria-label="{{ category.name }}: {{ category.share|floatformat:1 }}%">
                                     <div class="h-full rounded-full bg-expense dark:bg-expense-light" style="width: {{ category.bar_width|unlocalize }}%"></div>
@@ -132,7 +129,8 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
                     <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
                         {% for row in account_balances_preview %}
                             <li class="flex items-center justify-between gap-4 py-2.5">
-                                <a href="{% url 'banking:detail' row.account.bank_id %}#account-row-{{ row.account.pk|stringformat:'d' }}" class="min-w-0 text-sm font-medium text-forest/90 underline-offset-4 hover:underline dark:text-cream/90">{{ row.label }}</a>
+                                {% comment %}Let the record fragment set the viewport; the shell's default top scroll would hide the selected account.{% endcomment %}
+                                <a href="{% url 'banking:detail' row.account.bank_id %}#account-row-{{ row.account.pk|stringformat:'d' }}" hx-swap="innerHTML show:none" class="home-record-link min-w-0 gap-2 text-sm font-medium text-forest/90 underline-offset-4 hover:underline dark:text-cream/90"><span class="bank-marker shrink-0" style="--bank-color: {{ row.account.bank.color|default:'#B88D57' }}" aria-hidden="true"></span><span class="min-w-0 break-words">{{ row.label }}</span></a>
                                 <span class="shrink-0 tabular-nums text-forest/70 dark:text-night-muted">{{ row.currency }} {{ row.native_balance|floatformat:2 }}</span>
                             </li>
                         {% endfor %}
@@ -148,23 +146,27 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
             <div class="panel-heading">
                 <div>
                     <div class="label-with-help">
-                        {% translate "Upcoming invoices" as panel_label %}
-                        {% translate "Scheduled card cash settlements, independent of the selected month." as panel_help %}
+                        {% comment %}The live preview includes overdue and partial invoices; its hub intentionally opens all cards and statuses.{% endcomment %}
+                        {% translate "Outstanding invoices" as panel_label %}
+                        {% translate "Unpaid and partially paid card invoices, independent of the selected month." as panel_help %}
                         <h2 class="section-title">{{ panel_label }}</h2>
                         {% include 'partials/help_popover.html' with help_id='dashboard-invoices-help' help_label=panel_label help_text=panel_help %}
                     </div>
                 </div>
-                <a href="{% url 'banking:invoices' %}" class="quiet-action shrink-0">{% translate "Invoices" %}</a>
+                <a href="{% url 'banking:invoices' %}" class="quiet-action shrink-0">{% translate "All invoices" %}</a>
             </div>
             {% if open_invoices_preview %}
                 <ul class="mt-3 divide-y divide-forest/10 dark:divide-cream/10">
                     {% for invoice in open_invoices_preview %}
-                        <li class="flex items-center justify-between gap-4 py-2.5">
-                            <span class="min-w-0">
-                                {% url 'banking:invoice_detail' invoice.pk as invoice_url %}<a href="{% contextual_url invoice_url %}" class="block text-sm font-medium text-forest/90 underline-offset-4 hover:underline dark:text-cream/90">{{ invoice.card.account.bank.name }} &gt; {{ invoice.card.name }}</a>
+                        <li class="home-invoice-row flex flex-wrap justify-between gap-4 py-2.5">
+                            <div class="card-miniature-heading min-w-0 flex-1 basis-56">
+                                {% include 'banking/_card_miniature.html' with card=invoice.card only %}
+                                <span class="min-w-0 flex-1">
+                                {% url 'banking:invoice_detail' invoice.pk as invoice_url %}<a href="{% contextual_url invoice_url %}" class="home-record-link break-words text-sm font-medium text-forest/90 underline-offset-4 hover:underline dark:text-cream/90">{{ invoice.card.account.bank.name }} &gt; {{ invoice.card.name }}</a>
                                 <span class="text-xs text-forest/70 dark:text-night-muted">{% blocktranslate with due_date=invoice.due_date|date:USER_DATE_FORMAT %}Due {{ due_date }}{% endblocktranslate %}</span>
-                            </span>
-                            <span class="shrink-0 text-right tabular-nums text-caramel-ink dark:text-caramel-light">{{ invoice.card.account.currency }} {% if invoice.manual_settlement %}{{ invoice.remaining_amount|floatformat:2 }}<span class="block text-xs">{% translate 'Remaining' %}</span>{% else %}{{ invoice.amount|floatformat:2 }}{% endif %}</span>
+                                </span>
+                            </div>
+                            <span class="ml-auto shrink-0 text-right tabular-nums text-caramel-ink dark:text-caramel-light">{{ invoice.card.account.currency }} {% if invoice.manual_settlement %}{{ invoice.remaining_amount|floatformat:2 }}<span class="block text-xs">{% translate 'Remaining' %}</span>{% else %}{{ invoice.amount|floatformat:2 }}{% endif %}</span>
                         </li>
                     {% endfor %}
                 </ul>
@@ -182,7 +184,8 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
             <h2 id="outlook-heading" class="section-title">{{ outlook_label }}</h2>
             {% include 'partials/help_popover.html' with help_id='dashboard-outlook-help' help_label=outlook_label help_text=outlook_help %}
         </div>
-        <div class="overflow-x-auto">
+        {% comment %}The native horizontal table stays inside its panel and can be scrolled by keyboard without panning the page.{% endcomment %}
+        <div class="reporting-table-scroll overflow-x-auto" role="region" aria-labelledby="outlook-heading" tabindex="0">
             <table class="w-full min-w-[48rem] text-sm">
                 <thead>
                     <tr class="border-b border-forest/10 text-left text-sm font-medium text-forest/70 dark:border-cream/10 dark:text-night-muted">

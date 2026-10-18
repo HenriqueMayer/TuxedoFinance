@@ -6,6 +6,19 @@ using the existing CI measurement scope. This is a dated measurement, not a
 promise that the test count remains fixed. Repository-tool tests and browser
 suites run separately and are not included in that count.
 
+The **2026-10-16** maintenance verification passed **624 Django tests** with
+**94% combined coverage** under the same measurement policy. A diagnostic report
+excluding executed test modules, migrations and `manage.py` showed **90%** for
+the remaining executed application code. This is a separate view of the same
+run, not a new gate or a promise about unexecuted tooling:
+
+```bash
+uv run coverage report --omit='*/test_*.py,*/tests.py,*/migrations/*,manage.py'
+```
+
+See the [project health review](reviews/project-health-2026-10-16.md) for the
+financial/history regression scope and isolated performance observations.
+
 ## Policy
 
 CI enforces a repository-wide **70% combined line and branch coverage** floor
@@ -15,9 +28,9 @@ statements and branch destinations in the reported total. There is no separate
 line-only or branch-only gate. See the
 [Coverage.py explanation](https://coverage.readthedocs.io/en/latest/branch.html#how-to-measure-branch-coverage).
 
-The existing measurement includes executed test modules and migrations; the
-89% total must not be interpreted as application-only coverage. This maintenance
-change retains that measurement scope and threshold. New financial workflows
+The configured measurement includes executed test modules and migrations; the
+dated 89% and 94% totals must not be interpreted as application-only coverage.
+The maintenance measurement retained that scope and threshold. New financial workflows
 still need focused behavior and isolation tests, regardless of the overall score.
 
 ## Commands and artifacts

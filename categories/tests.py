@@ -1,5 +1,6 @@
 import csv
 import io
+from html.parser import HTMLParser
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -79,6 +80,55 @@ class CategoryListFilterTests(TestCase):
     def response_names(response):
         return [category.name for category in response.context['categories']]
 
+    @staticmethod
+    def filter_choices(response):
+        class FilterInputs(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.choices = {}
+
+            def handle_starttag(self, tag, attrs):
+                attributes = dict(attrs)
+                if tag == 'input' and attributes.get('name') in ('level', 'type'):
+                    self.choices[attributes['id']] = attributes
+
+        parser = FilterInputs()
+        parser.feed(response.content.decode())
+        return parser.choices
+
+    def test_filter_choices_are_always_visible_native_radios_with_stable_values(self):
+        for query, checked_ids in (
+            ({}, {'filter-level-all', 'filter-type-all'}),
+            ({'level': 'sub', 'type': 'unclassified'}, {'filter-level-sub', 'filter-type-unclassified'}),
+            ({'level': 'unknown', 'type': 'unknown'}, {'filter-level-all', 'filter-type-all'}),
+        ):
+            with self.subTest(query=query):
+                response = self.client.get(reverse('categories:list'), query)
+                self.assertNotContains(response, 'id="category-extra-filters"')
+                self.assertContains(response, '<fieldset id="filter-level"', count=1)
+                self.assertContains(response, '<fieldset id="filter-type"', count=1)
+                choices = self.filter_choices(response)
+                self.assertEqual(
+                    {key: item['value'] for key, item in choices.items()},
+                    {'filter-level-all': '', 'filter-level-top': 'top', 'filter-level-sub': 'sub',
+                     'filter-type-all': '', 'filter-type-income': 'INCOME',
+                     'filter-type-expense': 'EXPENSE', 'filter-type-unclassified': 'unclassified'},
+                )
+                self.assertEqual({key for key, item in choices.items() if 'checked' in item}, checked_ids)
+                self.assertTrue(all(item.get('type') == 'radio' for item in choices.values()))
+                self.assertTrue(all('data-live-change' in item for item in choices.values()))
+
+    def test_portuguese_filter_labels_keep_unlocalized_get_identifiers(self):
+        self.client.cookies['django_language'] = 'pt-br'
+        response = self.client.get(reverse('categories:list'), {'level': 'top', 'type': 'INCOME'})
+        self.assertContains(response, 'Todos os níveis')
+        self.assertContains(response, 'Sem classificação')
+        self.assertContains(response, 'Receita')
+        choices = self.filter_choices(response)
+        self.assertIn('checked', choices['filter-level-top'])
+        self.assertIn('checked', choices['filter-type-income'])
+        self.assertEqual(choices['filter-type-income']['value'], 'INCOME')
+
     def test_search_is_partial_case_insensitive_trimmed_and_user_scoped(self):
         response = self.client.get(reverse('categories:list'), {'q': ' DELIVERY '})
 
@@ -149,7 +199,7 @@ class CategoryListFilterTests(TestCase):
         self.assertContains(response, 'No matching categories')
         self.assertContains(response, 'Clear filters')
         self.assertContains(response, 'value="missing"')
-        self.assertContains(response, 'value="top" selected')
+        self.assertIn('checked', self.filter_choices(response)['filter-level-top'])
 
     def test_type_filter_combines_with_hierarchy_and_preserves_unclassified(self):
         self.salary.transaction_type = Category.TransactionType.INCOME

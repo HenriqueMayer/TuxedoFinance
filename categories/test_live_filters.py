@@ -74,4 +74,10 @@ class CategoryLiveFilterTests(TestCase):
         self.assertIn('data-live-change', form)
         self.assertIn('type="submit" data-live-submit', form)
         self.assertNotIn('type="submit" data-live-submit hidden', form)
-        self.assertIn('class="filter-disclosure"', form)
+        # Categories keep their short criteria visible instead of hiding them
+        # behind the optional-filter disclosure used by other consultations.
+        self.assertNotIn('class="filter-disclosure"', form)
+        self.assertIn('<fieldset id="filter-level"', form)
+        self.assertIn('<fieldset id="filter-type"', form)
+        self.assertEqual(form.count('type="radio" name="level"'), 3)
+        self.assertEqual(form.count('type="radio" name="type"'), 4)

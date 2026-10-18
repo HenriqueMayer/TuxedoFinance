@@ -42,6 +42,9 @@ evidence of an acquisition date.
 ## Operations
 
 Every operation records product, asset, kind, currency, date and optional notes.
+An operation with a bank cash endpoint cannot precede that account's known
+opening date. Validation runs before the atomic source/ledger save; unknown
+legacy opening dates are not inferred and historical conflicts are not rewritten.
 Monetary assets use an operation amount; unit-based assets use quantity and unit
 price. There is no `title`.
 
@@ -119,7 +122,7 @@ rather than invented holdings or returns.
 
 `PriceObservation` stores one positive unit price per owned asset/date, with an
 optional local source label. It is available only for unit-priced assets. The
-Prices screen provides create, edit and confirmed delete actions; existing
+Observed prices screen provides create, edit and confirmed delete actions; existing
 quotes for archived assets remain editable, while new choices exclude them.
 Quotes do not post bank movements, investment operations or FX evidence, and no
 external price feed is contacted.
@@ -184,6 +187,16 @@ canonical banking screen instead of duplicating it. Referenced banks, products
 and assets cannot be deleted. Personal operations remain editable; audit-grade
 reversal workflows are out of scope.
 
+The complete catalogue separates products grouped by institution from active and
+archived assets. Saved bank colors remain identity markers. Edit and asset
+Archive/Restore stay direct actions; less frequent price and deletion actions
+use deliberate compact menus. Archiving preserves the stable action identifier
+and focus instead of moving the user into a menu after each update.
+Institution and position names wrap even without spaces. Catalogue actions
+align to the right on phones so their anchored menus stay in view; full record
+labels wrap within the opening-product picker. User-facing setup instructions
+name the actual Accounts destination rather than the former Banking label.
+
 All forms and services enforce per-user ownership for bank, account, product and
 asset choices. Filters cover bank, product, asset, asset class, currency, kind
 and date without changing the unfiltered portfolio totals.
@@ -194,8 +207,9 @@ silently widening the history. They remain GET forms with native submission and
 HTMX/history support. Currency, class and dates use a native More filters
 disclosure; active criteria and invalid submissions keep it open. Filter swaps
 preserve scroll and focus instead of returning to the top of the form.
-Position names link to history for the exact purpose,
-product and asset; product-level New operation links preselect only an owned,
+Position names open the exact product/asset position, with its contextual
+operation history and update actions. Institution markers use the saved bank
+color without conveying financial meaning. Product-level New operation links preselect only an owned,
 explicitly requested product. Asset and operation type still wait for selection.
 
 For valuation limitations and a dated competitor comparison, see the
@@ -203,7 +217,8 @@ For valuation limitations and a dated competitor comparison, see the
 
 ## Charts
 
-The dedicated Charts tab at `/investments/charts/` uses the existing responsive
+Analyses at `/investments/charts/`, reached through the deliberate More menu,
+uses the existing responsive
 SVG charts and exact selection/composition data. Its Overall, Portfolio and
 Remunerated cash filter scopes both the historical position curve and monthly
 deposits, withdrawals and internal yields. Overall includes both purposes;
@@ -213,14 +228,21 @@ each cutoff, or remaining cost with a missing-price warning. Its recorded
 performance table separates valuation, cost, cumulative realized result and
 unrealized result. Monthly operation-flow bars retain recorded deposits,
 withdrawals and yields with their historical FX evidence. Position value and
-results also appear above the portfolio; Prices is the separate quote editor.
+results also appear above the portfolio; Observed prices is the separate quote editor.
 
 Changing the scope immediately applies the filter while preserving each chart's
 month window, focus and scroll. The Filter button is the no-JavaScript fallback.
-HTMX updates only the chart region;
+HTMX updates the chart region, including its scope-dependent current valuation
+summary and warnings;
 ordinary GETs, browser history, keyboard selection and no-JavaScript filtering
 remain available. Missing FX warnings appear inside that same region so filtered
 or refreshed charts cannot silently lose their incomplete-conversion warning.
+
+Composition links from a position point to the owned product/asset history
+through that plotted month's inclusive last day, rather than including later
+operations. Opening balances still explain part of the position without
+inventing an acquisition operation. Operation editors opened from analyses
+retain the scope, both chart windows and the owning-chart anchor for Save/Cancel.
 
 Portfolio and Remunerated cash retain their position tables and contextual links
 to the separate Operations page. Operation search/filter/pagination updates only
@@ -229,6 +251,24 @@ to the separate Operations page. Operation search/filter/pagination updates only
 ## Form keyboard behavior
 
 Record selectors use the shared keyboard-search component. Values and funding wait for the asset and operation type; monetary yields require an explicit input mode. New asset valuation choices begin empty, and opening-position products wait for an opening balance or quantity. Existing operations and invalid POSTs preserve their values and visible errors.
+
+Guided registration, operations, prices and configuration share the compact
+finance-entry sheet. Related values/dates use responsive columns; record choices,
+funding disclosures and optional notes retain their native/shared controls.
+Contextual price, exchange-rate and configuration actions carry a validated
+local origin, including the position or selected consultation filters.
+Archived-position configuration shortcuts reveal the exact asset row, including
+inside the archived disclosure, rather than returning to the page heading.
+Observed-price consultation explicitly names its selected asset and offers a
+shared searchable asset criterion and native Clear action; the existing owned
+asset filter and exact precision remain.
+
+Complete product and asset registrations group institution/purpose, identity,
+valuation and existing holdings under native legends. Guided registration keeps
+its atomic setup and the operation editor retains separate value and funding
+groups. Opening holdings still describe money or units already held; they never
+imply an account debit. Position detail separates the registered-value summary
+from cost/price evidence and optional configuration explanations.
 
 Deposits first ask whether funding comes from an account or a loyalty program.
 Only that record selector is revealed; points wait for a selected program and

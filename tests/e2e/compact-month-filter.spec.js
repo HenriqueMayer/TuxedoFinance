@@ -70,11 +70,22 @@ for (const [theme,language,width] of [['light','en',1366],['dark','en',1366],['l
         await expect(page).toHaveURL(url=>!url.searchParams.has('month'));
         await expect(native).toHaveValue('');await expect(trigger).toBeFocused();
         await expect(page.locator('#transaction-results')).toContainText('October record');
-        await page.locator('#transaction-extra-filters > summary').press('Enter');
-        const categorySearch=page.locator('#filter-category-search');await categorySearch.fill('Month shopping');
-        await categorySearch.press('Enter');await expect(page.locator('#filter-category')).toHaveValue('');
+        // Month's explicit unique-match shortcut must not change ordinary
+        // financial record selection after the redundant filter is removed.
+        await page.goto('/transactions/create/');
+        await selectChoice(page.locator('#id_transaction_type'), 'EXPENSE');
+        const categorySearch=page.locator('#category-search');await categorySearch.fill('Month shopping');
+        await categorySearch.press('Enter');await expect(page.locator('#id_category')).toHaveValue('');
         await categorySearch.press('ArrowDown');await categorySearch.press('Enter');
-        await expect(page).toHaveURL(url=>Boolean(url.searchParams.get('category')));
+        await expect(page.locator('#id_category')).not.toHaveValue('');
+        // The invoice month trigger shares the field surface in both themes.
+        // Leave this deliberately unsaved entry through the approved dialog.
+        await page.addLocatorHandler(page.locator('#departure-confirm[open]'), async()=>page.locator('[data-departure-leave]').click());
+        await page.locator(width===390?'#app-mobile-accounts-link':'#app-desktop-accounts-link').press('Enter');
+        await expect(page).toHaveURL(/\/banking\/$/);
+        await page.goto('/banking/invoices/');
+        await expect(page.locator('#invoice-filter-month-trigger')).toHaveCSS('background-color',
+            await page.locator('#invoice-filter-q').evaluate(element=>getComputedStyle(element).backgroundColor));
         expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     });
 }
@@ -167,7 +178,7 @@ for (const theme of ['light', 'dark']) {
         const cardUrl = await cardLink.getAttribute('href');
         await cardLink.press('Enter');
         await expect(page).toHaveURL(new URL(cardUrl, info.project.use.baseURL).href);
-        await page.locator('#invoice-extra-filters > summary').press('Enter');
+        await expect(page.locator('#invoice-extra-filters')).toBeVisible();
         await expect(page.getByRole('heading', {name:'Widget card', exact:true})).toBeVisible();
         const trigger = page.locator('#invoice-filter-month-trigger');
         await trigger.focus();

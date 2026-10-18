@@ -75,7 +75,7 @@ def budget_form(request, pk=None):
             messages.success(request, _('Budget saved.'))
             return redirect(return_url(request, reverse('planning:budgets') + f'?month={budget.month:%Y-%m}'))
     cancel_url = return_url(request, reverse('planning:budgets') + f'?month={fallback_month:%Y-%m}')
-    return render(request, 'planning/form.html', {'form': form, 'section': 'budgets', 'heading': _('Edit category budget') if pk else _('New category budget'), 'cancel_url': cancel_url, 'return_url': return_url(request, '')})
+    return render(request, 'planning/form.html', {'form': form, 'budget_entry': True, 'section': 'budgets', 'heading': _('Edit category budget') if pk else _('New category budget'), 'cancel_url': cancel_url, 'return_url': return_url(request, '')})
 
 
 @login_required
@@ -123,7 +123,7 @@ def goal_form(request, pk=None):
         else:
             messages.success(request, _('Goal saved.') if pk or form.allocation else _('Goal saved. Reserve an existing balance to record progress.'))
             return redirect(return_url(request, reverse('planning:goal_detail', args=[goal.pk])))
-    return render(request, 'planning/form.html', {'form': form, 'goal_creation': not pk, 'section': 'goals', 'heading': _('Edit goal') if pk else _('New goal'), 'cancel_url': return_url(request, reverse('planning:goals')), 'return_url': return_url(request, '')})
+    return render(request, 'planning/form.html', {'form': form, 'goal_entry': True, 'goal_creation': not pk, 'section': 'goals', 'heading': _('Edit goal') if pk else _('New goal'), 'cancel_url': return_url(request, reverse('planning:goals')), 'return_url': return_url(request, '')})
 
 
 @login_required
@@ -148,7 +148,7 @@ def allocation_form(request, goal_pk, pk=None):
         else:
             messages.success(request, _('Balance reserved for this goal.'))
             return redirect(return_url(request, reverse('planning:goal_detail', args=[goal.pk])))
-    return render(request, 'planning/form.html', {'form': form, 'section': 'goals', 'heading': _('Edit goal reservation') if pk else _('Reserve a balance'), 'cancel_url': return_url(request, reverse('planning:goal_detail', args=[goal.pk])), 'return_url': return_url(request, '')})
+    return render(request, 'planning/form.html', {'form': form, 'reservation_entry': True, 'goal': goal, 'section': 'goals', 'heading': _('Edit goal reservation') if pk else _('Reserve a balance'), 'cancel_url': return_url(request, reverse('planning:goal_detail', args=[goal.pk])), 'return_url': return_url(request, '')})
 
 
 @login_required
@@ -191,8 +191,8 @@ def signals_settings(request):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, _('Signal settings saved.'))
-        return redirect('planning:signals')
-    return render(request, 'planning/form.html', {'form': form, 'section': 'signals', 'heading': _('Local signal settings'), 'cancel_url': reverse('planning:signals')})
+        return redirect(return_url(request, reverse('planning:signals')))
+    return render(request, 'planning/form.html', {'form': form, 'signal_settings_entry': True, 'section': 'signals', 'heading': _('Local signal settings'), 'cancel_url': return_url(request, reverse('planning:signals')), 'return_url': return_url(request, '')})
 
 
 @login_required
@@ -207,4 +207,4 @@ def signal_decision(request):
         SignalDecision.objects.filter(user=request.user, key=key).delete()
     else:
         SignalDecision.objects.update_or_create(user=request.user, key=key, defaults={'action': action})
-    return redirect('planning:signals')
+    return redirect(return_url(request, reverse('planning:signals')))

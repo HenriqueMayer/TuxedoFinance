@@ -20,6 +20,21 @@ The main screen presents:
 - compact open-invoice previews and upcoming due dates;
 - a six-month outlook from recurring transactions and scheduled invoice payments.
 
+Reports remains accessible through the workspace's section tabs; the category
+summary has no separate Reports shortcut.
+
+Account shortcuts open the exact owned account row, including accounts outside
+planning availability. They retain the native fragment and bypass the shell's
+generic scroll-to-top behavior. The live **Outstanding invoices** preview includes
+scheduled, partially paid and overdue invoices, regardless of the selected
+performance month. **All invoices** opens the complete card overview without
+narrowing statuses; its scope is deliberately broader than the preview.
+
+The category ledger keeps full labels and separate amount/share values, with
+44px selection targets. Outstanding invoices reuse the saved card miniature;
+long bank/card names wrap without widening the page. The six-month outlook
+retains every numeric column inside a named, keyboard-focusable scrolling region.
+
 For the current month, performance is split at the local current date. One-off
 transactions use their recorded date, fixed recurrences keep their configured
 day (clamped to the target month's last day), and installments remain known
@@ -27,6 +42,14 @@ obligations from their original purchase. Investment and loyalty events use
 their own event date. The portion after the cutoff is shown as planned. Past
 months are complete; future months are entirely planned. Category totals follow
 the same current/past/future rule.
+
+Realized transaction/category amounts and points-purchase costs convert at the
+earlier of the month end and the realized cutoff. A future-dated exchange rate
+cannot fill an earlier evidence gap. In the current month's full total, already
+realized occurrences retain that cutoff and future occurrences use month-end
+conversion. Remaining planned activity therefore excludes FX revaluation of
+already realized events. Future months retain their month-end valuation.
+Composition details use the same cutoff as the mark they explain.
 
 Per-user base currency is implemented through `UserPreference`. Historical
 investment operations consume their persisted FX evidence; account balances,
@@ -82,7 +105,12 @@ summary card is removed. A liquid investment becomes bank cash only through a
 recorded withdrawal; merely being redeemable does not create a future inflow.
 
 Reports retain server-rendered SVG/CSS and HTMX-enhanced filters with plain GET
-fallbacks. The approved report set is organized by source of truth:
+fallbacks. Wide charts retain readable axes in named, keyboard-focusable regions;
+phone layouts show a horizontal-scroll hint. Current-month and rolling-year
+states occupy the same 44px targets as their links and expose `aria-current`.
+Instrument names and selection summaries wrap locally, while SVG label geometry,
+period scopes, source amounts and composition interactions remain unchanged.
+The approved report set is organized by source of truth:
 
 1. Available cash evolution from account opening balances and movements.
 2. Monthly income and expenses from categorized transactions, with investment
@@ -93,6 +121,21 @@ fallbacks. The approved report set is organized by source of truth:
    clearly labeled current/read-time valuations for entities not yet covered.
 6. Dated net-worth evolution combining bank cash, investment/cash-pot positions,
    incurred card debt and any confirmed card credit.
+
+The net-worth interface in item 6 is currently paused; its underlying read
+model remains available. See the [redesign roadmap](../roadmap.md).
+
+### Coverage of expense breakdowns
+
+Monthly expenses and their cash-flow composition include points purchases and
+legacy redemption IOF not already represented by a categorized transaction.
+Category budgets, category breakdowns, recurrence breakdowns and account/card
+activity currently cover categorized transactions only. A points purchase is
+therefore a valid reason for those breakdowns to differ from the monthly total;
+it is not another cash debit or an automatically classified budget expense.
+The full cash-flow composition identifies it as Bank costs and links to its
+owned source. Assigning categories/budgets to these costs is a separate product
+decision; do not synthesize another transaction or movement to make totals match.
 
 Charts must label actual versus projected values. Forecasts may include future
 recurrences and invoices. Synchronization may store future-effective
@@ -110,6 +153,19 @@ without summing sale proceeds as remaining holdings. Source amounts reconcile to
 including fractional FX cents; missing conversions remain explicitly incomplete.
 Navigation retains the report period and browser Back/Forward context. See the
 [chart interaction contract](../frontend.md#previous-screen-continuity-and-balance-ranges).
+From Home and Reports, composition source links also carry the current query and
+the owning chart's anchor as a validated local return destination. Existing
+editors use it for Save/Cancel; their ownership checks and generated-record locks
+remain unchanged.
+
+The instrument and recurrence charts each expose **Last 12 months**, covering
+the current calendar month and the previous eleven months. The existing `ALL`
+query value remains compatible, but does not mean the entire ledger history.
+Their independently selected periods and composition details retain the same
+scope.
+When an instrument month is empty, **New transaction** remains available on both
+full-page and HTMX responses and carries that report period and chart anchor
+into the editor's Save/Cancel context.
 
 The twelve-month evolution window contains five months before its anchor and
 six after it. Its anchor can move at most five months beyond the current month,
@@ -133,7 +189,12 @@ windows remain available while their opening balance date is representable.
 
 ## Dated wealth
 
-`/dashboard/wealth/` reads
+**The interface is paused:** old requests to `/dashboard/wealth/` return to
+Dashboard through the server review gate. This section describes the retained
+read model, not a currently available navigation destination. See the
+[redesign roadmap](../roadmap.md).
+
+The retained view reads
 `dashboard.wealth.wealth_snapshot(user, as_of, *, conversion=None)` at
 month-end cutoffs, capped at today for the current
 month. The GET start-month filter covers up to ten years and has a native form

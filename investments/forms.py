@@ -573,10 +573,24 @@ class AssetForm(forms.ModelForm):
         )
 
 
+class PriceObservationFilterForm(forms.Form):
+    asset = forms.ModelChoiceField(queryset=Asset.objects.none(), required=False,
+        label=_('Asset'), empty_label=_('All assets'))
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Consultation includes archived assets; only new observations exclude them.
+        self.fields['asset'].queryset = Asset.objects.filter(user=user)
+        self.fields['asset'].widget.attrs.update({
+            'id': 'investment-price-asset', 'class': INPUT_CLASSES, 'data-live-change': '',
+        })
+
+
 class PriceObservationForm(forms.ModelForm):
     class Meta:
         model = PriceObservation
         fields = ('asset', 'date', 'unit_price', 'source')
+        labels = {'asset': _('Asset')}
         widgets = {'unit_price': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0.00000001'})}
 
     def __init__(self, *args, user=None, **kwargs):

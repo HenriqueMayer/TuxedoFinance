@@ -1,17 +1,19 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}{% blocktranslate with item_name=item %}Delete {{ item_name }}{% endblocktranslate %} - Tuxedo Finance{% endblock %}
+{% block title %}{% if item.program_id and item.get_direction_display %}{% blocktranslate with item_name=item.program.name %}Delete {{ item_name }}{% endblocktranslate %}{% else %}{% blocktranslate with item_name=item %}Delete {{ item_name }}{% endblocktranslate %}{% endif %} - Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="banking-workspace mx-auto max-w-md space-y-4">
-    <h1 class="page-title">{% blocktranslate with item_name=item %}Delete {{ item_name }}?{% endblocktranslate %}</h1>
-        <form method="post" hx-boost="false" class="surface-panel space-y-4" novalidate>
+<div class="banking-workspace workspace-form-page mx-auto max-w-md space-y-4">
+    <h1 class="page-title">{% if item.program_id and item.get_direction_display %}{% blocktranslate with item_name=item.program.name %}Delete {{ item_name }}?{% endblocktranslate %}{% else %}{% blocktranslate with item_name=item %}Delete {{ item_name }}?{% endblocktranslate %}{% endif %}</h1>
+        <form method="post" hx-boost="false" class="workspace-form surface-panel space-y-4" novalidate>
         {% csrf_token %}
         {% if return_url %}<input type="hidden" name="next" value="{{ return_url }}">{% endif %}
+        {% comment %}The points-entry model string contains storage codes. Render its owned source and exact localized units without changing the value or deletion rules.{% endcomment %}
+        {% if item.program_id and item.get_direction_display %}<p class="text-sm font-medium">{{ item.program.name }} · {{ item.get_direction_display }} {{ item.amount }} {{ item.program.unit_name }} · {{ item.date|date:USER_DATE_FORMAT }}</p>{% endif %}
         <p class="text-sm text-forest/70 dark:text-night-muted">{% if delete_message %}{{ delete_message }}{% else %}{% translate "This action cannot be undone. Financial records that reference this item will prevent deletion." %}{% endif %}</p>
-        <div class="flex gap-3">
-            <button type="submit" class="action-link text-expense dark:text-expense-light">{% translate "Delete" %}</button>
+        <div class="form-actions">
+            <button type="submit" class="action-danger">{% translate "Delete" %}</button>
             {% url 'banking:list' as bank_list_url %}
             <a href="{{ cancel_url|default:bank_list_url }}" class="quiet-action">{% translate "Cancel" %}</a>
         </div>

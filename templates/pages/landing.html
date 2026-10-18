@@ -1,61 +1,105 @@
 {% extends 'base.html' %}
-{% load i18n static %}
+{% load i18n assets %}
 
 {% block title %}Tuxedo Finance{% endblock %}
 
 {% block content %}
-<section aria-labelledby="landing-title" class="grid items-center gap-10 py-6 sm:gap-12 sm:py-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-12">
-    <div class="max-w-xl">
-        <h1 id="landing-title" class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">Tuxedo Finance</h1>
-        <p class="mt-6 text-base leading-relaxed text-forest/70 dark:text-night-muted sm:text-lg">{% translate "A local application to record income and expenses, track accounts and card bills, and organize investments." %}</p>
-        <div class="mt-8 flex flex-wrap items-center gap-3">
-            {% if request.user.is_authenticated %}
-                <a href="{% url 'dashboard:index' %}" class="inline-flex items-center rounded-full bg-caramel px-6 py-3 text-sm font-medium text-forest-deep transition-colors hover:bg-caramel-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-caramel-ink">{% translate "Open dashboard" %}</a>
-            {% else %}
-                <a href="{% url 'accounts:login' %}" class="inline-flex items-center rounded-full bg-caramel px-6 py-3 text-sm font-medium text-forest-deep transition-colors hover:bg-caramel-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-caramel-ink">{% translate "Log in" %}</a>
-                {% if ALLOW_SIGNUPS %}
-                    <a href="{% url 'accounts:signup' %}" class="inline-flex items-center rounded-full border border-forest px-6 py-3 text-sm font-medium transition-colors hover:bg-forest hover:text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-caramel-ink dark:border-cream/50 dark:hover:bg-cream dark:hover:text-night">{% translate "Create account" %}</a>
+<section class="public-home" aria-labelledby="landing-title">
+    <div class="public-home-hero">
+        <div class="public-home-copy">
+            <p class="public-home-eyebrow">{% translate "Local personal finance." %}</p>
+            <h1 id="landing-title">{% blocktranslate %}Your finances,<br> made <span>clear</span>.{% endblocktranslate %}</h1>
+            <p>{% translate "A local application to record income and expenses, track accounts and card bills, and organize investments." %}</p>
+            <div class="public-home-actions">
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'dashboard:index' %}" class="action-primary">{% translate "Open dashboard" %}<span aria-hidden="true">↗</span></a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="action-primary">{% translate "Log in" %}<span aria-hidden="true">↗</span></a>
+                    {% if ALLOW_SIGNUPS %}<a href="{% url 'accounts:signup' %}" class="action-link">{% translate "Create account" %}</a>{% endif %}
                 {% endif %}
-            {% endif %}
-        </div>
-    </div>
-    <div class="group relative isolate mx-auto w-full max-w-2xl lg:justify-self-end">
-        <div aria-hidden="true" class="pointer-events-none absolute inset-4 -z-10 rounded-full bg-caramel/15 blur-3xl"></div>
-        <div class="rounded-3xl border border-forest/10 bg-white/40 p-2 backdrop-blur-sm dark:border-cream/10 dark:bg-cream/5 sm:p-3">
-            <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-forest/10 bg-cream/60 p-2 dark:border-cream/10 dark:bg-night/60 sm:aspect-[16/10] sm:p-3">
-                <img src="{% static 'brand/tuxedo-hero.jpg' %}" width="2814" height="1536" fetchpriority="high" class="h-auto w-full max-h-full rounded-xl object-contain transition-transform duration-500 motion-safe:group-hover:scale-[1.02] motion-reduce:transition-none" alt="{% translate 'A black-and-white cat wearing a bow tie at a desk.' %}">
             </div>
         </div>
+        <div class="public-home-art" data-paper-bowtie data-bowtie-state="resting" data-bowtie-motion="static" data-bowtie-label="{% translate 'Explore workspaces' %}">
+                <svg id="public-bowtie-scene" class="paper-bowtie" data-bowtie-svg viewBox="-40 -30 660 500" role="img" aria-label="{% translate 'A ledger-paper bow tie that reveals the workspace map.' %}">
+                    <defs>
+                        <clipPath id="lab-left-wing">
+                            <path d="M37 60Q22 47 24 76L24 365Q24 392 47 378L259 277V168Z"/>
+                        </clipPath>
+                        <clipPath id="lab-right-wing">
+                            <path d="M532 60Q554 48 553 76V365Q553 392 530 378L318 277V168Z"/>
+                        </clipPath>
+                        <g id="lab-bowtie-drawing">
+                            <path id="lab-paper-left" class="lab-wing-one" fill="currentColor" d="M37 60Q22 47 24 76L24 365Q24 392 47 378L259 277V168Z"/>
+                            <g id="lab-paper-ledger" clip-path="url(#lab-left-wing)" stroke="#B88A59" stroke-width="1" opacity=".7">
+                                <path d="M5 132h270M5 160h270M5 188h270M5 216h270M5 244h270M5 272h270M5 300h270M5 328h270"/>
+                                <path d="M82 0v440M194 0v440"/>
+                            </g>
+                            <path id="lab-paper-right" class="lab-wing-two" fill="#B88A59" d="M532 60Q554 48 553 76V365Q553 392 530 378L318 277V168Z"/>
+                            <g id="lab-paper-rings" clip-path="url(#lab-right-wing)" fill="none" stroke="#1A2E26" stroke-width="1.2" opacity=".6">
+                                <ellipse cx="530" cy="218" rx="188" ry="202"/>
+                                <ellipse cx="530" cy="218" rx="160" ry="174"/>
+                                <ellipse cx="530" cy="218" rx="132" ry="146"/>
+                                <ellipse cx="530" cy="218" rx="104" ry="118"/>
+                                <ellipse cx="530" cy="218" rx="76" ry="90"/>
+                            </g>
+                            <g id="lab-paper-knot">
+                                <rect x="264" y="171" width="48" height="104" rx="18" fill="#B88A59"/>
+                                <path d="M288 192v62" stroke="#1A2E26" stroke-width="1.5"/>
+                            </g>
+                        </g>
+                    </defs>
+                    <use href="#lab-bowtie-drawing" data-bowtie-whole aria-hidden="true"/>
+                </svg>
+                <nav id="public-bowtie-map" class="paper-bowtie-map" data-bowtie-map aria-label="{% translate 'Workspaces' %}">
+                    <ol>
+                        <li><a href="{% if request.user.is_authenticated %}{% url 'dashboard:index' %}{% else %}#feature-reports{% endif %}" data-bowtie-map-link="left" aria-label="{% translate 'Home' %}" aria-describedby="public-map-home-description"><span class="paper-map-number" aria-hidden="true">01</span><span class="paper-map-copy"><strong>{% translate 'Home' %}</strong><span id="public-map-home-description" class="paper-map-description">{% translate 'Balances, upcoming bills and reports.' %}</span></span><span class="paper-map-arrow" aria-hidden="true">↗</span></a></li>
+                        <li><a href="{% if request.user.is_authenticated %}{% url 'transactions:list' %}{% else %}#feature-transactions{% endif %}" data-bowtie-map-link="ledger" aria-label="{% translate 'Transactions' %}" aria-describedby="public-map-transactions-description"><span class="paper-map-number" aria-hidden="true">02</span><span class="paper-map-copy"><strong>{% translate 'Transactions' %}</strong><span id="public-map-transactions-description" class="paper-map-description">{% translate 'Income, expenses and categories.' %}</span></span><span class="paper-map-arrow" aria-hidden="true">↗</span></a></li>
+                        <li><a href="{% if request.user.is_authenticated %}{% url 'banking:list' %}{% else %}#feature-accounts{% endif %}" data-bowtie-map-link="knot" aria-label="{% translate 'Accounts' %}" aria-describedby="public-map-accounts-description"><span class="paper-map-number" aria-hidden="true">03</span><span class="paper-map-copy"><strong>{% translate 'Accounts' %}</strong><span id="public-map-accounts-description" class="paper-map-description">{% translate 'Bank accounts, cards and invoices.' %}</span></span><span class="paper-map-arrow" aria-hidden="true">↗</span></a></li>
+                        <li><a href="{% if request.user.is_authenticated %}{% url 'investments:list' %}{% else %}#feature-investments{% endif %}" data-bowtie-map-link="rings" aria-label="{% translate 'Investments' %}" aria-describedby="public-map-investments-description"><span class="paper-map-number" aria-hidden="true">04</span><span class="paper-map-copy"><strong>{% translate 'Investments' %}</strong><span id="public-map-investments-description" class="paper-map-description">{% translate 'Holdings, movements and dated prices.' %}</span></span><span class="paper-map-arrow" aria-hidden="true">↗</span></a></li>
+                        <li><a href="{% if request.user.is_authenticated %}{% url 'planning:index' %}{% else %}#feature-planning{% endif %}" data-bowtie-map-link="right" aria-label="{% translate 'Plan' %}" aria-describedby="public-map-plan-description"><span class="paper-map-number" aria-hidden="true">05</span><span class="paper-map-copy"><strong>{% translate 'Plan' %}</strong><span id="public-map-plan-description" class="paper-map-description">{% translate 'Budgets, goals and reserved cash.' %}</span></span><span class="paper-map-arrow" aria-hidden="true">↗</span></a></li>
+                    </ol>
+                </nav>
+        </div>
+    </div>
+    <div class="public-home-baseline">
+        <p>{% translate "Your records stay on your installation." %}</p>
+        <a class="public-text-link" href="#landing-features">{% translate "Features" %}<span aria-hidden="true">↓</span></a>
     </div>
 </section>
 
-<section aria-labelledby="features-title" class="pb-8 pt-10 sm:pb-12 sm:pt-14">
-    <h2 id="features-title" class="text-2xl font-semibold tracking-tight">{% translate "Features" %}</h2>
-    <dl class="mt-6 border-t border-forest/15 dark:border-cream/15">
-        <div class="grid gap-2 border-b border-forest/15 py-5 dark:border-cream/15 sm:grid-cols-[15rem_1fr] sm:gap-8">
-            <dt class="font-medium">{% translate "Transactions and categories" %}</dt>
-            <dd class="text-sm leading-relaxed text-forest/70 dark:text-night-muted">{% translate "Record income and expenses with categories, payment details, and CSV export." %}</dd>
+<section id="landing-features" class="public-home-features" aria-labelledby="features-title">
+    <h2 id="features-title" class="section-title">{% translate "Features" %}</h2>
+    <dl class="public-feature-grid">
+        <div id="feature-transactions">
+            <dt><span aria-hidden="true">01</span>{% translate "Transactions and categories" %}</dt>
+            <dd>{% translate "Record income and expenses with categories, payment details, and CSV export." %}</dd>
         </div>
-        <div class="grid gap-2 border-b border-forest/15 py-5 dark:border-cream/15 sm:grid-cols-[15rem_1fr] sm:gap-8">
-            <dt class="font-medium">{% translate "Accounts and cards" %}</dt>
-            <dd class="text-sm leading-relaxed text-forest/70 dark:text-night-muted">{% translate "Track bank balances, own-account transfers, PIX, and debit and credit cards with their bills." %}</dd>
+        <div id="feature-accounts">
+            <dt><span aria-hidden="true">02</span>{% translate "Accounts and cards" %}</dt>
+            <dd>{% translate "Track bank balances, own-account transfers, PIX, and debit and credit cards with their bills." %}</dd>
         </div>
-        <div class="grid gap-2 border-b border-forest/15 py-5 dark:border-cream/15 sm:grid-cols-[15rem_1fr] sm:gap-8">
-            <dt class="font-medium">{% translate "Recurrences and installments" %}</dt>
-            <dd class="text-sm leading-relaxed text-forest/70 dark:text-night-muted">{% translate "Schedule fixed income and expenses and distribute credit-card purchases across installments." %}</dd>
+        <div id="feature-recurrences">
+            <dt><span aria-hidden="true">03</span>{% translate "Recurrences and installments" %}</dt>
+            <dd>{% translate "Schedule fixed income and expenses and distribute credit-card purchases across installments." %}</dd>
         </div>
-        <div class="grid gap-2 border-b border-forest/15 py-5 dark:border-cream/15 sm:grid-cols-[15rem_1fr] sm:gap-8">
-            <dt class="font-medium">{% translate "Investments" %}</dt>
-            <dd class="text-sm leading-relaxed text-forest/70 dark:text-night-muted">{% translate "Record deposits, withdrawals, and yields in a separate investment ledger." %}</dd>
+        <div id="feature-investments">
+            <dt><span aria-hidden="true">04</span>{% translate "Investments" %}</dt>
+            <dd>{% translate "Record deposits, withdrawals, and yields in a separate investment ledger." %}</dd>
         </div>
-        <div class="grid gap-2 border-b border-forest/15 py-5 dark:border-cream/15 sm:grid-cols-[15rem_1fr] sm:gap-8">
-            <dt class="font-medium">{% translate "Reports" %}</dt>
-            <dd class="text-sm leading-relaxed text-forest/70 dark:text-night-muted">{% translate "Review income, expenses, and cash-flow projections by period and category." %}</dd>
+        <div id="feature-reports">
+            <dt><span aria-hidden="true">05</span>{% translate "Reports" %}</dt>
+            <dd>{% translate "Review income, expenses, and cash-flow projections by period and category." %}</dd>
         </div>
-        <div class="grid gap-2 border-b border-forest/15 py-5 dark:border-cream/15 sm:grid-cols-[15rem_1fr] sm:gap-8">
-            <dt class="font-medium">{% translate "Salary sandbox" %}</dt>
-            <dd class="text-sm leading-relaxed text-forest/70 dark:text-night-muted">{% translate "Estimate take-home pay and plan monthly expenses without saving the scenario." %}</dd>
+        <div id="feature-planning">
+            <dt><span aria-hidden="true">06</span>{% translate "Budgets and goals" %}</dt>
+            <dd>{% translate "Set category budgets and reserve existing balances for goals." %}</dd>
+        </div>
+        <div id="feature-sandbox">
+            <dt><span aria-hidden="true">07</span>{% translate "Salary sandbox" %}</dt>
+            <dd>{% translate "Estimate take-home pay and plan monthly expenses without saving the scenario." %}</dd>
         </div>
     </dl>
 </section>
 {% endblock %}
+
+{% block extra_js %}<script src="{% asset 'js/paper-layers.js' %}" defer></script>{% endblock %}

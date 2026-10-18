@@ -1,10 +1,25 @@
 # `ingestion`
 
-This app implements explicitly reviewed local bank-statement import at
-`/imports/`. It stores bounded evidence and decisions before posting through the
-existing banking and transaction services. It does not connect to a bank,
+**Current interface status: paused.** Upload, mapping, review, confirmation and
+undo cannot be used through the application. Existing owned confirmed/undone
+history remains available read-only. See the [review gate](#interface-review-gate)
+and [redesign roadmap](../roadmap.md); implemented services do not imply an
+available import workflow.
+
+This app retains explicitly reviewed local bank-statement services. It stores
+bounded evidence and decisions before posting through the existing banking and
+transaction services. It does not connect to a bank,
 broker, Open Finance provider or external processing service. This workflow is
 implemented under Unreleased after `0.10.0`.
+
+| Route family | Default behavior |
+|---|---|
+| `/imports/`, mapping, review, confirm and undo | GET/POST review gate redirects to Transactions before the workflow executes. |
+| `/imports/history/` | Authenticated, owned confirmed/undone provenance; read-only. |
+| `/imports/<id>/` | Owned confirmed/undone detail; pending batches cannot bypass the gate. |
+
+The workflow and UI descriptions below document retained implementation for its
+future review, rather than steps an installation owner can currently complete.
 
 ## Supported evidence
 

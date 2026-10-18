@@ -65,7 +65,7 @@ for (const theme of ['light', 'dark']) {
         await page.locator('#installment-all').press('Enter');
         await expect(page).toHaveURL(/installment_month=ALL/);
         await expect(page.locator('#installment-all')).toBeFocused();
-        await expect(page.locator('#installment-window')).toHaveText('All time');
+        await expect(page.locator('#installment-window')).toHaveText('Last 12 months');
         await expect(page.locator('#installments [data-donut-total]')).toContainText(/30[,.]00/);
         await page.locator('#installment-current').press('Enter');
         await expect(page).toHaveURL(new RegExp(`installment_month=${current}`));
@@ -102,7 +102,7 @@ for (const theme of ['light', 'dark']) {
         await page.locator('#instrument-all').press('Enter');
         await expect(page).toHaveURL(/instrument_month=ALL/);
         await expect(page.locator('#instrument-all')).toBeFocused();
-        await expect(page.locator('#instrument-window')).toHaveText('All time');
+        await expect(page.locator('#instrument-window')).toHaveText('Last 12 months');
         await bar.press('Enter');
         await expect(instrument.locator('[data-selection-values]')).toContainText(/30[,.]00/);
         await page.locator('#instrument-current').press('Enter');
@@ -112,8 +112,8 @@ for (const theme of ['light', 'dark']) {
 
         await page.goto('/dashboard/reports/?instrument_month=2026-13&installment_month=invalid');
         await expect(page.locator('#instrument-current')).toHaveText('Current month');
-        await expect(page.locator('#installment-all')).toHaveText('All time');
-        await expect(page.locator('#installment-window')).toHaveText('All time');
+        await expect(page.locator('#installment-all')).toHaveText('Last 12 months');
+        await expect(page.locator('#installment-window')).toHaveText('Last 12 months');
         await page.locator('#instrument-next').click();
         await expect(page).toHaveURL(new RegExp(`instrument_month=${future}`));
         await page.setViewportSize({ width: 390, height: 844 });
@@ -146,3 +146,33 @@ test('report month arrows work without JavaScript', async ({ browser }, info) =>
         await context.close();
     }
 });
+
+for (const [theme, width, javaScriptEnabled] of [['light', 1280, true], ['dark', 390, true], ['light', 390, false]]) {
+    test(`empty report entry shortcut survives month navigation (${theme}, ${width}, js=${javaScriptEnabled})`, async ({browser}, info) => {
+        const context = await browser.newContext({javaScriptEnabled, viewport: {width, height: 844}});
+        try {
+            const page = await context.newPage();
+            if (javaScriptEnabled) await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+            await seed(page, info);
+            await page.goto('/dashboard/reports/?charts_offset=-1&instrument_month=2020-03&installment_month=ALL');
+            const shortcut = page.locator('#instrument-activity').getByRole('link', {name: 'New transaction', exact: true});
+            await expect(shortcut).toBeVisible();
+            await page.locator('#instrument-previous').press('Enter');
+            await expect(page).toHaveURL(/instrument_month=2020-02/);
+            // The empty-state action must be rendered by the HTMX island too,
+            // with its newly selected period rather than the original page URL.
+            const origin = new URL(page.url()).pathname + new URL(page.url()).search + '#instrument-activity';
+            await expect(shortcut).toBeVisible();
+            const target = new URL(await shortcut.getAttribute('href'), page.url());
+            expect(target.pathname).toBe('/transactions/create/');
+            expect(target.searchParams.get('next')).toBe(origin);
+            await shortcut.press('Enter');
+            await expect(page.locator('main input[name="next"]')).toHaveValue(origin);
+            await page.getByRole('link', {name: 'Cancel', exact: true}).press('Enter');
+            await expect(page).toHaveURL(url => url.pathname + url.search + url.hash === origin);
+            await expect(page.locator('#instrument-activity')).toBeInViewport();
+        } finally {
+            await context.close();
+        }
+    });
+}

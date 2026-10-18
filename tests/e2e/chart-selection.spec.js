@@ -34,6 +34,7 @@ async function seed(page, testInfo) {
     await post(page, '/investments/create/', {
         product, asset, kind: 'YIELD', yield_input_mode: 'YIELD_AMOUNT', amount: '10', fees: '0', date: new Date().toISOString().slice(0,10),
     });
+    return {product, asset};
 }
 
 
@@ -188,7 +189,7 @@ for (const theme of ['light','dark']) {
 for(const [theme,language] of [['light','en'],['dark','pt-br']]){
     test(`composition links open exact operations and retain report history (${theme}, ${language})`,async({page},info)=>{
         await page.addInitScript(value=>localStorage.setItem('theme',value),theme);
-        await seed(page,info);const {account,date}=await seedExpenses(page);
+        const holding=await seed(page,info);const {account,date}=await seedExpenses(page);
         await page.goto('/transactions/create/');
         const category=await page.locator('#id_category option').filter({hasText:'Selection A'}).getAttribute('value');
         for(const [title,amount,eventDate] of [['Lunch source','7',date],['Dinner source','8',date],['Outside selected month','300','2020-01-01']]){
@@ -216,8 +217,9 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         await panel.screenshot({path:info.outputPath(`composition-sources-${theme}.png`)});
         const top=await page.evaluate(()=>scrollY);
         const lunch=group.getByRole('link',{name:new RegExp('Lunch source')});
-        await lunch.click();await expect(page).toHaveURL(/\/transactions\/\d+\/edit\/$/);
-        await expect(page.locator('#id_title')).toHaveValue('Lunch source');await expect(page.locator('#id_amount')).toHaveValue('7.00');
+        const lunchEditor=await contextualTarget(lunch,/^\/transactions\/\d+\/edit\/$/,path+'#instrument-activity');
+        await lunch.click();await expect(page).toHaveURL(lunchEditor.href);
+        await expect(page.locator('#id_title')).toHaveValue('Lunch source');await expect(page.locator('#id_amount')).toHaveValue(language==='en'?'7.00':'7,00');
         await page.goBack();await expect(page).toHaveURL(new RegExp(`instrument_month=${month}&installment_month=${month}`));
         await expect.poll(async()=>Math.abs(await page.evaluate(()=>scrollY)-top)).toBeLessThan(4);
         await expect(page.locator('.chart-composition')).toHaveCount(panelCount);
@@ -225,9 +227,13 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         // A single contribution needs no disclosure or extra action button.
         await expect(panel.locator('a').filter({hasText:'Selection B'})).toHaveCount(1);
         await panel.locator('a').filter({hasText:'Selection B'}).press('Enter');
-        await expect(page.locator('#id_title')).toHaveValue('Selection B');await expect(page.locator('#id_amount')).toHaveValue('20.00');
+        await expect(page.locator('#id_title')).toHaveValue('Selection B');await expect(page.locator('#id_amount')).toHaveValue(language==='en'?'20.00':'20,00');
         await page.goBack();await expect(page).toHaveURL(new RegExp(`instrument_month=${month}`));
         await expect(page.locator('.chart-composition')).toHaveCount(panelCount);
+        const [year, monthNumber] = month.split('-').map(Number);
+        await post(page, '/investments/create/', {...holding, kind: 'YIELD', yield_input_mode: 'YIELD_AMOUNT',
+            amount: '1', fees: '0', date: new Date(Date.UTC(year, monthNumber, 1)).toISOString().slice(0, 10),
+            reason: 'After plotted cutoff'});
         await page.goto('/investments/charts/');
         const total=page.locator('[data-chart-selection]').first(),mark=total.locator('[data-point]').last();
         await mark.focus();await page.keyboard.press('Control');await expect(panel).toBeFocused();
@@ -238,6 +244,8 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         await positionLink.press('Enter');
         await expect(page).toHaveURL(/\/investments\/operations\/\?section=portfolio&product=\d+&asset=\d+/);
         const selected=new URL(page.url()).searchParams;
+        expect(selected.get('date_to')).toBe(new Date(Date.UTC(year, monthNumber, 0)).toISOString().slice(0, 10));
+        await expect(page.locator('#investment-movements')).not.toContainText('After plotted cutoff');
         await expect(page.locator('#investment-product')).toHaveValue(selected.get('product'));
         await expect(page.locator('#investment-asset')).toHaveValue(selected.get('asset'));
         const historyOrigin = requestPath(page.url());

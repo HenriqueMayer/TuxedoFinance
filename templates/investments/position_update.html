@@ -1,9 +1,9 @@
 {% extends 'base.html' %}{% load i18n %}
 {% block title %}{% translate 'Update' %} · {{ position.name }} — Tuxedo Finance{% endblock %}
-{% block content %}<div class="mx-auto max-w-2xl space-y-6">
-    <header><h1 class="page-title">{% translate 'Update' %} · {{ position.name }}</h1><p class="subtle-copy mt-2">{{ product.bank.name }}{% if product.name != position.name %} · {{ product.name }}{% endif %}</p></header>
+{% block content %}<div class="finance-entry-page space-y-6">
+    <header><h1 class="page-title flex min-w-0 items-start gap-3"><span class="bank-marker mt-1 shrink-0" style="--bank-color:{{ product.bank.color|default:'#B88D57' }}" aria-hidden="true"></span><span class="min-w-0 break-words">{% translate 'Update' %} · {{ position.name }}</span></h1><p class="subtle-copy mt-2 break-words">{{ product.bank.name }}{% if product.name != position.name %} · {{ product.name }}{% endif %}</p></header>
     <p class="subtle-copy">{% translate 'What happened to this holding?' %}</p>
-    {% if position.is_archived %}<p role="status" class="surface-panel">{% translate 'This asset is archived. Restore it in Investment Settings to record new operations.' %} <a class="quiet-action" href="{{ configuration_url }}">{% translate 'Review configuration' %}</a></p>
+    {% if position.is_archived %}<p role="status" class="surface-panel">{% translate 'This asset is archived. Restore it in Investment Settings to record new operations.' %} <a class="quiet-action" href="{{ configuration_url }}" hx-swap="innerHTML show:none">{% translate 'Review configuration' %}</a></p>
     {% else %}<div class="surface-panel position-update-actions" aria-label="{% translate 'Update actions' %}">
         <a href="{{ actions.deposit }}" aria-labelledby="update-deposit-label" aria-describedby="update-deposit-description" class="position-update-choice"><span id="update-deposit-label" class="section-title block">{% translate 'Contribute' %}</span><span id="update-deposit-description" class="subtle-copy block">{% translate 'Record money or units added, with their funding source.' %}</span></a>
         <a href="{{ actions.withdrawal }}" aria-labelledby="update-withdrawal-label" aria-describedby="update-withdrawal-description" class="position-update-choice"><span id="update-withdrawal-label" class="section-title block">{% translate 'Redeem' %}</span><span id="update-withdrawal-description" class="subtle-copy block">{% translate 'Record a withdrawal and the account that receives it.' %}</span></a>

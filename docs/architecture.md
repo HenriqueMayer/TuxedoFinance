@@ -190,6 +190,13 @@ card and quote valuations request the cutoff rate; cost-based historical
 investment components retain their operation evidence. Missing valuation or
 performance evidence is carried separately rather than silently summed away.
 
+Report chart islands also reuse a single request-local list of categorized
+sources and prefetched splits. Services reject shared lists containing another
+user's records. Each island still applies its own month/window filters; this is
+read reuse, not an authoritative or persisted financial cache. The
+[project health review](reviews/project-health-2026-10-16.md#reproducible-reporting-measurements)
+records the measured cost and limits.
+
 New nonzero account and asset openings require dates. Incremental migrations
 leave older unknown opening dates null, retaining current holdings with an
 explicit incomplete-baseline warning. Replay and derived read models are
@@ -203,19 +210,25 @@ The route namespaces remain domain-based:
 | Prefix | App | Scope |
 |---|---|---|
 | `/accounts/` | `accounts` | signup, login, POST logout, and authenticated preferences |
-| `/dashboard/` | `dashboard` | overview, reports and dated wealth |
+| `/dashboard/` | `dashboard` | overview and reports; dated-wealth interface paused |
 | `/transactions/` | `transactions` | categorized event CRUD/search |
 | `/categories/` | `categories` | category CRUD |
 | `/banking/` | `banking` | banks, accounts, ledger, PIX, cards, invoices, loyalty |
 | `/investments/` | `investments` | portfolio, products, assets, operations, local prices and charts |
 | `/planning/` | `planning` | operational budgets, backed goals, reservations and local signals |
-| `/imports/` | `ingestion` | owned CSV/OFX staging, mapping, review, confirmation and guarded undo |
+| `/imports/` | `ingestion` | paused CSV/OFX operations; owned posted history remains read-only |
 | `/sandbox/` | `sandbox` | authenticated planning workspace and explicit draft persistence |
 | `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
 
 All authenticated CBVs constrain root querysets to `request.user`; forms also
 scope every foreign-key choice. Ownership is revalidated in posting services,
 not assumed from browser options.
+
+`core.features.review_gate` checks paused operation routes on GET and POST;
+hiding a navigation link is not the gate. Current default settings keep imports
+and the net-worth interface paused, while their financial sources and read
+models remain intact. Follow the [roadmap](roadmap.md) and owning app guides
+for availability; do not infer it from a model or URL pattern alone.
 
 ## Localization request flow
 
