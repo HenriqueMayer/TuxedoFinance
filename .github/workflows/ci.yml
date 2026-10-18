@@ -45,11 +45,11 @@ jobs:
       - name: Validate local documentation links and anchors
         run: uv run python scripts/check_docs.py
 
-      - name: Test repository tooling
-        run: uv run python -m unittest discover -s tests/tooling
-
       - name: Install pinned frontend tools
         run: npm ci
+
+      - name: Test repository tooling
+        run: uv run python -m unittest discover -s tests/tooling
 
       - name: Test JavaScript amount and allocation helpers
         run: npm run test:unit

@@ -9,6 +9,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Install pinned frontend tools before repository-tool checks in CI so the Playwright configuration check runs on clean checkouts. Clarify ordinary versus persistent payment-choice keyboard/selection contracts in the owning Forms guide, with presentation linking to that behavior.
 - Contain long Home/report identities and selected-category summaries, retain full category labels with comfortable touch targets, and expose wide charts/outlook tables as named keyboard-scroll regions. Keep report-period presets aligned in active and linked states without changing chart data or calculations.
 - Preserve filtered origins through category import/delete actions, banking confirmations, nested invoice payment/source editors and inline reward-redemption editing; return to the overview after removing an empty bank. Keep long valid names inside rows, activity, notices, confirmations and searchable choices on phones, without changing accounting values.
 - Align Home and Reports shortcuts with their actual scope: reveal the linked account row, identify outstanding invoices including overdue amounts, label the rolling-year controls Last 12 months and retain chart/filter context through source-editor Save/Cancel. Keep the empty-report New transaction shortcut available after period changes with the same return context.

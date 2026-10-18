@@ -75,36 +75,19 @@ before payment controls in both visual and Tab order. It is a non-submit action.
 The server HTML keeps its native Add fallback after Save, so Enter in an ordinary
 field still submits Save when JavaScript is unavailable.
 
-Categories, accounts, debit cards and credit cards remain owned Django model
-choices enhanced by the existing `static/js/forms.js` searchable picker. The
-payment fields opt in with `data-payment-choices`: revealing a channel shows
-that same listbox as persistent illustrated options, without moving
-focus or scrolling. Account and PIX options use their respective icons plus the
-bank's color marker, account name, institution and currency. Card options use
-their saved colors/gradient, nickname and account context. A separate compact
-44px search field filters these options; blur and Tab keep its query and results
-visible. Arrow/Enter selects explicitly, clears the filter and shows the complete
-compatible board. Escape clears only the filter and keyboard cursor, preserving
-the selected record. `aria-selected` identifies the committed payment option;
-`data-active` and `aria-activedescendant` identify its separate keyboard cursor.
-Ordinary model pickers keep their existing close-on-blur contract. Channel
-changes retain PIX eligibility filtering and clear incompatible card choices.
-The illustrations never introduce a second picker or automatically choose a
-record. Text remains on a neutral surface, independently of custom colors;
-native option labels, identifiers, ownership and no-JavaScript POSTs are intact.
-Custom gradients use the shared contrast protection described under
-[card appearance](forms.md#card-appearance).
+The shared payment board presents owned account and PIX options with their
+respective icons, the bank's color marker, account name, institution and currency.
+Card options use their saved colors/gradient, nickname and account context. A
+compact 44px search field accompanies the miniatures. Essential text remains on
+a neutral surface, independently of custom colors, using the shared contrast
+protection described under [card appearance](forms.md#card-appearance).
+`assets/css/payment-choices.css` owns this shared artwork and board presentation
+across transaction and banking editors, including multiple-card choices.
 
-The same opt-in applies to banking editors, including linked loyalty cards,
-points-purchase funding, invoice selection and redemption/IOF instruments.
-`assets/css/payment-choices.css` owns the shared artwork and board presentation;
-it is not restricted to the transaction sheet. A multiple-card field retains a
-labelled group of native checkboxes, rather than becoming a single-choice
-listbox. Tab reaches each visible checkbox and Space toggles it; filtering and
-clearing the query preserve selected records outside the results. An explicit
-Clear selection action retains its separate meaning. Full native option labels,
-safe server-provided metadata and unlocalized identifiers remain the submitted
-source of truth.
+The [persistent payment-choice contract](forms.md#persistent-payment-choices)
+owns opt-in, keyboard and selection behavior, channel eligibility, native
+submission and metadata/ownership rules. Keep those rules in Forms rather than
+redefining them through a presentation change.
 
 ## Visual language
 

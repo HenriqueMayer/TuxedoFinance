@@ -67,19 +67,22 @@ follows the [WAI-ARIA combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns
 | Control | Keyboard behavior |
 |---|---|
 | All controls | Tab/Shift+Tab move forward/back in document order with visible focus. No positive tabindex or focus jumps when branches appear. |
-| Searchable record choice | Type to filter; Down/Up open results and highlight the next/previous option; Enter confirms the highlighted option. |
-| Search cancellation | Escape closes; Tab continues. Both restore the committed choice and discard unconfirmed search text. Enter never submits from the search input, including zero matches. |
+| Ordinary single-record choice | Type to filter; Down/Up open results and highlight the next/previous option; Enter confirms the highlighted option. |
+| Ordinary single-record cancellation | Blur, Tab and Escape close results, restore the committed choice and discard unconfirmed search text; Tab continues in document order. |
+| Persistent payment choice (`data-payment-choices`) | Type to filter the visible board; Down/Up move its keyboard cursor and Enter confirms explicitly. Blur and Tab preserve the board and query. Escape clears the query and cursor, preserving the committed record. See [persistent payment choices](#persistent-payment-choices). |
+| Search input Enter | Never submits the form, including with zero matches. |
 | Short native select | Use the browser's native keys (Space or Alt+Down to open where supported, arrows to navigate and Enter to confirm). |
 | Checkbox / multiple record choice | Space toggles a focused checkbox; Tab reaches each visible checkbox. Filtering preserves selected records. |
 | Advanced options | Focus the native summary and press Enter or Space; Tab then visits its fields. |
 | Save / other buttons | Enter or Space activates the focused button. |
 
-Single-choice search uses manual confirmation, including when there is only one
-match. Focus remains on the search input; `aria-activedescendant`,
-`aria-selected` and the visible active highlight move together. Arrow navigation
-stops at the ends. Home/End and text-editing shortcuts retain native editing
-behavior. Mouse/touch selection and the explicitly labeled clear button perform
-the same committed change.
+Single-record search uses manual confirmation, including when there is only one
+match. Focus remains on the search input. In an ordinary single-record picker,
+`aria-activedescendant`, `aria-selected` and the visible active highlight move
+together; the payment board separates its committed selection from that cursor
+as described below. Arrow navigation stops at the ends. Home/End and text-editing
+shortcuts retain native editing behavior. Mouse/touch selection commits the
+same record; the explicitly labeled clear button removes the committed selection.
 
 Search instructions and single-choice selection announcements remain available
 through `aria-describedby` and live text without repeating paragraphs beneath
@@ -128,6 +131,41 @@ values/options; the shared refresh runs after their change handlers. Call
 inserted with textContent, never interpreted as HTML. No remote search or new
 frontend dependency is involved. Entry forms use `novalidate` so hidden native
 selects cannot intercept error recovery; Django renders the validation errors.
+
+### Persistent payment choices
+
+Payment instruments opt into the same shared picker with
+`data-payment-choices`. Revealing a channel presents its compatible options as a
+persistent illustrated board, without moving focus, scrolling or automatically
+selecting a record. This opt-in also serves banking editors, linked loyalty
+cards, points-purchase funding, invoice selection and redemption/IOF instruments.
+Ordinary model pickers retain the close-on-blur behavior in the table above.
+
+The compact search filters the board. Blur and Tab leave its query and results
+visible; an unrelated refresh preserves them too. In a single-choice board,
+Down/Up move the keyboard cursor and Enter explicitly commits the highlighted
+record. Committing by keyboard, mouse or touch clears the filter and restores
+the complete compatible board. Escape clears only the filter and cursor, never
+the committed record. `aria-selected` identifies the committed option;
+`data-active` and `aria-activedescendant` identify its separate keyboard cursor.
+The committed native value and selected-record announcement remain intact even
+when the current query filters that option out. The explicit Clear selection action
+retains its separate meaning: it removes that selection and resets the query.
+
+A multiple-card field remains a labelled group of native checkboxes, rather
+than a single-choice listbox. Tab reaches each visible checkbox and Space
+toggles it. Filtering, clearing the query and leaving the search preserve
+selected records outside the visible results. Clear selection explicitly removes
+all selected records; it must not be confused with Escape's query reset.
+
+Channel changes retain PIX eligibility filtering and clear incompatible card
+choices. Native option labels and unlocalized identifiers remain the submitted
+source of truth; safe server-provided metadata supplies only the owned records'
+illustrations. Ownership, compatibility and accounting checks remain on the
+server. Complete native controls and POSTs work without JavaScript. The board
+never introduces another picker or changes these rules through its artwork;
+see [payment presentation](presentation.md#editorial-application-adoption) and
+[card appearance](#card-appearance) for the visual treatment and contrast rules.
 
 ### Conditional fields and recovery
 
