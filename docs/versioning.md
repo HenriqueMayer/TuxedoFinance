@@ -69,8 +69,8 @@ dated version section, update the comparison links at the bottom of
 
 CI validates every pull request and pushes to `main`. It also runs
 for `v*` tags; tagged builds fail when the tag differs from `pyproject.toml` or
-when the matching dated changelog section is missing. This prevents publishing
-two different versions under the same release identity.
+when the matching dated changelog section is missing. These checks establish
+consistency between the tag, application version and dated changelog section.
 
 ## Container releases
 

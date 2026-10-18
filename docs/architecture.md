@@ -61,7 +61,9 @@ package solely to reduce line counts.
   operations, product/asset configuration and local prices. Position replay and
   financial synchronization retain their existing service modules.
 - `transactions.views` separates consultation/export from editing and split
-  controls. `categories.importing` owns bounded CSV parsing and atomic hierarchy
+  controls. `transactions.projection` owns arithmetic schedule windows and
+  occurrence validation; its middleware handles refused-projection recovery.
+  `categories.importing` owns bounded CSV parsing and atomic hierarchy
   imports; category views retain HTTP, messages and response handling.
 - Each app owns `tests/test_*.py` and the support modules it needs. Test package
   initializers do not reexport test classes. The [test index](../tests/README.md)
@@ -142,6 +144,29 @@ Cards may opt into manual settlement from a due-date boundary; those invoices
 have no projected settlement movement and derive status from explicit payments.
 Manual mode is sticky per invoice so later settings changes do not erase
 confirmed evidence. Payment-bearing invoices survive source/horizon cleanup.
+
+Projection calculates each source's actual monthly window arithmetically,
+preserving sparse ancient schedules without traversing empty calendar gaps.
+Existing installment cents, billing offsets and effective-date attribution
+remain authoritative. Each fixed transaction is limited to 1,200 applicable
+monthly occurrences through the requested horizon. Model validation rejects
+an excessive schedule, and the service repeats a read-only preflight before
+entering its own atomic block and acquiring SQLite's writer. It then reloads
+and revalidates source state under the transaction before any projection write,
+including legacy IOF backfill. A caller may already own an atomic source
+mutation; guard failure rolls that ordinary workflow back.
+
+`transactions.middleware.LedgerProjectionMiddleware` recovers guard failures
+through the authorized Transactions list, using a full redirect for HTMX.
+Financial GETs that require synchronization therefore cannot present stale
+balances after a refused projection. The ordinary list remains available for
+source review. Explicit correction or deletion of an excessive source may be
+saved individually while other excessive sources remain; a warning explains
+that the derived ledger stays unchanged and synchronized financial consultation
+remains blocked. The final repair permits full reconciliation. No automated
+date change, history alteration or schedule truncation resolves the guard.
+The [Transactions guide](apps/transactions.md#recurrence-projection-and-recovery)
+owns the limit and recovery workflow.
 
 The projection compares existing movements and invoices to their desired
 fields, saving only changed values and deleting only stale derived rows.

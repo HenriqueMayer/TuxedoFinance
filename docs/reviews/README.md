@@ -25,6 +25,7 @@ and [interface map](../interface-map.md) for present behavior.
 | [README and preview refresh — 2026-10-18](readme-preview-2026-10-18.md) | Concise bilingual entry points, editorial static tour, isolated current-workspace captures and presentation validation. |
 | [Workspace preview refinement — 2026-10-18](preview-workspaces-2026-10-18.md) | Historical initial refinement: factual README copy, optional localized demos, five-destination static navigation and complete themed captures; later simplified as recorded below. |
 | [Direct preview and New entry — 2026-10-18](preview-simple-2026-10-18.md) | Removes the demo and large introduction, opens directly on the dashboard and adds the actual transaction-entry form to the static tour. |
+| [Recurrence guard and public documentation — 2026-10-18](recurrence-public-readiness-2026-10-18.md) | Bounded recurrence projection, explicit legacy recovery and nine public documentation corrections, with isolated regression evidence. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

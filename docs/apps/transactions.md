@@ -27,8 +27,10 @@ package separates read-only consultation and CSV export in `consultation.py`
 from create/update/delete and split submissions in `editing.py`. Its explicit
 public exports keep the existing `transactions.views` imports and URL names.
 The month-filter helpers belong to `views.consultation`; tests should import
-them there rather than depending on incidental exports. `services.py` retains
-the financial ledger synchronization boundary.
+them there rather than depending on incidental exports. `projection.py` owns
+arithmetic occurrence windows and their validation limit; `services.py` retains
+the financial ledger synchronization boundary. `middleware.py` recovers refused
+projections through the authorized transaction list.
 
 ## Settlement behavior
 
@@ -100,6 +102,43 @@ prevent duplicate movements. Manual invoice payments are confirmed evidence,
 not disposable projections, and remain protected when a source or forecast
 horizon changes. Atomic synchronization still uses SQLite's serialized writer
 behavior; skipping unchanged writes does not provide concurrent row locks.
+
+## Recurrence projection and recovery
+
+The projector calculates each source's first applicable month and occurrence
+count arithmetically, then visits only that source's actual schedule. It does
+not scan empty calendar gaps between an old transaction and the projection
+horizon. One-off purchases and installments retain their bounded source
+windows. Ended fixed schedules remain valid even when their dates are ancient;
+their actual occurrence count controls validation. Credit-card billing offsets
+also shift the final billed month of an ended schedule. Projection preserves
+installment cents, effective dates and confirmed invoice payments.
+
+A fixed transaction may project at most **1,200 monthly occurrences** through
+the synchronization horizon, normally twelve months beyond today. Exactly
+1,200 is accepted; 1,201 is rejected. This is a per-source bound on applicable
+effective or billed occurrences, not a minimum start date, an aggregate limit
+for the user, or permission to truncate a longer schedule. Model validation
+attaches the error to the event date, and synchronization also guards legacy
+or direct-ORM sources. See the
+[synchronization boundary](../architecture.md#request-time-synchronization)
+for preflight, locked revalidation and rollback behavior.
+
+When an excessive existing source blocks a financial GET, recovery returns to
+Transactions with an explanatory message, including a full navigation for HTMX.
+The ordinary transaction list does not synchronize and remains available for
+review and editing. Ordinary source writes that fail the guard roll back;
+transaction forms retain their bound values and errors.
+
+An owner may explicitly correct an excessive source to a valid schedule or
+delete it while other excessive sources still remain. Each such repair is
+saved individually with a warning; derived movements and invoices remain
+unchanged while synchronization is stopped. Financial consultation that
+requires synchronization remains blocked rather than displaying the stale
+projection. After the final blocker is repaired, full reconciliation resumes.
+The guard never automatically changes existing dates, truncates occurrences
+or alters financial history; only the owner's explicit source correction or
+deletion changes that source.
 
 ## Category splits
 

@@ -273,6 +273,16 @@ creates paired movements, and is excluded from income and expense. Investments
 are not a transaction type: their cash legs use investment movements and their
 position history remains in `investments`.
 
+Recurrence fields describe the source schedule; projection creates no copied
+`Transaction` occurrences. Arithmetic source windows preserve ended schedules,
+credit-card billing offsets and installment cents. A fixed source is limited
+to 1,200 applicable monthly occurrences through the synchronization horizon;
+model and service validation enforce the bound without silently changing dates
+or truncating history. Existing excessive sources require explicit owner
+correction or deletion. See the
+[Transactions recurrence and recovery contract](apps/transactions.md#recurrence-projection-and-recovery)
+and [atomic synchronization boundary](architecture.md#request-time-synchronization).
+
 ### `TransactionSplit`
 
 An optional allocation stores `transaction`, protected owned `category` and a

@@ -37,8 +37,9 @@ its trigger. Native account options remain available without JavaScript.
 `partials/language_selector.html` appears in account options on desktop and the
 mobile menu, with an explicit native fallback when JavaScript is disabled. It
 posts the current path and `en` or `pt-br` to Django's
-`/i18n/set_language/`; JavaScript submits on change and the `noscript` Apply
-button preserves the server-rendered fallback. The choice is stored for one
+`/i18n/setlang/` endpoint (named route `set_language`); JavaScript submits on
+change and the `noscript` Apply button preserves the server-rendered fallback.
+The choice is stored for one
 year in Django's language cookie, not local storage or the user model, and URLs
 have no locale prefix. The light/dark choice remains in local storage so both
 preferences survive later visits in the same browser.

@@ -42,9 +42,10 @@ class ReportingEfficiencyTests(DashboardFixture):
         with CaptureQueriesContext(connection) as captured:
             response = self.client.get(reverse('dashboard:reports'))
         source_reads = [query for query in captured if 'FROM "transactions_transaction"' in query['sql']]
-        # One read reconciles the ledger; one loads categorized sources for all
-        # three report islands. Each island still applies its own date scope.
-        self.assertEqual(len(source_reads), 2)
+        # One read guards recurrence before SQLite's writer; another reloads
+        # sources inside reconciliation. All three chart islands still share
+        # one categorized read and apply their own date scopes.
+        self.assertEqual(len(source_reads), 3)
         self.assertEqual(response.context['instrument_activity']['expense_total'], Decimal('100'))
         self.assertEqual(writes(captured), [])
 

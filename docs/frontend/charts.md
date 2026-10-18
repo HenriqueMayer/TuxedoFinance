@@ -22,8 +22,10 @@ directly to their bank row without the shell's generic scroll-to-top override.
 Outstanding invoices include overdue obligations, independently of the selected
 performance month; All invoices explicitly opens the complete card overview.
 Invoice rows link to their source detail and show the remaining amount in
-confirmed mode. A separate owned, staged-import queue
-highlights decisions waiting for review without counting them as posted cash.
+confirmed mode. When `feature_available('imports')` is enabled, a separate owned,
+staged-import queue highlights decisions waiting for review without counting
+them as posted cash. Imports are paused by default, so the queue is hidden in
+the default configuration.
 
 ## Reports and charts
 

@@ -13,6 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.generic import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import ModelFormMixin
 
 from banking.models import BankAccount, CreditCard, DebitCard
 from core.navigation import ReturnContextMixin, return_url
@@ -21,6 +22,22 @@ from transactions.forms import (
 )
 from transactions.models import Transaction, TransactionSplit
 from transactions.services import sync_user_ledger
+from transactions.projection import ProjectionLimitExceeded, validate_occurrences
+
+
+def _excessive_schedule(item):
+    try:
+        validate_occurrences(item)
+    except ProjectionLimitExceeded:
+        return True
+    return False
+
+
+def _pending_projection_notice(request):
+    messages.warning(request, _(
+        'The transaction change was saved. Ledger synchronization remains stopped '
+        'until the other excessive recurring schedules are reviewed.'
+    ))
 
 
 @login_required
@@ -112,7 +129,30 @@ class TransactionFormMixin(ReturnContextMixin, LoginRequiredMixin):
             form.instance.category = allocations[0]['category']
         else:
             allocations = []
+        original_pk = form.instance.pk
+        try:
+            response = self.save_with_ledger(form, allocations)
+        except ProjectionLimitExceeded as error:
+            # Restore the unsaved identity after a rolled-back create. Keep the
+            # bound form and avoid a premature success message on any failure.
+            form.instance.pk = original_pk
+            form.instance._state.adding = original_pk is None
+            self.object = form.instance if original_pk else None
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        if response.status_code < 300:
+            return response
+        success = self.get_success_message(form.cleaned_data)
+        if success:
+            messages.success(self.request, success)
+        if getattr(self, 'projection_pending', False):
+            _pending_projection_notice(self.request)
+        return response
+
+    def save_with_ledger(self, form, allocations):
         with db_transaction.atomic():
+            repairing = bool(form.instance.pk and _excessive_schedule(
+                self.get_queryset().get(pk=form.instance.pk)))
             try:
                 form.instance.full_clean()
             except ValidationError as error:
@@ -120,7 +160,7 @@ class TransactionFormMixin(ReturnContextMixin, LoginRequiredMixin):
                     for value in values:
                         form.add_error(field if field in form.fields else None, value)
                 return self.form_invalid(form)
-            response = super().form_valid(form)
+            response = ModelFormMixin.form_valid(self, form)
             if form.manage_splits:
                 # Match by category so unchanged allocations retain their IDs,
                 # including when categories are swapped between editor rows.
@@ -134,7 +174,15 @@ class TransactionFormMixin(ReturnContextMixin, LoginRequiredMixin):
                     elif row.amount != amount:
                         row.amount = amount
                         row.save(update_fields=['amount'])
-            sync_user_ledger(self.request.user)
+            try:
+                sync_user_ledger(self.request.user)
+            except ProjectionLimitExceeded:
+                if not repairing:
+                    raise
+                # Permit explicit repairs one source at a time. No projection
+                # rows change while another legacy source still blocks sync.
+                validate_occurrences(self.get_queryset().get(pk=self.object.pk))
+                self.projection_pending = True
         return response
 
     def form_invalid(self, form):
@@ -200,8 +248,14 @@ class TransactionDeleteView(ReturnContextMixin, LoginRequiredMixin, DeleteView):
     def form_valid(self, form):
         title = self.object.title
         with db_transaction.atomic():
+            repairing = _excessive_schedule(self.object)
             response = super().form_valid(form)
-            sync_user_ledger(self.request.user)
+            try:
+                sync_user_ledger(self.request.user)
+            except ProjectionLimitExceeded:
+                if not repairing:
+                    raise
+                _pending_projection_notice(self.request)
         messages.success(
             self.request,
             _('Transaction "%(title)s" deleted.') % {'title': title},

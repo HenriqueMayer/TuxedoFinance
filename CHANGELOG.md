@@ -9,6 +9,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Project recurrence from arithmetic source windows and reject fixed schedules above 1,200 monthly occurrences per transaction within the projection horizon. Preserve historical amounts and paid invoices; recover excessive legacy schedules through Transactions with atomic rollback and explicit individual repairs before full reconciliation resumes.
+- Correct public guidance for preview captures/sections, version-check guarantees, repository implementation evidence, HTMX licensing, paused import queues, the language endpoint, mobile label sizing and the ordinary-expense catalogue specimen.
 - Install pinned frontend tools before repository-tool checks in CI so the Playwright configuration check runs on clean checkouts. Clarify ordinary versus persistent payment-choice keyboard/selection contracts in the owning Forms guide, with presentation linking to that behavior.
 - Contain long Home/report identities and selected-category summaries, retain full category labels with comfortable touch targets, and expose wide charts/outlook tables as named keyboard-scroll regions. Keep report-period presets aligned in active and linked states without changing chart data or calculations.
 - Preserve filtered origins through category import/delete actions, banking confirmations, nested invoice payment/source editors and inline reward-redemption editing; return to the overview after removing an empty bank. Keep long valid names inside rows, activity, notices, confirmations and searchable choices on phones, without changing accounting values.

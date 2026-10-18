@@ -134,11 +134,16 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
             await p.locator('#bank-activity > summary').press('Enter');
             await expect(p.locator('#reward-redemptions')).toContainText('IOF card');
             await expect(p.locator('#reward-redemptions')).toContainText('28/10/2026');
+            // A native click during panel entry reaches Playwright's in-page
+            // retry timer, which cannot run with JavaScript disabled. Poll the
+            // existing animation from the runner before each real pointer action.
+            await expect.poll(()=>p.locator('#bank-workspace-panel').evaluate(node=>node.getAnimations().length)).toBe(0);
             await p.getByRole('link',{name:language==='en'?'Edit redemption':'Editar resgate',exact:true}).click();
             const nativeEdit=p.getByRole('form',{name:language==='en'?'Edit redemption':'Editar resgate',exact:true});
             await expect(nativeEdit.locator('#id_redemption-iof_credit_card')).toHaveValue(card);
             await expect(nativeEdit.locator('#id_redemption-iof_credit_card option:checked')).toHaveText(cardLabel);
             await nativeEdit.locator('#id_redemption-iof_amount').fill('4.25');
+            await expect.poll(()=>p.locator('#bank-workspace-panel').evaluate(node=>node.getAnimations().length)).toBe(0);
             await nativeEdit.getByRole('button',{name:language==='en'?'Save':'Salvar',exact:true}).click();
             await expect(p.locator('#reward-redemptions')).toContainText(/USD 4[,.]25/);
         }finally{await native.close();}

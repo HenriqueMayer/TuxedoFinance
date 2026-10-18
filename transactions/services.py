@@ -1,5 +1,4 @@
 from calendar import monthrange
-from datetime import date
 from decimal import Decimal
 
 from django.db import transaction
@@ -9,6 +8,7 @@ from django.utils.translation import gettext as _
 
 from banking.models import BankMovement, CardInvoice, LoyaltyEntry, RewardRedemption
 from transactions.models import Transaction
+from transactions.projection import occurrence_months, projection_horizon, validate_occurrences
 from banking.services import sync_redemption_iof_transaction
 from banking.settlements import invoice_projection
 
@@ -16,20 +16,10 @@ from banking.settlements import invoice_projection
 ZERO = Decimal('0.00')
 
 
-def _add_months(value, offset, day=None):
-    index = value.year * 12 + value.month - 1 + offset
-    year, month = divmod(index, 12)
-    month += 1
-    target_day = value.day if day is None else day
-    return date(year, month, min(target_day, monthrange(year, month)[1]))
-
-
-def _month_range(start, end):
-    current = start.replace(day=1)
-    end = end.replace(day=1)
-    while current <= end:
-        yield current
-        current = _add_months(current, 1)
+def _sources(user):
+    return Transaction.objects.filter(user=user).select_related(
+        'bank_account__bank', 'debit_card__account__bank', 'credit_card__account__bank',
+    )
 
 
 def _save_derived_changes(instance, values):
@@ -53,24 +43,32 @@ def _project_movement(user, existing, source_key, values):
     return _save_derived_changes(movement, values)
 
 
-@transaction.atomic
 def sync_user_ledger(user, through_date=None, projection_months=12):
     """Idempotently project transactions into account movements and invoices."""
     through_date = through_date or timezone.localdate()
-    horizon = _add_months(through_date, projection_months)
+    horizon = projection_horizon(through_date, projection_months)
+    # Reject legacy/direct-ORM workloads before acquiring SQLite's writer.
+    # Existing callers may already own an atomic source mutation; it rolls back
+    # if this guard fails, and no derived projection is partially reconciled.
+    for item in _sources(user):
+        validate_occurrences(item, horizon)
+    return _sync_user_ledger(user, through_date, horizon)
+
+
+@transaction.atomic
+def _sync_user_ledger(user, through_date, horizon):
+    transactions = list(_sources(user).select_for_update())
+    # Recheck locked source state before even backfilling legacy IOF expenses.
+    for item in transactions:
+        validate_occurrences(item, horizon)
     # Legacy sources and direct ORM imports gain the same derived expense.
-    for redemption in RewardRedemption.objects.filter(
+    redemptions = list(RewardRedemption.objects.filter(
         user=user, iof_amount__gt=ZERO, iof_transaction__isnull=True,
-    ):
+    ))
+    for redemption in redemptions:
         sync_redemption_iof_transaction(redemption)
-    transactions = list(
-        Transaction.objects.select_for_update()
-        .filter(user=user)
-        .select_related(
-            'bank_account__bank', 'debit_card__account__bank',
-            'credit_card__account__bank'
-        )
-    )
+    if redemptions:
+        transactions = list(_sources(user).select_for_update())
     # Reconcile actual source values on every call rather than trusting a
     # timestamp cache: direct ORM imports and changes to card dates also count.
     existing_movements = {
@@ -85,7 +83,7 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
         if item.is_credit_card or item.reward_redemption_id:
             # Account IOF already owns an immediate redemption movement.
             continue
-        occurrences = _month_range(item.date, horizon) if item.is_fixed else [item.date]
+        occurrences = occurrence_months(item, horizon) if item.is_fixed else [item.date]
         for occurrence_month in occurrences:
             amount = item.amount_for_month(occurrence_month.year, occurrence_month.month)
             if not amount:
@@ -138,28 +136,18 @@ def sync_user_ledger(user, through_date=None, projection_months=12):
             cash_amount__gt=ZERO,
         ).select_related('funding_credit_card')
     )
-    first_months = [item.billed_month for item in credit_transactions if item.billed_month]
-    first_months.extend(
-        entry.funding_credit_card.statement_month(entry.date)
-        for entry in loyalty_purchases
-    )
     computed = {}
-    if first_months:
-        first_month = min(first_months)
-        for reference_month in _month_range(first_month, horizon):
-            for item in credit_transactions:
-                amount = item.amount_for_month(reference_month.year, reference_month.month)
-                if amount:
-                    computed[(item.credit_card_id, reference_month)] = (
-                        computed.get((item.credit_card_id, reference_month), ZERO) + amount
-                    )
-            for entry in loyalty_purchases:
-                card = entry.funding_credit_card
-                if card.statement_month(entry.date) == reference_month:
-                    computed[(card.pk, reference_month)] = (
-                        computed.get((card.pk, reference_month), ZERO)
-                        + entry.cash_amount
-                    )
+    for item in credit_transactions:
+        for reference_month in occurrence_months(item, horizon):
+            amount = item.amount_for_month(reference_month.year, reference_month.month)
+            if amount:
+                key = (item.credit_card_id, reference_month)
+                computed[key] = computed.get(key, ZERO) + amount
+    for entry in loyalty_purchases:
+        reference_month = entry.funding_credit_card.statement_month(entry.date)
+        if reference_month <= horizon:
+            key = (entry.funding_credit_card_id, reference_month)
+            computed[key] = computed.get(key, ZERO) + entry.cash_amount
 
     existing = list(
         CardInvoice.objects.select_for_update().filter(user=user)

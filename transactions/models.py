@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy
 
 from banking.models import BankAccount, CreditCard, DebitCard
 from categories.models import Category
+from transactions.projection import validate_occurrences, ProjectionLimitExceeded
 
 
 ZERO = Decimal('0.00')
@@ -206,6 +207,10 @@ class Transaction(models.Model):
         account = self.payment_account
         if account and account.predates_opening(self.date):
             errors['date'] = _('The transaction cannot precede the account opening balance date.')
+        try:
+            validate_occurrences(self)
+        except ProjectionLimitExceeded as error:
+            errors['date'] = error
         if errors:
             raise ValidationError(errors)
 

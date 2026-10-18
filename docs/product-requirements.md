@@ -397,7 +397,9 @@ financial history, not an immutable bank statement or return percentage.
   [route/component map](interface-map.md). Shared editorial components retain
   Inter typography, the cream/forest light palette, neutral black/graphite dark
   foundations, accessible semantic colors and mobile-first behavior. Ordinary
-  text maintains WCAG AA contrast; user-facing labels do not render below 12px.
+  text maintains WCAG AA contrast; user-facing labels do not render below 12px,
+  except for the approved [mobile navigation labels](frontend/navigation.md#root-layout-and-navigation)
+  at 10–11px, never below 10px, with touch targets of at least 44 × 44px.
 - The same five workspace destinations appear in desktop and mobile navigation.
   Secondary work stays in its owning section; paused resources are not links or
   disabled promotional entries. Native navigation remains available.

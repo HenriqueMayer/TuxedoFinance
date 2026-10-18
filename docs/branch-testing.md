@@ -85,7 +85,8 @@ filters, help and departure behavior. In both themes on computer and phone:
    owned confirmed/undone import history remains read-only. The redesign roadmap
    is documentation, not an application page.
 
-The public static tour still represents the published release. This branch's
+The static tour captures the checked-out application, including unreleased
+changes, as described in [preview maintenance](preview.md). This branch's
 interactive preview is the acceptance environment; no integration, bank
 connection, Cloudflare deployment or publication is implied by these tests.
 

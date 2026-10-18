@@ -29,7 +29,7 @@ to a separate view of the actual application form, including its credit-card
 miniatures. These are synthetic captures, not an editable financial session.
 With JavaScript, native hash
 links show one workspace at a time and preserve browser Back/Forward and the
-current section when switching languages. Without JavaScript, all six sections
+current section when switching languages. Without JavaScript, all seven sections
 remain readable through the same anchors. Existing section anchors and image
 paths remain valid.
 Its dark theme matches
