@@ -41,6 +41,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Refresh the English/Portuguese READMEs and static tour with the editorial identity, shorter copy, prominent preview access and current synthetic workspace captures. Include a copyable Docker quick start, retain detailed operation guides, legacy README/tour anchors, native language links and keyboard-accessible image inspection.
 - Organize frontend style sources by shared/workspace responsibility and form scripts into owning Django partials, preserving the emitted CSS and script behavior. Split frontend contracts into linked responsibility guides with legacy section anchors, and validate local documentation links/anchors in CI.
 - Group Django tests inside each app by responsibility with explicit fixture helpers. Split Banking and Investments form/view modules and Transaction consultation/editing views behind stable public imports; extract bounded atomic category CSV imports without changing models, migrations, URLs or financial services.
 - Keep frontend/browser configurations with their sources, group browser specs by domain and share catalogue routing. Move local preview maintenance under `scripts/preview/` and new test/coverage/cache outputs under ignored `.local/`, preserving installation data and existing artifacts. Run JavaScript amount/allocation unit tests in CI.

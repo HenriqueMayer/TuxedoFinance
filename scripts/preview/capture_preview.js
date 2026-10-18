@@ -21,13 +21,12 @@ const screens = [
     ['transactions-light.png', '/transactions/'],
     ['banking-light.png', '/banking/'],
     ['investments-light.png', '/investments/'],
-    ['planning-light.png', '/sandbox/simulation/'],
+    ['planning-light.png', '/planning/'],
 ];
 
 const screenshotOptions = {
     animations: 'disabled',
     caret: 'hide',
-    clip: { x: 80, y: 0, width: 1440, height: 1000 },
 };
 
 async function settle(page) {
@@ -77,7 +76,8 @@ async function login(page, profile) {
 
 async function captureProfile(browser, profile) {
     const context = await browser.newContext({
-        viewport: { width: 1600, height: 1000 },
+        // Capture the full workspace, including its left-edge navigation.
+        viewport: { width: 1440, height: 1000 },
         deviceScaleFactor: 1,
         locale: profile.locale,
         colorScheme: 'light',
@@ -97,17 +97,13 @@ async function captureProfile(browser, profile) {
 
     for (const [filename, route] of screens) {
         await page.goto(`${baseURL}${route}`);
-        if (route === '/sandbox/simulation/') {
-            await page.locator('#id_initial_balance').fill('10000');
-            await page.locator('#id_rate').fill('0.8');
-            await page.locator('#id_months').fill('12');
-            await page.locator('#id_contribution').fill('500');
-            await page.locator('#id_withdrawal').fill('0');
-            // Native Calculate remains authoritative; no draft or ledger is saved.
-            await page.locator('button[name="action"][value="calculate"]').click();
-            // Monthly rows stay inside a closed disclosure; the result header
-            // confirms calculation without expanding the user's default view.
-            await page.locator('#simulation-result .panel-heading').waitFor();
+        if (route === '/banking/') {
+            // Demonstrate the real internal workspace, not an artificially
+            // expanded collection of every institution in the overview.
+            await page.locator('[data-bank-open]').filter({ hasText: 'Tuxedo Demo Bank' }).click();
+            await page.locator('.bank-workspace-panel').waitFor();
+        } else if (route === '/planning/') {
+            await page.locator('[data-monthly-available]').waitFor();
         }
         await settle(page);
         await page.screenshot({

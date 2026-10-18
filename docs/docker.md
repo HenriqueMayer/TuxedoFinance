@@ -33,12 +33,21 @@ docker compose --env-file .env.docker -f compose.yaml -f compose.build.yaml up -
 
 ## Install a released image without cloning
 
-Follow the [Docker quick start](../README.md#docker) for the current release's
-download links, image tag and complete startup commands. Download `compose.yaml`
-and `docker.env.example` into a new installation directory and run the quick-start
-commands there.
-For another supported release, use the exact `TUXEDO_IMAGE` from that release's
-example.
+For the current published **v0.10.0**, download
+[compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/docker.env.example)
+from the [release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.10.0)
+into a new installation directory. Open a terminal there, select and pull the
+image, then follow [one-time configuration and startup](#one-time-configuration-and-startup):
+
+```bash
+image=ghcr.io/henriquemayer/tuxedofinance:v0.10.0
+docker pull "$image"
+```
+
+No repository clone is needed. For another supported release, use its matching
+assets and the exact `TUXEDO_IMAGE` from its example. These commands install a
+published release; unreleased checkout changes require a local source build.
 
 Images use explicit version tags; there is no supported `latest` alias. Keep
 the directory name stable because Compose uses it to identify the data volume.

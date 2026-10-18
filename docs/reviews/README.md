@@ -22,6 +22,7 @@ and [interface map](../interface-map.md) for present behavior.
 | [Python responsibility organization — 2026-10-18](python-organization-2026-10-18.md) | App-owned test packages, focused form/view modules, stable public imports, unchanged financial services/schema and isolated validation. |
 | [Frontend and documentation organization — 2026-10-18](frontend-organization-2026-10-18.md) | Ordered CSS source modules, owning form-script partials, canonical frontend guides with legacy anchors and automated local documentation checks. |
 | [Organization closeout — 2026-10-18](organization-closeout-2026-10-18.md) | CI dependency ordering, canonical ordinary/payment choice contracts and integrated browser-suite validation. |
+| [README and preview refresh — 2026-10-18](readme-preview-2026-10-18.md) | Concise bilingual entry points, editorial static tour, isolated current-workspace captures and presentation validation. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

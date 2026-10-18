@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="260" viewBox="0 0 1240 260" role="img" aria-labelledby="title description">
+  <title id="title">Tuxedo Finance</title>
+  <desc id="description">The Tuxedo Finance wordmark and its ledger-paper bow tie in forest green and caramel.</desc>
+  <style>
+    .ground{fill:#EBE7DE}.ink{fill:#1A2E26}.rule{stroke:#1A2E26;opacity:.16}
+    @media(prefers-color-scheme:dark){.ground{fill:#1B1B1B}.ink{fill:#FAF8F3}.rule{stroke:#FAF8F3}}
+  </style>
+  <defs>
+    <clipPath id="left"><path d="M37 60Q22 47 24 76L24 365Q24 392 47 378L259 277V168Z"/></clipPath>
+    <clipPath id="right"><path d="M532 60Q554 48 553 76V365Q553 392 530 378L318 277V168Z"/></clipPath>
+  </defs>
+  <rect class="ground" width="1240" height="260" rx="16"/>
+  <path class="rule" d="M56 216H1184" fill="none"/>
+  <text class="ink" x="56" y="139" font-family="Inter,ui-sans-serif,system-ui,-apple-system,sans-serif" font-size="64" font-weight="600" letter-spacing="-3">Tuxedo Finance</text>
+  <path d="M57 158Q215 150 374 157" fill="none" stroke="#B88A59" stroke-width="2" stroke-linecap="round"/>
+  <g transform="translate(846 5) scale(.49) rotate(-8 290 220)">
+    <path class="ink" d="M37 60Q22 47 24 76L24 365Q24 392 47 378L259 277V168Z"/>
+    <g clip-path="url(#left)" fill="none" stroke="#B88A59" opacity=".7">
+      <path d="M5 132h270M5 160h270M5 188h270M5 216h270M5 244h270M5 272h270M5 300h270M5 328h270M82 0v440M194 0v440"/>
+    </g>
+    <path fill="#B88A59" d="M532 60Q554 48 553 76V365Q553 392 530 378L318 277V168Z"/>
+    <g clip-path="url(#right)" fill="none" stroke="#1A2E26" stroke-width="1.2" opacity=".6">
+      <ellipse cx="530" cy="218" rx="188" ry="202"/><ellipse cx="530" cy="218" rx="160" ry="174"/><ellipse cx="530" cy="218" rx="132" ry="146"/><ellipse cx="530" cy="218" rx="104" ry="118"/><ellipse cx="530" cy="218" rx="76" ry="90"/>
+    </g>
+    <rect x="264" y="171" width="48" height="104" rx="18" fill="#B88A59"/>
+    <path d="M288 192v62" stroke="#1A2E26" stroke-width="1.5"/>
+  </g>
+</svg>

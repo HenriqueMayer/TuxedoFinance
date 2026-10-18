@@ -69,7 +69,7 @@ async function expectInternalLinks(page) {
 test('English and Portuguese tours use localized pages and image sets', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Meet your finances');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('A look inside');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await expectScreenshots(page, 'en');
     await expectInternalLinks(page);
@@ -77,7 +77,7 @@ test('English and Portuguese tours use localized pages and image sets', async ({
     await page.getByRole('link', { name: 'PT', exact: true }).click();
     await expect(page).toHaveURL(/\/pt-br\/index\.html$/);
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Conheça suas finanças');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Por dentro do');
     await expectScreenshots(page, 'pt-br');
     await expectInternalLinks(page);
 
@@ -94,12 +94,12 @@ test('local HTML files support language navigation without JavaScript', async ({
         await page.goto(englishURL);
         await page.getByRole('link', { name: 'PT', exact: true }).click();
         await expect(page).toHaveURL(portugueseURL);
-        await expect(page.getByRole('heading', { level: 1 })).toContainText('Conheça suas finanças');
+        await expect(page.getByRole('heading', { level: 1 })).toContainText('Por dentro do');
         await page.getByRole('link', { name: 'PT', exact: true }).click();
         await expect(page).toHaveURL(portugueseURL);
         await page.getByRole('link', { name: 'EN', exact: true }).click();
         await expect(page).toHaveURL(englishURL);
-        await expect(page.getByRole('heading', { level: 1 })).toContainText('Meet your finances');
+        await expect(page.getByRole('heading', { level: 1 })).toContainText('A look inside');
     } finally {
         await context.close();
     }
@@ -161,6 +161,43 @@ test('mobile tour remains readable without horizontal overflow', async ({ page }
     }
     await expectScreenshots(page, 'pt-br');
 });
+
+for (const [language, url] of [['en', '/'], ['pt-br', '/pt-br/']]) {
+    for (const width of [1440, 390]) {
+        for (const theme of ['light', 'dark']) {
+            test(`editorial tour keeps keyboard actions and viewport bounds (${language}, ${width}, ${theme})`, async ({ page }, testInfo) => {
+                await page.setViewportSize({ width, height: 900 });
+                await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
+                await page.goto(url);
+                await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+                expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+                await page.screenshot({ path: testInfo.outputPath('editorial-tour.png') });
+
+                // Real keyboard travel keeps the primary tour action and its
+                // external destinations distinct, then restores lightbox focus.
+                const actions = page.locator('.hero-actions a');
+                await actions.nth(0).focus();
+                await page.keyboard.press('Tab');
+                await expect(actions.nth(1)).toBeFocused();
+                await page.keyboard.press('Tab');
+                await expect(actions.nth(2)).toBeFocused();
+                const bounds = await actions.nth(2).boundingBox();
+                expect(bounds.x).toBeGreaterThanOrEqual(0);
+                expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+                expect(bounds.height).toBeGreaterThanOrEqual(44);
+
+                const screenshot = page.locator('[data-lightbox]').first();
+                await screenshot.focus();
+                await page.keyboard.press('Enter');
+                await expect(page.locator('#image-dialog')).toBeVisible();
+                await expect(page.locator('[data-dialog-close]')).toBeFocused();
+                await page.keyboard.press('Escape');
+                await expect(page.locator('#image-dialog')).toBeHidden();
+                await expect(screenshot).toBeFocused();
+            });
+        }
+    }
+}
 
 
 test('embedded tours open repository links outside their sandbox without leaving the preview', async ({ page }) => {

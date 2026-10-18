@@ -23,21 +23,24 @@
             document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         })();
     </script>
-    <link rel="stylesheet" href="../assets/preview.css?v=3">
+    <link rel="stylesheet" href="../assets/preview.css?v=4">
     <script src="../assets/preview.js" defer></script>
 </head>
 <body>
     <a class="skip-link" href="#main">Ir para o tour</a>
     <header class="site-header">
         <div class="header-inner">
-            <a class="wordmark" href="#top" aria-label="Prévia do Tuxedo Finance">Tuxedo<span>Finance</span></a>
+            <a class="wordmark" href="#top" aria-label="Prévia do Tuxedo Finance">
+                <svg class="brand-bowtie" viewBox="0 0 40 24" width="32" height="24" aria-hidden="true" focusable="false"><path d="M2 3 17 10V14L2 21ZM38 3 23 10V14L38 21Z" fill="currentColor"/><rect x="17" y="8" width="6" height="8" rx="2" fill="currentColor"/></svg>
+                <span>Tuxedo Finance</span>
+            </a>
             <nav class="tour-nav" aria-label="Seções da prévia">
-                <a href="#dashboard">Dashboard</a>
+                <a href="#dashboard">Início</a>
                 <a href="#reports">Relatórios</a>
                 <a href="#transactions">Transações</a>
-                <a href="#banking">Bancos</a>
+                <a href="#banking">Contas</a>
                 <a href="#investments">Investimentos</a>
-                <a href="#planning">Planejamento</a>
+                <a href="#planning">Planejar</a>
             </nav>
             <div class="header-actions">
                 <div class="language-switch" aria-label="Idioma">
@@ -56,103 +59,104 @@
         <section class="hero" id="top">
             <div>
                 <p class="eyebrow">Prévia da interface</p>
-                <h1>Conheça suas finanças além da planilha.</h1>
-                <p class="hero-copy">Explore a interface real do Tuxedo Finance antes de instalar. Este tour apresenta fluxo de caixa, relatórios, transações cotidianas, bancos, investimentos e planejamento.</p>
+                <h1>Por dentro do<br><span>Tuxedo Finance.</span></h1>
+                <p class="hero-copy">Conheça a aplicação atual, das transações diárias ao planejamento do mês. Disponível localmente em português e inglês.</p>
                 <div class="hero-actions">
                     <a class="button button-primary" href="#dashboard">Iniciar o tour</a>
                     <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">Ver repositório</a>
-                    <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance#-quick-start" target="_blank" rel="noopener noreferrer">Executar localmente</a>
+                    <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance/blob/main/README.pt-BR.md#instala%C3%A7%C3%A3o" target="_blank" rel="noopener noreferrer">Executar localmente</a>
                 </div>
             </div>
             <aside class="notice" aria-label="Sobre esta prévia">
-                <span class="notice-title">Tour estático e seguro</span>
-                <p>Todos os valores, instituições e contas exibidos são sintéticos. Não há login, backend ou banco de dados, e nada que você fizer nesta página será salvo.</p>
+                <span class="notice-title">Dados sintéticos</span>
+                <p>Contas e valores fictícios, capturados em uma instalação isolada. Este tour dispensa login e não salva registros financeiros.</p>
+                <p class="notice-meta">Português / English<br>Claro / Escuro</p>
             </aside>
         </section>
 
         <section class="tour-section" id="dashboard">
             <div class="section-heading">
-                <div><span class="section-number">01 / Dashboard</span><h2>Atividade mensal e contas atuais.</h2></div>
-                <p class="section-copy">O mês selecionado separa a atividade registrada do que está planejado, mantendo receitas, despesas, aportes e resgates distintos. Os saldos atuais das contas e as próximas faturas permanecem independentes do mês selecionado.</p>
+                <div><span class="section-number">01 / Início</span><h2>O mês em uma visão.</h2></div>
+                <p class="section-copy">Receitas, despesas e movimentações de investimentos do mês, junto aos saldos atuais e às faturas em aberto.</p>
             </div>
             <div class="screenshot-grid">
                 <figure>
                     <a class="screenshot-link" href="../images/pt-br/dashboard-light.png" data-lightbox>
-                        <img src="../images/pt-br/dashboard-light.png" width="1440" height="1000" alt="Dashboard do Tuxedo Finance no tema claro com recursos disponíveis para planejamento, receitas, despesas e movimentações de investimentos do mês" fetchpriority="high" decoding="async">
+                        <img src="../images/pt-br/dashboard-light.png" width="1440" height="1000" alt="Início do Tuxedo Finance no tema claro com receitas, despesas, movimentações de investimentos e recursos disponíveis" fetchpriority="high" decoding="async">
                     </a>
-                    <figcaption>Tema claro — atividade mensal, valores planejados e contas atuais.</figcaption>
+                    <figcaption>Tema claro — atividade registrada, previsões e contas atuais.</figcaption>
                 </figure>
                 <figure>
                     <a class="screenshot-link" href="../images/pt-br/dashboard-dark.png" data-lightbox>
-                        <img src="../images/pt-br/dashboard-dark.png" width="1440" height="1000" alt="Dashboard do Tuxedo Finance mostrando o mesmo resumo financeiro sintético no tema escuro" loading="lazy" decoding="async">
+                        <img src="../images/pt-br/dashboard-dark.png" width="1440" height="1000" alt="Início do Tuxedo Finance mostrando o mesmo resumo financeiro sintético no tema escuro" loading="lazy" decoding="async">
                     </a>
-                    <figcaption>Tema escuro — superfícies em preto e grafite com cores financeiras distintas.</figcaption>
+                    <figcaption>Tema escuro — os mesmos registros e significados financeiros.</figcaption>
                 </figure>
             </div>
         </section>
 
         <section class="tour-section" id="reports">
             <div class="section-heading">
-                <div><span class="section-number">02 / Relatórios</span><h2>Padrões sempre ligados aos números.</h2></div>
-                <p class="section-copy">Gráficos renderizados no servidor comparam evolução do saldo, fluxo de caixa, instrumentos, categorias, parcelas e despesas recorrentes sem esconder os valores de origem.</p>
+                <div><span class="section-number">02 / Relatórios</span><h2>Relatórios dentro de Início.</h2></div>
+                <p class="section-copy">Consulte o histórico de saldo, o fluxo de caixa e a composição das despesas por período, categoria e instrumento de pagamento.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="../images/pt-br/reports-light.png" data-lightbox>
                     <img src="../images/pt-br/reports-light.png" width="1440" height="1000" alt="Página de relatórios do Tuxedo Finance com valores resumidos e gráfico de evolução do saldo baseados em dados sintéticos" loading="lazy" decoding="async">
                 </a>
-                <figcaption>Os relatórios permanecem responsivos, acessíveis por teclado e organizados por perguntas financeiras relevantes.</figcaption>
+                <figcaption>Os controles de período e os detalhes dos gráficos mantêm os valores de origem em contexto.</figcaption>
             </figure>
         </section>
 
         <section class="tour-section" id="transactions">
             <div class="section-heading">
-                <div><span class="section-number">03 / Transações</span><h2>Cada evento classificado e pesquisável.</h2></div>
-                <p class="section-copy">Receitas e despesas preservam categoria, instrumento de pagamento, recorrência, parcelamento, data da transação e mês de cobrança.</p>
+                <div><span class="section-number">03 / Transações</span><h2>Transações do dia a dia.</h2></div>
+                <p class="section-copy">Registre receitas e despesas com categorias, contas ou cartões, parcelas e recorrência.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="../images/pt-br/transactions-light.png" data-lightbox>
                     <img src="../images/pt-br/transactions-light.png" width="1440" height="1000" alt="Lista de transações com filtros e receitas, despesas fixas, parcelas no cartão e pagamentos PIX sintéticos" loading="lazy" decoding="async">
                 </a>
-                <figcaption>Tipos de transação com contagens, atalhos de recorrência, categorias contextuais e filtros de datas complementam a pesquisa, a ordenação e a exportação CSV.</figcaption>
+                <figcaption>Uma busca por texto, filtros compactos e ações contextuais para cada registro.</figcaption>
             </figure>
         </section>
 
         <section class="tour-section" id="banking">
             <div class="section-heading">
-                <div><span class="section-number">04 / Bancos</span><h2>Contas, cartões e moedas em contexto.</h2></div>
-                <p class="section-copy">Veja o valor disponível para o mês entre contas e caixa remunerado. Reserve parte de uma conta ou exclua seu saldo positivo do planejamento, mantendo o saldo real visível.</p>
+                <div><span class="section-number">04 / Contas</span><h2>Contas e cartões.</h2></div>
+                <p class="section-copy">Abra um banco para gerenciar suas contas e cartões. Faturas, transferências, câmbio e fidelidade permanecem no mesmo espaço.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="../images/pt-br/banking-light.png" data-lightbox>
-                    <img src="../images/pt-br/banking-light.png" width="1440" height="1000" alt="Visão de bancos com caixa disponível sintético, conta BRL com reserva parcial, conta USD excluída e cofrinho do mês" loading="lazy" decoding="async">
+                    <img src="../images/pt-br/banking-light.png" width="1440" height="1000" alt="Área de Contas com um banco sintético aberto, suas contas e cartões e os saldos disponíveis para planejamento" loading="lazy" decoding="async">
                 </a>
-                <figcaption>Este exemplo reserva BRL 2.000 e exclui a conta USD. As contas a pagar continuam no plano, e o cofrinho do mês inclui apenas rendimentos registrados.</figcaption>
+                <figcaption>O banco se expande na própria página; o resumo dos saldos separa os valores reservados dos disponíveis.</figcaption>
             </figure>
         </section>
 
         <section class="tour-section" id="investments">
             <div class="section-heading">
-                <div><span class="section-number">05 / Investimentos</span><h2>Investimentos e caixa do mês têm papéis diferentes.</h2></div>
-                <p class="section-copy">Separe as posições da carteira do caixa remunerado reservado para pagar o mês. Aportes, retiradas e rendimentos reais preservam histórico, quantidades, taxas e contas de origem e destino.</p>
+                <div><span class="section-number">05 / Investimentos</span><h2>Posições e operações.</h2></div>
+                <p class="section-copy">Acompanhe posições, aportes, retiradas e rendimentos registrados. Mantenha os investimentos separados do caixa para as contas do mês.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="../images/pt-br/investments-light.png" data-lightbox>
                     <img src="../images/pt-br/investments-light.png" width="1440" height="1000" alt="Área de investimentos com posição em ações sintética, totais da carteira e acesso separado ao caixa remunerado" loading="lazy" decoding="async">
                 </a>
-                <figcaption>Os totais descrevem aquisições e fluxos de valor registrados, não cotações de mercado em tempo real.</figcaption>
+                <figcaption>Valores e operações registrados; os preços de mercado são informados manualmente.</figcaption>
             </figure>
         </section>
 
         <section class="tour-section" id="planning">
             <div class="section-heading">
-                <div><span class="section-number">06 / Planejamento</span><h2>Experimente um cenário antes de realizá-lo.</h2></div>
-                <p class="section-copy">Estime o orçamento mensal com parcelas futuras e despesas recorrentes ou simule a evolução do saldo com aportes, retiradas e uma taxa efetiva. Salve rascunhos com nome, reabra e compare cenários sem alterar os registros financeiros.</p>
+                <div><span class="section-number">06 / Planejar</span><h2>Planeje o mês.</h2></div>
+                <p class="section-copy">Consulte a disponibilidade após os compromissos conhecidos e defina orçamentos por categoria. Metas e ferramentas de simulação têm suas próprias abas.</p>
             </div>
             <figure>
                 <a class="screenshot-link" href="../images/pt-br/planning-light.png" data-lightbox>
-                    <img src="../images/pt-br/planning-light.png" width="1440" height="1000" alt="Simulador de rendimento do Planejamento com saldo inicial de BRL 10.000, aportes mensais de BRL 500 e taxa mensal hipotética de 0,8 por cento" loading="lazy" decoding="async">
+                    <img src="../images/pt-br/planning-light.png" width="1440" height="1000" alt="Área Planejar com disponibilidade prevista após os compromissos conhecidos, valores reservados e orçamentos por categoria com registros sintéticos" loading="lazy" decoding="async">
                 </a>
-                <figcaption>O simulador recalcula conforme você edita. Aportes e retiradas ocorrem no fim do mês, com ajustes por mês para testar diferentes cenários.</figcaption>
+                <figcaption>Os limites por categoria comparam o gasto registrado com o orçamento; os valores reservados permanecem separados.</figcaption>
             </figure>
         </section>
     </main>
@@ -166,8 +170,8 @@
 
     <footer class="site-footer">
         <div class="footer-inner">
-            <p>Tuxedo Finance — finanças pessoais simplificadas.</p>
-            <p>Prévia estática · Dados sintéticos · Nada é salvo</p>
+            <p>Tuxedo Finance</p>
+            <p>Tour estático · Registros financeiros sintéticos</p>
         </div>
     </footer>
 </body>

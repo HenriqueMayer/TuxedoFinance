@@ -18,17 +18,37 @@ The files that GitHub Pages publishes remain in `preview/`. Preview browser
 assertions remain in `tests/preview/`, and `.github/workflows/pages.yml`
 publishes only `preview/` after changes reach `main`.
 
-The tour preserves its section layout and light palette. Its dark theme matches
+The tour uses the application's editorial language: short factual copy, the
+Paper Layers bow-tie identity, subtle ledger dividers and balanced actions.
+Its six public section anchors and fourteen screenshot paths remain stable.
+Its dark theme matches
 the application's `night` tokens in `assets/tailwind.config.js`: background `#101010`,
 surface `#1B1B1B`, raised/hover surface `#262626`, and muted text `#B8B8B8`.
 Caramel actions and the financial colors in application screenshots retain
 their meanings. Keep both language editions and their captions in sync with the
 current dashboard and transaction navigation when refreshing captures.
 The synthetic profiles also demonstrate a BRL 2,000 account reserve, an excluded
-USD account, and a monthly cash pot. The Planning capture calculates a hypothetical
-yield scenario without saving a draft or creating financial operations.
-The capture waits for the calculated result header and leaves the optional
-Monthly breakdown disclosure closed, matching the normal initial view.
+USD account, a monthly cash pot, card appearance and explicit category budgets.
+The Accounts capture deliberately opens one synthetic institution's internal
+workspace. The Plan capture shows the current monthly availability and category
+limits at `/planning/`; simulations remain a secondary tool. The captured budget
+limits do not reserve balances or generate financial operations.
+
+Captures use the complete 1440 × 1000 viewport, starting at its left edge, so the
+shared sidebar remains visible. Do not reintroduce the old centered crop from
+the earlier top-navigation layout. All screenshots come from the checked-out
+application, including unreleased changes. Local regeneration does not publish
+the tour or change the application version.
+
+Both root READMEs reuse the generated Home images, with a dark-image alternative
+for dark-mode readers. Their shared native SVG cover lives in
+`docs/assets/readme-cover.svg`; its bow-tie geometry follows the public homepage.
+The prominent preview action uses `docs/assets/preview-link.svg`, with a native
+link and localized accessible text in each README.
+Keep equivalent English/Portuguese content and the published-release versus
+current-checkout distinction. The READMEs include a copyable published-image
+Docker quick start; detailed configuration, updates and backup procedures belong
+to the Docker and operations guides. Retain earlier README anchors as aliases.
 
 ## Commands
 
@@ -75,3 +95,5 @@ existing server and check an execution-specific readiness endpoint. Their
 artifacts stay in `.local/test-results/preview/` and the CI HTML report in
 `.local/playwright-report/preview/`. Running tests does not regenerate screenshots;
 only the explicit `preview:capture` command replaces the staged public images.
+Review desktop and phone renders in both languages/themes, including real
+keyboard travel between actions and lightbox focus restoration.

@@ -34,6 +34,7 @@ from banking.services import create_transfer
 from categories.models import Category
 from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import refresh_fx_snapshot, sync_investment_ledger
+from planning.models import CategoryBudget
 from transactions.models import Transaction
 from transactions.services import sync_user_ledger
 
@@ -193,14 +194,15 @@ def seed_profile(language: str, password: str) -> None:
         travel_category = make_category(user, labels['travel'], Category.TransactionType.EXPENSE)
         technology_category = make_category(user, labels['technology'], Category.TransactionType.EXPENSE)
 
-        primary_bank = Bank.objects.create(user=user, name='Tuxedo Demo Bank')
-        global_bank = Bank.objects.create(user=user, name='Northstar Demo Bank')
+        primary_bank = Bank.objects.create(user=user, name='Tuxedo Demo Bank', color='#B88A59')
+        global_bank = Bank.objects.create(user=user, name='Northstar Demo Bank', color='#597E93')
         checking = BankAccount.objects.create(
             user=user,
             bank=primary_bank,
             name=labels['checking'],
             currency='BRL',
             opening_balance=Decimal('4800.00'),
+            opening_date=add_months(today, -12, 1),
             reserved_amount=Decimal('2000.00'),
         )
         savings = BankAccount.objects.create(
@@ -209,6 +211,7 @@ def seed_profile(language: str, password: str) -> None:
             name=labels['savings'],
             currency='BRL',
             opening_balance=Decimal('12000.00'),
+            opening_date=add_months(today, -12, 1),
         )
         global_account = BankAccount.objects.create(
             user=user,
@@ -216,12 +219,14 @@ def seed_profile(language: str, password: str) -> None:
             name=labels['global'],
             currency='USD',
             opening_balance=Decimal('1500.00'),
+            opening_date=add_months(today, -12, 1),
             planning_enabled=False,
         )
         debit = DebitCard.objects.create(
             user=user,
             account=checking,
             name=labels['debit'],
+            color='#1A2E26',
         )
         credit = CreditCard.objects.create(
             user=user,
@@ -229,6 +234,9 @@ def seed_profile(language: str, password: str) -> None:
             name=labels['credit'],
             closing_day=28,
             due_day=5,
+            color='#584079',
+            gradient_end='#213D35',
+            gradient_angle=135,
         )
 
         for offset, rate in zip(range(-12, 1), (
@@ -387,6 +395,20 @@ def seed_profile(language: str, password: str) -> None:
             amount=Decimal('95.00'), date=add_months(today, 0, 20),
             reason=labels['yield_reason'],
         )
+
+        # These explicit synthetic limits make the current Plan workspace
+        # inspectable; they neither reserve balances nor create cash movements.
+        for category, limit in (
+            (housing_category, '2500.00'),
+            (grocery_category, '800.00'),
+            (subscription_category, '150.00'),
+        ):
+            budget = CategoryBudget(
+                user=user, category=category, month=today.replace(day=1),
+                currency='BRL', amount=Decimal(limit),
+            )
+            budget.full_clean()
+            budget.save()
 
         sync_user_ledger(user)
 

@@ -1,63 +1,69 @@
-[English](README.md) | [Português (Brasil)](README.pt-BR.md)
+[English](README.md) · [Português (Brasil)](README.pt-BR.md)
+
+<h1><img src="docs/assets/readme-cover.svg" alt="Tuxedo Finance" width="1240"></h1>
+
+<a id="-controle-dos-dados"></a>
+
+**Suas finanças de forma clara.**
+
+Uma aplicação local para receitas, despesas, contas, cartões, investimentos e
+planejamento mensal. Seus registros ficam no seu próprio banco SQLite. Interface
+em português do Brasil e inglês, com temas claro e escuro.
+
+<a id="prévia-da-interface"></a>
 
 <p align="center">
-  <img src="static/brand/tuxedo-mark-256.png" width="144" alt="Logo do Tuxedo Finance">
+  <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/"><img src="docs/assets/preview-link.svg" width="320" height="64" alt="Abrir o preview da interface do Tuxedo Finance"></a>
 </p>
 
-<h1 align="center">Tuxedo Finance</h1>
-
-<p align="center">
-  <strong>Finanças pessoais, simplificadas.</strong><br>
-  Uma aplicação de operação local para fluxo de caixa, despesas recorrentes,
-  faturas de cartão, investimentos e planejamento mensal.
+<p>
+  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=flat&amp;label=CI&amp;labelColor=1A2E26&amp;color=176B52" alt="Status da integração contínua"></a>
+  <img src="https://img.shields.io/badge/version-0.10.0-B88A59?style=flat&amp;labelColor=1A2E26" alt="Versão 0.10.0">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-B88A59?style=flat&amp;labelColor=1A2E26" alt="Licença PolyForm Noncommercial"></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="Status da integração contínua"></a>
-  <img src="https://img.shields.io/badge/version-0.10.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Versão 0.10.0">
-  <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
-  <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
-  <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Interface em inglês e português do Brasil">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-7C5C13?style=for-the-badge&amp;labelColor=101E18" alt="Licença PolyForm Noncommercial"></a>
-</p>
+[Instalação](#instalação) · [Documentação](docs/README.md) · [Alterações](CHANGELOG.md)
 
-O Tuxedo Finance organiza as finanças pessoais em registros categorizados.
-É desenvolvido com Django para operação local simples, com interface em inglês
-e português do Brasil. Cada instalação mantém seus registros financeiros em
-um banco SQLite sob controle do responsável pela instalação.
+<a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="preview/images/pt-br/dashboard-dark.png">
+    <img src="preview/images/pt-br/dashboard-light.png" width="1440" height="1000" alt="Início do Tuxedo Finance com navegação lateral, saldos mensais e gráficos financeiros usando dados fictícios">
+  </picture>
+</a>
 
-## Prévia da interface
+<a id="código-em-desenvolvimento"></a>
 
-<table>
-  <tr>
-    <td width="96" align="center">
-      <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/">
-        <img src="static/brand/tuxedo-mark-256.png" width="72" alt="Abrir a prévia da interface do Tuxedo Finance">
-      </a>
-    </td>
-    <td>
-      <strong>Conheça o Tuxedo Finance antes de instalar.</strong><br>
-      Explore a apresentação bilíngue de Visão geral, Relatórios, Movimentações,
-      Bancos, Investimentos e Planejamento, com a Visão geral nos temas claro e escuro.<br><br>
-      <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/"><strong>Abrir a prévia da interface →</strong></a>
-    </td>
-  </tr>
-</table>
+O [tour local](preview/pt-br/index.html) e as imagens deste checkout usam dados
+fictícios. A apresentação é estática: sem login, backend público ou gravação de
+registros financeiros. Esta branch contém alterações ainda não publicadas; o
+tour publicado e a imagem **v0.10.0** podem ser diferentes. Consulte o
+[roteiro de teste da branch](docs/branch-testing.md) e o [changelog](CHANGELOG.md#unreleased).
 
-> A prévia utiliza dados fictícios e funciona como uma apresentação estática.
-> Não há login, backend público ou persistência, e nenhum dado é salvo.
+<a id="-funcionalidades"></a>
 
+## Cinco áreas
 
-## 🚀 Instalação inicial
+| Área | O que você pode fazer |
+|---|---|
+| **Início** | Conferir saldos, compromissos próximos e relatórios financeiros. |
+| **Transações** | Registrar receitas e despesas, dividir categorias, gerenciar recorrências e parcelas, exportar CSV. |
+| **Contas** | Organizar contas bancárias, PIX, cartões, faturas, transferências e fidelidade. |
+| **Investimentos** | Acompanhar posições, movimentações, cofrinhos e preços datados. |
+| **Planejar** | Definir limites por categoria, reservar saldos existentes para metas e comparar simulações. |
+
+<a id="-instalação-inicial"></a>
+
+## Instalação
 
 ### Docker
 
-Requer Docker Engine 28+ (ou Docker Desktop atualizado) e Compose v2+.
+Requer Docker Engine 28+ (ou Docker Desktop atualizado), Compose v2+ e um
+shell POSIX (WSL no Windows). Não é necessário clonar o repositório nem instalar
+Python ou Node.js no computador.
 Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/compose.yaml)
 e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/docker.env.example)
-da [release v0.10.0](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.10.0)
-para uma nova pasta de instalação. Abra um terminal nessa pasta e execute os comandos.
-Não é necessário clonar o repositório nem instalar Python, uv ou Node.js no computador:
+da release **v0.10.0** para uma nova pasta de instalação. Abra um terminal
+nessa pasta e execute:
 
 ```bash
 image=ghcr.io/henriquemayer/tuxedofinance:v0.10.0
@@ -71,19 +77,17 @@ docker pull "$image"
 docker compose --env-file .env.docker up -d --wait
 ```
 
-Abra o [Tuxedo Finance](http://127.0.0.1:8000/). O Docker mantém o SQLite em um
-volume nomeado e usa uma chave de assinatura persistente. O comando de
-configuração recusa substituir um `.env.docker` existente. Preserve o nome da
-pasta e a configuração nas atualizações. Consulte o [guia de Docker](docs/docker.md),
-em inglês, para compilar a imagem a partir do código, configurar e fazer backup/restauração.
-Para uma instalação Docker existente, siga o [procedimento de atualização](docs/docker.md#update):
-faça o backup, selecione a nova versão da imagem, baixe-a e recrie o serviço
-preservando a mesma chave e o volume.
+Abra [127.0.0.1:8000](http://127.0.0.1:8000/). A configuração preserva um
+`.env.docker` existente; mantenha sua chave de assinatura, a pasta de instalação
+e o volume de dados nas atualizações. Consulte o [guia de Docker](docs/docker.md)
+para configuração, atualizações e backups. Esses comandos instalam a release
+publicada; alterações do checkout exigem uma
+[compilação local da imagem](docs/docker.md#build-from-a-checkout).
 
-### Python e uv
+<a id="python-e-uv"></a>
 
-Requer Python 3.12 e [uv](https://docs.astral.sh/uv/getting-started/installation/).
-Execute estes comandos para uma nova instalação:
+**Python 3.12 + [uv](https://docs.astral.sh/uv/getting-started/installation/):**
+para uma nova instalação a partir do código:
 
 ```bash
 git clone https://github.com/HenriqueMayer/TuxedoFinance.git
@@ -94,176 +98,28 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Abra [a aplicação local](http://127.0.0.1:8000/), crie seu usuário e cadastre
-um banco e uma conta antes de registrar a primeira transação.
-O Node.js é necessário apenas para as ferramentas de desenvolvimento; a
-aplicação utiliza os arquivos de frontend já compilados no repositório.
+Abra [127.0.0.1:8000](http://127.0.0.1:8000/), crie um usuário e adicione um banco
+e uma conta bancária. Node.js é necessário apenas nas ferramentas de desenvolvimento.
+Antes de atualizar uma instalação existente, siga o
+[procedimento de backup e migração](docs/operations.md#updating-a-native-installation).
+Preserve o banco de dados e a chave de assinatura.
 
-O assistente cria `.env` com permissões exclusivas do proprietário e preserva
-qualquer arquivo e chave existentes. Os comandos nativos de migração e servidor criam novos arquivos
-do banco com permissões exclusivas do proprietário. `.env` e `db.sqlite3` são
-ignorados pelo Git.
-Consulte o [guia de operações](docs/operations.md) para backup e restauração.
-Após atualizar o código, siga o [procedimento de atualização local](docs/operations.md#updating-a-native-installation).
-Preserve a chave e o banco de dados da instalação; faça backup do banco em uso
-antes de aplicar novas migrações. Reinicie com:
+<a id="dados-de-demonstração-opcionais"></a><a id="-configuração"></a><a id="-desenvolvimento"></a><a id="-documentação"></a><a id="-contribuição"></a>
 
-```bash
-uv run python manage.py migrate
-uv run python manage.py runserver
-```
+## Guias
 
-### Dados de demonstração opcionais
+[Configuração e operação](docs/operations.md) · [Dados de demonstração](docs/demo-data.md) ·
+[Design system](docs/design-system.html) · [Como contribuir](CONTRIBUTING.md) ·
+[Roadmap](docs/roadmap.md) · [Segurança](SECURITY.md)
 
-Para apresentações, o código-fonte atual pode criar contas separadas em inglês e
-português com atividades financeiras fictícias ao longo de vários meses:
+<a id="-tecnologia"></a>
 
-```bash
-uv run python manage.py insert_demo pt
-uv run python manage.py insert_demo en
-```
+Desenvolvido com **Django, SQLite, HTMX e assets servidos localmente**.
+O [índice da documentação](docs/README.md) reúne os detalhes técnicos e financeiros,
+em inglês. A importação de extratos e a interface de patrimônio continuam pausadas.
 
-Cada comando exibe uma senha gerada aleatoriamente para `demo_pt` ou `demo_en`.
-A execução é opcional, recusa um nome de usuário existente e não copia nem
-altera registros pessoais. Consulte o [guia de dados de demonstração](docs/demo-data.md),
-em inglês, para opções de data, seleção de idioma e um roteiro de apresentação.
-O comando está disponível a partir da `v0.9.0`.
+---
 
-## ✨ Funcionalidades
+<a id="-licença"></a>
 
-Estes recursos estão incluídos na [v0.10.0](CHANGELOG.md#0100---2026-10-09).
-Esta versão esclarece as conversões de moeda atuais e históricas de investimentos,
-adiciona o arquivamento reversível de ativos e amplia os filtros e o acesso às operações.
-Instalações Docker existentes precisam selecionar a nova imagem e seguir o
-[procedimento de atualização](docs/docker.md#update) para recebê-los.
-
-| Área | Recursos |
-|---|---|
-| 📊 **Dashboard** | Saldo atual, receitas e despesas mensais, investimentos, faturas abertas e saldo projetado para o fim do mês. |
-| 🧾 **Transações** | Receitas e despesas, categorias, formas de pagamento, recorrências fixas, parcelas, contagens por tipo, filtros por categoria/recorrência e CSV fiel ou preparado para planilhas. |
-| 🏦 **Bancos** | Contas por moeda, cartões, faturas, transferências e fidelidade, com exclusão de contas e reservas parciais para o planejamento mensal. |
-| 📈 **Relatórios** | Gráficos SVG responsivos renderizados no servidor, resumos acessíveis e atualizações progressivas com HTMX. |
-| 💼 **Investimentos** | Finalidades separadas de investimento e caixa mensal, aportes/resgates/rendimentos manuais, posições iniciais, preços unitários, exclusão ou arquivamento reversível de ativos, diagnóstico de câmbio por data, gráficos dedicados e filtros de operações por período, moeda e classe de ativo. |
-| 🧮 **Planejamento** | Planejamento mensal com salário líquido CLT, consulta às faixas tributárias, parâmetros de folha, previsão de despesas existente, despesas adicionais em R$ ou percentual do salário bruto e rascunhos salvos, além de simulações editáveis de aportes e rendimentos. |
-| 🌍 **Localização** | Inglês e português do Brasil, moeda de apresentação independente (BRL, USD, EUR, GBP, JPY, CHF) e preferência de formato de data. |
-| 🌗 **Interface** | Temas claro e escuro, navegação por teclado, campos condicionais, validação no servidor e formulários funcionais sem JavaScript. |
-
-> O **saldo atual** representa o dinheiro efetivo nas contas até hoje.
-> O **saldo projetado para o fim do mês** representa a previsão de fechamento.
-> Compras no cartão de crédito pertencem ao mês da fatura; o dinheiro sai da conta
-> na data de vencimento. A liquidação da fatura não é uma segunda despesa.
-
-### Código em desenvolvimento
-
-A branch `feat/personal-finance-evolution` adiciona os recursos abaixo para
-validação local. Eles ainda não estão na imagem publicada da v0.10.0 nem na
-prévia estática. Siga o [guia de testes da branch](docs/branch-testing.md), em
-inglês, para testar uma cópia descartável antes de migrar uma instalação existente.
-
-| Área | Novidades |
-|---|---|
-| Importação de extratos (pausada) | Upload, revisão, confirmação e desfazer estão indisponíveis; registros confirmados/desfeitos do usuário continuam em consulta somente leitura. O [guia do app](docs/apps/ingestion.md) descreve os serviços CSV/OFX preservados e o bloqueio da interface. |
-| Divisão por categorias | Distribuição de uma transação entre categorias com totais e centavos exatos nas parcelas; relatórios, orçamentos e exportações CSV preservam as divisões sem duplicar pagamentos. |
-| Faturas confirmadas | Opção por cartão para registrar pagamentos totais ou parciais a partir de uma conta real. Faturas automáticas anteriores mantêm seu comportamento; valores não pagos continuam visíveis como obrigações previstas. |
-| Orçamentos e metas | Limites mensais por categoria, cópia do mês anterior, gastos registrados e previsões conhecidas; metas com moeda/data e reservas respaldadas por saldos existentes em contas ou caixas monetários. Falta de saldo e limitações do câmbio de referência ficam visíveis. |
-| Sinais locais | Sugestões explicadas de duplicatas, aumentos de assinaturas, orçamento excedido e falta futura de caixa, com ações de ciência/descarte/reabertura que preservam os registros financeiros de origem. |
-| Avaliações e patrimônio | Cotações unitárias locais por data, custo médio ponderado remanescente, resultados realizados/não realizados, moeda explícita das taxas e cálculos de patrimônio líquido incluindo dívidas de cartão já contraídas; a interface de patrimônio está oculta para revisão. Histórico, datas de abertura, cotações e câmbio ausentes são sinalizados. |
-| Operação local | Fontes servidas localmente, reutilização do contexto de relatórios/conversões e sincronização incremental do razão, além de dados sintéticos de demonstração ampliados. |
-| Navegação diária | Cinco áreas compartilhadas, abas locais, filtros dinâmicos compactos, ações financeiras em contexto e retorno à origem dos formulários. O [mapa da interface](docs/interface-map.md) registra as telas e os componentes atuais; valores registrados, projeções e dados ausentes permanecem distintos. |
-
-A branch não adiciona conexão bancária ao vivo, feed externo de cotações ou
-serviço de IA na nuvem. Cotações e decisões de revisão permanecem no banco local;
-as avaliações históricas não inventam retorno percentual ajustado pelos fluxos.
-
-<details>
-<summary><strong>🎨 Linguagem visual</strong></summary>
-
-<br>
-
-A interface segue o design system do Tuxedo Finance: bases visuais discretas,
-tipografia de alto contraste, ações em caramelo e cores com significado financeiro.
-
-O tema escuro usa bases neutras em preto e grafite com as variantes semânticas
-mais claras documentadas no catálogo, preservando o contraste e o significado
-financeiro de cada cor. A página pública reúne links de acesso e uma gravata
-borboleta em camadas de papel que revela as cinco áreas da aplicação, seguida
-de sete descrições de funcionalidades. Há suporte a teclado, toque e movimento reduzido.
-
-O catálogo de componentes está em
-[`docs/design-system.html`](docs/design-system.html),
-com orientações de implementação em [`docs/frontend.md`](docs/frontend.md).
-
-</details>
-
-## 🧭 Tecnologia
-
-| Camada | Tecnologia |
-|---|---|
-| Backend | Python 3.12, Django 6.0 e autenticação nativa do Django |
-| Frontend | Templates Django, Tailwind CSS, JavaScript, HTMX e gráficos SVG inline |
-| Banco de dados | SQLite em modo WAL |
-| Dependências | uv e lockfile Python versionado; lockfile npm para ferramentas de desenvolvimento |
-
-## ⚙️ Configuração
-
-A configuração vem do `.env` ou das variáveis do processo, que têm prioridade.
-`SECRET_KEY` é obrigatória. `ALLOW_SIGNUPS=False` desativa novos cadastros e
-preserva o login. `TUXEDO_DATA_DIR` define um diretório alternativo para o banco
-de dados.
-
-Consulte a [referência de configuração](docs/operations.md#configuration) para
-conhecer as variáveis e seus valores padrão, e o
-[guia de arquitetura](docs/architecture.md) para as responsabilidades dos
-domínios e o fluxo de dados.
-
-## ✅ Desenvolvimento
-
-O [guia de contribuição](CONTRIBUTING.md) descreve os pré-requisitos, verificações,
-traduções, compilação do frontend e testes de navegador. Após instalar as
-dependências de desenvolvimento e o Chromium, execute:
-
-```bash
-npm run test:e2e
-docker build -t tuxedo-finance:local .
-npm run test:e2e -- --docker-image tuxedo-finance:local
-npm run test:preview
-```
-
-O comando de testes da aplicação cria um banco temporário e inicia seu próprio
-servidor local. Ao terminar, remove os dados de teste e encerra seus processos.
-A suíte da prévia verifica separadamente a apresentação estática versionada.
-
-## 📚 Documentação
-
-A documentação técnica é mantida em inglês.
-
-- [Índice da documentação](docs/README.md) — estrutura do repositório e referências dos apps
-- [Roteiro de validação](docs/branch-testing.md) — prévia descartável e avaliação no computador/celular
-- [Roadmap](docs/roadmap.md) e [arquivo de revisões](docs/reviews/README.md) — funcionalidades pausadas e evidências datadas
-- [Requisitos do produto](docs/product-requirements.md) — comportamento suportado e critérios de aceitação
-- [Modelo de dados](docs/data-model.md) — entidades, relacionamentos e regras financeiras
-- [Frontend](docs/frontend.md) e [design system](docs/design-system.html) — convenções da interface e catálogo de componentes
-- [Operações](docs/operations.md) — configuração, dependências, backup e restauração
-- [Histórico de alterações](CHANGELOG.md) e [processo de release](docs/versioning.md) — mudanças e versionamento
-- [Segurança](SECURITY.md) — modelo de acesso suportado e relato privado de vulnerabilidades
-- [Coleções de categorias](docs/category-collections/) — exemplos em inglês e português prontos para importação
-
-## 🔐 Controle dos dados
-
-Os registros financeiros permanecem no banco da instalação e não fazem parte
-do repositório. O responsável pela instalação administra acesso, backups,
-retenção e testes de restauração. Antes de atualizar, confira os requisitos de
-compatibilidade da versão e siga o procedimento documentado de backup.
-
-## 🤝 Contribuição
-
-Contribuições, relatos de problemas e sugestões são bem-vindos. Leia
-[CONTRIBUTING.md](CONTRIBUTING.md) antes de propor uma alteração. Mudanças neste
-README também devem atualizar a [versão em inglês](README.md).
-
-## 📄 Licença
-
-Copyright (c) 2026 Henrique Mayer.
-
-Distribuído sob a [PolyForm Noncommercial License 1.0.0](LICENSE).
-Consulte a licença para os termos completos de uso e distribuição.
+Copyright © 2026 Henrique Mayer. [PolyForm Noncommercial 1.0.0](LICENSE).
