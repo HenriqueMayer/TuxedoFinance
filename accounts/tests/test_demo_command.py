@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """Demo command coverage for accounts."""
 
-from datetime import date
+from datetime import date, datetime, timezone as datetime_timezone
 from decimal import Decimal
 from io import StringIO
 from unittest.mock import patch
@@ -10,6 +10,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from accounts.demo_data import _month, seed_demo_profile
 from accounts.models import UserPreference
 from banking.models import Bank, BankAccount, BankMovement, BankTransfer, CardInvoice, CreditCard, DebitCard, ExchangeRate, InvoicePayment, LoyaltyEntry, LoyaltyProgram, RewardRedemption
@@ -140,6 +141,28 @@ class InsertDemoCommandTests(TestCase):
         self.assertFalse(user.bank_movements.filter(source_key__startswith='invoice-payment:').exists())
         self.assertEqual(reserved_by_source(user), {'accounts': {}, 'cash_pots': {}})
         self.assertEqual(get_planning_availability(user)['bank_total'], Decimal('0'))
+
+    def test_demo_skips_payment_after_application_today_when_host_is_next_day(self):
+        class NextDayHostDate(date):
+            @classmethod
+            def today(cls):
+                return cls(2026, 10, 22)
+
+        instant = datetime(2026, 10, 22, 0, 30, tzinfo=datetime_timezone.utc)
+        with timezone.override('America/Sao_Paulo'), \
+                patch('django.utils.timezone.now', return_value=instant), \
+                patch('accounts.demo_data.date', NextDayHostDate):
+            self.assertEqual(timezone.localdate(), date(2026, 10, 21))
+            self.assertEqual(NextDayHostDate.today(), date(2026, 10, 22))
+            # December's demo would confirm its October 22 payment if it used
+            # the host date, contradicting the active financial calendar.
+            user = seed_demo_profile(language='en', username='calendar_demo',
+                password='Calendar-demo-isolated-29', as_of=date(2026, 12, 15))
+
+        self.assertTrue(User.objects.filter(pk=user.pk).exists())
+        self.assertEqual(FinancialGoal.objects.filter(user=user).count(), 3)
+        self.assertFalse(InvoicePayment.objects.filter(user=user).exists())
+        self.assertFalse(user.bank_movements.filter(source_key__startswith='invoice-payment:').exists())
 
     @override_settings(ALLOW_SIGNUPS=True)
     def test_normal_signup_does_not_populate_demonstration_data(self):

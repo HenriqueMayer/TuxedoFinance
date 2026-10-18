@@ -139,6 +139,11 @@ for due-date forecasts. These planned obligations do not post cash or count as
 another expense. Historical readers filter confirmations by their actual date
 and must not use today's paid flag as evidence of an earlier payment.
 
+Invoice properties and payment validation use the same Django current day as
+settlement and default balance reads. The operating system's local date must
+not independently include a payment, reject its date or mark an invoice overdue.
+See the shared [financial calendar](../operations.md#financial-calendar).
+
 ## Loyalty
 
 `LoyaltyProgram` belongs to the user and may be independent, linked to a `Bank`,

@@ -9,6 +9,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Use the existing Django financial calendar consistently for invoice due state, confirmed-payment totals/validation and demo confirmation guards, independent of the host timezone. Preserve stored dates and explicit historical cutoffs. Wait for the Accounts entry animation before measuring its unchanged 44px action targets in browser tests.
 - Project recurrence from arithmetic source windows and reject fixed schedules above 1,200 monthly occurrences per transaction within the projection horizon. Preserve historical amounts and paid invoices; recover excessive legacy schedules through Transactions with atomic rollback and explicit individual repairs before full reconciliation resumes.
 - Correct public guidance for preview captures/sections, version-check guarantees, repository implementation evidence, HTMX licensing, paused import queues, the language endpoint, mobile label sizing and the ordinary-expense catalogue specimen.
 - Install pinned frontend tools before repository-tool checks in CI so the Playwright configuration check runs on clean checkouts. Clarify ordinary versus persistent payment-choice keyboard/selection contracts in the owning Forms guide, with presentation linking to that behavior.

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.utils import translation
+from django.utils import timezone, translation
 
 from accounts.demo_investments import seed_investments_and_drafts
 from accounts.models import UserPreference
@@ -266,7 +266,7 @@ def seed_demo_profile(*, language, username, password, as_of):
         sync_user_ledger(user, through_date=as_of)
         partial_invoice = user.card_invoices.get(card=manual, reference_month=_month(as_of, -2))
         payment_date = _month(as_of, -2, 22)
-        if payment_date <= date.today():
+        if payment_date <= timezone.localdate():
             # Confirm only a past/current fictional payment. A future --as-of
             # may project obligations, but cannot fabricate future confirmation.
             save_invoice_payment(InvoicePayment(

@@ -26,6 +26,8 @@ and [interface map](../interface-map.md) for present behavior.
 | [Workspace preview refinement — 2026-10-18](preview-workspaces-2026-10-18.md) | Historical initial refinement: factual README copy, optional localized demos, five-destination static navigation and complete themed captures; later simplified as recorded below. |
 | [Direct preview and New entry — 2026-10-18](preview-simple-2026-10-18.md) | Removes the demo and large introduction, opens directly on the dashboard and adds the actual transaction-entry form to the static tour. |
 | [Recurrence guard and public documentation — 2026-10-18](recurrence-public-readiness-2026-10-18.md) | Bounded recurrence projection, explicit legacy recovery and nine public documentation corrections, with isolated regression evidence. |
+| [Full browser validation and v1 readiness — 2026-10-18](v1-readiness-2026-10-18.md) | Complete browser inventory, financial-calendar boundary evidence and remaining candidate/release validation. |
+| [Financial calendar and Accounts stability — 2026-10-18](financial-calendar-2026-10-18.md) | Consistent Django financial cutoffs, preserved payment evidence and animation-aware Accounts regression validation. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

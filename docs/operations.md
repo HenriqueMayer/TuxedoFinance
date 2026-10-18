@@ -41,6 +41,23 @@ For Docker installations, use the [Docker operations guide](docker.md) for
 volume-aware backup, restore and updates. Keep the Compose project identity and
 signing key across container recreation.
 
+## Financial calendar
+
+Financial rules obtain today's date through Django's `timezone.localdate()`.
+The current application sets `TIME_ZONE = 'UTC'` and does not activate a
+per-user timezone. Invoice due-state checks, confirmed-payment validation,
+current payment totals, ledger synchronization and default cash/report cutoffs
+therefore share that calendar, independently of the operating system's date
+or the browser's timezone.
+
+Explicit `as_of` and `through_date` arguments remain authoritative for
+historical or projected reads. Stored operation/payment dates are calendar
+dates; this rule does not convert or rewrite them. Aware timestamps retain
+their existing behavior. Demo confirmation guards use the same current day,
+so a future demo reference cannot fabricate an already confirmed payment.
+Changing the application's financial timezone is a separate product decision;
+changing the host timezone alone must not change these financial rules.
+
 ## Review opening-date conflicts
 
 Validation rejects new or edited operations before a known account opening.

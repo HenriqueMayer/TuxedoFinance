@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlsplit
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from banking.models import Bank, BankAccount, CardInvoice, CreditCard
 from categories.models import Category
@@ -44,7 +45,7 @@ class ContextualBankNavigationTests(TestCase):
     def test_transfer_returns_to_owned_source_context_without_extra_cash(self):
         destination = BankAccount.objects.create(user=self.user, bank=self.bank, name='Savings', currency='BRL')
         origin = reverse('banking:list') + '?q=Local'
-        response = self.client.post(reverse('banking:transfer_create'), {'next': origin, 'source_account': self.account.pk, 'destination_account': destination.pk, 'source_amount': '25', 'destination_amount': '25', 'date': date.today().isoformat()})
+        response = self.client.post(reverse('banking:transfer_create'), {'next': origin, 'source_account': self.account.pk, 'destination_account': destination.pk, 'source_amount': '25', 'destination_amount': '25', 'date': timezone.localdate().isoformat()})
         self.assertRedirects(response, origin, fetch_redirect_response=False)
         self.assertEqual(Transaction.objects.filter(user=self.user).count(), 0)
 
@@ -90,7 +91,7 @@ class ContextualBankNavigationTests(TestCase):
     def make_invoice(self, name='Card'):
         card = CreditCard.objects.create(user=self.user, account=self.account, name=name, closing_day=31, due_day=30, manual_settlement_from=date(2025, 1, 1))
         category = Category.objects.create(user=self.user, name=name + ' expense', transaction_type='EXPENSE')
-        Transaction.objects.create(user=self.user, title='Purchase', amount=100, transaction_type='EXPENSE', category=category, payment_channel='CREDIT_CARD', credit_card=card, date=date.today().replace(day=1))
+        Transaction.objects.create(user=self.user, title='Purchase', amount=100, transaction_type='EXPENSE', category=category, payment_channel='CREDIT_CARD', credit_card=card, date=timezone.localdate().replace(day=1))
         sync_user_ledger(self.user)
         return CardInvoice.objects.get(card=card)
 
@@ -113,13 +114,13 @@ class ContextualBankNavigationTests(TestCase):
         invoice = self.make_invoice()
         url = reverse('banking:invoice_detail', args=[invoice.pk])
         origin = reverse('dashboard:index') + '?month=2026-09'
-        response = self.client.post(url, {'next': origin, 'confirmation_key': str(uuid4()), 'account': self.account.pk, 'amount': '101', 'date': date.today().isoformat()})
+        response = self.client.post(url, {'next': origin, 'confirmation_key': str(uuid4()), 'account': self.account.pk, 'amount': '101', 'date': timezone.localdate().isoformat()})
         self.assertContains(response, 'Payments cannot exceed')
         self.assertEqual(response.context['return_url'], origin)
         self.assertContains(response, 'Record a payment already made at your bank.')
         self.assertLess(response.content.find(b'id="invoice-payment"'), response.content.find(b'Invoice sources'))
         self.assertEqual(invoice.payments.count(), 0)
-        response = self.client.post(url, {'next': origin, 'confirmation_key': str(uuid4()), 'account': self.account.pk, 'amount': '25', 'date': date.today().isoformat()})
+        response = self.client.post(url, {'next': origin, 'confirmation_key': str(uuid4()), 'account': self.account.pk, 'amount': '25', 'date': timezone.localdate().isoformat()})
         self.assertEqual(response.status_code, 302)
         destination = urlsplit(response['Location'])
         self.assertEqual(destination.path, url)

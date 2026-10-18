@@ -2,7 +2,7 @@
 
 SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """
-from datetime import date, timedelta
+from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlsplit
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import escape
 
 from banking.models import Bank, BankAccount, CardInvoice, CreditCard, DebitCard, ExchangeRate, InvoicePayment
@@ -28,18 +29,18 @@ class InvoiceActionContextTests(TestCase):
         self.account = BankAccount.objects.create(user=self.user, bank=self.bank,
             name='Checking', currency='BRL', opening_balance=1000)
         self.card = CreditCard.objects.create(user=self.user, account=self.account,
-            name='Daily card', closing_day=31, due_day=30, manual_settlement_from=date.today())
+            name='Daily card', closing_day=31, due_day=30, manual_settlement_from=timezone.localdate())
         self.invoice = CardInvoice.objects.create(user=self.user, card=self.card,
-            reference_month=date.today().replace(day=1), due_date=date.today() + timedelta(days=30),
+            reference_month=timezone.localdate().replace(day=1), due_date=timezone.localdate() + timedelta(days=30),
             amount=100, manual_settlement=True)
         self.payment = save_invoice_payment(InvoicePayment(user=self.user, invoice=self.invoice,
-            account=self.account, amount=Decimal('20'), date=date.today()))
+            account=self.account, amount=Decimal('20'), date=timezone.localdate()))
         category = Category.objects.create(user=self.user, name='Practical invoice source', transaction_type='EXPENSE')
         self.purchase = Transaction.objects.create(user=self.user, title='Source purchase', amount=100,
             transaction_type='EXPENSE', category=category, payment_channel='CREDIT_CARD',
-            credit_card=self.card, date=date.today().replace(day=1))
+            credit_card=self.card, date=timezone.localdate().replace(day=1))
         self.invoice_url = reverse('banking:invoice_detail', args=[self.invoice.pk])
-        self.origin = reverse('banking:card_invoices', args=[self.card.pk]) + '?q=Daily&status=PARTIAL&month=' + date.today().strftime('%Y-%m')
+        self.origin = reverse('banking:card_invoices', args=[self.card.pk]) + '?q=Daily&status=PARTIAL&month=' + timezone.localdate().strftime('%Y-%m')
         self.context_url = with_return_url(self.invoice_url, self.origin)
         self.payment_origin = self.context_url + '#invoice-payments'
         self.edit_url = reverse('banking:invoice_payment_edit', args=[self.payment.pk])
@@ -70,7 +71,7 @@ class InvoiceActionContextTests(TestCase):
         response = self.client.get(self.edit_url, {'next': self.payment_origin})
         self.assertEqual(response.context['cancel_url'], self.payment_origin)
         values = {'next': self.payment_origin, 'account': self.account.pk, 'amount': '-1',
-            'date': date.today().isoformat(), 'notes': 'Owned edit',
+            'date': timezone.localdate().isoformat(), 'notes': 'Owned edit',
             'confirmation_key': str(self.payment.confirmation_key)}
         invalid = self.client.post(self.edit_url, values)
         self.assertContains(invalid, 'aria-invalid="true"')
@@ -151,7 +152,7 @@ class RecordDeletionContextTests(TestCase):
         response = self.client.get(path, {'next': '//outside.example/'})
         self.assertEqual(response.context['cancel_url'], reverse('banking:list'))
         rate = ExchangeRate.objects.create(user=self.user, from_currency='USD', to_currency='BRL',
-            rate='5.12345678', effective_date=date.today())
+            rate='5.12345678', effective_date=timezone.localdate())
         rate_path = reverse('banking:exchange_rate_delete', args=[rate.pk])
         response = self.client.get(rate_path, {'next': 'https://outside.example/'})
         self.assertEqual(response.context['cancel_url'], reverse('banking:exchange_rates'))

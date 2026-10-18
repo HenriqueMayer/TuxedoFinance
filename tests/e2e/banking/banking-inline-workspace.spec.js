@@ -78,6 +78,10 @@ for (const theme of ['light', 'dark']) {
             const minimize = page.getByRole('link', {name: 'Minimize Everyday bank', exact: true});
             await expect(minimize).toBeFocused();
             await expect(minimize).toHaveText('Minimize');
+            // Panel entry translates the target briefly. Measure settled
+            // geometry while retaining the strict 44px accessibility bound.
+            await expect.poll(() => page.locator('#bank-workspace-panel')
+                .evaluate(node => node.getAnimations().length)).toBe(0);
             const minimizeBounds = await minimize.boundingBox();
             expect(minimizeBounds.height).toBeGreaterThanOrEqual(44);
             expect(minimizeBounds.width).toBeGreaterThanOrEqual(44);

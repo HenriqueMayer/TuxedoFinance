@@ -9,6 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator, RegexVa
 from django.db import models
 from django.db.models import Case, DecimalField, F, Sum, Value, When
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django.utils.translation import gettext as gettext
 from django.utils.translation import gettext_lazy as _
 
@@ -279,11 +280,13 @@ class CardInvoice(TimestampedModel):
 
     @property
     def is_overdue(self):
-        return self.status != self.Status.PAID and self.due_date < date.today()
+        return self.status != self.Status.PAID and self.due_date < timezone.localdate()
 
     @property
     def confirmed_amount(self):
-        return sum((payment.amount for payment in self.payments.all() if payment.date <= date.today()), ZERO)
+        # Match settlement and cash cutoffs, regardless of the host's timezone.
+        today = timezone.localdate()
+        return sum((payment.amount for payment in self.payments.all() if payment.date <= today), ZERO)
 
     @property
     def remaining_amount(self):
@@ -491,7 +494,7 @@ class InvoicePayment(TimestampedModel):
             errors['account'] = _('Choose an account in the invoice currency.')
         if self.invoice_id and not self.invoice.manual_settlement:
             errors['invoice'] = _('This invoice uses automatic settlement.')
-        if self.date and self.date > date.today():
+        if self.date and self.date > timezone.localdate():
             errors['date'] = _('Confirmed payments cannot be dated in the future.')
         if self.account_id and self.account.predates_opening(self.date):
             errors['date'] = _('The payment cannot precede the account opening balance date.')
