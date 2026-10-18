@@ -15,7 +15,7 @@ releases, persistent volumes and isolated restore rehearsals.
 | [Contributing](../CONTRIBUTING.md) | Canonical developer setup, checks, translations, browser isolation, and documentation conventions. |
 | [Interface preview](https://henriquemayer.github.io/TuxedoFinance/) | Bilingual static tour of the application using synthetic financial data. |
 | [demo-data.md](demo-data.md) | Explicit creation of separate English and Portuguese demo accounts, date options and a presentation walkthrough. |
-| [Preview maintenance](../.github/preview/README.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
+| [Preview maintenance](preview.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and release compatibility. |
 | [branch-testing.md](branch-testing.md) | Owner walkthrough using an isolated disposable copy; computer/phone acceptance and native fallbacks. |
 | [roadmap.md](roadmap.md) | Paused interfaces and future studies; no implied availability or scheduled release. |
@@ -59,17 +59,22 @@ application and static preview:
 | Path | Responsibility |
 |---|---|
 | Django app directories | Domain code, migrations and focused unit tests kept beside each app. |
-| `assets/` | Tailwind source input; files here are compiled rather than served directly. |
+| `assets/` | Tailwind configuration and CSS source input; compiled rather than served directly. |
 | `static/` | Versioned assets served by Django, including compiled CSS, JavaScript and brand files. |
-| `tests/` | Application and preview browser tests plus standard-library repository-tool tests; Django tests stay in their apps. |
+| `tests/` | Explicit Playwright configurations, application specs grouped by domain, preview browser tests and repository-tool/JavaScript unit tests; Django tests stay in their apps. |
 | `preview/` | Self-contained bilingual static tour published by GitHub Pages. |
-| `.github/preview/` | Isolated tooling that generates and tests the public preview. |
-| `scripts/` | Small repository-wide maintenance and validation commands. |
+| `.github/` | Workflows and repository rules; local preview tooling belongs to `scripts/preview/`. |
+| `scripts/` | Small repository-wide maintenance and validation commands, including isolated preview capture in `scripts/preview/`. |
 | `docs/` | Product, architecture, data, operations and frontend documentation. |
+| `.local/` (ignored) | New disposable test runtime, diagnostics, browser reports, coverage and lint caches. Never installation data. |
 
-Root configuration files remain at the repository root because Django, `uv`,
-npm, Tailwind, Playwright and CI discover or share them there. The application
-and preview use the same locked frontend toolchain.
+Root entries retain Django's launcher, dependency manifests/lockfiles,
+Docker/Compose and project policies. Tailwind configuration is explicitly loaded
+from `assets/tailwind.config.js`; the disposable browser runner explicitly loads
+`tests/playwright.config.js`. Preview tests use their own configuration under
+`tests/preview/`. The application and preview share the same locked frontend
+toolchain. Existing root artifacts, environments, databases and backups are
+preserved when new tool outputs move to `.local/`.
 
 ## Canonical references
 

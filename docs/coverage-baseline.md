@@ -19,6 +19,11 @@ uv run coverage report --omit='*/test_*.py,*/tests.py,*/migrations/*,manage.py'
 See the [project health review](reviews/project-health-2026-10-16.md) for the
 financial/history regression scope and isolated performance observations.
 
+The **2026-10-18** repository-organization verification passed **723 Django
+tests** with **95% combined coverage** under the existing measurement scope.
+See the [dated organization review](reviews/repository-organization-2026-10-18.md)
+for isolation, test-inventory reconciliation and remaining validation limits.
+
 ## Policy
 
 CI enforces a repository-wide **70% combined line and branch coverage** floor
@@ -29,7 +34,7 @@ line-only or branch-only gate. See the
 [Coverage.py explanation](https://coverage.readthedocs.io/en/latest/branch.html#how-to-measure-branch-coverage).
 
 The configured measurement includes executed test modules and migrations; the
-dated 89% and 94% totals must not be interpreted as application-only coverage.
+dated 89%, 94% and 95% totals must not be interpreted as application-only coverage.
 The maintenance measurement retained that scope and threshold. New financial workflows
 still need focused behavior and isolation tests, regardless of the overall score.
 

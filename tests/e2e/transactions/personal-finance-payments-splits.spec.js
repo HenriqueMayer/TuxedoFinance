@@ -1,0 +1,111 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+const { test, expect } = require('@playwright/test');
+const { selectChoice } = require('../helpers/forms');
+const { contextualTarget } = require('../helpers/navigation');
+
+async function post(page, path, values) {
+    const response = await page.request.get(path);
+    const csrf = (await response.text()).match(/name="csrfmiddlewaretoken" value="([^"]+)"/)[1];
+    const saved = await page.request.post(path, { form: {csrfmiddlewaretoken: csrf, ...values}, headers: {Referer: response.url()}, maxRedirects: 0 });
+    expect(saved.status(), (await saved.text()).match(/role="alert"[^>]*>[^<]+/g)?.join(' ')).toBe(302);
+    return saved.headers().location;
+}
+
+async function prepare(page, testInfo) {
+    const username = `personal-${testInfo.workerIndex}-${Date.now()}`;
+    // Keep credentials unrelated to the generated username/email: timestamps
+    // must not change the password-similarity validator's fixture outcome.
+    await post(page, '/accounts/signup/', {username, email: `${username}@example.test`, password1: 'M8!qL4@vZ7#rT2', password2: 'M8!qL4@vZ7#rT2'});
+    await post(page, '/banking/create/', {name: 'Personal bank'});
+    await page.goto('/banking/accounts/create/');
+    const bank = await page.locator('#id_bank option').last().getAttribute('value');
+    await post(page, '/banking/accounts/create/', {bank, name: 'Cash', currency: 'BRL', opening_balance: '1000', opening_date: '2025-01-01', pix_enabled: 'on'});
+    await post(page, '/categories/create/', {name: 'Food', transaction_type: 'EXPENSE'});
+    await post(page, '/categories/create/', {name: 'Transport', transaction_type: 'EXPENSE'});
+    await page.goto('/transactions/create/');
+    const account = await page.locator('#id_bank_account option').last().getAttribute('value');
+    const category = await page.locator('#id_category option').filter({hasText: /^Food$/}).getAttribute('value');
+    await post(page, '/transactions/create/', {title:'Shared purchase', amount:'100', transaction_type:'EXPENSE', category, payment_channel:'ACCOUNT', bank_account:account, date:'2026-10-01', installments:'1'});
+    await page.goto('/transactions/');
+    const split = await contextualTarget(page.getByRole('link', {name:'Split', exact:true}),
+        /^\/transactions\/\d+\/edit\/$/, '/transactions/');
+    expect(split.searchParams.get('split')).toBe('1');
+    return {account, split: split.href, legacySplit: split.pathname.replace('/edit/', '/split/'), editor: split.pathname};
+}
+
+for (const theme of ['light', 'dark']) {
+test(`split categories and confirmed invoice payment preserve keyboard errors (${theme})`, async ({page}, testInfo) => {
+    await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+    const externalRequests = [];
+    page.on('request', request => { if (!request.url().startsWith(testInfo.project.use.baseURL)) externalRequests.push(request.url()); });
+    const {account, split} = await prepare(page, testInfo);
+    await page.goto(split);
+    await selectChoice(page.locator('#id_splits-0-category'), {label:'Food'});
+    await page.locator('#id_splits-0-amount').fill('40');
+    await selectChoice(page.locator('#id_splits-1-category'), {label:'Transport'});
+    await page.locator('#id_splits-1-amount').fill('59');
+    await expect(page.locator('#id_split_categories')).toBeChecked();
+    await page.getByRole('button', {name:'Save', exact:true}).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('alert').filter({hasText:'Category amounts must add up'})).toBeVisible();
+    await expect(page.locator('#id_splits-0-category-search')).toHaveValue('Food');
+    await page.locator('#id_splits-1-amount').fill('60');
+    await page.getByRole('button', {name:'Save', exact:true}).click();
+    await expect(page).toHaveURL(url => url.pathname === '/transactions/' && url.search === '');
+    await expect(page.locator('main')).toContainText('Shared purchase');
+
+    const today = new Date().toISOString().slice(0,10);
+    await post(page, '/banking/credit-cards/create/', {account, name:'Confirmed card', card_type:'PHYSICAL', closing_day:'31', due_day:'31', manual_settlement_from:today});
+    await page.goto('/transactions/create/');
+    const card = await page.locator('#id_credit_card option').last().getAttribute('value');
+    const category = await page.locator('#id_category option').filter({hasText:/^Food$/}).getAttribute('value');
+    await post(page, '/transactions/create/', {title:'Invoice purchase', amount:'100', category, transaction_type:'EXPENSE', payment_channel:'CREDIT_CARD', credit_card:card, date:today, installments:'1'});
+    await page.goto('/banking/invoices/');
+    await page.getByRole('link', {name:/Confirmed card/}).focus();
+    await page.keyboard.press('Enter');
+    await page.getByRole('link', {name:'View invoice', exact:true}).press('Enter');
+    await expect(page.getByRole('heading', {name:'Confirm a payment'})).toBeVisible();
+    await selectChoice(page.locator('#id_account'), account);
+    await page.locator('#id_amount').fill('101');
+    await page.locator('#id_date').fill(today);
+    await page.getByRole('button', {name:'Confirm payment', exact:true}).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByText('Payments cannot exceed the current invoice amount.', {exact:true})).toBeVisible();
+    // The board's input filters available records; the native value and
+    // selected miniature retain the committed account after a bound error.
+    await expect(page.locator('#id_account')).toHaveValue(account);
+    await expect(page.locator('#id_account-search')).toHaveValue('');
+    const selectedAccount = page.locator('#id_account + .search-choice').getByRole('option', {selected:true});
+    await expect(selectedAccount).toHaveCount(1);
+    await expect(selectedAccount.locator('.payment-choice-name')).toHaveText('Cash');
+    await expect(selectedAccount.locator('.payment-choice-detail')).toHaveText('Personal bank · BRL');
+    await expect(page.locator('#id_account-search-selection')).toContainText('Personal bank - Cash (BRL)');
+    await page.locator('#id_amount').fill('40');
+    await page.getByRole('button', {name:'Confirm payment', exact:true}).click();
+    await expect(page.getByText(/Partially paid/)).toBeVisible();
+    await expect(page.getByText(/Remaining: 60/)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({path:testInfo.outputPath(`invoice-${theme}.png`), fullPage:true});
+    await page.goto('/dashboard/wealth/');
+    await expect(page).toHaveURL(/\/dashboard\/$/);
+    await expect(page.locator('a[href="/dashboard/wealth/"]')).toHaveCount(0);
+    expect(externalRequests).toEqual([]);
+});
+}
+
+test('category split has a native no-JavaScript path', async ({browser}, testInfo) => {
+    const context = await browser.newContext({javaScriptEnabled:false});
+    const page = await context.newPage();
+    try {
+        const {legacySplit, editor} = await prepare(page, testInfo);
+        // The primary action now opens combined editing. Keep independent
+        // browser coverage for existing native standalone split URLs as well.
+        await page.goto(legacySplit);
+        await page.locator('#id_splits-0-category').selectOption({label:'Food'});
+        await page.locator('#id_splits-0-amount').fill('40');
+        await page.locator('#id_splits-1-category').selectOption({label:'Transport'});
+        await page.locator('#id_splits-1-amount').fill('60');
+        await page.getByRole('button', {name:'Save split', exact:true}).click();
+        await expect(page).toHaveURL(url => url.pathname === editor && url.search === '');
+    } finally { await context.close(); }
+});

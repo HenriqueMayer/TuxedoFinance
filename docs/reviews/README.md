@@ -18,6 +18,7 @@ and [interface map](../interface-map.md) for present behavior.
 | [Interface adoption — 2026-10-17](interface-adoption-2026-10-17.md) | Dated design-system adoption and inspection records, moved out of the current route/component map. |
 | [Accounts and Transactions — 2026-10-17](accounts-transactions-2026-10-17.md) | Desktop/phone banking and transaction workflows, preserved financial behavior, documentation organization and scoped final validation. |
 | [Home, Reports and Loyalty — 2026-10-17](home-reports-loyalty-2026-10-17.md) | Chart readability and native scrolling, period controls, shared illustrated banking choices and final scoped validation. |
+| [Repository organization — 2026-10-18](repository-organization-2026-10-18.md) | Tool/config ownership, ignored output layout, grouped browser specs, unchanged runtime and complete inventory validation with focused reruns. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

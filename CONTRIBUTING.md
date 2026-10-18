@@ -25,8 +25,11 @@ copyright and license notices.
   [location-preservation contract](docs/frontend.md#preserve-the-users-location)
   and test from a nonzero scroll position; ordinary updates must not jump to the top.
 - Keep domain code and Python tests in their owning apps. Shared browser tests
-  belong in `tests/e2e`, preview tests in `tests/preview`, and repository-tool
-  tests in `tests/tooling`. Root manifests serve the shared toolchain.
+  belong in domain folders under `tests/e2e`, preview tests in `tests/preview`,
+  and repository-tool tests in `tests/tooling`. Shared E2E helpers own catalogue
+  routing and repository paths. Root manifests serve the shared toolchain;
+  Tailwind configuration lives in `assets/` and Playwright configuration in
+  `tests/`.
 - Introduce a module or abstraction when it has a distinct responsibility or
   removes demonstrated duplication. File length alone does not justify a split.
 - Update documentation affected by a change. Maintain equivalent content in
@@ -93,7 +96,7 @@ PY
 
 The Django suite uses its own test database. The context also removes any SQLite
 files created by the migration check in that temporary directory. Coverage
-outputs are ignored local artifacts.
+outputs are ignored local artifacts under `.local/coverage/`.
 See [coverage-baseline.md](docs/coverage-baseline.md) for policy and measurements.
 
 CI also performs executable-correctness lint and dependency audits:
@@ -123,6 +126,7 @@ After changing Tailwind classes or tokens:
 
 ```bash
 npm run build:css
+npm run test:unit
 ```
 
 Use the shared `{% asset %}` template tag for CSS and JavaScript URLs; it versions
@@ -178,23 +182,43 @@ The executor forwards Playwright arguments and returns the suite's exit code:
 npm run test:e2e -- --grep 'dashboard'
 ```
 
+Without a file filter or grep, this command runs the complete application
+browser suite. Existing skipped cases for paused features remain skipped.
+
 Success, failure, and interruption all stop its processes and remove temporary
-data. Migration and server logs remain at `test-results/e2e-server.log`.
+data. Owned temporary installations live under `.local/test-results/runtime/`;
+migration and server logs remain at `.local/test-results/e2e-server.log`.
 Playwright retains configured failure screenshots, videos, and traces; CI
 uploads browser artifacts when a check fails.
 
 For an advanced, manually managed **disposable** installation, the direct
-`npx playwright test` command still honors `E2E_BASE_URL` (default:
-`http://127.0.0.1:8765`). It does not manage a server or database. The suite creates
-users and financial records, so never point that direct command at personal data.
+`npx playwright test --config=tests/playwright.config.js` command still honors
+`E2E_BASE_URL` (default: `http://127.0.0.1:8765`). It does not manage a server or
+database. The suite creates users and financial records, so never point that
+direct command at personal data.
 
 `test:preview` serves only the committed static tour. Screenshot regeneration is
 a separate operation, `npm run preview:capture`, documented in
-[preview maintenance](.github/preview/README.md).
+[preview maintenance](docs/preview.md).
+
+The E2E configuration uses absolute repository paths so moving specs into domain
+folders does not change asset roots or the disposable executor. Catalogue tests
+share `tests/e2e/helpers/catalogue.js`; application tests reuse the existing form
+and navigation helpers. `npm run test:unit` executes the dependency-free
+JavaScript amount/allocation tests and also runs in CI.
+
+New browser reports live in `.local/playwright-report/`, test artifacts and logs
+in `.local/test-results/`, coverage in `.local/coverage/`, and Ruff's cache in
+`.local/cache/ruff/`. Playwright clears only `.local/test-results/browser/`,
+keeping active runtime and server logs beside it. The [test index](tests/README.md)
+maps domain folders and shared helpers. This ignored tree is not installation
+storage. Never move installation `.env`, databases, backups or dependencies into
+it, and do not remove an old artifact directory merely because a new output
+location is configured.
 
 ## Reporting performance
 
-`uv run python scripts/benchmark_reporting.py --samples 20 --output test-results/reporting.json`
+`uv run python scripts/benchmark_reporting.py --samples 20 --output .local/test-results/reporting.json`
 measures 0, 1,000 and 10,000 synthetic sources in separate disposable processes.
 It never accepts an installation database or server. See the
 [measurement method and limits](docs/reviews/project-health-2026-10-16.md#reproducible-reporting-measurements)
@@ -215,7 +239,7 @@ npm run test:e2e -- --docker-image tuxedo-finance:test
 
 Both Docker runners own their Compose project, ephemeral key, loopback port and
 named volume. They discard inherited installation/Compose settings and remove
-only their own resources. Logs remain under `test-results/`. Never target the
+only their own resources. Logs remain under `.local/test-results/`. Never target the
 installation owner's database, server or volume. Docker Engine 28+ or a current
 Docker Desktop and Compose v2+ are the supported installation baseline.
 See [Docker operations](docs/docker.md) for configuration and release delivery.

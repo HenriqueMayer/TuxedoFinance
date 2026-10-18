@@ -111,7 +111,7 @@ jobs:
       - name: Install Chromium for browser smoke tests
         run: npx playwright install --with-deps chromium
 
-      - name: Run browser smoke tests
+      - name: Run application browser tests
         run: npm run test:e2e
 
       - name: Test static interface preview

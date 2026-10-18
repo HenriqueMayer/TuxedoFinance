@@ -175,6 +175,10 @@ track their redesign in documentation while preserving their server-side gates.
 Run browser tests with `npm run test:e2e`, which owns a disposable database and
 loopback server. Never point browser tests at the developer's database or server.
 Use isolated settings for Django/tooling checks as documented in Contributing.
+Keep E2E specs in their domain folders and reuse the shared catalogue/path
+helpers. New tool outputs belong under ignored `.local/`; never relocate or
+delete installation data or old artifacts as part of changing output paths.
+Use the npm entry points so explicit test configurations and isolation apply.
 Run applicable Django checks and `git diff --check`; rebuild committed CSS and
 translations when their sources change.
 

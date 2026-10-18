@@ -218,7 +218,7 @@ Enhancement runs before the navigation snapshot records a swapped form, so
 formatting alone cannot trigger an unsaved-operation warning. Exact parsing and
 editing cases run with `node --test tests/tooling/money-input.test.cjs`; real
 keyboard, native POST and visual-choice coverage lives in
-`tests/e2e/payment-choice-visuals.spec.js`.
+`tests/e2e/shared/payment-choice-visuals.spec.js`.
 
 ### Shared complete-date dialog
 
@@ -456,7 +456,7 @@ Component previews isolate their stacking contexts so their navigation cannot
 paint over the catalogue header. Internal anchor targets also leave room for
 that header. Review desktop/mobile, both themes, keyboard/touch, invalid recovery,
 reduced motion and native fallback with
-`npm run test:e2e -- tests/e2e/catalogue-*.spec.js`.
+`npm run test:e2e -- tests/e2e/catalogue`.
 The application adopts the common presentation through shared components;
 catalogue examples remain synthetic and never write application data. See the
 interface map for the retained framework and paused-feature boundaries.
@@ -1026,7 +1026,7 @@ without relying on hover, color or JavaScript.
 
 ## Automated browser checks
 
-`tests/e2e/design-system.spec.js` checks translated landing copy, local HTMX,
+`tests/e2e/shared/design-system.spec.js` checks translated landing copy, local HTMX,
 CSV downloads, responsive navigation, dashboard month states, conditional loyalty
 fields, monetary-yield forms, salary-sandbox calculations and help, and report
 navigation. These checks cover
@@ -1043,7 +1043,7 @@ accessible screenshot dialog and mobile layout. Run `npm run test:preview` for
 that isolated site. `npm run preview:capture` regenerates its screenshots using
 only disposable synthetic records in a guarded temporary database. The capture
 and test configuration is documented in
-[`../.github/preview/README.md`](../.github/preview/README.md).
+[preview maintenance](preview.md).
 
 ## Planning workspaces and shared presentation
 
