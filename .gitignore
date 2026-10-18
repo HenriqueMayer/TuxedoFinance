@@ -30,6 +30,9 @@ coverage.xml
 htmlcov/
 
 # Frontend development and browser-test artifacts
+# Keep new local tool outputs together; retain legacy ignores without moving
+# any existing artifacts, databases, environments, or backups.
+/.local/
 node_modules/
 playwright-report/
 test-results/

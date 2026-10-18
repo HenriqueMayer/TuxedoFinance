@@ -240,7 +240,7 @@ npm run test:e2e -- --docker-image tuxedo-finance:test
 
 Both runners own fresh Compose projects, keys, volumes and loopback ports and
 remove only their own resources. They never consume the developer's `.env`,
-`TUXEDO_DATA_DIR` or `E2E_BASE_URL`. Failure logs remain under `test-results/`.
+`TUXEDO_DATA_DIR` or `E2E_BASE_URL`. Failure logs remain under `.local/test-results/`.
 The lifecycle runner checks non-root operation, configuration failures, assets,
 translations, financial-record persistence, repeated startup, backup/restore,
 shutdown and health checks. The browser runner exercises the real container.

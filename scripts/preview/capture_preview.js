@@ -2,12 +2,12 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const { chromium } = require('@playwright/test');
 
-const baseURL = process.env.PREVIEW_BASE_URL || 'http://127.0.0.1:8766';
+const baseURL = process.env.PREVIEW_BASE_URL;
 const outputRoot = process.env.PREVIEW_OUTPUT_DIR;
 const password = process.env.PREVIEW_PASSWORD;
 
-if (!outputRoot || !password) {
-    throw new Error('PREVIEW_OUTPUT_DIR and PREVIEW_PASSWORD are required.');
+if (!baseURL || !outputRoot || !password) {
+    throw new Error('PREVIEW_BASE_URL, PREVIEW_OUTPUT_DIR and PREVIEW_PASSWORD are required.');
 }
 
 const profiles = [

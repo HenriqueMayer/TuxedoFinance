@@ -42,7 +42,9 @@ class Installation:
         self.directory = None
 
     def __enter__(self):
-        self.directory = tempfile.TemporaryDirectory(prefix='tuxedo-docker-test-')
+        runtime = ROOT / '.local/test-results/runtime'
+        runtime.mkdir(parents=True, exist_ok=True)
+        self.directory = tempfile.TemporaryDirectory(prefix='tuxedo-docker-test-', dir=runtime)
         directory = Path(self.directory.name)
         shutil.copyfile(ROOT / 'compose.yaml', directory / 'compose.yaml')
         env_file = directory / '.env'
@@ -82,8 +84,8 @@ class Installation:
     def __exit__(self, exc_type, exc, traceback):
         try:
             log = self.compose('logs', '--no-color', check=False)
-            output = ROOT / 'test-results'
-            output.mkdir(exist_ok=True)
+            output = ROOT / '.local/test-results'
+            output.mkdir(parents=True, exist_ok=True)
             (output / f'{self.project}.log').write_bytes(log.stdout + log.stderr)
             self.compose('down', '--volumes', '--remove-orphans')
         finally:

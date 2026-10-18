@@ -145,6 +145,6 @@ conversions remain visible limitations rather than fabricated returns.
 
 The [public interface preview](https://henriquemayer.github.io/TuxedoFinance/)
 remains a static tour without a login or persistence. Its disposable screenshot
-database is managed by separate [preview tooling](../.github/preview/README.md).
+database is managed by separate [preview tooling](preview.md).
 `insert_demo` creates editable records in the selected local installation; it
 does not publish them or bundle a runtime database in the repository.

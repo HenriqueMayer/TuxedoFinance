@@ -73,8 +73,9 @@ jobs:
         with:
           name: docker-failure-${{ matrix.arch }}
           path: |
-            test-results/
-            playwright-report/
+            .local/test-results/
+            .local/playwright-report/
+          include-hidden-files: true
 
   publish:
     name: Publish tested stable release

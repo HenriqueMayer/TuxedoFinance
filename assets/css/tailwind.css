@@ -1,5 +1,5 @@
 @import "tailwindcss" source(none);
-@config "../../tailwind.config.js";
+@config "../tailwind.config.js";
 @import "./workspace-shell.css";
 @import "./transaction-entry.css";
 @import "./date-picker.css";

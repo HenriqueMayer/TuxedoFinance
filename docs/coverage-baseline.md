@@ -43,6 +43,9 @@ uv run coverage xml
 uv run coverage html
 ```
 
-CI uploads these reports when their steps complete. `.coverage`, `coverage.xml`,
-and `htmlcov/` are ignored local outputs and must not be committed. A successful
+CI uploads these reports when their steps complete. Configuration in
+`pyproject.toml` writes data to `.local/coverage/.coverage`, XML to
+`.local/coverage/coverage.xml`, and HTML to `.local/coverage/html/`. These are
+ignored local outputs and must not be committed. Earlier root artifacts are
+preserved; the new paths do not authorize their deletion. A successful
 local report does not establish that remote CI ran or passed.

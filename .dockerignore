@@ -38,6 +38,7 @@
 !scripts/docker_healthcheck.py
 !scripts/sqlite_backup.py
 **/__pycache__/**
+**/.local/**
 **/*.pyc
 **/.env*
 **/*.sqlite3*

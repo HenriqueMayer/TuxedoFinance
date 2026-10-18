@@ -114,10 +114,13 @@ def run(args):
     options, args = parser.parse_known_args(args)
     if args[:1] == ['--']:
         args = args[1:]
+    command = [node, str(cli), 'test', '--config', str(ROOT / 'tests/playwright.config.js'), *args]
     if options.docker_image:
-        return run_docker(options.docker_image, [node, str(cli), 'test', *args])
+        return run_docker(options.docker_image, command)
 
-    with tempfile.TemporaryDirectory(prefix='tuxedo-e2e-') as directory:
+    runtime = ROOT / '.local/test-results/runtime'
+    runtime.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='tuxedo-e2e-', dir=runtime) as directory:
         data_dir = Path(directory)
         env_file = data_dir / '.env'
         env_file.touch()
@@ -163,7 +166,7 @@ def run(args):
                     stdout=log, stderr=subprocess.STDOUT,
                 )
                 wait_for_server(server, url)
-                return start([node, str(cli), 'test', *args]).wait()
+                return start(command).wait()
             finally:
                 # Repeated Ctrl-C must not interrupt disposal of private test data.
                 previous = {
@@ -174,7 +177,7 @@ def run(args):
                     for process in reversed(processes):
                         stop(process)
                     log.flush()
-                    destination = ROOT / 'test-results/e2e-server.log'
+                    destination = ROOT / '.local/test-results/e2e-server.log'
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(log_path, destination)
                     print(f'Isolated server log: {destination}', flush=True)

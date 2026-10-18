@@ -1,24 +1,25 @@
 # Interface preview maintenance
 
-This directory contains the local automation used to maintain the static
-GitHub Pages interface tour. It is development tooling and is not included in
-the published Pages artifact.
+The local automation in `scripts/preview/` maintains the static GitHub Pages
+interface tour. It is development tooling and is not included in the published
+Pages artifact.
 
 ## Layout
 
 | File | Purpose |
 |---|---|
-| `capture_preview.sh` | Creates isolated temporary storage, starts Django locally, validates all captures and cleans up. |
-| `seed_preview_data.py` | Populates two disposable, localized profiles with synthetic financial data. |
-| `capture_preview.js` | Signs in to the temporary profiles and captures the 14 versioned screenshots. |
-| `playwright.config.js` | Serves and validates the static English and Portuguese tours. |
+| `scripts/preview/capture_preview.sh` | Creates isolated temporary storage, starts Django locally, validates all captures and cleans up. |
+| `scripts/preview/seed_preview_data.py` | Populates two disposable, localized profiles with synthetic financial data. |
+| `scripts/preview/capture_preview.js` | Signs in to the temporary profiles and captures the 14 versioned screenshots. |
+| `scripts/preview/serve.py` | Owns the loopback capture server and serves the committed static tour for tests. |
+| `tests/preview/playwright.config.js` | Serves and validates the static English and Portuguese tours. |
 
 The files that GitHub Pages publishes remain in `preview/`. Preview browser
 assertions remain in `tests/preview/`, and `.github/workflows/pages.yml`
 publishes only `preview/` after changes reach `main`.
 
 The tour preserves its section layout and light palette. Its dark theme matches
-the application's `night` tokens in `tailwind.config.js`: background `#101010`,
+the application's `night` tokens in `assets/tailwind.config.js`: background `#101010`,
 surface `#1B1B1B`, raised/hover surface `#262626`, and muted text `#B8B8B8`.
 Caramel actions and the financial colors in application screenshots retain
 their meanings. Keep both language editions and their captions in sync with the
@@ -47,7 +48,7 @@ python3 -m http.server 4173 --bind 127.0.0.1 --directory preview
 
 Then visit <http://127.0.0.1:4173/pt-br/> for Portuguese.
 
-Install the [development prerequisites](../../CONTRIBUTING.md#prerequisites),
+Install the [development prerequisites](../CONTRIBUTING.md#prerequisites),
 then run maintenance commands from the repository root. This workflow is
 separate from the disposable application smoke tests (`npm run test:e2e`):
 
@@ -62,3 +63,15 @@ npm run preview:capture
 ephemeral credentials, stages every image before replacing versioned captures,
 and removes its temporary database even when capture fails. Never weaken those
 guards or use real financial records for the public tour.
+
+The capture server binds an automatically allocated loopback port and publishes
+its URL only after binding; there is no released-port window in which another
+server can be mistaken for the capture application. The shell checks that its
+server is alive before and after the readiness request. The browser script
+requires that explicit URL instead of defaulting to an existing installation.
+
+Static preview tests choose an available loopback port, refuse to reuse an
+existing server and check an execution-specific readiness endpoint. Their
+artifacts stay in `.local/test-results/preview/` and the CI HTML report in
+`.local/playwright-report/preview/`. Running tests does not regenerate screenshots;
+only the explicit `preview:capture` command replaces the staged public images.
