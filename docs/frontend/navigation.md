@@ -19,6 +19,12 @@ and a fixed bottom navigation below that breakpoint. Primary links navigate
 directly, without hover submenus. Workspace section tabs keep reports,
 categories, invoices and exchange rates discoverable. Paused net-worth and
 statement-import interfaces stay out of navigation.
+
+The Tuxedo Finance brand in the desktop sidebar and mobile toolbar opens the
+product homepage (`/`) while retaining the signed-in session. Home/Início in
+the workspace navigation still opens the financial dashboard (`/dashboard/`).
+Brand links use the shared native/HTMX navigation and unsaved-edit protection.
+
 The body reserves room for the sidebar and bottom bar, including the mobile
 safe area. Searchable-choice viewport calculations also account for the bar.
 The bottom bar is the sole compact-label typography exception: its five full

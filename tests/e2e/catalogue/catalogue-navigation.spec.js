@@ -29,6 +29,7 @@ for (const theme of ['light', 'dark']) {
         await page.setViewportSize({width: 1440, height: 900});
         await openCatalogue(page, {hash: '#navigation'});
         const sample = page.locator('#lab-workspace-example');
+        await expect(sample.locator('.lab-rail-brand')).toHaveAttribute('href', '#public-homepage');
         const navigation = sample.getByRole('navigation', {name: 'Workspace navigation', exact: true});
         const names = ['Home', 'Transactions', 'Accounts', 'Investments', 'Plan'];
         await expect(navigation.getByRole('link')).toHaveCount(5);

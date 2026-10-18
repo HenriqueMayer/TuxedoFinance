@@ -9,6 +9,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Open the product homepage from the Tuxedo Finance brand in the desktop sidebar and mobile toolbar, preserving the session, unsaved-edit protection and the Home workspace's dashboard destination.
 - Use the existing Django financial calendar consistently for invoice due state, confirmed-payment totals/validation and demo confirmation guards, independent of the host timezone. Preserve stored dates and explicit historical cutoffs. Wait for the Accounts entry animation before measuring its unchanged 44px action targets in browser tests.
 - Project recurrence from arithmetic source windows and reject fixed schedules above 1,200 monthly occurrences per transaction within the projection horizon. Preserve historical amounts and paid invoices; recover excessive legacy schedules through Transactions with atomic rollback and explicit individual repairs before full reconciliation resumes.
 - Correct public guidance for preview captures/sections, version-check guarantees, repository implementation evidence, HTMX licensing, paused import queues, the language endpoint, mobile label sizing and the ordinary-expense catalogue specimen.

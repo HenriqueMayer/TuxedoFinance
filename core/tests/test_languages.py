@@ -112,8 +112,10 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, 'aria-modal="true"')
         self.assertContains(
             response,
-            f'<a href="{reverse("dashboard:index")}" class="app-brand">',
+            f'<a href="{reverse("pages:landing")}" class="app-brand">',
         )
+        self.assertContains(response,
+            f'<a href="{reverse("pages:landing")}" class="app-mobile-brand lg:hidden" aria-label="Tuxedo Finance">')
         self.assertContains(response, '<span>Tuxedo Finance</span>', html=True)
         self.assertContains(
             response,
