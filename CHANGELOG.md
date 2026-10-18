@@ -40,6 +40,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Group Django tests inside each app by responsibility with explicit fixture helpers. Split Banking and Investments form/view modules and Transaction consultation/editing views behind stable public imports; extract bounded atomic category CSV imports without changing models, migrations, URLs or financial services.
 - Keep frontend/browser configurations with their sources, group browser specs by domain and share catalogue routing. Move local preview maintenance under `scripts/preview/` and new test/coverage/cache outputs under ignored `.local/`, preserving installation data and existing artifacts. Run JavaScript amount/allocation unit tests in CI.
 - Apply the approved editorial design across authentication and all five workspaces, including complete forms, lists, confirmations and feedback. Use the same Home, Transactions, Accounts, Investments and Plan destinations on desktop/mobile, with local section tabs, deliberate menus, visible focus and native links; omit decorative destination numbers.
 - Open Accounts with a colored institution overview and replace it with one full-width internal bank workspace when selected. Keep consolidated balances visible, a prominent Minimize action, account/card shortcuts, reserves and secondary recent activity. Monetary cash pots retain separate Balance/Available figures and one redemption hint; excluding planning funds never hides balances or debts.

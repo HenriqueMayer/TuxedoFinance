@@ -58,7 +58,7 @@ application and static preview:
 
 | Path | Responsibility |
 |---|---|
-| Django app directories | Domain code, migrations and focused unit tests kept beside each app. |
+| Django app directories | Domain code and migrations, with focused Python tests in each app's `tests/` package. Views/forms with distinct responsibilities use packages with explicit public exports. |
 | `assets/` | Tailwind configuration and CSS source input; compiled rather than served directly. |
 | `static/` | Versioned assets served by Django, including compiled CSS, JavaScript and brand files. |
 | `tests/` | Explicit Playwright configurations, application specs grouped by domain, preview browser tests and repository-tool/JavaScript unit tests; Django tests stay in their apps. |

@@ -23,7 +23,7 @@ priority over `.env`, including in CI.
 | `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR02A/FR16). |
 | `core/formats/en/formats.py` | Locale number-format override driven by the selected reporting currency (FR16). |
 | `core/formats/pt_BR/formats.py` | Portuguese locale counterpart that preserves the same currency-driven number format. |
-| `core/tests.py` | Language cookie, navbar, HTMX and language/currency-independence tests. |
+| `core/tests/` | Settings, language/currency independence, preferences, signup and shared interface/navigation tests, each in a focused module. |
 | `core/wsgi.py` | Django WSGI entrypoint used by Gunicorn in the Docker image. |
 | `core/asgi.py` | Standard ASGI entrypoint; unused in this project (no async views, no channels) but kept as Django scaffolding. |
 
@@ -129,7 +129,7 @@ notes, titles, bank names or any other user-entered/persisted values for
 automatic translation.
 
 `LocaleMiddleware` also activates the language for HTMX fragment requests; no
-special client header or translation branch is required. `core/tests.py`
+special client header or translation branch is required. `core/tests/test_languages.py`
 checks English defaults and selector presence, Portuguese cookie persistence,
 desktop/mobile authenticated selectors, translated HTMX reports and identical
 currency separators under both UI languages.

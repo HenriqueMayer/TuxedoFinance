@@ -4,6 +4,33 @@ The investments app remains a separate position ledger. It reuses `banking.Bank`
 and `BankAccount` for providers and cash legs, but investment operations do not
 become ordinary categorized transactions.
 
+## Python responsibilities
+
+Public form and view imports remain available through `investments.forms` and
+`investments.views`; URL names and callable names are unchanged. Their packages
+separate configuration from operation entry and read-only consultation:
+
+| Module | Responsibility |
+|---|---|
+| `forms/operations.py` | Operation fields, funding selection and monetary-yield input validation. |
+| `forms/setup.py` | Guided holdings, investment products and asset configuration. |
+| `forms/filters.py` | Read-only chart, operation and observed-price criteria. |
+| `forms/prices.py` | Dated local price registration. |
+| `views/portfolio.py` | Current position lists/details and historical chart presentation. |
+| `views/operations.py` | Operation history, create/update/delete and non-persistent yield preview. |
+| `views/setup.py` | Guided registration and the product/asset configuration lifecycle. |
+| `views/prices.py` | Owned local price consultation and editing. |
+| `services.py` | Atomic investment/banking synchronization, yield calculations and aggregation entry points. |
+| `positions.py` | Ordered position replay, weighted cost and dated portfolio valuation. |
+
+Keep financial writes in the existing service boundary and owner validation in
+the forms, models and views. The form package shares field styling internally;
+it does not introduce another record picker. Configuration readiness is shared
+by the portfolio, operation history and settings views. The deferred imports
+between position valuation and services remain deliberate, avoiding eager
+circular initialization. Tests belong to this app's `tests/` package and follow
+the same domain responsibilities.
+
 ## Domain
 
 ```text

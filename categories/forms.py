@@ -1,10 +1,8 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from categories.importing import CATEGORY_CSV_MAX_BYTES
 from categories.models import Category
-
-CATEGORY_CSV_MAX_BYTES = 2 * 1024 * 1024
-CATEGORY_CSV_MAX_ROWS = 500
 
 # PRD §9.4 — the exact input classes shared by every form in the project.
 # `partials/form_field.html` renders the label/help/errors but never injects

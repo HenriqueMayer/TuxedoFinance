@@ -23,6 +23,9 @@ The **2026-10-18** repository-organization verification passed **723 Django
 tests** with **95% combined coverage** under the existing measurement scope.
 See the [dated organization review](reviews/repository-organization-2026-10-18.md)
 for isolation, test-inventory reconciliation and remaining validation limits.
+The subsequent [Python organization lot](reviews/python-organization-2026-10-18.md)
+retained the same 723-case inventory and measured 95% with that policy after
+moving tests into app-owned packages.
 
 ## Policy
 
@@ -47,6 +50,17 @@ collect coverage. After that run, optional machine-readable and HTML reports are
 uv run coverage xml
 uv run coverage html
 ```
+
+After Python tests moved into app-owned packages, an optional application-only
+diagnostic must omit the complete test packages, including support fixtures:
+
+```bash
+uv run coverage report --omit='*/tests/*,*/migrations/*,manage.py'
+```
+
+This remains a diagnostic view; the CI scope and combined-coverage floor above
+are unchanged. The earlier omission command belongs to the dated flat-layout
+measurement.
 
 CI uploads these reports when their steps complete. Configuration in
 `pyproject.toml` writes data to `.local/coverage/.coverage`, XML to

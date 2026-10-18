@@ -48,6 +48,31 @@ sandbox/       # private planning drafts and isolated simulations
 `banking/` owns every settlement instrument and the account ledger. `Bank` is
 shared with `investments`.
 
+## Python module ownership
+
+App packages, model labels and migration paths are stable. Split a Python
+module when it contains distinct workflows; cohesive modules do not need a
+package solely to reduce line counts.
+
+- `banking.forms` and `banking.views` expose explicit public imports, with
+  implementations for accounts/cards, invoices, loyalty, transfers, exchange
+  rates and shared form/workspace behavior.
+- `investments.forms` and `investments.views` separate portfolio consultation,
+  operations, product/asset configuration and local prices. Position replay and
+  financial synchronization retain their existing service modules.
+- `transactions.views` separates consultation/export from editing and split
+  controls. `categories.importing` owns bounded CSV parsing and atomic hierarchy
+  imports; category views retain HTTP, messages and response handling.
+- Each app owns `tests/test_*.py` and the support modules it needs. Test package
+  initializers do not reexport test classes. The [test index](../tests/README.md)
+  explains discovery, fixture imports and isolated execution.
+
+Public package initializers provide compatibility imports, not proxy globals.
+Implementation modules import their direct dependencies; they do not import
+their partially initialized package. Existing optional cross-domain imports
+remain deferred where required to avoid cycles. See each owning app guide for
+the detailed file map.
+
 ## Dependency direction
 
 ```text

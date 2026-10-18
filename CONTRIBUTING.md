@@ -24,7 +24,12 @@ copyright and license notices.
   cards, sorting, pagination, refreshes and inline edits). Follow the
   [location-preservation contract](docs/frontend.md#preserve-the-users-location)
   and test from a nonzero scroll position; ordinary updates must not jump to the top.
-- Keep domain code and Python tests in their owning apps. Shared browser tests
+- Keep domain code and Python tests in their owning apps. Django tests live in
+  `<app>/tests/test_*.py`, grouped by responsibility, with fixtures in explicit
+  support modules and no test-class reexports from `tests/__init__.py`. Keep
+  stable public imports when splitting view/form packages; import sibling
+  implementations directly and patch dependencies at their actual lookup site.
+  Shared browser tests
   belong in domain folders under `tests/e2e`, preview tests in `tests/preview`,
   and repository-tool tests in `tests/tooling`. Shared E2E helpers own catalogue
   routing and repository paths. Root manifests serve the shared toolchain;
@@ -98,6 +103,9 @@ The Django suite uses its own test database. The context also removes any SQLite
 files created by the migration check in that temporary directory. Coverage
 outputs are ignored local artifacts under `.local/coverage/`.
 See [coverage-baseline.md](docs/coverage-baseline.md) for policy and measurements.
+For a focused run, substitute `manage.py test <app>` or
+`manage.py test <app>.tests.test_<responsibility>` inside the same isolated block.
+The [test index](tests/README.md) describes discovery and fixture ownership.
 
 CI also performs executable-correctness lint and dependency audits:
 

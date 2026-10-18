@@ -19,6 +19,17 @@ is expressed through owned banking accounts, cards, invoices, and movements.
 withdrawals belong to the investments workflow and create banking movements
 without becoming income or expense.
 
+## Module ownership
+
+`models.py` owns transaction validation, calendar attribution and exact category
+allocations; `forms.py` owns user-scoped input and split formsets. The `views/`
+package separates read-only consultation and CSV export in `consultation.py`
+from create/update/delete and split submissions in `editing.py`. Its explicit
+public exports keep the existing `transactions.views` imports and URL names.
+The month-filter helpers belong to `views.consultation`; tests should import
+them there rather than depending on incidental exports. `services.py` retains
+the financial ledger synchronization boundary.
+
 ## Settlement behavior
 
 | Path | Transaction classification | Cash effect |

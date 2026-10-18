@@ -4,6 +4,14 @@ The app owns income/expense classification, optional subcategories, CSV exchange
 and the default-category signup signal. See the
 [data model](../data-model.md#category) for fields and relationships.
 
+## Module ownership
+
+`models.py` owns category validation and hierarchy integrity; `forms.py` owns
+user-scoped input and file selection. `importing.py` owns the bounded CSV parser,
+its byte/row limits and the atomic import of validated rows. `views.py` retains
+HTTP handlers, redirects, file errors and success messages. `signals.py` owns
+signup seeding. Models, migrations and route names retain their existing paths.
+
 ## Forms and ownership
 
 `CategoryForm` exposes `name`, optional `transaction_type`, and optional

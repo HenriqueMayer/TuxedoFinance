@@ -6,7 +6,8 @@ find a case.
 
 | Path | Responsibility |
 |---|---|
-| `<app>/tests.py`, `<app>/test_*.py` | Django domain, ownership, model, service and rendered-response checks beside the owning app. |
+| `<app>/tests/test_*.py` | Django domain, ownership, model, service and rendered-response checks grouped by responsibility inside the owning app. |
+| `<app>/tests/fixtures.py`, `factories.py`, `samples.py`, `snapshots.py`, `queries.py` | Reusable test setup and evidence helpers; only the files needed by each app exist. These modules are not test-discovery entry points. |
 | `e2e/banking/` | Accounts, cards, invoices, loyalty, exchange rates and internal bank workspaces. |
 | `e2e/categories/` | Category forms, filters and hierarchy integrity. |
 | `e2e/dashboard/` | Authenticated Home, reports, period controls and source return context. |
@@ -34,6 +35,22 @@ npm run test:e2e -- tests/e2e/banking
 npm run test:e2e -- tests/e2e/catalogue
 npm run test:preview
 ```
+
+For Django tests, use the isolated environment in the contributor guide. Within
+that environment, `uv run python manage.py test banking` selects an app, and
+`uv run python manage.py test banking.tests.test_cards_invoices` selects a
+responsibility. Every app's `tests/__init__.py` stays free of test-class exports;
+unittest discovers the `test_*.py` modules once. Import fixtures from their
+explicit support module rather than importing another test module. Shared
+ledger write classification lives in `transactions.tests.queries` and is also
+used by dashboard read-model tests.
+
+When code moves, patch the module where the dependency is looked up. For
+example, invoice views use `banking.views.invoices.sync_user_ledger`, while bank
+workspaces use `banking.views.workspace.sync_user_ledger`. Public view/form
+package exports preserve application imports; they do not proxy mutable globals.
+Compare discovered app/class/method identities when regrouping tests, preserving
+assertions, decorators, native fallback and ownership coverage.
 
 When regrouping specs, preserve the test inventory and assertions, update
 relative imports, and use `helpers/paths.js` for repository files. Catalogue

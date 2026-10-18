@@ -175,6 +175,11 @@ track their redesign in documentation while preserving their server-side gates.
 Run browser tests with `npm run test:e2e`, which owns a disposable database and
 loopback server. Never point browser tests at the developer's database or server.
 Use isolated settings for Django/tooling checks as documented in Contributing.
+Keep Django tests under their owning app's `tests/` package, grouped by
+responsibility; import support fixtures explicitly and keep test classes out of
+`tests/__init__.py`. Preserve discovered app/class/method identities during moves.
+View/form package exports preserve public imports, not mutable globals: patch
+the implementation module where a dependency is looked up.
 Keep E2E specs in their domain folders and reuse the shared catalogue/path
 helpers. New tool outputs belong under ignored `.local/`; never relocate or
 delete installation data or old artifacts as part of changing output paths.

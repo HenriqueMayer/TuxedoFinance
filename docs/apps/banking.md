@@ -4,6 +4,29 @@ This app owns banks, currency-specific accounts, the account ledger, PIX, debit
 and credit cards, card invoices, and loyalty programs. Per-user base reporting
 currency preferences are configured per user in Settings.
 
+## Python module ownership
+
+`banking.forms` and `banking.views` remain the public import paths. Their
+`__init__.py` files explicitly export the existing forms and route handlers;
+implementations live in the following responsibility-specific modules:
+
+| Responsibility | Forms | Views |
+|---|---|---|
+| Shared ownership, instrument fields and form lifecycle | `forms/base.py` | `views/base.py` |
+| Bank workspace, balances presentation and planning participation | — | `views/workspace.py` |
+| Banks and currency-specific accounts | `forms/accounts.py` | `views/accounts.py` |
+| Debit/credit settings and card appearance | `forms/cards.py` | `views/cards.py` |
+| Invoice consultation and confirmed payments | `forms/invoices.py` | `views/invoices.py` |
+| Loyalty programs, points entries and redemptions | `forms/loyalty.py` | `views/loyalty.py` |
+| Own-account transfers | `forms/transfers.py` | `views/transfers.py` |
+| Exchange-rate evidence and consultation | `forms/exchange_rates.py` | `views/exchange_rates.py` |
+
+Modules inside each package import their sibling implementations directly,
+avoiding dependencies on a partially initialized public export module. The URL
+names and `banking.urls` remain unchanged. Domain calculations and mutations
+continue to live in `banking.services` and `banking.settlements`; this division
+does not introduce a second ledger or change transaction boundaries.
+
 ## Domain
 
 ```text

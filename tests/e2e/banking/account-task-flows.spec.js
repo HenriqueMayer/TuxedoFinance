@@ -95,6 +95,10 @@ test('account update choices work natively on mobile without JavaScript', async 
     try {
         const { bank, account } = await seed(page, testInfo);
         await page.goto(`/banking/${bank}/`);
+        // Poll from the test runner: Chromium can stall the click retry timer
+        // with scripts disabled if the native panel-entry animation is active.
+        await expect.poll(() => page.locator('#bank-workspace-panel')
+            .evaluate(node => getComputedStyle(node).transform)).toBe('none');
         const menu = page.locator('details[name="account-updates"]').first();
         await menu.locator('summary').press('Enter');
         await expect(menu.getByRole('link', { name: 'Import statement', exact: true })).toHaveCount(0);

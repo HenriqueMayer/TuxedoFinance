@@ -1,0 +1,290 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+"""Owned transaction consultation and CSV presentation."""
+
+import csv
+import json
+from datetime import date
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Q
+from django.http import HttpResponse, QueryDict
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils.translation import gettext as _
+from django.utils.translation import pgettext
+from django.views import View
+from django.views.generic import ListView
+
+from categories.models import Category
+from core.csv import export_row
+from transactions.forms import TransactionDateFilterForm
+from transactions.models import Transaction, TransactionSplit
+
+
+def _requested_billed_month(raw_month):
+    """Return a valid ``(year, month)`` pair or ``None`` for no filter."""
+    if len(raw_month) != 7:
+        return None
+    try:
+        parsed = date.fromisoformat(raw_month + '-01')
+    except ValueError:
+        return None
+    return (parsed.year, parsed.month) if parsed.isoformat()[:7] == raw_month else None
+
+def _filter_transactions_by_billed_month(queryset, raw_month):
+    requested_month = _requested_billed_month(raw_month)
+    if requested_month is None:
+        return queryset
+    year, month_number = requested_month
+    return [txn for txn in queryset if txn.amount_for_month(year, month_number)]
+
+class TransactionListView(LoginRequiredMixin, ListView):
+    """Progressive GET filters over owned economic events.
+
+    Type-card counts precede category/recurrence refinement. A billed-month
+    request folds amount_for_month once; otherwise aggregation and filtering
+    remain in SQL. Ordering always has a unique tie-breaker, and amount sorting
+    uses the stored full native amount, as displayed in the existing rows.
+    """
+
+    model = Transaction
+    template_name = 'transactions/list.html'
+    context_object_name = 'transactions'
+    paginate_by = 10
+
+    SORT_OPTIONS = {
+        'newest': ('-date', '-created_at', '-pk'),
+        'oldest': ('date', 'created_at', 'pk'),
+        'updated': ('-updated_at', '-pk'),
+        'highest': ('-amount', '-date', '-created_at', '-pk'),
+        'lowest': ('amount', '-date', '-created_at', '-pk'),
+    }
+
+    def _selected_sort(self):
+        sort = self.request.GET.get('sort')
+        return sort if sort in self.SORT_OPTIONS else 'newest'
+
+    def get(self, request, *args, **kwargs):
+        self.date_filter_form = TransactionDateFilterForm(request.GET, user=request.user)
+        if self.date_filter_form.is_valid():
+            chosen = self.date_filter_form.cleaned_data['date']
+            if chosen and request.GET.get('date') != chosen.isoformat():
+                params = request.GET.copy()
+                params['date'] = chosen.isoformat()
+                return redirect(request.path + '?' + params.urlencode())
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = Transaction.objects.filter(user=self.request.user).select_related(
+            'category', 'bank_account__bank', 'debit_card__account__bank',
+            'credit_card__account__bank', 'reward_redemption__target_account'
+        ).prefetch_related('splits__category')
+
+        # FR17: free-text search across everything the row displays, so
+        # "salary" finds the transaction whether the word is in its title,
+        # its notes, or the name of its category/banking instrument. Filtering
+        # still starts from the user's own rows, so search can never reach
+        # another user's data (PRD R3).
+        search = self.request.GET.get('q', '').strip()
+        if search:
+            matching = (
+                Q(title__icontains=search)
+                | Q(notes__icontains=search)
+                | Q(category__name__icontains=search)
+                | Q(splits__category__name__icontains=search)
+                | Q(bank_account__name__icontains=search)
+                | Q(bank_account__bank__name__icontains=search)
+                | Q(debit_card__name__icontains=search)
+                | Q(debit_card__account__name__icontains=search)
+                | Q(debit_card__account__bank__name__icontains=search)
+                | Q(credit_card__name__icontains=search)
+                | Q(credit_card__account__name__icontains=search)
+                | Q(credit_card__account__bank__name__icontains=search)
+            )
+            # Generated titles are translated at display time, including the
+            # expenses backfilled from installations in either language.
+            if search.casefold() in _('IOF on reward redemption').casefold():
+                matching |= Q(reward_redemption__isnull=False)
+            queryset = queryset.filter(matching).distinct()
+
+        self.filters = QueryDict(mutable=True)
+        if search:
+            self.filters['q'] = search
+        selected_date = self.date_filter_form.cleaned_data.get('date')
+        if selected_date:
+            self.filters['date'] = selected_date.isoformat()
+            queryset = queryset.filter(date=selected_date)
+
+        # Normalize the list's month independently of the unchanged CSV API.
+        raw_month = self.request.GET.get('month', '').strip()
+        try:
+            selected_month = date.fromisoformat(raw_month + '-01')
+        except ValueError:
+            selected_month = None
+        if selected_month and selected_month.isoformat()[:7] == raw_month:
+            self.filters['month'] = raw_month
+        self.filters['sort'] = self._selected_sort()
+        queryset = queryset.order_by(*self.SORT_OPTIONS[self.filters['sort']])
+        rows = _filter_transactions_by_billed_month(queryset, self.filters.get('month', ''))
+        monthly = isinstance(rows, list)
+        if monthly:
+            counts = {kind: 0 for kind in Transaction.TransactionType.values}
+            for item in rows:
+                counts[item.transaction_type] += 1
+        else:
+            counts = dict(rows.order_by().values('transaction_type').annotate(
+                count=Count('pk', distinct=True),
+            ).values_list('transaction_type', 'count'))
+        self.type_counts = counts
+        self.has_transactions = bool(sum(counts.values())) or Transaction.objects.filter(
+            user=self.request.user,
+        ).exists()
+
+        kind = self.request.GET.get('type', '')
+        if kind in Transaction.TransactionType.values:
+            self.filters['type'] = kind
+            rows = ([item for item in rows if item.transaction_type == kind]
+                    if monthly else rows.filter(transaction_type=kind))
+        recurrence = self.request.GET.get('recurrence', '')
+        predicates = {
+            'fixed': Q(is_fixed=True),
+            'installment': Q(is_fixed=False, installments__gt=1),
+            'oneoff': Q(is_fixed=False, installments=1),
+        }
+        if recurrence in predicates and not (kind == 'INCOME' and recurrence == 'installment'):
+            self.filters['recurrence'] = recurrence
+            if monthly:
+                rows = [item for item in rows if (
+                    'fixed' if item.is_fixed else
+                    'installment' if item.is_installment_plan else 'oneoff'
+                ) == recurrence]
+            else:
+                rows = rows.filter(predicates[recurrence])
+
+        if monthly:
+            category_ids = {category.pk for item in rows for category, _amount in item.category_allocations_for(item.amount)}
+        else:
+            category_ids = set(rows.filter(splits__isnull=True).order_by().values_list('category_id', flat=True))
+            category_ids.update(TransactionSplit.objects.filter(transaction__in=rows).values_list('category_id', flat=True))
+        self.category_choices = list(Category.objects.filter(
+            user=self.request.user, pk__in=category_ids,
+        ).select_related('parent_category'))
+        category = self.request.GET.get('category', '')
+        if category in {str(item.pk) for item in self.category_choices}:
+            self.filters['category'] = category
+            rows = ([item for item in rows if any(str(cat.pk) == category for cat, _amount in item.category_allocations_for(item.amount))]
+                    if monthly else rows.filter(Q(splits__isnull=True, category_id=category) | Q(splits__category_id=category)).distinct())
+        return rows
+
+    def _filter_url(self, **changes):
+        params = self.filters.copy()
+        for key, value in changes.items():
+            if value:
+                params[key] = value
+            else:
+                params.pop(key, None)
+        return reverse('transactions:list') + '?' + params.urlencode()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        kind = self.filters.get('type', '')
+        recurrence = self.filters.get('recurrence', '')
+        extra_filter_count = sum((
+            bool(self.filters.get('category')),
+            bool(recurrence),
+            bool(self.filters.get('date')),
+            self.filters['sort'] != 'newest',
+        ))
+        context.update({
+            'filter_params': self.filters,
+            'search_query': self.filters.get('q', ''),
+            'selected_month': self.filters.get('month', ''),
+            'selected_date': self.filters.get('date', ''),
+            'date_filter_form': self.date_filter_form,
+            'selected_type': kind,
+            'selected_sort': self.filters['sort'],
+            'selected_category': self.filters.get('category', ''),
+            'selected_recurrence': recurrence,
+            'extra_filter_count': extra_filter_count,
+            'category_choices': self.category_choices,
+            'has_transactions': self.has_transactions,
+            'has_filters': any(key != 'sort' for key in self.filters) or self.filters['sort'] != 'newest',
+            'type_cards': [{
+                'label': label,
+                'value': value,
+                'selected': kind == value,
+                'count': self.type_counts.get(value, 0) if value else sum(self.type_counts.values()),
+                'url': self._filter_url(type=value, category=None, recurrence=(
+                    None if value == 'INCOME' and recurrence == 'installment' else recurrence
+                )),
+            } for value, label in [('', _('All')), ('INCOME', pgettext('transaction type filter', 'Income')), ('EXPENSE', _('Expenses'))]],
+            'recurrence_links': [{
+                'label': label,
+                'selected': recurrence == value,
+                'url': self._filter_url(recurrence=value, category=None),
+            } for value, label in [('', _('All')), ('fixed', pgettext('transaction recurrence filter', 'Fixed')),
+                                  ('installment', pgettext('transaction recurrence filter', 'Installments')),
+                                  ('oneoff', pgettext('transaction recurrence filter', 'One-off'))]
+               if not (kind == 'INCOME' and value == 'installment')],
+        })
+        return context
+
+class TransactionExportView(LoginRequiredMixin, View):
+    """Download the user's transactions, optionally for one billed month."""
+
+    def get(self, request):
+        spreadsheet = request.GET.get('format') == 'spreadsheet'
+        raw_month = request.GET.get('month', '')
+        selected_month = _requested_billed_month(raw_month)
+        transactions = Transaction.objects.filter(user=request.user).select_related(
+            'category', 'bank_account__bank', 'debit_card__account__bank',
+            'credit_card__account__bank',
+        ).prefetch_related('splits__category').order_by('-date', '-created_at', '-pk')
+        transactions = _filter_transactions_by_billed_month(transactions, raw_month)
+
+        filename = 'transactions.csv'
+        if selected_month:
+            filename = f'transactions-{selected_month[0]}-{selected_month[1]:02d}.csv'
+        if spreadsheet:
+            filename = filename.removesuffix('.csv') + '-spreadsheet.csv'
+
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response.write('\ufeff')
+        writer = csv.writer(response)
+        writer.writerow((
+            'transaction_date', 'billed_month', 'title', 'transaction_type',
+            'category', 'payment_channel', 'bank', 'account', 'credit_card',
+            'currency', 'amount', 'total_amount', 'installments', 'is_fixed',
+            'fixed_until', 'notes', 'category_splits',
+        ))
+
+        for item in transactions:
+            account = item.payment_account
+            if selected_month:
+                year, month_number = selected_month
+                billed_month = date(year, month_number, 1)
+                amount = item.amount_for_month(year, month_number)
+            else:
+                billed_month = item.billed_month
+                amount = item.amount
+            writer.writerow(export_row((
+                item.date.isoformat(),
+                billed_month.isoformat() if billed_month else '',
+                item.display_title,
+                item.transaction_type,
+                item.category.name,
+                item.payment_channel,
+                account.bank.name if account else '',
+                account.name if account else '',
+                item.credit_card.name if item.credit_card_id else '',
+                item.native_currency,
+                amount,
+                item.amount,
+                item.installments,
+                str(item.is_fixed).lower(),
+                item.fixed_until.isoformat() if item.fixed_until else '',
+                item.notes,
+                json.dumps([{'category_id': category.pk, 'category': category.name, 'amount': str(value)} for category, value in (item.category_allocations_for_month(*selected_month) if selected_month else item.category_allocations_for(amount))], ensure_ascii=False) if item.splits.all() else '',
+            ), spreadsheet=spreadsheet))
+        return response
