@@ -1,0 +1,120 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Transaction consultation owns stable tracks, even when metadata is absent.
+   Scope the gutter to this workspace; other page layouts are unchanged. */
+html:has(#transaction-filters) { scrollbar-gutter: stable; }
+#transaction-filters.transaction-consultation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .75rem;
+  --transaction-filter-slot: 8.75rem;
+  --transaction-clear-slot: 7.5rem;
+  --transaction-action-gap: .75rem;
+}
+#transaction-filters .transaction-consultation-primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .5rem;
+  min-width: 0;
+  width: 100%;
+  align-items: end;
+}
+#transaction-filters .consultation-search { width: 100%; }
+/* Match the 44px month and action rail without changing shared inputs. */
+#transaction-filters #filter-search { height: 2.75rem; }
+#transaction-filters [data-month-filter] { width: 12rem; min-width: 0; }
+#transaction-filters .month-filter-trigger { width: 100%; height: 2.75rem; white-space: nowrap; }
+#transaction-filters .transaction-consultation-actions {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--transaction-clear-slot);
+  grid-template-rows: 2.75rem 3.25rem auto;
+  column-gap: var(--transaction-action-gap);
+  row-gap: 0;
+  width: 100%;
+  min-width: 0;
+}
+#transaction-filters .transaction-type-control {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 27rem) 1.75rem;
+  gap: .5rem;
+  align-items: center;
+  min-width: 0;
+}
+#transaction-filters .transaction-type-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .25rem;
+  min-width: 0;
+}
+#transaction-filters .transaction-type-options > a {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  height: 2.75rem;
+  padding: .25rem;
+}
+#transaction-filters .transaction-type-options > a > span:first-child { font-size: .75rem; line-height: 1rem; }
+#transaction-filters .transaction-type-count {
+  min-width: calc(6ch + .5rem);
+  padding: 0 .25rem;
+  text-align: center;
+  font-size: .75rem;
+  line-height: 1rem;
+}
+#transaction-filters #transaction-extra-filters { grid-column: 1 / -1; grid-row: 3; min-width: 0; width: 100%; }
+/* Position only the native summary. Its fields stay in document flow below the
+   rail, so expanding them never redistributes the search, types or Clear. */
+#transaction-filters #transaction-extra-filters > summary {
+  position: absolute;
+  top: 3.25rem;
+  left: 0;
+  box-sizing: border-box;
+  width: var(--transaction-filter-slot);
+  height: 2.75rem;
+  justify-content: center;
+  white-space: nowrap;
+}
+#transaction-filters #transaction-extra-filters > summary:focus-visible { outline: 2px solid var(--color-caramel); outline-offset: 2px; }
+#transaction-filters #transaction-extra-filter-indicator { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 1.5rem; width: 1.5rem; height: 1.5rem; }
+#transaction-filters #transaction-clear-control {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  display: block;
+  width: var(--transaction-clear-slot);
+  min-height: 2.75rem;
+}
+#transaction-filters #transaction-clear-filters { width: 100%; white-space: nowrap; }
+#transaction-filters #transaction-apply-filters { grid-column: 1 / -1; grid-row: 4; justify-self: end; margin-top: .75rem; }
+@media (min-width: 640px) {
+  #transaction-filters .transaction-consultation-primary { grid-template-columns: minmax(0, 1fr) 12rem; gap: .75rem; }
+}
+@media (min-width: 768px) {
+  #transaction-filters .transaction-consultation-actions { grid-template-columns: minmax(0, 1fr) var(--transaction-filter-slot) var(--transaction-clear-slot); grid-template-rows: 2.75rem auto; }
+  #transaction-filters .transaction-type-control { grid-column: 1; }
+  #transaction-filters .transaction-type-options { gap: .5rem; }
+  #transaction-filters .transaction-type-options > a { flex-direction: row; gap: .25rem; }
+  #transaction-filters .transaction-type-options > a > span:first-child { font-size: .875rem; line-height: 1.25rem; }
+  #transaction-filters #transaction-extra-filters { grid-row: 2; }
+  #transaction-filters #transaction-extra-filters > summary { top: 0; left: auto; right: calc(var(--transaction-clear-slot) + var(--transaction-action-gap)); }
+  #transaction-filters #transaction-clear-control { grid-column: 3; grid-row: 1; }
+  #transaction-filters #transaction-apply-filters { grid-row: 3; }
+}
+@media (min-width: 1440px) {
+  /* Wide workspaces keep one rail without letting optional metadata shrink it.
+     The real details content alone occupies the next full-width grid row. */
+  #transaction-filters.transaction-consultation { position: relative; grid-template-columns: minmax(0, 1fr) 25rem var(--transaction-filter-slot) var(--transaction-clear-slot); column-gap: var(--transaction-action-gap); row-gap: 0; align-items: center; }
+  #transaction-filters .transaction-consultation-primary { grid-column: 1; grid-row: 1; }
+  #transaction-filters .transaction-consultation-actions { display: contents; position: static; }
+  #transaction-filters .transaction-type-control { grid-column: 2; grid-row: 1; grid-template-columns: minmax(0, 1fr) 1.75rem; }
+  #transaction-filters .transaction-type-options { gap: .25rem; }
+  #transaction-filters .transaction-type-options > a > span:first-child { font-size: .75rem; line-height: 1rem; }
+  #transaction-filters #transaction-extra-filters { grid-column: 1 / -1; grid-row: 2; }
+  #transaction-filters #transaction-extra-filters > summary { top: .75rem; right: calc(.75rem + var(--transaction-clear-slot) + var(--transaction-action-gap)); }
+  #transaction-filters #transaction-clear-control { grid-column: 4; grid-row: 1; align-self: center; }
+  #transaction-filters #transaction-apply-filters { grid-column: 1 / -1; grid-row: 3; }
+  #transaction-filters [data-month-fallback] input { height: 2.75rem; }
+  #transaction-filters [data-month-fallback] label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+}

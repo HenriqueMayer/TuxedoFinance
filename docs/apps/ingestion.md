@@ -126,7 +126,7 @@ owner-scoped and revalidated in services. Mapping and action selectors begin
 empty. Dependent amount/category/invoice/transfer fields reveal only their
 chosen branch; invalid submissions preserve errors and values. Shared partials,
 searchable record choices, native no-JavaScript forms, CSRF and explicit POST
-confirmation follow the [mandatory form contract](../frontend.md#keyboard-and-choice-contract).
+confirmation follow the [mandatory form contract](../frontend/forms.md#keyboard-and-choice-contract).
 Evidence is escaped in owned local review screens; sensitive import responses
 use `never_cache`.
 

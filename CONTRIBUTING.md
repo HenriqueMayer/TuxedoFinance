@@ -11,18 +11,18 @@ copyright and license notices.
   current when adding a route or interaction; presentation must preserve domain
   precision, native fallbacks and paused-feature gates.
 - All new or changed forms must follow the mandatory
-  [keyboard and choice contract](docs/frontend.md#keyboard-and-choice-contract):
+  [keyboard and choice contract](docs/frontend/forms.md#keyboard-and-choice-contract):
   shared searchable record choices, native short choices, explicit conditional
   selections, visible focus, error recovery and a complete no-JavaScript path.
   Include real keyboard and conditional-transition tests in form reviews.
 - Preserve the local-first Django architecture, user isolation, Decimal-based
   calculations, accessibility, and no-JavaScript form fallbacks.
-- Use the [shared question-mark help contract](docs/frontend.md#question-mark-help)
+- Use the [shared question-mark help contract](docs/frontend/navigation.md#question-mark-help)
   for every new or changed help icon. Test hover dismissal, keyboard/touch,
   outside clicks, readable viewport bounds and HTMX behavior.
 - Preserve viewport and keyboard focus when updating the current page (filters,
   cards, sorting, pagination, refreshes and inline edits). Follow the
-  [location-preservation contract](docs/frontend.md#preserve-the-users-location)
+  [location-preservation contract](docs/frontend/navigation.md#preserve-the-users-location)
   and test from a nonzero scroll position; ordinary updates must not jump to the top.
 - Keep domain code and Python tests in their owning apps. Django tests live in
   `<app>/tests/test_*.py`, grouped by responsibility, with fixtures in explicit
@@ -144,6 +144,11 @@ change, without replaying POSTs or discarding validation errors.
 CI rebuilds CSS into a temporary file and compares it with the committed asset;
 it also verifies the pinned checksum of vendored HTMX.
 
+The [style-source index](assets/README.md) records ordered CSS responsibilities.
+Keep the emitted stylesheet identical for source-only moves. Form interaction
+partials stay beside their owning templates; retain their translated context
+and script execution point when extracting a block.
+
 After changing translatable UI copy:
 
 ```bash
@@ -168,7 +173,7 @@ Compile the project catalog directly so dependency catalogs are not modified.
 Commit the updated `.po` and
 `.mo` files together. CI checks that recompilation
 leaves the committed `.mo` unchanged. The
-[frontend guide](docs/frontend.md#translation-convention) defines which strings
+[frontend guide](docs/frontend/runtime.md#translation-convention) defines which strings
 to mark and how the interface retains its no-JavaScript behavior.
 
 ## Browser tests
@@ -259,6 +264,12 @@ unintended generated files and private data. For documentation changes, verify
 relative links, section anchors, images, and rendered layout; compare both
 READMEs for equivalent commands, features, and version badges.
 
+Run `uv run python scripts/check_docs.py` after documentation moves. It checks
+local paths and Markdown/HTML anchors in tracked and new source documents,
+including the Design Lab, without network access or ignored runtime artifacts.
+CI runs the same check. Keep old section links available when extracting a
+guide; do not silently drop a contract while changing its location.
+
 The [documentation index](docs/README.md) identifies each guide's owner. Keep
 current instructions in that guide and dated findings, test counts and benchmark
 evidence in [reviews](docs/reviews/README.md). Historical reviews must state their
@@ -267,6 +278,10 @@ Do not copy the same detailed interaction protocol into several app guides:
 link to the shared frontend contract and describe only the app's domain behavior
 and deliberate exceptions. Keep `AGENTS.md` as the implementation checklist,
 with setup and executable commands here.
+
+The [frontend index](docs/frontend.md) directs changes to the responsibility
+guides under `docs/frontend/`. Link new references to the owning guide and
+preserve the index's existing section links when reorganizing a contract.
 
 The single application CI job uses the same lockfiles and isolated browser
 executor as local development. It checks the supported SQLite configuration;

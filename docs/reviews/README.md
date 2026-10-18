@@ -20,6 +20,7 @@ and [interface map](../interface-map.md) for present behavior.
 | [Home, Reports and Loyalty — 2026-10-17](home-reports-loyalty-2026-10-17.md) | Chart readability and native scrolling, period controls, shared illustrated banking choices and final scoped validation. |
 | [Repository organization — 2026-10-18](repository-organization-2026-10-18.md) | Tool/config ownership, ignored output layout, grouped browser specs, unchanged runtime and complete inventory validation with focused reruns. |
 | [Python responsibility organization — 2026-10-18](python-organization-2026-10-18.md) | App-owned test packages, focused form/view modules, stable public imports, unchanged financial services/schema and isolated validation. |
+| [Frontend and documentation organization — 2026-10-18](frontend-organization-2026-10-18.md) | Ordered CSS source modules, owning form-script partials, canonical frontend guides with legacy anchors and automated local documentation checks. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

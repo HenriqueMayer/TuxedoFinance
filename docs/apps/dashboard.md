@@ -97,7 +97,7 @@ The summary has three cards:
   the exact window and explains that it can include historical and projected
   months. The calculation and missing-exchange-rate warning are preserved.
 
-Question-mark help follows the shared [tooltip contract](../frontend.md#question-mark-help):
+Question-mark help follows the shared [tooltip contract](../frontend/navigation.md#question-mark-help):
 hover or keyboard focus opens one readable box; pointer exit, outside click and
 Escape dismiss it. Touch toggles it, and native details remain the no-JavaScript
 fallback. Formulas and explanatory paragraphs are visually separated. The former best-month
@@ -152,7 +152,7 @@ product/asset position to its scoped operation history and use its dated value,
 without summing sale proceeds as remaining holdings. Source amounts reconcile to the existing aggregate,
 including fractional FX cents; missing conversions remain explicitly incomplete.
 Navigation retains the report period and browser Back/Forward context. See the
-[chart interaction contract](../frontend.md#previous-screen-continuity-and-balance-ranges).
+[chart interaction contract](../frontend/charts.md#chart-selection-and-composition).
 From Home and Reports, composition source links also carry the current query and
 the owning chart's anchor as a validated local return destination. Existing
 editors use it for Save/Cancel; their ownership checks and generated-record locks

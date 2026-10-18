@@ -1,0 +1,276 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Preserve existing reset and keyboard focus behavior across compiler versions. */
+@layer base {
+  *, ::before, ::after, ::backdrop, ::file-selector-button { border-color: #e5e7eb; }
+  button, [role="button"] { cursor: pointer; }
+  :disabled { cursor: default; }
+  input::placeholder, textarea::placeholder { color: #9ca3af; opacity: 1; }
+}
+@theme { --default-ring-width: 3px; --default-ring-color: #3b82f6; }
+
+/*
+ * Source for static/css/app.css.
+ * Rebuild with npm run build:css; see docs/frontend.md.
+ */
+
+@layer components {
+  .chart-composition { @apply fixed z-50 rounded-2xl border border-forest/20 bg-white p-5 text-forest shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:border-cream/20 dark:bg-night-surface dark:text-cream; width: min(32rem, calc(100vw - 24px)); max-height: min(26rem, calc(100vh - 90px)); overflow: auto; overscroll-behavior: contain; }
+  .chart-composition[hidden] { display: none; }
+  .chart-composition-header { @apply sticky -top-5 z-10 -mt-5 mb-3 flex items-center justify-between gap-3 bg-white pt-5 dark:bg-night-surface; }
+  .chart-composition-row { @apply flex min-h-7 items-start justify-between gap-4 rounded text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel; }
+  .chart-composition-row:hover .chart-composition-label, .chart-composition-row:focus-visible .chart-composition-label { text-decoration: underline; text-underline-offset: 4px; }
+  .chart-composition-group > summary { @apply cursor-pointer list-none; }
+  .chart-composition-group > summary::-webkit-details-marker { display: none; }
+  .chart-composition-group[open] > summary svg { transform: rotate(90deg); }
+  .chart-composition-sources { @apply mt-1 space-y-1 border-l border-forest/15 pl-3 dark:border-cream/15; }
+  [data-chart-selection] [data-legend-item][data-chart-selected] { @apply rounded-lg bg-caramel/10 outline outline-2 outline-caramel; }
+  [data-chart-selection] [data-legend-item]:focus-visible { @apply rounded-lg outline outline-2 outline-caramel; }
+  [data-selection-surface] g[data-chart-selected] > rect:first-child { @apply fill-caramel/20 stroke-caramel; stroke-width: 2; }
+
+  .bank-panel { position: relative; }
+  .bank-bookmark { position: absolute; top: 0; left: 0; width: 9px; height: 54px; border-radius: 20px 0 6px 0; background: var(--bank-color); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .10); }
+  .bank-color-link { @apply inline-flex h-11 w-8 shrink-0 items-center justify-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel; }
+  .bank-marker { width: 13px; height: 27px; background: var(--bank-color); clip-path: polygon(0 0,100% 0,100% 100%,50% 80%,0 100%); }
+  input[type="color"] { min-height: 3.5rem; cursor: pointer; }
+
+  [data-chart-selection] [hidden] { display: none; }
+  [data-selection-surface] { user-select: none; }
+  [data-selection-surface] li[data-chart-selected] { @apply rounded-lg bg-caramel/10 outline outline-2 outline-caramel; }
+  [data-selection-surface] g[data-chart-selected] > path:first-child { @apply stroke-caramel; stroke-width: 3; }
+  [data-selection-surface] li:focus-visible { @apply rounded-lg outline outline-2 outline-caramel; }
+
+  [data-previous-workspace][hidden], [data-workspace-restored][hidden], [data-balance-range] [hidden] { display: none; }
+  [data-range-chart] { user-select: none; }
+  .surface-panel { @apply min-w-0 rounded-2xl border border-forest/10 bg-white p-5 dark:border-cream/10 dark:bg-night-surface sm:p-6; box-shadow: 0 2px 3px -2px rgb(26 46 38 / .06); }
+  .metric-panel { @apply flex min-w-0 flex-col gap-2 rounded-2xl border border-forest/10 bg-white p-5 dark:border-cream/10 dark:bg-night-surface; }
+  .page-title { @apply text-[1.75rem] font-semibold leading-tight tracking-tight sm:text-[2rem]; }
+  .section-title { @apply text-lg font-semibold leading-snug tracking-tight sm:text-xl sm:leading-7; }
+  .field-label, .metric-label { @apply block text-sm font-medium leading-5 text-forest/80 dark:text-cream/80; }
+  .search-choice-help { @apply sr-only; }
+  .panel-heading { @apply flex flex-wrap items-center justify-between gap-4; }
+  .chart-canvas { @apply mx-auto block w-full; max-height: 22rem; }
+  .label-with-help { @apply flex flex-wrap items-center gap-2; }
+  .primary-link { @apply whitespace-nowrap py-2 text-sm font-medium text-forest/70 transition-colors hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted dark:hover:text-caramel-light; }
+  .primary-link[aria-current="page"] { @apply font-semibold text-forest dark:text-cream; }
+  /* The same five destinations stay visible; secondary screens live in area tabs. */
+  .app-layout { padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); }
+  #menu-btn { display: none; }
+  .js-ready #menu-btn { display: inline-flex; }
+  html:has(.app-layout) { scroll-padding-top: 5rem; scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); }
+  html:has(.app-layout header noscript nav) { scroll-padding-top: 9rem; }
+  .app-sidebar { @apply fixed inset-y-0 left-0 z-40 hidden w-52 flex-col border-r border-forest/10 bg-white px-4 dark:border-cream/10 dark:bg-night-surface lg:flex; overflow-y: auto; }
+  .app-brand { @apply flex min-h-16 shrink-0 items-center gap-3 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel; }
+  .app-navigation-list { @apply flex flex-col gap-2 py-6; }
+  .app-navigation-link { @apply flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-forest/70 transition-colors hover:bg-forest/5 hover:text-forest focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted dark:hover:bg-cream/5 dark:hover:text-cream; }
+  .app-navigation-link svg { @apply h-5 w-5 shrink-0; }
+  .app-navigation-link[aria-current="page"] { @apply bg-caramel/15 font-semibold text-forest dark:bg-caramel/20 dark:text-cream; }
+  .app-bottom-navigation { @apply fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-forest/15 bg-white px-1 pt-1 dark:border-cream/15 dark:bg-night-surface lg:hidden; padding-bottom: calc(.25rem + env(safe-area-inset-bottom, 0px)); }
+  .app-bottom-navigation .app-navigation-link { @apply min-w-0 flex-col justify-start gap-1 px-0 py-2 text-center; min-height: 4rem; font-size: clamp(.625rem, 2.8vw, .6875rem); letter-spacing: -.015em; }
+  .app-bottom-navigation .app-navigation-link span { white-space: nowrap; }
+  /* Color and background identify the active mobile destination without making long labels wider. */
+  .app-bottom-navigation .app-navigation-link[aria-current="page"] { font-weight: 500; }
+  @media (max-width: 359px) {
+    .app-bottom-navigation { padding-inline: 0; }
+    .app-bottom-navigation .app-navigation-link { letter-spacing: -.04em; }
+  }
+  @media (min-width: 1024px) {
+    .js-ready #menu-btn { display: none; }
+    .app-layout { padding-left: 13rem; padding-bottom: 0; }
+    html:has(.app-layout) { scroll-padding-bottom: 1rem; }
+  }
+  .section-nav { @apply flex flex-wrap gap-x-6 gap-y-2 border-b border-forest/15 dark:border-cream/15; }
+  .section-nav a { @apply border-b-2 border-transparent px-1 py-3 text-sm text-forest/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted; }
+  .section-nav a[aria-current="page"] { @apply border-caramel font-medium text-forest dark:text-cream; }
+  .workspace-header { @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between; }
+  .action-primary { @apply action-link border-transparent bg-caramel text-forest-deep hover:bg-caramel-light; }
+  #budget-forecast[hidden], [data-duration-presets][hidden] { display: none; }
+  [data-months][aria-pressed="true"] { @apply border-caramel bg-caramel/15; }
+  .quiet-action { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-forest/70 transition-colors hover:bg-forest/5 hover:text-forest focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream/70 dark:hover:bg-cream/10 dark:hover:text-cream; }
+  .secondary-actions { @apply relative; }
+  .secondary-actions > summary { @apply action-link cursor-pointer list-none; }
+  .secondary-actions > summary::marker { content: ''; }
+  .secondary-actions > summary::-webkit-details-marker { display: none; }
+  .secondary-actions.compact-menu > summary { @apply min-h-11 min-w-11 rounded-lg border-transparent px-2 py-2 text-lg hover:bg-forest/5 dark:hover:bg-cream/10; }
+  .secondary-actions-panel { @apply absolute right-0 z-30 mt-2 w-64 space-y-1 rounded-xl border border-forest/15 bg-white p-2 shadow-lg dark:border-cream/20 dark:bg-night-raised; max-width: calc(100vw - 2rem); }
+  .secondary-actions-panel > a, .secondary-actions-panel > form > button { @apply block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:hover:bg-night; }
+  .data-table { @apply w-full border-collapse text-left text-sm; }
+  .data-table th { @apply border-b border-forest/15 px-3 py-3 text-xs font-medium text-forest/70 dark:border-cream/15 dark:text-night-muted; }
+  .data-table td { @apply border-b border-forest/10 px-3 py-4 align-top dark:border-cream/10; }
+  .data-table .number { @apply text-right tabular-nums; }
+  .account-currency { @apply text-xs font-medium text-forest/70 dark:text-cream/50; }
+  .planning-visibility { @apply inline-flex min-h-11 items-center gap-1.5 rounded-lg text-xs text-forest/70 transition-colors hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-cream/60 dark:hover:text-caramel-light; }
+  .planning-sheet { @apply w-full border-collapse text-left text-sm tabular-nums; }
+  .planning-sheet th { @apply border-b border-forest/15 px-3 py-3 text-xs font-medium normal-case tracking-normal text-forest/70 dark:border-cream/15 dark:text-night-muted; }
+  .planning-sheet td { @apply h-12 border-b border-forest/10 px-3 py-2 align-middle dark:border-cream/10; }
+  .planning-sheet tbody tr { @apply transition-colors hover:bg-forest/[0.02] dark:hover:bg-cream/[0.02]; }
+  .planning-sheet .number { @apply text-right tabular-nums; }
+  .planning-sheet-input { @apply h-10 w-full min-w-0 rounded-lg border border-forest/15 bg-white px-3 py-2 text-right text-sm tabular-nums focus:border-caramel focus:outline-hidden focus:ring-2 focus:ring-caramel/25 dark:border-cream/20 dark:bg-night; }
+  .subtle-copy { @apply text-sm text-forest/70 dark:text-night-muted; }
+  .category-disclosure { @apply -my-2 inline-flex min-h-11 items-center gap-2 rounded-lg py-2 text-left font-medium hover:text-caramel-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-caramel dark:hover:text-caramel-light; }
+  .category-disclosure svg { @apply shrink-0 text-forest/70 dark:text-night-muted; }
+  .category-disclosure[aria-expanded="false"] svg,
+  details:not([open]) > summary.category-disclosure svg { transform: rotate(-90deg); }
+  [data-category-tree] [hidden] { display: none; }
+
+}
+
+@layer base {
+  html {
+    background-color: #FAF8F3;
+    overflow-x: clip;
+  }
+
+  html.dark {
+    background-color: theme('colors.night.DEFAULT');
+    color-scheme: dark;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #FAF8F3;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: #1A2E26;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: theme('colors.night.DEFAULT');
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #B88A59;
+  }
+
+
+}
+
+@layer base {
+  :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid theme('colors.caramel.ink');
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .site-footer { @apply border-t border-forest/10 text-forest/65 dark:border-cream/10 dark:text-night-muted; }
+  .help-popover { position: relative; display: inline-flex; flex-shrink: 0; }
+  .help-trigger {
+    @apply flex h-6 w-6 cursor-help list-none items-center justify-center rounded-full text-current hover:bg-caramel/15 dark:hover:bg-cream/10;
+  }
+  .help-trigger[hidden] { display: none; }
+  .help-trigger::-webkit-details-marker { display: none; }
+  .help-trigger svg { width: 1rem; height: 1rem; }
+  .help-content, .help-fallback-content {
+    @apply rounded-2xl border border-forest/15 bg-white p-4 text-left text-sm font-normal normal-case leading-6 tracking-normal text-forest shadow-xl dark:border-cream/15 dark:bg-night dark:text-cream;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .help-content {
+    position: fixed;
+    z-index: 70;
+    width: min(22rem, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .help-title { display: block; font-weight: 600; }
+  .unavailable-action { @apply inline-flex; }
+  .unavailable-action-trigger { @apply min-h-11 cursor-not-allowed border-b-2 border-transparent px-1 py-3 text-left text-sm text-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-gray-400; }
+  .unavailable-action-trigger[hidden] { display: none; }
+  .action-notice { @apply rounded-lg border-gray-300 bg-gray-100 px-4 py-3 text-gray-700 dark:border-gray-600 dark:bg-night-raised dark:text-gray-200; }
+  .unavailable-action-native > [role="tooltip"] { display: none; }
+  .unavailable-action-native > summary { list-style: none; }
+  .unavailable-action-native > summary::-webkit-details-marker { display: none; }
+  .unavailable-action-native[open] > [role="tooltip"],
+  .unavailable-action-native:hover > [role="tooltip"],
+  .unavailable-action-native:focus-within > [role="tooltip"] { display: block; }
+  .help-paragraph, .help-formula { display: block; margin-top: 0.75rem; }
+  .help-formula {
+    @apply rounded-lg bg-forest/5 px-3 py-2 font-medium dark:bg-cream/5;
+  }
+  .help-fallback-content {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 70;
+    width: auto;
+    max-width: 22rem;
+    max-height: calc(100dvh - 2rem);
+    margin-inline: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .search-choice-results { position: relative; }
+  .search-choice-option {
+    @apply flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-forest dark:text-cream;
+  }
+  .search-choice-option:hover,
+  .search-choice-option[aria-selected="true"] {
+    @apply bg-forest text-cream dark:bg-cream dark:text-night;
+  }
+}
+@layer components {
+  .bank-color-swatch { @apply h-9 w-9 rounded-full border border-forest/20 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-caramel dark:border-cream/30; }
+}
+@utility action-link { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-forest/25 px-3 py-2 text-sm font-medium transition-colors hover:bg-forest/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:border-cream/25 dark:hover:bg-cream/10;
+}
+
+/* Accessibility boundaries must outrank utility layers after the compiler upgrade. */
+  /* Controls need a visible boundary on both neutral dark surface levels. */
+  .dark :is(input:not([type='hidden']), select, textarea) {
+    border-color: theme('colors.night.line');
+  }
+
+  .dark :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid theme('colors.caramel.light');
+    outline-offset: 3px;
+  }
+
+@layer components {
+  .filter-panel { @apply flex flex-wrap items-end gap-4 rounded-2xl border border-forest/15 bg-white p-4 dark:border-cream/15 dark:bg-night-surface; }
+  .form-input { @apply min-h-11 rounded-xl border border-forest/20 bg-white px-4 py-3 text-forest dark:border-cream/20 dark:bg-night dark:text-cream; }
+  .status-badge { @apply inline-flex items-center rounded-full bg-forest/5 px-3 py-1 text-xs font-medium text-forest dark:bg-cream/10 dark:text-cream; }
+  .section-paused { @apply flex min-h-11 flex-wrap items-center gap-2 px-3 py-2 text-sm text-forest/60 dark:text-night-muted; }
+  .roadmap-badge { @apply rounded-full border border-forest/20 px-2 py-1 text-xs font-medium hover:bg-forest/5 dark:border-cream/20 dark:hover:bg-cream/10; }
+  .money-highlight { @apply text-3xl font-semibold tracking-tight sm:text-4xl; }
+  .explanation-disclosure > summary { @apply min-h-11 cursor-pointer py-3 text-sm font-medium; }
+  .tool-card { @apply block transition-colors hover:border-caramel focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel; }
+  .bank-disclosure-summary { @apply flex min-h-14 cursor-pointer list-none items-center justify-between gap-4; }
+  .bank-disclosure-summary::-webkit-details-marker { display: none; }
+  .bank-disclosure-summary > svg, .reserve-disclosure-summary > svg { @apply h-5 w-5 shrink-0 transition-transform; }
+  .bank-disclosure[open] > .bank-disclosure-summary > svg,
+  .reserve-disclosure[open] > .reserve-disclosure-summary > svg { transform: rotate(180deg); }
+  .reserve-disclosure-summary { @apply flex min-h-11 list-none items-center justify-between gap-3; }
+  .reserve-disclosure-summary::-webkit-details-marker { display: none; }
+  .reserve-disclosure { @apply border-t border-forest/15 dark:border-cream/15; }
+}
+
+/* Compact consultation controls share one rail; optional criteria stay grouped. */
+@layer components {
+  .consultation-bar { @apply flex flex-wrap items-center gap-3 rounded-2xl border border-forest/15 bg-white p-3 dark:border-cream/15 dark:bg-night-surface; }
+  .consultation-primary { flex: 1 1 22rem; }
+  .consultation-search { @apply min-w-0 flex-1; flex-basis: 16rem; }
+  .consultation-search label { @apply sr-only; }
+  .consultation-search input[type='search'] { @apply min-h-11 w-full rounded-xl px-3 py-2; margin-block-start: 0; }
+  .consultation-actions { @apply flex flex-wrap items-center gap-2; }
+  .filter-disclosure { @apply min-w-0; }
+  .filter-disclosure > summary { @apply inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-forest/25 px-3 py-2 text-sm font-medium dark:border-cream/25; }
+  .filter-disclosure > summary::-webkit-details-marker { display: none; }
+  .filter-disclosure > summary svg { @apply h-4 w-4 shrink-0; }
+  .filter-disclosure[open] > summary { @apply border-caramel bg-caramel/10; }
+  .filter-disclosure-panel { @apply mt-3 w-full border-t border-forest/10 pt-4 dark:border-cream/10; }
+  .filter-disclosure[open] { @apply w-full; }
+  .month-filter-panel { @apply fixed z-50 w-80 space-y-2 overflow-y-auto rounded-2xl border border-forest/20 bg-white p-4 shadow-xl dark:border-cream/20 dark:bg-night-surface; max-width: calc(100vw - 1.5rem); overscroll-behavior: contain; }
+  .month-filter-panel .search-choice-results { position: relative; max-height: 12rem; }
+  .month-filter-icon { @apply text-lg text-caramel-ink dark:text-caramel-light; }
+}
+@layer components {
+  .consultation-actions:has(.filter-disclosure[open]) { flex-basis: 100%; width: 100%; }
+}

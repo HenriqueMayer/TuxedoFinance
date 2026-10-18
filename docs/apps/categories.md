@@ -95,7 +95,7 @@ Parent-category selection uses the shared searchable record picker: type to
 filter, use arrows to highlight and Enter to confirm. Escape/Tab restore the
 committed choice. The native select remains available without JavaScript, with
 ownership and hierarchy validation on the server. Follow the
-[mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+[mandatory shared form contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 ## Hierarchy and secondary actions
 
@@ -159,7 +159,7 @@ Categories has one grouped list, initially collapsed. Search stays in the compac
 consultation bar; Level and Type remain visible as native segmented radio groups.
 The summary and Clear reserve their own control slots. Controls stay mounted
 during live updates; Clear, native submissions and browser Back/Forward follow
-the [shared live-filter contract](../frontend.md#live-consultation-filters).
+the [shared live-filter contract](../frontend/consultation.md#live-consultation-filters).
 
 The graph and view switch have been removed. Legacy `?view=tree` and other view
 parameters render the same owned list and keep compatible filters. They do not

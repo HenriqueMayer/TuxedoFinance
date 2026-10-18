@@ -40,7 +40,7 @@ protection and backup; see
 Settings use `TIME_ZONE = 'UTC'` with timezone-aware Django datetimes. This is a
 code-level setting, not an advertised `TIME_ZONE` environment variable or a
 per-user timezone preference. Complete-date presentation is a separate DMY/MDY
-setting; see the [shared date component](../frontend.md#shared-complete-date-dialog).
+setting; see the [shared date component](../frontend/forms.md#shared-complete-date-dialog).
 
 ## Context processors
 

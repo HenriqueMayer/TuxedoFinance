@@ -47,7 +47,7 @@ ordinary fields while preserving native widget types, values, precision and
 error/help associations. Specialized controls retain their own presentation;
 model choices are automatically marked for the shared keyboard-search
 enhancement. See the
-[form contract](../frontend.md#keyboard-and-choice-contract).
+[form contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 
 ## Planned features outside the interface

@@ -114,7 +114,7 @@ Month filters use ordinary GETs. Forms use shared field/choice rendering,
 sources use a stable shared searchable selector, start empty and reveal the
 amount only after deliberate selection. Foreign-key ownership, category
 compatibility, source denomination and balance validation remain on the server.
-Follow the [shared form contract](../frontend.md#keyboard-and-choice-contract).
+Follow the [shared form contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 See [banking availability](banking.md#monthly-planning-availability),
 [category splits](transactions.md#category-splits) and

@@ -148,6 +148,6 @@ width. Draft checkbox and form identifiers stay unlocalized above 999.
 Draft saving gives the name its own row on phones and keeps Save/Delete
 together below it. Reopening a saved draft must not compress the name field to
 make room for both actions; desktop keeps a compact adjacent action group.
-Follow the [form and keyboard contract](../frontend.md#keyboard-and-choice-contract),
-[question-mark help contract](../frontend.md#question-mark-help), and
-[viewport-preservation contract](../frontend.md#preserve-the-users-location).
+Follow the [form and keyboard contract](../frontend/forms.md#keyboard-and-choice-contract),
+[question-mark help contract](../frontend/navigation.md#question-mark-help), and
+[viewport-preservation contract](../frontend/navigation.md#preserve-the-users-location).

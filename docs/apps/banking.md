@@ -167,7 +167,7 @@ selected cards from the submission. Points-purchase funding, invoice awards and
 redemption/IOF fields use the same account/card identity; an invoice option also
 identifies its reference month. This is presentation of the existing owned
 choices, not a new eligibility, settlement or points-valuation rule. See the
-[shared choice contract](../frontend.md#keyboard-and-choice-contract).
+[shared choice contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 `RewardRedemption` coordinates a redemption rather than replacing the points
 ledger. It records the points used, target account and monetary amount, IOF, and
@@ -258,7 +258,7 @@ for backups, version selection and restoration.
 
 Banks, accounts, cards, programs and invoices use shared searchable choices. Multiple eligible cards use searchable checkboxes with Tab/Space and retain selection when filtered. Purchased-points amounts wait for a funding source; IOF sources wait for a positive amount. A deliberate source change clears the incompatible alternative.
 
-Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+Follow the [mandatory shared form contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 ## Monthly planning availability
 

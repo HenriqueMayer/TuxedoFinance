@@ -313,7 +313,7 @@ For opening unit positions, the unit price waits for a positive quantity and
 returns to zero when the quantity is deliberately cleared. Initialization and
 browser-history restoration preserve bound values and errors.
 
-Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+Follow the [mandatory shared form contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 ## Purpose and cash planning
 

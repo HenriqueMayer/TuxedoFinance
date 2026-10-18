@@ -113,65 +113,6 @@
 {% block extra_js %}
 {% if form.is_card_form %}<script src="{% asset 'js/card-appearance.js' %}" defer></script>{% endif %}
 {% if form_variant == 'loyalty_entry' %}
-<script>
-    (function () {
-        const kind = document.getElementById('{{ form.kind.id_for_label }}');
-        const invoice = document.getElementById('{{ form.invoice.id_for_label }}');
-        const fundingAccount = document.getElementById('{{ form.funding_account.id_for_label }}');
-        const fundingCreditCard = document.getElementById('{{ form.funding_credit_card.id_for_label }}');
-        const cashAmount = document.getElementById('{{ form.cash_amount.id_for_label }}');
-        const invoiceFields = document.getElementById('loyalty-invoice-fields');
-        const purchaseFields = document.getElementById('loyalty-purchase-fields');
-        const status = document.getElementById('loyalty-kind-status');
-        if (!kind || !invoice || !fundingAccount || !fundingCreditCard || !cashAmount) return;
-
-        const setHidden = window.TuxedoForms.setHidden;
-
-        function updateKindFields(clearStale) {
-            const isInvoiceAward = kind.value === 'INVOICE_AWARD';
-            const isPurchase = kind.value === 'PURCHASE';
-            setHidden(invoiceFields, !isInvoiceAward, !clearStale);
-            setHidden(purchaseFields, !isPurchase, !clearStale);
-
-            if (clearStale) {
-                if (!isInvoiceAward) invoice.value = '';
-                if (!isPurchase) {
-                    fundingAccount.value = '';
-                    fundingCreditCard.value = '';
-                    cashAmount.value = '';
-                }
-            }
-
-            if (isInvoiceAward) {
-                status.textContent = '{% translate "Choose the invoice that awarded these points." %}';
-            } else if (isPurchase) {
-                status.textContent = '{% translate "Choose one payment source and enter the amount paid." %}';
-            } else {
-                status.textContent = '';
-            }
-        }
-
-        function updatePurchaseSource(clearStale, source) {
-            if (clearStale && source && source.value) {
-                if (source === fundingAccount) fundingCreditCard.value = '';
-                else fundingAccount.value = '';
-            }
-            const inactive = kind.value !== 'PURCHASE' || !(fundingAccount.value || fundingCreditCard.value);
-            if (inactive && clearStale) cashAmount.value = '';
-            setHidden(document.getElementById('loyalty-cash-fields'), inactive, !clearStale);
-        }
-        [fundingAccount, fundingCreditCard].forEach(input => input.addEventListener('change', () => updatePurchaseSource(true, input)));
-        updatePurchaseSource(false);
-        kind.addEventListener('change', function () {
-            updateKindFields(true);
-            updatePurchaseSource(true);
-        });
-        kind.form.addEventListener('tuxedo:restore', () => {
-            updateKindFields(false);
-            updatePurchaseSource(false);
-        });
-        updateKindFields(false);
-    })();
-</script>
+{% include 'banking/_loyalty_form_script.html' %}
 {% endif %}
 {% endblock %}

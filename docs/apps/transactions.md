@@ -149,7 +149,7 @@ existing layout.
 All controls work through ordinary GET requests, including without JavaScript.
 Enhanced filtering, card/recurrence
 selection, sorting and pagination preserve viewport position and keyboard focus
-through the [shared navigation contract](../frontend.md#preserve-the-users-location).
+through the [shared navigation contract](../frontend/navigation.md#preserve-the-users-location).
 
 **All**, **Income** and **Expenses** use equal compact cells in a single horizontal
 row. On smaller screens, labels and counts stack inside the same 44px target
@@ -238,7 +238,7 @@ DELETE checkbox and Add category submission retain the complete server path.
 Classification still conserves one transaction, one payment and installment
 category cents. The automatic/fixed UI state is not a financial source of truth.
 
-Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+Follow the [mandatory shared form contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 ## Contextual transaction entry
 

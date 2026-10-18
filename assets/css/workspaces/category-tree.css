@@ -1,0 +1,44 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Parent and leaf rows share their grid; controls stay outside native details. */
+.category-list { padding: .75rem 1rem; }
+.category-list-tools { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.25rem; padding-block:0 .5rem; }
+.category-list-tools .quiet-action { min-height:2.25rem; font-size:.75rem; }
+.category-row-main { display:grid; grid-template-columns:1rem minmax(0,1fr) 7.5rem 5.5rem 6rem; align-items:center; column-gap:.75rem; min-height:3.25rem; padding-inline-end:6.25rem; font-size:.875rem; }
+.category-row-main.category-disclosure { display:grid; margin:0; width:100%; padding-block:0; border-radius:.375rem; }
+.category-row-chevron { display:flex; width:1rem; align-items:center; justify-content:center; }
+.category-row-name { min-width:0; overflow-wrap:anywhere; font-weight:500; line-height:1.4; }
+.category-row-information { display:contents; }
+.category-row-kind { width:fit-content; max-width:100%; padding:.125rem .375rem; border-radius:.375rem; background:rgb(26 46 38 / .05); font-size:.75rem; color:rgb(26 46 38 / .75); }
+.category-row-kind[data-kind="INCOME"] { color:#176b52; background:rgb(23 107 82 / .08); }
+.category-row-kind[data-kind="EXPENSE"] { color:#b42318; background:rgb(180 35 24 / .06); }
+.category-row-count { text-align:right; font-size:.8125rem; font-variant-numeric:tabular-nums; color:rgb(26 46 38 / .7); }
+.category-count-label { display:none; }
+.category-row-context { margin-inline-start:.375rem; font-size:.6875rem; font-weight:400; color:rgb(26 46 38 / .65); }
+.category-row-actions { inset-inline-end:0; top:0; display:flex; align-items:center; height:3.25rem; }
+.category-row-actions .quiet-action, .category-row-actions .compact-menu > summary { min-height:2.25rem; padding:.375rem; }
+.category-row-actions .compact-menu > summary { min-width:2.25rem; }
+.category-row-actions .secondary-actions-panel > a { min-height:2.25rem; display:flex; align-items:center; }
+.category-list-heading { min-height:2rem; border-bottom:1px solid rgb(26 46 38 / .12); color:rgb(26 46 38 / .65); font-size:.6875rem; }
+.category-list-heading .category-row-information > span:not(:first-child) { text-align:right; }
+.category-children { margin-inline-start:.625rem; padding-inline-start:.625rem; border-inline-start:1px solid rgb(26 46 38 / .15); }
+.category-children > li { border-top:1px solid rgb(26 46 38 / .08); }
+.dark .category-row-kind { color:rgb(250 248 243 / .8); background:rgb(250 248 243 / .06); }
+.dark .category-row-kind[data-kind="INCOME"] { color:#64d8b1; background:rgb(100 216 177 / .07); }
+.dark .category-row-kind[data-kind="EXPENSE"] { color:#ff8a80; background:rgb(255 138 128 / .07); }
+.dark .category-row-count, .dark .category-row-context, .dark .category-list-heading { color:rgb(250 248 243 / .68); }
+.dark .category-list-heading, .dark .category-children { border-color:rgb(250 248 243 / .15); }
+.dark .category-children > li { border-color:rgb(250 248 243 / .08); }
+@media (max-width:899px) {
+  .category-list-heading { display:none; }
+  .category-row-main { grid-template-columns:1rem minmax(0,1fr); grid-template-rows:minmax(2.75rem,auto) auto; gap:0 .5rem; padding-block-end:.5rem; padding-inline-end:5.75rem; }
+  .category-row-chevron { grid-column:1; grid-row:1; }
+  .category-row-name { grid-column:2; grid-row:1; }
+  .category-row-information { grid-column:2; grid-row:2; display:flex; align-items:center; flex-wrap:wrap; gap:.25rem .5rem; }
+  .category-row-kind, .category-row-count { font-size:.75rem; }
+  .category-count-label { display:inline; }
+  /* Zero child counts remain announced without adding an empty mobile line. */
+  .category-row-count[data-category-child-count="0"] { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; padding:0; border-width:0; }
+  .category-row-actions { height:2.75rem; }
+  .category-row-actions .quiet-action, .category-row-actions .compact-menu > summary, .category-list-tools .quiet-action, .category-row-actions .secondary-actions-panel > a { min-height:2.75rem; }
+  .category-row-actions .compact-menu > summary { min-width:2.75rem; }
+}

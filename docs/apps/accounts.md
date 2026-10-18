@@ -52,5 +52,5 @@ failure. Public signup links reflect the server's registration policy.
 
 Authentication controls retain their explicit native autocomplete semantics.
 Private preference forms and browser restoration follow the shared
-[private-history contract](../frontend.md#private-history); changing accounts
+[private-history contract](../frontend/runtime.md#private-history); changing accounts
 must never restore another user's unsent financial fields.

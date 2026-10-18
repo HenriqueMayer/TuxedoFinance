@@ -21,6 +21,11 @@ find a case.
 | `preview/` | Static bilingual tour tests and their independent Playwright configuration. |
 | `tooling/` | Standard-library Python tests for repository commands and dependency-free JavaScript amount/allocation tests. |
 
+Documentation checks run with `uv run python scripts/check_docs.py` and are
+covered by `tooling/test_check_docs.py`. They validate source paths, local
+section anchors and legacy links without accessing installation data or the
+network.
+
 The explicit application configuration is `tests/playwright.config.js`.
 `npm run test:e2e` loads it through the disposable runner, which owns its server
 and database. Never substitute a personal installation URL. The separate
@@ -56,7 +61,7 @@ When regrouping specs, preserve the test inventory and assertions, update
 relative imports, and use `helpers/paths.js` for repository files. Catalogue
 cases reuse `helpers/catalogue.js` rather than adding a private file router.
 Native fallback, real keyboard events and invalid-response coverage remain
-part of the [form contract](../docs/frontend.md#keyboard-and-choice-contract).
+part of the [form contract](../docs/frontend/forms.md#keyboard-and-choice-contract).
 
 New diagnostics live under ignored `.local/`. Playwright may clear only its
 dedicated browser-output directory; active disposable runtime and persistent

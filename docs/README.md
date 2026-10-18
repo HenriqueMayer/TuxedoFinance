@@ -21,7 +21,7 @@ releases, persistent volumes and isolated restore rehearsals.
 | [roadmap.md](roadmap.md) | Paused interfaces and future studies; no implied availability or scheduled release. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and migration compatibility. |
-| [frontend.md](frontend.md) | Server-rendered design system, viewport/focus preservation, mandatory keyboard/searchable-choice form contract, progressive disclosure and banking UI structure. |
+| [frontend.md](frontend.md) | Entry index for the responsibility-specific frontend contracts: runtime, presentation, forms, catalogue, navigation, charts, consultation and workspace compositions. Earlier section URLs remain available. |
 | [interface-map.md](interface-map.md) | Application routes, screen/form/filter/action families, shared components, financial presentation exceptions and paused-feature boundaries for consistent design adoption. |
 | [design-system.html](design-system.html) | Visual catalogue with the approved tokens, Paper Layers homepage, one workspace shell and compact editorial component specimens; application adoption is tracked in the interface map. |
 | [operations.md](operations.md) | Native source/dependency updates, required migrations and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
@@ -66,6 +66,7 @@ application and static preview:
 | `.github/` | Workflows and repository rules; local preview tooling belongs to `scripts/preview/`. |
 | `scripts/` | Small repository-wide maintenance and validation commands, including isolated preview capture in `scripts/preview/`. |
 | `docs/` | Product, architecture, data, operations and frontend documentation. |
+| `docs/frontend/` | Canonical interaction and presentation guides, reached through `docs/frontend.md`; app guides retain financial rules and deliberate domain exceptions. |
 | `.local/` (ignored) | New disposable test runtime, diagnostics, browser reports, coverage and lint caches. Never installation data. |
 
 Root entries retain Django's launcher, dependency manifests/lockfiles,

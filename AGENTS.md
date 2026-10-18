@@ -29,6 +29,10 @@ behavior with an appropriate regression test. Update this contract only for
 application-wide obligations. Keep validation results in dated reviews, with
 their scope and limits, rather than copying test counts into current contracts.
 
+Frontend contracts live in responsibility guides under `docs/frontend/`, reached
+through the [frontend index](docs/frontend.md). Link to the owning guide for a
+specific rule and retain the index's existing section links during reorganization.
+
 ## Mandatory form behavior
 
 Use the approved editorial components across product screens; the
@@ -38,7 +42,7 @@ pickers. Complete dates use the shared preferred-date/calendar component.
 Keep monetary cents entry opt-in: quantities, rates, FX, loyalty units and
 empty-versus-zero simulation overrides retain their own precision and meaning.
 
-Every new or changed form must follow the [shared form contract](docs/frontend.md#keyboard-and-choice-contract).
+Every new or changed form must follow the [shared form contract](docs/frontend/forms.md#keyboard-and-choice-contract).
 
 - Use `partials/form_field.html` for ordinary Django fields. It automatically
   enhances model choices through `form_control`; do not implement another picker.
@@ -77,7 +81,7 @@ Every new or changed form must follow the [shared form contract](docs/frontend.m
 ## Mandatory help icons
 
 Every new or changed question-mark help icon must follow the
-[shared tooltip contract](docs/frontend.md#question-mark-help). Reuse
+[shared tooltip contract](docs/frontend/navigation.md#question-mark-help). Reuse
 `partials/help_popover.html`; open on icon hover or keyboard focus; mouse help closes immediately when the
 pointer leaves the icon, including entry into its text. Dismiss on outside
 click/Escape, and never pin mouse-clicked help. Preserve touch and
@@ -128,7 +132,7 @@ activation: click, touch or keyboard. Never open or switch them on hover or
 focus alone. Keep one row menu open at a time, retain native `details` behavior
 without JavaScript, and preserve outside-click, Tab-away and Escape dismissal.
 Primary navigation and question-mark help retain their separate contracts.
-Follow the [compact row-action contract](docs/frontend.md#compact-row-action-menus).
+Follow the [compact row-action contract](docs/frontend/navigation.md#compact-row-action-menus).
 
 Chart composition panels open with Ctrl over a mark or a touch hold and remain
 open after key release or pointer travel. Keep scrolling inside the panel,
@@ -151,7 +155,7 @@ committed dates and ordering immediately, and show Clear near active controls.
 Preserve stable controls, caret, keyboard focus, scroll, owned disclosures and
 browser Back/Forward. Retain an ordinary GET submit fallback without JavaScript
 or after request failure. Keep POST writes and simulations explicitly submitted.
-Follow the [live consultation contract](docs/frontend.md#live-consultation-filters)
+Follow the [live consultation contract](docs/frontend/consultation.md#live-consultation-filters)
 and test real keyboard interactions, both themes, mobile, and native fallback.
 
 Consultation bars keep one primary text search and optional criteria in a deliberate
@@ -186,6 +190,8 @@ delete installation data or old artifacts as part of changing output paths.
 Use the npm entry points so explicit test configurations and isolation apply.
 Run applicable Django checks and `git diff --check`; rebuild committed CSS and
 translations when their sources change.
+After documentation moves, run `uv run python scripts/check_docs.py`. Preserve
+old section anchors and link new references to the owning responsibility guide.
 
 For interface work, inspect the rendered desktop and phone layouts in both
 themes, including long names, expanded controls, invalid responses and final
