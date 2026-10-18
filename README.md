@@ -4,11 +4,9 @@
 
 <a id="-data-ownership"></a>
 
-**Your finances, made clear.**
-
-A local application for income, expenses, accounts, cards, investments and monthly
-planning. Your records stay in your own SQLite database. English and Brazilian
-Portuguese, light and dark themes.
+Income, expenses, accounts, cards and investments in a local app.
+Run it on your computer, in English or Brazilian Portuguese, with light and dark
+themes. Your records stay on your installation.
 
 <a id="interface-preview"></a>
 
@@ -24,23 +22,10 @@ Portuguese, light and dark themes.
 
 [Quick start](#quick-start) · [Documentation](docs/README.md) · [Changes](CHANGELOG.md)
 
-<a href="https://henriquemayer.github.io/TuxedoFinance/">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="preview/images/en/dashboard-dark.png">
-    <img src="preview/images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance Home with sidebar navigation, monthly balances and financial charts using synthetic data">
-  </picture>
-</a>
-
-<a id="unreleased-source-branch"></a>
-
-The [local tour](preview/index.html) and images in this checkout use synthetic
-data. The tour is static: no login, public backend or saved financial records.
-This branch contains unreleased work; the published tour and **v0.10.0** image
-may differ. See the [branch walkthrough](docs/branch-testing.md) and [changelog](CHANGELOG.md#unreleased).
-
 <a id="-features"></a>
+<a id="five-workspaces"></a>
 
-## Five workspaces
+## What's in the app
 
 | Workspace | What you can do |
 |---|---|
@@ -81,6 +66,8 @@ across updates. See the [Docker guide](docs/docker.md) for configuration,
 updates and backups. This installs the published release; checkout changes
 require a [local image build](docs/docker.md#build-from-a-checkout).
 
+<a id="unreleased-source-branch"></a>
+
 <a id="python-and-uv"></a>
 
 **Python 3.12 + [uv](https://docs.astral.sh/uv/getting-started/installation/):**
@@ -113,7 +100,6 @@ Preserve its database and signing key.
 
 Built with **Django, SQLite, HTMX and locally served assets**.
 The [documentation index](docs/README.md) owns the technical and financial details.
-Statement imports and the net-worth interface remain paused.
 
 ---
 

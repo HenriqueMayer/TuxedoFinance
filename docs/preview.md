@@ -10,7 +10,7 @@ Pages artifact.
 |---|---|
 | `scripts/preview/capture_preview.sh` | Creates isolated temporary storage, starts Django locally, validates all captures and cleans up. |
 | `scripts/preview/seed_preview_data.py` | Populates two disposable, localized profiles with synthetic financial data. |
-| `scripts/preview/capture_preview.js` | Signs in to the temporary profiles and captures the 14 versioned screenshots. |
+| `scripts/preview/capture_preview.js` | Signs in to the temporary profiles and captures seven areas in both themes and languages (28 images). |
 | `scripts/preview/serve.py` | Owns the loopback capture server and serves the committed static tour for tests. |
 | `tests/preview/playwright.config.js` | Serves and validates the static English and Portuguese tours. |
 
@@ -19,8 +19,19 @@ assertions remain in `tests/preview/`, and `.github/workflows/pages.yml`
 publishes only `preview/` after changes reach `main`.
 
 The tour uses the application's editorial language: short factual copy, the
-Paper Layers bow-tie identity, subtle ledger dividers and balanced actions.
-Its six public section anchors and fourteen screenshot paths remain stable.
+bow-tie wordmark, local Inter typography, subtle ledger dividers
+and balanced actions. The font license is included in `preview/assets/OFL.txt`.
+The five direct destinations match the application's desktop sidebar and phone
+dock; Reports stays under Home's section tabs, and New entry belongs to
+Transactions. The preview opens directly on the dashboard, without a large
+introduction or video. Home and Transactions expose New entry as a direct action
+to a separate view of the actual application form, including its credit-card
+miniatures. These are synthetic captures, not an editable financial session.
+With JavaScript, native hash
+links show one workspace at a time and preserve browser Back/Forward and the
+current section when switching languages. Without JavaScript, all six sections
+remain readable through the same anchors. Existing section anchors and image
+paths remain valid.
 Its dark theme matches
 the application's `night` tokens in `assets/tailwind.config.js`: background `#101010`,
 surface `#1B1B1B`, raised/hover surface `#262626`, and muted text `#B8B8B8`.
@@ -35,14 +46,24 @@ limits at `/planning/`; simulations remain a secondary tool. The captured budget
 limits do not reserve balances or generate financial operations.
 
 Captures use the complete 1440 × 1000 viewport, starting at its left edge, so the
-shared sidebar remains visible. Do not reintroduce the old centered crop from
-the earlier top-navigation layout. All screenshots come from the checked-out
-application, including unreleased changes. Local regeneration does not publish
-the tour or change the application version.
+shared sidebar remains available in original images and the lightbox. The tour
+thumbnail crops the captured header/sidebar through CSS, avoiding a second
+navigation shell inside the interactive preview. Home and New entry also omit
+their captured duplicate section/title bars: their crop starts at y=230 and
+y=220 respectively, retaining the balance/form panels. The tour supplies the
+real headings and New entry action above those images. If the application frame's
+dimensions change, update the documented offsets in `preview.css` together with
+the captures. Every area has its own light/dark capture; do not invert image
+colors or reuse a light capture in a dark shell. All screenshots come from the
+checked-out application, including unreleased changes. Local regeneration does
+not publish the tour or change the application version.
 
-Both root READMEs reuse the generated Home images, with a dark-image alternative
-for dark-mode readers. Their shared native SVG cover lives in
-`docs/assets/readme-cover.svg`; its bow-tie geometry follows the public homepage.
+Both root READMEs link directly to the tour instead of embedding a static
+screenshot or demo video. The preview remains the primary action. Earlier
+recordings and review frames stay under ignored `.local/` as historical evidence;
+do not package them in the repository presentation.
+The shared native SVG cover lives in `docs/assets/readme-cover.svg`; its
+bow-tie geometry follows the public homepage.
 The prominent preview action uses `docs/assets/preview-link.svg`, with a native
 link and localized accessible text in each README.
 Keep equivalent English/Portuguese content and the published-release versus
@@ -96,4 +117,7 @@ artifacts stay in `.local/test-results/preview/` and the CI HTML report in
 `.local/playwright-report/preview/`. Running tests does not regenerate screenshots;
 only the explicit `preview:capture` command replaces the staged public images.
 Review desktop and phone renders in both languages/themes, including real
-keyboard travel between actions and lightbox focus restoration.
+keyboard travel between workspaces/actions, history and language context,
+lightbox focus restoration, final actions above the phone dock and native
+no-JavaScript access. Public copy describes the app; capture, version and
+publication caveats belong in this guide rather than an interrupting banner.

@@ -4,11 +4,9 @@
 
 <a id="-controle-dos-dados"></a>
 
-**Suas finanças de forma clara.**
-
-Uma aplicação local para receitas, despesas, contas, cartões, investimentos e
-planejamento mensal. Seus registros ficam no seu próprio banco SQLite. Interface
-em português do Brasil e inglês, com temas claro e escuro.
+Receitas, despesas, contas, cartões e investimentos em um app local.
+Você instala no seu computador e usa em português ou inglês, com tema claro ou
+escuro. Seus registros ficam na sua instalação.
 
 <a id="prévia-da-interface"></a>
 
@@ -24,24 +22,10 @@ em português do Brasil e inglês, com temas claro e escuro.
 
 [Instalação](#instalação) · [Documentação](docs/README.md) · [Alterações](CHANGELOG.md)
 
-<a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="preview/images/pt-br/dashboard-dark.png">
-    <img src="preview/images/pt-br/dashboard-light.png" width="1440" height="1000" alt="Início do Tuxedo Finance com navegação lateral, saldos mensais e gráficos financeiros usando dados fictícios">
-  </picture>
-</a>
-
-<a id="código-em-desenvolvimento"></a>
-
-O [tour local](preview/pt-br/index.html) e as imagens deste checkout usam dados
-fictícios. A apresentação é estática: sem login, backend público ou gravação de
-registros financeiros. Esta branch contém alterações ainda não publicadas; o
-tour publicado e a imagem **v0.10.0** podem ser diferentes. Consulte o
-[roteiro de teste da branch](docs/branch-testing.md) e o [changelog](CHANGELOG.md#unreleased).
-
 <a id="-funcionalidades"></a>
+<a id="cinco-áreas"></a>
 
-## Cinco áreas
+## O que tem no app
 
 | Área | O que você pode fazer |
 |---|---|
@@ -84,6 +68,8 @@ para configuração, atualizações e backups. Esses comandos instalam a release
 publicada; alterações do checkout exigem uma
 [compilação local da imagem](docs/docker.md#build-from-a-checkout).
 
+<a id="código-em-desenvolvimento"></a>
+
 <a id="python-e-uv"></a>
 
 **Python 3.12 + [uv](https://docs.astral.sh/uv/getting-started/installation/):**
@@ -116,7 +102,7 @@ Preserve o banco de dados e a chave de assinatura.
 
 Desenvolvido com **Django, SQLite, HTMX e assets servidos localmente**.
 O [índice da documentação](docs/README.md) reúne os detalhes técnicos e financeiros,
-em inglês. A importação de extratos e a interface de patrimônio continuam pausadas.
+em inglês.
 
 ---
 

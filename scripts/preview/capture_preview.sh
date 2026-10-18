@@ -62,7 +62,7 @@ kill -0 "$server_pid" 2>/dev/null || { cat "$server_log" >&2; exit 1; }
 node scripts/preview/capture_preview.js
 
 for language in en pt-br; do
-    for name in dashboard-light reports-light transactions-light banking-light investments-light planning-light dashboard-dark; do
+    for name in dashboard-light dashboard-dark reports-light reports-dark transactions-light transactions-dark new-entry-light new-entry-dark banking-light banking-dark investments-light investments-dark planning-light planning-dark; do
         image="$image_stage/$language/$name.png"
         [[ -s "$image" ]] || { echo "Missing capture: $image" >&2; exit 1; }
         dimensions=$(file "$image")

@@ -142,9 +142,11 @@ if os.environ['FIXTURE_MODE'] == 'capture-failure': sys.exit(9)
 for language in ['en', 'pt-br']:
     target = pathlib.Path(os.environ['PREVIEW_OUTPUT_DIR'], language)
     target.mkdir()
-    for name in ['dashboard-light', 'reports-light', 'transactions-light', 'banking-light',
-                 'investments-light', 'planning-light', 'dashboard-dark']:
-        (target / (name + '.png')).write_bytes(b'staged fixture image')
+    for area in ['dashboard', 'reports', 'transactions', 'new-entry', 'banking', 'investments', 'planning']:
+        for theme in ['light', 'dark']:
+            if os.environ['FIXTURE_MODE'] == 'missing-entry' and language == 'pt-br' and area == 'new-entry' and theme == 'dark':
+                continue
+            (target / (area + '-' + theme + '.png')).write_bytes(b'staged fixture image')
 '''
 
 
@@ -187,18 +189,20 @@ class PreviewCaptureCleanupTests(TestCase):
                     os.kill(event['pid'], 0)
             if mode == 'success':
                 self.assertEqual(result.returncode, 0, result.stderr.decode())
-                self.assertEqual(len(list((root / 'preview/images').rglob('*.png'))), 14)
+                self.assertEqual(len(list((root / 'preview/images').rglob('*.png'))), 28)
                 self.assertEqual(image.read_bytes(), b'staged fixture image')
             else:
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(image.read_bytes(), b'original fixture image')
-                self.assertEqual((root / 'node-invoked').exists(), mode == 'capture-failure')
+                self.assertEqual((root / 'node-invoked').exists(), mode in {'capture-failure', 'missing-entry'})
 
     def test_success_disposes_its_server_and_temporaries_after_staging(self):
         self.run_capture('success')
 
     def test_capture_failure_keeps_published_images_and_disposes_its_server(self):
-        self.run_capture('capture-failure')
+        for mode in ['capture-failure', 'missing-entry']:
+            with self.subTest(mode=mode):
+                self.run_capture(mode)
 
     def test_startup_failure_cannot_invoke_capture_or_replace_images(self):
         self.run_capture('startup-failure')

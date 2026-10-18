@@ -19,6 +19,7 @@ const screens = [
     ['dashboard-light.png', '/dashboard/'],
     ['reports-light.png', '/dashboard/reports/'],
     ['transactions-light.png', '/transactions/'],
+    ['new-entry-light.png', '/transactions/create/'],
     ['banking-light.png', '/banking/'],
     ['investments-light.png', '/investments/'],
     ['planning-light.png', '/planning/'],
@@ -91,34 +92,34 @@ async function captureProfile(browser, profile) {
     });
 
     await login(page, profile);
-    await setTheme(page, 'light');
     const outputDirectory = path.join(outputRoot, profile.language);
     await fs.mkdir(outputDirectory, { recursive: true });
 
-    for (const [filename, route] of screens) {
-        await page.goto(`${baseURL}${route}`);
-        if (route === '/banking/') {
-            // Demonstrate the real internal workspace, not an artificially
-            // expanded collection of every institution in the overview.
-            await page.locator('[data-bank-open]').filter({ hasText: 'Tuxedo Demo Bank' }).click();
-            await page.locator('.bank-workspace-panel').waitFor();
-        } else if (route === '/planning/') {
-            await page.locator('[data-monthly-available]').waitFor();
+    for (const theme of ['light', 'dark']) {
+        await setTheme(page, theme);
+        for (const [filename, route] of screens) {
+            await page.goto(`${baseURL}${route}`);
+            if (route === '/banking/') {
+                // Demonstrate the real internal workspace, not an artificially
+                // expanded collection of every institution in the overview.
+                await page.locator('[data-bank-open]').filter({ hasText: 'Tuxedo Demo Bank' }).click();
+                await page.locator('.bank-workspace-panel').waitFor();
+            } else if (route === '/planning/') {
+                await page.locator('[data-monthly-available]').waitFor();
+            } else if (route === '/transactions/create/') {
+                // Expose the real conditional payment board without submitting
+                // an entry or replacing native controls with staged artwork.
+                await page.locator('#id_transaction_type input[value="EXPENSE"]').check();
+                await page.locator('#id_payment_channel input[value="CREDIT_CARD"]').check();
+                await page.locator('#credit-card-fields .payment-choice-art').first().waitFor();
+            }
+            await settle(page);
+            await page.screenshot({
+                path: path.join(outputDirectory, filename.replace('-light.png', `-${theme}.png`)),
+                ...screenshotOptions,
+            });
         }
-        await settle(page);
-        await page.screenshot({
-            path: path.join(outputDirectory, filename),
-            ...screenshotOptions,
-        });
     }
-
-    await setTheme(page, 'dark');
-    await page.goto(`${baseURL}/dashboard/`);
-    await settle(page);
-    await page.screenshot({
-        path: path.join(outputDirectory, 'dashboard-dark.png'),
-        ...screenshotOptions,
-    });
 
     if (errors.length) {
         throw new Error(`Browser errors for ${profile.language}:\n${errors.join('\n')}`);

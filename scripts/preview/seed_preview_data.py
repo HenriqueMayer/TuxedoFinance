@@ -357,6 +357,7 @@ def seed_profile(language: str, password: str) -> None:
             valuation_mode=Asset.ValuationMode.UNITS,
             opening_quantity=Decimal('10.00000000'),
             opening_unit_price=Decimal('100.00000000'),
+            opening_date=add_months(today, -12, 1),
             opening_product=brokerage,
         )
         reserve = Asset.objects.create(
@@ -367,6 +368,7 @@ def seed_profile(language: str, password: str) -> None:
             currency='BRL',
             valuation_mode=Asset.ValuationMode.MONETARY,
             opening_balance=Decimal('3000.00'),
+            opening_date=add_months(today, -12, 1),
             opening_product=reserve_product,
         )
         make_investment(
