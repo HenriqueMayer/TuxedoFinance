@@ -8,7 +8,7 @@ available import workflow.
 
 This app retains explicitly reviewed local bank-statement services. It stores
 bounded evidence and decisions before posting through the existing banking and
-transaction services. It does not connect to a bank,
+transaction services. Its paused statement workflow does not connect to a bank,
 broker, Open Finance provider or external processing service. This workflow is
 implemented under Unreleased after `0.10.0`.
 
@@ -16,6 +16,13 @@ The separate [personal Open Finance study](../reviews/open-finance-personal-stud
 examines future provider eligibility, resource cadence and reconciliation.
 It does not add a connector or reopen this workflow. Assistant context/proposal
 contracts likewise cannot confirm imports or bypass the gate.
+
+The separately invoked [Meu Pluggy Inter bill pilot](../open-finance-pilot.md)
+now provides an operator-only read command under `ingestion/open_finance/` and
+`pluggy_invoice_pilot`. Its labelled demo is offline; an explicit live mode uses
+one-shot hidden credentials and a human-confirmed Inter personal proxy item.
+It writes only bounded private local observations, never import batches or
+financial models. It does not reopen any route above or schedule synchronization.
 
 | Route family | Default behavior |
 |---|---|

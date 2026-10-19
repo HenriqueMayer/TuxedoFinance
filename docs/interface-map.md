@@ -188,8 +188,11 @@ protects both GET and POST entry into paused features:
 - The static preview and Design Lab are reference surfaces, not alternate
   financial applications or runtime data sources.
 - Assistant proposal/simulation interfaces are contracts only. The model provider
-  is separately gated; no financial action execution, Open Finance connector or unattended automation is enabled;
+  is separately gated; no financial action execution, assistant Open Finance tool or unattended automation is enabled;
   they cannot bypass an unavailable feature's server gate.
+- The [Inter bill pilot](open-finance-pilot.md) is an operator-only management
+  command, not a web route, navigation item, form or assistant tool. It does not
+  enable the paused statement UI or post financial records.
 
 ## Adoption and verification
 

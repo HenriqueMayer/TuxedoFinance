@@ -202,9 +202,13 @@ cutoff/currency/evidence warnings. It never scrapes DOM/form contents or invokes
 `sync_user_ledger`. Opening assistant context therefore cannot materialize or
 repair financial projections.
 
-No model provider, external bank connection, credential flow or execution tool
-is enabled. The intended OpenAI connection is a later user-linked authorization,
-not a replacement for Django login or a paid fallback. The
+The assistant's implemented provider follows the separate authorization/inference
+gates in its owning guide; neither gate enables financial execution or banking
+tools. The explicit [Inter bill pilot](open-finance-pilot.md) is an operator-only
+ingestion command, outside the assistant and all web routes. Its fixed-origin
+provider client and private artifact store perform no database queries or ledger
+writes. One-shot hidden credentials are not assistant-vault data, and the
+personal proxy's original bank remains operator-attested. The
 [personal Open Finance study](reviews/open-finance-personal-study-2026-10-18.md)
 records a separate unresolved PF/cadence feasibility gate. Neither assistant
 contracts nor external research enable the paused ingestion interface.
@@ -295,7 +299,7 @@ The route namespaces remain domain-based:
 | `/planning/` | `planning` | operational budgets, backed goals, reservations and local signals |
 | `/imports/` | `ingestion` | paused CSV/OFX operations; owned posted history remains read-only |
 | `/sandbox/` | `sandbox` | authenticated planning workspace and explicit draft persistence |
-| `/assistant/` | `assistant` | local conversation utility/native page and owned context; provider unavailable |
+| `/assistant/` | `assistant` | owned local conversations/context, separately gated ChatGPT-plan streaming and saved model/effort preferences; no browsing or financial execution |
 | `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
 
 All authenticated CBVs constrain root querysets to `request.user`; forms also

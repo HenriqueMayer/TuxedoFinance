@@ -32,6 +32,9 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Add an operator-only Meu Pluggy Inter card-bill pilot with offline synthetic preparation, one-shot hidden credentials, bounded read-only collection and private daily observation reuse. Preserve all database records and paused import routes; real personal-proxy bill coverage remains to be verified after owner setup.
+
+- Add versioned Tuxedo financial-assistant identity and original personal-finance reasoning premises, with goal/evidence/scenario guidance, methodology provenance and explicit current web/news limitations. Preserve earlier instruction versions; no external research tool or financial action is enabled.
 - Add optional catalogue-validated reasoning effort to the subscription assistant. Keep Model and Reasoning effort in a compact Chat settings gear with native labelled choices, mobile clearance and invalid-field recovery; Model default leaves the provider's effort unchanged, without another billing route or automatic model fallback.
 - Add selected-account model choices and streamed assistant replies behind a separate default-off inference gate. Require explicit model selection and per-request financial-context opt-in; retain native submission, Cancel, verified local references and bounded completed/partial history. Keep unavailable states honest, retries idempotent and financial execution/automatic paid fallback absent. Add guarded synthetic streaming browser fixtures without live account or provider access.
 - Prepare owner-scoped ChatGPT account settings and local OAuth authorization, disabled by default. Keep tokens and PKCE in an encrypted private vault, require confirmation in the originating Django session, serialize refresh and preserve local disconnect. A separately approved native account link was observed; it does not itself enable the inference gate or prove live model access and usage limits.

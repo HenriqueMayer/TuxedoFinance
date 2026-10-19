@@ -114,6 +114,23 @@ tokens or copy financial data to a provider as a workaround. Follow the
 [planned-integration gates](roadmap.md) and
 [dated Open Finance study](reviews/open-finance-personal-study-2026-10-18.md).
 
+## Read-only Open Finance pilot
+
+The [Meu Pluggy Inter bill pilot](open-finance-pilot.md) is an explicitly invoked
+operator command with no settings, migration, scheduler or web route. Its demo
+uses synthetic data; live mode requires the owner's official bank/provider setup
+and hidden one-shot credentials. It reads only the selected personal proxy/card
+and saves a minimized private observation under ignored `.local/open-finance-pilot/`.
+It never queries or changes the application database or stores credentials.
+
+The private files contain financial evidence and require owner-only POSIX access.
+Decide explicitly whether to retain/encrypt/back up those observations; this is
+separate from database or assistant-vault recovery. Reports are not served to
+application users or attached to assistant context. No API key, bank password,
+MFA code or provider response belongs in logs, chat or versioned documentation.
+Consult the owning guide for daily cache, expiry, incomplete coverage and
+preservation on failure. There is no automatic collection while the process is off.
+
 ## Financial calendar
 
 Financial rules obtain today's date through Django's `timezone.localdate()`.

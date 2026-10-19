@@ -42,7 +42,18 @@ access/limits, streaming or real refresh/revocation. A later
 [bounded streaming validation](reviews/assistant-streaming-2026-10-19.md)
 completed a synthetic ChatGPT-plan request without financial context; this does
 not establish financial-answer quality, all-model access or live Docker inference.
-The personal Open Finance study is research only.
+The broader personal Open Finance study remains research. A separately approved
+[Inter bill pilot](open-finance-pilot.md) provides an explicit operator-only read
+command with daily private observations; it does not synchronize the ledger or
+enable a product connection screen.
+
+The assistant's identity is **Tuxedo, your financial assistant** (**Tuxedo, o seu
+assistente financeiro** in Brazilian Portuguese). Versioned
+[financial premises](assistant/financial-premises.md) guide personal-finance
+explanations, evidence and planning. The current runtime has no Internet
+browsing/news tool and does not inherit development-environment plugins.
+Future external research needs its own source, privacy, subscription and
+validation boundary; instructions alone do not enable it.
 
 The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
@@ -61,7 +72,7 @@ implementation; they are not all navigation destinations or published features.
 | Assistant foundation (FR39) | Owned local conversations and minimized request context; financial evidence requires a per-request unchecked opt-in. No financial execution endpoint. |
 | OpenAI authorization preparation (FR40) | Gated account settings, OAuth lifecycle and encrypted vault; authorization defaults off. Native account linking was observed, without proving inference or wider deployment eligibility. |
 | Gated streaming chat (FR41) | Implemented selected-account model catalogue, explicit model choice, SSE/native submission, cancellation and local run history; inference independently defaults off. Live model access/allowance and output quality are not established by code or synthetic tests. |
-| Personal Open Finance | Research only. No bank connection or payment initiation is enabled. The PF 6–8-hour data target remains unproven by checked public offers. |
+| Personal Open Finance | Broader PF 6–8-hour aggregation remains research. The separately approved daily Inter bill probe is implemented as an operator-only command; live personal-proxy bill coverage remains unverified. No payment initiation, automatic ledger import or unattended synchronization. |
 
 The [roadmap](roadmap.md) records paused/future work, the
 [interface map](interface-map.md) records current screens, and the
@@ -130,13 +141,17 @@ availability or permission to re-enable a paused workflow.
   owner-approved native authorization validation within its dated evidence limits.
 - A public-source personal Open Finance feasibility study for Nubank, Banco Inter
   and Mercado Pago, covering 6–8-hour collection and source-preserving reconciliation.
+- An operator-only free personal Meu Pluggy Inter bill pilot: explicit offline/live
+  modes, hidden one-shot credentials, bounded collection and private daily reuse,
+  without database queries, financial writes or enabling paused import routes.
 
 ### Out of scope
 
 - Automatic conversion of unsupported pre-release financial rows or invention
   of opening dates, prices, historical fee currencies or returns.
-- Live Open Finance/bank synchronization, payment initiation, broker/issuer APIs
-  and cloud financial processing. A documented feasibility study does not enable them.
+- Automatic Open Finance/bank ledger synchronization, payment initiation, broker/
+  issuer APIs and broader cloud financial processing. The explicit read-only
+  Inter bill pilot is the scoped exception; research does not enable other integrations.
 - Broader deployment/program eligibility guarantees, Docker real OAuth, model
   access/limits or live response-quality guarantees, real refresh/revocation validation,
   action execution, unattended automation and automatic paid-provider fallback
@@ -360,6 +375,10 @@ serve explicitly labeled current or selected-date valuations elsewhere.
   other deployments, model access/limits, streaming or real refresh/revocation.
 - The [Open Finance study](reviews/open-finance-personal-study-2026-10-18.md)
   excludes payment initiation and does not reopen paused statement operations.
+- The [bill pilot](open-finance-pilot.md) keeps credentials in one command's memory
+  and observations in private operator files. Proxy provenance remains human-
+  attested, missing values stay unknown, and reported payments do not establish
+  local paid status. Bank consent and live coverage are not established by mocks.
 
 ## 6. Data Structure
 

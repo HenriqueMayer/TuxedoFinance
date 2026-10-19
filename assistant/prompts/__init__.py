@@ -3,8 +3,8 @@
 from pathlib import Path
 
 
-INSTRUCTIONS_VERSION = 'v2'
-SUPPORTED_INSTRUCTIONS_VERSIONS = ('v1', 'v2')
+INSTRUCTIONS_VERSION = 'v3'
+SUPPORTED_INSTRUCTIONS_VERSIONS = ('v1', 'v2', 'v3')
 
 
 def load_instructions(version=INSTRUCTIONS_VERSION):

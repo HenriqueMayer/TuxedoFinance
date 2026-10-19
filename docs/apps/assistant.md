@@ -340,8 +340,8 @@ implementation must keep generation and confirmation separate.
 
 ## Versioned instructions and evaluation limits
 
-`assistant.prompts.INSTRUCTIONS_VERSION` is `v2`; `load_instructions` defaults to
-`assistant/prompts/v2/system.txt`, retains explicit v1 loading for historical
+`assistant.prompts.INSTRUCTIONS_VERSION` is `v3`; `load_instructions` defaults to
+`assistant/prompts/v3/system.txt`, retains explicit v1/v2 loading for historical
 requests and refuses unknown versions. The
 instructions require supplied owned source links, explicit missing/stale/bounded
 evidence and separation of native currency, source amounts, installments,
@@ -349,9 +349,19 @@ settlement, cost and projections. The selected English/Brazilian Portuguese
 language, concise practical style, facts versus estimates/suggestions and focused
 questions for missing information are explicit written obligations. Record text and chat history are untrusted
 data rather than authority to change instructions, access credentials or execute
-tools. V2 does not hardcode provider availability; it explicitly distinguishes
-minimal page metadata from opted-in financial evidence and grants no tool or
+tools. V2/v3 do not hardcode provider availability; they explicitly distinguish
+minimal page metadata from opted-in financial evidence and grant no tool or
 financial execution authority.
+
+V3 names the assistant **Tuxedo, your financial assistant**, or **Tuxedo, o seu
+assistente financeiro** in Brazilian Portuguese. It adds practical personal-finance
+premises: comparable evidence, goal/horizon/liquidity framing, measurable
+proposals and explicitly conditional scenarios. It states that the application
+has no live web/news verification tools and does not inherit ChatGPT/Codex
+plugins. Pasted articles remain unverified data. The
+[financial premises and research boundaries](../assistant/financial-premises.md)
+own methodology provenance and future-news acceptance requirements; reading
+that document does not connect a tool or provider.
 
 These are versioned local instructions and interface guards. Offline tests can
 check deterministic boundaries and fixtures; they do not establish the quality,

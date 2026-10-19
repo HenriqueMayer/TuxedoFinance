@@ -20,6 +20,9 @@ releases, persistent volumes and isolated restore rehearsals.
 | [branch-testing.md](branch-testing.md) | Owner walkthrough using an isolated disposable copy; computer/phone acceptance and native fallbacks. |
 | [roadmap.md](roadmap.md) | Paused interfaces and future studies; no implied availability or scheduled release. |
 | [Personal Open Finance study](reviews/open-finance-personal-study-2026-10-18.md) | Dated PF coverage, eligibility, cadence/cost limitations and reconciliation design for Nubank, Inter and Mercado Pago; no enabled bank connection. |
+| [Intraday Open Finance alternatives](reviews/open-finance-intraday-study-2026-10-19.md) | Follow-up retaining the 6–8-hour requirement, personal REST/MCP candidates and outstanding provider/resource/local-delivery evidence. |
+| [Meu Pluggy bill pilot](open-finance-pilot.md) | Operator-only free personal Inter bill probe, offline preparation, hidden credential setup, daily observation reuse and preserved ledger/import gates. |
+| [Tuxedo financial premises](assistant/financial-premises.md) | Assistant identity, original personal-finance reasoning rules, inspected plugin methodology and future news/source boundaries; browsing is not enabled. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and migration compatibility. |
 | [frontend.md](frontend.md) | Entry index for the responsibility-specific frontend contracts: runtime, presentation, forms, catalogue, navigation, charts, consultation and workspace compositions. Earlier section URLs remain available. |

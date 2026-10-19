@@ -11,6 +11,9 @@ and [interface map](../interface-map.md) for present behavior.
 
 | Record | Scope and status |
 |---|---|
+| [Meu Pluggy Inter bill pilot — 2026-10-19](open-finance-pilot-2026-10-19.md) | Operator-only bounded read command, synthetic preparation, private daily evidence, zero-query ledger preservation and unexercised real consent/coverage boundary. |
+| [Personal intraday Open Finance alternatives — 2026-10-19](open-finance-intraday-study-2026-10-19.md) | Retained 6–8-hour PF target, personal REST/MCP and commercial alternatives, conditional Banco MCP lead, resource freshness and unresolved selection requirements; research only. |
+| [Tuxedo identity and financial premises — 2026-10-19](assistant-financial-premises-2026-10-19.md) | Original v3 persona/PF instructions, inspected plugin methodology and provenance, verified current absence of browsing/news tools and future external-evidence boundaries. |
 | [Saved assistant settings and gear — 2026-10-19](assistant-saved-settings-2026-10-19.md) | Owned local model/effort preferences, catalogue validation, reload/native/queued-save behavior, corrected settings geometry and additive installation migration. |
 | [Assistant compact chrome — 2026-10-19](assistant-clean-chrome-2026-10-19.md) | Presentation refinement of titlebar, shared toolbar, message typography and composer; preserves window actions, 44px targets, model/effort/context controls and native behavior. |
 | [Assistant window and connection availability — 2026-10-19](assistant-window-and-availability-2026-10-19.md) | Explicit local-selection/gate states, grouped Minimize/Close titlebar and authorized restore; integrated desktop/phone validation and local configuration evidence. |
