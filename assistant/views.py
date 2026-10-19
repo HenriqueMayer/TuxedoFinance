@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """Private local history and honest provider-unavailable recovery."""
-from datetime import date
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
@@ -8,7 +7,6 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
@@ -41,13 +39,11 @@ def _render(request, conversation=None, *, status=200, error=None, create_form=N
         messages = messages[:200]
         error = error or _('Only the latest 200 messages are displayed.')
     messages.reverse()
-    # Display dates are separate from the canonical ISO snapshot supplied to
-    # future providers; presentation must not change its evidence or cutoff.
+    # The UI shows location and its link only. Bounded financial evidence stays
+    # in the structured context contract instead of becoming a second dashboard.
     context = {'conversations': history.object_list, 'history_page': history, 'conversation': conversation,
                'chat_messages': messages, 'provider_state': 'disconnected', 'scope': token,
                'scope_label': label, 'context_snapshot': snapshot,
-               'context_captured_at': parse_datetime(snapshot['captured_at']) if snapshot else None,
-               'context_cutoff': date.fromisoformat(snapshot['cutoff']) if snapshot else None,
                'create_form': create_form or CreateConversationForm(initial={'scope': token}),
                'send_form': SendMessageForm(initial={'scope': token}), 'error': error}
     template = 'assistant/_content.html' if request.headers.get('X-Tuxedo-Assistant') == 'panel' else 'assistant/index.html'

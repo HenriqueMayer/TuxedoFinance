@@ -622,7 +622,6 @@
         function layout() {
             if (panel.hidden) return;
             panel.setAttribute('aria-modal', String(!wide.matches));
-            document.body.classList.toggle('lab-assistant-docked', wide.matches);
             backgroundInert(!wide.matches);
             document.body.style.overflow = wide.matches ? originalOverflow : 'hidden';
             const viewport = window.visualViewport;
@@ -646,7 +645,6 @@
             cancelPreview();
             panel.hidden = true;
             backgroundInert(false);
-            document.body.classList.remove('lab-assistant-docked');
             document.body.style.overflow = originalOverflow;
             document.querySelectorAll('[data-lab-assistant-open]').forEach(button => button.setAttribute('aria-expanded', 'false'));
             shell.querySelector('[data-lab-assistant-launcher]').hidden = false;

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 02:06+0000\n"
+"POT-Creation-Date: 2026-10-19 02:35+0000\n"
 "PO-Revision-Date: 2026-10-16 00:12+0000\n"
 "Last-Translator: Tuxedo Finance contributors\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -162,7 +162,7 @@ msgstr "Data de contexto do assistente inválida."
 msgid "Invalid assistant context currency."
 msgstr "Moeda de contexto do assistente inválida."
 
-#: assistant/context.py:207 assistant/views.py:128
+#: assistant/context.py:207 assistant/views.py:124
 msgid "Open the assistant again from an available workspace."
 msgstr "Abra o assistente novamente em uma área disponível."
 
@@ -233,15 +233,15 @@ msgstr "Os valores mantêm suas moedas originais; nenhuma conversão de moeda fo
 msgid "Conversation title"
 msgstr "Título da conversa"
 
-#: assistant/forms.py:12 templates/assistant/_content.html:57
+#: assistant/forms.py:12 templates/assistant/_content.html:47
 msgid "Message"
 msgstr "Mensagem"
 
-#: assistant/views.py:42
+#: assistant/views.py:40
 msgid "Only the latest 200 messages are displayed."
 msgstr "Apenas as 200 mensagens mais recentes são exibidas."
 
-#: assistant/views.py:118
+#: assistant/views.py:114
 msgid "No AI provider is connected. No message was sent or saved."
 msgstr "Nenhum provedor de IA está conectado. Nenhuma mensagem foi enviada ou salva."
 
@@ -705,7 +705,6 @@ msgid "Reconstructed"
 msgstr "Reconstruída"
 
 #: banking/models.py:313 investments/models.py:257
-#: templates/assistant/_content.html:34
 msgid "Captured"
 msgstr "Capturada"
 
@@ -3296,7 +3295,7 @@ msgid "Conversation history"
 msgstr "Histórico de conversas"
 
 #: templates/assistant/_content.html:9 templates/assistant/_content.html:23
-#: templates/assistant/_content.html:44
+#: templates/assistant/_content.html:34
 msgid "New conversation"
 msgstr "Nova conversa"
 
@@ -3330,64 +3329,52 @@ msgstr "Anterior"
 msgid "Next"
 msgstr "Próxima"
 
-#: templates/assistant/_content.html:28
+#: templates/assistant/_content.html:30
 msgid "Context"
 msgstr "Contexto"
 
-#: templates/assistant/_content.html:31
-msgid "Information available for consultation"
-msgstr "Informações disponíveis para consulta"
-
 #: templates/assistant/_content.html:35
-msgid "Financial cutoff"
-msgstr "Data de corte financeiro"
-
-#: templates/assistant/_content.html:36
-msgid "Reporting currency"
-msgstr "Moeda de consolidação"
-
-#: templates/assistant/_content.html:45
 msgid "Messages"
 msgstr "Mensagens"
 
-#: templates/assistant/_content.html:47
+#: templates/assistant/_content.html:37
 msgid "You"
 msgstr "Você"
 
-#: templates/assistant/_content.html:47 templates/assistant/_dock.html:14
+#: templates/assistant/_content.html:37 templates/assistant/_dock.html:14
 #: templates/assistant/index.html:3 templates/assistant/index.html:7
 msgid "Tuxedo assistant"
 msgstr "Assistente Tuxedo"
 
-#: templates/assistant/_content.html:51
+#: templates/assistant/_content.html:41
 msgid "Provider not connected"
 msgstr "Provedor não conectado"
 
-#: templates/assistant/_content.html:52
+#: templates/assistant/_content.html:42
 msgid "Your chat is ready for a future AI connection. No financial data is being sent to a provider."
 msgstr "O chat está preparado para uma futura conexão com IA. Nenhum dado financeiro está sendo enviado a um provedor."
 
-#: templates/assistant/_content.html:58
+#: templates/assistant/_content.html:48
 msgid "Connect a provider in a future update to send messages."
 msgstr "Conecte um provedor em uma futura atualização para enviar mensagens."
 
-#: templates/assistant/_content.html:59
+#: templates/assistant/_content.html:49
 msgid "Sending is unavailable."
 msgstr "O envio está indisponível."
 
-#: templates/assistant/_content.html:59
+#: templates/assistant/_content.html:49
 msgid "Send message"
 msgstr "Enviar mensagem"
 
-#: templates/assistant/_content.html:63
+#: templates/assistant/_content.html:53
 msgid "Delete conversation"
 msgstr "Excluir conversa"
 
-#: templates/assistant/_content.html:66
+#: templates/assistant/_content.html:56
 msgid "Delete this conversation and its messages? Financial records will be kept."
 msgstr "Excluir esta conversa e suas mensagens? Os registros financeiros serão mantidos."
 
-#: templates/assistant/_content.html:67
+#: templates/assistant/_content.html:57
 msgid "Confirm deletion"
 msgstr "Confirmar exclusão"
 
@@ -7490,6 +7477,15 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+#~ msgid "Information available for consultation"
+#~ msgstr "Informações disponíveis para consulta"
+
+#~ msgid "Financial cutoff"
+#~ msgstr "Data de corte financeiro"
+
+#~ msgid "Reporting currency"
+#~ msgstr "Moeda de consolidação"
 
 #, python-format
 #~ msgid "Source amount: %(title)s"

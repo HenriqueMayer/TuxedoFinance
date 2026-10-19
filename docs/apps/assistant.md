@@ -57,12 +57,18 @@ object ID, label, total or arbitrary URL as financial authority.
 30 query fields; unsupported filters are refused rather than copied wholesale.
 
 The collector returns the supported scope, snapshot timestamp, financial cutoff,
-reporting currency, metrics, evidence warnings and owned source links. Context
-dates use the interface's display formats, with the capture timezone visible;
-the canonical ISO timestamps/dates and numeric strings remain unchanged.
-Context may be incomplete or unavailable; those states must stay visible rather than
-being treated as a zero balance or an answer about the entire ledger. Native
-currencies and historical FX evidence retain their existing meaning.
+reporting currency, metrics, evidence warnings and owned source links. The compact
+Context block shows only the current workspace/period and its authorized origin
+link. It does not repeat financial figures, technical timestamps or the evidence
+inventory. The structured endpoint retains canonical ISO dates, numeric strings,
+currencies and warnings for future response construction. Incomplete evidence
+must remain explicit in any later answer rather than being treated as a zero
+balance or a complete ledger review. Page location is a UI cue, not a claim that
+every customer record was fetched or a replacement for server-side ownership.
+Future agent queries may consult the authenticated user's financial data beyond
+the page currently open, retrieving what the question needs rather than copying
+the whole database into each request. This disconnected foundation retains the
+bounded collector below; broader query tools belong to later provider work.
 
 | Current context surface | Collected evidence |
 |---|---|
@@ -96,8 +102,13 @@ and paused-feature gates.
 ## Interface and recovery
 
 The authenticated shell offers the assistant as a utility, preserving the same
-five primary destinations. Its panel lives outside `main`, so chat actions never
-submit or capture a financial draft. A whole-body HTMX navigation reconstructs
+five primary destinations. Its fixed desktop overlay lives outside `main` and
+never reserves width or changes page/filter/form geometry. Narrow screens retain
+the accessible modal sheet. Chat actions never submit or capture a financial draft.
+Following Context to the current document closes the panel without reloading
+that document; navigation-only origins and empty filters do not change this rule.
+The cat/orbit artwork has gentle transform-only motion inside stationary controls,
+disabled by reduced-motion preference. A whole-body HTMX navigation reconstructs
 the panel and refetches the selected conversation with authenticated owner
 checks; it does not preserve or replay a DOM transcript. The full-page route
 remains available without JavaScript. Shared colors, typography, actions,

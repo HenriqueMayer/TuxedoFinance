@@ -25,21 +25,11 @@
     </div>
     {% if error %}<p class="assistant-error" role="alert">{{ error }}</p>{% endif %}
     {% for field in create_form %}{% for message in field.errors %}<p class="assistant-error" role="alert">{{ message }}</p>{% endfor %}{% endfor %}
-    {% if scope_label %}<div class="assistant-scope"><span>{% translate 'Context' %}</span><strong>{{ scope_label }}</strong></div>{% endif %}
-    {% if context_snapshot %}
-    <details class="assistant-context-details">
-        <summary>{% translate 'Information available for consultation' %}</summary>
-        <div>
-            <dl>
-                <div><dt>{% translate 'Captured' %}</dt><dd><time datetime="{{ context_snapshot.captured_at }}">{{ context_captured_at|date:'SHORT_DATE_FORMAT' }} {{ context_captured_at|date:'H:i T' }}</time></dd></div>
-                <div><dt>{% translate 'Financial cutoff' %}</dt><dd><time datetime="{{ context_snapshot.cutoff }}">{{ context_cutoff|date:'SHORT_DATE_FORMAT' }}</time></dd></div>
-                {% if context_snapshot.currency %}<div><dt>{% translate 'Reporting currency' %}</dt><dd>{{ context_snapshot.currency }}</dd></div>{% endif %}
-                {% for metric in context_snapshot.metrics %}<div><dt>{{ metric.label }}</dt><dd>{% if metric.currency %}{{ metric.currency }} {{ metric.value|floatformat:2 }}{% else %}{{ metric.value }}{% endif %}</dd></div>{% endfor %}
-            </dl>
-            {% for warning in context_snapshot.warnings %}<p class="subtle-copy">{{ warning }}</p>{% endfor %}
-            {% if context_snapshot.sources %}<ul class="assistant-sources">{% for source in context_snapshot.sources %}<li><a href="{{ source.url }}" data-assistant-source>{{ source.label }} ↗</a></li>{% endfor %}</ul>{% endif %}
-        </div>
-    </details>
+    {% if scope_label %}
+    <div class="assistant-scope">
+        <span>{% translate 'Context' %}</span>
+        {% with origin=context_snapshot.sources.0 %}<a href="{{ origin.url }}" data-assistant-source data-assistant-context-link><span>{{ scope_label }}</span><span aria-hidden="true">↗</span></a>{% endwith %}
+    </div>
     {% endif %}
     {% if conversation %}<h3 class="mt-4 text-sm font-medium">{{ conversation.title|default:_('New conversation') }}</h3>{% endif %}
     <section class="assistant-transcript" aria-label="{% translate 'Messages' %}" tabindex="0">

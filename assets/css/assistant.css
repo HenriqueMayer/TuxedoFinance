@@ -1,8 +1,9 @@
 /* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
-/* The dock reflows a wide workspace; narrow screens use a focus-contained sheet. */
+/* A fixed overlay never changes workspace geometry; narrow screens use a sheet. */
 .assistant-mark { position: relative; display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; flex: none; color: var(--ui-accent); }
-.assistant-mark img { width: 36px; height: 36px; border-radius: 50%; }
-.assistant-mark > svg { position: absolute; inset: 0; width: 48px; height: 48px; }
+/* Animate only the artwork: the trigger and its focus/target stay still. */
+.assistant-mark img { width: 28px; height: 28px; border-radius: 50%; animation: assistant-mark-float 4s ease-in-out infinite; }
+.assistant-mark > svg { position: absolute; inset: 0; width: 48px; height: 48px; transform-origin: 50% 50%; animation: assistant-mark-orbit 12s ease-in-out infinite; }
 .assistant-launcher { position: fixed; right: 18px; bottom: var(--assistant-bottom, 92px); z-index: 43; display: flex; width: 60px; height: 60px; align-items: center; justify-content: center; border: 1px solid var(--ui-line); border-radius: 18px; background: var(--ui-paper); box-shadow: 0 4px 18px rgb(26 46 38 / .12); transition: background-color 180ms ease, box-shadow 180ms ease; }
 .assistant-launcher:hover { background: var(--ui-ground); box-shadow: 0 6px 24px rgb(26 46 38 / .16); }
 .assistant-launcher[hidden], .assistant-panel[hidden], [data-assistant-shell] [hidden] { display: none !important; }
@@ -20,20 +21,15 @@
 .assistant-history > summary::-webkit-details-marker { display: none; }
 .assistant-history[open] > summary svg { transform: rotate(180deg); }
 .assistant-history-list { display: flex; flex-direction: column; max-height: 180px; overflow-y: auto; overscroll-behavior: contain; padding-block: 4px; }
-.assistant-history-list a { display: flex; flex-direction: column; min-height: 48px; gap: 3px; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: var(--ui-ink); }
+/* Keep each wrapped title/date together inside the independently scrolled list. */
+.assistant-history-list a { display: flex; flex: none; flex-direction: column; min-height: 48px; gap: 3px; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: var(--ui-ink); }
 .assistant-history-list a time { font-size: 11px; color: var(--ui-muted); }
 .assistant-history-list a:is(:hover, [aria-current]) { background: var(--ui-ground); }
 .assistant-history-pagination { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-.assistant-scope { display: grid; gap: 3px; padding-block: 14px; font-size: 12px; }
+.assistant-scope { display: grid; gap: 3px; padding-block: 12px; border-bottom: 1px solid var(--ui-line); font-size: 12px; }
 .assistant-scope > span { color: var(--ui-muted); }
-.assistant-scope strong { font-weight: 500; }
-.assistant-context-details { border-bottom: 1px solid var(--ui-line); padding-bottom: 12px; font-size: 12px; }
-.assistant-context-details summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; color: var(--ui-muted); }
-.assistant-context-details > div { display: grid; gap: 10px; padding-block: 8px; }
-.assistant-context-details .subtle-copy { font-size: 12px; }
-.assistant-context-details dl > div { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; padding-block: 5px; border-bottom: 1px solid var(--ui-line); }
-.assistant-context-details dd { font-variant-numeric: tabular-nums; }
-.assistant-sources a { display: inline-flex; min-height: 44px; align-items: center; color: var(--ui-accent); text-decoration: underline; text-underline-offset: 4px; }
+.assistant-scope a { display: inline-flex; align-items: center; gap: 8px; justify-self: start; min-height: 44px; max-width: 100%; font-weight: 500; text-decoration: underline; text-decoration-color: var(--ui-line); text-underline-offset: 4px; }
+.assistant-scope a:hover { color: var(--ui-accent); }
 .assistant-transcript { flex: 1; display: flex; flex-direction: column; gap: 16px; padding-block: 24px; min-height: 220px; }
 .assistant-empty { margin: auto 0; padding: 18px 0 30px; }
 .assistant-bowtie { width: 90px; height: 44px; color: var(--ui-accent); margin-bottom: 24px; }
@@ -62,7 +58,6 @@ body.tuxedo-ui .assistant-composer textarea.entry-input { min-height: 76px; widt
 body:has([data-assistant-shell]) > main { padding-bottom: 6rem; }
 @media (min-width: 1024px) { .assistant-launcher { bottom: 20px; } }
 @media (min-width: 1280px) {
-  body.app-layout.assistant-docked { padding-right: 408px; }
   .assistant-panel { inset: 80px 16px 16px auto; width: 376px; height: auto; border-radius: 16px; box-shadow: 0 8px 36px rgb(26 46 38 / .08); }
 }
 /* A full-screen sheet is opaque from its first frame; fading the entire
@@ -70,4 +65,6 @@ body:has([data-assistant-shell]) > main { padding-bottom: 6rem; }
 @media (max-width: 1279px) { .assistant-panel { animation: assistant-sheet-enter 180ms cubic-bezier(.22,1,.36,1); } }
 @keyframes assistant-sheet-enter { from { transform: translateY(6px); } to { transform: none; } }
 @keyframes assistant-enter { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .assistant-panel { animation: none; } .assistant-launcher { transition: none; } }
+@keyframes assistant-mark-float { 0%, 100% { transform: translateY(1.5px) rotate(-2deg); } 50% { transform: translateY(-1.5px) rotate(2deg); } }
+@keyframes assistant-mark-orbit { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+@media (prefers-reduced-motion: reduce) { .assistant-panel, .assistant-mark img, .assistant-mark > svg { animation: none; } .assistant-launcher { transition: none; } }

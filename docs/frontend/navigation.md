@@ -71,6 +71,24 @@ capture a financial draft. Whole-body HTMX navigation reconstructs the panel;
 an owner-checked server request reloads its selected conversation instead of
 replaying a preserved DOM transcript.
 
+At desktop widths the panel is a fixed, nonmodal overlay above the workspace.
+Opening or closing it must not reserve a column, change body/main padding or
+resize filters, charts or forms. The page keeps its original geometry and remains
+usable beside the overlay. Narrow screens retain the modal, focus-contained sheet.
+The Context block is a location cue: show the current workspace/period as an
+authorized link, without repeating balances, technical timestamps or a financial
+evidence inventory. Structured evidence remains in the backend context contract.
+Activating the context link for the document already open closes the panel
+without a GET or form reset, including when the signed scope omits a navigation
+origin (`next`). Other source destinations retain normal departure protection.
+
+The cat and its orbit use smooth 4-second and 12-second CSS transform cycles
+inside the fixed mark, with two stars on opposite sides of the orbit. Keep the
+cat at 28px inside the 48px orbit and retain the 60px launcher target.
+Never animate the button's target, focus ring or surrounding layout. Honor
+`prefers-reduced-motion` for both the launcher and header artwork, including the
+Design Lab specimen; keep the disconnected-provider status explicit.
+
 Opening and closing are deliberate keyboard, pointer or touch actions. Preserve
 the workspace's scroll, selected filters and unsent form values; closing returns
 focus to the trigger when it still exists. The narrow-screen presentation keeps

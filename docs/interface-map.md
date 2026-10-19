@@ -48,7 +48,7 @@ execution. See the [assistant guide](apps/assistant.md).
 
 | Routes | Interface and actions | Preserved boundaries |
 |---|---|---|
-| `/assistant/`, `/assistant/<uuid>/` | Local conversation list/detail, explicit New conversation/Delete, context status and unavailable provider/composer; utility panel with a native full-page fallback. | Owner-scoped UUIDs, no-store responses, shared keyboard/focus/mobile clearance and no fake model reply. Outside `main`; whole-body HTMX navigation reconstructs the panel and refetches its owned conversation. |
+| `/assistant/`, `/assistant/<uuid>/` | Local conversation list/detail, explicit New conversation/Delete, compact current-page context link and unavailable provider/composer; fixed desktop overlay, mobile sheet and native full-page fallback. | Opening/closing preserves workspace/filter geometry. Stationary controls contain gentle artwork motion with reduced-motion support. Owner-scoped UUIDs, no-store responses, shared keyboard/focus/mobile clearance and no fake model reply. Outside `main`; whole-body HTMX navigation reconstructs the panel and refetches its owned conversation. |
 | `/assistant/conversations/new/`, `/assistant/<uuid>/delete/` | Explicit CSRF-protected local POSTs. | Create/delete owned conversation history only; no financial write. |
 | `/assistant/<uuid>/messages/` | Unavailable-provider recovery for a stale/direct POST. | HTTP 503 without saving a fake exchange; no external request or paid fallback. |
 | `/assistant/context/` | Timestamped/cutoff/currency-aware structured context with metrics, warnings and owned source links. | Signed expiring user-bound origin, allowlisted route/query, ownership rechecks, read-only collection and no DOM/unsent-form capture. |

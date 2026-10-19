@@ -542,9 +542,10 @@
 .lab-assistant-reference-ledger dd { font-size: 14px; line-height: 1.6; font-variant-numeric: tabular-nums; }
 .lab-assistant-launcher { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 43; display: grid; place-items: center; width: 60px; height: 60px; border: 1px solid var(--lab-line); border-radius: 18px; background: var(--lab-paper); color: var(--lab-accent-ink); box-shadow: 0 4px 18px rgb(26 46 38 / .12); transition: background-color 180ms ease, box-shadow 180ms ease; }
 .lab-assistant-launcher:hover { background: var(--lab-ground); box-shadow: 0 6px 24px rgb(26 46 38 / .16); }
-.lab-assistant-mark { position: relative; display: grid; place-items: center; width: 48px; height: 48px; }
-.lab-assistant-mark img, .lab-assistant-heading img { width: 36px; height: 36px; border-radius: 50%; flex: none; }
-.lab-assistant-mark svg { position: absolute; inset: 0; width: 48px; height: 48px; }
+.lab-assistant-mark { position: relative; display: grid; place-items: center; width: 48px; height: 48px; flex: none; color: var(--lab-accent-ink); }
+/* Only artwork transforms: the launcher's hit target and focus ring stay still. */
+.lab-assistant-mark img { width: 28px; height: 28px; border-radius: 50%; animation: lab-assistant-cat-float 4s ease-in-out infinite; }
+.lab-assistant-mark svg { position: absolute; inset: 0; width: 48px; height: 48px; transform-origin: 50% 50%; animation: lab-assistant-orbit-sway 12s ease-in-out infinite; }
 .lab-assistant-panel { position: fixed; inset: var(--lab-assistant-top, 0px) 0 auto; z-index: 45; height: var(--lab-assistant-height, 100dvh); display: flex; flex-direction: column; min-width: 0; background: var(--lab-surface); color: var(--lab-ink); border: 1px solid var(--lab-line); overflow: hidden; animation: lab-assistant-enter 180ms ease-out; }
 .lab-assistant-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: none; padding: 14px 18px; border-bottom: 1px solid var(--lab-line); background: var(--lab-paper); }
 .lab-assistant-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -557,17 +558,15 @@
 .lab-assistant-action:hover { color: var(--lab-ink); background: var(--lab-ground); }
 .lab-assistant-history { flex: 1; min-width: 0; }
 .lab-assistant-history > div { display: flex; flex-direction: column; max-height: 170px; overflow-y: auto; }
-.lab-assistant-history button { min-height: 48px; text-align: left; font-size: 13px; padding: 10px; border-radius: 8px; overflow-wrap: anywhere; }
+.lab-assistant-history button { flex: none; min-height: 48px; text-align: left; font-size: 13px; padding: 10px; border-radius: 8px; overflow-wrap: anywhere; }
 .lab-assistant-history button[aria-current], .lab-assistant-history button:hover { background: var(--lab-ground); }
-.lab-assistant-scope { display: grid; gap: 4px; padding-block: 16px; font-size: 12px; }
+.lab-assistant-scope { display: grid; gap: 4px; font-size: 12px; }
 .lab-assistant-scope span { color: var(--lab-muted); }
 .lab-assistant-scope strong { font-weight: 500; }
-.lab-assistant-context { border-bottom: 1px solid var(--lab-line); padding-bottom: 10px; font-size: 12px; }
-.lab-assistant-context summary { min-height: 44px; align-content: center; cursor: pointer; color: var(--lab-muted); }
-.lab-assistant-context p { line-height: 1.6; margin-block: 8px; color: var(--lab-muted); }
-.lab-assistant-context dl > div { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-block: 7px; border-bottom: 1px solid var(--lab-line); }
-.lab-assistant-context dd { font-variant-numeric: tabular-nums; }
+.lab-assistant-context { border-bottom: 1px solid var(--lab-line); padding-block: 12px 4px; font-size: 12px; }
+.lab-assistant-context nav { display: flex; flex-wrap: wrap; column-gap: 12px; }
 .lab-assistant-context a, .lab-assistant-sources a { display: inline-flex; align-items: center; min-height: 44px; color: var(--lab-accent-ink); text-decoration: underline; text-underline-offset: 4px; margin-right: 12px; font-size: 12px; }
+.lab-assistant-context a { margin-right: 0; }
 .lab-assistant-messages { display: flex; flex-direction: column; gap: 20px; min-height: 200px; padding-block: 20px; }
 .lab-assistant-empty { margin: auto 0; padding-block: 4px; }
 .lab-assistant-empty > svg { width: 86px; height: 44px; color: var(--lab-accent-ink); margin-bottom: 16px; }
@@ -591,11 +590,12 @@
 .lab-assistant-delete button { color: var(--lab-error); }
 [data-lab-assistant-shell] :is(button, textarea, select, summary, a):focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: 3px; }
 @media (min-width: 1280px) {
-    [data-design-lab].lab-assistant-docked { padding-right: 408px; }
     .lab-assistant-panel { inset: calc(var(--lab-header) + 12px) 16px 16px auto; width: 376px; height: auto; border-radius: 16px; box-shadow: 0 8px 36px rgb(26 46 38 / .08); }
 }
 @media (max-width: 639px) { .lab-assistant-introduction { align-items: start; flex-direction: column; } }
 @keyframes lab-assistant-enter { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+@keyframes lab-assistant-cat-float { 0%, 100% { transform: translateY(1.5px) rotate(-2deg); } 50% { transform: translateY(-1.5px) rotate(2deg); } }
+@keyframes lab-assistant-orbit-sway { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
 @media (prefers-reduced-motion: reduce) {
     /* This utility is outside .lab-section, so its shared buttons need the
        same motion override as the inline specimens. */
@@ -603,5 +603,4 @@
 }
 @media print {
     [data-lab-assistant-shell] { display: none !important; }
-    [data-design-lab].lab-assistant-docked { padding-right: 0; }
 }

@@ -2,6 +2,50 @@
 const {test, expect} = require('@playwright/test');
 const {openCatalogue} = require('../helpers/catalogue');
 
+async function pageGeometry(page) {
+    return page.evaluate(() => ['main', '#lab-workspace-example', '#daily-flow .filter-panel', '#daily-flow input[type="search"]'].map(selector => {
+        const {left, top, width, height} = document.querySelector(selector).getBoundingClientRect();
+        return {selector, left:left + scrollX, top:top + scrollY, width, height};
+    }));
+}
+
+async function expectSteadyLauncherMotion(launcher) {
+    // Seek the real CSS effects instead of waiting through their slow cycles.
+    const motion = await launcher.evaluate(button => {
+        const box = () => {
+            const {x, y, width, height} = button.getBoundingClientRect();
+            return {x, y, width, height};
+        };
+        return ['img', 'svg'].map(selector => {
+            const node = button.querySelector(selector), animation = node.getAnimations()[0];
+            if (!animation) return null;
+            const duration = animation.effect.getTiming().duration;
+            animation.pause();
+            const samples = [0, duration / 2].map(time => {
+                animation.currentTime = time;
+                const matrix = new DOMMatrix(getComputedStyle(node).transform);
+                return {box:box(), y:matrix.m42, angle:Math.atan2(matrix.b, matrix.a) * 180 / Math.PI};
+            });
+            const properties = [...new Set(animation.effect.getKeyframes().flatMap(frame => Object.keys(frame)))];
+            animation.play();
+            return {duration, samples, properties, buttonAnimations:button.getAnimations().length};
+        });
+    });
+    for (const [index, duration, angle] of [[0, 4000, 2], [1, 12000, 7]]) {
+        expect(motion[index]).not.toBeNull();
+        expect(motion[index].duration).toBe(duration);
+        expect(motion[index].buttonAnimations).toBe(0);
+        expect(motion[index].properties.filter(key => !['offset', 'computedOffset', 'easing', 'composite'].includes(key))).toEqual(['transform']);
+        expect(motion[index].samples[0].box).toEqual(motion[index].samples[1].box);
+        expect(motion[index].samples[0].angle).toBeCloseTo(-angle, 3);
+        expect(motion[index].samples[1].angle).toBeCloseTo(angle, 3);
+    }
+    expect(motion[0].samples[0].y).toBeCloseTo(1.5, 3);
+    expect(motion[0].samples[1].y).toBeCloseTo(-1.5, 3);
+    expect(motion[0].samples[0].box.width).toBeGreaterThanOrEqual(44);
+    expect(motion[0].samples[0].box.height).toBeGreaterThanOrEqual(44);
+}
+
 async function scenario(panel, value) {
     const controls = panel.locator('.lab-assistant-demo-controls');
     if (await controls.getAttribute('open') === null) await controls.locator('summary').press('Enter');
@@ -17,17 +61,20 @@ async function scenario(panel, value) {
 }
 
 for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
-    test(`synthetic assistant keeps context, recovery and keyboard ownership (${theme}, ${width})`, async ({page}, info) => {
+    test(`synthetic assistant preserves page geometry, compact context and keyboard ownership (${theme}, ${width})`, async ({page}, info) => {
         const external = [];
         const origin = new URL(info.project.use.baseURL).origin;
         page.on('request', request => {
             if (new URL(request.url()).origin !== origin) external.push(request.url());
         });
         await page.setViewportSize({width, height:900});
+        await page.emulateMedia({reducedMotion:'no-preference'});
         await openCatalogue(page, {hash:'#assistant', theme, waitForFonts:true});
         const launcher = page.getByRole('button', {name:'Open Tuxedo assistant specimen', exact:true});
         const panel = page.locator('[data-lab-assistant-panel]');
+        const geometry = await pageGeometry(page);
         const originalScroll = await page.evaluate(() => scrollY);
+        await expectSteadyLauncherMotion(launcher);
         await launcher.focus();
         await launcher.press('Tab');
         await page.keyboard.press('Shift+Tab');
@@ -39,7 +86,17 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(panel.getByRole('button', {name:'Close assistant', exact:true})).toBeFocused();
         await expect(panel).toContainText('Synthetic preview · no provider');
         await expect(panel.locator('[data-lab-assistant-scope]')).toHaveText('Home · October 2026 · BRL');
+        const compactContext = panel.getByLabel('Current page context', {exact:true});
+        await expect(compactContext.getByRole('link')).toHaveCount(2);
+        await expect(compactContext.getByRole('link', {name:'Cash and reserves ↗', exact:true})).toBeVisible();
+        await expect(compactContext.getByRole('link', {name:'Known commitments ↗', exact:true})).toBeVisible();
+        await expect(compactContext.locator('details, summary, dl')).toHaveCount(0);
+        await expect(compactContext).not.toContainText('1,000.00');
+        await expect(compactContext).not.toContainText('300.00');
+        await expect(compactContext).not.toContainText('800.00');
+        await expect(panel.getByText('Included context and sources', {exact:true})).toHaveCount(0);
         await expect.poll(() => panel.evaluate(node => node.getAnimations().length)).toBe(0);
+        if (width >= 1280) expect(await pageGeometry(page)).toEqual(geometry);
         const box = await panel.boundingBox();
         expect(box.x).toBeGreaterThanOrEqual(0);
         expect(box.x + box.width).toBeLessThanOrEqual(width);
@@ -47,7 +104,8 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         if (width >= 1280) {
             expect(box.width).toBe(376);
             expect(await page.locator('main').evaluate(node => node.inert)).toBe(false);
-            expect((await page.locator('main').boundingBox()).x + (await page.locator('main').boundingBox()).width).toBeLessThan(box.x);
+            const mainBox = await page.locator('main').boundingBox();
+            expect(mainBox.x + mainBox.width).toBeGreaterThan(box.x);
             await page.locator('[data-lab-navigation] [data-lab-destination="accounts"]').press('Enter');
             await expect(panel.locator('[data-lab-assistant-scope]')).toHaveText('Accounts · October 2026 · BRL');
             await panel.getByRole('button', {name:'Close assistant', exact:true}).focus();
@@ -59,10 +117,12 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
             await expect(panel.getByRole('button', {name:'Close assistant', exact:true})).toBeFocused();
         }
         await page.screenshot({path:info.outputPath(`assistant-empty-${theme}-${width}.png`)});
+        const geometryBeforeClose = width >= 1280 ? await pageGeometry(page) : null;
         await page.keyboard.press('Escape');
         await expect(panel).toBeHidden();
         await expect(launcher).toBeFocused();
         expect(Math.abs(await page.evaluate(() => scrollY) - originalScroll)).toBeLessThan(2);
+        if (width >= 1280) expect(await pageGeometry(page)).toEqual(geometryBeforeClose);
         await launcher.press('Enter');
 
         const question = panel.getByLabel('Your question about the example', {exact:true});
@@ -126,9 +186,14 @@ test('assistant sheet fits touch, short viewports and reduced motion', async ({b
     try {
         const page = await context.newPage();
         await openCatalogue(page, {hash:'#assistant', theme:'dark'});
-        await page.getByRole('button', {name:'Open Tuxedo assistant specimen', exact:true}).tap();
+        const launcher = page.getByRole('button', {name:'Open Tuxedo assistant specimen', exact:true});
+        await expect(launcher.locator('img')).toHaveCSS('animation-name', 'none');
+        await expect(launcher.locator('svg')).toHaveCSS('animation-name', 'none');
+        await launcher.tap();
         const panel = page.locator('[data-lab-assistant-panel]');
         await expect(panel).toHaveCSS('animation-name', 'none');
+        await expect(panel.locator('.lab-assistant-mark img')).toHaveCSS('animation-name', 'none');
+        await expect(panel.locator('.lab-assistant-mark svg')).toHaveCSS('animation-name', 'none');
         await page.setViewportSize({width:320, height:480});
         const input = panel.getByLabel('Your question about the example', {exact:true});
         await input.tap();

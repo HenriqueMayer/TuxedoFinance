@@ -2,7 +2,6 @@
 from datetime import datetime, timezone as datetime_timezone
 from unittest.mock import patch
 
-from django.conf import settings
 from django.db import connection
 from django.test import Client, TestCase
 from django.test.utils import CaptureQueriesContext
@@ -13,7 +12,6 @@ from assistant.models import Conversation, Message
 from assistant.tests.support import make_finances, make_owner
 from banking.models import BankMovement
 from transactions.models import Transaction
-from core.currencies import get_currency
 
 
 class AssistantViewTests(TestCase):
@@ -78,22 +76,24 @@ class AssistantViewTests(TestCase):
         self.assertTrue(Transaction.objects.filter(pk=self.item.pk).exists())
         self.assertEqual(BankMovement.objects.filter(user=self.user).count(), 1)
 
-    def test_context_money_uses_shared_financial_format_without_changing_canonical_values(self):
+    def test_compact_context_links_to_workspace_without_dumping_financial_evidence(self):
         token = sign_scope(self.user, '/dashboard/')
         instant = datetime(2026, 10, 18, 12, tzinfo=datetime_timezone.utc)
-        # Number separators follow the configured default currency throughout
-        # the app; changing the UI language does not change financial notation.
-        visible = 'BRL 87' + get_currency(settings.DEFAULT_CURRENCY).decimal_separator + '66'
         for language in ['en', 'pt-br']:
             with self.subTest(language=language), patch('assistant.context.timezone.now', return_value=instant):
                 response = self.client.get(reverse('assistant:index'), {'scope': token},
                                            HTTP_X_TUXEDO_ASSISTANT='panel', HTTP_ACCEPT_LANGUAGE=language)
-                self.assertContains(response, visible)
-                self.assertEqual(response.context['context_snapshot']['metrics'][0]['value'], '87.66')
-                self.assertEqual(response.context['context_captured_at'], instant)
-                self.assertEqual(response.context['context_cutoff'].isoformat(),
-                                 response.context['context_snapshot']['cutoff'])
-                self.assertContains(response, '<time datetime="2026-10-18T12:00:00+00:00">')
+                self.assertContains(response, 'href="/dashboard/" data-assistant-source')
+                self.assertNotContains(response, self.account.name)
+                self.assertNotContains(response, '87.66')
+                self.assertNotContains(response, '87,66')
+                self.assertNotContains(response, 'assistant-context-details')
+                self.assertNotContains(response, instant.isoformat())
+                snapshot = self.client.get(reverse('assistant:context'), {'scope': token},
+                                           HTTP_ACCEPT_LANGUAGE=language).json()['context_snapshot']
+                self.assertEqual(snapshot['metrics'][0]['value'], '87.66')
+                self.assertEqual(snapshot['captured_at'], instant.isoformat())
+                self.assertEqual(snapshot['cutoff'], '2026-10-18')
 
     def test_panel_owner_identifiers_stay_unlocalized_above_999(self):
         owner = self.user.__class__.objects.create_user(pk=2001, username='high-id-owner', password='local-test-only')

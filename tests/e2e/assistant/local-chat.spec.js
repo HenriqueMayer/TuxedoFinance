@@ -28,11 +28,14 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
         await page.setViewportSize({width, height: 844});
         await signup(page, info);
         await post(page, '/i18n/setlang/', {language: language === 'pt' ? 'pt-br' : 'en', next: '/transactions/create/'});
-        await page.goto('/transactions/create/');
+        // Navigation origins are excluded from assistant scope; their omission
+        // must not turn the context link into a destructive form reload.
+        await page.goto(width < 1280 ? '/transactions/create/?next=%2Ftransactions%2F%3Fq%3DDraft&q=&type=' : '/transactions/create/');
         const title = page.locator('#id_title');
         await title.fill('Private draft that must survive chat');
         const c = copy[language];
         const launcher = page.getByRole('button', {name: c.open, exact: true});
+        const workspaceBefore = await page.locator('main').boundingBox();
         await launcher.focus();
         await launcher.press('Space');
         const panel = page.locator('#assistant-panel');
@@ -45,7 +48,8 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
             await expect(page.locator('main')).not.toHaveAttribute('inert');
             const boxes = await page.evaluate(() => ({main: document.querySelector('main').getBoundingClientRect().right,
                 panel: document.querySelector('#assistant-panel').getBoundingClientRect().left}));
-            expect(boxes.main).toBeLessThanOrEqual(boxes.panel);
+            expect(boxes.main).toBeGreaterThan(boxes.panel);
+            expect(await page.locator('main').boundingBox()).toEqual(workspaceBefore);
         } else {
             await expect(page.locator('main')).toHaveAttribute('inert');
             const close = panel.getByRole('button', {name: c.close, exact: true});
@@ -56,6 +60,24 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
             expect(box.x).toBeGreaterThanOrEqual(0);
             expect(box.width).toBeLessThanOrEqual(width);
         }
+        const originalURL = page.url();
+        let formReads = 0;
+        const countFormReads = request => {
+            if (request.method() === 'GET' && new URL(request.url()).pathname === '/transactions/create/') formReads += 1;
+        };
+        page.on('request', countFormReads);
+        await title.evaluate(node => { node.dataset.assistantDraftProbe = 'same-form'; });
+        await panel.locator('[data-assistant-context-link]').press('Enter');
+        await expect(panel).toBeHidden();
+        await expect(launcher).toBeFocused();
+        await expect(title).toHaveValue('Private draft that must survive chat');
+        await expect(title).toHaveAttribute('data-assistant-draft-probe', 'same-form');
+        await expect(page).toHaveURL(originalURL);
+        await expect(page.locator('#departure-confirm')).toBeHidden();
+        expect(formReads).toBe(0);
+        page.off('request', countFormReads);
+        await launcher.press('Enter');
+        await expect(panel.getByText(c.unavailable, {exact: true})).toBeVisible();
         await panel.getByRole('button', {name: c.new, exact: true}).press('Enter');
         await expect(panel.locator('[data-conversation-id]')).toHaveAttribute('data-conversation-id', /[a-f0-9-]{36}/);
         await expect(panel.getByRole('heading', {name: c.new, exact: true})).toBeVisible();
@@ -207,7 +229,7 @@ test('Reopening a panel never flashes its former owner while reauthorization is 
 });
 
 for (const theme of ['light', 'dark']) {
-    test(`Assistant short phone keeps long history and expanded context inside its surface (${theme})`, async ({page}, info) => {
+    test(`Assistant short phone keeps long history and compact context inside its surface (${theme})`, async ({page}, info) => {
         await page.setViewportSize({width: 320, height: 480});
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await signup(page, info, '-small');
@@ -220,8 +242,19 @@ for (const theme of ['light', 'dark']) {
         const panel = page.locator('#assistant-panel');
         await expect(panel.getByText(longTitle, {exact: true})).toBeVisible();
         await expect(panel.locator('.assistant-history-list img')).toHaveCount(0);
-        await panel.locator('.assistant-context-details > summary').press('Enter');
-        const source = panel.locator('.assistant-sources a').first();
+        const historyRows = await panel.locator('.assistant-history-list a').evaluateAll(links => links.map(link => ({
+            top: link.getBoundingClientRect().top, bottom: link.getBoundingClientRect().bottom,
+            labelBottom: link.querySelector('span').getBoundingClientRect().bottom,
+            dateTop: link.querySelector('time').getBoundingClientRect().top,
+            dateBottom: link.querySelector('time').getBoundingClientRect().bottom,
+        })));
+        historyRows.forEach((row, index) => {
+            expect(row.dateTop).toBeGreaterThanOrEqual(row.labelBottom);
+            expect(row.bottom).toBeGreaterThanOrEqual(row.dateBottom);
+            if (index) expect(row.top).toBeGreaterThanOrEqual(historyRows[index - 1].bottom);
+        });
+        await expect(panel.locator('.assistant-context-details')).toHaveCount(0);
+        const source = panel.locator('.assistant-scope a[data-assistant-source]');
         await source.focus();
         await expect(source).toBeInViewport();
         await expect(panel.getByRole('button', {name: copy.en.close, exact: true})).toBeInViewport();
@@ -287,4 +320,105 @@ test('Touch assistant preserves its conversation and clears the bottom navigatio
     } finally {
         await context.close();
     }
+});
+
+for (const theme of ['light', 'dark']) for (const width of [1280, 1920]) {
+    test(`Assistant overlays transaction filters without moving or overlapping their controls (${theme}, ${width})`, async ({page}, info) => {
+        await page.setViewportSize({width, height: 900});
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        await signup(page, info, '-overlay');
+        await post(page, '/i18n/setlang/', {language: 'pt-br', next: '/transactions/'});
+        await page.goto('/transactions/?q=Overlay');
+        await page.evaluate(() => document.fonts.ready);
+        const geometry = () => page.evaluate(() => {
+            const rect = node => {
+                const {x, y, width, height} = node.getBoundingClientRect();
+                return {x, y, width, height};
+            };
+            const form = document.querySelector('#transaction-filters');
+            return {main: rect(document.querySelector('main')), form: rect(form),
+                controls: ['#filter-search', '[data-month-filter]', '#transaction-type-options', '#transaction-extra-filters > summary']
+                    .map(selector => rect(form.querySelector(selector)))};
+        });
+        const before = await geometry();
+        await page.getByRole('button', {name: copy.pt.open, exact: true}).press('Enter');
+        const panel = page.locator('#assistant-panel');
+        await expect(panel.getByText(copy.pt.unavailable, {exact: true})).toBeVisible();
+        expect(await geometry()).toEqual(before);
+        await expect(panel).toHaveCSS('position', 'fixed');
+        await expect(panel.locator('.assistant-scope a')).toHaveAttribute('href', '/transactions/?q=Overlay');
+        await expect(panel.locator('.assistant-context-details, dl')).toHaveCount(0);
+        for (let first = 0; first < before.controls.length; first++) {
+            const a = before.controls[first];
+            for (const b of before.controls.slice(first + 1)) {
+                const overlapX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+                const overlapY = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+                expect(overlapX > 1 && overlapY > 1).toBe(false);
+            }
+        }
+        await page.screenshot({path: info.outputPath(`assistant-overlay-${theme}-${width}.png`), animations: 'disabled'});
+        await panel.getByRole('button', {name: copy.pt.close, exact: true}).press('Escape');
+        await expect(panel).toBeHidden();
+        expect(await geometry()).toEqual(before);
+        await expect(page.locator('#filter-search')).toHaveValue('Overlay');
+    });
+}
+
+test('Assistant artwork moves gently while its target stays fixed and reduced motion stops it', async ({page}, info) => {
+    await page.setViewportSize({width: 1440, height: 900});
+    await page.emulateMedia({reducedMotion: 'no-preference'});
+    await signup(page, info, '-motion');
+    await page.goto('/banking/');
+    const launcher = page.getByRole('button', {name: copy.en.open, exact: true});
+    const samples = await launcher.evaluate(button => {
+        const rect = () => {
+            const {x, y, width, height} = button.getBoundingClientRect();
+            return {x, y, width, height};
+        };
+        return ['img', 'svg'].map(selector => {
+            const node = button.querySelector(selector), animation = node.getAnimations()[0];
+            if (!animation) return null;
+            const duration = animation.effect.getTiming().duration;
+            animation.pause();
+            const values = [0, duration / 2].map(time => {
+                animation.currentTime = time;
+                return {transform: getComputedStyle(node).transform, target: rect()};
+            });
+            animation.play();
+            return {duration, values};
+        });
+    });
+    expect(samples.map(sample => sample?.duration)).toEqual([4000, 12000]);
+    for (const sample of samples) {
+        expect(sample.values[0].transform).not.toEqual(sample.values[1].transform);
+        expect(sample.values[0].target).toEqual(sample.values[1].target);
+        expect(sample.values[0].target.width).toBeGreaterThanOrEqual(44);
+        expect(sample.values[0].target.height).toBeGreaterThanOrEqual(44);
+    }
+    const starPositions = await launcher.locator('svg').evaluate(svg => {
+        const box = svg.getBoundingClientRect();
+        return [...svg.querySelectorAll('path[fill="currentColor"]')].map(star => {
+            const rect = star.getBoundingClientRect();
+            return {x: rect.x + rect.width / 2 - box.x - box.width / 2,
+                y: rect.y + rect.height / 2 - box.y - box.height / 2};
+        });
+    });
+    expect(starPositions).toHaveLength(2);
+    expect(starPositions[0].x).toBeGreaterThan(0);
+    expect(starPositions[0].y).toBeLessThan(0);
+    expect(starPositions[1].x).toBeLessThan(0);
+    expect(starPositions[1].y).toBeGreaterThan(0);
+    expect(starPositions[0].x + starPositions[1].x).toBeCloseTo(0, 1);
+    expect(starPositions[0].y + starPositions[1].y).toBeCloseTo(0, 1);
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    await expect(launcher.locator('img')).toHaveCSS('animation-name', 'none');
+    await expect(launcher.locator('svg')).toHaveCSS('animation-name', 'none');
+    await launcher.press('Enter');
+    const panel = page.locator('#assistant-panel');
+    await expect(panel.getByText(copy.en.unavailable, {exact: true})).toBeVisible();
+    await expect(panel.locator('.assistant-mark img')).toHaveCSS('animation-name', 'none');
+    await expect(panel.locator('.assistant-mark svg')).toHaveCSS('animation-name', 'none');
+    await expect(panel.locator('.assistant-mark svg path[fill="currentColor"]')).toHaveCount(2);
+    await expect(panel).toHaveCSS('animation-name', 'none');
+    await page.screenshot({path: info.outputPath('assistant-opposite-stars.png')});
 });

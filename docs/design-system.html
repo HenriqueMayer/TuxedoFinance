@@ -26,7 +26,7 @@
 
     <!-- Application and catalogue share compiled tokens and components. -->
     <link rel="stylesheet" href="../static/css/app.css">
-    <link rel="stylesheet" href="design-system.css?v=e0a800def441">
+    <link rel="stylesheet" href="design-system.css?v=1121c5cdab68">
 </head>
 <body data-design-lab class="min-h-screen bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
 
@@ -1245,10 +1245,10 @@
 <section id="assistant" class="lab-section" aria-labelledby="lab-assistant-specimen-title">
     <div class="lab-section-heading">
         <div><span class="lab-eyebrow">13 / Assistant</span><h2 id="lab-assistant-specimen-title">Tuxedo assistant.</h2></div>
-        <p>A Tuxedo companion for the current workspace. A quiet cat mark opens an editorial conversation, with the scope and sources kept in view.</p>
+        <p>A Tuxedo companion for the current workspace. A gently animated cat mark opens an editorial conversation, with compact page context and references beside the replies.</p>
     </div>
     <div class="lab-assistant-introduction">
-        <div><h3 class="section-title">Context, conversations and references.</h3><p>Wide screens keep the page usable beside a 376 px dock. Smaller screens open a focus-contained sheet. Closing returns to the same place and control.</p></div>
+        <div><h3 class="section-title">Context, conversations and references.</h3><p>Wide screens use a fixed 376 px overlay without resizing the page or its filters. Smaller screens open a focus-contained sheet. Closing returns to the same place and control. Reduced motion keeps the mark still.</p></div>
         <button type="button" class="lab-button" data-lab-assistant-open hidden>Try the assistant specimen <span aria-hidden="true">↗</span></button>
     </div>
     <dl class="lab-assistant-reference-ledger" aria-label="Synthetic assistant reference ledger">
@@ -1259,7 +1259,7 @@
     <details id="lab-assistant-native" class="lab-reference">
         <summary>Read the assistant specimen without JavaScript</summary>
         <div class="lab-reference-content">
-            <p><strong>Example scope:</strong> Accounts · October 2026 · BRL. Only the active workspace and its recorded summaries are included.</p>
+            <p><strong>Example scope:</strong> Accounts · October 2026 · BRL. Compact page context and source links accompany the conversation; financial figures appear in the synthetic reply.</p>
             <p><strong>Example question:</strong> What can I safely set aside?</p>
             <p><strong>Synthetic reply:</strong> The example has BRL 1,000.00 in recorded cash and BRL 300.00 already reserved, leaving BRL 700.00 unreserved. The BRL 800.00 projection after known commitments is a different measure. Review upcoming bills before changing a goal.</p>
             <p><a class="lab-text-link" href="#lab-assistant-cash-source">Inspect recorded cash and reserves</a> · <a class="lab-text-link" href="#lab-assistant-projection-source">Inspect the known commitments projection</a></p>
@@ -1325,12 +1325,12 @@
 
 <div data-lab-assistant-shell>
     <button type="button" class="lab-assistant-launcher" data-lab-assistant-launcher data-lab-assistant-open aria-label="Open Tuxedo assistant specimen" aria-controls="lab-assistant-panel" aria-expanded="false" hidden>
-        <span class="lab-assistant-mark" aria-hidden="true"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="36" height="36"><svg viewBox="0 0 48 48" fill="none"><path d="M7 31C-1 18 12 3 28 5M41 17C49 30 36 45 20 43" stroke="currentColor" stroke-width="1.2"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" fill="currentColor"/></svg></span>
+        <span class="lab-assistant-mark" aria-hidden="true"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="28" height="28"><svg viewBox="0 0 48 48" fill="none"><path d="M7 31C-1 18 12 3 28 5M41 17C49 30 36 45 20 43" stroke="currentColor" stroke-width="1.2"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" fill="currentColor"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" transform="rotate(180 24 24)" fill="currentColor"/></svg></span>
     </button>
-    <noscript><a class="lab-assistant-launcher" href="#lab-assistant-native" aria-label="Read the Tuxedo assistant specimen"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="36" height="36"></a></noscript>
+    <noscript><a class="lab-assistant-launcher" href="#lab-assistant-native" aria-label="Read the Tuxedo assistant specimen"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="28" height="28"></a></noscript>
     <section id="lab-assistant-panel" class="lab-assistant-panel" role="dialog" aria-labelledby="lab-assistant-title" aria-describedby="lab-assistant-demo-note" tabindex="-1" data-lab-assistant-panel hidden>
         <header class="lab-assistant-header">
-            <div class="lab-assistant-heading"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="36" height="36"><div><h2 id="lab-assistant-title">Tuxedo assistant</h2><p id="lab-assistant-demo-note">Synthetic preview · no provider</p></div></div>
+            <div class="lab-assistant-heading"><span class="lab-assistant-mark" aria-hidden="true"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="28" height="28"><svg viewBox="0 0 48 48" fill="none"><path d="M7 31C-1 18 12 3 28 5M41 17C49 30 36 45 20 43" stroke="currentColor" stroke-width="1.2"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" fill="currentColor"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" transform="rotate(180 24 24)" fill="currentColor"/></svg></span><div><h2 id="lab-assistant-title">Tuxedo assistant</h2><p id="lab-assistant-demo-note">Synthetic preview · no provider</p></div></div>
             <button type="button" class="lab-icon-button" data-lab-assistant-close aria-label="Close assistant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
         </header>
         <div class="lab-assistant-body" data-lab-assistant-body data-search-choice-viewport>
@@ -1338,8 +1338,10 @@
                 <details class="lab-assistant-history" data-lab-assistant-history><summary>Conversation history</summary><div data-lab-assistant-history-list></div></details>
                 <button type="button" class="lab-assistant-action" data-lab-assistant-new>New conversation</button>
             </div>
-            <div class="lab-assistant-scope"><span>Current page context</span><strong data-lab-assistant-scope>Home · October 2026 · BRL</strong></div>
-            <details class="lab-assistant-context"><summary>Included context and sources</summary><p>The separate synthetic reference ledger below this specimen supplies these figures. No unsaved form, private note or uploaded statement is included.</p><dl><div><dt>Recorded cash</dt><dd>BRL 1,000.00</dd></div><div><dt>Already reserved</dt><dd>BRL 300.00</dd></div><div><dt>After known commitments</dt><dd>BRL 800.00 · projection</dd></div></dl><a href="#lab-assistant-cash-source" data-lab-assistant-source="accounts">Recorded cash and reserves ↗</a><a href="#lab-assistant-projection-source" data-lab-assistant-source="plan">Known commitments projection ↗</a></details>
+            <div class="lab-assistant-context" aria-label="Current page context">
+                <div class="lab-assistant-scope"><span>Current page context</span><strong data-lab-assistant-scope>Home · October 2026 · BRL</strong></div>
+                <nav aria-label="Context sources"><a href="#lab-assistant-cash-source" data-lab-assistant-source="accounts">Cash and reserves ↗</a><a href="#lab-assistant-projection-source" data-lab-assistant-source="plan">Known commitments ↗</a></nav>
+            </div>
             <div class="lab-assistant-messages" role="log" aria-label="Synthetic conversation" aria-live="polite" data-lab-assistant-messages></div>
             <p class="lab-assistant-notice" role="status" data-lab-assistant-notice hidden></p>
             <button type="button" class="lab-assistant-action" data-lab-assistant-cancel hidden>Cancel preview</button>
@@ -1360,7 +1362,7 @@
 <script src="design-system-layers.js?v=dc84f7eb1cfd" defer></script>
 <script src="../static/js/date-picker.js?v=56f29700f264" defer></script>
 <script src="design-system-calendar.js?v=bf1a89ac0411" defer></script>
-<script src="design-system.js?v=84ee3a7b30dc" defer></script>
+<script src="design-system.js?v=4009a2731a7a" defer></script>
 <script src="../static/js/theme.js"></script>
 <script src="../static/js/preferred-dates.js" defer></script>
 <script src="../static/js/project-menu.js"></script>

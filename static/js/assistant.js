@@ -10,6 +10,17 @@
     const panel = () => shell()?.querySelector('#assistant-panel');
     const content = () => shell()?.querySelector('[data-assistant-body]');
     const currentLocation = () => location.pathname + location.search;
+    function isCurrentContext(path) {
+        const current = new URL(location.href), destination = new URL(path, location.origin);
+        // Scope normalization omits navigation-only origins and empty filters.
+        // Returning to the already-open document must never reload its draft.
+        for (const url of [current, destination]) {
+            url.searchParams.delete('next');
+            for (const [key, value] of [...url.searchParams]) if (!value) url.searchParams.delete(key);
+            url.searchParams.sort();
+        }
+        return current.origin === destination.origin && current.pathname === destination.pathname && current.search === destination.search;
+    }
     function status(message = '', recovery = false) {
         const root = shell();
         if (!root) return;
@@ -47,7 +58,8 @@
     function mode() {
         clearInert();
         const root = shell(), box = panel();
-        document.body.classList.toggle('assistant-docked', Boolean(memory.open && root && wide.matches));
+        // Wide panels overlay the workspace. Only the narrow modal mode
+        // changes background interaction; neither mode reserves a column.
         if (!box || !memory.open) return;
         box.setAttribute('aria-modal', String(!wide.matches));
         if (!wide.matches) {
@@ -76,7 +88,6 @@
         abort();
         memory.open = false;
         clearInert();
-        document.body.classList.remove('assistant-docked');
         const box = panel(), root = shell();
         if (box) box.hidden = true;
         content()?.replaceChildren();
@@ -192,7 +203,6 @@
         if (!root || root.dataset.assistantUser !== memory.owner) {
             abort(); clearInert();
             memory = {owner: root?.dataset.assistantUser || '', open: false, conversation: ''};
-            document.body.classList.remove('assistant-docked');
         }
         if (!root) return;
         root.querySelector('[data-assistant-open]').hidden = false;
@@ -206,6 +216,9 @@
         if (!root?.contains(target)) return;
         if (target.matches('[data-assistant-link]') && !event.button && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
             event.preventDefault(); event.stopPropagation(); load(target.href); return;
+        }
+        if (target.matches('[data-assistant-context-link]') && !event.button && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && isCurrentContext(target.href)) {
+            event.preventDefault(); event.stopPropagation(); close(); return;
         }
         if (target.matches('[data-assistant-source], [data-assistant-full]')) { close(); return; }
         if (target.matches('[data-assistant-open]')) open();
