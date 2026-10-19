@@ -19,6 +19,7 @@ releases, persistent volumes and isolated restore rehearsals.
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and release compatibility. |
 | [branch-testing.md](branch-testing.md) | Owner walkthrough using an isolated disposable copy; computer/phone acceptance and native fallbacks. |
 | [roadmap.md](roadmap.md) | Paused interfaces and future studies; no implied availability or scheduled release. |
+| [Personal Open Finance study](reviews/open-finance-personal-study-2026-10-18.md) | Dated PF coverage, eligibility, cadence/cost limitations and reconciliation design for Nubank, Inter and Mercado Pago; no enabled bank connection. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and migration compatibility. |
 | [frontend.md](frontend.md) | Entry index for the responsibility-specific frontend contracts: runtime, presentation, forms, catalogue, navigation, charts, consultation and workspace compositions. Earlier section URLs remain available. |
@@ -50,6 +51,8 @@ releases, persistent volumes and isolated restore rehearsals.
   retained underlying services and available owned read-only posted history.
 - [apps/sandbox.md](apps/sandbox.md) — private planning drafts, salary/budget
   scenarios, commitment snapshots and contribution/yield simulations.
+- [apps/assistant.md](apps/assistant.md) — local conversations, signed owned
+  context and unavailable-provider foundation; OpenAI and action execution remain planned.
 
 ## Repository layout
 

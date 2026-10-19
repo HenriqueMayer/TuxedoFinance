@@ -29,6 +29,7 @@ and [interface map](../interface-map.md) for present behavior.
 | [Full browser validation and v1 readiness — 2026-10-18](v1-readiness-2026-10-18.md) | Complete browser inventory, financial-calendar boundary evidence and remaining candidate/release validation. |
 | [Financial calendar and Accounts stability — 2026-10-18](financial-calendar-2026-10-18.md) | Consistent Django financial cutoffs, preserved payment evidence and animation-aware Accounts regression validation. |
 | [Personal Open Finance feasibility — 2026-10-18](open-finance-personal-study-2026-10-18.md) | Public primary-source study for Nubank, Inter and Mercado Pago PF, the unresolved 6–8-hour production route, and proposed source-preserving reconciliation; no live account, credentials or integration. |
+| [Local assistant foundation — 2026-10-18](assistant-foundation-2026-10-18.md) | Local chat/context contracts, synthetic Design Lab, privacy/draft/browser validation and preserved installation boundaries; provider remains disconnected. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

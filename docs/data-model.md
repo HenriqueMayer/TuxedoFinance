@@ -33,6 +33,8 @@ erDiagram
     USER ||--o| SIGNAL_SETTINGS : configures
     USER ||--o{ SIGNAL_DECISION : reviews
     USER ||--o{ IMPORT_BATCH : reviews
+    USER ||--o{ CONVERSATION : owns
+    CONVERSATION ||--o{ MESSAGE : contains
 
     BANK ||--o{ BANK_ACCOUNT : contains
     BANK_ACCOUNT ||--o{ BANK_MOVEMENT : posts
@@ -533,6 +535,27 @@ created records or evidence matched by another confirmed batch. Undo deletes
 only unchanged sources it created, keeps matched originals and retains the
 undone batch. Closing discrepancies never create a balancing adjustment.
 See [ingestion](apps/ingestion.md) for parsing limits and duplication rules.
+
+## Assistant conversation data
+
+The [assistant app](apps/assistant.md) owns `Conversation(user, title,
+created_at, updated_at)` and `Message(conversation, role, content, created_at)`.
+Both have UUID primary keys. The optional conversation title is bounded at
+120 characters; roles are user/assistant. Ownership follows the conversation's
+Django user. Messages cascade with their conversation; deletion removes that
+owned local history. Retention lasts until explicit deletion, with normal backup retention
+still applying. These rows have no accounting effect and are not financial
+source records. With the provider unavailable, message submission returns an
+explicit error without saving a fake exchange.
+
+Context is a bounded read-only snapshot, not another ledger or a source of new
+balances. Its signed, expiring origin scope is bound to the current owner and
+allowlisted route/query. Collection rechecks object ownership, retains cutoff,
+currency and evidence warnings, and never writes derived financial rows.
+Provider tokens, bank credentials and external-observation schemas are not
+introduced by this foundation. Action/simulation contracts do not post records.
+The incremental `assistant/0001_initial.py` migration adds only conversation
+tables; it does not import, modify or synchronize financial records.
 
 ## Dashboard formulas
 

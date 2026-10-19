@@ -30,4 +30,5 @@ urlpatterns = [
     path('sandbox/', include('sandbox.urls')),
     path('planning/', include('planning.urls')),
     path('imports/', include('ingestion.urls')),
+    path('assistant/', include('assistant.urls')),
 ]

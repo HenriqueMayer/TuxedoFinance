@@ -1,9 +1,9 @@
 # PRD — Tuxedo Finance
 
-**Status:** Approved baseline and confirmed local-finance evolution
+**Status:** Approved baseline, local-finance evolution and local assistant foundation
 
 **Current release:** 0.10.0
-**Implementation beyond release:** Unreleased on `feat/personal-finance-evolution`; publication and owner validation are separate steps
+**Implementation beyond release:** The v1 candidate remains on `feat/personal-finance-evolution`; the assistant continuation is on `feat/tuxedo-assistant-foundation`. Publication and owner validation are separate steps.
 **Migration policy:** Preserve released installations through incremental migrations
 **Product:** Django personal finance tracker
 
@@ -26,6 +26,12 @@ dated openings, weighted investment cost, local price observations and dated
 wealth. It preserves the local installation and default automatic settlement.
 No external bank/broker integration or publication is implied by this scope.
 
+The separately confirmed assistant foundation adds private local conversations,
+a persistent utility panel/native page and bounded read-only financial context.
+It has no connected provider or action execution. Sign in with ChatGPT is the
+planned next connection, linked to the Django user without replacing local
+login or adding paid fallback. The personal Open Finance study is research only.
+
 The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
 HTMX progressive enhancement.
@@ -40,6 +46,8 @@ implementation; they are not all navigation destinations or published features.
 | Home/Reports, Transactions/Categories, Accounts, Investments and Plan | Available under the current shared interface contracts. Unreleased changes still need owner acceptance and a separate release decision. |
 | Local statement operations (FR34) | Paused: upload, mapping, review, confirmation and undo are gated on GET/POST. Owned confirmed/undone provenance remains read-only. |
 | Dated net-worth interface (FR38) | Paused: old screen requests return to Home; calculations and source data remain available to their existing consumers. |
+| Assistant foundation (FR39) | Local conversation/context foundation; provider unavailable, real composer disabled and no execution endpoint. |
+| OpenAI connection and personal Open Finance | Planned. No OAuth, model request, bank connection or payment initiation is enabled. The PF 6–8-hour data target remains unproven by checked public offers. |
 
 The [roadmap](roadmap.md) records paused/future work, the
 [interface map](interface-map.md) records current screens, and the
@@ -97,12 +105,21 @@ availability or permission to re-enable a paused workflow.
   dated prices and disclosed cost fallbacks/unknown baselines.
 - Dated wealth including full incurred installment debt and retained card credits,
   without treating forecasts or goal earmarks as new assets.
+- Local owner-scoped assistant conversations, signed expiring route context and
+  read-only financial snapshots with explicit unavailable-provider behavior.
+- Provider streaming/cancellation/error and proposed-action/simulation contracts,
+  with no provider invocation, daemon or financial execution in this foundation.
+- A public-source personal Open Finance feasibility study for Nubank, Banco Inter
+  and Mercado Pago, covering 6–8-hour collection and source-preserving reconciliation.
 
 ### Out of scope
 
 - Automatic conversion of unsupported pre-release financial rows or invention
   of opening dates, prices, historical fee currencies or returns.
-- Open Finance/bank synchronization, broker/issuer APIs and cloud processing.
+- Live Open Finance/bank synchronization, payment initiation, broker/issuer APIs
+  and cloud financial processing. A documented feasibility study does not enable them.
+- Model/provider credentials, live inference, action execution, unattended
+  automation and automatic paid-provider fallback in the assistant foundation.
 - Market-price, FX or loyalty-provider feeds; local prices and rates are manual.
 - Tax-lot/tax reporting, automatic investment accrual and annualized,
   time-weighted or money-weighted return inference from incomplete evidence.
@@ -154,6 +171,7 @@ availability or permission to re-enable a paused workflow.
 | FR36 | Dated openings | Require dates for new nonzero account/asset openings, include known openings only from their date and disclose migrated unknown baselines without inventing history. |
 | FR37 | Investment results | Replay weighted cost per product/asset after valid edits/deletion, preserve yield entry values and actual cash, and apply only explicitly declared asset-currency fees. Local quotes expose valuation and missing-price cost fallbacks. |
 | FR38 | Dated wealth | Compose dated cash and position valuation, incurred card debt including future installments, and card credits; exclude future recurring occurrences, duplicated settlements and goal earmarks. |
+| FR39 | Local assistant foundation | Persist owned conversations locally; collect signed, bounded, read-only route context with cutoff/currency/evidence warnings; expose panel/native access and provider-unavailable recovery without fake messages, model calls or financial actions. |
 
 ## 5. Domain Rules
 
@@ -264,8 +282,8 @@ serve explicitly labeled current or selected-date valuations elsewhere.
   Saved legacy drafts retain their captured payment-month basis until explicit
   recalculation. Opening or comparing a draft does not silently rewrite it.
 - Monthly contribution/yield simulations accept editable amounts and rates and
-  display their assumptions. External price/history feeds and agent integration
-  remain outside the implemented local scope.
+  display their assumptions. External price/history feeds and execution of
+  model-proposed simulations remain outside the implemented local scope.
 
 ### 5.8 Operational limits, goals and signals
 
@@ -295,6 +313,23 @@ serve explicitly labeled current or selected-date valuations elsewhere.
 - Undo removes only unchanged sources created by that batch and refuses changed
   or subsequently matched evidence. Matched originals and review history remain.
 
+### 5.10 Assistant and external-integration boundaries
+
+- Django authentication and current record ownership remain authoritative.
+  Conversation UUIDs, client route values and model text do not grant access.
+- Structured context is server-built from a signed, expiring owner-bound
+  allowlist scope. It never scrapes unsent forms or synchronizes financial rows.
+- No provider is configured; message submission fails explicitly without a fake
+  saved exchange. Local history remains until explicit deletion and is covered
+  by the installation's ordinary database/backup responsibilities.
+- Proposed actions and simulations are not execution. Later financial writes
+  require canonical services, fresh ownership/state checks and the applicable
+  explicitly enabled bounded rule or review decision. No such execution exists now.
+- A future ChatGPT connection is linked to the Django user and separately
+  authorizes model usage; no API-key billing fallback is inferred.
+- The [Open Finance study](reviews/open-finance-personal-study-2026-10-18.md)
+  excludes payment initiation and does not reopen paused statement operations.
+
 ## 6. Data Structure
 
 The canonical entity-relationship diagram and posting-flow diagram are in
@@ -316,6 +351,7 @@ investments/   # products, assets, position operations and valuation
 planning/      # operational budgets, cash-backed goals and local review signals
 ingestion/     # explicitly reviewed local cash statements and guarded undo
 sandbox/       # private planning drafts and isolated simulations
+assistant/     # local conversations, signed context and unavailable provider contracts
 ```
 
 Navigation and financial relationships use the current banking concepts.
@@ -431,7 +467,8 @@ financial history, not an immutable bank statement or return percentage.
 | NFR05 | Precision | Decimal arithmetic only; explicit currency and rounding policy. |
 | NFR06 | Performance | Use scoped related-object loading, bounded folds and owned request-scoped FX reuse; compare projections before writing and retain unchanged IDs/timestamps. SQLite atomic writes remain serialized. |
 | NFR07 | Accessibility | Responsive keyboard-usable server-rendered UI and text status labels. |
-| NFR08 | Simplicity | Native Django patterns; no API/SPA introduced by this release. |
+| NFR08 | Simplicity | Native Django patterns; no SPA or external general-purpose API. The narrow authenticated assistant context endpoint remains internal and read-only. |
+| NFR09 | Assistant boundary | Local history and signed context remain owner-scoped; no provider, external inference, execution or paid fallback is silently enabled. |
 
 ## 12. Acceptance Criteria
 

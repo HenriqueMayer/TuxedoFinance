@@ -43,6 +43,7 @@ investments/   # products, assets, position operations and valuation
 planning/      # category budgets, existing-cash goals and local review signals
 ingestion/     # explicitly reviewed local statements and guarded import undo
 sandbox/       # private planning drafts and isolated simulations
+assistant/     # local conversations, owned read-only context and provider contracts
 ```
 
 `banking/` owns every settlement instrument and the account ledger. `Bank` is
@@ -65,6 +66,11 @@ package solely to reduce line counts.
   occurrence validation; its middleware handles refused-projection recovery.
   `categories.importing` owns bounded CSV parsing and atomic hierarchy
   imports; category views retain HTTP, messages and response handling.
+- `assistant.context` normalizes/signs authorized page scopes and collects
+  bounded stored evidence without calling workspace views or ledger projection.
+  `assistant.providers.base` owns the disconnected streaming/cancellation
+  interface; `assistant.actions` owns shape-only, non-executable previews and
+  `assistant.prompts` owns versioned instructions. None is a financial writer.
 - Each app owns `tests/test_*.py` and the support modules it needs. Test package
   initializers do not reexport test classes. The [test index](../tests/README.md)
   explains discovery, fixture imports and isolated execution.
@@ -98,6 +104,9 @@ Arrows mean "calls or imports", not ownership.
 - `ingestion` owns statement evidence and import decisions. Only explicit
   confirmation calls canonical transaction, payment or transfer services;
   matching an existing movement does not create a second source.
+- `assistant` owns conversation data and server-built owned context. Context
+  reads never synchronize the ledger or call mutation services. The provider is
+  unavailable; proposal/simulation contracts expose no execution endpoint.
 - `dashboard` query services compose the ledgers without posting records. Its
   views first call transaction synchronization, which can write derived banking
   records. The app owns no financial model.
@@ -118,6 +127,7 @@ event and its movements runs in one database transaction.
 | What is a position worth at a date? | Remaining quantity × latest local `PriceObservation` by that date, or disclosed remaining-cost fallback; monetary positions use their balance. |
 | What is reserved for a goal? | `GoalAllocation` backed by existing positive account/cash-pot balances; no new financial asset is created. |
 | What did an imported statement establish? | Owned `ImportBatch`/`ImportedRow` evidence and explicit source links, not a replacement bank ledger. |
+| What can assistant context establish? | A timestamped, bounded snapshot of authorized local sources and warnings; conversation/model text is not financial truth. |
 | How many loyalty points exist? | Signed `LoyaltyEntry` rows. |
 | What was a transfer or investment worth historically? | Its persisted FX snapshot, including source/target currencies, rate, effective date, and status. |
 | What is another amount worth now? | User's `UserPreference.base_currency` plus a current `ExchangeRate`, shown as a labeled current valuation. |
@@ -181,6 +191,23 @@ This keeps a local installation synchronized without a scheduler. As records
 and recurrence history grow, measure request latency, query counts, and SQLite
 write-lock time before changing the synchronization boundary. No asynchronous
 worker, cache, or extra service is required by the current repository structure.
+
+## Assistant and integration boundary
+
+The [assistant app](apps/assistant.md) adds a utility panel and native page backed
+by local, owner-scoped UUID conversations. A signed, expiring local route/query
+scope is bound to the current Django user; the collector resolves only
+allowlisted financial routes, rechecks referenced ownership and returns explicit
+cutoff/currency/evidence warnings. It never scrapes DOM/form contents or invokes
+`sync_user_ledger`. Opening assistant context therefore cannot materialize or
+repair financial projections.
+
+No model provider, external bank connection, credential flow or execution tool
+is enabled. The intended OpenAI connection is a later user-linked authorization,
+not a replacement for Django login or a paid fallback. The
+[personal Open Finance study](reviews/open-finance-personal-study-2026-10-18.md)
+records a separate unresolved PF/cadence feasibility gate. Neither assistant
+contracts nor external research enable the paused ingestion interface.
 
 ## Posting workflows
 
@@ -268,6 +295,7 @@ The route namespaces remain domain-based:
 | `/planning/` | `planning` | operational budgets, backed goals, reservations and local signals |
 | `/imports/` | `ingestion` | paused CSV/OFX operations; owned posted history remains read-only |
 | `/sandbox/` | `sandbox` | authenticated planning workspace and explicit draft persistence |
+| `/assistant/` | `assistant` | local conversation utility/native page and owned context; provider unavailable |
 | `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
 
 All authenticated CBVs constrain root querysets to `request.user`; forms also

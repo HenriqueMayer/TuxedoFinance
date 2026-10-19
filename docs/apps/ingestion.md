@@ -12,6 +12,11 @@ transaction services. It does not connect to a bank,
 broker, Open Finance provider or external processing service. This workflow is
 implemented under Unreleased after `0.10.0`.
 
+The separate [personal Open Finance study](../reviews/open-finance-personal-study-2026-10-18.md)
+examines future provider eligibility, resource cadence and reconciliation.
+It does not add a connector or reopen this workflow. Assistant context/proposal
+contracts likewise cannot confirm imports or bypass the gate.
+
 | Route family | Default behavior |
 |---|---|
 | `/imports/`, mapping, review, confirm and undo | GET/POST review gate redirects to Transactions before the workflow executes. |

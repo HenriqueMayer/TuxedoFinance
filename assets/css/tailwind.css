@@ -12,6 +12,7 @@
 @import "./period-navigation.css";
 @import "./departure-confirm.css";
 @import "./public-home.css";
+@import "./assistant.css";
 
 /* Vendored Inter: English and Portuguese require no external font request. */
 @font-face {

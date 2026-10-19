@@ -1,0 +1,24 @@
+{% load i18n %}
+{% comment %}Outside main: chat actions must never submit or rebase a financial draft.{% endcomment %}
+<div data-assistant-shell data-assistant-user="{{ request.user.pk|stringformat:'d' }}" data-assistant-scope="{{ assistant_scope }}" data-assistant-url="{% url 'assistant:index' %}"
+     data-assistant-loading="{% translate 'Loading conversation…' %}" data-assistant-cancelled="{% translate 'Loading cancelled.' %}"
+     data-assistant-error="{% translate 'Could not load the assistant. Try again or open the full page.' %}"
+     data-assistant-session-error="{% translate 'Your session changed. Open the assistant page to continue.' %}">
+    <button type="button" class="assistant-launcher" data-assistant-open aria-label="{% translate 'Open Tuxedo assistant' %}" aria-controls="assistant-panel" aria-expanded="false" hidden>
+        {% include 'assistant/_mark.html' %}
+    </button>
+    <noscript><a href="{% url 'assistant:index' %}?scope={{ assistant_scope|urlencode }}" class="assistant-launcher" aria-label="{% translate 'Open Tuxedo assistant' %}">{% include 'assistant/_mark.html' %}</a></noscript>
+    <section id="assistant-panel" class="assistant-panel" role="dialog" aria-labelledby="assistant-panel-title" hidden>
+        <header class="assistant-panel-header">
+            <div class="assistant-heading">{% include 'assistant/_mark.html' %}<div><h2 id="assistant-panel-title">{% translate 'Tuxedo assistant' %}</h2><span class="assistant-status">{% translate 'Local history' %}</span></div></div>
+            <button type="button" class="icon-action" data-assistant-close aria-label="{% translate 'Close assistant' %}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        </header>
+        <div class="assistant-request-status" role="status" aria-live="polite" data-assistant-notice hidden></div>
+        <div class="assistant-request-actions" data-assistant-recovery hidden>
+            <button type="button" class="quiet-action" data-assistant-retry>{% translate 'Try again' %}</button>
+            <a href="{% url 'assistant:index' %}?scope={{ assistant_scope|urlencode }}" class="quiet-action" data-assistant-full>{% translate 'Open full page' %} ↗</a>
+        </div>
+        <button type="button" class="quiet-action assistant-cancel" data-assistant-cancel hidden>{% translate 'Cancel loading' %}</button>
+        <div class="assistant-panel-body" data-assistant-body></div>
+    </section>
+</div>

@@ -1,0 +1,71 @@
+{% load i18n %}
+<div class="assistant-content" data-assistant-content data-assistant-user="{{ request.user.pk|stringformat:'d' }}" data-assistant-scope="{{ scope }}" data-conversation-id="{{ conversation.pk|default:'' }}">
+    <div class="assistant-content-toolbar">
+        <details class="assistant-history" {% if not conversation and conversations %}open{% endif %}>
+            <summary class="quiet-action">{% translate 'History' %}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+            <nav class="assistant-history-list" aria-label="{% translate 'Conversation history' %}">
+                {% for item in conversations %}
+                <a href="{% url 'assistant:detail' item.pk %}?scope={{ scope|urlencode }}" data-assistant-link {% if item.pk == conversation.pk %}aria-current="page"{% endif %}>
+                    <span>{{ item.title|default:_('New conversation') }}</span><time datetime="{{ item.updated_at|date:'c' }}">{{ item.updated_at|date:'SHORT_DATE_FORMAT' }}</time>
+                </a>
+                {% empty %}<p class="subtle-copy">{% translate 'No conversations yet.' %}</p>{% endfor %}
+            </nav>
+            {% if history_page.has_other_pages %}
+            <nav class="assistant-history-pagination" aria-label="{% translate 'Conversation history pages' %}">
+                {% if history_page.has_previous %}<a class="quiet-action" data-assistant-link href="{% if conversation %}{% url 'assistant:detail' conversation.pk %}{% else %}{% url 'assistant:index' %}{% endif %}?scope={{ scope|urlencode }}&page={{ history_page.previous_page_number|stringformat:'d' }}">{% translate 'Previous' %}</a>{% endif %}
+                <span>{{ history_page.number }} / {{ history_page.paginator.num_pages }}</span>
+                {% if history_page.has_next %}<a class="quiet-action" data-assistant-link href="{% if conversation %}{% url 'assistant:detail' conversation.pk %}{% else %}{% url 'assistant:index' %}{% endif %}?scope={{ scope|urlencode }}&page={{ history_page.next_page_number|stringformat:'d' }}">{% translate 'Next' %}</a>{% endif %}
+            </nav>
+            {% endif %}
+        </details>
+        <form method="post" action="{% url 'assistant:create' %}" hx-boost="false" autocomplete="off" data-assistant-form novalidate>
+            {% csrf_token %}<input type="hidden" name="scope" value="{{ scope }}">
+            <button type="submit" class="quiet-action"><span aria-hidden="true">＋</span> {% translate 'New conversation' %}</button>
+        </form>
+    </div>
+    {% if error %}<p class="assistant-error" role="alert">{{ error }}</p>{% endif %}
+    {% for field in create_form %}{% for message in field.errors %}<p class="assistant-error" role="alert">{{ message }}</p>{% endfor %}{% endfor %}
+    {% if scope_label %}<div class="assistant-scope"><span>{% translate 'Context' %}</span><strong>{{ scope_label }}</strong></div>{% endif %}
+    {% if context_snapshot %}
+    <details class="assistant-context-details">
+        <summary>{% translate 'Information available for consultation' %}</summary>
+        <div>
+            <dl>
+                <div><dt>{% translate 'Captured' %}</dt><dd><time datetime="{{ context_snapshot.captured_at }}">{{ context_captured_at|date:'SHORT_DATE_FORMAT' }} {{ context_captured_at|date:'H:i T' }}</time></dd></div>
+                <div><dt>{% translate 'Financial cutoff' %}</dt><dd><time datetime="{{ context_snapshot.cutoff }}">{{ context_cutoff|date:'SHORT_DATE_FORMAT' }}</time></dd></div>
+                {% if context_snapshot.currency %}<div><dt>{% translate 'Reporting currency' %}</dt><dd>{{ context_snapshot.currency }}</dd></div>{% endif %}
+                {% for metric in context_snapshot.metrics %}<div><dt>{{ metric.label }}</dt><dd>{% if metric.currency %}{{ metric.currency }} {{ metric.value|floatformat:2 }}{% else %}{{ metric.value }}{% endif %}</dd></div>{% endfor %}
+            </dl>
+            {% for warning in context_snapshot.warnings %}<p class="subtle-copy">{{ warning }}</p>{% endfor %}
+            {% if context_snapshot.sources %}<ul class="assistant-sources">{% for source in context_snapshot.sources %}<li><a href="{{ source.url }}" data-assistant-source>{{ source.label }} ↗</a></li>{% endfor %}</ul>{% endif %}
+        </div>
+    </details>
+    {% endif %}
+    {% if conversation %}<h3 class="mt-4 text-sm font-medium">{{ conversation.title|default:_('New conversation') }}</h3>{% endif %}
+    <section class="assistant-transcript" aria-label="{% translate 'Messages' %}" tabindex="0">
+        {% for message in chat_messages %}
+        <article class="assistant-message assistant-message--{{ message.role }}"><p class="assistant-message-role">{% if message.role == 'user' %}{% translate 'You' %}{% else %}{% translate 'Tuxedo assistant' %}{% endif %}</p><p>{{ message.content|linebreaksbr }}</p></article>
+        {% empty %}
+        <div class="assistant-empty">
+            <svg class="assistant-bowtie" viewBox="0 0 100 48" fill="none" aria-hidden="true"><path d="m8 6 34 13v10L8 42z" fill="currentColor"/><rect x="44" y="16" width="12" height="16" rx="4" fill="currentColor"/><path d="M92 6 58 19v10l34 13z" stroke="currentColor" stroke-width="1.4"/><path d="M70 16v16m8-19v22" stroke="currentColor" stroke-width=".7"/></svg>
+            <h3>{% translate 'Provider not connected' %}</h3>
+            <p>{% translate 'Your chat is ready for a future AI connection. No financial data is being sent to a provider.' %}</p>
+        </div>
+        {% endfor %}
+    </section>
+    <div class="assistant-composer">
+        <label for="{% if assistant_available %}assistant-panel-message{% else %}assistant-page-message{% endif %}">{% translate 'Message' %}</label>
+        <textarea id="{% if assistant_available %}assistant-panel-message{% else %}assistant-page-message{% endif %}" class="entry-input" rows="2" disabled placeholder="{% translate 'Connect a provider in a future update to send messages.' %}"></textarea>
+        <div><span class="subtle-copy">{% translate 'Sending is unavailable.' %}</span><button type="button" class="action-primary" disabled>{% translate 'Send message' %}</button></div>
+    </div>
+    {% if conversation %}
+    <details class="assistant-delete">
+        <summary class="quiet-action">{% translate 'Delete conversation' %}</summary>
+        <form method="post" action="{% url 'assistant:delete' conversation.pk %}" autocomplete="off" hx-boost="false" novalidate data-assistant-form>
+            {% csrf_token %}<input type="hidden" name="scope" value="{{ scope }}">
+            <p>{% translate 'Delete this conversation and its messages? Financial records will be kept.' %}</p>
+            <button type="submit" class="action-danger">{% translate 'Confirm deletion' %}</button>
+        </form>
+    </details>
+    {% endif %}
+</div>

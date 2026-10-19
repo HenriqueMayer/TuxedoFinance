@@ -1,0 +1,73 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* The dock reflows a wide workspace; narrow screens use a focus-contained sheet. */
+.assistant-mark { position: relative; display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; flex: none; color: var(--ui-accent); }
+.assistant-mark img { width: 36px; height: 36px; border-radius: 50%; }
+.assistant-mark > svg { position: absolute; inset: 0; width: 48px; height: 48px; }
+.assistant-launcher { position: fixed; right: 18px; bottom: var(--assistant-bottom, 92px); z-index: 43; display: flex; width: 60px; height: 60px; align-items: center; justify-content: center; border: 1px solid var(--ui-line); border-radius: 18px; background: var(--ui-paper); box-shadow: 0 4px 18px rgb(26 46 38 / .12); transition: background-color 180ms ease, box-shadow 180ms ease; }
+.assistant-launcher:hover { background: var(--ui-ground); box-shadow: 0 6px 24px rgb(26 46 38 / .16); }
+.assistant-launcher[hidden], .assistant-panel[hidden], [data-assistant-shell] [hidden] { display: none !important; }
+.assistant-panel { position: fixed; z-index: 45; inset: var(--assistant-viewport-top, 0px) 0 auto; height: var(--assistant-viewport-height, 100dvh); display: flex; flex-direction: column; min-width: 0; background: var(--ui-surface); color: var(--ui-ink); border: 1px solid var(--ui-line); overflow: hidden; animation: assistant-enter 200ms cubic-bezier(.22,1,.36,1); }
+.assistant-panel-header { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--ui-line); }
+.assistant-heading { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.assistant-panel-header h2 { font-size: 15px; font-weight: 600; letter-spacing: -.03em; }
+.assistant-status { display: block; margin-top: 2px; font-size: 12px; color: var(--ui-muted); }
+.assistant-panel-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.assistant-content { display: flex; flex-direction: column; min-height: 100%; padding: 0 20px 20px; overflow-wrap: anywhere; }
+.assistant-content-toolbar { display: flex; align-items: start; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding-block: 10px; border-bottom: 1px solid var(--ui-line); }
+.assistant-content-toolbar .quiet-action { font-size: 13px; }
+.assistant-history { min-width: 0; flex: 1; }
+.assistant-history > summary { display: inline-flex; cursor: pointer; list-style: none; }
+.assistant-history > summary::-webkit-details-marker { display: none; }
+.assistant-history[open] > summary svg { transform: rotate(180deg); }
+.assistant-history-list { display: flex; flex-direction: column; max-height: 180px; overflow-y: auto; overscroll-behavior: contain; padding-block: 4px; }
+.assistant-history-list a { display: flex; flex-direction: column; min-height: 48px; gap: 3px; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: var(--ui-ink); }
+.assistant-history-list a time { font-size: 11px; color: var(--ui-muted); }
+.assistant-history-list a:is(:hover, [aria-current]) { background: var(--ui-ground); }
+.assistant-history-pagination { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.assistant-scope { display: grid; gap: 3px; padding-block: 14px; font-size: 12px; }
+.assistant-scope > span { color: var(--ui-muted); }
+.assistant-scope strong { font-weight: 500; }
+.assistant-context-details { border-bottom: 1px solid var(--ui-line); padding-bottom: 12px; font-size: 12px; }
+.assistant-context-details summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; color: var(--ui-muted); }
+.assistant-context-details > div { display: grid; gap: 10px; padding-block: 8px; }
+.assistant-context-details .subtle-copy { font-size: 12px; }
+.assistant-context-details dl > div { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; padding-block: 5px; border-bottom: 1px solid var(--ui-line); }
+.assistant-context-details dd { font-variant-numeric: tabular-nums; }
+.assistant-sources a { display: inline-flex; min-height: 44px; align-items: center; color: var(--ui-accent); text-decoration: underline; text-underline-offset: 4px; }
+.assistant-transcript { flex: 1; display: flex; flex-direction: column; gap: 16px; padding-block: 24px; min-height: 220px; }
+.assistant-empty { margin: auto 0; padding: 18px 0 30px; }
+.assistant-bowtie { width: 90px; height: 44px; color: var(--ui-accent); margin-bottom: 24px; }
+.assistant-empty h3 { font-size: 20px; line-height: 1.3; letter-spacing: -.04em; font-weight: 600; margin-bottom: 12px; }
+.assistant-empty > p { max-width: 36ch; color: var(--ui-muted); font-size: 14px; line-height: 1.65; }
+.assistant-composer { padding-top: 16px; border-top: 1px solid var(--ui-line); }
+.assistant-composer > label { display: block; font-size: 13px; margin-bottom: 8px; }
+body.tuxedo-ui .assistant-composer textarea.entry-input { min-height: 76px; width: 100%; font-size: 13px; line-height: 1.5; opacity: .7; }
+.assistant-composer > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.assistant-composer .subtle-copy { font-size: 12px; }
+.assistant-composer button { font-size: 13px !important; }
+.assistant-delete { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--ui-line); }
+.assistant-delete summary { display: inline-flex; cursor: pointer; list-style: none; color: var(--ui-muted); font-size: 12px; }
+.assistant-delete summary::-webkit-details-marker { display: none; }
+.assistant-delete form { display: grid; gap: 14px; justify-items: start; padding: 12px 0 0; font-size: 13px; }
+.assistant-error { padding: 12px; margin-block: 12px; border-left: 2px solid var(--ui-danger); background: var(--ui-danger-ground); font-size: 13px; }
+.assistant-message { border-bottom: 1px solid var(--ui-line); padding-bottom: 16px; font-size: 14px; line-height: 1.65; }
+.assistant-message-role { color: var(--ui-muted); font-size: 12px; font-weight: 500; margin-bottom: 8px; }
+.assistant-request-status { font-size: 13px; padding: 12px 20px; color: var(--ui-muted); }
+.assistant-request-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-inline: 12px; }
+.assistant-cancel { align-self: start; margin-inline: 12px; }
+.assistant-page { max-width: 56rem; margin: 0 auto; }
+.assistant-page > .assistant-content { border: 1px solid var(--ui-line); border-radius: 14px; min-height: 600px; padding-inline: clamp(18px, 4vw, 32px); }
+.assistant-page .assistant-content-toolbar { gap: 20px; }
+.assistant-page .assistant-transcript { min-height: 260px; }
+body:has([data-assistant-shell]) > main { padding-bottom: 6rem; }
+@media (min-width: 1024px) { .assistant-launcher { bottom: 20px; } }
+@media (min-width: 1280px) {
+  body.app-layout.assistant-docked { padding-right: 408px; }
+  .assistant-panel { inset: 80px 16px 16px auto; width: 376px; height: auto; border-radius: 16px; box-shadow: 0 8px 36px rgb(26 46 38 / .08); }
+}
+/* A full-screen sheet is opaque from its first frame; fading the entire
+   surface makes the underlying financial form show through its text. */
+@media (max-width: 1279px) { .assistant-panel { animation: assistant-sheet-enter 180ms cubic-bezier(.22,1,.36,1); } }
+@keyframes assistant-sheet-enter { from { transform: translateY(6px); } to { transform: none; } }
+@keyframes assistant-enter { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .assistant-panel { animation: none; } .assistant-launcher { transition: none; } }

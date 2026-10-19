@@ -3,6 +3,7 @@ module.exports = {
   content: [
     '../templates/**/*.html',
     '../accounts/**/*.py',
+    '../assistant/**/*.py',
     '../banking/**/*.py',
     '../categories/**/*.py',
     '../core/**/*.py',

@@ -15,6 +15,7 @@ find a case.
 | `e2e/planning/` | Budgets, goals, planning tools, scenarios and simulations. |
 | `e2e/transactions/` | Transaction forms, lists, splits, payment selection and export. |
 | `e2e/ingestion/` | Paused-import gates and owned read-only import history. |
+| `e2e/assistant/` | Local assistant history, responsive panel, draft continuity, session privacy and native fallback; no live provider. |
 | `e2e/catalogue/` | Design Lab components and local interactions using synthetic specimens. |
 | `e2e/shared/` | Cross-workspace contracts, authentication/public pages, history, keyboard behavior and shared UI. |
 | `e2e/helpers/` | Shared form/navigation actions, repository path resolution and bounded catalogue routing. |

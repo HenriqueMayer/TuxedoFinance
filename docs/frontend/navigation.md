@@ -62,6 +62,42 @@ Latin variable font with its SIL Open Font License in `static/fonts/`; font,
 script and style requests stay on this installation. Language selection uses a delegated local
 listener instead of an inline event handler and retains its `noscript` submit.
 
+## Assistant panel
+
+The authenticated assistant is a utility alongside the five direct workspace
+destinations. Its native `/assistant/` link remains usable without JavaScript.
+The enhanced panel belongs outside `main` so its actions cannot submit or
+capture a financial draft. Whole-body HTMX navigation reconstructs the panel;
+an owner-checked server request reloads its selected conversation instead of
+replaying a preserved DOM transcript.
+
+Opening and closing are deliberate keyboard, pointer or touch actions. Preserve
+the workspace's scroll, selected filters and unsent form values; closing returns
+focus to the trigger when it still exists. The narrow-screen presentation keeps
+its heading, close control, conversation actions and unavailable composer inside
+the viewport and above fixed navigation/safe areas. Visible focus, Escape and
+Tab/Shift+Tab behavior must match the panel's declared modal behavior; background
+content must not remain keyboard-active behind a modal surface.
+
+Context follows an explicitly authorized local origin, not HTML scraped from the
+current page. Only its allowlisted route/query is signed for the current Django
+user; ownership is checked again by the server. Do not include unsent financial
+form fields in a context update. Page navigation, filter changes and a restored
+private document must not retain another user's context or transcript.
+Closing or reopening clears transcript/context HTML before a new authorized
+fetch; only the selected conversation UUID remains in user-scoped memory. A
+pending or cancelled request must not reveal an earlier hidden transcript.
+Custom assistant fetches respect asset-recovery headers before inserting HTML;
+recovery offers a validated native GET through the ordinary unsaved-edit guard,
+without replaying a POST or automatically discarding a financial draft.
+
+No provider is configured in this foundation. Keep that status visible and the
+real composer disabled; do not render fake streamed replies or an active Send
+action. The [assistant guide](../apps/assistant.md) owns storage, routes, context
+and the planned provider/action boundaries. Browser validation must cover
+desktop/phone, both themes, real keyboard focus, HTMX navigation, account/logout
+boundaries and the native page.
+
 ## Preserve the user's location
 
 Every new or changed interaction that updates the current page must preserve the

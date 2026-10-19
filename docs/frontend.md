@@ -16,6 +16,7 @@ provides the visual reference.
 | Fields, choices, conditional recovery, dates, amounts and card appearance | [Forms](frontend/forms.md) |
 | Synthetic visual specimens and their local interactions | [Catalogue](frontend/catalogue.md) |
 | Navigation, viewport, menus, help, return context and departure | [Navigation](frontend/navigation.md) |
+| Assistant utility panel, focus and workspace continuity | [Navigation — assistant panel](frontend/navigation.md#assistant-panel); [assistant data/provider boundary](apps/assistant.md) |
 | Dashboard/report chart scopes, SVG layers, selections and source composition | [Charts](frontend/charts.md) |
 | Dynamic GET filters, consultation bars and named months | [Consultation](frontend/consultation.md) |
 | Banking, investment and planning screen compositions | [Workspaces](frontend/workspaces.md) |

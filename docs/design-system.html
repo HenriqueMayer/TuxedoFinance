@@ -26,7 +26,7 @@
 
     <!-- Application and catalogue share compiled tokens and components. -->
     <link rel="stylesheet" href="../static/css/app.css">
-    <link rel="stylesheet" href="design-system.css?v=dd0c3d6ea62e">
+    <link rel="stylesheet" href="design-system.css?v=e0a800def441">
 </head>
 <body data-design-lab class="min-h-screen bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
 
@@ -35,7 +35,7 @@
     <nav class="lab-catalogue-toolbar" aria-label="Design system sections">
         <a href="#public-homepage" class="lab-catalogue-brand"><img class="h-7 w-7" src="../static/brand/tuxedo-mark-256.png" alt=""><span>TUXEDO FINANCE<small>Design lab &nbsp; / &nbsp; 01</small></span></a>
         <div class="lab-catalogue-links">
-            <a href="#public-homepage">Homepage</a><a href="#typography">Type</a><a href="#colors">Colors</a><a href="#navigation">Workspace</a><a href="#forms">Forms</a><a href="#data">Data</a><a href="#components">UI</a><a href="#layout">Layout</a><a href="#motion">Motion</a><a href="#icons">Icons</a><a href="#workspaces">Patterns</a>
+            <a href="#public-homepage">Homepage</a><a href="#typography">Type</a><a href="#colors">Colors</a><a href="#navigation">Workspace</a><a href="#forms">Forms</a><a href="#data">Data</a><a href="#components">UI</a><a href="#layout">Layout</a><a href="#motion">Motion</a><a href="#icons">Icons</a><a href="#workspaces">Patterns</a><a href="#assistant">Assistant</a>
         </div>
         <button type="button" class="lab-icon-button" data-theme-toggle aria-label="Toggle color theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9h-9V3Z"/><path d="M12 3a9 9 0 0 1 9 9" stroke-dasharray="2 3"/></svg></button>
     </nav>
@@ -1242,10 +1242,35 @@
   </section>
     </div>
 </section>
+<section id="assistant" class="lab-section" aria-labelledby="lab-assistant-specimen-title">
+    <div class="lab-section-heading">
+        <div><span class="lab-eyebrow">13 / Assistant</span><h2 id="lab-assistant-specimen-title">Tuxedo assistant.</h2></div>
+        <p>A Tuxedo companion for the current workspace. A quiet cat mark opens an editorial conversation, with the scope and sources kept in view.</p>
+    </div>
+    <div class="lab-assistant-introduction">
+        <div><h3 class="section-title">Context, conversations and references.</h3><p>Wide screens keep the page usable beside a 376 px dock. Smaller screens open a focus-contained sheet. Closing returns to the same place and control.</p></div>
+        <button type="button" class="lab-button" data-lab-assistant-open hidden>Try the assistant specimen <span aria-hidden="true">↗</span></button>
+    </div>
+    <dl class="lab-assistant-reference-ledger" aria-label="Synthetic assistant reference ledger">
+        <div id="lab-assistant-cash-source"><dt>Recorded cash and reserves</dt><dd>BRL 1,000.00 cash · BRL 300.00 reserved · BRL 700.00 unreserved</dd></div>
+        <div id="lab-assistant-projection-source"><dt>Known commitments projection</dt><dd>BRL 800.00 after known commitments · a forecast, not recorded cash</dd></div>
+    </dl>
+    <p class="lab-prototype-note">Synthetic demonstration only. The replies, history and preview controls below run in this page's memory. No provider is contacted, no personal records are read, and reloading discards the demonstration.</p>
+    <details id="lab-assistant-native" class="lab-reference">
+        <summary>Read the assistant specimen without JavaScript</summary>
+        <div class="lab-reference-content">
+            <p><strong>Example scope:</strong> Accounts · October 2026 · BRL. Only the active workspace and its recorded summaries are included.</p>
+            <p><strong>Example question:</strong> What can I safely set aside?</p>
+            <p><strong>Synthetic reply:</strong> The example has BRL 1,000.00 in recorded cash and BRL 300.00 already reserved, leaving BRL 700.00 unreserved. The BRL 800.00 projection after known commitments is a different measure. Review upcoming bills before changing a goal.</p>
+            <p><a class="lab-text-link" href="#lab-assistant-cash-source">Inspect recorded cash and reserves</a> · <a class="lab-text-link" href="#lab-assistant-projection-source">Inspect the known commitments projection</a></p>
+            <p>When no provider is connected, the application states that clearly. Questions are not sent and no generated answer is implied. The interactive specimen additionally demonstrates loading, cancellation, errors and local conversation controls.</p>
+        </div>
+    </details>
+</section>
 <section id="lab-design-notes" class="lab-section" aria-labelledby="lab-notes-title">
     <div class="lab-section-heading">
         <div>
-            <span class="lab-eyebrow">13 / Design decisions</span>
+            <span class="lab-eyebrow">14 / Design decisions</span>
             <h2 id="lab-notes-title">Design decisions.</h2>
         </div>
         <p>The approved bow-tie/ledger direction and shared components guide the application. Catalogue examples use synthetic records; their local interactions never save financial data.</p>
@@ -1298,13 +1323,44 @@
 
 </main>
 
+<div data-lab-assistant-shell>
+    <button type="button" class="lab-assistant-launcher" data-lab-assistant-launcher data-lab-assistant-open aria-label="Open Tuxedo assistant specimen" aria-controls="lab-assistant-panel" aria-expanded="false" hidden>
+        <span class="lab-assistant-mark" aria-hidden="true"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="36" height="36"><svg viewBox="0 0 48 48" fill="none"><path d="M7 31C-1 18 12 3 28 5M41 17C49 30 36 45 20 43" stroke="currentColor" stroke-width="1.2"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" fill="currentColor"/></svg></span>
+    </button>
+    <noscript><a class="lab-assistant-launcher" href="#lab-assistant-native" aria-label="Read the Tuxedo assistant specimen"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="36" height="36"></a></noscript>
+    <section id="lab-assistant-panel" class="lab-assistant-panel" role="dialog" aria-labelledby="lab-assistant-title" aria-describedby="lab-assistant-demo-note" tabindex="-1" data-lab-assistant-panel hidden>
+        <header class="lab-assistant-header">
+            <div class="lab-assistant-heading"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="36" height="36"><div><h2 id="lab-assistant-title">Tuxedo assistant</h2><p id="lab-assistant-demo-note">Synthetic preview · no provider</p></div></div>
+            <button type="button" class="lab-icon-button" data-lab-assistant-close aria-label="Close assistant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        </header>
+        <div class="lab-assistant-body" data-lab-assistant-body data-search-choice-viewport>
+            <div class="lab-assistant-toolbar">
+                <details class="lab-assistant-history" data-lab-assistant-history><summary>Conversation history</summary><div data-lab-assistant-history-list></div></details>
+                <button type="button" class="lab-assistant-action" data-lab-assistant-new>New conversation</button>
+            </div>
+            <div class="lab-assistant-scope"><span>Current page context</span><strong data-lab-assistant-scope>Home · October 2026 · BRL</strong></div>
+            <details class="lab-assistant-context"><summary>Included context and sources</summary><p>The separate synthetic reference ledger below this specimen supplies these figures. No unsaved form, private note or uploaded statement is included.</p><dl><div><dt>Recorded cash</dt><dd>BRL 1,000.00</dd></div><div><dt>Already reserved</dt><dd>BRL 300.00</dd></div><div><dt>After known commitments</dt><dd>BRL 800.00 · projection</dd></div></dl><a href="#lab-assistant-cash-source" data-lab-assistant-source="accounts">Recorded cash and reserves ↗</a><a href="#lab-assistant-projection-source" data-lab-assistant-source="plan">Known commitments projection ↗</a></details>
+            <div class="lab-assistant-messages" role="log" aria-label="Synthetic conversation" aria-live="polite" data-lab-assistant-messages></div>
+            <p class="lab-assistant-notice" role="status" data-lab-assistant-notice hidden></p>
+            <button type="button" class="lab-assistant-action" data-lab-assistant-cancel hidden>Cancel preview</button>
+            <form class="lab-assistant-composer" data-lab-assistant-form autocomplete="off" novalidate>
+                <label for="lab-assistant-question">Your question about the example</label>
+                <textarea id="lab-assistant-question" name="question" rows="3" maxlength="1200" placeholder="What should I look at this month?" aria-describedby="lab-assistant-input-help"></textarea>
+                <div><span id="lab-assistant-input-help">Enter adds a line. Ctrl/⌘ + Enter sends.</span><button type="submit" class="lab-button" data-lab-assistant-send>Preview reply ↗</button></div>
+            </form>
+            <details class="lab-assistant-demo-controls"><summary>Preview scenarios</summary><label for="lab-assistant-scenario">Synthetic response</label><select id="lab-assistant-scenario" data-lab-assistant-scenario><option value="answer">Example answer</option><option value="hold">Loading until cancelled</option><option value="error">Recoverable error</option><option value="disconnected">Provider disconnected</option></select><p>These controls belong only to the Design Lab.</p></details>
+            <details class="lab-assistant-delete" data-lab-assistant-delete><summary>Delete this conversation</summary><p>Delete only this synthetic conversation from the current preview?</p><button type="button" class="lab-assistant-action" data-lab-assistant-delete-confirm>Delete conversation</button></details>
+        </div>
+    </section>
+</div>
+
 <div hidden data-form-ui-strings data-search="Type to search" data-empty="No matching options" data-none="No option selected." data-selected="Selected:" data-clear="Clear selection" data-help="Type to search. Use ↑/↓ to navigate, Enter to select, Escape to close and Tab to continue." data-multiple-help="Type to filter. Use Tab to reach checkboxes and Space to select."></div>
 <script src="../static/js/forms.js" defer></script>
 <script src="../static/js/paper-layers.js?v=75b1d8b147df" defer></script>
 <script src="design-system-layers.js?v=dc84f7eb1cfd" defer></script>
 <script src="../static/js/date-picker.js?v=56f29700f264" defer></script>
 <script src="design-system-calendar.js?v=bf1a89ac0411" defer></script>
-<script src="design-system.js?v=0ca7112d0a61" defer></script>
+<script src="design-system.js?v=84ee3a7b30dc" defer></script>
 <script src="../static/js/theme.js"></script>
 <script src="../static/js/preferred-dates.js" defer></script>
 <script src="../static/js/project-menu.js"></script>

@@ -11,6 +11,12 @@ controls and server-rendered responses remain the source of truth.
 User-submitted mutations use CSRF-protected POSTs, and filters have
 plain GET fallbacks. Some page reads synchronize derived ledger records before
 rendering; see [request-time synchronization](../architecture.md#request-time-synchronization).
+The [assistant context collector](../apps/assistant.md#structured-financial-context)
+is deliberately read-only and does not perform that synchronization. Its utility
+panel is outside `main`; whole-body HTMX navigation reconstructs it and refetches
+owned conversation data. The native assistant route remains the no-JavaScript
+path. No model SDK, provider request or external script
+is enabled by this local foundation.
 
 Use the [interface map](../interface-map.md) for routes and component ownership.
 This guide owns interaction protocols; app guides describe their financial

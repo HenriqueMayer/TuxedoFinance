@@ -515,6 +515,248 @@
         });
     }
 
+    function initializeAssistantPreview() {
+        const shell = document.querySelector('[data-lab-assistant-shell]');
+        if (!shell) return;
+        const panel = shell.querySelector('[data-lab-assistant-panel]');
+        const body = shell.querySelector('[data-lab-assistant-body]');
+        const messages = shell.querySelector('[data-lab-assistant-messages]');
+        const notice = shell.querySelector('[data-lab-assistant-notice]');
+        const form = shell.querySelector('[data-lab-assistant-form]');
+        const question = form.elements.question;
+        const send = shell.querySelector('[data-lab-assistant-send]');
+        const cancel = shell.querySelector('[data-lab-assistant-cancel]');
+        const scenario = shell.querySelector('[data-lab-assistant-scenario]');
+        const historyList = shell.querySelector('[data-lab-assistant-history-list]');
+        const wide = matchMedia('(min-width: 1280px)');
+        const reply = 'Synthetic example: BRL 1,000.00 in recorded cash minus BRL 300.00 already reserved leaves BRL 700.00 unreserved. The BRL 800.00 projection after known commitments is a different measure. Review upcoming bills before changing a goal. No financial record was changed.';
+        const threads = [{id: 1, title: 'October cash review', messages: [{role: 'Tuxedo · synthetic example', text: reply}]}];
+        let nextId = 2, current, pending = null, returnFocus, originalScroll, originalOverflow;
+
+        function status(text = '', state = '') {
+            notice.textContent = text;
+            notice.hidden = !text;
+            notice.dataset.state = state;
+        }
+        function renderHistory() {
+            historyList.replaceChildren();
+            threads.slice().reverse().forEach(thread => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = thread.title;
+                button.dataset.labAssistantThread = String(thread.id);
+                if (thread === current) button.setAttribute('aria-current', 'true');
+                historyList.append(button);
+            });
+        }
+        function renderMessages() {
+            messages.replaceChildren();
+            if (!current.messages.length) {
+                const empty = document.createElement('div');
+                empty.className = 'lab-assistant-empty';
+                // Fixed specimen artwork/copy; user questions always use textContent.
+                empty.innerHTML = '<svg viewBox="0 0 90 44" fill="currentColor" aria-hidden="true"><path d="M2 2 38 16v12L2 42V2Zm86 0L52 16v12l36 14V2ZM39 14h12v16H39z"/></svg><h3>Consult this workspace.</h3><p>Ask about the example ledger. Answers include the period, currency and sources.</p><button type="button" class="lab-assistant-action" data-lab-assistant-prompt>What can I safely set aside?</button>';
+                messages.append(empty);
+            }
+            current.messages.forEach(message => {
+                const article = document.createElement('article');
+                article.className = 'lab-assistant-message';
+                article.dataset.labAssistantMessage = message.role === 'You' ? 'user' : 'assistant';
+                const role = document.createElement('strong'), text = document.createElement('p');
+                role.textContent = message.role;
+                text.textContent = message.text;
+                article.append(role, text);
+                if (message.role !== 'You') {
+                    const sources = document.createElement('details');
+                    sources.className = 'lab-assistant-sources';
+                    sources.innerHTML = '<summary>Sources used (2)</summary><a href="#lab-assistant-cash-source" data-lab-assistant-source="accounts">Recorded cash and reserves ↗</a><a href="#lab-assistant-projection-source" data-lab-assistant-source="plan">Known commitments projection ↗</a>';
+                    article.append(sources);
+                }
+                messages.append(article);
+            });
+            renderHistory();
+        }
+        function controls() {
+            const disconnected = scenario.value === 'disconnected';
+            question.disabled = disconnected || Boolean(pending);
+            send.disabled = disconnected || Boolean(pending);
+            cancel.hidden = !pending;
+            form.setAttribute('aria-busy', String(Boolean(pending)));
+        }
+        function cancelPreview(announce = true) {
+            if (!pending) return;
+            clearTimeout(pending.timer);
+            question.value = pending.prompt;
+            pending.thread.messages.pop();
+            pending = null;
+            renderMessages();
+            controls();
+            if (announce) status('Preview cancelled. Your question is still in the composer.');
+        }
+        function newThread() {
+            cancelPreview(false);
+            current = {id: nextId++, title: 'New conversation', messages: []};
+            threads.push(current);
+            question.value = '';
+            status();
+            renderMessages();
+            controls();
+        }
+        function updateContext() {
+            const view = document.querySelector('section[data-lab-view]:not([hidden])');
+            const labels = {home: 'Home', transactions: 'Transactions', accounts: 'Accounts', investments: 'Investments', plan: 'Plan'};
+            shell.querySelector('[data-lab-assistant-scope]').textContent = `${labels[view?.dataset.labView] || 'Home'} · October 2026 · BRL`;
+        }
+        function backgroundInert(inert) {
+            Array.from(document.body.children).forEach(element => {
+                if (element === shell || element.tagName === 'SCRIPT') return;
+                if (inert && !element.hasAttribute('inert')) {
+                    element.setAttribute('data-lab-assistant-inert', '');
+                    element.inert = true;
+                } else if (!inert && element.hasAttribute('data-lab-assistant-inert')) {
+                    element.inert = false;
+                    element.removeAttribute('data-lab-assistant-inert');
+                }
+            });
+        }
+        function layout() {
+            if (panel.hidden) return;
+            panel.setAttribute('aria-modal', String(!wide.matches));
+            document.body.classList.toggle('lab-assistant-docked', wide.matches);
+            backgroundInert(!wide.matches);
+            document.body.style.overflow = wide.matches ? originalOverflow : 'hidden';
+            const viewport = window.visualViewport;
+            panel.style.setProperty('--lab-assistant-top', `${viewport?.offsetTop || 0}px`);
+            panel.style.setProperty('--lab-assistant-height', `${viewport?.height || innerHeight}px`);
+        }
+        function open(trigger) {
+            if (!panel.hidden) return;
+            returnFocus = trigger;
+            originalScroll = {left: scrollX, top: scrollY};
+            originalOverflow = document.body.style.overflow;
+            panel.hidden = false;
+            document.querySelectorAll('[data-lab-assistant-open]').forEach(button => button.setAttribute('aria-expanded', 'true'));
+            shell.querySelector('[data-lab-assistant-launcher]').hidden = true;
+            updateContext();
+            layout();
+            shell.querySelector('[data-lab-assistant-close]').focus({preventScroll: true});
+        }
+        function close(restore = true) {
+            if (panel.hidden) return;
+            cancelPreview();
+            panel.hidden = true;
+            backgroundInert(false);
+            document.body.classList.remove('lab-assistant-docked');
+            document.body.style.overflow = originalOverflow;
+            document.querySelectorAll('[data-lab-assistant-open]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+            shell.querySelector('[data-lab-assistant-launcher]').hidden = false;
+            if (restore) {
+                if (returnFocus?.isConnected) returnFocus.focus({preventScroll: true});
+                window.scrollTo({...originalScroll, behavior: 'instant'});
+            }
+        }
+        document.querySelectorAll('[data-lab-assistant-open]').forEach(button => {
+            button.hidden = false;
+            button.addEventListener('click', () => open(button));
+        });
+        shell.addEventListener('click', event => {
+            if (event.target.closest('[data-lab-assistant-close]')) close();
+            if (event.target.closest('[data-lab-assistant-new]')) { newThread(); question.focus(); }
+            if (event.target.closest('[data-lab-assistant-prompt]')) { question.value = 'What can I safely set aside?'; question.focus(); }
+            if (event.target.closest('[data-lab-assistant-cancel]')) { cancelPreview(); question.focus(); }
+            const selected = event.target.closest('[data-lab-assistant-thread]');
+            if (selected) {
+                cancelPreview(false);
+                current = threads.find(thread => thread.id === Number(selected.dataset.labAssistantThread));
+                question.value = '';
+                status();
+                renderMessages();
+                shell.querySelector('[data-lab-assistant-history]').open = false;
+                question.focus();
+            }
+            if (event.target.closest('[data-lab-assistant-delete-confirm]')) {
+                cancelPreview(false);
+                threads.splice(threads.indexOf(current), 1);
+                current = threads.at(-1);
+                if (!current) newThread();
+                question.value = '';
+                renderMessages();
+                shell.querySelector('[data-lab-assistant-delete]').open = false;
+                status('Synthetic conversation deleted.');
+                question.focus();
+            }
+            const source = event.target.closest('[data-lab-assistant-source]');
+            if (source) {
+                close(false);
+                document.querySelector(`[data-lab-destination="${source.dataset.labAssistantSource}"]`)?.click();
+                updateContext();
+            }
+        });
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            if (pending || scenario.value === 'disconnected') return;
+            const prompt = question.value.trim();
+            if (!prompt) { status('Write a question about the example first.', 'error'); question.focus(); return; }
+            current.title = prompt.slice(0, 48);
+            current.messages.push({role: 'You', text: prompt});
+            pending = {thread: current, prompt, timer: null};
+            renderMessages();
+            status('Preparing a synthetic reply…');
+            controls();
+            cancel.focus();
+            if (scenario.value === 'hold') return;
+            const fail = scenario.value === 'error';
+            pending.timer = setTimeout(() => {
+                if (!pending) return;
+                if (fail) {
+                    cancelPreview(false);
+                    status('The example reply failed. Your question was kept; choose Example answer and try again.', 'error');
+                } else {
+                    pending.thread.messages.push({role: 'Tuxedo · synthetic example', text: reply});
+                    pending = null;
+                    question.value = '';
+                    renderMessages();
+                    status('Synthetic reply ready. No provider or financial action was used.');
+                    controls();
+                }
+                question.focus();
+            }, 600);
+        });
+        question.addEventListener('keydown', event => {
+            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); form.requestSubmit(); }
+        });
+        scenario.addEventListener('change', () => {
+            cancelPreview(false);
+            controls();
+            status(scenario.value === 'disconnected' ? 'Provider disconnected. Questions are not sent; this is a local preview.' : 'Synthetic scenario selected. No external request is made.');
+        });
+        document.addEventListener('keydown', event => {
+            if (panel.hidden || document.querySelector('dialog[open]')) return;
+            if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+            if (event.key !== 'Tab' || wide.matches) return;
+            const focusable = Array.from(panel.querySelectorAll('button, textarea, select, summary, a[href]'))
+                .filter(node => {
+                    if (node.disabled || !node.getClientRects().length) return false;
+                    // Closed details may retain layout boxes for descendants;
+                    // only their own summary belongs in the native Tab order.
+                    for (let owner = node.parentElement; owner && owner !== panel; owner = owner.parentElement) {
+                        if (owner.tagName === 'DETAILS' && !owner.open && owner.firstElementChild !== node) return false;
+                    }
+                    return true;
+                });
+            const first = focusable[0], last = focusable.at(-1);
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+        document.querySelector('[data-lab-navigation]')?.addEventListener('click', updateContext);
+        window.addEventListener('hashchange', updateContext);
+        window.addEventListener('resize', layout);
+        window.visualViewport?.addEventListener('resize', layout);
+        window.visualViewport?.addEventListener('scroll', layout);
+        newThread();
+        updateContext();
+    }
+
     function initialize() {
         initializePeriodExample();
         // Old catalogue bookmarks resolve to the sole illustration without
@@ -532,6 +774,7 @@
         initializeTransactionPreview();
         window.TuxedoLabCalendar?.initialize();
         initializeBowtie();
+        initializeAssistantPreview();
 
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize, { once: true });

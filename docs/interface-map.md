@@ -28,6 +28,9 @@ screens belong to their workspace; an editor retains its workspace context.
 Settings, language, theme, project links and POST logout remain in account or
 utility controls. Primary navigation has no hover submenus. Option menus open
 deliberately; question-mark help keeps its separate hover/focus behavior.
+The authenticated assistant is a utility panel/native destination, not a sixth
+primary workspace. Its local foundation has no connected model or financial
+execution. See the [assistant guide](apps/assistant.md).
 
 ## Screens and route families
 
@@ -40,6 +43,15 @@ deliberately; question-mark help keeps its separate hover/focus behavior.
 | `/accounts/signup/` | Username/email/password confirmation, registration errors, Sign up or closed-registration state, login link. | Signup policy and server validation; no demo financial records are inserted by registration. |
 | `/accounts/settings/` | Consolidation currency and complete-date order, contextual help, Save/Cancel. | Preferences change presentation; native record currencies and calendar dates retain their meaning. |
 | `/accounts/logout/`, `/i18n/setlang/` | Explicit logout and locale submissions. | POST actions, existing session/security behavior and validated destinations. |
+
+### Assistant utility
+
+| Routes | Interface and actions | Preserved boundaries |
+|---|---|---|
+| `/assistant/`, `/assistant/<uuid>/` | Local conversation list/detail, explicit New conversation/Delete, context status and unavailable provider/composer; utility panel with a native full-page fallback. | Owner-scoped UUIDs, no-store responses, shared keyboard/focus/mobile clearance and no fake model reply. Outside `main`; whole-body HTMX navigation reconstructs the panel and refetches its owned conversation. |
+| `/assistant/conversations/new/`, `/assistant/<uuid>/delete/` | Explicit CSRF-protected local POSTs. | Create/delete owned conversation history only; no financial write. |
+| `/assistant/<uuid>/messages/` | Unavailable-provider recovery for a stale/direct POST. | HTTP 503 without saving a fake exchange; no external request or paid fallback. |
+| `/assistant/context/` | Timestamped/cutoff/currency-aware structured context with metrics, warnings and owned source links. | Signed expiring user-bound origin, allowlisted route/query, ownership rechecks, read-only collection and no DOM/unsent-form capture. |
 
 ### Home and reporting
 
@@ -167,6 +179,9 @@ protects both GET and POST entry into paused features:
   catalogue rollout; mapping it does not enable staff access or restyle it.
 - The static preview and Design Lab are reference surfaces, not alternate
   financial applications or runtime data sources.
+- Assistant proposal/simulation interfaces are contracts only. No provider,
+  action execution, Open Finance connector or unattended automation is enabled;
+  they cannot bypass an unavailable feature's server gate.
 
 ## Adoption and verification
 

@@ -90,6 +90,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <script src="{% asset 'js/month-filter.js' %}" defer></script>
     <script src="{% asset 'js/chart-selection.js' %}" defer></script>
     <script src="{% asset 'js/bank-colors.js' %}" defer></script>
+    <script src="{% asset 'js/assistant.js' %}" defer></script>
 </head>
 {% comment %}History keeps URLs, but never financial HTML or account forms.
 Back/Forward must reauthorize against the current session before restoring the
@@ -117,6 +118,7 @@ including when JavaScript is disabled.{% endcomment %}
     {% if request.user.is_authenticated %}{% include 'partials/app_bottom_navigation.html' %}{% endif %}
     {% include 'partials/form_ui_strings.html' %}
     {% if request.user.is_authenticated %}{% include 'partials/departure_confirm.html' %}{% endif %}
+    {% if assistant_available %}{% include 'assistant/_dock.html' %}{% endif %}
 
     {% block extra_js %}{% endblock %}
 </body>

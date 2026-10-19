@@ -27,6 +27,8 @@
 !planning/**
 !ingestion/
 !ingestion/**
+!assistant/
+!assistant/**
 !templates/
 !templates/**
 !static/

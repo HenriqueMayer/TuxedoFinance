@@ -41,6 +41,31 @@ For Docker installations, use the [Docker operations guide](docker.md) for
 volume-aware backup, restore and updates. Keep the Compose project identity and
 signing key across container recreation.
 
+## Assistant data and integrations
+
+The [assistant foundation](apps/assistant.md) runs locally with no provider
+credentials, model calls, bank connection or background worker. There is no
+operator configuration that enables ChatGPT-plan usage, paid API-key fallback
+or Open Finance in this implementation. A disabled composer is the expected
+unavailable-provider state, not a setup failure to resolve by inserting a key.
+
+Conversation/message data belongs to the authenticated user and remains in the
+installation database until deletion. Protect it with the same access, backup
+and retention policy as financial records. Deleting a conversation from the
+active database does not erase older owner-managed backup copies. The
+structured-context endpoint is read-only and does not synchronize projections.
+Apply the new assistant migration through the ordinary backed-up update workflow
+before running this source checkout; it only adds local conversation tables.
+
+Later provider authorization would need separate user-linked secure credential
+storage, usage/permission controls and explicit disclosure of transmitted
+context. Bank synchronization additionally needs an approved delivery strategy:
+provider webhooks cannot reach an ordinary loopback-only service by themselves.
+Do not expose the installation, configure a tunnel, reuse another application's
+tokens or copy financial data to a provider as a workaround. Follow the
+[planned-integration gates](roadmap.md) and
+[dated Open Finance study](reviews/open-finance-personal-study-2026-10-18.md).
+
 ## Financial calendar
 
 Financial rules obtain today's date through Django's `timezone.localdate()`.

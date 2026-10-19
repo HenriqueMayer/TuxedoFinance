@@ -528,3 +528,80 @@
     .lab-bank-accounts { margin-inline: 16px; }
     .lab-bank-accounts p, .lab-bank-invoice { align-items: start; flex-direction: column; gap: 10px; }
 }
+
+/* Synthetic assistant specimen. The wide dock reflows the catalogue rather
+   than covering its controls; narrow sheets own focus and their own scrolling. */
+[data-design-lab] { padding-bottom: 80px; }
+[data-lab-assistant-shell] [hidden], [data-lab-assistant-open][hidden] { display: none !important; }
+.lab-assistant-introduction { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-block: 1px solid var(--lab-line); padding-block: 24px; }
+.lab-assistant-introduction p { max-width: 62ch; color: var(--lab-muted); font-size: 14px; line-height: 1.7; margin-top: 12px; }
+.lab-assistant-introduction > button { flex: none; }
+.lab-assistant-reference-ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 20px; padding-block: 20px; border-bottom: 1px solid var(--lab-line); }
+.lab-assistant-reference-ledger > div { scroll-margin-top: calc(var(--lab-header) + 20px); }
+.lab-assistant-reference-ledger dt { color: var(--lab-muted); font-size: 12px; margin-bottom: 6px; }
+.lab-assistant-reference-ledger dd { font-size: 14px; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.lab-assistant-launcher { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 43; display: grid; place-items: center; width: 60px; height: 60px; border: 1px solid var(--lab-line); border-radius: 18px; background: var(--lab-paper); color: var(--lab-accent-ink); box-shadow: 0 4px 18px rgb(26 46 38 / .12); transition: background-color 180ms ease, box-shadow 180ms ease; }
+.lab-assistant-launcher:hover { background: var(--lab-ground); box-shadow: 0 6px 24px rgb(26 46 38 / .16); }
+.lab-assistant-mark { position: relative; display: grid; place-items: center; width: 48px; height: 48px; }
+.lab-assistant-mark img, .lab-assistant-heading img { width: 36px; height: 36px; border-radius: 50%; flex: none; }
+.lab-assistant-mark svg { position: absolute; inset: 0; width: 48px; height: 48px; }
+.lab-assistant-panel { position: fixed; inset: var(--lab-assistant-top, 0px) 0 auto; z-index: 45; height: var(--lab-assistant-height, 100dvh); display: flex; flex-direction: column; min-width: 0; background: var(--lab-surface); color: var(--lab-ink); border: 1px solid var(--lab-line); overflow: hidden; animation: lab-assistant-enter 180ms ease-out; }
+.lab-assistant-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: none; padding: 14px 18px; border-bottom: 1px solid var(--lab-line); background: var(--lab-paper); }
+.lab-assistant-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lab-assistant-heading h2 { font-size: 15px; line-height: 1.4; font-weight: 600; letter-spacing: -.03em; }
+.lab-assistant-heading p { margin-top: 3px; color: var(--lab-muted); font-size: 12px; }
+.lab-assistant-body { flex: 1; min-height: 0; padding: 0 20px calc(24px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; overflow-wrap: anywhere; }
+.lab-assistant-toolbar { display: flex; align-items: start; justify-content: space-between; gap: 8px; padding-block: 10px; border-bottom: 1px solid var(--lab-line); }
+.lab-assistant-action, .lab-assistant-toolbar summary, .lab-assistant-delete summary, .lab-assistant-demo-controls summary { display: inline-flex; align-items: center; min-height: 44px; font-size: 12px; line-height: 1.4; color: var(--lab-muted); cursor: pointer; }
+.lab-assistant-action { padding: 8px; border-radius: 8px; }
+.lab-assistant-action:hover { color: var(--lab-ink); background: var(--lab-ground); }
+.lab-assistant-history { flex: 1; min-width: 0; }
+.lab-assistant-history > div { display: flex; flex-direction: column; max-height: 170px; overflow-y: auto; }
+.lab-assistant-history button { min-height: 48px; text-align: left; font-size: 13px; padding: 10px; border-radius: 8px; overflow-wrap: anywhere; }
+.lab-assistant-history button[aria-current], .lab-assistant-history button:hover { background: var(--lab-ground); }
+.lab-assistant-scope { display: grid; gap: 4px; padding-block: 16px; font-size: 12px; }
+.lab-assistant-scope span { color: var(--lab-muted); }
+.lab-assistant-scope strong { font-weight: 500; }
+.lab-assistant-context { border-bottom: 1px solid var(--lab-line); padding-bottom: 10px; font-size: 12px; }
+.lab-assistant-context summary { min-height: 44px; align-content: center; cursor: pointer; color: var(--lab-muted); }
+.lab-assistant-context p { line-height: 1.6; margin-block: 8px; color: var(--lab-muted); }
+.lab-assistant-context dl > div { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-block: 7px; border-bottom: 1px solid var(--lab-line); }
+.lab-assistant-context dd { font-variant-numeric: tabular-nums; }
+.lab-assistant-context a, .lab-assistant-sources a { display: inline-flex; align-items: center; min-height: 44px; color: var(--lab-accent-ink); text-decoration: underline; text-underline-offset: 4px; margin-right: 12px; font-size: 12px; }
+.lab-assistant-messages { display: flex; flex-direction: column; gap: 20px; min-height: 200px; padding-block: 20px; }
+.lab-assistant-empty { margin: auto 0; padding-block: 4px; }
+.lab-assistant-empty > svg { width: 86px; height: 44px; color: var(--lab-accent-ink); margin-bottom: 16px; }
+.lab-assistant-empty h3 { font-size: 20px; line-height: 1.25; font-weight: 600; letter-spacing: -.04em; margin-bottom: 12px; }
+.lab-assistant-empty p { color: var(--lab-muted); font-size: 13px; line-height: 1.7; }
+.lab-assistant-empty button { margin-top: 10px; color: var(--lab-accent-ink); }
+.lab-assistant-message { font-size: 14px; line-height: 1.7; border-bottom: 1px solid var(--lab-line); padding-bottom: 16px; white-space: pre-wrap; }
+.lab-assistant-message > strong { display: block; color: var(--lab-muted); font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+.lab-assistant-sources summary { min-height: 44px; align-content: center; cursor: pointer; font-size: 12px; }
+.lab-assistant-notice { padding: 12px; border-left: 2px solid var(--lab-accent-ink); background: var(--lab-paper); font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+.lab-assistant-notice[data-state="error"] { border-color: var(--lab-error); }
+.lab-assistant-composer { border-top: 1px solid var(--lab-line); padding-top: 16px; }
+.lab-assistant-composer label { display: block; font-size: 13px; margin-bottom: 8px; }
+.lab-assistant-composer textarea, .lab-assistant-demo-controls select { width: 100%; min-width: 0; min-height: 44px; padding: 12px; border: 1px solid var(--lab-control-line); border-radius: 8px; color: var(--lab-ink); background: var(--lab-surface); font: inherit; font-size: 14px; line-height: 1.5; }
+.lab-assistant-composer textarea { resize: vertical; min-height: 88px; max-height: 180px; }
+.lab-assistant-composer > div { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.lab-assistant-composer > div > span { color: var(--lab-muted); font-size: 12px; }
+.lab-assistant-composer :disabled { opacity: .6; cursor: not-allowed; }
+.lab-assistant-demo-controls, .lab-assistant-delete { margin-top: 16px; border-top: 1px solid var(--lab-line); padding-top: 6px; }
+.lab-assistant-demo-controls label, .lab-assistant-demo-controls p, .lab-assistant-delete p { display: block; font-size: 12px; line-height: 1.6; margin-block: 8px; color: var(--lab-muted); }
+.lab-assistant-delete button { color: var(--lab-error); }
+[data-lab-assistant-shell] :is(button, textarea, select, summary, a):focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: 3px; }
+@media (min-width: 1280px) {
+    [data-design-lab].lab-assistant-docked { padding-right: 408px; }
+    .lab-assistant-panel { inset: calc(var(--lab-header) + 12px) 16px 16px auto; width: 376px; height: auto; border-radius: 16px; box-shadow: 0 8px 36px rgb(26 46 38 / .08); }
+}
+@media (max-width: 639px) { .lab-assistant-introduction { align-items: start; flex-direction: column; } }
+@keyframes lab-assistant-enter { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    /* This utility is outside .lab-section, so its shared buttons need the
+       same motion override as the inline specimens. */
+    [data-lab-assistant-shell], [data-lab-assistant-shell] * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+@media print {
+    [data-lab-assistant-shell] { display: none !important; }
+    [data-design-lab].lab-assistant-docked { padding-right: 0; }
+}

@@ -18,6 +18,7 @@ declaration stays in the entry so its delivered relative URL remains stable.
 | Transaction consultation geometry and selected states | [`transaction-consultation.css`](css/workspaces/transaction-consultation.css), [`transaction-consultation-state.css`](css/workspaces/transaction-consultation-state.css) |
 | Investment and planning workspaces | [`finance.css`](css/workspaces/finance.css) |
 | Reporting surfaces and chart readability | [`reporting.css`](css/reporting.css) |
+| Local assistant launcher, panel and native page | [`assistant.css`](css/assistant.css) |
 
 Imports are ordered, rather than alphabetical. Layered shared components precede
 the later unlayered workspace rules. Transaction consultation states deliberately

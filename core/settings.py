@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'sandbox',
     'planning',
     'ingestion',
+    'assistant',
 ]
 
 MIDDLEWARE = [
@@ -101,6 +102,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.currency',
+                'assistant.context_processors.assistant_shell',
             ],
         },
     },
