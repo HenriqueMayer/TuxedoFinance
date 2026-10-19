@@ -54,6 +54,8 @@ class ProviderConnection(models.Model):
     expires_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.IDENTITY_ONLY)
     is_active = models.BooleanField(default=False)
+    last_model_slug = models.CharField(max_length=160, blank=True, default='')
+    last_reasoning_effort = models.CharField(max_length=12, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -113,6 +115,7 @@ class GenerationRun(models.Model):
     connection = models.ForeignKey(ProviderConnection, on_delete=models.SET_NULL, null=True,
                                    related_name='generation_runs')
     model_slug = models.CharField(max_length=160)
+    reasoning_effort = models.CharField(max_length=12, blank=True, default='')
     input_message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='generation_inputs')
     output_message = models.OneToOneField(Message, on_delete=models.SET_NULL, null=True, blank=True,
                                         related_name='generation_result')

@@ -60,6 +60,32 @@ async function scenario(panel, value) {
     await controls.locator('summary').press('Enter');
 }
 
+async function selectModel(panel, value = 'synthetic') {
+    const settings = panel.locator('[data-lab-assistant-settings]');
+    if (!await settings.evaluate(node => node.open)) await settings.locator(':scope > summary').press('Enter');
+    await settings.getByLabel('Preview model', {exact: true}).selectOption(value);
+    await settings.locator(':scope > summary').press('Escape');
+    await expect(settings).not.toHaveAttribute('open');
+}
+
+async function expectSquareSettingsGear(panel) {
+    const summary = panel.locator('[data-lab-assistant-settings] > summary');
+    const target = await summary.boundingBox();
+    expect(target.width).toBeGreaterThanOrEqual(44);
+    expect(target.height).toBeGreaterThanOrEqual(44);
+    const gear = await summary.locator('svg').evaluate(svg => {
+        const frame = svg.getBoundingClientRect(), circle = svg.querySelector('circle, path:last-child').getBoundingClientRect();
+        return {width: frame.width, height: frame.height, shrink: getComputedStyle(svg).flexShrink,
+            centerX: frame.x + frame.width / 2, centerY: frame.y + frame.height / 2,
+            circleX: circle.x + circle.width / 2, circleY: circle.y + circle.height / 2};
+    });
+    expect(gear.width).toBeCloseTo(16, 1);
+    expect(gear.height).toBeCloseTo(16, 1);
+    expect(gear.shrink).toBe('0');
+    expect(gear.circleX).toBeCloseTo(gear.centerX, 1);
+    expect(gear.circleY).toBeCloseTo(gear.centerY, 1);
+}
+
 for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
     test(`synthetic assistant preserves page geometry, compact context and keyboard ownership (${theme}, ${width})`, async ({page}, info) => {
         const external = [];
@@ -83,13 +109,12 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await launcher.press('Enter');
         await expect(panel).toBeVisible();
         await expect(panel).toHaveAttribute('aria-modal', String(width < 1280));
-        await expect(panel.getByRole('button', {name:'Close assistant', exact:true})).toBeFocused();
+        await expect(panel.getByRole('button', {name:'Minimize assistant', exact:true})).toBeFocused();
         await expect(panel).toContainText('Synthetic preview · no provider');
         await expect(panel.locator('[data-lab-assistant-scope]')).toHaveText('Home · October 2026 · BRL');
         const compactContext = panel.getByLabel('Current page context', {exact:true});
-        await expect(compactContext.getByRole('link')).toHaveCount(2);
-        await expect(compactContext.getByRole('link', {name:'Cash and reserves ↗', exact:true})).toBeVisible();
-        await expect(compactContext.getByRole('link', {name:'Known commitments ↗', exact:true})).toBeVisible();
+        await expect(compactContext.getByRole('link')).toHaveCount(1);
+        await expect(compactContext.getByRole('link', {name:'Home · October 2026 · BRL', exact:true})).toHaveAttribute('href', '#lab-view-home');
         await expect(compactContext.locator('details, summary, dl')).toHaveCount(0);
         await expect(compactContext).not.toContainText('1,000.00');
         await expect(compactContext).not.toContainText('300.00');
@@ -102,7 +127,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         expect(box.x + box.width).toBeLessThanOrEqual(width);
         expect(box.y + box.height).toBeLessThanOrEqual(900);
         if (width >= 1280) {
-            expect(box.width).toBe(376);
+            expect(box.width).toBe(420);
             expect(await page.locator('main').evaluate(node => node.inert)).toBe(false);
             const mainBox = await page.locator('main').boundingBox();
             expect(mainBox.x + mainBox.width).toBeGreaterThan(box.x);
@@ -112,28 +137,122 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         } else {
             await expect(page.locator('main')).toHaveAttribute('inert', '');
             await page.keyboard.press('Shift+Tab');
-            await expect(panel.locator('[data-lab-assistant-delete] > summary')).toBeFocused();
+            await expect(panel.getByRole('checkbox', {name:'Use page data', exact:true})).toBeFocused();
             await page.keyboard.press('Tab');
-            await expect(panel.getByRole('button', {name:'Close assistant', exact:true})).toBeFocused();
+            await expect(panel.getByRole('button', {name:'Minimize assistant', exact:true})).toBeFocused();
         }
+        // Compact paint must retain touch-sized targets in both desktop and sheet layouts.
+        for (const control of [
+            panel.getByRole('button', {name:'Minimize assistant', exact:true}),
+            panel.getByRole('button', {name:'Close assistant', exact:true}),
+            panel.getByRole('button', {name:'New conversation', exact:true}),
+            compactContext.getByRole('link'),
+            panel.getByLabel('Your question about the example', {exact:true}),
+            panel.locator('[data-lab-assistant-settings] > summary'),
+            panel.locator('.lab-assistant-context-choice'),
+            panel.getByRole('button', {name:'Preview reply', exact:true}),
+        ]) {
+            const target = await control.boundingBox();
+            expect(target.width).toBeGreaterThanOrEqual(44);
+            expect(target.height).toBeGreaterThanOrEqual(44);
+        }
+        const empty = panel.locator('.lab-assistant-empty');
+        const emptyBox = await empty.boundingBox(), artworkBox = await empty.locator('svg').boundingBox();
+        expect(Math.abs(artworkBox.x + artworkBox.width / 2 - emptyBox.x - emptyBox.width / 2)).toBeLessThan(1);
+        await expect(empty).toHaveCSS('text-align', 'center');
+        // The working chat and its specimen share one compact utility rail;
+        // context must not consume a second row above the conversation.
+        const chrome = await panel.evaluate(node => {
+            const header = node.querySelector('.lab-assistant-header').getBoundingClientRect();
+            const toolbar = node.querySelector('.lab-assistant-toolbar').getBoundingClientRect();
+            const context = node.querySelector('[data-lab-assistant-scope]').getBoundingClientRect();
+            const transcript = node.querySelector('[data-lab-assistant-messages]').getBoundingClientRect();
+            const composer = node.querySelector('.lab-assistant-composer-input').getBoundingClientRect();
+            return {header: header.height, toolbar: toolbar.height, contextY: context.y,
+                toolbarY: toolbar.y, chrome: transcript.y - header.y, composer: composer.height};
+        });
+        expect(chrome.header).toBeLessThanOrEqual(58);
+        expect(chrome.toolbar).toBeLessThanOrEqual(46);
+        expect(chrome.chrome).toBeLessThanOrEqual(106);
+        expect(Math.abs(chrome.contextY - chrome.toolbarY)).toBeLessThanOrEqual(1);
+        expect(chrome.composer).toBeLessThanOrEqual(100);
+        await expectSquareSettingsGear(panel);
         await page.screenshot({path:info.outputPath(`assistant-empty-${theme}-${width}.png`)});
         const geometryBeforeClose = width >= 1280 ? await pageGeometry(page) : null;
         await page.keyboard.press('Escape');
         await expect(panel).toBeHidden();
-        await expect(launcher).toBeFocused();
+        await expect(page.getByRole('button', {name:'Restore assistant', exact:true})).toBeFocused();
         expect(Math.abs(await page.evaluate(() => scrollY) - originalScroll)).toBeLessThan(2);
         if (width >= 1280) expect(await pageGeometry(page)).toEqual(geometryBeforeClose);
-        await launcher.press('Enter');
+        await page.getByRole('button', {name:'Restore assistant', exact:true}).press('Enter');
+        await selectModel(panel);
+        const settings = panel.locator('[data-lab-assistant-settings]');
+        await settings.locator(':scope > summary').press('Enter');
+        const model = settings.getByLabel('Preview model', {exact: true});
+        const effort = settings.getByLabel('Reasoning effort', {exact: true});
+        await effort.selectOption('medium');
+        await model.selectOption('synthetic-mini');
+        await expect(effort).toHaveValue('');
+        await expect(panel.locator('[data-lab-assistant-notice]')).toContainText('Model default is now selected');
+        await effort.selectOption('high');
+        await expect(panel.locator('[data-lab-assistant-notice]')).toBeEmpty();
+        await model.selectOption('synthetic');
+        await expect(effort).toHaveValue('high');
+        for (const control of [model, effort]) {
+            await control.focus(); await expect(control).toBeInViewport();
+            const bounds = await control.boundingBox();
+            expect(bounds.width).toBeGreaterThanOrEqual(44);
+            expect(bounds.height).toBeGreaterThanOrEqual(44);
+            expect(bounds.x).toBeGreaterThanOrEqual(0);
+            expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+        }
+        await page.screenshot({path:info.outputPath(`assistant-chat-settings-${theme}-${width}.png`)});
+        await effort.press('Escape');
+        await expect(settings).not.toHaveAttribute('open');
+        await expect(settings.locator(':scope > summary')).toBeFocused();
+        await expect(panel).toBeVisible();
 
         const question = panel.getByLabel('Your question about the example', {exact:true});
-        const send = panel.getByRole('button', {name:'Preview reply ↗', exact:true});
+        const send = panel.getByRole('button', {name:'Preview reply', exact:true});
         const notice = panel.locator('[data-lab-assistant-notice]');
+        await expect(question).toHaveAttribute('rows', '1');
+        await question.fill('An unsent synthetic draft');
+        await panel.getByRole('checkbox', {name:'Use page data', exact:true}).check();
+        await panel.getByRole('button', {name:'Minimize assistant', exact:true}).press('Enter');
+        await expect(panel).toBeHidden();
+        const restore = page.getByRole('button', {name:'Restore assistant', exact:true});
+        await expect(restore).toBeFocused();
+        const restoreBox = await restore.boundingBox();
+        expect(restoreBox.width).toBeGreaterThanOrEqual(44);
+        expect(restoreBox.height).toBeGreaterThanOrEqual(44);
+        expect(restoreBox.x).toBeGreaterThanOrEqual(0);
+        expect(restoreBox.x + restoreBox.width).toBeLessThanOrEqual(width);
+        await expect(page.locator('main')).not.toHaveAttribute('inert');
+        await page.screenshot({path:info.outputPath(`assistant-minimized-${theme}-${width}.png`)});
+        await restore.press('Enter');
+        await expect(question).toHaveValue('An unsent synthetic draft');
+        await expect(model).toHaveValue('synthetic');
+        await expect(effort).toHaveValue('high');
+        await expect(panel.getByRole('checkbox', {name:'Use page data', exact:true})).toBeChecked();
+        await expect(panel.getByRole('button', {name:'Minimize assistant', exact:true})).toBeFocused();
+        await panel.getByRole('checkbox', {name:'Use page data', exact:true}).uncheck();
+        await question.fill('First line');
+        await question.press('Shift+Enter');
+        await question.press('x');
+        await expect(question).toHaveValue('First line\nx');
+        await expect(panel.locator('[data-lab-assistant-message="user"]')).toHaveCount(0);
+        await question.fill('Line\n'.repeat(30));
+        expect((await question.boundingBox()).height).toBeLessThanOrEqual(120);
         await scenario(panel, 'hold');
         await question.fill('Keep my synthetic question');
         await send.press('Enter');
         await expect(notice).toHaveText('Preparing a synthetic reply…');
         await expect(panel.locator('form')).toHaveAttribute('aria-busy', 'true');
-        await panel.getByRole('button', {name:'Cancel preview', exact:true}).press('Enter');
+        await panel.getByRole('button', {name:'Minimize assistant', exact:true}).press('Enter');
+        await expect(panel).toBeHidden();
+        await page.getByRole('button', {name:'Restore assistant', exact:true}).press('Enter');
+        await expect(panel.locator('form')).toHaveAttribute('aria-busy', 'true');
+        await panel.getByRole('button', {name:'Stop preview', exact:true}).press('Enter');
         await expect(question).toHaveValue('Keep my synthetic question');
         await expect(panel.locator('form')).toHaveAttribute('aria-busy', 'false');
         await expect(notice).toContainText('Preview cancelled');
@@ -148,11 +267,25 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(notice).toContainText('Questions are not sent');
         await scenario(panel, 'answer');
         await question.fill('What can I safely set aside?');
-        await question.press('Control+Enter');
+        await panel.getByRole('checkbox', {name:'Use page data', exact:true}).check();
+        await question.press('Enter');
         await expect(notice).toContainText('Synthetic reply ready');
         const answer = panel.locator('[data-lab-assistant-message="assistant"]');
         await expect(answer).toContainText('BRL 700.00 unreserved');
         await expect(answer).toContainText('BRL 800.00 projection');
+        await expect(panel.getByRole('checkbox', {name:'Use page data', exact:true})).not.toBeChecked();
+        await expect(panel.locator('[data-lab-assistant-message="user"]')).toHaveCSS('align-self', 'flex-end');
+        const composer = panel.locator('[data-lab-assistant-form]');
+        const composerBox = await composer.boundingBox();
+        await question.fill('A longer synthetic question about the example. '.repeat(24));
+        await question.press('Enter');
+        await expect(panel.locator('[data-lab-assistant-message="assistant"]')).toHaveCount(2);
+        const transcript = panel.locator('[data-lab-assistant-messages]');
+        await expect.poll(() => transcript.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true);
+        await transcript.evaluate(node => { node.scrollTop = 0; });
+        expect(await composer.boundingBox()).toEqual(composerBox);
+        await expect(question).toBeInViewport();
+        expect(await panel.locator('[data-lab-assistant-body]').evaluate(node => node.scrollTop)).toBe(0);
         await page.screenshot({path:info.outputPath(`assistant-reply-${theme}-${width}.png`)});
 
         await panel.locator('[data-lab-assistant-history] > summary').press('Enter');
@@ -160,6 +293,8 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(answer).toContainText('Synthetic example:');
         await panel.getByRole('button', {name:'New conversation', exact:true}).press('Enter');
         await expect(answer).toHaveCount(0);
+        await expect(model).toHaveValue('synthetic');
+        await expect(effort).toHaveValue('high');
         await expect(panel).toContainText('Consult this workspace.');
         await question.fill('A conversation to delete');
         await send.press('Enter');
@@ -170,12 +305,25 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await panel.locator('[data-lab-assistant-history] > summary').press('Enter');
         await expect(panel.getByRole('button', {name:'A conversation to delete', exact:true})).toHaveCount(0);
         await panel.locator('[data-lab-assistant-history] > summary').press('Enter');
-        await answer.locator('.lab-assistant-sources > summary').press('Enter');
-        await answer.getByRole('link', {name:'Recorded cash and reserves ↗', exact:true}).press('Enter');
+        await answer.first().locator('.lab-assistant-sources > summary').press('Enter');
+        await answer.first().getByRole('link', {name:'Recorded cash and reserves ↗', exact:true}).press('Enter');
         await expect(panel).toBeHidden();
         await expect(page).toHaveURL(/#lab-assistant-cash-source$/);
         await expect(page.locator('#lab-assistant-cash-source')).toBeInViewport();
         await expect(page.locator('main')).not.toHaveAttribute('inert');
+        await page.getByRole('button', {name:'Restore assistant', exact:true}).press('Enter');
+        await question.fill('Draft discarded by deliberate close');
+        await panel.getByRole('button', {name:'Close assistant', exact:true}).press('Enter');
+        await expect(panel).toBeHidden();
+        await expect(launcher).toBeFocused();
+        await expect(page.getByRole('button', {name:'Restore assistant', exact:true})).toBeHidden();
+        await launcher.press('Enter');
+        await expect(question).toHaveValue('');
+        await expect(model).toHaveValue('synthetic');
+        await expect(effort).toHaveValue('high');
+        await expect(panel.getByRole('checkbox', {name:'Use page data', exact:true})).not.toBeChecked();
+        await expect(answer).not.toHaveCount(0);
+        await panel.getByRole('button', {name:'Close assistant', exact:true}).press('Enter');
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         expect(external).toEqual([]);
     });
@@ -191,6 +339,7 @@ test('assistant sheet fits touch, short viewports and reduced motion', async ({b
         await expect(launcher.locator('svg')).toHaveCSS('animation-name', 'none');
         await launcher.tap();
         const panel = page.locator('[data-lab-assistant-panel]');
+        await expectSquareSettingsGear(panel);
         await expect(panel).toHaveCSS('animation-name', 'none');
         await expect(panel.locator('.lab-assistant-mark img')).toHaveCSS('animation-name', 'none');
         await expect(panel.locator('.lab-assistant-mark svg')).toHaveCSS('animation-name', 'none');
@@ -202,6 +351,31 @@ test('assistant sheet fits touch, short viewports and reduced motion', async ({b
         expect(box.x + box.width).toBeLessThanOrEqual(320);
         expect(box.y + box.height).toBeLessThanOrEqual(480);
         await page.screenshot({path:info.outputPath('assistant-short-touch.png')});
+        for (const width of [390, 320]) {
+            await page.setViewportSize({width, height:320});
+            await input.fill('A line\n'.repeat(25));
+            await expect(page.locator('[data-lab-assistant-shell]')).toHaveAttribute('data-lab-assistant-short', '');
+            expect((await input.boundingBox()).height).toBeLessThanOrEqual(44);
+            for (const control of [input, panel.locator('[data-lab-assistant-settings] > summary'), panel.getByRole('checkbox', {name:'Use page data', exact:true}), panel.getByRole('button', {name:'Preview reply', exact:true}), panel.getByLabel('Current page context', {exact:true})]) {
+                await expect(control).toBeInViewport();
+                const bounds = await control.boundingBox();
+                expect(bounds.y + bounds.height).toBeLessThanOrEqual(320);
+            }
+            expect(await panel.locator('[data-lab-assistant-messages]').evaluate(node => node.clientHeight)).toBeGreaterThan(0);
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            await page.screenshot({path:info.outputPath(`assistant-keyboard-${width}.png`)});
+            const settings = panel.locator('[data-lab-assistant-settings]');
+            await settings.locator(':scope > summary').tap();
+            for (const control of [settings.getByLabel('Preview model', {exact: true}), settings.getByLabel('Reasoning effort', {exact: true})]) {
+                await control.focus(); await expect(control).toBeInViewport();
+                const bounds = await control.boundingBox();
+                expect(bounds.y).toBeGreaterThanOrEqual(0);
+                expect(bounds.y + bounds.height).toBeLessThanOrEqual(320);
+                expect(bounds.height).toBeGreaterThanOrEqual(44);
+            }
+            await page.screenshot({path:info.outputPath(`assistant-chat-settings-short-${width}.png`)});
+            await settings.locator(':scope > summary').tap();
+        }
         await panel.getByRole('button', {name:'Close assistant', exact:true}).tap();
         await expect(panel).toBeHidden();
         await expect(page.locator('main')).not.toHaveAttribute('inert');

@@ -6,10 +6,12 @@ import uuid
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import DatabaseError
 from django.db.models import Q
 from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.crypto import salted_hmac
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
@@ -18,8 +20,8 @@ from django.views.decorators.vary import vary_on_headers
 from assistant import chat
 from assistant.context import ScopeError, read_scope, scope_label, sign_normalized_scope
 from assistant.context_request import build_context
-from assistant.forms import CreateConversationForm, SendMessageForm
-from assistant.models import Conversation, GenerationRun
+from assistant.forms import CreateConversationForm, SaveChatSettingsForm, SendMessageForm
+from assistant.models import Conversation, GenerationRun, ProviderConnection
 
 
 def _scope(request, *, include_financial=False):
@@ -61,21 +63,46 @@ def _render(request, conversation=None, *, status=200, error=None, create_form=N
                                      if run and run.status == GenerationRun.Status.COMPLETED
                                      and message.role == 'assistant' else [])
     state = chat.composer_state(request.user)
-    selected = request.POST.get('model', request.GET.get('model', ''))
+    # Only the selected owned account's validated last choice is a default.
+    # Explicit empty values and bound recovery forms must never resurrect it.
+    if send_form is not None and send_form.is_bound:
+        selection = send_form.data
+    elif 'model' in request.POST or 'reasoning_effort' in request.POST:
+        selection = request.POST
+    elif 'model' in request.GET or 'reasoning_effort' in request.GET:
+        selection = request.GET
+    else:
+        saved = ProviderConnection.objects.filter(pk=state['connection_id'], user=request.user,
+                                                  is_active=True).first() if state['connection_id'] else None
+        selection = {'model': saved.last_model_slug, 'reasoning_effort': saved.last_reasoning_effort} if saved else {}
+    selected = selection.get('model', '')
     if selected not in {model['slug'] for model in state['models']}:
         selected = ''
+    selected_model = next((model for model in state['models'] if model['slug'] == selected), {})
+    effort = selection.get('reasoning_effort', '')
+    if effort not in selected_model.get('reasoning_efforts', []):
+        effort = ''
     request_id = str(uuid.uuid4())
     auto_id = 'assistant-panel-%s' if request.headers.get('X-Tuxedo-Assistant') == 'panel' else 'assistant-page-%s'
     if send_form is None:
         send_form = SendMessageForm(models=state['models'], auto_id=auto_id, initial={
             'scope': token, 'location': scope['location'] if scope else '', 'model': selected,
+            'reasoning_effort': effort,
             'connection_id': state['connection_id'], 'request_id': request_id})
     else:
         send_form.auto_id = auto_id
         request_id = str(send_form.data.get('request_id') or request_id)
+    # Minimized drafts may survive UI updates, but never a logout/re-login, even
+    # for the same user. Expose a one-way session binding rather than its key.
+    ui_session = salted_hmac('assistant.ui.session.v1',
+                            f'{request.user.pk}:{request.session.session_key or ""}', algorithm='sha256').hexdigest()
     context = {'conversations': history.object_list, 'history_page': history, 'conversation': conversation,
+               'ui_session': ui_session,
                'chat_messages': messages, 'provider_state': state['provider_state'], 'provider_error': state['error'],
-               'models': state['models'], 'selected_model': selected, 'connection_id': state['connection_id'],
+               'models': state['models'], 'selected_model': selected, 'selected_reasoning_effort': effort,
+               'connection_id': state['connection_id'],
+               'chat_models_json_id': 'assistant-panel-models' if auto_id.startswith('assistant-panel')
+                                      else 'assistant-page-models',
                'request_id': request_id, 'run_by_message': by_message, 'scope': token, 'scope_label': label,
                'scope_location': scope['location'] if scope else '', 'context_snapshot': snapshot,
                'create_form': create_form or CreateConversationForm(initial={'scope': token}),
@@ -93,11 +120,23 @@ def _wants_stream(request):
     return 'text/event-stream' in request.headers.get('Accept', '')
 
 
+def _save_chat_settings(user, connection_id, model, effort):
+    # updated_at versions the credential/catalogue lifecycle. A local UI
+    # preference must not invalidate that cache or change account ordering.
+    return ProviderConnection.objects.filter(
+        pk=connection_id, user=user, provider='openai', is_active=True,
+        status=ProviderConnection.Status.READY).update(last_model_slug=model, last_reasoning_effort=effort)
+
+
 def _send_problem(request, conversation, code, *, status=400, form=None):
     if _wants_stream(request) and (status != 400 or form is None):
         return JsonResponse({'error': code, 'errors': form.errors.get_json_data() if form else {}}, status=status)
-    message = (_('No AI provider is connected. No message was sent or saved.') if code == 'unavailable' else
-               _('The message could not be sent. Review the form and try again.'))
+    if code in {'auth_disabled', 'disabled'}:
+        message = _('Chat is disabled on this installation. No message was sent or saved.')
+    elif code == 'unavailable':
+        message = _('No AI provider is connected. No message was sent or saved.')
+    else:
+        message = _('The message could not be sent. Review the form and try again.')
     return _render(request, conversation, status=status, error=message, send_form=form)
 
 
@@ -122,7 +161,7 @@ class _SSEStream:
 def _send(request, conversation=None):
     state = chat.composer_state(request.user, request.POST.get('connection_id') or None)
     if state['provider_state'] != 'ready':
-        return _send_problem(request, conversation, 'unavailable', status=503)
+        return _send_problem(request, conversation, state['error'] or 'unavailable', status=503)
     form = SendMessageForm(request.POST, models=state['models'])
     if not form.is_valid():
         return _send_problem(request, conversation, 'invalid_form', form=form)
@@ -138,6 +177,12 @@ def _send(request, conversation=None):
     except Exception:
         # A local DEBUG response must not expose adapter credentials or context.
         return _send_problem(request, conversation, 'provider_error', status=503, form=form)
+    try:
+        _save_chat_settings(request.user, run.connection_id, run.model_slug, run.reasoning_effort)
+    except DatabaseError:
+        # Generation already owns a persisted run. An optional UI-preference
+        # write must not strand it before its stream can complete or close.
+        pass
     if _wants_stream(request):
         response = StreamingHttpResponse(_SSEStream(stream), content_type='text/event-stream; charset=utf-8')
         response['X-Accel-Buffering'] = 'no'
@@ -150,8 +195,7 @@ def _send(request, conversation=None):
     finally:
         if callable(getattr(stream, 'close', None)):
             stream.close()
-    destination = _destination('assistant:detail', token, run.conversation_id)
-    return redirect(destination + ('&' if '?' in destination else '?') + urlencode({'model': run.model_slug}))
+    return redirect(_destination('assistant:detail', token, run.conversation_id))
 
 
 @never_cache
@@ -222,6 +266,40 @@ def send_new(request):
 def models(request):
     return JsonResponse(chat.composer_state(request.user, request.GET.get('connection_id'),
                                            refresh=request.GET.get('refresh') == '1'))
+
+
+@never_cache
+@login_required
+@require_POST
+def preferences(request):
+    allowed = {'connection_id', 'model', 'reasoning_effort', 'csrfmiddlewaretoken'}
+    if (not {'connection_id', 'model', 'reasoning_effort'} <= set(request.POST)
+            or set(request.POST) - allowed
+            or any(len(request.POST.getlist(key)) != 1 for key in request.POST)):
+        return JsonResponse({'error': 'invalid_form'}, status=400)
+    # Parse the owner/account identity before loading any provider catalogue.
+    try:
+        requested = uuid.UUID(request.POST.get('connection_id', ''))
+    except (ValueError, TypeError, AttributeError):
+        return JsonResponse({'error': 'invalid_form'}, status=400)
+    selected, status = chat._selected_connection(request.user, requested)
+    if selected is None or selected.pk != requested:
+        return JsonResponse({'error': 'connection_changed'}, status=409)
+    state = chat.composer_state(request.user, requested)
+    if status != 'ready' or state['provider_state'] != 'ready':
+        return JsonResponse({'error': state['error'] or 'unavailable'}, status=503)
+    form = SaveChatSettingsForm(request.POST, models=state['models'])
+    if not form.is_valid():
+        return JsonResponse({'error': 'invalid_form', 'errors': form.errors.get_json_data()}, status=400)
+    data = form.cleaned_data
+    try:
+        saved = _save_chat_settings(request.user, requested, data['model'], data['reasoning_effort'])
+    except DatabaseError:
+        return JsonResponse({'error': 'storage_unavailable'}, status=503)
+    if not saved:
+        return JsonResponse({'error': 'connection_changed'}, status=409)
+    return JsonResponse({'connection_id': str(requested), 'model': data['model'],
+                         'reasoning_effort': data['reasoning_effort']})
 
 
 @never_cache

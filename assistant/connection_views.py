@@ -25,7 +25,7 @@ def _private(response, *, referrer_policy='no-referrer'):
 
 def _problem(request, code):
     if code == 'disabled':
-        text = _('Real sign-in is disabled in this delivery. No account was contacted.')
+        text = _('Real sign-in is disabled on this installation. No account was contacted.')
     elif code in {'attempt_expired', 'attempt_used', 'state_invalid', 'invalid_session', 'forbidden'}:
         text = _('This authorization is unavailable. Start again from the original settings tab.')
     elif code == 'too_many_attempts':
@@ -62,6 +62,8 @@ def index(request):
         'pending_authorizations': pending,
         'auth_enabled': settings.ASSISTANT_OPENAI_AUTH_ENABLED,
         'inference_enabled': settings.ASSISTANT_OPENAI_INFERENCE_ENABLED,
+        'chat_enabled': (settings.ASSISTANT_OPENAI_AUTH_ENABLED is True
+                         and settings.ASSISTANT_OPENAI_INFERENCE_ENABLED is True),
     }), referrer_policy='same-origin')
 
 
@@ -113,7 +115,7 @@ def finish(request, pk):
         service.finish_authorization(request.user, request.session.session_key or '', pk)
     except service.ConnectionError as error:
         return _problem(request, error.code)
-    messages.success(request, _('Account linked locally. AI responses remain unavailable in this delivery.'))
+    messages.success(request, _('Account linked locally. Review its authorization status below.'))
     return _private(redirect('assistant:connections'))
 
 
@@ -139,7 +141,7 @@ def activate(request, pk):
         service.activate_connection(request.user, pk)
     except service.ConnectionError as error:
         return _problem(request, error.code)
-    messages.success(request, _('Account selected. This does not enable AI responses.'))
+    messages.success(request, _('Account selected. Review its authorization status below.'))
     return _private(redirect('assistant:connections'))
 
 

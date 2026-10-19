@@ -15,9 +15,9 @@ async function signup(page, info, suffix = '') {
     expect(response.status(), await response.text()).toBe(302);
 }
 const copy = {
-    en: {open: 'Open Tuxedo assistant', close: 'Close assistant', new: 'New conversation',
+    en: {open: 'Open Tuxedo assistant', close: 'Close assistant', minimize: 'Minimize assistant', restore: 'Restore assistant', new: 'New conversation',
         unavailable: 'Provider not connected', history: 'History', remove: 'Delete conversation', confirm: 'Confirm deletion'},
-    pt: {open: 'Abrir assistente Tuxedo', close: 'Fechar assistente', new: 'Nova conversa',
+    pt: {open: 'Abrir assistente Tuxedo', close: 'Fechar assistente', minimize: 'Minimizar assistente', restore: 'Restaurar assistente', new: 'Nova conversa',
         unavailable: 'Provedor não conectado', history: 'Histórico', remove: 'Excluir conversa', confirm: 'Confirmar exclusão'},
 };
 for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (const language of ['en', 'pt']) {
@@ -35,6 +35,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
         await title.fill('Private draft that must survive chat');
         const c = copy[language];
         const launcher = page.getByRole('button', {name: c.open, exact: true});
+        const restore = page.locator('[data-assistant-minimized]').getByRole('button', {name: c.restore, exact: true});
         const workspaceBefore = await page.locator('main').boundingBox();
         await launcher.focus();
         await launcher.press('Space');
@@ -52,9 +53,9 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
             expect(await page.locator('main').boundingBox()).toEqual(workspaceBefore);
         } else {
             await expect(page.locator('main')).toHaveAttribute('inert');
-            const close = panel.getByRole('button', {name: c.close, exact: true});
-            await close.focus();
-            await close.press('Shift+Tab');
+            const minimize = panel.getByRole('button', {name: c.minimize, exact: true});
+            await minimize.focus();
+            await minimize.press('Shift+Tab');
             await expect(panel.locator('.assistant-empty a')).toBeFocused();
             const box = await panel.boundingBox();
             expect(box.x).toBeGreaterThanOrEqual(0);
@@ -69,32 +70,32 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
         await title.evaluate(node => { node.dataset.assistantDraftProbe = 'same-form'; });
         await panel.locator('[data-assistant-context-link]').press('Enter');
         await expect(panel).toBeHidden();
-        await expect(launcher).toBeFocused();
+        await expect(restore).toBeFocused();
         await expect(title).toHaveValue('Private draft that must survive chat');
         await expect(title).toHaveAttribute('data-assistant-draft-probe', 'same-form');
         await expect(page).toHaveURL(originalURL);
         await expect(page.locator('#departure-confirm')).toBeHidden();
         expect(formReads).toBe(0);
         page.off('request', countFormReads);
-        await launcher.press('Enter');
+        await restore.press('Enter');
         await expect(panel.getByText(c.unavailable, {exact: true})).toBeVisible();
         await panel.getByRole('button', {name: c.new, exact: true}).press('Enter');
         await expect(panel.locator('[data-conversation-id]')).toHaveAttribute('data-conversation-id', /[a-f0-9-]{36}/);
-        await expect(panel.getByRole('heading', {name: c.new, exact: true})).toBeVisible();
+        await expect(panel.getByRole('heading', {name: c.new, exact: true})).toHaveCount(1);
         const conversation = await panel.locator('[data-conversation-id]').getAttribute('data-conversation-id');
         if (width < 1280) {
-            const close = panel.getByRole('button', {name: c.close, exact: true});
-            await close.focus();
-            await close.press('Shift+Tab');
-            await expect(panel.locator('.assistant-delete > summary')).toBeFocused();
-            await panel.locator('.assistant-delete > summary').press('Tab');
-            await expect(close).toBeFocused();
+            const minimize = panel.getByRole('button', {name: c.minimize, exact: true});
+            await minimize.focus();
+            await minimize.press('Shift+Tab');
+            await expect(panel.locator('.assistant-empty a')).toBeFocused();
+            await panel.locator('.assistant-empty a').press('Tab');
+            await expect(minimize).toBeFocused();
         }
         await panel.getByRole('button', {name: c.close, exact: true}).press('Escape');
         await expect(panel).toBeHidden();
-        await expect(launcher).toBeFocused();
+        await expect(restore).toBeFocused();
         await expect(title).toHaveValue('Private draft that must survive chat');
-        await launcher.press('Enter');
+        await restore.press('Enter');
         await expect(panel.locator('[data-conversation-id]')).toHaveAttribute('data-conversation-id', conversation);
         const history = panel.locator('.assistant-history');
         if (!await history.getAttribute('open')) await history.locator('summary').press('Enter');
@@ -213,6 +214,7 @@ test('Reopening a panel never flashes its former owner while reauthorization is 
     await page.goto('/banking/');
     await page.getByRole('button', {name: copy.en.open, exact: true}).click();
     const panel = page.locator('#assistant-panel');
+    await panel.locator('.assistant-history > summary').press('Enter');
     await expect(panel.getByText('Former owner private history', {exact: true})).toBeVisible();
     await panel.getByRole('button', {name: copy.en.close, exact: true}).click();
     expect((await post(page, '/accounts/logout/')).status()).toBe(302);
@@ -240,6 +242,8 @@ for (const theme of ['light', 'dark']) {
         await page.goto('/banking/');
         await page.getByRole('button', {name: copy.en.open, exact: true}).click();
         const panel = page.locator('#assistant-panel');
+        await expect(panel.locator('.assistant-history')).not.toHaveAttribute('open');
+        await panel.locator('.assistant-history > summary').press('Enter');
         await expect(panel.getByText(longTitle, {exact: true})).toBeVisible();
         await expect(panel.locator('.assistant-history-list img')).toHaveCount(0);
         const historyRows = await panel.locator('.assistant-history-list a').evaluateAll(links => links.map(link => ({
@@ -253,6 +257,7 @@ for (const theme of ['light', 'dark']) {
             expect(row.bottom).toBeGreaterThanOrEqual(row.dateBottom);
             if (index) expect(row.top).toBeGreaterThanOrEqual(historyRows[index - 1].bottom);
         });
+        await panel.locator('.assistant-history > summary').press('Enter');
         await expect(panel.locator('.assistant-context-details')).toHaveCount(0);
         const source = panel.locator('.assistant-scope a[data-assistant-source]');
         await source.focus();
@@ -263,7 +268,7 @@ for (const theme of ['light', 'dark']) {
         await page.screenshot({path: info.outputPath(`assistant-small-${theme}.png`)});
         await source.press('Escape');
         await expect(panel).toBeHidden();
-        await expect(page.getByRole('button', {name: copy.en.open, exact: true})).toBeFocused();
+        await expect(page.locator('[data-assistant-minimized]').getByRole('button', {name: copy.en.restore, exact: true})).toBeFocused();
     });
 }
 
@@ -370,6 +375,10 @@ test('Assistant artwork moves gently while its target stays fixed and reduced mo
     await signup(page, info, '-motion');
     await page.goto('/banking/');
     const launcher = page.getByRole('button', {name: copy.en.open, exact: true});
+    await expect(launcher.locator('img')).toHaveCSS('width', '28px');
+    await expect(launcher.locator('img')).toHaveCSS('height', '28px');
+    await expect(launcher.locator('svg')).toHaveCSS('width', '48px');
+    await expect(launcher.locator('svg')).toHaveCSS('height', '48px');
     const samples = await launcher.evaluate(button => {
         const rect = () => {
             const {x, y, width, height} = button.getBoundingClientRect();

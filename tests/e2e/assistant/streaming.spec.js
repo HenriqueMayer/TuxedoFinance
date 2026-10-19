@@ -15,9 +15,9 @@ async function signup(page, info) {
 }
 
 const strings = {
-    en: {open: 'Open Tuxedo assistant', close: 'Close assistant', model: 'Model',
+    en: {open: 'Open Tuxedo assistant', close: 'Close assistant', model: 'Model', settings: 'Chat settings',
         message: 'Message', send: 'Send message', stop: 'Stop response'},
-    pt: {open: 'Abrir assistente Tuxedo', close: 'Fechar assistente', model: 'Modelo',
+    pt: {open: 'Abrir assistente Tuxedo', close: 'Fechar assistente', model: 'Modelo', settings: 'Configurações do chat',
         message: 'Mensagem', send: 'Enviar mensagem', stop: 'Interromper resposta'},
 };
 
@@ -42,9 +42,22 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(form).toBeVisible();
         const model = form.getByLabel(`${c.model} *`, {exact: true});
         await expect(model).toHaveValue('');
+        const include = form.locator('input[name="include_context"]');
+        await include.focus(); await include.press('Space');
+        await expect(include).toBeChecked();
+        await form.getByLabel(`${c.message} *`, {exact: true}).fill('Synthetic invalid response keeps consent and draft');
+        await form.getByRole('button', {name: c.send, exact: true}).press('Enter');
+        await expect(model).toHaveAttribute('aria-invalid', 'true');
+        await expect(model).toBeFocused();
+        await expect(model).toBeInViewport();
+        await expect(include).toBeChecked();
+        await expect(form.getByLabel(`${c.message} *`, {exact: true})).toHaveValue('Synthetic invalid response keeps consent and draft');
+        await page.screenshot({path: info.outputPath(`stream-invalid-${theme}-${width}.png`)});
+        await include.focus(); await include.press('Space');
+        await expect(include).not.toBeChecked();
+        await form.locator('[data-assistant-settings] > summary').press('Enter');
         await model.focus(); await model.press('ArrowDown'); await model.press('Enter');
         await expect(model).toHaveValue('mock-standard');
-        const include = form.locator('input[name="include_context"]');
         await expect(include).not.toBeChecked();
         await form.getByLabel(`${c.message} *`, {exact: true}).fill('Synthetic test only');
         const posted = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/messages/'));
@@ -93,10 +106,10 @@ test('Streaming validates fields, stops partial output and renders provider text
     let form = page.locator('[data-assistant-send]');
     await form.locator('textarea').fill('Missing model');
     await form.getByRole('button', {name: 'Send message', exact: true}).press('Enter');
-    await expect(page.locator('[data-assistant-send] select')).toHaveAttribute('aria-invalid', 'true');
-    await expect(page.locator('[data-assistant-send] select')).toBeFocused();
+    await expect(page.locator('[data-assistant-send] select[name="model"]')).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('[data-assistant-send] select[name="model"]')).toBeFocused();
     form = page.locator('[data-assistant-send]');
-    await form.locator('select').selectOption('mock-mini');
+    await form.locator('select[name="model"]').selectOption('mock-mini');
     await form.locator('textarea').fill('[cancel]');
     await form.getByRole('button', {name: 'Send message', exact: true}).press('Enter');
     await expect(form.getByRole('button', {name: 'Stop response', exact: true})).toBeVisible();
@@ -113,7 +126,8 @@ test('Streaming validates fields, stops partial output and renders provider text
     await expect(page.locator('.assistant-message--assistant').last()).toContainText('<img');
     await expect(page.locator('.assistant-message img')).toHaveCount(0);
     await expect(page.locator('[data-assistant-send]')).not.toHaveAttribute('aria-busy');
-    await expect(page).toHaveURL(new RegExp(`/assistant/${conversation}/\\?model=mock-mini`));
+    await expect(page).toHaveURL(new RegExp(`/assistant/${conversation}/$`));
+    await expect(page.locator('[data-assistant-send] select[name="model"]')).toHaveValue('mock-mini');
     form = page.locator('[data-assistant-send]');
     await form.locator('textarea').fill('[error]');
     await form.getByRole('button', {name: 'Send message', exact: true}).press('Enter');
@@ -128,12 +142,57 @@ test('Native chat sends and preserves the explicitly selected model without Java
     await signup(page, info); await page.goto('/banking/');
     await page.getByRole('link', {name: 'Open Tuxedo assistant', exact: true}).click();
     const form = page.locator('[data-assistant-send]');
-    await form.locator('select').selectOption('mock-mini');
+    await form.locator('[data-assistant-settings] > summary').press('Enter');
+    await form.locator('select[name="model"]').selectOption('mock-mini');
     await form.locator('textarea').fill('Native synthetic question');
+    const nativeSend = form.getByRole('button', {name: 'Send message', exact: true});
+    await nativeSend.scrollIntoViewIfNeeded();
+    const beforeSend = await nativeSend.boundingBox();
+    const beforeDock = await page.locator('.app-bottom-navigation').boundingBox();
+    expect(beforeSend.y + beforeSend.height).toBeLessThanOrEqual(beforeDock.y);
+    await page.screenshot({path: info.outputPath('stream-native-composer-phone.png')});
     await form.getByRole('button', {name: 'Send message', exact: true}).click();
-    await expect(page).toHaveURL(/\/assistant\/[a-f0-9-]{36}\/\?scope=.+&model=mock-mini/);
+    await expect(page).toHaveURL(/\/assistant\/[a-f0-9-]{36}\/\?scope=.+/);
+    expect(new URL(page.url()).searchParams.has('model')).toBe(false);
+    expect(new URL(page.url()).searchParams.has('reasoning_effort')).toBe(false);
     await expect(page.locator('.assistant-message--assistant')).toContainText('Synthetic');
-    await expect(page.locator('[data-assistant-send] select')).toHaveValue('mock-mini');
+    await expect(page.locator('[data-assistant-send] select[name="model"]')).toHaveValue('mock-mini');
+    const sendAgain = page.locator('[data-assistant-send]').getByRole('button', {name: 'Send message', exact: true});
+    await sendAgain.scrollIntoViewIfNeeded();
+    const afterSend = await sendAgain.boundingBox();
+    const afterDock = await page.locator('.app-bottom-navigation').boundingBox();
+    expect(afterSend.y + afterSend.height).toBeLessThanOrEqual(afterDock.y);
     await page.screenshot({path: info.outputPath('stream-native-phone.png')});
     await context.close();
+});
+
+
+test('Native settings reject an incompatible effort and recover without JavaScript', async ({browser}, info) => {
+    const context = await browser.newContext({javaScriptEnabled: false, baseURL: info.project.use.baseURL,
+        viewport: {width: 390, height: 844}, locale: 'en'});
+    try {
+        const page = await context.newPage();
+        await signup(page, info);
+        await page.goto('/assistant/');
+        let form = page.locator('[data-assistant-send]');
+        let settings = form.locator('[data-assistant-settings]');
+        await settings.locator(':scope > summary').press('Enter');
+        await settings.locator('select[name="model"]').selectOption('mock-mini');
+        await settings.locator('select[name="reasoning_effort"]').selectOption('medium');
+        await form.locator('textarea').fill('[settings] Native synthetic question');
+        await form.getByRole('button', {name: 'Send message', exact: true}).click();
+        form = page.locator('[data-assistant-send]');
+        settings = form.locator('[data-assistant-settings]');
+        await expect(settings).toHaveAttribute('open');
+        await expect(settings.locator('select[name="reasoning_effort"]')).toHaveAttribute('aria-invalid', 'true');
+        await expect(settings).toContainText('This effort is not available for the selected model.');
+        await expect(form.locator('textarea')).toHaveValue('[settings] Native synthetic question');
+        await expect(page.locator('.assistant-message--assistant')).toHaveCount(0);
+        await settings.locator('select[name="reasoning_effort"]').selectOption('high');
+        await page.screenshot({path: info.outputPath('chat-settings-native-recovery.png')});
+        await form.getByRole('button', {name: 'Send message', exact: true}).click();
+        await expect(page.locator('.assistant-message--assistant')).toContainText('mock-mini; effort: high');
+        await expect(page.locator('[data-assistant-settings] select[name="reasoning_effort"]')).toHaveValue('high');
+        await expect(page).toHaveURL(/\/assistant\/[a-f0-9-]{36}\/$/);
+    } finally { await context.close(); }
 });

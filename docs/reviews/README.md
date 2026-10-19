@@ -11,6 +11,10 @@ and [interface map](../interface-map.md) for present behavior.
 
 | Record | Scope and status |
 |---|---|
+| [Saved assistant settings and gear — 2026-10-19](assistant-saved-settings-2026-10-19.md) | Owned local model/effort preferences, catalogue validation, reload/native/queued-save behavior, corrected settings geometry and additive installation migration. |
+| [Assistant compact chrome — 2026-10-19](assistant-clean-chrome-2026-10-19.md) | Presentation refinement of titlebar, shared toolbar, message typography and composer; preserves window actions, 44px targets, model/effort/context controls and native behavior. |
+| [Assistant window and connection availability — 2026-10-19](assistant-window-and-availability-2026-10-19.md) | Explicit local-selection/gate states, grouped Minimize/Close titlebar and authorized restore; integrated desktop/phone validation and local configuration evidence. |
+| [Assistant model and reasoning settings — 2026-10-19](assistant-effort-2026-10-19.md) | Catalogue-validated effort, compact native chat configuration, synthetic browser checks and additive local migration. |
 | [Planning evolution delivery](../implementation-review.md) | Historical September delivery, calculations and acceptance evidence for the changes included in v0.4.0. |
 | [Investments and Pierre comparison — 2026-10-09](investments-and-pierre-2026-10-09.md) | Historical investment/FX findings and attributed competitor observations; later local implementation is linked explicitly. |
 | [Branch validation history](branch-validation-history.md) | October test/performance reports and earlier navigation iterations, moved from the current owner testing guide. |
@@ -34,6 +38,8 @@ and [interface map](../interface-map.md) for present behavior.
 | [Assistant authorization preparation — 2026-10-19](assistant-authorization-2026-10-19.md) | Default-disabled account settings, session-bound OAuth handoff, encrypted vault, refresh/recovery and synthetic browser/container validation; no live account or inference. |
 | [Native ChatGPT sign-in — 2026-10-19](assistant-native-sign-in-2026-10-19.md) | Backed-up native migration, real authorization handoff and browser-origin/CSP corrections; no financial export or inference. |
 | [ChatGPT-plan streaming — 2026-10-19](assistant-streaming-2026-10-19.md) | Selected-account models, bounded streaming/context, local run history and scoped browser/native verification; subscription-only integration evidence and its limits. |
+| [Assistant conversation layout — 2026-10-19](assistant-chat-ux-2026-10-19.md) | Independent transcript, persistent composer, Enter/Shift+Enter, history/menu focus, short-height controls and synthetic app/Lab validation; preserved subscription and financial boundaries. |
+| [Assistant visual refinements — 2026-10-19](assistant-polish-2026-10-19.md) | Continuous header, compact Context badge, centered empty state and composer focus/alignment with preserved 44px targets, approved artwork and native interaction contracts. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

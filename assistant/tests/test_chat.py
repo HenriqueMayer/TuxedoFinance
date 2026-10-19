@@ -33,7 +33,8 @@ class SyntheticProvider:
     def list_models(self):
         assert not connection.in_atomic_block
         self.catalog_calls += 1
-        return [{'slug': 'synthetic-model', 'display_name': 'Synthetic model'},
+        return [{'slug': 'synthetic-model', 'display_name': 'Synthetic model',
+                 'reasoning_efforts': ['low', 'high'], 'default_reasoning_effort': 'low'},
                 {'slug': 'another-model', 'display_name': 'Another model'}]
 
     def stream(self, request, cancellation):
@@ -109,6 +110,127 @@ class StreamingChatTests(TransactionTestCase):
         self.assertEqual(self.provider.catalog_calls, 2)
         self.client.force_login(self.other)
         self.assertEqual(self.client.get(reverse('assistant:models')).json()['models'], [])
+
+    def test_selected_account_is_disabled_locally_without_becoming_disconnected(self):
+        for auth, inference, code in [(False, True, 'auth_disabled'),
+                                      (True, False, 'disabled'), (False, False, 'auth_disabled')]:
+            with self.subTest(auth=auth, inference=inference), override_settings(
+                    ASSISTANT_OPENAI_AUTH_ENABLED=auth, ASSISTANT_OPENAI_INFERENCE_ENABLED=inference), \
+                    patch('assistant.chat.get_provider') as resolve:
+                state = chat.composer_state(self.user)
+                self.assertEqual(state, {'provider_state': 'disabled', 'error': code, 'models': [],
+                                         'connection_id': str(self.account.pk)})
+                response = self.client.get(reverse('assistant:index'), HTTP_ACCEPT_LANGUAGE='en',
+                                           HTTP_X_TUXEDO_ASSISTANT='panel')
+                self.assertContains(response, 'Chat disabled on this installation')
+                self.assertNotContains(response, 'Provider not connected')
+                self.assertNotContains(response, 'name="content"')
+                self.assertEqual(self.client.get(reverse('assistant:models')).json()['provider_state'], 'disabled')
+                rejected = self.send(self.data())
+                self.assertEqual(rejected.status_code, 503)
+                self.assertEqual(rejected.json()['error'], code)
+                native = self.send(self.data(), stream=False)
+                self.assertContains(native, 'Chat is disabled on this installation. No message was sent or saved.',
+                                    status_code=503)
+                self.assertNotContains(native, 'No AI provider is connected', status_code=503)
+                resolve.assert_not_called()
+        self.account.refresh_from_db()
+        self.assertTrue(self.account.is_active)
+        self.assertEqual(self.account.status, ProviderConnection.Status.READY)
+        self.assertEqual(GenerationRun.objects.count(), 0)
+        self.assertEqual(Message.objects.count(), 0)
+        self.assertEqual(self.provider.catalog_calls, 0)
+        self.assertFalse((Path(self.private.name) / 'private').exists())
+
+    def test_disabled_service_preserves_real_absence_reconnect_and_requested_owner_checks(self):
+        with override_settings(ASSISTANT_OPENAI_AUTH_ENABLED=False,
+                               ASSISTANT_OPENAI_INFERENCE_ENABLED=False), \
+                patch('assistant.chat.get_provider') as resolve:
+            self.assertEqual(chat.composer_state(self.other)['provider_state'], 'disconnected')
+            self.assertEqual(chat.composer_state(self.user, str(uuid.uuid4()))['provider_state'], 'reauth')
+            self.account.status = ProviderConnection.Status.RECONNECT
+            self.account.save(update_fields=['status'])
+            state = chat.composer_state(self.user)
+            self.assertEqual(state['provider_state'], 'reauth')
+            self.assertEqual(state['connection_id'], str(self.account.pk))
+            self.account.status = ProviderConnection.Status.DISCONNECTED
+            self.account.is_active = False
+            self.account.save(update_fields=['status', 'is_active'])
+            self.assertEqual(chat.composer_state(self.user)['provider_state'], 'disconnected')
+            resolve.assert_not_called()
+
+    def test_catalogue_capabilities_are_bounded_and_legacy_cache_does_not_hide_efforts(self):
+        legacy_key = f'assistant.models.v1:{self.user.pk}:{self.account.pk}:{self.account.updated_at.isoformat()}'
+        cache.set(legacy_key, [{'slug': 'legacy-model', 'display_name': 'Stale model'}], 120)
+        supplied = [{'slug': 'synthetic-model', 'display_name': 'Synthetic model',
+                     'reasoning_efforts': ['high', 'low', 'high', {}, 'future'],
+                     'default_reasoning_effort': 'low', 'private_metadata': 'not for client'},
+                    {'slug': 'another-model', 'display_name': 'Another model',
+                     'reasoning_efforts': ['none'], 'default_reasoning_effort': 'high'}]
+        with patch.object(self.provider, 'list_models', return_value=supplied):
+            state = self.client.get(reverse('assistant:models')).json()
+        self.assertEqual(state['models'], [
+            {'slug': 'synthetic-model', 'display_name': 'Synthetic model',
+             'reasoning_efforts': ['high', 'low'], 'default_reasoning_effort': 'low'},
+            {'slug': 'another-model', 'display_name': 'Another model', 'reasoning_efforts': ['none']},
+        ])
+        self.assertEqual(self.provider.requests, [])
+
+    def test_model_default_omits_override_while_explicit_effort_is_persisted_and_replayed(self):
+        default = self.data()
+        self.events(self.send(default))
+        self.assertEqual(self.provider.requests[-1].reasoning_effort, '')
+        self.assertEqual(GenerationRun.objects.get(pk=default['request_id']).reasoning_effort, '')
+        explicit = self.data(reasoning_effort='high')
+        self.events(self.send(explicit))
+        self.assertEqual(self.provider.requests[-1].reasoning_effort, 'high')
+        self.assertEqual(GenerationRun.objects.get(pk=explicit['request_id']).reasoning_effort, 'high')
+        self.events(self.send(explicit))
+        self.assertEqual(len(self.provider.requests), 2)
+        conflict = self.send({**explicit, 'reasoning_effort': 'low'})
+        self.assertEqual(conflict.status_code, 409)
+        self.assertEqual(conflict.json()['error'], 'request_conflict')
+
+    def test_effort_is_validated_with_its_model_before_any_message_write(self):
+        for fields in ({'reasoning_effort': 'invented'}, {'model': 'another-model', 'reasoning_effort': 'high'}):
+            with self.subTest(fields=fields):
+                response = self.send(self.data(**fields))
+                self.assertEqual(response.status_code, 400)
+                self.assertIn('reasoning_effort', response.context['send_form'].errors)
+                self.assertEqual(response.context['send_form']['reasoning_effort'].value(), fields['reasoning_effort'])
+        self.assertEqual(GenerationRun.objects.count(), 0)
+        self.assertEqual(Message.objects.count(), 0)
+        self.assertEqual(self.provider.requests, [])
+
+    def test_direct_start_run_cannot_bypass_effort_compatibility(self):
+        for effort in ['unknown', None, ['high']]:
+            with self.subTest(effort=effort), self.assertRaises(chat.ChatError) as invalid:
+                chat.start_run(self.user, self.client.session.session_key,
+                               self.data(reasoning_effort=effort), conversation=self.conversation)
+            self.assertEqual(invalid.exception.code, 'invalid_reasoning_effort')
+        with self.assertRaises(chat.ChatError) as incompatible:
+            chat.start_run(self.user, self.client.session.session_key,
+                           self.data(model='another-model', reasoning_effort='high'), conversation=self.conversation)
+        self.assertEqual(incompatible.exception.code, 'invalid_reasoning_effort')
+        self.assertEqual(GenerationRun.objects.count(), 0)
+        self.assertEqual(Message.objects.count(), 0)
+        self.assertEqual(self.provider.requests, [])
+
+    def test_native_effort_post_and_get_retain_the_validated_configuration(self):
+        response = self.send(self.data(reasoning_effort='low'), stream=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn('reasoning_effort=', response['Location'])
+        self.assertNotIn('model=', response['Location'])
+        self.account.refresh_from_db()
+        self.assertEqual((self.account.last_model_slug, self.account.last_reasoning_effort),
+                         ('synthetic-model', 'low'))
+        page = self.client.get(response['Location'])
+        self.assertEqual(page.context['selected_reasoning_effort'], 'low')
+        self.assertEqual(page.context['send_form']['reasoning_effort'].value(), 'low')
+        self.assertEqual(self.provider.requests[-1].reasoning_effort, 'low')
+        invalid_get = self.client.get(reverse('assistant:index'), {
+            'model': 'another-model', 'reasoning_effort': 'high'})
+        self.assertEqual(invalid_get.context['send_form']['reasoning_effort'].value(), '')
 
     def test_empty_catalog_disables_composer_and_selected_account_has_its_own_cache(self):
         with patch.object(self.provider, 'list_models', return_value=[]):
@@ -259,7 +381,9 @@ class StreamingChatTests(TransactionTestCase):
         response = self.send(self.data(location=''), stream=False)
         self.assertEqual(response.status_code, 302)
         self.assertIn(str(self.conversation.pk), response['Location'])
-        self.assertIn('model=synthetic-model', response['Location'])
+        self.assertNotIn('model=', response['Location'])
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.last_model_slug, 'synthetic-model')
         self.assertEqual(GenerationRun.objects.get().status, 'completed')
         self.assertEqual(self.provider.closed, 1)
 

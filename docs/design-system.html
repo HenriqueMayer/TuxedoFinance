@@ -26,7 +26,7 @@
 
     <!-- Application and catalogue share compiled tokens and components. -->
     <link rel="stylesheet" href="../static/css/app.css">
-    <link rel="stylesheet" href="design-system.css?v=1121c5cdab68">
+    <link rel="stylesheet" href="design-system.css?v=a797c5332406">
 </head>
 <body data-design-lab class="min-h-screen bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
 
@@ -1248,7 +1248,7 @@
         <p>A Tuxedo companion for the current workspace. A gently animated cat mark opens an editorial conversation, with compact page context and references beside the replies.</p>
     </div>
     <div class="lab-assistant-introduction">
-        <div><h3 class="section-title">Context, conversations and references.</h3><p>Wide screens use a fixed 376 px overlay without resizing the page or its filters. Smaller screens open a focus-contained sheet. Closing returns to the same place and control. Reduced motion keeps the mark still.</p></div>
+        <div><h3 class="section-title">Context, conversations and references.</h3><p>Wide screens use a fixed conversation overlay without resizing the workspace. Its compact titlebar groups Minimize and Close, with a single quiet toolbar for history, page context and conversation actions. Small visual controls retain 44px activation areas. Minimize keeps the current draft and reply behind a restore tab; Close clears the unsent draft and stops the reply without deleting history. Smaller screens open a focus-contained sheet. Reduced motion keeps the mark still.</p></div>
         <button type="button" class="lab-button" data-lab-assistant-open hidden>Try the assistant specimen <span aria-hidden="true">↗</span></button>
     </div>
     <div class="lab-specimen space-y-4" aria-label="ChatGPT connection preparation">
@@ -1256,13 +1256,13 @@
         <p>Local account settings prepare authorization and protected credential storage. Real sign-in is disabled by default; authorizing an account does not enable model responses.</p>
         <button type="button" class="assistant-connect-button" disabled>Continue with ChatGPT</button>
         <p class="subtle-copy">OAuth fixtures belong to isolated tests. This catalogue does not connect an account or send financial data.</p>
-        <p class="subtle-copy">The application has a separate default-off inference gate. When eligible, its account-specific model choice starts empty and Include financial context starts unchecked for each request. Send streams plain text with Cancel and verified local references; native submission waits for its bounded result. This static specimen remains synthetic and does not establish live model access, quota or output quality. See the <a href="apps/assistant.md#provider-and-action-boundary">assistant provider contract</a>.</p>
+        <p class="subtle-copy">The application has a separate default-off inference gate. When eligible, its account-specific model choice starts empty until the user makes an explicit choice. The application remembers the last valid model and reasoning effort for that local user and linked account; Use page data starts unchecked for each request. A deliberate settings gear holds the labelled native Model and Reasoning effort choices, leaving the message area free. Model default omits an effort override; explicit levels come from the selected account's catalogue and are checked for the selected model. The compact composer uses Enter to send and Shift+Enter for a new line; its labelled Send and Stop icons remain keyboard and touch accessible. Send streams plain text with verified local references; native submission waits for its bounded result. This static specimen remains synthetic and does not establish live model access, quota or output quality. See the <a href="apps/assistant.md#provider-and-action-boundary">assistant provider contract</a>.</p>
     </div>
     <dl class="lab-assistant-reference-ledger" aria-label="Synthetic assistant reference ledger">
         <div id="lab-assistant-cash-source"><dt>Recorded cash and reserves</dt><dd>BRL 1,000.00 cash · BRL 300.00 reserved · BRL 700.00 unreserved</dd></div>
         <div id="lab-assistant-projection-source"><dt>Known commitments projection</dt><dd>BRL 800.00 after known commitments · a forecast, not recorded cash</dd></div>
     </dl>
-    <p class="lab-prototype-note">Synthetic demonstration only. The replies, history and preview controls below run in this page's memory. No provider is contacted, no personal records are read, and reloading discards the demonstration.</p>
+    <p class="lab-prototype-note">Synthetic demonstration only. The replies, history and preview controls below run in this page's memory. Model and effort choices survive closing the specimen and starting a new conversation within this page. No provider is contacted, no personal records are read, and reloading discards the demonstration.</p>
     <details id="lab-assistant-native" class="lab-reference">
         <summary>Read the assistant specimen without JavaScript</summary>
         <div class="lab-reference-content">
@@ -1334,31 +1334,56 @@
     <button type="button" class="lab-assistant-launcher" data-lab-assistant-launcher data-lab-assistant-open aria-label="Open Tuxedo assistant specimen" aria-controls="lab-assistant-panel" aria-expanded="false" hidden>
         <span class="lab-assistant-mark" aria-hidden="true"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="28" height="28"><svg viewBox="0 0 48 48" fill="none"><path d="M7 31C-1 18 12 3 28 5M41 17C49 30 36 45 20 43" stroke="currentColor" stroke-width="1.2"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" fill="currentColor"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" transform="rotate(180 24 24)" fill="currentColor"/></svg></span>
     </button>
+    <div class="lab-assistant-minimized-tab" data-lab-assistant-minimized-tab hidden>
+        <button type="button" class="lab-assistant-restore" data-lab-assistant-restore aria-label="Restore assistant" aria-controls="lab-assistant-panel" aria-expanded="false">
+            <span class="lab-assistant-mark" aria-hidden="true"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="28" height="28"><svg viewBox="0 0 48 48" fill="none"><path d="M7 31C-1 18 12 3 28 5M41 17C49 30 36 45 20 43" stroke="currentColor" stroke-width="1.2"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" fill="currentColor"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" transform="rotate(180 24 24)" fill="currentColor"/></svg></span>
+            <span><strong>Tuxedo assistant</strong><span data-lab-assistant-minimized-state>Restore chat</span></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 14V7h7M7 7l10 10"/></svg>
+        </button>
+        <button type="button" class="lab-assistant-minimized-close" data-lab-assistant-close aria-label="Close assistant" title="Close assistant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
     <noscript><a class="lab-assistant-launcher" href="#lab-assistant-native" aria-label="Read the Tuxedo assistant specimen"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="28" height="28"></a></noscript>
     <section id="lab-assistant-panel" class="lab-assistant-panel" role="dialog" aria-labelledby="lab-assistant-title" aria-describedby="lab-assistant-demo-note" tabindex="-1" data-lab-assistant-panel hidden>
         <header class="lab-assistant-header">
-            <div class="lab-assistant-heading"><span class="lab-assistant-mark" aria-hidden="true"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="28" height="28"><svg viewBox="0 0 48 48" fill="none"><path d="M7 31C-1 18 12 3 28 5M41 17C49 30 36 45 20 43" stroke="currentColor" stroke-width="1.2"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" fill="currentColor"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" transform="rotate(180 24 24)" fill="currentColor"/></svg></span><div><h2 id="lab-assistant-title">Tuxedo assistant</h2><p id="lab-assistant-demo-note">Synthetic preview · no provider</p></div></div>
-            <button type="button" class="lab-icon-button" data-lab-assistant-close aria-label="Close assistant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+            <div class="lab-assistant-heading"><span class="lab-assistant-mark" aria-hidden="true"><img src="../static/brand/tuxedo-mark-256.png" alt="" width="28" height="28"><svg viewBox="0 0 48 48" fill="none"><path d="M7 31C-1 18 12 3 28 5M41 17C49 30 36 45 20 43" stroke="currentColor" stroke-width="1.2"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" fill="currentColor"/><path d="m38 4 1.6 4.4L44 10l-4.4 1.6L38 16l-1.6-4.4L32 10l4.4-1.6Z" transform="rotate(180 24 24)" fill="currentColor"/></svg></span><div><h2 id="lab-assistant-title">Tuxedo assistant</h2><p id="lab-assistant-demo-note" class="lab-assistant-sr-only">Synthetic preview · no provider</p></div></div>
+            <div class="lab-assistant-window-controls" role="group" aria-label="Chat window">
+                <button type="button" data-lab-assistant-minimize aria-label="Minimize assistant" title="Minimize assistant"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+                <button type="button" data-lab-assistant-close aria-label="Close assistant" title="Close assistant"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+            </div>
         </header>
         <div class="lab-assistant-body" data-lab-assistant-body data-search-choice-viewport>
             <div class="lab-assistant-toolbar">
-                <details class="lab-assistant-history" data-lab-assistant-history><summary>Conversation history</summary><div data-lab-assistant-history-list></div></details>
-                <button type="button" class="lab-assistant-action" data-lab-assistant-new>New conversation</button>
-            </div>
-            <div class="lab-assistant-context" aria-label="Current page context">
-                <div class="lab-assistant-scope"><span>Current page context</span><strong data-lab-assistant-scope>Home · October 2026 · BRL</strong></div>
-                <nav aria-label="Context sources"><a href="#lab-assistant-cash-source" data-lab-assistant-source="accounts">Cash and reserves ↗</a><a href="#lab-assistant-projection-source" data-lab-assistant-source="plan">Known commitments ↗</a></nav>
+                <details class="lab-assistant-history" data-lab-assistant-history><summary aria-label="Conversation history"><span>History</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div data-lab-assistant-history-list></div></details>
+                <div class="lab-assistant-context" aria-label="Current page context"><span class="lab-assistant-sr-only">Context</span><a href="#lab-view-home" data-lab-assistant-scope data-lab-assistant-source="home"><span>Home · October 2026 · BRL</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div>
+                <button type="button" class="lab-assistant-action" data-lab-assistant-new aria-label="New conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lab-assistant-sr-only">New</span></button>
+                <details class="lab-assistant-delete" data-lab-assistant-delete><summary aria-label="Delete this conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7"/></svg></summary><div><p>Delete only this synthetic conversation from the current preview?</p><button type="button" class="lab-assistant-action" data-lab-assistant-delete-confirm>Delete conversation</button></div></details>
+                <details class="lab-assistant-demo-controls"><summary aria-label="Scenarios"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4m4 0h8M4 17h8m4 0h4"/><circle cx="10" cy="7" r="2"/><circle cx="14" cy="17" r="2"/></svg><span class="lab-assistant-sr-only">Scenarios</span></summary><div><label for="lab-assistant-scenario">Synthetic response</label><select id="lab-assistant-scenario" data-lab-assistant-scenario><option value="answer">Example answer</option><option value="hold">Loading until cancelled</option><option value="error">Recoverable error</option><option value="disconnected">Provider disconnected</option></select><p>Design Lab only. No external requests.</p></div></details>
             </div>
             <div class="lab-assistant-messages" role="log" aria-label="Synthetic conversation" aria-live="polite" data-lab-assistant-messages></div>
-            <p class="lab-assistant-notice" role="status" data-lab-assistant-notice hidden></p>
-            <button type="button" class="lab-assistant-action" data-lab-assistant-cancel hidden>Cancel preview</button>
             <form class="lab-assistant-composer" data-lab-assistant-form autocomplete="off" novalidate>
-                <label for="lab-assistant-question">Your question about the example</label>
-                <textarea id="lab-assistant-question" name="question" rows="3" maxlength="1200" placeholder="What should I look at this month?" aria-describedby="lab-assistant-input-help"></textarea>
-                <div><span id="lab-assistant-input-help">Enter adds a line. Ctrl/⌘ + Enter sends.</span><button type="submit" class="lab-button" data-lab-assistant-send>Preview reply ↗</button></div>
+                <label class="lab-assistant-sr-only" for="lab-assistant-question">Your question about the example</label>
+                <div class="lab-assistant-composer-input">
+                    <textarea id="lab-assistant-question" name="question" rows="1" maxlength="1200" placeholder="Message Tuxedo…" aria-describedby="lab-assistant-input-help"></textarea>
+                    <button type="submit" class="lab-assistant-send" data-lab-assistant-send aria-label="Preview reply"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
+                    <button type="button" class="lab-assistant-send" data-lab-assistant-cancel aria-label="Stop preview" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button>
+                    <div class="lab-assistant-composer-options">
+                        <details class="lab-assistant-settings" data-lab-assistant-settings>
+                            <summary aria-label="Chat settings"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.073.04.145.083.216.127.325.2.72.263 1.077.13l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.993a6.8 6.8 0 0 1 0 .255c-.008.38.137.753.43.994l1.003.827c.424.35.534.954.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.491l-1.217-.456c-.357-.133-.752-.07-1.077.13a6.8 6.8 0 0 1-.216.127c-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.8 6.8 0 0 1-.216-.127c-.325-.2-.72-.263-1.077-.13l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.241.438-.614.43-.994a6.8 6.8 0 0 1 0-.255c.008-.38-.137-.753-.43-.993l-1.003-.827a1.125 1.125 0 0 1-.26-1.431L4.856 6.38a1.125 1.125 0 0 1 1.37-.49l1.217.456c.357.133.752.07 1.077-.13.071-.044.143-.087.216-.127.332-.184.582-.496.645-.87l.213-1.281Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></summary>
+                            <div class="lab-assistant-settings-body" data-search-choice-viewport>
+                                <label for="lab-assistant-model">Model</label>
+                                <select id="lab-assistant-model" name="model" aria-label="Preview model" aria-describedby="lab-assistant-demo-note"><option value="">Choose a model</option><option value="synthetic">Synthetic standard</option><option value="synthetic-mini">Synthetic mini</option></select>
+                                <label for="lab-assistant-effort">Reasoning effort</label>
+                                <select id="lab-assistant-effort" name="reasoning_effort" aria-describedby="lab-assistant-effort-help"><option value="">Model default</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+                                <p id="lab-assistant-effort-help">Available levels depend on the model. Model default leaves the choice to the provider. This specimen is synthetic.</p>
+                            </div>
+                        </details>
+                        <span class="lab-assistant-config-summary" data-lab-assistant-config-summary>Choose a model</span>
+                        <label class="lab-assistant-context-choice"><input type="checkbox" name="include_context"> Use page data</label>
+                    </div>
+                </div>
+                <p class="lab-assistant-notice" role="status" data-lab-assistant-notice hidden></p>
+                <p class="lab-assistant-privacy" id="lab-assistant-input-help">Enter sends · Shift+Enter adds a line</p>
             </form>
-            <details class="lab-assistant-demo-controls"><summary>Preview scenarios</summary><label for="lab-assistant-scenario">Synthetic response</label><select id="lab-assistant-scenario" data-lab-assistant-scenario><option value="answer">Example answer</option><option value="hold">Loading until cancelled</option><option value="error">Recoverable error</option><option value="disconnected">Provider disconnected</option></select><p>These controls belong only to the Design Lab.</p></details>
-            <details class="lab-assistant-delete" data-lab-assistant-delete><summary>Delete this conversation</summary><p>Delete only this synthetic conversation from the current preview?</p><button type="button" class="lab-assistant-action" data-lab-assistant-delete-confirm>Delete conversation</button></details>
         </div>
     </section>
 </div>
@@ -1369,7 +1394,7 @@
 <script src="design-system-layers.js?v=dc84f7eb1cfd" defer></script>
 <script src="../static/js/date-picker.js?v=56f29700f264" defer></script>
 <script src="design-system-calendar.js?v=bf1a89ac0411" defer></script>
-<script src="design-system.js?v=4009a2731a7a" defer></script>
+<script src="design-system.js?v=ea93d6df1eaf" defer></script>
 <script src="../static/js/theme.js"></script>
 <script src="../static/js/preferred-dates.js" defer></script>
 <script src="../static/js/project-menu.js"></script>

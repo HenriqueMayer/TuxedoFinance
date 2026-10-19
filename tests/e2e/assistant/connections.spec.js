@@ -28,7 +28,8 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(page.getByRole('heading', {name: 'Assistant settings', exact: true})).toBeVisible();
         await expect(page.getByRole('button', {name: 'Continue with ChatGPT', exact: true})).toBeDisabled();
         await expect(page.getByText('No ChatGPT account is linked.', {exact: true})).toBeVisible();
-        await expect(page.locator('main')).toContainText('Sending messages remains unavailable');
+        await expect(page.locator('main')).toContainText('Chat is disabled in this installation’s configuration.');
+        await expect(page.locator('.status-badge').first()).toHaveText('Chat disabled');
         await expect(page.locator('main')).toContainText('Real sign-in is disabled');
         const geometry = await page.locator('main').evaluate(main => ({scroll: main.scrollWidth, width: main.clientWidth}));
         expect(geometry.scroll).toBeLessThanOrEqual(geometry.width);
@@ -54,7 +55,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(page).toHaveURL(/\/transactions\/create\/$/);
         await expect(title).toHaveValue('Keep this draft before account settings');
         await expect(panel).toBeHidden();
-        await launcher.press('Enter');
+        await page.locator('[data-assistant-minimized]').getByRole('button', {name: 'Restore assistant', exact: true}).press('Enter');
         await panel.getByRole('link', {name: 'Assistant settings', exact: true}).press('Enter');
         await page.locator('[data-departure-leave]').press('Enter');
         await expect(page).toHaveURL(/\/assistant\/connections\/$/);
@@ -89,7 +90,7 @@ test('Native authorization POST preserves a valid CSRF origin and the original t
     const request = await submitted;
     expect(request.headers().origin).toBe(new URL(info.project.use.baseURL).origin);
     await expect(popup).toHaveURL(/\/assistant\/connections\/$/);
-    await expect(popup.getByText('Real sign-in is disabled in this delivery. No account was contacted.', {exact: true})).toBeVisible();
+    await expect(popup.getByText('Real sign-in is disabled on this installation. No account was contacted.', {exact: true})).toBeVisible();
     await expect(page).toHaveURL(/\/assistant\/connections\/$/);
     expect(await popup.evaluate(() => window.opener === null)).toBe(true);
     await popup.close();

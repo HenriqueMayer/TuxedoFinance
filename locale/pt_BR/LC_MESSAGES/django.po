@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 04:07+0000\n"
+"POT-Creation-Date: 2026-10-19 18:11+0000\n"
 "PO-Revision-Date: 2026-10-16 00:12+0000\n"
 "Last-Translator: Tuxedo Finance contributors\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -76,8 +76,8 @@ msgid "Your settings were updated."
 msgstr "Suas configurações foram atualizadas."
 
 #: assistant/connection_views.py:28
-msgid "Real sign-in is disabled in this delivery. No account was contacted."
-msgstr "O login real está desativado nesta entrega. Nenhuma conta foi contatada."
+msgid "Real sign-in is disabled on this installation. No account was contacted."
+msgstr "O login real está desativado nesta instalação. Nenhuma conta foi contatada."
 
 #: assistant/connection_views.py:30
 msgid "This authorization is unavailable. Start again from the original settings tab."
@@ -95,23 +95,23 @@ msgstr "O cofre local de credenciais está indisponível. Verifique a chave e as
 msgid "The connection could not be updated. Your financial data and conversations were kept."
 msgstr "Não foi possível atualizar a conexão. Seus dados financeiros e conversas foram mantidos."
 
-#: assistant/connection_views.py:116
-msgid "Account linked locally. AI responses remain unavailable in this delivery."
-msgstr "Conta vinculada localmente. As respostas de IA continuam indisponíveis nesta entrega."
+#: assistant/connection_views.py:118
+msgid "Account linked locally. Review its authorization status below."
+msgstr "Conta vinculada localmente. Confira abaixo o estado da autorização."
 
-#: assistant/connection_views.py:129
+#: assistant/connection_views.py:131
 msgid "Authorization cancelled."
 msgstr "Autorização cancelada."
 
-#: assistant/connection_views.py:142
-msgid "Account selected. This does not enable AI responses."
-msgstr "Conta selecionada. Isso não habilita respostas de IA."
+#: assistant/connection_views.py:144
+msgid "Account selected. Review its authorization status below."
+msgstr "Conta selecionada. Confira abaixo o estado da autorização."
 
-#: assistant/connection_views.py:156
+#: assistant/connection_views.py:158
 msgid "Account disconnected and renewable access revoked."
 msgstr "Conta desconectada e acesso renovável revogado."
 
-#: assistant/connection_views.py:158
+#: assistant/connection_views.py:160
 msgid "Local credentials removed. Remote revocation was not confirmed; review app access in ChatGPT settings."
 msgstr "Credenciais locais removidas. A revogação remota não foi confirmada; revise o acesso do aplicativo nas configurações do ChatGPT."
 
@@ -175,7 +175,7 @@ msgstr "Configurações"
 #: assistant/context.py:94 assistant/context.py:96 assistant/context.py:128
 #: assistant/context.py:133 assistant/context.py:135 assistant/context.py:138
 #: assistant/context.py:142 assistant/context.py:149 assistant/context.py:153
-#: assistant/views.py:181 assistant/views.py:197
+#: assistant/views.py:220 assistant/views.py:236
 msgid "Invalid assistant context."
 msgstr "Contexto do assistente inválido."
 
@@ -203,7 +203,7 @@ msgstr "Data de contexto do assistente inválida."
 msgid "Invalid assistant context currency."
 msgstr "Moeda de contexto do assistente inválida."
 
-#: assistant/context.py:207 assistant/views.py:249
+#: assistant/context.py:207 assistant/views.py:318
 msgid "Open the assistant again from an available workspace."
 msgstr "Abra o assistente novamente em uma área disponível."
 
@@ -270,41 +270,87 @@ msgstr "Esta página está disponível como fonte dos seus dados. Seus valores d
 msgid "Amounts retain their native currencies; no currency conversion was performed."
 msgstr "Os valores mantêm suas moedas originais; nenhuma conversão de moeda foi realizada."
 
-#: assistant/forms.py:7
+#: assistant/forms.py:9
 msgid "Conversation title"
 msgstr "Título da conversa"
 
-#: assistant/forms.py:12 templates/assistant/_composer.html:24
-msgid "Message"
-msgstr "Mensagem"
-
-#: assistant/forms.py:13
+#: assistant/forms.py:16 assistant/forms.py:45
 msgid "Model"
 msgstr "Modelo"
 
-#: assistant/forms.py:19
-msgid "Include financial context from this page"
-msgstr "Incluir dados financeiros desta página"
+#: assistant/forms.py:17
+msgid "Reasoning effort"
+msgstr "Esforço de raciocínio"
 
 #: assistant/forms.py:23
-#| msgid "Choose a column"
 msgid "Choose a model"
 msgstr "Escolha um modelo"
 
-#: assistant/views.py:40
-#| msgid "This assistant context expired or is invalid. Open it again from the workspace."
+#: assistant/forms.py:25
+msgid "None"
+msgstr "Nenhum"
+
+#: assistant/forms.py:25
+msgid "Minimal"
+msgstr "Mínimo"
+
+#: assistant/forms.py:25
+msgid "Low"
+msgstr "Baixo"
+
+#: assistant/forms.py:25
+msgid "Medium"
+msgstr "Médio"
+
+#: assistant/forms.py:26
+msgid "High"
+msgstr "Alto"
+
+#: assistant/forms.py:26
+msgid "Extra high"
+msgstr "Muito alto"
+
+#: assistant/forms.py:26
+msgid "Maximum"
+msgstr "Máximo"
+
+#: assistant/forms.py:30
+msgid "Model default"
+msgstr "Padrão do modelo"
+
+#: assistant/forms.py:38 assistant/forms.py:40
+msgid "This effort is not available for the selected model."
+msgstr "Este esforço não está disponível para o modelo selecionado."
+
+#: assistant/forms.py:49 templates/assistant/_composer.html:45
+msgid "Message"
+msgstr "Mensagem"
+
+#: assistant/forms.py:50
+msgid "Write a message…"
+msgstr "Escreva uma mensagem…"
+
+#: assistant/forms.py:55
+msgid "Use page data"
+msgstr "Usar dados da página"
+
+#: assistant/views.py:41
 msgid "This assistant context is no longer available. Open it again from the workspace."
 msgstr "Este contexto do assistente não está mais disponível. Abra-o novamente na aplicação."
 
-#: assistant/views.py:46
+#: assistant/views.py:47
 msgid "Only the latest 200 messages are displayed."
 msgstr "Apenas as 200 mensagens mais recentes são exibidas."
 
-#: assistant/views.py:98
+#: assistant/views.py:134
+msgid "Chat is disabled on this installation. No message was sent or saved."
+msgstr "O chat está desativado nesta instalação. Nenhuma mensagem foi enviada ou salva."
+
+#: assistant/views.py:136
 msgid "No AI provider is connected. No message was sent or saved."
 msgstr "Nenhum provedor de IA está conectado. Nenhuma mensagem foi enviada ou salva."
 
-#: assistant/views.py:99
+#: assistant/views.py:138
 msgid "The message could not be sent. Review the form and try again."
 msgstr "Não foi possível enviar a mensagem. Revise o formulário e tente novamente."
 
@@ -3329,8 +3375,9 @@ msgid "Cancel"
 msgstr "Cancelar"
 
 #: templates/accounts/settings.html:40 templates/assistant/_composer.html:9
-#: templates/assistant/_content.html:37 templates/assistant/_dock.html:14
-#: templates/assistant/index.html:3 templates/assistant/index.html:7
+#: templates/assistant/_content.html:53 templates/assistant/_dock.html:13
+#: templates/assistant/_dock.html:20 templates/assistant/index.html:3
+#: templates/assistant/index.html:7
 msgid "Tuxedo assistant"
 msgstr "Assistente Tuxedo"
 
@@ -3338,8 +3385,8 @@ msgstr "Assistente Tuxedo"
 msgid "Manage the ChatGPT account linked to your local Tuxedo Finance user."
 msgstr "Gerencie a conta ChatGPT vinculada ao seu usuário local do Tuxedo Finance."
 
-#: templates/accounts/settings.html:42 templates/assistant/_content.html:45
-#: templates/assistant/connections.html:3
+#: templates/accounts/settings.html:42 templates/assistant/_content.html:22
+#: templates/assistant/_content.html:61 templates/assistant/connections.html:3
 #: templates/assistant/connections.html:7
 msgid "Assistant settings"
 msgstr "Configurações do assistente"
@@ -3369,7 +3416,6 @@ msgid "Writing a response…"
 msgstr "Escrevendo uma resposta…"
 
 #: templates/assistant/_composer.html:4
-#| msgid "Incomplete"
 msgid "Response complete."
 msgstr "Resposta concluída."
 
@@ -3378,7 +3424,6 @@ msgid "Response stopped. Partial text is kept locally."
 msgstr "Resposta interrompida. O texto parcial fica salvo localmente."
 
 #: templates/assistant/_composer.html:6
-#| msgid "Authorization could not be completed. Return to the original settings tab and start again."
 msgid "The response could not be completed. Refresh the conversation before sending again."
 msgstr "Não foi possível concluir a resposta. Atualize a conversa antes de enviar novamente."
 
@@ -3390,28 +3435,63 @@ msgstr "Sua sessão ou conta selecionada mudou. Reabra a conversa."
 msgid "Your plan is temporarily unavailable or its usage limit was reached. Try again later."
 msgstr "Seu plano está temporariamente indisponível ou atingiu o limite de uso. Tente novamente mais tarde."
 
-#: templates/assistant/_composer.html:9 templates/assistant/_content.html:37
+#: templates/assistant/_composer.html:9 templates/assistant/_content.html:53
 msgid "You"
 msgstr "Você"
 
-#: templates/assistant/_composer.html:15
-msgid "Only this conversation and the context selected for this message are sent. History stays on this installation."
-msgstr "Apenas esta conversa e o contexto selecionado para a mensagem são enviados. O histórico fica nesta instalação."
+#: templates/assistant/_composer.html:11
+msgid "Saving chat settings…"
+msgstr "Salvando configurações do chat…"
 
-#: templates/assistant/_composer.html:18 templates/assistant/_composer.html:26
+#: templates/assistant/_composer.html:12
+msgid "Chat settings saved."
+msgstr "Configurações do chat salvas."
+
+#: templates/assistant/_composer.html:13
+msgid "Could not save chat settings. Try again."
+msgstr "Não foi possível salvar as configurações do chat. Tente novamente."
+
+#: templates/assistant/_composer.html:21 templates/assistant/_composer.html:23
+msgid "Chat settings"
+msgstr "Configurações do chat"
+
+#: templates/assistant/_composer.html:26
+msgid "Available effort levels depend on the model. Default keeps the model’s own setting."
+msgstr "Os níveis de esforço dependem do modelo. O padrão mantém a configuração do próprio modelo."
+
+#: templates/assistant/_composer.html:27
+msgid "Effort reset to the model default."
+msgstr "Esforço redefinido para o padrão do modelo."
+
+#: templates/assistant/_composer.html:29 templates/assistant/_dock.html:28
+msgid "Try again"
+msgstr "Tentar novamente"
+
+#: templates/assistant/_composer.html:35 templates/assistant/_composer.html:47
 msgid "Send message"
 msgstr "Enviar mensagem"
 
-#: templates/assistant/_composer.html:19
+#: templates/assistant/_composer.html:36
 msgid "Stop response"
 msgstr "Interromper resposta"
 
-#: templates/assistant/_composer.html:25
-#| msgid "Connect a provider in a future update to send messages."
+#: templates/assistant/_composer.html:41
+msgid "Enter to send · Shift+Enter for a new line"
+msgstr "Enter envia · Shift+Enter quebra linha"
+
+#: templates/assistant/_composer.html:46
+msgid "Chat is disabled on this installation."
+msgstr "O chat está desativado nesta instalação."
+
+#: templates/assistant/_composer.html:46
+msgid "Review assistant settings to send messages."
+msgstr "Confira as configurações do assistente para enviar mensagens."
+
+#: templates/assistant/_composer.html:46
 msgid "Connect a provider to send messages."
 msgstr "Conecte um provedor para enviar mensagens."
 
-#: templates/assistant/_composer.html:26
+#: templates/assistant/_composer.html:47
 msgid "Sending is unavailable."
 msgstr "O envio está indisponível."
 
@@ -3420,24 +3500,24 @@ msgstr "O envio está indisponível."
 msgid "History"
 msgstr "Histórico"
 
-#: templates/assistant/_content.html:6
+#: templates/assistant/_content.html:7
 msgid "Conversation history"
 msgstr "Histórico de conversas"
 
-#: templates/assistant/_content.html:9 templates/assistant/_content.html:23
-#: templates/assistant/_content.html:34
+#: templates/assistant/_content.html:10 templates/assistant/_content.html:35
+#: templates/assistant/_content.html:50
 msgid "New conversation"
 msgstr "Nova conversa"
 
-#: templates/assistant/_content.html:11
+#: templates/assistant/_content.html:12
 msgid "No conversations yet."
 msgstr "Nenhuma conversa ainda."
 
-#: templates/assistant/_content.html:14
+#: templates/assistant/_content.html:15
 msgid "Conversation history pages"
 msgstr "Páginas do histórico de conversas"
 
-#: templates/assistant/_content.html:15
+#: templates/assistant/_content.html:16
 #: templates/banking/_invoice_cards.html:14
 #: templates/banking/_invoice_results.html:15
 #: templates/banking/_rate_results.html:13 templates/ingestion/history.html:13
@@ -3448,7 +3528,7 @@ msgstr "Páginas do histórico de conversas"
 msgid "Previous"
 msgstr "Anterior"
 
-#: templates/assistant/_content.html:17
+#: templates/assistant/_content.html:18
 #: templates/banking/_invoice_cards.html:14
 #: templates/banking/_invoice_results.html:15
 #: templates/banking/_rate_results.html:13 templates/ingestion/history.html:13
@@ -3459,83 +3539,85 @@ msgstr "Anterior"
 msgid "Next"
 msgstr "Próxima"
 
-#: templates/assistant/_content.html:30
+#: templates/assistant/_content.html:23
+msgid "Only this conversation and the context selected for this message are sent. History stays on this installation."
+msgstr "Apenas esta conversa e o contexto selecionado para a mensagem são enviados. O histórico fica nesta instalação."
+
+#: templates/assistant/_content.html:29
 msgid "Context"
 msgstr "Contexto"
 
-#: templates/assistant/_content.html:35
-msgid "Messages"
-msgstr "Mensagens"
-
-#: templates/assistant/_content.html:38
-#| msgid "Partial total"
-msgid "Partial response"
-msgstr "Resposta parcial"
-
-#: templates/assistant/_content.html:38
-#| msgid "Copper"
-msgid "Stopped"
-msgstr "Interrompida"
-
-#: templates/assistant/_content.html:38
-#| msgid "Goal progress"
-msgid "In progress"
-msgstr "Em andamento"
-
-#: templates/assistant/_content.html:38
-#| msgid "Incomplete"
-msgid "Not completed"
-msgstr "Não concluída"
-
 #: templates/assistant/_content.html:39
-#| msgid "Difference"
-msgid "References"
-msgstr "Referências"
-
-#: templates/assistant/_content.html:44
-msgid "How can I help?"
-msgstr "Como posso ajudar?"
-
-#: templates/assistant/_content.html:44
-msgid "Choose a model and write your message. Include the current page’s financial information only when it is needed."
-msgstr "Escolha um modelo e escreva sua mensagem. Inclua os dados financeiros da página atual apenas quando necessário."
-
-#: templates/assistant/_content.html:44 templates/assistant/connections.html:46
-msgid "Sign in again"
-msgstr "Entrar novamente"
-
-#: templates/assistant/_content.html:44
-msgid "Renew the selected account connection in assistant settings."
-msgstr "Renove a conexão da conta selecionada nas configurações do assistente."
-
-#: templates/assistant/_content.html:44
-#| msgid "Sending is unavailable."
-msgid "Models unavailable"
-msgstr "Modelos indisponíveis"
-
-#: templates/assistant/_content.html:44
-msgid "Could not load models for this account. Refresh the conversation or review its connection."
-msgstr "Não foi possível carregar os modelos desta conta. Atualize a conversa ou revise a conexão."
-
-#: templates/assistant/_content.html:44
-msgid "Provider not connected"
-msgstr "Provedor não conectado"
-
-#: templates/assistant/_content.html:44
-msgid "Your chat is ready for a future AI connection. No financial data is being sent to a provider."
-msgstr "O chat está preparado para uma futura conexão com IA. Nenhum dado financeiro está sendo enviado a um provedor."
-
-#: templates/assistant/_content.html:52
 msgid "Delete conversation"
 msgstr "Excluir conversa"
 
-#: templates/assistant/_content.html:55
+#: templates/assistant/_content.html:42
 msgid "Delete this conversation and its messages? Financial records will be kept."
 msgstr "Excluir esta conversa e suas mensagens? Os registros financeiros serão mantidos."
 
-#: templates/assistant/_content.html:56
+#: templates/assistant/_content.html:43
 msgid "Confirm deletion"
 msgstr "Confirmar exclusão"
+
+#: templates/assistant/_content.html:51
+msgid "Messages"
+msgstr "Mensagens"
+
+#: templates/assistant/_content.html:54
+msgid "Partial response"
+msgstr "Resposta parcial"
+
+#: templates/assistant/_content.html:54
+msgid "Stopped"
+msgstr "Interrompida"
+
+#: templates/assistant/_content.html:54
+msgid "In progress"
+msgstr "Em andamento"
+
+#: templates/assistant/_content.html:54
+msgid "Not completed"
+msgstr "Não concluída"
+
+#: templates/assistant/_content.html:55
+msgid "References"
+msgstr "Referências"
+
+#: templates/assistant/_content.html:60
+msgid "How can I help?"
+msgstr "Como posso ajudar?"
+
+#: templates/assistant/_content.html:60
+msgid "Chat disabled on this installation"
+msgstr "Chat desativado nesta instalação"
+
+#: templates/assistant/_content.html:60
+msgid "Your selected ChatGPT account is kept. Enable the assistant connection in this installation’s configuration to send messages."
+msgstr "A conta ChatGPT selecionada continua vinculada. Habilite a conexão do assistente na configuração desta instalação para enviar mensagens."
+
+#: templates/assistant/_content.html:60 templates/assistant/connections.html:46
+msgid "Sign in again"
+msgstr "Entrar novamente"
+
+#: templates/assistant/_content.html:60
+msgid "Renew the selected account connection in assistant settings."
+msgstr "Renove a conexão da conta selecionada nas configurações do assistente."
+
+#: templates/assistant/_content.html:60
+msgid "Models unavailable"
+msgstr "Modelos indisponíveis"
+
+#: templates/assistant/_content.html:60
+msgid "Could not load models for this account. Refresh the conversation or review its connection."
+msgstr "Não foi possível carregar os modelos desta conta. Atualize a conversa ou revise a conexão."
+
+#: templates/assistant/_content.html:60
+msgid "Provider not connected"
+msgstr "Provedor não conectado"
+
+#: templates/assistant/_content.html:60
+msgid "Connect your ChatGPT account in assistant settings to send messages. Your conversation history stays local."
+msgstr "Conecte sua conta ChatGPT nas configurações do assistente para enviar mensagens. O histórico de conversas permanece local."
 
 #: templates/assistant/_dock.html:5
 msgid "Loading conversation…"
@@ -3553,27 +3635,39 @@ msgstr "Não foi possível carregar o assistente. Tente novamente ou abra a pág
 msgid "Your session changed. Open the assistant page to continue."
 msgstr "Sua sessão mudou. Abra a página do assistente para continuar."
 
-#: templates/assistant/_dock.html:8 templates/assistant/_dock.html:11
+#: templates/assistant/_dock.html:8 templates/assistant/_dock.html:17
 msgid "Open Tuxedo assistant"
 msgstr "Abrir assistente Tuxedo"
 
-#: templates/assistant/_dock.html:14
-msgid "Local history"
-msgstr "Histórico local"
+#: templates/assistant/_dock.html:12
+msgid "Restore assistant"
+msgstr "Restaurar assistente"
 
-#: templates/assistant/_dock.html:15
+#: templates/assistant/_dock.html:13
+msgid "Restore chat"
+msgstr "Restaurar chat"
+
+#: templates/assistant/_dock.html:15 templates/assistant/_dock.html:23
 msgid "Close assistant"
 msgstr "Fechar assistente"
 
-#: templates/assistant/_dock.html:19
-msgid "Try again"
-msgstr "Tentar novamente"
-
 #: templates/assistant/_dock.html:20
+msgid "Local history"
+msgstr "Histórico local"
+
+#: templates/assistant/_dock.html:21
+msgid "Chat window"
+msgstr "Janela do chat"
+
+#: templates/assistant/_dock.html:22
+msgid "Minimize assistant"
+msgstr "Minimizar assistente"
+
+#: templates/assistant/_dock.html:29
 msgid "Open full page"
 msgstr "Abrir página completa"
 
-#: templates/assistant/_dock.html:22
+#: templates/assistant/_dock.html:31
 msgid "Cancel loading"
 msgstr "Cancelar carregamento"
 
@@ -3595,34 +3689,28 @@ msgid "No account is linked until you confirm it in the original authenticated s
 msgstr "Nenhuma conta será vinculada até sua confirmação na sessão autenticada original. Nenhuma solicitação a modelos foi enviada."
 
 #: templates/assistant/connections.html:11
-#| msgid "ChatGPT authorization"
-msgid "ChatGPT connection"
-msgstr "Conexão com ChatGPT"
+msgid "Chat enabled"
+msgstr "Chat habilitado"
 
 #: templates/assistant/connections.html:11
-msgid "Connection preparation"
-msgstr "Preparação da conexão"
+msgid "Chat disabled"
+msgstr "Chat desativado"
 
 #: templates/assistant/connections.html:12
-#| msgid "Your database and conversation history stay on this installation. Future responses will send only your question and the context needed to answer it."
 msgid "Your database and history stay on this installation. Messages send only your question, necessary conversation history and the context you choose to include."
 msgstr "Seu banco de dados e histórico ficam nesta instalação. As mensagens enviam apenas sua pergunta, o histórico necessário da conversa e o contexto que você escolher incluir."
-
-#: templates/assistant/connections.html:12
-msgid "Your database and conversation history stay on this installation. Future responses will send only your question and the context needed to answer it."
-msgstr "Seu banco de dados e histórico de conversas ficam nesta instalação. As respostas futuras enviarão apenas sua pergunta e o contexto necessário para respondê-la."
 
 #: templates/assistant/connections.html:13
 msgid "Choose an available model in the assistant before sending a message. Requests use your ChatGPT plan."
 msgstr "Escolha um modelo disponível no assistente antes de enviar a mensagem. As solicitações usam seu plano ChatGPT."
 
 #: templates/assistant/connections.html:13
-msgid "Account authorization and AI responses are separate. Sending messages remains unavailable in this delivery."
-msgstr "A autorização da conta e as respostas de IA são etapas separadas. O envio de mensagens continua indisponível nesta entrega."
+msgid "Chat is disabled in this installation’s configuration. Linked accounts and conversation history are kept."
+msgstr "O chat está desativado na configuração desta instalação. As contas vinculadas e o histórico de conversas são mantidos."
 
 #: templates/assistant/connections.html:14
-msgid "Real sign-in is disabled. This screen does not contact OpenAI or consume your plan."
-msgstr "O login real está desativado. Esta tela não contata a OpenAI nem consome seu plano."
+msgid "Real sign-in is disabled on this installation. Existing account links are kept."
+msgstr "O login real está desativado nesta instalação. Os vínculos existentes são mantidos."
 
 #: templates/assistant/connections.html:16
 msgid "Continue with ChatGPT"
@@ -3647,7 +3735,6 @@ msgid "Registration"
 msgstr "Registro da conexão"
 
 #: templates/assistant/connections.html:26
-#| msgid "Only confirm the ChatGPT account you intended to link. This does not enable model requests."
 msgid "Only confirm the ChatGPT account you intended to use for assistant messages."
 msgstr "Confirme apenas a conta ChatGPT que você pretende usar nas mensagens do assistente."
 
@@ -3672,19 +3759,16 @@ msgid "Linked accounts"
 msgstr "Contas vinculadas"
 
 #: templates/assistant/connections.html:41
-#: templates/partials/chart_selection.html:3
-#: templates/transactions/list.html:70 templates/transactions/list.html:92
-msgid "Selected"
-msgstr "Selecionado"
+msgid "Selected account"
+msgstr "Conta selecionada"
 
 #: templates/assistant/connections.html:43
-#| msgid "Amount paid"
 msgid "Account authorized."
 msgstr "Conta autorizada."
 
 #: templates/assistant/connections.html:43
-msgid "Account authorized. AI responses remain unavailable."
-msgstr "Conta autorizada. As respostas de IA continuam indisponíveis."
+msgid "Account authorized. Chat is disabled on this installation."
+msgstr "Conta autorizada. O chat está desativado nesta instalação."
 
 #: templates/assistant/connections.html:43
 msgid "Identity verified; permission to use the ChatGPT plan was not granted."
@@ -6272,6 +6356,11 @@ msgstr "Cotações ausentes"
 msgid "Selected total"
 msgstr "Total selecionado"
 
+#: templates/partials/chart_selection.html:3
+#: templates/transactions/list.html:70 templates/transactions/list.html:92
+msgid "Selected"
+msgstr "Selecionado"
+
 #: templates/partials/chart_selection.html:8
 msgid "Net change in selected period"
 msgstr "Variação do saldo no período"
@@ -7772,6 +7861,36 @@ msgstr "Transação \"%(title)s\" atualizada."
 #, python-format
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
+
+#~ msgid "Account selected. This does not enable AI responses."
+#~ msgstr "Conta selecionada. Isso não habilita respostas de IA."
+
+#~ msgid "Your chat is ready for a future AI connection. No financial data is being sent to a provider."
+#~ msgstr "O chat está preparado para uma futura conexão com IA. Nenhum dado financeiro está sendo enviado a um provedor."
+
+#~ msgid "ChatGPT connection"
+#~ msgstr "Conexão com ChatGPT"
+
+#~ msgid "Connection preparation"
+#~ msgstr "Preparação da conexão"
+
+#~ msgid "Your database and conversation history stay on this installation. Future responses will send only your question and the context needed to answer it."
+#~ msgstr "Seu banco de dados e histórico de conversas ficam nesta instalação. As respostas futuras enviarão apenas sua pergunta e o contexto necessário para respondê-la."
+
+#~ msgid "Account authorization and AI responses are separate. Sending messages remains unavailable in this delivery."
+#~ msgstr "A autorização da conta e as respostas de IA são etapas separadas. O envio de mensagens continua indisponível nesta entrega."
+
+#~ msgid "Real sign-in is disabled. This screen does not contact OpenAI or consume your plan."
+#~ msgstr "O login real está desativado. Esta tela não contata a OpenAI nem consome seu plano."
+
+#~ msgid "Account authorized. AI responses remain unavailable."
+#~ msgstr "Conta autorizada. As respostas de IA continuam indisponíveis."
+
+#~ msgid "Include financial context from this page"
+#~ msgstr "Incluir dados financeiros desta página"
+
+#~ msgid "Choose a model and write your message. Include the current page’s financial information only when it is needed."
+#~ msgstr "Escolha um modelo e escreva sua mensagem. Inclua os dados financeiros da página atual apenas quando necessário."
 
 #~ msgid "Information available for consultation"
 #~ msgstr "Informações disponíveis para consulta"

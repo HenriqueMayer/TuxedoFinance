@@ -111,8 +111,10 @@ class AssistantFixturesConfig(AppConfig):
             def list_models(self, cancellation=None):
                 if cancellation:
                     cancellation.raise_if_cancelled()
-                return [{'slug': 'mock-standard', 'display_name': 'Mock Standard'},
-                        {'slug': 'mock-mini', 'display_name': 'Mock Mini'}]
+                return [{'slug': 'mock-standard', 'display_name': 'Mock Standard',
+                         'reasoning_efforts': ['low', 'medium', 'high'], 'default_reasoning_effort': 'medium'},
+                        {'slug': 'mock-mini', 'display_name': 'Mock Mini with a deliberately long model name for a narrow screen',
+                         'reasoning_efforts': ['low', 'high'], 'default_reasoning_effort': 'low'}]
 
             def stream(self, generation, cancellation):
                 cancellation.raise_if_cancelled()
@@ -129,6 +131,38 @@ class AssistantFixturesConfig(AppConfig):
                 if '[error]' in content:
                     yield ProviderEvent('text', text='Synthetic partial response. ')
                     yield ProviderEvent('error', code='transport_error')
+                    return
+                if '[tail]' in content:
+                    # A bounded, paced fixture lets a reader scroll away from
+                    # the live tail without an external model or network call.
+                    release = Event()
+                    unregister = cancellation.register_close(release.set)
+                    try:
+                        for index in range(30):
+                            yield ProviderEvent('text', text=(
+                                f'Synthetic streamed paragraph {index + 1}. '
+                                'Reading earlier messages should keep the reader in place.\n\n'))
+                            release.wait(.12)
+                            cancellation.raise_if_cancelled()
+                    finally:
+                        unregister()
+                    yield ProviderEvent('done')
+                    return
+                if '[long]' in content:
+                    text = (
+                        'Synthetic long conversation. ' + 'W' * 120 + '\n\n'
+                        + '\n\n'.join(
+                            f'Paragraph {index + 1}. Account and transaction details here are entirely synthetic. '
+                            'The composer stays available while this transcript scrolls.'
+                            for index in range(52)))
+                    for offset in range(0, len(text), 2000):
+                        yield ProviderEvent('text', text=text[offset:offset + 2000])
+                    yield ProviderEvent('done')
+                    return
+                if '[settings]' in content:
+                    yield ProviderEvent('text', text=(
+                        f'Synthetic request: {generation.model}; effort: {generation.reasoning_effort or "default"}.'))
+                    yield ProviderEvent('done')
                     return
                 text = ('<img src=x onerror="window.__assistantInjected=true"><strong>Untrusted model text</strong>'
                         if '[html]' in content else

@@ -136,10 +136,36 @@ class ConnectionSettingsViewTests(TransactionTestCase):
         response = self.client.get(reverse('assistant:connections'))
         self.assertContains(response, '&lt;img')
         self.assertNotContains(response, '<img src=x')
-        self.assertContains(response, 'AI responses remain unavailable')
+        self.assertContains(response, 'Account authorized. Chat is disabled on this installation.')
         from assistant.providers import get_provider
         from assistant.providers.base import DisconnectedProvider
         self.assertIsInstance(get_provider(), DisconnectedProvider)
+
+    def test_selected_account_and_local_availability_are_separate_in_settings(self):
+        connection = ProviderConnection.objects.create(
+            user=self.user, issuer=oauth.ISSUER, subject='synthetic-subject', client_id='oaiapp_owned',
+            email='selected@example.test', status=ProviderConnection.Status.READY, is_active=True)
+        for auth, inference in [(False, False), (True, False), (False, True), (True, True)]:
+            with self.subTest(auth=auth, inference=inference), override_settings(
+                    ASSISTANT_OPENAI_AUTH_ENABLED=auth, ASSISTANT_OPENAI_INFERENCE_ENABLED=inference), \
+                    patch('assistant.chat.get_provider') as resolve:
+                response = self.client.get(reverse('assistant:connections'), HTTP_ACCEPT_LANGUAGE='en')
+                self.assertEqual(response.context['chat_enabled'], auth and inference)
+                self.assertContains(response, 'Selected account')
+                self.assertNotContains(response, 'Connection preparation')
+                self.assertNotContains(response, 'unavailable in this delivery')
+                if auth and inference:
+                    self.assertContains(response, 'Chat enabled')
+                    self.assertContains(response, 'Account authorized.')
+                    self.assertNotContains(response, 'Chat is disabled')
+                else:
+                    self.assertContains(response, 'Chat disabled')
+                    self.assertContains(response, 'Account authorized. Chat is disabled on this installation.')
+                resolve.assert_not_called()
+        connection.refresh_from_db()
+        self.assertTrue(connection.is_active)
+        self.assertEqual(connection.status, ProviderConnection.Status.READY)
+        self.assertFalse(self.private.exists())
 
     @override_settings(ASSISTANT_OPENAI_AUTH_ENABLED=True)
     def test_native_authorization_forms_preserve_original_settings_tab_without_javascript(self):

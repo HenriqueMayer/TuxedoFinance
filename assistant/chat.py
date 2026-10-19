@@ -21,7 +21,7 @@ from django.utils.crypto import constant_time_compare, salted_hmac
 from assistant.context_request import build_context
 from assistant.models import Conversation, GenerationRun, Message, ProviderConnection
 from assistant.providers import get_provider
-from assistant.providers.base import CancellationToken, ChatTurn, GenerationRequest, stream_response
+from assistant.providers.base import CancellationToken, ChatTurn, GenerationRequest, reasoning_efforts, stream_response
 
 
 CATALOG_SECONDS = 120
@@ -31,7 +31,7 @@ _ERRORS = {'unavailable', 'cancelled', 'provider_error', 'transport_error', 'rat
            'unauthorized', 'limit_exceeded', 'invalid_model', 'incomplete', 'interrupted',
            'timeout', 'invalid_grant', 'reconnect_required', 'auth_disabled', 'disabled',
            'vault_unavailable', 'storage_unavailable', 'connection_error', 'host_mismatch',
-           'request_rejected', 'invalid_response', 'permission_denied'}
+           'request_rejected', 'invalid_response', 'permission_denied', 'invalid_reasoning_effort'}
 _LIVE_TOKENS = WeakValueDictionary()
 _LIVE_TOKENS_LOCK = Lock()
 
@@ -74,9 +74,7 @@ def _session_authorized(owner, session_key):
 
 
 def _selected_connection(user, requested=None):
-    if (getattr(settings, 'ASSISTANT_OPENAI_AUTH_ENABLED', False) is not True
-            or getattr(settings, 'ASSISTANT_OPENAI_INFERENCE_ENABLED', False) is not True
-            or not getattr(user, 'is_authenticated', False) or not getattr(user, 'is_active', False)):
+    if not getattr(user, 'is_authenticated', False) or not getattr(user, 'is_active', False):
         return None, 'disconnected'
     connection = ProviderConnection.objects.filter(user=user, provider='openai', is_active=True).first()
     if connection is None:
@@ -87,6 +85,11 @@ def _selected_connection(user, requested=None):
         return connection, 'reauth'
     if connection.status != ProviderConnection.Status.READY:
         return connection, 'disconnected'
+    # A stored account selection survives a local service switch. Preserve that
+    # identity in the UI without resolving a provider or loading its catalogue.
+    if (getattr(settings, 'ASSISTANT_OPENAI_AUTH_ENABLED', False) is not True
+            or getattr(settings, 'ASSISTANT_OPENAI_INFERENCE_ENABLED', False) is not True):
+        return connection, 'disabled'
     return connection, 'ready'
 
 
@@ -95,9 +98,12 @@ def composer_state(user, connection_id=None, *, refresh=False):
     connection, state = _selected_connection(user, connection_id)
     result = {'provider_state': state, 'error': '', 'models': [],
               'connection_id': str(connection.pk) if connection else ''}
+    if state == 'disabled':
+        result['error'] = ('auth_disabled' if getattr(settings, 'ASSISTANT_OPENAI_AUTH_ENABLED', False) is not True
+                           else 'disabled')
     if state != 'ready':
         return result
-    key = f'assistant.models.v1:{user.pk}:{connection.pk}:{connection.updated_at.isoformat()}'
+    key = f'assistant.models.v2:{user.pk}:{connection.pk}:{connection.updated_at.isoformat()}'
     try:
         models = None if refresh else cache.get(key)
         if models is None:
@@ -117,7 +123,13 @@ def composer_state(user, connection_id=None, *, refresh=False):
                         or not 1 <= len(item['display_name']) <= 160):
                     continue
                 if item['slug'] not in seen:
-                    models.append({'slug': item['slug'], 'display_name': item['display_name']})
+                    efforts = reasoning_efforts(item.get('reasoning_efforts'))
+                    normalized = {'slug': item['slug'], 'display_name': item['display_name'],
+                                  'reasoning_efforts': efforts}
+                    default = item.get('default_reasoning_effort')
+                    if isinstance(default, str) and default in efforts:
+                        normalized['default_reasoning_effort'] = default
+                    models.append(normalized)
                     seen.add(item['slug'])
             cache.set(key, models, CATALOG_SECONDS)
         result['models'] = models
@@ -159,6 +171,7 @@ def _existing(user, session_key, data, conversation):
         raise ChatError('request_conflict', 409)
     if (conversation is not None and run.conversation_id != conversation.pk
             or run.input_message.content != data['content'] or run.model_slug != data['model']
+            or run.reasoning_effort != data.get('reasoning_effort', '')
             or str(run.connection_id) != str(data['connection_id'])
             or bool(run.context_references.get('include_financial')) != bool(data.get('include_context'))
             or run.context_references.get('scope_location', '') != data.get('_scope_location', '')):
@@ -200,8 +213,12 @@ def start_run(user, session_key, data, *, scope=None, conversation=None, languag
     state = composer_state(user, data['connection_id'])
     if state['provider_state'] != 'ready':
         raise ChatError(state['error'] or 'unavailable', 503)
-    if data['model'] not in {model['slug'] for model in state['models']}:
+    model = next((model for model in state['models'] if model['slug'] == data['model']), None)
+    if model is None:
         raise ChatError('invalid_model')
+    effort = data.get('reasoning_effort', '')
+    if not isinstance(effort, str) or effort and effort not in model['reasoning_efforts']:
+        raise ChatError('invalid_reasoning_effort')
     selected, status = _selected_connection(user, data['connection_id'])
     if status != 'ready':
         raise ChatError('unauthorized', 403)
@@ -211,7 +228,8 @@ def start_run(user, session_key, data, *, scope=None, conversation=None, languag
     context = build_context(user, scope, bool(data.get('include_context')))
     request = GenerationRequest(json.dumps(context, ensure_ascii=True, separators=(',', ':')),
                                 history=_history(conversation) + (ChatTurn('user', data['content']),),
-                                language='pt-br' if language.lower().startswith('pt') else 'en', model=data['model'])
+                                language='pt-br' if language.lower().startswith('pt') else 'en', model=data['model'],
+                                reasoning_effort=effort)
     try:
         with transaction.atomic():
             if conversation is None:
@@ -219,6 +237,7 @@ def start_run(user, session_key, data, *, scope=None, conversation=None, languag
             message = Message.objects.create(conversation=conversation, role=Message.Role.USER, content=data['content'])
             run = GenerationRun.objects.create(
                 pk=data['request_id'], conversation=conversation, connection=selected, model_slug=data['model'],
+                reasoning_effort=effort,
                 input_message=message, session_digest=digest,
                 context_references=_references(context, scope, data.get('include_context')))
             Conversation.objects.filter(pk=conversation.pk, user=user).update(updated_at=timezone.now())

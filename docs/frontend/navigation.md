@@ -75,10 +75,24 @@ At desktop widths the panel is a fixed, nonmodal overlay above the workspace.
 Opening or closing it must not reserve a column, change body/main padding or
 resize filters, charts or forms. The page keeps its original geometry and remains
 usable beside the overlay. Narrow screens retain the modal, focus-contained sheet.
-The Context block is a location cue: show the current workspace/period as an
-authorized link, without repeating balances, technical timestamps or a financial
-evidence inventory. Structured evidence remains in the backend context contract.
-Activating the context link for the document already open closes the panel
+The compact titlebar groups the unchanged Tuxedo mark and identity with
+stationary, labelled Minimize and Close controls. Keep the controls adjacent,
+with a fine separator and restrained hover/focus feedback rather than individual
+heavy outlines. Local history remains accessible text without a repeated visible
+subtitle. History, the current-page link, New conversation and Delete share one
+compact toolbar beneath the titlebar, with deliberate action disclosures.
+Context is a location cue: show the current workspace/period as an authorized
+link and retain its accessible label without a separate visible label or row.
+Do not repeat balances, technical timestamps or a financial evidence inventory.
+Structured evidence remains in the backend context contract. User messages align
+to the right in a restrained paper-colored bubble; assistant text reads naturally
+on the left, with references beside that answer. Keep role labels available to
+assistive technology without repeating a visible assistant heading before every
+answer. Use compact, readable chat typography and restrained message spacing.
+Keep the transcript as the independently scrolling area, above a persistent
+composer. History/actions and the composer must not disappear while reading an
+older message. Long replies wrap without widening the panel.
+Activating the context link for the document already open minimizes the panel
 without a GET or form reset, including when the signed scope omits a navigation
 origin (`next`). Other source destinations retain normal departure protection.
 
@@ -89,22 +103,44 @@ Never animate the button's target, focus ring or surrounding layout. Honor
 `prefers-reduced-motion` for both the launcher and header artwork, including the
 Design Lab specimen; keep provider availability and its recovery state explicit.
 
-Opening and closing are deliberate keyboard, pointer or touch actions. Preserve
-the workspace's scroll, selected filters and unsent form values; closing returns
-focus to the trigger when it still exists. The narrow-screen presentation keeps
-its heading, close control, conversation actions, composer and cancellation state inside
+Opening, minimizing, restoring and closing are deliberate keyboard, pointer or
+touch actions. Minimize hides the panel behind a named restore tab and retains
+the current draft, model, effort and active reply in the current document. Its
+adjacent Close control remains available without restoring the panel. It
+does not cancel a generation. The tab reflects a pending/completed reply without
+moving its target; restoring first performs an authenticated GET and restores
+temporary text only when both user and Django session still match; temporary
+model/effort and context consent also require the same linked account. A changed
+account keeps its freshly authorized saved settings and unchecked consent. Never store
+an unsent chat draft in browser storage. Close discards that temporary composer
+state, cancels the active reply and returns the ordinary launcher; it does not
+delete saved conversation history or the last explicitly saved model/effort.
+Those preferences live in the local owned account record, are revalidated on
+load, and never carry financial-context consent. Preserve the workspace's scroll, selected
+filters and unsent financial form values. Minimize returns focus to the restore
+tab, Close to the launcher. The narrow-screen presentation keeps
+its heading, window controls, conversation actions, composer and cancellation state inside
 the viewport and above fixed navigation/safe areas. Visible focus, Escape and
 Tab/Shift+Tab behavior must match the panel's declared modal behavior; background
-content must not remain keyboard-active behind a modal surface.
+content must not remain keyboard-active behind a modal surface. When the visual
+viewport is shorter than 400px, trim secondary header text and keyboard hints
+and cap the editor at 44px, while keeping Context, model/context controls and
+Send/Stop reachable. Honor the visual viewport rather than only height media
+queries, because opening a software keyboard does not resize every browser
+layout viewport. The native chat page can scroll vertically and retains a
+minimum usable conversation height and clearance above fixed navigation.
 
 Context follows an explicitly authorized local origin, not HTML scraped from the
 current page. Only its allowlisted route/query is signed for the current Django
 user; ownership is checked again by the server. Do not include unsent financial
 form fields in a context update. Page navigation, filter changes and a restored
 private document must not retain another user's context or transcript.
-Closing or reopening clears transcript/context HTML before a new authorized
-fetch; only the selected conversation UUID remains in user-scoped memory. A
-pending or cancelled request must not reveal an earlier hidden transcript.
+Closing, replacing or departing clears transcript/context HTML before a new
+authorized fetch; only the selected conversation UUID remains in user-scoped
+memory. Minimized HTML stays inaccessible in its hidden panel and cannot be
+revealed before the restoration GET reauthorizes the user and session. A
+different or expired session discards the temporary state and hidden transcript.
+An interrupted or cancelled request must not reveal an earlier hidden transcript.
 Custom assistant fetches respect asset-recovery headers before inserting HTML;
 recovery offers a validated native GET through the ordinary unsaved-edit guard,
 without replaying a POST or automatically discarding a financial draft.
@@ -126,14 +162,46 @@ and callback pages retain `no-referrer`. Never exempt these POSTs from CSRF or
 trust a null origin to make the flow work.
 
 With either gate off, keep unavailable status explicit and Send disabled; never
-render a fake streamed reply. When eligible, the model picker starts empty and
-the Include financial context checkbox starts unchecked for each new request.
+render a fake streamed reply. When eligible, the model picker starts empty until
+an explicit selection is saved for that local user and linked account; later
+loads restore only catalogue-valid saved model/effort choices. The
+Use page data checkbox starts unchecked for each new request.
 It follows the shared form/checkbox contract, preserves invalid submitted values
 and does not scrape current-page drafts. Show plain streamed text, selected model,
-pending/terminal state, verified local references and a deliberate Cancel action.
-Enter adds a line; Ctrl/Command+Enter submits through the same validated form.
+pending/terminal state, verified local references and a deliberate Stop action.
+The message editor starts at one line and grows to a bounded height; extra lines
+scroll internally. Keep Model and Reasoning effort in a deliberate Chat settings
+gear disclosure below it, with a single-line model/effort caption and the
+per-request context checkbox. Long selection names truncate visually without
+losing their full accessible text or widening the chat. Its upward surface stays
+inside the panel and scrolls internally on short viewports. Keep native labelled
+selects and 44px targets;
+opening settings must neither resize the transcript nor move the message draft.
+Only the selected account catalogue determines compatible effort levels.
+Model default omits the override, and no effort is inferred from a model name.
+Changing a model retains compatible effort or announces a reset to Model default.
+Server validation rejects incompatible submitted pairs; reopen settings around
+invalid fields for recovery, including the native form without JavaScript.
+Settings opens only through click, touch or keyboard activation. Dismiss it on
+outside click or Tab-away; Escape closes settings and returns focus to its gear
+before a subsequent Escape minimizes chat. Keep only one chat action disclosure open.
+Keep only the toolbar's lower transcript boundary and center the empty state.
+The compact page badge keeps a 44px outer link target. Let the compact composer
+frame provide its own border and theme-aware focus ring, without another divider
+above it or an extra enclosing box. Minimized controls use the same quiet window
+chrome; avoid framing an already framed restore tab again.
+Send and Stop use stationary, labelled icon buttons
+with at least 44px targets and visible focus; a smaller visual face must not
+shrink those targets. Keep model, effort, consent and the message editor at least 44px
+tall. Keep the privacy explanation inside History. The enhanced composer reveals
+its short keyboard hint while focused, retaining the hint's reserved space so
+focus does not move the composer or transcript; native fallback keeps it visible.
+Enter submits through the same validated form; Shift+Enter inserts a line.
+Composition/IME confirmation must not send a message. Preserve the draft on
+validation failures and retain an ordinary native Send button without JavaScript.
 Closing/replacing the panel or departing cancels its active stream and clears
-hidden text before an authorized reload. Never replay a POST on history restore.
+hidden text before an authorized reload. Minimizing keeps the stream alive only
+in the same current document; restoring never replays its POST. Never replay a POST on history restore.
 Native submission waits for the bounded result and redirects to owned local
 history without JavaScript. Preserve readable errors, empty model lists,
 partial-output status and keyboard/mobile access above fixed navigation. The

@@ -3,8 +3,8 @@
     'use strict';
     if (window.TuxedoAssistant) return;
     const wide = matchMedia('(min-width: 1280px)');
-    let memory = {owner: '', open: false, conversation: ''};
-    let pending = null, returnFocus = null, lastURL = '', previousOverflow = null;
+    let memory = {owner: '', open: false, minimized: false, conversation: ''};
+    let pending = null, restoring = null, minimizedView = null, returnFocus = null, lastURL = '', previousOverflow = null;
     const inertElements = new Map();
     const shell = () => document.querySelector('[data-assistant-shell]');
     const panel = () => shell()?.querySelector('#assistant-panel');
@@ -39,15 +39,20 @@
         const root = shell();
         if (!root) return;
         const view = window.visualViewport;
-        root.style.setProperty('--assistant-viewport-height', `${view?.height || innerHeight}px`);
+        const height = view?.height || innerHeight;
+        const short = height < 400;
+        const shortChanged = root.hasAttribute('data-assistant-short') !== short;
+        root.style.setProperty('--assistant-viewport-height', `${height}px`);
         root.style.setProperty('--assistant-viewport-top', `${view?.offsetTop || 0}px`);
+        root.toggleAttribute('data-assistant-short', short);
+        if (shortChanged) window.TuxedoAssistantChat?.initialize(document);
         const navigation = document.querySelector('.app-bottom-navigation');
         const rect = navigation?.getBoundingClientRect();
         const bottom = rect && rect.height && rect.top < innerHeight ? innerHeight - rect.top + 16 : 20;
         root.style.setProperty('--assistant-bottom', `${bottom}px`);
         // A floating shortcut yields to an editable control instead of covering
         // its caret or action while the user is working near the screen edge.
-        const launcher = root.querySelector('[data-assistant-open]');
+        const launcher = root.querySelector(memory.minimized ? '[data-assistant-minimized]' : '[data-assistant-open]');
         launcher.style.visibility = '';
         const active = document.activeElement;
         if (!memory.open && active?.matches('input, textarea, select, [contenteditable="true"]')) {
@@ -73,7 +78,7 @@
             });
             previousOverflow = document.body.style.overflow;
             document.body.style.overflow = 'hidden';
-            if (!box.contains(document.activeElement)) box.querySelector('[data-assistant-close]').focus({preventScroll: true});
+            if (!box.contains(document.activeElement)) box.querySelector('[data-assistant-minimize]').focus({preventScroll: true});
         }
         viewport();
     }
@@ -87,15 +92,136 @@
     function close(restoreFocus = true) {
         window.TuxedoAssistantChat?.cancelWithin(panel());
         abort();
+        restoring?.abort(); restoring = null;
         memory.open = false;
+        memory.minimized = false;
+        minimizedView = null;
         clearInert();
         const box = panel(), root = shell();
         if (box) box.hidden = true;
+        if (root) root.querySelector('[data-assistant-minimized]').hidden = true;
         content()?.replaceChildren();
         const launcher = root?.querySelector('[data-assistant-open]');
         if (launcher) { launcher.hidden = false; launcher.setAttribute('aria-expanded', 'false'); }
         if (restoreFocus) (returnFocus?.isConnected ? returnFocus : launcher)?.focus({preventScroll: true});
         viewport();
+    }
+    function minimize() {
+        if (!memory.open) return;
+        abort();
+        minimizedView = window.TuxedoAssistantChat?.capture(content()?.querySelector('[data-assistant-content]')) || null;
+        memory.conversation = content()?.querySelector('[data-assistant-content]')?.dataset.conversationId || memory.conversation;
+        memory.open = false; memory.minimized = true;
+        clearInert();
+        panel().hidden = true;
+        const root = shell();
+        root.querySelector('[data-assistant-open]').hidden = true;
+        root.querySelector('[data-assistant-open]').setAttribute('aria-expanded', 'false');
+        root.querySelector('[data-assistant-minimized]').hidden = false;
+        root.querySelector('[data-assistant-minimized-state]').textContent = root.querySelector('[data-assistant-minimized-state]').dataset.defaultText;
+        root.querySelector('[data-assistant-restore]').focus({preventScroll: true});
+        viewport();
+    }
+    function reveal() {
+        memory.open = true; memory.minimized = false;
+        const root = shell();
+        root.querySelector('[data-assistant-minimized]').hidden = true;
+        root.querySelector('[data-assistant-open]').hidden = true;
+        root.querySelector('[data-assistant-open]').setAttribute('aria-expanded', 'true');
+        panel().hidden = false;
+        mode();
+        root.querySelector('[data-assistant-minimize]').focus({preventScroll: true});
+    }
+    async function restore() {
+        if (!memory.minimized || restoring) return;
+        const root = shell(), controller = new AbortController();
+        if (!root) return;
+        restoring = controller;
+        const button = root.querySelector('[data-assistant-restore]');
+        button.setAttribute('aria-busy', 'true');
+        const current = content()?.querySelector('[data-assistant-content]');
+        const conversation = current?.dataset.conversationId || memory.conversation;
+        const url = requestURL(conversation ? `${root.dataset.assistantUrl}${conversation}/` : root.dataset.assistantUrl);
+        const headers = {'X-Tuxedo-Assistant': 'panel'};
+        const revision = window.TuxedoRuntimeAssets?.revision;
+        if (revision) headers['X-Tuxedo-Assets'] = revision;
+        try {
+            await window.TuxedoAssistantChat?.flushPreferences();
+            if (restoring !== controller || !root.isConnected || !memory.minimized) return;
+            // Reauthorize before exposing a hidden draft or transcript. The
+            // opaque session binding also rejects another login by the same user.
+            const response = await fetch(url, {headers, credentials: 'same-origin', cache: 'no-store', signal: controller.signal});
+            const html = await response.text();
+            if (restoring !== controller || !root.isConnected || !memory.minimized) return;
+            const next = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-assistant-content]');
+            if (!response.ok || response.headers.get('HX-Redirect') || !next || next.dataset.assistantUser !== memory.owner) {
+                window.TuxedoAssistantChat?.cancelWithin(panel());
+                content().replaceChildren();
+                memory.conversation = '';
+                status(root.dataset.assistantSessionError, true);
+                reveal();
+                return;
+            }
+            const retained = content().querySelector('[data-assistant-content]');
+            const sameSession = retained?.dataset.assistantSession && retained.dataset.assistantSession === next.dataset.assistantSession;
+            if (retained?.dataset.assistantSession && !sameSession) {
+                window.TuxedoAssistantChat?.cancelWithin(panel());
+                content().replaceChildren();
+                memory.conversation = '';
+                status(root.dataset.assistantSessionError, true);
+                reveal();
+                return;
+            }
+            const streaming = sameSession && next.dataset.providerState === 'ready'
+                && retained.querySelector('[name="connection_id"]')?.value === next.querySelector('[name="connection_id"]')?.value
+                && window.TuxedoAssistantChat?.isStreamingWithin(retained);
+            // A response may finish and refresh the hidden transcript while
+            // this authorization GET is travelling. Never replace that newer
+            // owned document with the earlier response's incomplete history.
+            const refreshedWhileRestoring = sameSession && current && retained !== current;
+            let restoredForm = null;
+            if (!streaming && !refreshedWhileRestoring) {
+                const form = sameSession ? retained.querySelector('[data-assistant-send]') : null;
+                const draft = form ? {content: form.elements.content.value, model: form.elements.model.value,
+                    effort: form.elements.reasoning_effort.value, context: form.elements.include_context?.checked,
+                    connection: form.elements.connection_id.value} : null;
+                window.TuxedoAssistantChat?.cancelWithin(panel());
+                content().replaceChildren(document.adoptNode(next));
+                const nextForm = next.querySelector('[data-assistant-send]');
+                if (draft && nextForm) {
+                    nextForm.elements.content.value = draft.content;
+                    // A same-user account switch keeps the unsent text but
+                    // must use the newly authorized account's saved settings
+                    // and fresh per-request context consent.
+                    if (draft.connection === nextForm.elements.connection_id.value) {
+                        nextForm.elements.model.value = draft.model;
+                        nextForm.elements.reasoning_effort.value = draft.effort;
+                        if (nextForm.elements.include_context) nextForm.elements.include_context.checked = !!draft.content && !!draft.context;
+                    }
+                }
+                window.TuxedoForms?.refresh(next);
+                if (draft && nextForm) restoredForm = nextForm;
+            }
+            memory.conversation = (streaming || refreshedWhileRestoring ? retained : next).dataset.conversationId || '';
+            lastURL = url.pathname + url.search;
+            root.querySelector('[data-assistant-full]').href = lastURL;
+            status();
+            reveal();
+            // Hidden scroll containers report zero dimensions. Restore the
+            // reading position captured before minimizing, only once visible.
+            window.TuxedoAssistantChat?.initialize(content().querySelector('[data-assistant-content]'), {
+                view: sameSession && minimizedView ? {...minimizedView, focus: null} : null,
+            });
+            if (restoredForm) window.TuxedoAssistantChat?.refreshSettings(restoredForm);
+            minimizedView = null;
+        } catch (_) {
+            if (restoring === controller && root.isConnected) {
+                root.querySelector('[data-assistant-minimized-state]').textContent = root.dataset.assistantError;
+            }
+        } finally {
+            if (restoring === controller) restoring = null;
+            button.removeAttribute('aria-busy');
+        }
     }
     function requestURL(path) {
         const root = shell(), url = new URL(path, location.origin);
@@ -104,7 +230,7 @@
         url.searchParams.set('location', currentLocation());
         return url;
     }
-    async function load(path, form = null) {
+    async function load(path, form = null, view = null) {
         window.TuxedoAssistantChat?.cancelWithin(panel());
         const root = shell();
         if (!root) return;
@@ -129,6 +255,8 @@
         root.querySelector('[data-assistant-cancel]').hidden = Boolean(form);
         status(root.dataset.assistantLoading);
         try {
+            await window.TuxedoAssistantChat?.flushPreferences();
+            if (pending !== controller || !root.isConnected) return;
             const response = await fetch(url, options);
             if (pending !== controller || !root.isConnected) return;
             const assetRedirect = response.headers.get('HX-Redirect');
@@ -162,15 +290,24 @@
             // Keep those server explanations visible without broadening scope.
             if (!response.ok && response.status !== 400) throw new Error('Assistant request failed');
             const focused = panel().contains(document.activeElement);
+            let restoration = view;
+            if (view) {
+                const current = content().querySelector('[data-assistant-content]');
+                if (current) {
+                    restoration = window.TuxedoAssistantChat?.capture(current) || view;
+                    if (!restoration.focus && document.activeElement === document.body) restoration.focus = view.focus;
+                }
+            }
             content().replaceChildren(document.adoptNode(next));
+            window.TuxedoAssistantChat?.initialize(next, {view: restoration && memory.minimized ? {...restoration, focus: null} : restoration});
             memory.conversation = next.dataset.conversationId || '';
             const canonical = new URL(response.url);
             lastURL = canonical.pathname + canonical.search;
             root.querySelector('[data-assistant-full]').href = response.ok ? lastURL : root.dataset.assistantUrl;
             if (next.dataset.assistantScope) root.dataset.assistantScope = next.dataset.assistantScope;
             status(response.ok ? '' : root.dataset.assistantError, !response.ok);
-            if (form || focused && document.activeElement === document.body) {
-                root.querySelector('[data-assistant-close]').focus({preventScroll: true});
+            if (memory.open && !restoration?.focus && (form || focused && document.activeElement === document.body)) {
+                root.querySelector('[data-assistant-minimize]').focus({preventScroll: true});
             }
         } catch (error) {
             if (pending !== controller || !root.isConnected) return;
@@ -185,6 +322,7 @@
         }
     }
     function open() {
+        if (memory.minimized) { restore(); return; }
         const root = shell();
         if (!root) return;
         returnFocus = document.activeElement;
@@ -192,22 +330,19 @@
         // changed the session while this panel was closed; do not flash an
         // old transcript/context before the owner-checked GET completes.
         content().replaceChildren();
-        memory.open = true;
-        panel().hidden = false;
-        root.querySelector('[data-assistant-open]').hidden = true;
-        root.querySelector('[data-assistant-open]').setAttribute('aria-expanded', 'true');
-        mode();
-        root.querySelector('[data-assistant-close]').focus({preventScroll: true});
+        reveal();
         load(memory.conversation ? `${root.dataset.assistantUrl}${memory.conversation}/` : root.dataset.assistantUrl);
     }
     function init() {
         const root = shell();
         if (!root || root.dataset.assistantUser !== memory.owner) {
             abort(); clearInert();
-            memory = {owner: root?.dataset.assistantUser || '', open: false, conversation: ''};
+            restoring?.abort(); restoring = null;
+            memory = {owner: root?.dataset.assistantUser || '', open: false, minimized: false, conversation: ''};
         }
         if (!root) return;
-        root.querySelector('[data-assistant-open]').hidden = false;
+        root.querySelector('[data-assistant-open]').hidden = memory.open || memory.minimized;
+        root.querySelector('[data-assistant-minimized]').hidden = !memory.minimized;
         viewport();
         if (memory.open) open();
     }
@@ -220,10 +355,13 @@
             event.preventDefault(); event.stopPropagation(); load(target.href); return;
         }
         if (target.matches('[data-assistant-context-link]') && !event.button && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && isCurrentContext(target.href)) {
-            event.preventDefault(); event.stopPropagation(); close(); return;
+            event.preventDefault(); event.stopPropagation(); minimize(); return;
         }
-        if (target.matches('[data-assistant-source], [data-assistant-full]')) { close(); return; }
+        if (target.matches('[data-assistant-source]')) { minimize(); return; }
+        if (target.matches('[data-assistant-full]')) { close(); return; }
         if (target.matches('[data-assistant-open]')) open();
+        else if (target.matches('[data-assistant-minimize]')) minimize();
+        else if (target.matches('[data-assistant-restore]')) restore();
         else if (target.matches('[data-assistant-close]')) close();
         else if (target.matches('[data-assistant-retry]')) load(lastURL || root.dataset.assistantUrl);
         else if (target.matches('[data-assistant-cancel]')) { abort(); status(root.dataset.assistantCancelled); }
@@ -236,10 +374,13 @@
     document.addEventListener('keydown', event => {
         const box = panel();
         if (!memory.open || !box || event.defaultPrevented || document.querySelector('dialog[open]')) return;
-        if (event.key === 'Escape' && box.contains(document.activeElement)) { event.preventDefault(); close(); }
+        if (event.key === 'Escape' && box.contains(document.activeElement)) {
+            event.preventDefault();
+            if (!window.TuxedoAssistantChat?.dismissMenu(box)) minimize();
+        }
         if (event.key !== 'Tab' || wide.matches) return;
-        const controls = Array.from(box.querySelectorAll('button:not(:disabled), a[href], summary, [tabindex="0"]')).filter(node => {
-            if (!node.getClientRects().length || node.closest('[hidden], [inert]')) return false;
+        const controls = Array.from(box.querySelectorAll('button, input, select, textarea, a[href], summary, [tabindex]')).filter(node => {
+            if (node.matches(':disabled') || node.tabIndex < 0 || !node.getClientRects().length || node.closest('[hidden], [inert]')) return false;
             for (let parent = node.parentElement; parent && parent !== box; parent = parent.parentElement) {
                 if (parent.tagName === 'DETAILS' && !parent.open) {
                     const summary = Array.from(parent.children).find(child => child.tagName === 'SUMMARY');
@@ -253,7 +394,7 @@
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     });
     document.addEventListener('htmx:beforeSwap', event => {
-        if (event.detail.target === document.body && event.detail.shouldSwap) { abort(); clearInert(); }
+        if (event.detail.target === document.body && event.detail.shouldSwap) { abort(); restoring?.abort(); restoring = null; clearInert(); }
     });
     document.addEventListener('htmx:afterSwap', event => { if (event.detail.target === document.body) init(); });
     document.addEventListener('tuxedo:live-filters-updated', () => { if (memory.open) load(lastURL || shell().dataset.assistantUrl); });
@@ -264,13 +405,13 @@
     window.visualViewport?.addEventListener('resize', viewport);
     window.visualViewport?.addEventListener('scroll', viewport);
     wide.addEventListener('change', mode);
-    window.addEventListener('pagehide', () => { abort(); content()?.replaceChildren(); });
+    window.addEventListener('pagehide', () => { abort(); restoring?.abort(); restoring = null; content()?.replaceChildren(); });
     window.addEventListener('pageshow', event => { if (!event.persisted) init(); });
     document.addEventListener('DOMContentLoaded', init);
     if (document.readyState !== 'loading') init();
-    window.TuxedoAssistant = {open, close, init, refreshConversation(path, conversation) {
-        if (!memory.open) return;
+    window.TuxedoAssistant = {open, close, minimize, restore, init, refreshConversation(path, conversation, view = null) {
+        if (!memory.open && !memory.minimized) return;
         memory.conversation = conversation || memory.conversation;
-        load(path);
+        return load(path, null, view);
     }};
 })();

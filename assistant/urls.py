@@ -17,6 +17,7 @@ urlpatterns = [
     path('connections/<uuid:pk>/disconnect/', connection_views.disconnect, name='connection-disconnect'),
     path('context/', views.context_snapshot, name='context'),
     path('models/', views.models, name='models'),
+    path('preferences/', views.preferences, name='preferences'),
     path('messages/', views.send_new, name='send-new'),
     path('runs/<uuid:pk>/cancel/', views.cancel_run, name='cancel-run'),
     path('conversations/new/', views.create, name='create'),

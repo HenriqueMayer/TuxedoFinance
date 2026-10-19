@@ -7,11 +7,20 @@
     <button type="button" class="assistant-launcher" data-assistant-open aria-label="{% translate 'Open Tuxedo assistant' %}" aria-controls="assistant-panel" aria-expanded="false" hidden>
         {% include 'assistant/_mark.html' %}
     </button>
+    <div class="assistant-minimized" data-assistant-minimized hidden>
+        <button type="button" class="assistant-restore" data-assistant-restore aria-label="{% translate 'Restore assistant' %}" aria-controls="assistant-panel" aria-expanded="false">
+            {% include 'assistant/_mark.html' %}<span><strong>{% translate 'Tuxedo assistant' %}</strong><span data-assistant-minimized-state data-default-text="{% translate 'Restore chat' %}">{% translate 'Restore chat' %}</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
+        </button>
+        <button type="button" class="assistant-window-button" data-assistant-close aria-label="{% translate 'Close assistant' %}" title="{% translate 'Close assistant' %}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
     <noscript><a href="{% url 'assistant:index' %}?scope={{ assistant_scope|urlencode }}" class="assistant-launcher" aria-label="{% translate 'Open Tuxedo assistant' %}">{% include 'assistant/_mark.html' %}</a></noscript>
     <section id="assistant-panel" class="assistant-panel" role="dialog" aria-labelledby="assistant-panel-title" hidden>
         <header class="assistant-panel-header">
-            <div class="assistant-heading">{% include 'assistant/_mark.html' %}<div><h2 id="assistant-panel-title">{% translate 'Tuxedo assistant' %}</h2><span class="assistant-status">{% translate 'Local history' %}</span></div></div>
-            <button type="button" class="icon-action" data-assistant-close aria-label="{% translate 'Close assistant' %}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+            <div class="assistant-heading">{% include 'assistant/_mark.html' %}<div><h2 id="assistant-panel-title">{% translate 'Tuxedo assistant' %}</h2><span class="assistant-status sr-only">{% translate 'Local history' %}</span></div></div>
+            <div class="assistant-window-controls" role="group" aria-label="{% translate 'Chat window' %}">
+                <button type="button" class="assistant-window-button" data-assistant-minimize aria-label="{% translate 'Minimize assistant' %}" title="{% translate 'Minimize assistant' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+                <button type="button" class="assistant-window-button" data-assistant-close aria-label="{% translate 'Close assistant' %}" title="{% translate 'Close assistant' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+            </div>
         </header>
         <div class="assistant-request-status" role="status" aria-live="polite" data-assistant-notice hidden></div>
         <div class="assistant-request-actions" data-assistant-recovery hidden>

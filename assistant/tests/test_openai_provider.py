@@ -67,12 +67,43 @@ class OpenAIProviderTests(SimpleTestCase):
             {'slug': 'first-model', 'display_name': 'First', 'visibility': 'list'},
         ]})
         self.assertEqual(self.provider.list_models(), [
-            {'slug': 'second-model', 'display_name': 'Second'},
-            {'slug': 'first-model', 'display_name': 'First'},
+            {'slug': 'second-model', 'display_name': 'Second', 'reasoning_efforts': []},
+            {'slug': 'first-model', 'display_name': 'First', 'reasoning_efforts': []},
         ])
         self.assertEqual(self.calls[0][:2], ('GET', openai.MODELS_ENDPOINT))
         self.assertEqual(self.calls[0][2]['access_token'], 'SYNTHETIC-TOKEN')
         self.assertIsNone(self.calls[0][2]['data'])
+
+    def test_catalogue_retains_only_advertised_known_efforts_and_matching_defaults(self):
+        self.response = openai.TransportResponse(200, body={'models': [
+            {'slug': 'reasoning-model', 'display_name': 'Reasoning', 'visibility': 'list',
+             'default_reasoning_level': 'medium',
+             'supported_reasoning_levels': [
+                 {'effort': 'high', 'description': 'Private description not needed by UI'},
+                 {'effort': 'medium'}, {'effort': 'high'}, {'effort': 'unknown-future'},
+                 {'effort': ['invalid']}, None]},
+            {'slug': 'unknown-model', 'display_name': 'Unknown', 'visibility': 'list',
+             'default_reasoning_level': 'high', 'supported_reasoning_levels': {'high': True}},
+            {'slug': 'oversized-model', 'display_name': 'Oversized', 'visibility': 'list',
+             'supported_reasoning_levels': [{'effort': 'low'}] * 33},
+        ]})
+        models = self.provider.list_models()
+        self.assertEqual(models, [
+            {'slug': 'reasoning-model', 'display_name': 'Reasoning', 'reasoning_efforts': ['high', 'medium'],
+             'default_reasoning_effort': 'medium'},
+            {'slug': 'unknown-model', 'display_name': 'Unknown', 'reasoning_efforts': []},
+            {'slug': 'oversized-model', 'display_name': 'Oversized', 'reasoning_efforts': []},
+        ])
+        self.assertNotIn('Private description', json.dumps(models))
+
+    def test_explicit_reasoning_effort_enters_only_the_supported_request_object(self):
+        self.request = GenerationRequest('{}', model='synthetic-model', reasoning_effort='low')
+        self.assertEqual(self.events(), [ProviderEvent('done')])
+        body = self.calls[0][2]['data']
+        self.assertEqual(body['reasoning'], {'effort': 'low'})
+        self.assertFalse(body['store'])
+        self.assertTrue(body['stream'])
+        self.assertNotIn('reasoning_effort', body)
 
     def test_responses_request_has_only_supported_fields_context_and_explicit_selected_model(self):
         self.assertEqual(self.events(), [ProviderEvent('done')])
@@ -591,7 +622,8 @@ class ProviderHTTPTransportTests(SimpleTestCase):
                              return_value=service.AuthorizedAccessToken('SYNTHETIC-TOKEN')):
             build.return_value.open.return_value = response
             selected = openai.OpenAIProvider(object(), 'synthetic-connection').list_models()
-        self.assertEqual(selected, [{'slug': 'synthetic-' + str(index), 'display_name': 'Synthetic ' + str(index)}
+        self.assertEqual(selected, [{'slug': 'synthetic-' + str(index), 'display_name': 'Synthetic ' + str(index),
+                                     'reasoning_efforts': []}
                                     for index in range(7)])
         self.assertTrue(response.closed)
         self.assertEqual(openai.MAX_EVENT_BYTES, 512 * 1024)

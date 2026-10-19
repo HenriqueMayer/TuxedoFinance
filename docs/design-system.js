@@ -528,15 +528,28 @@
         const cancel = shell.querySelector('[data-lab-assistant-cancel]');
         const scenario = shell.querySelector('[data-lab-assistant-scenario]');
         const historyList = shell.querySelector('[data-lab-assistant-history-list]');
+        const settings = shell.querySelector('[data-lab-assistant-settings]');
+        const model = form.elements.model;
+        const effort = form.elements.reasoning_effort;
+        const configSummary = shell.querySelector('[data-lab-assistant-config-summary]');
+        const launcher = shell.querySelector('[data-lab-assistant-launcher]');
+        const minimizedTab = shell.querySelector('[data-lab-assistant-minimized-tab]');
+        const restoreTab = shell.querySelector('[data-lab-assistant-restore]');
+        const restoreState = shell.querySelector('[data-lab-assistant-minimized-state]');
+        const actionMenus = Array.from(shell.querySelectorAll('.lab-assistant-toolbar details, [data-lab-assistant-settings]'));
+        // These levels are deliberately synthetic; production uses the owned
+        // account's catalogue rather than deriving support from a model name.
+        const modelEfforts = {synthetic: ['low', 'medium', 'high'], 'synthetic-mini': ['low', 'high']};
         const wide = matchMedia('(min-width: 1280px)');
         const reply = 'Synthetic example: BRL 1,000.00 in recorded cash minus BRL 300.00 already reserved leaves BRL 700.00 unreserved. The BRL 800.00 projection after known commitments is a different measure. Review upcoming bills before changing a goal. No financial record was changed.';
         const threads = [{id: 1, title: 'October cash review', messages: [{role: 'Tuxedo · synthetic example', text: reply}]}];
-        let nextId = 2, current, pending = null, returnFocus, originalScroll, originalOverflow;
+        let nextId = 2, current, pending = null, originalScroll, originalOverflow;
 
         function status(text = '', state = '') {
             notice.textContent = text;
             notice.hidden = !text;
             notice.dataset.state = state;
+            restoreState.textContent = pending ? 'Reply in progress' : state === 'ready' ? 'Reply ready' : 'Restore chat';
         }
         function renderHistory() {
             historyList.replaceChildren();
@@ -548,6 +561,9 @@
                 if (thread === current) button.setAttribute('aria-current', 'true');
                 historyList.append(button);
             });
+            const privacy = document.createElement('p');
+            privacy.textContent = 'This specimen stays in page memory. No data is sent.';
+            historyList.append(privacy);
         }
         function renderMessages() {
             messages.replaceChildren();
@@ -574,6 +590,7 @@
                 }
                 messages.append(article);
             });
+            messages.scrollTop = messages.scrollHeight;
             renderHistory();
         }
         function controls() {
@@ -581,7 +598,28 @@
             question.disabled = disconnected || Boolean(pending);
             send.disabled = disconnected || Boolean(pending);
             cancel.hidden = !pending;
+            send.hidden = Boolean(pending);
+            form.elements.model.disabled = disconnected || Boolean(pending);
+            effort.disabled = disconnected || Boolean(pending);
+            form.elements.include_context.disabled = disconnected || Boolean(pending);
             form.setAttribute('aria-busy', String(Boolean(pending)));
+        }
+        function configureModel(announce = false) {
+            const selected = effort.value;
+            const levels = modelEfforts[model.value] || [];
+            effort.replaceChildren(new Option('Model default', ''));
+            levels.forEach(level => effort.add(new Option(level[0].toUpperCase() + level.slice(1), level)));
+            effort.value = levels.includes(selected) ? selected : '';
+            configSummary.textContent = model.selectedOptions[0].textContent + (effort.value ? ` · ${effort.selectedOptions[0].textContent}` : '');
+            configSummary.title = configSummary.textContent;
+            if (announce && selected && !effort.value) status('The selected effort is unavailable for this model. Model default is now selected.', 'settings-reset');
+            else if (notice.dataset.state === 'settings-reset') status();
+        }
+        function positionSettings() {
+            if (panel.hidden) return;
+            const composerTop = form.querySelector('.lab-assistant-composer-input').getBoundingClientRect().top;
+            const available = composerTop - panel.getBoundingClientRect().top - 12;
+            panel.style.setProperty('--lab-assistant-settings-max', `${Math.max(44, Math.min(280, available))}px`);
         }
         function cancelPreview(announce = true) {
             if (!pending) return;
@@ -598,6 +636,8 @@
             current = {id: nextId++, title: 'New conversation', messages: []};
             threads.push(current);
             question.value = '';
+            form.elements.include_context.checked = false;
+            resizeComposer();
             status();
             renderMessages();
             controls();
@@ -605,7 +645,11 @@
         function updateContext() {
             const view = document.querySelector('section[data-lab-view]:not([hidden])');
             const labels = {home: 'Home', transactions: 'Transactions', accounts: 'Accounts', investments: 'Investments', plan: 'Plan'};
-            shell.querySelector('[data-lab-assistant-scope]').textContent = `${labels[view?.dataset.labView] || 'Home'} · October 2026 · BRL`;
+            const destination = view?.dataset.labView || 'home';
+            const scope = shell.querySelector('[data-lab-assistant-scope]');
+            scope.querySelector('span').textContent = `${labels[destination]} · October 2026 · BRL`;
+            scope.href = `#lab-view-${destination}`;
+            scope.dataset.labAssistantSource = destination;
         }
         function backgroundInert(inert) {
             Array.from(document.body.children).forEach(element => {
@@ -625,40 +669,79 @@
             backgroundInert(!wide.matches);
             document.body.style.overflow = wide.matches ? originalOverflow : 'hidden';
             const viewport = window.visualViewport;
+            const height = viewport?.height || innerHeight;
+            shell.toggleAttribute('data-lab-assistant-short', height < 400);
             panel.style.setProperty('--lab-assistant-top', `${viewport?.offsetTop || 0}px`);
-            panel.style.setProperty('--lab-assistant-height', `${viewport?.height || innerHeight}px`);
+            panel.style.setProperty('--lab-assistant-height', `${height}px`);
+            resizeComposer();
         }
         function open(trigger) {
             if (!panel.hidden) return;
-            returnFocus = trigger;
+            const minimized = shell.hasAttribute('data-lab-assistant-minimized');
             originalScroll = {left: scrollX, top: scrollY};
             originalOverflow = document.body.style.overflow;
             panel.hidden = false;
             document.querySelectorAll('[data-lab-assistant-open]').forEach(button => button.setAttribute('aria-expanded', 'true'));
-            shell.querySelector('[data-lab-assistant-launcher]').hidden = true;
+            shell.removeAttribute('data-lab-assistant-minimized');
+            launcher.hidden = true;
+            minimizedTab.hidden = true;
+            restoreTab.setAttribute('aria-expanded', 'true');
+            if (!minimized) renderMessages();
             updateContext();
             layout();
-            shell.querySelector('[data-lab-assistant-close]').focus({preventScroll: true});
+            panel.querySelector('[data-lab-assistant-minimize]').focus({preventScroll: true});
         }
-        function close(restore = true) {
-            if (panel.hidden) return;
-            cancelPreview();
+        function hidePanel(minimized, restore = true) {
+            const wasOpen = !panel.hidden;
+            if (!wasOpen && (!shell.hasAttribute('data-lab-assistant-minimized') || minimized)) return;
+            actionMenus.forEach(menu => { menu.open = false; });
+            // The specimen has no private account. The real restore path first
+            // reauthorizes its owner/session; this state stays only in page memory.
+            if (!minimized) {
+                cancelPreview(false);
+                question.value = '';
+                // Preferences stay in this synthetic page instance; closing only
+                // clears the draft and its per-message context permission.
+                form.elements.include_context.checked = false;
+                configureModel();
+                status();
+                messages.replaceChildren();
+            }
             panel.hidden = true;
+            shell.toggleAttribute('data-lab-assistant-minimized', minimized);
             backgroundInert(false);
             document.body.style.overflow = originalOverflow;
             document.querySelectorAll('[data-lab-assistant-open]').forEach(button => button.setAttribute('aria-expanded', 'false'));
-            shell.querySelector('[data-lab-assistant-launcher]').hidden = false;
+            launcher.hidden = minimized;
+            minimizedTab.hidden = !minimized;
+            restoreTab.setAttribute('aria-expanded', 'false');
             if (restore) {
-                if (returnFocus?.isConnected) returnFocus.focus({preventScroll: true});
-                window.scrollTo({...originalScroll, behavior: 'instant'});
+                (minimized ? restoreTab : launcher).focus({preventScroll: true});
+                if (wasOpen) window.scrollTo({...originalScroll, behavior: 'instant'});
             }
         }
+        function close(restore = true) { hidePanel(false, restore); }
+        function minimize(restore = true) { hidePanel(true, restore); }
+        actionMenus.forEach(menu => menu.addEventListener('toggle', () => {
+            if (menu.open) {
+                actionMenus.filter(other => other !== menu).forEach(other => { other.open = false; });
+                positionSettings();
+            }
+        }));
+        document.addEventListener('click', event => {
+            actionMenus.filter(menu => menu.open && !menu.contains(event.target)).forEach(menu => { menu.open = false; });
+        });
+        document.addEventListener('focusin', event => {
+            actionMenus.filter(menu => menu.open && !menu.contains(event.target)).forEach(menu => { menu.open = false; });
+        });
         document.querySelectorAll('[data-lab-assistant-open]').forEach(button => {
             button.hidden = false;
             button.addEventListener('click', () => open(button));
         });
+        restoreTab.addEventListener('click', () => open(restoreTab));
         shell.addEventListener('click', event => {
             if (event.target.closest('[data-lab-assistant-close]')) close();
+            if (event.target.closest('[data-lab-assistant-minimize]')) minimize();
             if (event.target.closest('[data-lab-assistant-new]')) { newThread(); question.focus(); }
             if (event.target.closest('[data-lab-assistant-prompt]')) { question.value = 'What can I safely set aside?'; question.focus(); }
             if (event.target.closest('[data-lab-assistant-cancel]')) { cancelPreview(); question.focus(); }
@@ -685,7 +768,7 @@
             }
             const source = event.target.closest('[data-lab-assistant-source]');
             if (source) {
-                close(false);
+                minimize(false);
                 document.querySelector(`[data-lab-destination="${source.dataset.labAssistantSource}"]`)?.click();
                 updateContext();
             }
@@ -695,6 +778,8 @@
             if (pending || scenario.value === 'disconnected') return;
             const prompt = question.value.trim();
             if (!prompt) { status('Write a question about the example first.', 'error'); question.focus(); return; }
+            if (!model.value) { settings.open = true; positionSettings(); status('Choose a synthetic model in Chat settings first.', 'error'); model.focus(); return; }
+            settings.open = false;
             current.title = prompt.slice(0, 48);
             current.messages.push({role: 'You', text: prompt});
             pending = {thread: current, prompt, timer: null};
@@ -713,15 +798,32 @@
                     pending.thread.messages.push({role: 'Tuxedo · synthetic example', text: reply});
                     pending = null;
                     question.value = '';
+                    form.elements.include_context.checked = false;
+                    resizeComposer();
                     renderMessages();
-                    status('Synthetic reply ready. No provider or financial action was used.');
+                    status('Synthetic reply ready. No provider or financial action was used.', 'ready');
                     controls();
                 }
-                question.focus();
+                if (!panel.hidden) question.focus();
             }, 600);
         });
+        function resizeComposer() {
+            question.style.height = 'auto';
+            const style = getComputedStyle(question);
+            const minimum = parseFloat(style.minHeight) || 44;
+            const maximum = parseFloat(style.maxHeight) || 120;
+            question.style.height = `${Math.min(maximum, Math.max(minimum, question.scrollHeight))}px`;
+            positionSettings();
+        }
+        question.addEventListener('input', resizeComposer);
+        model.addEventListener('change', () => configureModel(true));
+        effort.addEventListener('change', () => configureModel());
         question.addEventListener('keydown', event => {
-            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); form.requestSubmit(); }
+            // IME confirmation remains native; Shift+Enter is the explicit newline.
+            if (event.key === 'Enter' && !event.shiftKey && !event.isComposing && event.keyCode !== 229) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
         });
         scenario.addEventListener('change', () => {
             cancelPreview(false);
@@ -730,9 +832,15 @@
         });
         document.addEventListener('keydown', event => {
             if (panel.hidden || document.querySelector('dialog[open]')) return;
-            if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                const menu = actionMenus.find(owner => owner.open);
+                if (menu) { menu.open = false; menu.querySelector('summary').focus(); }
+                else minimize();
+                return;
+            }
             if (event.key !== 'Tab' || wide.matches) return;
-            const focusable = Array.from(panel.querySelectorAll('button, textarea, select, summary, a[href]'))
+            const focusable = Array.from(panel.querySelectorAll('button, textarea, select, input, summary, a[href]'))
                 .filter(node => {
                     if (node.disabled || !node.getClientRects().length) return false;
                     // Closed details may retain layout boxes for descendants;
@@ -752,6 +860,7 @@
         window.visualViewport?.addEventListener('resize', layout);
         window.visualViewport?.addEventListener('scroll', layout);
         newThread();
+        configureModel();
         updateContext();
     }
 

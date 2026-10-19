@@ -8,10 +8,10 @@
         <p class="subtle-copy">{% translate 'Manage the ChatGPT account linked to your local Tuxedo Finance user.' %}</p>
     </header>
     <section class="surface-panel space-y-4" aria-labelledby="assistant-connection-title">
-        <div class="panel-heading"><h2 id="assistant-connection-title" class="section-title">ChatGPT</h2><span class="status-badge">{% if inference_enabled %}{% translate 'ChatGPT connection' %}{% else %}{% translate 'Connection preparation' %}{% endif %}</span></div>
-        <p>{% if inference_enabled %}{% translate 'Your database and history stay on this installation. Messages send only your question, necessary conversation history and the context you choose to include.' %}{% else %}{% translate 'Your database and conversation history stay on this installation. Future responses will send only your question and the context needed to answer it.' %}{% endif %}</p>
-        <p class="subtle-copy">{% if inference_enabled %}{% translate 'Choose an available model in the assistant before sending a message. Requests use your ChatGPT plan.' %}{% else %}{% translate 'Account authorization and AI responses are separate. Sending messages remains unavailable in this delivery.' %}{% endif %}</p>
-        {% if not auth_enabled %}<p class="subtle-copy" role="status">{% translate 'Real sign-in is disabled. This screen does not contact OpenAI or consume your plan.' %}</p>{% endif %}
+        <div class="panel-heading"><h2 id="assistant-connection-title" class="section-title">ChatGPT</h2><span class="status-badge">{% if chat_enabled %}{% translate 'Chat enabled' %}{% else %}{% translate 'Chat disabled' %}{% endif %}</span></div>
+        <p>{% translate 'Your database and history stay on this installation. Messages send only your question, necessary conversation history and the context you choose to include.' %}</p>
+        <p class="subtle-copy">{% if chat_enabled %}{% translate 'Choose an available model in the assistant before sending a message. Requests use your ChatGPT plan.' %}{% else %}{% translate 'Chat is disabled in this installation’s configuration. Linked accounts and conversation history are kept.' %}{% endif %}</p>
+        {% if not auth_enabled %}<p class="subtle-copy" role="status">{% translate 'Real sign-in is disabled on this installation. Existing account links are kept.' %}</p>{% endif %}
         <form method="post" action="{% url 'assistant:connection-start' %}" target="_blank" rel="noopener" autocomplete="off" hx-boost="false" novalidate>
             {% csrf_token %}<button type="submit" class="assistant-connect-button" {% if not auth_enabled %}disabled{% endif %}>{% translate 'Continue with ChatGPT' %}</button>
         </form>
@@ -23,7 +23,7 @@
         <h2 class="section-title">{% translate 'Confirm account link' %}</h2>
         <p class="assistant-account-identity">{{ item.preview.email|default:item.preview.subject }}</p>
         <p class="subtle-copy assistant-account-identity">{% translate 'Registration' %}: <code>{{ item.preview.client_id }}</code></p>
-        <p class="subtle-copy">{% if inference_enabled %}{% translate 'Only confirm the ChatGPT account you intended to use for assistant messages.' %}{% else %}{% translate 'Only confirm the ChatGPT account you intended to link. This does not enable model requests.' %}{% endif %}</p>
+        <p class="subtle-copy">{% if chat_enabled %}{% translate 'Only confirm the ChatGPT account you intended to use for assistant messages.' %}{% else %}{% translate 'Only confirm the ChatGPT account you intended to link. This does not enable model requests.' %}{% endif %}</p>
         {% else %}
         <h2 class="section-title">{% translate 'Waiting for authorization' %}</h2>
         <p class="subtle-copy">{% translate 'Return to this tab and refresh after completing the browser authorization.' %}</p>
@@ -38,9 +38,9 @@
         <h2 id="assistant-accounts-title" class="section-title">{% translate 'Linked accounts' %}</h2>
         {% for connection in connections %}
         <article class="surface-panel space-y-4">
-            <div class="panel-heading"><h3 class="assistant-account-identity">{{ connection.email|default:connection.subject }}</h3>{% if connection.is_active %}<span class="status-badge">{% translate 'Selected' %}</span>{% endif %}</div>
+            <div class="panel-heading"><h3 class="assistant-account-identity">{{ connection.email|default:connection.subject }}</h3>{% if connection.is_active %}<span class="status-badge">{% translate 'Selected account' %}</span>{% endif %}</div>
             <p class="subtle-copy assistant-account-identity">{% translate 'Registration' %}: <code>{{ connection.client_id }}</code></p>
-            <p class="subtle-copy">{% if connection.status == 'ready' %}{% if inference_enabled %}{% translate 'Account authorized.' %}{% else %}{% translate 'Account authorized. AI responses remain unavailable.' %}{% endif %}{% elif connection.status == 'identity_only' %}{% translate 'Identity verified; permission to use the ChatGPT plan was not granted.' %}{% elif connection.status == 'reconnect' %}{% translate 'Sign in again to renew this connection.' %}{% else %}{% translate 'Disconnected. The registration is retained for a later sign-in.' %}{% endif %}</p>
+            <p class="subtle-copy">{% if connection.status == 'ready' %}{% if chat_enabled %}{% translate 'Account authorized.' %}{% else %}{% translate 'Account authorized. Chat is disabled on this installation.' %}{% endif %}{% elif connection.status == 'identity_only' %}{% translate 'Identity verified; permission to use the ChatGPT plan was not granted.' %}{% elif connection.status == 'reconnect' %}{% translate 'Sign in again to renew this connection.' %}{% else %}{% translate 'Disconnected. The registration is retained for a later sign-in.' %}{% endif %}</p>
             <div class="assistant-account-actions">
                 {% if not connection.is_active and connection.status != 'disconnected' %}<form method="post" action="{% url 'assistant:connection-activate' connection.pk %}" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-link">{% translate 'Use this account' %}</button></form>{% endif %}
                 <form method="post" action="{% url 'assistant:connection-authorize' connection.pk %}" target="_blank" rel="noopener" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-link" {% if not auth_enabled %}disabled{% endif %}>{% translate 'Sign in again' %}</button></form>

@@ -27,7 +27,8 @@ is separate research, not a data source for this assistant.
 
 Follow the normal [upgrade steps](../operations.md#updating-a-native-installation)
 before opening chat in an existing installation. The additive assistant
-migrations create conversation, authorization and generation-run tables. They
+migrations create conversation, authorization and generation-run tables. The
+additive reasoning-effort migration leaves existing runs at Model default. They
 do not alter financial records. Use disposable data for validation as described
 in Contributing.
 
@@ -39,6 +40,7 @@ in Contributing.
 | `/assistant/<uuid>/delete/` | CSRF-protected POST deleting only the owned conversation and its messages. |
 | `/assistant/messages/`, `/assistant/<uuid>/messages/` | CSRF-protected POST for a new/existing owned conversation; validates selected account/model/context, streams SSE to an enhanced client or waits and redirects natively. Gate-off requests return unavailable without a fake exchange. |
 | `/assistant/models/` | Authenticated owned-account catalogue/state GET; no external call with either gate off. |
+| `/assistant/preferences/` | CSRF-protected POST remembering only the selected owned account's validated model and reasoning effort. No message or financial context is accepted. |
 | `/assistant/runs/<uuid>/cancel/` | CSRF-protected owner/session POST cancelling a generation run; no financial rollback. |
 | `/assistant/context/` | Authenticated read-only context GET: minimal page metadata by default; bounded financial evidence only with explicit `include_context=1`. It never calls a model. |
 | `/assistant/connections/` | Authenticated, owner-scoped settings GET: local account metadata and pending authorization status; no vault initialization or external request. |
@@ -64,10 +66,12 @@ deleted. They are not browser-storage transcripts, shared global history or an
 OpenAI conversation store. Normal database backups can retain older copies
 after deletion; see [operations](../operations.md#assistant-data-and-integrations).
 An unavailable composer is disabled and direct submissions fail explicitly.
-Eligible submissions persist the user message and a session-bound `GenerationRun`;
+Eligible submissions persist the user message and a session-bound `GenerationRun`,
+including its selected model and optional reasoning effort;
 its completed/failed/cancelled state and any bounded partial assistant text stay
 in local history. Request UUID retries replay the existing terminal result,
-without submitting another paid request. Conflicting reuse is refused. A failed
+without submitting another provider request. Conflicting reuse, including a
+different effort for the same request UUID, is refused. A failed
 or cancelled exchange is not silently reused as completed model history.
 
 ## Structured financial context
@@ -84,7 +88,7 @@ object ID, label, total or arbitrary URL as financial authority.
 `assistant.context_request.build_context` returns timestamp, financial cutoff,
 language and optional current-page label/route/date-period filters by default.
 It does not collect financial metrics or preferences without the request's
-unchecked-by-default Include financial context choice. Free-text search and
+unchecked-by-default Use page data choice. Free-text search and
 record-filter IDs are omitted from transmitted page metadata. No scope remains
 finance-free even when the choice is submitted. With the choice enabled, the
 existing bounded collector supplies reporting/native currencies, metrics,
@@ -140,7 +144,38 @@ The authenticated shell offers the assistant as a utility, preserving the same
 five primary destinations. Its fixed desktop overlay lives outside `main` and
 never reserves width or changes page/filter/form geometry. Narrow screens retain
 the accessible modal sheet. Chat actions never submit or capture a financial draft.
-Following Context to the current document closes the panel without reloading
+The compact conversation layout keeps local history, the current-page link and
+a persistent composer available while the transcript scrolls. Short software-
+keyboard viewports use compact chrome and a 44px editor cap; the native full
+page remains vertically scrollable. A compact titlebar groups the unchanged mark
+and title with stationary 44px Minimize and Close controls, paired without heavy
+individual outlines. Local history remains accessible without a redundant
+visible subtitle. Minimize keeps the
+current draft, model/effort choices and active reply behind a restore tab in the
+current document. The restore tab also exposes Close without reopening the panel.
+Restore reauthorizes the user/session before revealing content;
+an expired or different session discards hidden temporary state. Close cancels
+the reply and clears the unsent message and per-request context consent without
+deleting saved history or deliberately saved model/effort preferences.
+If the linked account changes while minimized, retain same-session unsent text
+but use the new account's fresh settings and unchecked context consent.
+History, the compact current-page badge and New/Delete actions share one toolbar
+above the transcript. Context and message-role labels remain accessible without
+repeated visible headings. Center the empty-state artwork and copy. Compact chat
+type, restrained message spacing and a shallow composer keep the conversation
+prominent. The composer frame owns its border and theme-aware focus ring. A
+deliberate Chat settings gear holds the labelled native Model and Reasoning
+effort selects; a single-line caption identifies the selection without occupying
+the message area. Long captions retain their full accessible text. The enhanced
+keyboard hint appears while the composer is focused, without moving its layout.
+The native context checkbox remains beside the gear and Send/Stop. Their visual faces may be smaller, but
+interactive targets, including the editor and page link, remain at least 44px.
+Native model and per-request context controls retain their validated submission
+contracts. Settings use a native disclosure without a focus trap: Escape closes
+it before minimizing chat, and outside click or Tab-away dismisses it. The bounded
+settings surface opens above the composer and scrolls internally on short screens.
+Invalid submitted settings reopen for recovery, including without JavaScript.
+Following Context to the current document minimizes the panel without reloading
 that document; navigation-only origins and empty filters do not change this rule.
 The cat/orbit artwork has gentle transform-only motion inside stationary controls,
 disabled by reduced-motion preference. A whole-body HTMX navigation reconstructs
@@ -156,9 +191,42 @@ context and deleted conversation are explicit states. They must not display a
 simulated model reply or imply an external connection. Conversation creation
 and deletion are explicit local POSTs, not financial mutations. Native requests
 retain CSRF, ownership and server-rendered recovery.
-Closing/reopening clears hidden transcript/context HTML while an authorized
-reload is pending. Only the selected owned conversation identifier survives in
-page memory; it is not permission to replay its content after a session change.
+Closing or replacing the panel clears hidden transcript/context HTML before an
+authorized reload. Minimize retains it only in the hidden current-document panel;
+the restore GET must validate the same user and session before revealing it or
+reapplying temporary choices. The selected owned conversation identifier is not
+permission to replay its content after a session change.
+
+## Saved chat settings
+
+The last explicitly selected model and reasoning effort live in the local
+`ProviderConnection.last_model_slug` and `last_reasoning_effort` fields, scoped
+to its Django user and linked account. Migration `0005` adds these blank fields;
+it does not infer a preference from earlier conversations or edit financial
+records. First use remains empty. An authorized composer GET revalidates the
+saved pair against the current account's catalogue. An unavailable model renders
+empty; an unsupported effort renders Model default for the still-available model.
+GET does not rewrite preferences or choose a different model/account.
+
+Enhanced native selects save deliberate changes through `/assistant/preferences/`.
+Requests contain only CSRF, connection ID, model and effort; the server rejects
+extra fields, stale/foreign accounts and invalid pairs. Changes are serialized
+and the next chat load waits for pending saves, so delayed responses cannot
+replace a newer choice. Failed saves expose a retry inside Chat settings.
+The Saved confirmation marks durability; reloading the browser while Saving is
+still shown can discard a change waiting behind an unfinished request.
+Accepted Send also saves the validated pair, including without JavaScript.
+Native redirects and enhanced completion GETs do not put model/effort into the
+URL, allowing subsequent loads to use the latest preference. Explicit legacy
+GET values and bound POST errors retain precedence for recovery.
+
+Closing, creating a conversation and reloading keep saved settings, while drafts
+and per-request financial-context consent retain their separate lifecycle.
+The browser stores no preference in local/session storage. Saving preferences
+does not update the connection's credential-lifecycle timestamp, enable a
+provider, generate a message or change its billing route. Model default persists
+as blank effort; a deliberate blank model/effort clears the remembered choice.
+The Design Lab keeps only synthetic page-memory settings, discarded on reload.
 
 ## Provider and action boundary
 
@@ -180,22 +248,35 @@ paid API key when plan access, quota or a request fails.
 The adapter follows the official [models and inference guide](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference):
 it reads the selected account's `/v1/models` catalogue, keeps `visibility: list`,
 shows `display_name` and submits the explicitly selected `slug`. No model is
-preselected or substituted automatically. A short owner/connection-specific
+invented or substituted automatically; only a previously explicit, currently
+valid saved choice is restored. A short owner/connection-specific
 cache avoids repeated catalogue requests; account changes invalidate that scope.
 Send revalidates the selected connection and catalogue choice. An empty catalogue,
 reauthorization requirement or request error remains a visible recovery state.
 
+Reasoning effort is optional and model-specific. Only supported values advertised
+by the selected account's catalogue are offered; names alone never establish
+support. **Model default** sends no `reasoning.effort` override. An explicit
+selection is validated against the selected model again on Send, and an
+unsupported model/effort combination is a recoverable field error. Changing the
+model in the enhanced composer keeps a compatible effort; an incompatible one
+returns to Model default with an announcement. This never substitutes another
+model or enables separate API billing. The native form retains labelled choices
+and server-side compatibility validation without JavaScript.
+
 | Python interface | Current contract |
 |---|---|
 | `assistant.providers.get_provider(user, connection_id)` | Resolves the explicitly gated owned selected account to `OpenAIProvider`; returns `DisconnectedProvider` when unavailable. Tokens stay in the server process/vault. |
-| `providers.base.GenerationRequest` | Explicit model slug, JSON context up to 32,000 characters, bounded `ChatTurn` tuple, language (`en`/`pt-br`) and supported instruction version. The chat service supplies at most eight prior completed messages plus the current question; constructor validation alone does not authorize context. |
+| `providers.base.GenerationRequest` | Explicit model slug, optional validated reasoning effort, JSON context up to 32,000 characters, bounded `ChatTurn` tuple, language (`en`/`pt-br`) and supported instruction version. The chat service supplies at most eight prior completed messages plus the current question; constructor validation alone does not authorize context or a model/effort pair. |
 | `ChatTurn` | User/assistant role with bounded text. Prior history is limited to 4,000 characters per supplied message; full local history is not automatically transmitted. |
 | `ProviderEvent` | Typed `text`, `error` or `done` event; per-event text/code bounds. `ProviderUnavailable`, `ProviderCancelled` and `ProviderError` expose stable error codes rather than adapter exception text. |
 | `CancellationToken` and `stream_response` | Typed terminal/error handling, registered transport closure and explicit completion; EOF/incomplete/interrupted streams never imply success. Provider I/O is refused inside a database transaction. |
 | `assistant.actions.preview_action` | Shape-only allowlisted proposal, returned as an immutable `ActionPreview`; no object lookup, simulation of financial results or execution. |
 
 Responses use public `/v1/responses` HTTP SSE with `store: false`, `stream: true`
-and no server-conversation/continuation ID. The current question, minimized
+and no server-conversation/continuation ID. Explicit effort uses
+`reasoning: {"effort": "<advertised level>"}`; Model default omits that field.
+The current question, minimized
 context and selected recent history are the outbound content. No tools, hosted
 connectors, model-side financial actions, automatic retry or paid fallback are
 supplied. The [preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
@@ -293,6 +374,12 @@ the application never seeds or displays a fabricated connected account.
 `ASSISTANT_OPENAI_AUTH_ENABLED` defaults to `False`. Its explicit environment
 opt-in requires the owner's approval for live account authorization. Opening
 connection settings does not enable it, initialize the vault or contact OpenAI.
+The saved account's local selection and installation availability are separate
+states. A disabled authorization or inference setting leaves the selected link
+stored; settings must identify that local selection and explain the disabled
+capability instead of implying that selection alone makes chat usable. The
+panel names the blocked capability and links to settings. Status inspection must
+not initialize/decrypt the vault or contact the provider while either gate is off.
 The separately gated composer catalogue behavior is defined above. Setting the
 authorization flag alone does not start authorization; the owner must submit the native Continue with ChatGPT
 POST, which opens authorization in a new tab while preserving the original

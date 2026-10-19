@@ -19,14 +19,15 @@ from django.conf import settings
 
 from assistant.connections import service
 from assistant.providers.base import (
-    CancellationToken, ProviderError, ProviderEvent, ProviderUnavailable, _outside_transaction, valid_model,
+    CancellationToken, ProviderError, ProviderEvent, ProviderUnavailable, _outside_transaction,
+    reasoning_efforts, valid_model,
 )
 
 
 MODELS_ENDPOINT = 'https://api.openai.com/v1/models'
 RESPONSES_ENDPOINT = 'https://api.openai.com/v1/responses'
 MAX_EVENT_BYTES = 512 * 1024
-# Account catalogues include rich per-model metadata beyond the two UI fields.
+# Account catalogues include rich per-model metadata beyond the UI capabilities.
 # Keep that JSON bound separate from individual SSE events and request bodies.
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 MAX_ERROR_BYTES = 64 * 1024
@@ -57,7 +58,7 @@ _ERROR_CODE_MAP = {
 }
 _ERROR_TYPES = frozenset({'invalid_request_error', 'authentication_error', 'permission_error',
                           'rate_limit_error', 'server_error'})
-_ERROR_PARAMETERS = frozenset({'model', 'input', 'instructions', 'store', 'stream'})
+_ERROR_PARAMETERS = frozenset({'model', 'input', 'instructions', 'store', 'stream', 'reasoning', 'reasoning.effort'})
 _PROTOCOL_ERRORS = frozenset({'unexpected_content_type', 'invalid_json', 'invalid_schema', 'invalid_sse'})
 _CONTENT_TYPES = frozenset({'text/plain', 'application/json', 'application/octet-stream', 'text/event-stream'})
 _BODY_KINDS = frozenset({'sse_prefix', 'response_object', 'error_object', 'other'})
@@ -389,7 +390,16 @@ class OpenAIProvider:
                     or any(ord(char) < 32 for char in name) or slug in seen):
                 _invalid_response('invalid_schema')
             seen.add(slug)
-            result.append({'slug': slug, 'display_name': name})
+            levels = model.get('supported_reasoning_levels', [])
+            # Catalogue descriptions and other account metadata are not needed
+            # by the client; retain only known, explicitly advertised levels.
+            efforts = reasoning_efforts([level.get('effort') for level in levels if isinstance(level, dict)]
+                                        if isinstance(levels, list) and len(levels) <= 32 else [])
+            item = {'slug': slug, 'display_name': name, 'reasoning_efforts': efforts}
+            default = model.get('default_reasoning_level')
+            if isinstance(default, str) and default in efforts:
+                item['default_reasoning_effort'] = default
+            result.append(item)
         return result
 
     def stream(self, generation, cancellation):
@@ -401,6 +411,9 @@ class OpenAIProvider:
                      + [{'role': turn.role, 'content': turn.content} for turn in generation.history],
             'store': False, 'stream': True,
         }
+        # Blank means the provider's own default, never an inferred override.
+        if generation.reasoning_effort:
+            body['reasoning'] = {'effort': generation.reasoning_effort}
         response = self._call('POST', RESPONSES_ENDPOINT, cancellation, data=body, stream=True)
         source = response.stream
         if source is None or not callable(getattr(source, 'readline', None)):

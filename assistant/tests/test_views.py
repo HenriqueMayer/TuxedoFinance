@@ -6,6 +6,7 @@ from django.db import connection
 from django.test import Client, TestCase
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from django.utils.html import format_html
 
 from assistant.context import read_scope, sign_scope
 from assistant.models import Conversation, Message
@@ -60,6 +61,25 @@ class AssistantViewTests(TestCase):
         self.assertIn('X-Tuxedo-Assistant', fragment.headers['Vary'])
         self.assert_private(fragment)
 
+    def test_minimized_ui_binding_is_private_and_changes_with_the_authenticated_session(self):
+        first = self.client.get(reverse('assistant:index'))
+        token = first.context['ui_session']
+        self.assertRegex(token, r'^[a-f0-9]{64}$')
+        self.assertContains(first, f'data-assistant-session="{token}"')
+        self.assertNotContains(first, self.client.session.session_key)
+        fragment = self.client.get(reverse('assistant:index'), {'ui_session': 'forged-session'},
+                                   HTTP_X_TUXEDO_ASSISTANT='panel')
+        self.assertEqual(fragment.context['ui_session'], token)
+        separate_session = Client()
+        separate_session.force_login(self.user)
+        second = separate_session.get(reverse('assistant:index'))
+        self.assertNotEqual(second.context['ui_session'], token)
+        self.client.logout()
+        self.client.force_login(self.user)
+        self.assertNotEqual(self.client.get(reverse('assistant:index')).context['ui_session'], token)
+        self.client.force_login(self.other)
+        self.assertNotEqual(self.client.get(reverse('assistant:index')).context['ui_session'], token)
+
     def test_conversation_prg_creation_deletion_cascade_and_financial_preservation(self):
         token = sign_scope(self.user, '/transactions/')
         created = self.client.post(reverse('assistant:create'), {'scope': token})
@@ -79,11 +99,14 @@ class AssistantViewTests(TestCase):
     def test_compact_context_links_to_workspace_without_dumping_financial_evidence(self):
         token = sign_scope(self.user, '/dashboard/')
         instant = datetime(2026, 10, 18, 12, tzinfo=datetime_timezone.utc)
-        for language in ['en', 'pt-br']:
+        for language, label in [('en', 'Home'), ('pt-br', 'Início')]:
             with self.subTest(language=language), patch('assistant.context.timezone.now', return_value=instant):
                 response = self.client.get(reverse('assistant:index'), {'scope': token},
                                            HTTP_X_TUXEDO_ASSISTANT='panel', HTTP_ACCEPT_LANGUAGE=language)
-                self.assertContains(response, 'href="/dashboard/" data-assistant-source')
+                self.assertContains(response, format_html(
+                    '<a href="/dashboard/" title="{}" data-assistant-source data-assistant-context-link>'
+                    '<span class="assistant-scope-destination"><span>{}</span>'
+                    '<span aria-hidden="true">↗</span></span></a>', label, label), html=True)
                 self.assertNotContains(response, self.account.name)
                 self.assertNotContains(response, '87.66')
                 self.assertNotContains(response, '87,66')

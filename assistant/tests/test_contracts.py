@@ -32,7 +32,9 @@ class OfflineProviderContractsTests(SimpleTestCase):
                     lambda: GenerationRequest('{' + 'x' * 32000),
                     lambda: GenerationRequest('{}', history=(turn,) * 21),
                     lambda: GenerationRequest('{}', language='invalid'),
-                    lambda: GenerationRequest('{}', instructions_version='../other')]
+                    lambda: GenerationRequest('{}', instructions_version='../other'),
+                    lambda: GenerationRequest('{}', reasoning_effort='unknown'),
+                    lambda: GenerationRequest('{}', reasoning_effort=None)]
         for make_invalid in rejected:
             with self.subTest(make_invalid=make_invalid):
                 with self.assertRaises(ValueError):

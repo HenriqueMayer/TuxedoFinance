@@ -1,8 +1,9 @@
 {% load i18n %}
-<div class="assistant-content" data-assistant-content data-assistant-user="{{ request.user.pk|stringformat:'d' }}" data-assistant-scope="{{ scope }}" data-conversation-id="{{ conversation.pk|default:'' }}" data-provider-state="{{ provider_state }}">
+<div class="assistant-content" data-assistant-content data-assistant-user="{{ request.user.pk|stringformat:'d' }}" data-assistant-session="{{ ui_session }}" data-assistant-scope="{{ scope }}" data-conversation-id="{{ conversation.pk|default:'' }}" data-provider-state="{{ provider_state }}">
     <div class="assistant-content-toolbar">
-        <details class="assistant-history" {% if not conversation and conversations %}open{% endif %}>
+        <details class="assistant-history" data-assistant-menu>
             <summary class="quiet-action">{% translate 'History' %}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+            <div class="assistant-history-popover">
             <nav class="assistant-history-list" aria-label="{% translate 'Conversation history' %}">
                 {% for item in conversations %}
                 <a href="{% url 'assistant:detail' item.pk %}?scope={{ scope|urlencode }}" data-assistant-link {% if item.pk == conversation.pk %}aria-current="page"{% endif %}>
@@ -17,22 +18,37 @@
                 {% if history_page.has_next %}<a class="quiet-action" data-assistant-link href="{% if conversation %}{% url 'assistant:detail' conversation.pk %}{% else %}{% url 'assistant:index' %}{% endif %}?scope={{ scope|urlencode }}&page={{ history_page.next_page_number|stringformat:'d' }}">{% translate 'Next' %}</a>{% endif %}
             </nav>
             {% endif %}
+            <div class="assistant-history-footer">
+                <a href="{% url 'assistant:connections' %}" class="quiet-action" data-assistant-source>{% translate 'Assistant settings' %} <span aria-hidden="true">↗</span></a>
+                <p class="subtle-copy">{% translate 'Only this conversation and the context selected for this message are sent. History stays on this installation.' %}</p>
+            </div>
+            </div>
         </details>
+    {% if scope_label %}
+    <div class="assistant-scope">
+        <span class="sr-only">{% translate 'Context' %}</span>
+        <a href="{{ scope_location }}" title="{{ scope_label }}" data-assistant-source data-assistant-context-link><span class="assistant-scope-destination"><span>{{ scope_label }}</span><span aria-hidden="true">↗</span></span></a>
+    </div>
+    {% endif %}
         <form method="post" action="{% url 'assistant:create' %}" hx-boost="false" autocomplete="off" data-assistant-form novalidate>
             {% csrf_token %}<input type="hidden" name="scope" value="{{ scope }}">
-            <button type="submit" class="quiet-action"><span aria-hidden="true">＋</span> {% translate 'New conversation' %}</button>
+            <button type="submit" class="icon-action assistant-new" aria-label="{% translate 'New conversation' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
         </form>
+        {% if conversation %}
+        <details class="assistant-delete" data-assistant-menu>
+            <summary class="icon-action" aria-label="{% translate 'Delete conversation' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></summary>
+            <form method="post" action="{% url 'assistant:delete' conversation.pk %}" autocomplete="off" hx-boost="false" novalidate data-assistant-form>
+                {% csrf_token %}<input type="hidden" name="scope" value="{{ scope }}">
+                <p>{% translate 'Delete this conversation and its messages? Financial records will be kept.' %}</p>
+                <button type="submit" class="action-danger">{% translate 'Confirm deletion' %}</button>
+            </form>
+        </details>
+        {% endif %}
     </div>
     {% if error %}<p class="assistant-error" role="alert">{{ error }}</p>{% endif %}
     {% for field in create_form %}{% for message in field.errors %}<p class="assistant-error" role="alert">{{ message }}</p>{% endfor %}{% endfor %}
-    {% if scope_label %}
-    <div class="assistant-scope">
-        <span>{% translate 'Context' %}</span>
-        <a href="{{ scope_location }}" data-assistant-source data-assistant-context-link><span>{{ scope_label }}</span><span aria-hidden="true">↗</span></a>
-    </div>
-    {% endif %}
-    {% if conversation %}<h3 class="mt-4 text-sm font-medium">{{ conversation.title|default:_('New conversation') }}</h3>{% endif %}
-    <section class="assistant-transcript" aria-label="{% translate 'Messages' %}" tabindex="0">
+    {% if conversation %}<h3 class="assistant-conversation-title{% if not conversation.title %} sr-only{% endif %}">{{ conversation.title|default:_('New conversation') }}</h3>{% endif %}
+    <section class="assistant-transcript" data-assistant-transcript aria-label="{% translate 'Messages' %}" tabindex="0">
         {% for message in chat_messages %}
         <article class="assistant-message assistant-message--{{ message.role }}"><p class="assistant-message-role">{% if message.role == 'user' %}{% translate 'You' %}{% else %}{% translate 'Tuxedo assistant' %}{% endif %}</p><p class="assistant-message-text">{{ message.content }}</p>
             {% if message.generation_status and message.generation_status != 'completed' %}<p class="assistant-partial">{% if message.role == 'assistant' %}{% translate 'Partial response' %} · {% endif %}{% if message.generation_status == 'cancelled' %}{% translate 'Stopped' %}{% elif message.generation_status == 'running' %}{% translate 'In progress' %}{% else %}{% translate 'Not completed' %}{% endif %}</p>{% endif %}
@@ -41,20 +57,10 @@
         {% empty %}
         <div class="assistant-empty">
             <svg class="assistant-bowtie" viewBox="0 0 100 48" fill="none" aria-hidden="true"><path d="m8 6 34 13v10L8 42z" fill="currentColor"/><rect x="44" y="16" width="12" height="16" rx="4" fill="currentColor"/><path d="M92 6 58 19v10l34 13z" stroke="currentColor" stroke-width="1.4"/><path d="M70 16v16m8-19v22" stroke="currentColor" stroke-width=".7"/></svg>
-            {% if provider_state == 'ready' %}<h3>{% translate 'How can I help?' %}</h3><p>{% translate 'Choose a model and write your message. Include the current page’s financial information only when it is needed.' %}</p>{% elif provider_state == 'reauth' %}<h3>{% translate 'Sign in again' %}</h3><p>{% translate 'Renew the selected account connection in assistant settings.' %}</p>{% elif provider_state == 'error' %}<h3>{% translate 'Models unavailable' %}</h3><p>{% translate 'Could not load models for this account. Refresh the conversation or review its connection.' %}</p>{% else %}<h3>{% translate 'Provider not connected' %}</h3><p>{% translate 'Your chat is ready for a future AI connection. No financial data is being sent to a provider.' %}</p>{% endif %}
-            <a href="{% url 'assistant:connections' %}" class="quiet-action" data-assistant-source>{% translate 'Assistant settings' %} <span aria-hidden="true">↗</span></a>
+            {% if provider_state == 'ready' %}<h3>{% translate 'How can I help?' %}</h3>{% elif provider_state == 'disabled' %}<h3>{% translate 'Chat disabled on this installation' %}</h3><p>{% translate 'Your selected ChatGPT account is kept. Enable the assistant connection in this installation’s configuration to send messages.' %}</p>{% elif provider_state == 'reauth' %}<h3>{% translate 'Sign in again' %}</h3><p>{% translate 'Renew the selected account connection in assistant settings.' %}</p>{% elif provider_state == 'error' %}<h3>{% translate 'Models unavailable' %}</h3><p>{% translate 'Could not load models for this account. Refresh the conversation or review its connection.' %}</p>{% else %}<h3>{% translate 'Provider not connected' %}</h3><p>{% translate 'Connect your ChatGPT account in assistant settings to send messages. Your conversation history stays local.' %}</p>{% endif %}
+            {% if provider_state != 'ready' %}<a href="{% url 'assistant:connections' %}" class="quiet-action" data-assistant-source>{% translate 'Assistant settings' %} <span aria-hidden="true">↗</span></a>{% endif %}
         </div>
         {% endfor %}
     </section>
     {% include 'assistant/_composer.html' %}
-    {% if conversation %}
-    <details class="assistant-delete">
-        <summary class="quiet-action">{% translate 'Delete conversation' %}</summary>
-        <form method="post" action="{% url 'assistant:delete' conversation.pk %}" autocomplete="off" hx-boost="false" novalidate data-assistant-form>
-            {% csrf_token %}<input type="hidden" name="scope" value="{{ scope }}">
-            <p>{% translate 'Delete this conversation and its messages? Financial records will be kept.' %}</p>
-            <button type="submit" class="action-danger">{% translate 'Confirm deletion' %}</button>
-        </form>
-    </details>
-    {% endif %}
 </div>

@@ -98,6 +98,7 @@ class GenerationRequest:
     language: Literal['en', 'pt-br'] = 'en'
     instructions_version: str = INSTRUCTIONS_VERSION
     model: str = ''
+    reasoning_effort: str = ''
 
     def __post_init__(self):
         if (not isinstance(self.context_json, str) or len(self.context_json) > 32000
@@ -106,7 +107,9 @@ class GenerationRequest:
                 or not all(isinstance(turn, ChatTurn) for turn in self.history)
                 or self.language not in {'en', 'pt-br'}
                 or self.instructions_version not in SUPPORTED_INSTRUCTIONS_VERSIONS
-                or not isinstance(self.model, str) or self.model and not valid_model(self.model)):
+                or not isinstance(self.model, str) or self.model and not valid_model(self.model)
+                or not isinstance(self.reasoning_effort, str)
+                or self.reasoning_effort and self.reasoning_effort not in REASONING_EFFORTS):
             raise ValueError('Invalid bounded generation request.')
 
     @property
@@ -116,7 +119,18 @@ class GenerationRequest:
 
 ERROR_CODES = frozenset({'unavailable', 'cancelled', 'provider_error', 'transport_error', 'rate_limited',
                          'unauthorized', 'limit_exceeded', 'incomplete', 'interrupted', 'timeout', 'invalid_model',
-                         'request_rejected', 'invalid_response', 'permission_denied'})
+                         'request_rejected', 'invalid_response', 'permission_denied', 'invalid_reasoning_effort'})
+
+# This is the protocol vocabulary, not a per-model capability map. A selected
+# level must also be advertised by the authenticated account's model catalogue.
+REASONING_EFFORTS = ('none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max')
+
+
+def reasoning_efforts(value):
+    """Keep only bounded, recognized capability values in their server order."""
+    if not isinstance(value, list) or len(value) > 32:
+        return []
+    return list(dict.fromkeys(item for item in value if isinstance(item, str) and item in REASONING_EFFORTS))
 
 
 def valid_model(value):
