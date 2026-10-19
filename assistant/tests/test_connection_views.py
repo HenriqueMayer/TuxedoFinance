@@ -9,6 +9,7 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
+from django.conf import settings
 from django.db import DatabaseError
 from django.test import Client, SimpleTestCase, TransactionTestCase, override_settings
 from django.urls import reverse
@@ -75,10 +76,34 @@ class ConnectionSettingsViewTests(TransactionTestCase):
             response = self.client.get(reverse('assistant:connections'), HTTP_ACCEPT_LANGUAGE=language)
             self.assertEqual(response.status_code, 200)
             self.assertContains(response, 'disabled')
-            self.assertEqual(response['Referrer-Policy'], 'no-referrer')
+            self.assertEqual(response['Referrer-Policy'], 'same-origin')
             self.assertIn('no-store', response['Cache-Control'])
             self.assertFalse(self.private.exists())
         self.assertEqual(ProviderConnection.objects.count(), 0)
+
+    def test_authorization_form_csp_is_exact_and_other_routes_preserve_global_policy(self):
+        def directives(response):
+            return {name: values for name, *values in
+                    (part.strip().split() for part in response['Content-Security-Policy'].split(';') if part.strip())}
+
+        global_policy = {name: [str(value) for value in values] for name, values in settings.SECURE_CSP.items()}
+        response = self.client.get(reverse('assistant:connections'))
+        self.assertEqual(directives(response), {
+            **global_policy, 'form-action': ["'self'", oauth.AUTHORIZATION_ENDPOINT],
+        })
+        self.assertEqual(global_policy['form-action'], ["'self'"])
+        for path in [reverse('assistant:connection-callback-result'),
+                     reverse('transactions:list'), reverse('accounts:settings')]:
+            with self.subTest(path=path):
+                default = self.client.get(path)
+                self.assertEqual(default.status_code, 200)
+                self.assertEqual(directives(default), global_policy)
+        # The callback redirect itself must never acquire the authorization exception.
+        with patch.object(service, 'receive_callback', side_effect=service.ConnectionError('state_invalid')):
+            callback = self.client.get(reverse('assistant:connection-callback'), {'state': 'synthetic-state'})
+        self.assertEqual(callback.status_code, 302)
+        self.assertEqual(directives(callback), global_policy)
+        self.assertFalse(self.private.exists())
 
     def test_disabled_start_never_contacts_oauth_or_creates_attempt(self):
         with patch('assistant.connections.service.oauth.new_attempt') as authorize:
@@ -128,7 +153,7 @@ class ConnectionSettingsViewTests(TransactionTestCase):
                 form = forms[action]
                 self.assertEqual(form['method'], 'post')
                 self.assertEqual(form['target'], '_blank')
-                self.assertEqual(set(form['rel'].split()), {'noopener', 'noreferrer'})
+                self.assertEqual(set(form['rel'].split()), {'noopener'})
                 self.assertEqual(form['hx-boost'], 'false')
         self.assertContains(response, 'Sign-in opens in a new tab.')
         self.assertFalse(self.private.exists())
@@ -302,6 +327,27 @@ class ConnectionSettingsViewTests(TransactionTestCase):
                                    HTTP_X_CSRFTOKEN=csrf)
         self.assertEqual(response.status_code, 302)
         finish.assert_called_once_with(self.user, strict.session.session_key, attempt.pk)
+
+    @override_settings(ASSISTANT_OPENAI_AUTH_ENABLED=True)
+    def test_authorization_csrf_accepts_same_origin_and_rejects_null_even_with_valid_token(self):
+        strict = Client(enforce_csrf_checks=True)
+        strict.force_login(self.user)
+        settings_page = strict.get(reverse('assistant:connections'))
+        self.assertEqual(settings_page['Referrer-Policy'], 'same-origin')
+        csrf = strict.cookies['csrftoken'].value
+        destination = oauth.AUTHORIZATION_ENDPOINT + '?state=synthetic-state'
+        with patch.object(service, 'begin_authorization', return_value=(None, destination)) as begin:
+            rejected = strict.post(reverse('assistant:connection-start'),
+                                   HTTP_X_CSRFTOKEN=csrf, HTTP_ORIGIN='null')
+            self.assertEqual(rejected.status_code, 403)
+            begin.assert_not_called()
+            accepted = strict.post(reverse('assistant:connection-start'),
+                                   HTTP_X_CSRFTOKEN=csrf, HTTP_ORIGIN='http://testserver')
+        self.assertEqual(accepted.status_code, 302)
+        self.assertEqual(accepted['Location'], destination)
+        self.assertEqual(accepted['Referrer-Policy'], 'no-referrer')
+        begin.assert_called_once_with(self.user, strict.session.session_key, None)
+        self.assertFalse(self.private.exists())
 
     @override_settings(DEBUG=True, ASSISTANT_OPENAI_AUTH_ENABLED=True)
     def test_debug_callback_raw_credential_failures_use_real_safe_service_boundary(self):

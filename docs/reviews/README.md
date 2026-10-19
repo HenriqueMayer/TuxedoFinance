@@ -32,6 +32,7 @@ and [interface map](../interface-map.md) for present behavior.
 | [Local assistant foundation — 2026-10-18](assistant-foundation-2026-10-18.md) | Local chat/context contracts, synthetic Design Lab, privacy/draft/browser validation and preserved installation boundaries; provider remains disconnected. |
 | [Assistant overlay and compact context — 2026-10-18](assistant-overlay-2026-10-18.md) | Fixed desktop overlay, compact location links, gentle artwork motion and short-phone history containment, with isolated regression evidence. |
 | [Assistant authorization preparation — 2026-10-19](assistant-authorization-2026-10-19.md) | Default-disabled account settings, session-bound OAuth handoff, encrypted vault, refresh/recovery and synthetic browser/container validation; no live account or inference. |
+| [Native ChatGPT sign-in — 2026-10-19](assistant-native-sign-in-2026-10-19.md) | Backed-up native migration, real authorization handoff and browser-origin/CSP corrections; no financial export or inference. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

@@ -53,8 +53,11 @@ releases, persistent volumes and isolated restore rehearsals.
   scenarios, commitment snapshots and contribution/yield simulations.
 - [apps/assistant.md](apps/assistant.md) — local conversations, signed owned
   context, unavailable-provider foundation and gated OpenAI account settings,
-  OAuth lifecycle and encrypted vault preparation. Real-account validation,
-  model inference and action execution remain pending.
+  OAuth lifecycle and encrypted vault preparation. An
+  [owner-approved native account link](reviews/assistant-native-sign-in-2026-10-19.md)
+  was observed; Docker real OAuth, broader eligibility, model access/limits,
+  inference/streaming, real refresh/revocation and action execution remain
+  unverified or unimplemented as described in the app guide.
 
 ## Repository layout
 

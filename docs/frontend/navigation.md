@@ -117,6 +117,14 @@ settings link in the panel retains normal departure protection for edited
 financial forms. Callback pages contain no account or authorization code and
 require confirmation in the original authenticated settings session.
 
+The settings document uses `Referrer-Policy: same-origin` and authorization
+forms retain `noopener` without `noreferrer`: Chromium otherwise submits an
+opaque `Origin: null`, which Django correctly rejects. Its view-specific CSP
+allows form redirects only to self and the exact official authorization endpoint;
+other pages retain the application's self-only form policy. Outbound redirects
+and callback pages retain `no-referrer`. Never exempt these POSTs from CSRF or
+trust a null origin to make the flow work.
+
 Keep the disconnected inference status visible and the real composer disabled;
 do not render fake streamed replies or an active Send action. The
 [assistant guide](../apps/assistant.md) owns storage, routes, context and the

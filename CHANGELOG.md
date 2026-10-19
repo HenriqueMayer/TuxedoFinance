@@ -9,6 +9,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Preserve the real browser origin on native ChatGPT authorization POSTs, retaining Django CSRF checks, opener isolation and no-referrer callbacks. Scope the official authorization redirect allowance to assistant settings instead of changing the global form policy.
 - Open the assistant as a fixed overlay without shrinking the workspace or its filters. Keep Context as a compact current-page link, retain structured evidence on the backend, and animate only the cat/orbit artwork gently with reduced-motion support.
 - Open the product homepage from the Tuxedo Finance brand in the desktop sidebar and mobile toolbar, preserving the session, unsaved-edit protection and the Home workspace's dashboard destination.
 - Use the existing Django financial calendar consistently for invoice due state, confirmed-payment totals/validation and demo confirmation guards, independent of the host timezone. Preserve stored dates and explicit historical cutoffs. Wait for the Accounts entry animation before measuring its unchanged 44px action targets in browser tests.

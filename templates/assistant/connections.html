@@ -12,7 +12,7 @@
         <p>{% translate 'Your database and conversation history stay on this installation. Future responses will send only your question and the context needed to answer it.' %}</p>
         <p class="subtle-copy">{% translate 'Account authorization and AI responses are separate. Sending messages remains unavailable in this delivery.' %}</p>
         {% if not auth_enabled %}<p class="subtle-copy" role="status">{% translate 'Real sign-in is disabled. This screen does not contact OpenAI or consume your plan.' %}</p>{% endif %}
-        <form method="post" action="{% url 'assistant:connection-start' %}" target="_blank" rel="noopener noreferrer" autocomplete="off" hx-boost="false" novalidate>
+        <form method="post" action="{% url 'assistant:connection-start' %}" target="_blank" rel="noopener" autocomplete="off" hx-boost="false" novalidate>
             {% csrf_token %}<button type="submit" class="assistant-connect-button" {% if not auth_enabled %}disabled{% endif %}>{% translate 'Continue with ChatGPT' %}</button>
         </form>
         <p class="subtle-copy">{% translate 'Sign-in opens in a new tab. Use the computer running Tuxedo Finance, then return here to confirm the account. Your Tuxedo Finance login stays unchanged.' %}</p>
@@ -43,7 +43,7 @@
             <p class="subtle-copy">{% if connection.status == 'ready' %}{% translate 'Account authorized. AI responses remain unavailable.' %}{% elif connection.status == 'identity_only' %}{% translate 'Identity verified; permission to use the ChatGPT plan was not granted.' %}{% elif connection.status == 'reconnect' %}{% translate 'Sign in again to renew this connection.' %}{% else %}{% translate 'Disconnected. The registration is retained for a later sign-in.' %}{% endif %}</p>
             <div class="form-actions">
                 {% if not connection.is_active and connection.status != 'disconnected' %}<form method="post" action="{% url 'assistant:connection-activate' connection.pk %}" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-secondary">{% translate 'Use this account' %}</button></form>{% endif %}
-                <form method="post" action="{% url 'assistant:connection-authorize' connection.pk %}" target="_blank" rel="noopener noreferrer" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-secondary" {% if not auth_enabled %}disabled{% endif %}>{% translate 'Sign in again' %}</button></form>
+                <form method="post" action="{% url 'assistant:connection-authorize' connection.pk %}" target="_blank" rel="noopener" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-secondary" {% if not auth_enabled %}disabled{% endif %}>{% translate 'Sign in again' %}</button></form>
                 {% if connection.status != 'disconnected' %}<details class="assistant-delete"><summary class="quiet-action">{% translate 'Disconnect account' %}</summary><form method="post" action="{% url 'assistant:connection-disconnect' connection.pk %}" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<p>{% translate 'Remove the local credentials for this connection? Conversations and financial records are kept.' %}</p><button type="submit" class="action-danger">{% translate 'Confirm disconnection' %}</button></form></details>{% endif %}
             </div>
         </article>

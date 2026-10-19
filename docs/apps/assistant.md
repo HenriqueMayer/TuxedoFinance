@@ -2,11 +2,12 @@
 
 **Current status:** Local assistant foundation and OpenAI account-authorization
 preparation under Unreleased after `0.10.0`. Real authorization is disabled by
-default; no real account or model request was used to validate this delivery.
+default. Owner-approved native sign-in and local account confirmation were
+observed; see the [bounded native validation](../reviews/assistant-native-sign-in-2026-10-19.md).
 The provider and composer remain disconnected. The application does not generate
 model answers, consume a ChatGPT plan, initiate bank payments or execute
 financial actions. The developer version is unchanged; this is unreleased
-preparation, not a verified live integration.
+authorization preparation with inference still unavailable.
 
 The app owns private conversation storage, user-owned connection metadata, an
 encrypted local credential vault, a provider-unavailable state, structured
@@ -199,7 +200,7 @@ evaluation needs its own approved account/context/usage scope and evidence.
 
 ## OpenAI authorization preparation
 
-**Implemented preparation, with real authorization disabled. Official
+**Implemented preparation, with real authorization disabled by default. Official
 documentation checked 2026-10-19.** Settings exposes the owned account lifecycle
 without replacing Django login or enabling inference. Synthetic accounts,
 signed-token fixtures and injected transports belong only in isolated tests;
@@ -208,14 +209,15 @@ the application never seeds or displays a fabricated connected account.
 ### Authorization gate and local callback
 
 `ASSISTANT_OPENAI_AUTH_ENABLED` defaults to `False`. Its explicit environment
-opt-in is reserved for later, separately approved account validation. Opening
+opt-in requires the owner's approval for live account authorization. Opening
 the assistant or its settings does not enable it, initialize the vault, contact
 OpenAI, refresh a token or consume plan usage. Setting the flag alone does not
 start authorization; the owner must submit the native Continue with ChatGPT
 POST, which opens authorization in a new tab while preserving the original
-settings tab for final confirmation. This delivery was verified with mocks,
-without real sign-in or provider requests. Even a later successfully linked
-account cannot enable the disconnected composer or model adapter.
+settings tab for final confirmation. The
+[native validation](../reviews/assistant-native-sign-in-2026-10-19.md) records the
+owner-approved account link and preserved installation boundary. Account linking
+cannot enable the disconnected composer or model adapter.
 
 `ASSISTANT_OPENAI_CALLBACK_URL` defaults to
 `http://127.0.0.1:8000/assistant/connections/callback/`. The prepared protocol
@@ -231,7 +233,9 @@ validated callback therefore stages the verified identity without logging the
 visitor into Django or immediately attaching the account. The owner returns to
 the original settings tab, refreshes it, reviews the identity and submits Confirm
 account link. A different Django user or browser session cannot finish that
-handoff. Callback pages use no-store and no-referrer responses and promptly
+handoff. The settings form preserves the browser's same-origin CSRF identity;
+its narrow form-action policy permits only the official authorization redirect.
+Callback pages use no-store and no-referrer responses and promptly
 redirect away from the authorization query.
 
 ### Protocol and account lifecycle
@@ -318,8 +322,11 @@ identity scopes from plan permission. The
 documents local/open-source clients and user/workspace-bound registrations;
 paid or remotely hosted deployment has a separate access process. This
 repository's PolyForm Noncommercial license is not proof of eligibility under
-that program. Actual deployment eligibility, account access and authorization
-have not been validated in this delivery.
+that program. The observed native authorization is bounded evidence for that
+owner and installation, not a license/program eligibility guarantee. Real Docker
+OAuth, other accounts/deployments, model access, limits/quotas, streaming, and
+real token refresh/revocation remain unverified; see the
+[native validation limits](../reviews/assistant-native-sign-in-2026-10-19.md).
 
 [ChatGPT's user guide](https://learn.chatgpt.com/docs/sign-in-with-chatgpt)
 describes eligible Plus/Pro users, shared existing usage limits and access

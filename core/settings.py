@@ -49,7 +49,7 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
-# Explicit opt-in for later account validation. Authentication never enables
+# Explicit opt-in for owner-approved authorization. Authentication never enables
 # model generation; the provider remains disconnected in this delivery.
 ASSISTANT_OPENAI_AUTH_ENABLED = os.environ.get('ASSISTANT_OPENAI_AUTH_ENABLED', 'False').strip().lower() in {
     '1', 'true', 'yes', 'on'

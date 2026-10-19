@@ -20,7 +20,7 @@ file. Process environment variables always take priority.
 | `TUXEDO_DATA_DIR` | Directory containing `db.sqlite3`; create the directory before use | Project root |
 | `TUXEDO_ENV_FILE` | Environment file path, selected through the process environment | Project-root `.env` |
 | `LOG_LEVEL` | Application log level | `INFO` |
-| `ASSISTANT_OPENAI_AUTH_ENABLED` | Explicit real-authorization opt-in reserved for later approved account validation; never enables model responses | `False` |
+| `ASSISTANT_OPENAI_AUTH_ENABLED` | Explicit owner-approved real-authorization opt-in; never enables model responses | `False` |
 | `ASSISTANT_OPENAI_CALLBACK_URL` | Exact local OAuth callback; literal HTTP `127.0.0.1`, service port and `/assistant/connections/callback/` | `http://127.0.0.1:8000/assistant/connections/callback/` |
 | `ASSISTANT_PRIVATE_DIR` | Private credential vault path; changing it does not move existing material | `assistant-private` beside the configured database |
 
@@ -48,11 +48,16 @@ signing key across container recreation.
 ## Assistant data and integrations
 
 The [assistant](apps/assistant.md) includes OpenAI account-authorization
-preparation, disabled by default and verified only with isolated synthetic
-transports. No real account authorization or model request was performed for
-this delivery. Leave `ASSISTANT_OPENAI_AUTH_ENABLED=False` until a separately
-approved account validation. The provider/composer remains disconnected even if
-a later authorization succeeds; a disabled composer is the expected state.
+preparation, disabled by default, with isolated synthetic coverage and an
+[owner-approved native sign-in observation](reviews/assistant-native-sign-in-2026-10-19.md).
+That server enabled authorization only through its process environment; the
+installation `.env` and repository default stayed unchanged. Keep the flag off
+unless the owner approves live authorization for the intended installation.
+The observed original-session confirmation linked an account while preserving
+financial records. It did not list models, send inference or export financial
+data. Docker real OAuth, program eligibility, model access/limits, streaming and
+real refresh/revocation remain unverified. The provider/composer stays
+disconnected after account authorization; a disabled composer is the expected state.
 There is no paid API-key fallback, bank connection or background worker.
 Opening settings does not initialize the vault or contact OpenAI.
 

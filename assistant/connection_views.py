@@ -7,16 +7,18 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import TooManyFieldsSent
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.csp import CSP
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csp import csp_override
 from django.views.decorators.http import require_GET, require_POST
 
-from assistant.connections import service
+from assistant.connections import oauth, service
 from assistant.models import AuthorizationAttempt, ProviderConnection
 
 
-def _private(response):
-    response['Referrer-Policy'] = 'no-referrer'
+def _private(response, *, referrer_policy='no-referrer'):
+    response['Referrer-Policy'] = referrer_policy
     response['Cache-Control'] = 'private, no-store, max-age=0'
     return response
 
@@ -36,9 +38,12 @@ def _problem(request, code):
     return _private(redirect('assistant:connections'))
 
 
+# Chromium checks the native form's OAuth redirect against this source page's
+# policy. Permit its fixed authorization target without widening other pages.
 @never_cache
 @login_required
 @require_GET
+@csp_override({**settings.SECURE_CSP, 'form-action': [CSP.SELF, oauth.AUTHORIZATION_ENDPOINT]})
 def index(request):
     pending = []
     attempts = service.pending_authorizations(request.user, request.session.session_key) if request.session.session_key else []
@@ -50,11 +55,13 @@ def index(request):
             except service.ConnectionError:
                 pass
         pending.append({'attempt': attempt, 'preview': preview})
+    # Same-origin forms need their real Origin for Django CSRF validation.
+    # Outbound OAuth redirects and callback pages keep no-referrer separately.
     return _private(render(request, 'assistant/connections.html', {
         'connections': ProviderConnection.objects.filter(user=request.user).order_by('-is_active', '-updated_at'),
         'pending_authorizations': pending,
         'auth_enabled': settings.ASSISTANT_OPENAI_AUTH_ENABLED,
-    }))
+    }), referrer_policy='same-origin')
 
 
 @never_cache

@@ -34,14 +34,17 @@ only, with no action execution endpoint.
 The implemented [OpenAI authorization preparation](apps/assistant.md#openai-authorization-preparation)
 adds owner-scoped account settings, a gated OAuth lifecycle and an encrypted
 private vault. Real authorization is disabled by default; isolated mocks verify
-the preparation without signing in to a real account or consuming plan usage.
+the preparation, and [owner-approved native sign-in](reviews/assistant-native-sign-in-2026-10-19.md)
+was observed through the original session's explicit local confirmation.
+That server used process-only opt-in with `.env` unchanged; financial records
+were preserved and no model listing, inference or financial export occurred.
 Django authentication remains authoritative, and account linking cannot enable
 the disconnected model provider or a paid API-key fallback.
 
-Real-account eligibility and authorization validation remain a separate approved
-step. Inference transport, account/model access validation and transmitting
-financial context are later implementation work; none is established by the
-prepared protocol or local account status.
+Real Docker OAuth, broader license/program eligibility, model access and
+limits/quotas, streaming, and real token refresh/revocation remain unverified.
+Inference transport and transmitting financial context are later implementation
+work; none is established by the native account link or local connection status.
 Opt-in assistance while the application is in use is later work; no daemon,
 unattended automation or financial writes are enabled. Later goals, budgets,
 alerts and transaction creation/categorization may use previously enabled

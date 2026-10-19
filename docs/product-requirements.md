@@ -31,8 +31,12 @@ a persistent utility panel/native page and bounded read-only financial context.
 The implemented [OpenAI authorization preparation](apps/assistant.md#openai-authorization-preparation)
 adds default-disabled account settings, an OAuth lifecycle and an encrypted
 credential vault linked to the Django user. It preserves local login and has
-no connected model provider, action execution or paid fallback. Real-account
-eligibility/authorization validation and inference remain separate later work.
+no connected model provider, action execution or paid fallback.
+[Owner-approved native sign-in and local confirmation](reviews/assistant-native-sign-in-2026-10-19.md)
+were observed without model listing, inference, financial export or changes to
+financial records. Broader deployment/program eligibility and inference remain
+unverified; the native observation does not establish Docker real OAuth, model
+access/limits, streaming or real refresh/revocation.
 The personal Open Finance study is research only.
 
 The product remains a lean Django full-stack application: native authentication,
@@ -50,7 +54,7 @@ implementation; they are not all navigation destinations or published features.
 | Local statement operations (FR34) | Paused: upload, mapping, review, confirmation and undo are gated on GET/POST. Owned confirmed/undone provenance remains read-only. |
 | Dated net-worth interface (FR38) | Paused: old screen requests return to Home; calculations and source data remain available to their existing consumers. |
 | Assistant foundation (FR39) | Local conversation/context foundation; provider unavailable, real composer disabled and no execution endpoint. |
-| OpenAI authorization preparation (FR40) | Implemented gated account settings, OAuth lifecycle and encrypted vault; real authorization disabled by default and verified with isolated mocks only. No real-account validation or inference is established. |
+| OpenAI authorization preparation (FR40) | Implemented gated account settings, OAuth lifecycle and encrypted vault; real authorization disabled by default. Owner-approved native sign-in/local confirmation was observed; model provider remains disconnected and wider deployment/inference claims remain unverified. |
 | Personal Open Finance | Research only. No bank connection or payment initiation is enabled. The PF 6–8-hour data target remains unproven by checked public offers. |
 
 The [roadmap](roadmap.md) records paused/future work, the
@@ -114,7 +118,8 @@ availability or permission to re-enable a paused workflow.
 - Provider streaming/cancellation/error and proposed-action/simulation contracts,
   with no provider invocation, daemon or financial execution in this foundation.
 - Default-disabled, owner-scoped ChatGPT account settings, OAuth lifecycle and
-  encrypted private vault preparation, validated with isolated synthetic transports.
+  encrypted private vault preparation, with isolated synthetic coverage and
+  owner-approved native authorization validation within its dated evidence limits.
 - A public-source personal Open Finance feasibility study for Nubank, Banco Inter
   and Mercado Pago, covering 6–8-hour collection and source-preserving reconciliation.
 
@@ -124,9 +129,10 @@ availability or permission to re-enable a paused workflow.
   of opening dates, prices, historical fee currencies or returns.
 - Live Open Finance/bank synchronization, payment initiation, broker/issuer APIs
   and cloud financial processing. A documented feasibility study does not enable them.
-- Real-account eligibility/authorization validation, live inference, action
-  execution, unattended automation and automatic paid-provider fallback in this
-  delivery. Prepared credential storage does not authorize live account use.
+- Broader deployment/program eligibility guarantees, Docker real OAuth, model
+  access/limits, live inference/streaming, real refresh/revocation validation,
+  action execution, unattended automation and automatic paid-provider fallback
+  in this delivery. Live authorization still requires the owner's approval.
 - Market-price, FX or loyalty-provider feeds; local prices and rates are manual.
 - Tax-lot/tax reporting, automatic investment accrual and annualized,
   time-weighted or money-weighted return inference from incomplete evidence.
@@ -179,7 +185,7 @@ availability or permission to re-enable a paused workflow.
 | FR37 | Investment results | Replay weighted cost per product/asset after valid edits/deletion, preserve yield entry values and actual cash, and apply only explicitly declared asset-currency fees. Local quotes expose valuation and missing-price cost fallbacks. |
 | FR38 | Dated wealth | Compose dated cash and position valuation, incurred card debt including future installments, and card credits; exclude future recurring occurrences, duplicated settlements and goal earmarks. |
 | FR39 | Local assistant foundation | Persist owned conversations locally; collect signed, bounded, read-only route context with cutoff/currency/evidence warnings; expose panel/native access and provider-unavailable recovery without fake messages, model calls or financial actions. |
-| FR40 | Gated account authorization preparation | Prepare owner/session-bound ChatGPT linking, local account selection and encrypted credential storage; keep real authorization disabled by default and the model provider disconnected. Real-account validation remains separately approved work. |
+| FR40 | Gated account authorization preparation | Prepare owner/session-bound ChatGPT linking, local account selection and encrypted credential storage; keep real authorization disabled by default, require explicit owner approval for live authorization and leave the model provider disconnected. |
 
 ## 5. Domain Rules
 
@@ -337,7 +343,10 @@ serve explicitly labeled current or selected-date valuations elsewhere.
   links accounts to the Django user, keeps credentials in the private encrypted
   vault and requires the original session's final confirmation. Default-disabled
   real authorization and future model use remain separate gates; no API-key
-  billing fallback is inferred. No real account was tested in this delivery.
+  billing fallback is inferred. The [native observation](reviews/assistant-native-sign-in-2026-10-19.md)
+  covered an owner-approved account link using process-only opt-in, with `.env`
+  unchanged and no model request or financial export. It does not establish
+  other deployments, model access/limits, streaming or real refresh/revocation.
 - The [Open Finance study](reviews/open-finance-personal-study-2026-10-18.md)
   excludes payment initiation and does not reopen paused statement operations.
 
