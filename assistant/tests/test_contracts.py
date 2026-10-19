@@ -41,7 +41,7 @@ class OfflineProviderContractsTests(SimpleTestCase):
     def test_versioned_instruction_fixture_obligations_are_present(self):
         cases = json.loads((Path(__file__).parent / 'offline_cases.json').read_text())
         instructions = ' '.join(load_instructions().split())
-        self.assertEqual(INSTRUCTIONS_VERSION, 'v1')
+        self.assertEqual(INSTRUCTIONS_VERSION, 'v2')
         for case in cases:
             with self.subTest(case=case['id']):
                 self.assertTrue(case['synthetic_only'])
@@ -67,6 +67,7 @@ class OfflineProviderContractsTests(SimpleTestCase):
                 try:
                     yield ProviderEvent('text', text='Synthetic fixture, not a product answer')
                     yield ProviderEvent('text', text='Second fixture event')
+                    yield ProviderEvent('done')
                 finally:
                     closed.append(True)
 

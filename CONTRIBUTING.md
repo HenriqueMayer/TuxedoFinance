@@ -197,7 +197,7 @@ It migrates that database, starts its own Django server on a free loopback port,
 and passes the URL to Playwright. It never reuses an existing server or the
 installation's `TUXEDO_DATA_DIR`, `.env`, or `E2E_BASE_URL`.
 Both native and Docker runners discard inherited assistant configuration and
-force real authorization off. Native runs bind the private vault and callback
+force real authorization/inference off. Native runs bind the private vault and callback
 to their disposable data directory and loopback port; Docker keeps the vault in
 its disposable data volume. These checks never authorize a real account.
 
@@ -206,6 +206,18 @@ The executor forwards Playwright arguments and returns the suite's exit code:
 ```bash
 npm run test:e2e -- --grep 'dashboard'
 ```
+
+Streaming UI cases use a guarded synthetic catalogue/provider, without account
+credentials or external network access:
+
+```bash
+npm run test:e2e -- --assistant-fixtures tests/e2e/assistant/streaming.spec.js
+```
+
+This explicit option is native-runner-only and accepts only its owned disposable
+runtime and empty environment file. It does not enable live OAuth or inference;
+never select the fixture settings module manually for an installation. The
+[test index](tests/README.md) owns fixture locations and coverage responsibilities.
 
 Without a file filter or grep, this command runs the complete application
 browser suite. Existing skipped cases for paused features remain skipped.

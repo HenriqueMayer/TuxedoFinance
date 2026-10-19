@@ -26,10 +26,9 @@ branch changes before authorizing any integration into `main` or publication.
 ## Assistant foundation and later provider
 
 The [assistant foundation](apps/assistant.md) provides local conversations and
-bounded, read-only owned context. No provider is connected; the composer remains
-unavailable and no model response or financial execution is fabricated.
-Provider streaming/cancellation and action/simulation interfaces are preparation
-only, with no action execution endpoint.
+bounded, read-only owned context. The implemented model catalogue/streaming path
+is separately gated and defaults off; an unavailable composer never fabricates
+responses. Action/simulation interfaces remain contracts with no execution endpoint.
 
 The implemented [OpenAI authorization preparation](apps/assistant.md#openai-authorization-preparation)
 adds owner-scoped account settings, a gated OAuth lifecycle and an encrypted
@@ -39,12 +38,16 @@ was observed through the original session's explicit local confirmation.
 That server used process-only opt-in with `.env` unchanged; financial records
 were preserved and no model listing, inference or financial export occurred.
 Django authentication remains authoritative, and account linking cannot enable
-the disconnected model provider or a paid API-key fallback.
+the separate inference gate or a paid API-key fallback.
 
 Real Docker OAuth, broader license/program eligibility, model access and
 limits/quotas, streaming, and real token refresh/revocation remain unverified.
-Inference transport and transmitting financial context are later implementation
-work; none is established by the native account link or local connection status.
+The [gated provider](apps/assistant.md#provider-and-action-boundary) now implements
+account-specific model selection, streaming, cancellation and local run history.
+With either gate off it makes no external model request. Financial context is
+unchecked by default and included only for an explicitly selected request.
+Implemented transport does not establish live availability, allowance or model
+quality; those require separate bounded evidence.
 Opt-in assistance while the application is in use is later work; no daemon,
 unattended automation or financial writes are enabled. Later goals, budgets,
 alerts and transaction creation/categorization may use previously enabled

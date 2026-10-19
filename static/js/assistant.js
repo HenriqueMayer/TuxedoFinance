@@ -85,6 +85,7 @@
         if (button) button.hidden = true;
     }
     function close(restoreFocus = true) {
+        window.TuxedoAssistantChat?.cancelWithin(panel());
         abort();
         memory.open = false;
         clearInert();
@@ -104,6 +105,7 @@
         return url;
     }
     async function load(path, form = null) {
+        window.TuxedoAssistantChat?.cancelWithin(panel());
         const root = shell();
         if (!root) return;
         abort();
@@ -266,5 +268,9 @@
     window.addEventListener('pageshow', event => { if (!event.persisted) init(); });
     document.addEventListener('DOMContentLoaded', init);
     if (document.readyState !== 'loading') init();
-    window.TuxedoAssistant = {open, close, init};
+    window.TuxedoAssistant = {open, close, init, refreshConversation(path, conversation) {
+        if (!memory.open) return;
+        memory.conversation = conversation || memory.conversation;
+        load(path);
+    }};
 })();

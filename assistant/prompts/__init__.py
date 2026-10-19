@@ -3,10 +3,11 @@
 from pathlib import Path
 
 
-INSTRUCTIONS_VERSION = 'v1'
+INSTRUCTIONS_VERSION = 'v2'
+SUPPORTED_INSTRUCTIONS_VERSIONS = ('v1', 'v2')
 
 
 def load_instructions(version=INSTRUCTIONS_VERSION):
-    if version != INSTRUCTIONS_VERSION:
+    if version not in SUPPORTED_INSTRUCTIONS_VERSIONS:
         raise ValueError('Unsupported assistant instructions version.')
     return (Path(__file__).parent / version / 'system.txt').read_text(encoding='utf-8')

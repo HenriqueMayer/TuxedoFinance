@@ -61,6 +61,7 @@ def index(request):
         'connections': ProviderConnection.objects.filter(user=request.user).order_by('-is_active', '-updated_at'),
         'pending_authorizations': pending,
         'auth_enabled': settings.ASSISTANT_OPENAI_AUTH_ENABLED,
+        'inference_enabled': settings.ASSISTANT_OPENAI_INFERENCE_ENABLED,
     }), referrer_policy='same-origin')
 
 

@@ -21,11 +21,12 @@ file. Process environment variables always take priority.
 | `TUXEDO_ENV_FILE` | Environment file path, selected through the process environment | Project-root `.env` |
 | `LOG_LEVEL` | Application log level | `INFO` |
 | `ASSISTANT_OPENAI_AUTH_ENABLED` | Explicit owner-approved real-authorization opt-in; never enables model responses | `False` |
+| `ASSISTANT_OPENAI_INFERENCE_ENABLED` | Separate owner-approved catalogue/inference gate; also requires authorization, an eligible selected account and explicit model selection | `False` |
 | `ASSISTANT_OPENAI_CALLBACK_URL` | Exact local OAuth callback; literal HTTP `127.0.0.1`, service port and `/assistant/connections/callback/` | `http://127.0.0.1:8000/assistant/connections/callback/` |
 | `ASSISTANT_PRIVATE_DIR` | Private credential vault path; changing it does not move existing material | `assistant-private` beside the configured database |
 
 `DEBUG` and `HTTPS` are enabled only by the exact value `True`.
-`ALLOW_SIGNUPS` and `ASSISTANT_OPENAI_AUTH_ENABLED` accept `1`, `true`, `yes`, or
+`ALLOW_SIGNUPS` and both assistant enable flags accept `1`, `true`, `yes`, or
 `on`, ignoring case and surrounding whitespace. Use an absolute path for an
 external data directory or environment file. Changing the data directory does
 not move an existing database.
@@ -56,8 +57,23 @@ unless the owner approves live authorization for the intended installation.
 The observed original-session confirmation linked an account while preserving
 financial records. It did not list models, send inference or export financial
 data. Docker real OAuth, program eligibility, model access/limits, streaming and
-real refresh/revocation remain unverified. The provider/composer stays
-disconnected after account authorization; a disabled composer is the expected state.
+real refresh/revocation were not established by that authorization observation.
+The separate `ASSISTANT_OPENAI_INFERENCE_ENABLED=False` default keeps the
+provider/composer unavailable after account linking. With either gate off, no
+model catalogue, inference or inference-triggered credential refresh is sent.
+With both enabled, opening a ready composer may fetch the account catalogue and
+refresh expiring credentials before Send; each message then requires explicit
+model selection. Financial evidence is a separate per-request unchecked opt-in.
+The owner-approved native validation enables both flags only in the server
+process; `.env` and both repository defaults remain unchanged. The public model
+and response endpoints use ChatGPT-plan OAuth exclusively. The adapter never
+reads `OPENAI_API_KEY`, exposes no separate API organization/key/billing
+configuration and never selects paid fallback. Bounded, mapped diagnostics are documented in the
+[provider contract](apps/assistant.md#provider-and-action-boundary); keep raw
+provider bodies and credentials out of operational logs.
+The [assistant guide](apps/assistant.md#provider-and-action-boundary) owns streaming,
+local run/partial-history retention, native fallback, cancellation and usage/error
+limits. Implemented transport is not evidence of live account/model availability.
 There is no paid API-key fallback, bank connection or background worker.
 Opening settings does not initialize the vault or contact OpenAI.
 
@@ -67,8 +83,8 @@ and retention policy as financial records. Deleting a conversation from the
 active database does not erase older owner-managed backup copies. The
 structured-context endpoint is read-only and does not synchronize projections.
 Apply the additive assistant migrations through the ordinary backed-up update
-workflow before running this source checkout. They add conversation and
-user-owned authorization metadata tables, without changing financial records.
+workflow before running this source checkout. They add conversation,
+user-owned authorization and generation-run metadata, without changing financial records.
 
 The SQLite database retains account identity, scopes, expiry, connection state
 and digests for short-lived authorization attempts. Reusable tokens and pending

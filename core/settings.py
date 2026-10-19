@@ -54,6 +54,9 @@ ALLOWED_HOSTS = [
 ASSISTANT_OPENAI_AUTH_ENABLED = os.environ.get('ASSISTANT_OPENAI_AUTH_ENABLED', 'False').strip().lower() in {
     '1', 'true', 'yes', 'on'
 }
+ASSISTANT_OPENAI_INFERENCE_ENABLED = os.environ.get('ASSISTANT_OPENAI_INFERENCE_ENABLED', 'False').strip().lower() in {
+    '1', 'true', 'yes', 'on'
+}
 ASSISTANT_OPENAI_CALLBACK_URL = os.environ.get(
     'ASSISTANT_OPENAI_CALLBACK_URL', 'http://127.0.0.1:8000/assistant/connections/callback/'
 )

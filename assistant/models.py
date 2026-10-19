@@ -97,3 +97,33 @@ class AuthorizationAttempt(models.Model):
     class Meta:
         ordering = ['-created_at', 'pk']
         indexes = [models.Index(fields=['user', 'expires_at'], name='assistant_attempt_owner_expiry')]
+
+
+class GenerationRun(models.Model):
+    """An idempotent, session-bound generation with an explicit terminal state."""
+
+    class Status(models.TextChoices):
+        RUNNING = 'running', 'Running'
+        COMPLETED = 'completed', 'Completed'
+        FAILED = 'failed', 'Failed'
+        CANCELLED = 'cancelled', 'Cancelled'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='generation_runs')
+    connection = models.ForeignKey(ProviderConnection, on_delete=models.SET_NULL, null=True,
+                                   related_name='generation_runs')
+    model_slug = models.CharField(max_length=160)
+    input_message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='generation_inputs')
+    output_message = models.OneToOneField(Message, on_delete=models.SET_NULL, null=True, blank=True,
+                                        related_name='generation_result')
+    session_digest = models.CharField(max_length=64)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.RUNNING)
+    error_code = models.CharField(max_length=40, blank=True, default='')
+    context_references = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['created_at', 'pk']
+        constraints = [models.UniqueConstraint(
+            fields=['conversation'], condition=models.Q(status='running'), name='assistant_one_running_generation')]

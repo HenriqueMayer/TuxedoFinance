@@ -1,13 +1,20 @@
 # `assistant`
 
-**Current status:** Local assistant foundation and OpenAI account-authorization
-preparation under Unreleased after `0.10.0`. Real authorization is disabled by
-default. Owner-approved native sign-in and local account confirmation were
+**Current status:** Local conversations, OpenAI authorization and gated model
+catalogue/streaming implementation under Unreleased after `0.10.0`.
+Authorization and inference are independently disabled by default.
+Owner-approved native sign-in and local account confirmation were
 observed; see the [bounded native validation](../reviews/assistant-native-sign-in-2026-10-19.md).
-The provider and composer remain disconnected. The application does not generate
-model answers, consume a ChatGPT plan, initiate bank payments or execute
-financial actions. The developer version is unchanged; this is unreleased
-authorization preparation with inference still unavailable.
+That observation did not establish live model availability or streaming. With
+either gate off, the provider/composer remains unavailable and makes no model
+catalogue or inference request. When both are explicitly enabled, an eligible
+selected account can load its models and submit a chosen-model request. No
+financial execution, bank payment or paid API-key fallback is implemented.
+
+A later [bounded streaming validation](../reviews/assistant-streaming-2026-10-19.md)
+completed a short owner-authorized synthetic request through the ChatGPT-plan
+connection. It does not establish financial-answer quality, every model's
+availability or live Docker inference.
 
 The app owns private conversation storage, user-owned connection metadata, an
 encrypted local credential vault, a provider-unavailable state, structured
@@ -20,8 +27,9 @@ is separate research, not a data source for this assistant.
 
 Follow the normal [upgrade steps](../operations.md#updating-a-native-installation)
 before opening chat in an existing installation. The additive assistant
-migrations create conversation and authorization tables. They do not alter
-financial records. Use disposable data for validation as described in Contributing.
+migrations create conversation, authorization and generation-run tables. They
+do not alter financial records. Use disposable data for validation as described
+in Contributing.
 
 | Route | Behavior |
 |---|---|
@@ -29,8 +37,10 @@ financial records. Use disposable data for validation as described in Contributi
 | `/assistant/<uuid>/` | Read an owned conversation; UUIDs do not replace ownership checks. |
 | `/assistant/conversations/new/` | CSRF-protected POST creating an empty local conversation. |
 | `/assistant/<uuid>/delete/` | CSRF-protected POST deleting only the owned conversation and its messages. |
-| `/assistant/<uuid>/messages/` | Returns provider-unavailable HTTP 503; no fake user message, answer or successful inference is saved. |
-| `/assistant/context/` | Authenticated GET collecting a bounded, read-only structured snapshot for an authorized originating route. |
+| `/assistant/messages/`, `/assistant/<uuid>/messages/` | CSRF-protected POST for a new/existing owned conversation; validates selected account/model/context, streams SSE to an enhanced client or waits and redirects natively. Gate-off requests return unavailable without a fake exchange. |
+| `/assistant/models/` | Authenticated owned-account catalogue/state GET; no external call with either gate off. |
+| `/assistant/runs/<uuid>/cancel/` | CSRF-protected owner/session POST cancelling a generation run; no financial rollback. |
+| `/assistant/context/` | Authenticated read-only context GET: minimal page metadata by default; bounded financial evidence only with explicit `include_context=1`. It never calls a model. |
 | `/assistant/connections/` | Authenticated, owner-scoped settings GET: local account metadata and pending authorization status; no vault initialization or external request. |
 | `/assistant/connections/start/`, `/assistant/connections/<uuid>/authorize/` | Explicit CSRF-protected native POST starting a new link or reauthorization; refused while real authorization is disabled. |
 | `/assistant/connections/callback/` | One-time loopback OAuth GET; validates the handoff without requiring a callback-host cookie and redirects to the neutral result page. It does not attach an account to a Django user. |
@@ -53,8 +63,12 @@ Conversations and messages are local database data, retained until explicitly
 deleted. They are not browser-storage transcripts, shared global history or an
 OpenAI conversation store. Normal database backups can retain older copies
 after deletion; see [operations](../operations.md#assistant-data-and-integrations).
-The unavailable composer is disabled, and a stale/direct message POST fails
-explicitly instead of silently accepting unsent work.
+An unavailable composer is disabled and direct submissions fail explicitly.
+Eligible submissions persist the user message and a session-bound `GenerationRun`;
+its completed/failed/cancelled state and any bounded partial assistant text stay
+in local history. Request UUID retries replay the existing terminal result,
+without submitting another paid request. Conflicting reuse is refused. A failed
+or cancelled exchange is not silently reused as completed model history.
 
 ## Structured financial context
 
@@ -67,19 +81,29 @@ object ID, label, total or arbitrary URL as financial authority.
 (`SCOPE_MAX_AGE = 3600`). Local locations are limited to 2,048 characters and
 30 query fields; unsupported filters are refused rather than copied wholesale.
 
-The collector returns the supported scope, snapshot timestamp, financial cutoff,
-reporting currency, metrics, evidence warnings and owned source links. The compact
+`assistant.context_request.build_context` returns timestamp, financial cutoff,
+language and optional current-page label/route/date-period filters by default.
+It does not collect financial metrics or preferences without the request's
+unchecked-by-default Include financial context choice. Free-text search and
+record-filter IDs are omitted from transmitted page metadata. No scope remains
+finance-free even when the choice is submitted. With the choice enabled, the
+existing bounded collector supplies reporting/native currencies, metrics,
+evidence warnings and verified owned references. Labels become bounded plain
+text; notes, raw HTML, unsent fields and other model fields are excluded. The compact
 Context block shows only the current workspace/period and its authorized origin
 link. It does not repeat financial figures, technical timestamps or the evidence
-inventory. The structured endpoint retains canonical ISO dates, numeric strings,
-currencies and warnings for future response construction. Incomplete evidence
+inventory. Financial context retains canonical ISO dates, numeric strings,
+currencies and warnings. Default JSON is capped at 32,000 characters, including
+Unicode escapes, with deterministic trailing-row/reference truncation and an
+explicit warning. A retained zero remains zero; missing amounts or FX remain
+unknown. Incomplete evidence
 must remain explicit in any later answer rather than being treated as a zero
 balance or a complete ledger review. Page location is a UI cue, not a claim that
 every customer record was fetched or a replacement for server-side ownership.
 Future agent queries may consult the authenticated user's financial data beyond
 the page currently open, retrieving what the question needs rather than copying
-the whole database into each request. This disconnected foundation retains the
-bounded collector below; broader query tools belong to later provider work.
+the whole database into each request. This streaming implementation retains the
+bounded collector below; broader query tools remain later work.
 
 | Current context surface | Collected evidence |
 |---|---|
@@ -138,26 +162,81 @@ page memory; it is not permission to replay its content after a session change.
 
 ## Provider and action boundary
 
-The provider boundary defines future response streaming, cancellation and error
-handling. Account authorization has its own service and vault; it does not
-connect this boundary to a running model or background worker. The current
-unavailable state remains authoritative until a separately approved provider
-implementation exists. There is no automatic paid API-key fallback.
+`ASSISTANT_OPENAI_INFERENCE_ENABLED` defaults to `False`, separately from
+`ASSISTANT_OPENAI_AUTH_ENABLED`. Both must be enabled and the current user must
+have a selected `ready` connection with direct-plan/invoke scopes. Otherwise
+provider resolution, composer rendering, model-list GETs and message POSTs cannot
+open an external model connection. Enabling authorization alone is insufficient.
+When inference is enabled, opening a ready composer may fetch the account's model
+catalogue and refresh expiring credentials; this is an external request even
+before Send. The connection-settings GET itself remains local/read-only.
+
+The public `https://api.openai.com/v1/models` and `/v1/responses` endpoints are
+used only with the selected account's authorized ChatGPT-plan OAuth token.
+The adapter never reads `OPENAI_API_KEY` and exposes no API organization/project,
+API-key configuration or separate API billing route. It never falls back to a
+paid API key when plan access, quota or a request fails.
+
+The adapter follows the official [models and inference guide](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference):
+it reads the selected account's `/v1/models` catalogue, keeps `visibility: list`,
+shows `display_name` and submits the explicitly selected `slug`. No model is
+preselected or substituted automatically. A short owner/connection-specific
+cache avoids repeated catalogue requests; account changes invalidate that scope.
+Send revalidates the selected connection and catalogue choice. An empty catalogue,
+reauthorization requirement or request error remains a visible recovery state.
 
 | Python interface | Current contract |
 |---|---|
-| `assistant.providers.get_provider()` | Returns `DisconnectedProvider`; no credential lookup, transport or live generation. |
-| `providers.base.GenerationRequest` | Explicit JSON context object, at most 32,000 characters, plus at most 20 selected `ChatTurn` entries, `language` (`en` or `pt-br`) and the supported instruction version. This constructor checks shape/bounds, not ownership. |
-| `ChatTurn` | User/assistant role and at most 4,000 text characters. The request does not automatically include all locally stored history. |
+| `assistant.providers.get_provider(user, connection_id)` | Resolves the explicitly gated owned selected account to `OpenAIProvider`; returns `DisconnectedProvider` when unavailable. Tokens stay in the server process/vault. |
+| `providers.base.GenerationRequest` | Explicit model slug, JSON context up to 32,000 characters, bounded `ChatTurn` tuple, language (`en`/`pt-br`) and supported instruction version. The chat service supplies at most eight prior completed messages plus the current question; constructor validation alone does not authorize context. |
+| `ChatTurn` | User/assistant role with bounded text. Prior history is limited to 4,000 characters per supplied message; full local history is not automatically transmitted. |
 | `ProviderEvent` | Typed `text`, `error` or `done` event; per-event text/code bounds. `ProviderUnavailable`, `ProviderCancelled` and `ProviderError` expose stable error codes rather than adapter exception text. |
-| `CancellationToken` and `stream_response` | Cooperative cancellation between events, typed terminal/error handling and iterator closure; no output persistence or HTTP streaming endpoint. Generation is refused inside a database transaction. |
+| `CancellationToken` and `stream_response` | Typed terminal/error handling, registered transport closure and explicit completion; EOF/incomplete/interrupted streams never imply success. Provider I/O is refused inside a database transaction. |
 | `assistant.actions.preview_action` | Shape-only allowlisted proposal, returned as an immutable `ActionPreview`; no object lookup, simulation of financial results or execution. |
 
-A later transport adapter must supply bounded network timeouts and close its
-transport when iteration closes. Cooperative cancellation cannot interrupt an
-adapter blocked in I/O. Authorization and deliberate persistence remain the
-caller's responsibility; constructing a valid request does not make arbitrary
-JSON authorized context.
+Responses use public `/v1/responses` HTTP SSE with `store: false`, `stream: true`
+and no server-conversation/continuation ID. The current question, minimized
+context and selected recent history are the outbound content. No tools, hosted
+connectors, model-side financial actions, automatic retry or paid fallback are
+supplied. The [preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
+remain the upstream request contract.
+
+The enhanced UI renders streamed deltas as text, exposes Cancel and keeps
+references as separately verified local links. The native POST waits for the
+bounded run and redirects to its owned history, without JavaScript. Runs retain
+explicit terminal status, at most 16,000 output characters and a 90-second budget;
+transport reads are bounded at 15 seconds. Only explicit nonempty
+`response.completed` output completes successfully. Session, user, connection
+and run authorization are rechecked before exposing text after blocking reads.
+Cancel records terminal state in the database. A process-local weak registry
+also closes the active transport immediately when the cancel request reaches
+the worker serving that stream. Other workers observe cancellation through
+database rechecks between chunks; a blocked read can take its 15-second bound
+to unwind, within the 90-second total budget. Response closure and departure
+also signal cancellation. Cancellation cannot undo provider work
+already performed or guarantee zero usage. Partial output remains visibly
+failed/cancelled locally and is excluded from later completed history.
+
+A crashed worker may leave a run marked running. The next eligible deliberate
+send marks runs older than the 90-second budget failed/interrupted before
+accepting new work. It never automatically resubmits that POST or repeats the
+inference request; an identical request UUID retains its existing terminal result.
+
+Stable unavailable, unauthorized, rate/usage-limit, incomplete, interrupted,
+timeout and transport errors reveal neither credentials nor raw provider bodies.
+Catalogue JSON is bounded at 2 MiB and error JSON at 64 KiB. Diagnostics retain
+only fixed mapped status/code/parameter values, MIME classifications and body
+kind; they never log raw response content, prompts, tokens or account identity.
+For HTTP 200 streams with a missing `Content-Type`, compatibility is limited to
+a bounded first-line check identifying valid SSE. The consumed prefix is replayed
+unchanged through the ordinary parser. Explicit wrong MIME types and non-SSE
+bodies are rejected; event-schema and terminal-completion checks remain intact.
+The check creates no synthetic progress or API-key fallback. This rule alone
+does not establish that a live request completes successfully.
+The official [errors and recovery guide](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
+distinguishes app/plan usage limits from exhausted overall allowance; the app
+does not invent reset times, quota totals or guaranteed model access. No error
+silently switches model, account, billing route or retries the generation.
 
 Current dry-run previews set `requires_review=True`, `executable=False` and warn
 that ownership, compatibility and current state have not been validated. A
@@ -180,21 +259,24 @@ implementation must keep generation and confirmation separate.
 
 ## Versioned instructions and evaluation limits
 
-`assistant.prompts.INSTRUCTIONS_VERSION` is `v1`; `load_instructions` loads the
-matching `assistant/prompts/v1/system.txt` and refuses unknown versions. The
+`assistant.prompts.INSTRUCTIONS_VERSION` is `v2`; `load_instructions` defaults to
+`assistant/prompts/v2/system.txt`, retains explicit v1 loading for historical
+requests and refuses unknown versions. The
 instructions require supplied owned source links, explicit missing/stale/bounded
 evidence and separation of native currency, source amounts, installments,
 settlement, cost and projections. The selected English/Brazilian Portuguese
 language, concise practical style, facts versus estimates/suggestions and focused
 questions for missing information are explicit written obligations. Record text and chat history are untrusted
 data rather than authority to change instructions, access credentials or execute
-tools. The unavailable-provider status must remain honest.
+tools. V2 does not hardcode provider availability; it explicitly distinguishes
+minimal page metadata from opted-in financial evidence and grants no tool or
+financial execution authority.
 
 These are versioned local instructions and interface guards. Offline tests can
 check deterministic boundaries and fixtures; they do not establish the quality,
-financial correctness or injection resistance of a live model. No provider or
-real-model evaluation is part of this implementation. Any later model-backed
-evaluation needs its own approved account/context/usage scope and evidence.
+financial correctness or injection resistance of a live model. Model-backed
+evaluation needs its own approved account/context/usage scope and dated evidence;
+implemented transport and a successful authorization are insufficient.
 
 <a id="planned-openai-connection"></a>
 
@@ -202,7 +284,7 @@ evaluation needs its own approved account/context/usage scope and evidence.
 
 **Implemented preparation, with real authorization disabled by default. Official
 documentation checked 2026-10-19.** Settings exposes the owned account lifecycle
-without replacing Django login or enabling inference. Synthetic accounts,
+without replacing Django login or enabling the separate inference gate. Synthetic accounts,
 signed-token fixtures and injected transports belong only in isolated tests;
 the application never seeds or displays a fabricated connected account.
 
@@ -210,14 +292,14 @@ the application never seeds or displays a fabricated connected account.
 
 `ASSISTANT_OPENAI_AUTH_ENABLED` defaults to `False`. Its explicit environment
 opt-in requires the owner's approval for live account authorization. Opening
-the assistant or its settings does not enable it, initialize the vault, contact
-OpenAI, refresh a token or consume plan usage. Setting the flag alone does not
-start authorization; the owner must submit the native Continue with ChatGPT
+connection settings does not enable it, initialize the vault or contact OpenAI.
+The separately gated composer catalogue behavior is defined above. Setting the
+authorization flag alone does not start authorization; the owner must submit the native Continue with ChatGPT
 POST, which opens authorization in a new tab while preserving the original
 settings tab for final confirmation. The
 [native validation](../reviews/assistant-native-sign-in-2026-10-19.md) records the
 owner-approved account link and preserved installation boundary. Account linking
-cannot enable the disconnected composer or model adapter.
+does not turn on the separate inference gate or prove a listed model can respond.
 
 `ASSISTANT_OPENAI_CALLBACK_URL` defaults to
 `http://127.0.0.1:8000/assistant/connections/callback/`. The prepared protocol
@@ -259,8 +341,8 @@ the corresponding lifecycle operation. Account selection is local metadata;
 each Django user may have multiple registrations and at most one selected
 connection. Settings and confirmation show the stable issued client ID beside
 the account identity so registrations sharing an email remain distinguishable.
-`ready` means the verified account granted plan permission, not that this
-delivery can generate responses.
+`ready` means the verified account granted plan permission. Model availability
+still requires the separate inference gate and the selected account's catalogue.
 
 The prepared refresh service serializes each connection's full read/refresh/write
 sequence across threads and processes. It retains a rotated refresh token before
@@ -331,16 +413,17 @@ real token refresh/revocation remain unverified; see the
 [ChatGPT's user guide](https://learn.chatgpt.com/docs/sign-in-with-chatgpt)
 describes eligible Plus/Pro users, shared existing usage limits and access
 management. Plan permission grants neither ChatGPT conversations/memories nor a
-new allowance. A later model adapter must separately verify account/model access
-and current limits, send only deliberately selected context/history and preserve
+new allowance. The gated adapter checks the account catalogue and sends only
+the selected question/history and explicitly opted-in context. Preserve
 explicit unavailable/exhausted states without automatic paid fallback.
 
 The current [preview contract](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 requires HTTP Responses requests with `store: false` and `stream: true`; HTTP
 continuation does not provide persistent server conversation storage. No
-Responses API call, financial context transmission or live-model evaluation is
-part of this authorization preparation. Recheck that contract before implementing
-the separately approved inference slice.
+live Responses API success, quota availability or financial correctness is
+established by the earlier authorization observation. The streaming code path
+exists behind its own gate; current validation evidence belongs in dated reviews,
+and isolated synthetic tests do not prove a particular live account can infer.
 
 ## Later automation
 

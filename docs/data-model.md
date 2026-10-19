@@ -38,6 +38,8 @@ erDiagram
     USER ||--o{ PROVIDER_CONNECTION : owns
     USER ||--o{ AUTHORIZATION_ATTEMPT : authorizes
     PROVIDER_CONNECTION |o--o{ AUTHORIZATION_ATTEMPT : links
+    CONVERSATION ||--o{ GENERATION_RUN : records
+    PROVIDER_CONNECTION |o--o{ GENERATION_RUN : authorizes
 
     BANK ||--o{ BANK_ACCOUNT : contains
     BANK_ACCOUNT ||--o{ BANK_MOVEMENT : posts
@@ -585,9 +587,31 @@ removes reusable local tokens and retains registration metadata for later
 sign-in. Database-only backup/restore cannot recover authorization credentials.
 See the owning [authorization contract](apps/assistant.md#openai-authorization-preparation)
 and [recovery boundary](operations.md#assistant-data-and-integrations).
-No real account was authorized for this delivery; synthetic account fixtures
-remain confined to isolated tests. Bank/external-observation schemas and model
-generation remain outside this slice.
+The [native authorization observation](reviews/assistant-native-sign-in-2026-10-19.md)
+is bounded account-link evidence; synthetic fixtures remain confined to isolated
+tests. Bank/external-observation schemas and financial execution remain outside
+this slice. Model transport has its own default-off gate.
+
+### Generation runs
+
+The additive `assistant.0003_generationrun` migration records a UUID request,
+owned conversation, optional selected provider connection, model slug, user input
+message, optional assistant output message, session digest, running/completed/
+failed/cancelled state, safe error code, reference metadata and timestamps.
+At most one run per conversation may be running. Identical terminal retries
+replay the saved result; conflicting UUID reuse is refused. Provider waits occur
+outside short database bookkeeping transactions. A running row left behind by
+a crashed worker becomes failed/interrupted on the next eligible deliberate
+send after its 90-second budget, without automatically resubmitting a POST.
+
+Context JSON is constructed per request and is not copied into the run row;
+the row retains the opt-in flag, source-location/reference metadata and cutoff.
+The user question and any bounded completed or partial output remain local
+messages. Failed/cancelled exchanges keep explicit status and are excluded from
+later completed-history selection. Conversation deletion cascades its runs and
+messages; ordinary private backup retention still applies. These records have
+no accounting effect. See the [streaming contract](apps/assistant.md#provider-and-action-boundary)
+for gates, history/context minimization, cancellation and limits.
 
 ## Dashboard formulas
 

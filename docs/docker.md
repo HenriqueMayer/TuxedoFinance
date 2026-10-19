@@ -89,6 +89,7 @@ from `.env.docker.example` (the release asset is named `docker.env.example`):
 | `HTTPS` | Default `False`; set `True` only with a correctly configured TLS proxy |
 | `LOG_LEVEL` | Default `INFO` |
 | `ASSISTANT_OPENAI_AUTH_ENABLED` | Default `False`; reserved for a later separately approved real-account authorization validation; does not enable responses |
+| `ASSISTANT_OPENAI_INFERENCE_ENABLED` | Default `False`; separate explicit catalogue/streaming opt-in, requiring authorization and an eligible selected account |
 | `ASSISTANT_OPENAI_CALLBACK_URL` | Container value derived by Compose from the published `TUXEDO_PORT` and exact `/assistant/connections/callback/` path |
 
 The Compose service fixes `DEBUG=False`, `TUXEDO_DATA_DIR=/data` and
@@ -108,7 +109,10 @@ The Unreleased source checkout prepares OpenAI account authorization; published
 no real account or model calls were used for this delivery. Leave the explicit
 authorization flag disabled until a later approved validation. Opening settings
 does not initialize private storage or contact OpenAI, and linking an account
-cannot enable the disconnected provider/composer.
+does not enable the separate inference gate. With either gate off, catalogue
+and inference make no external request. The gated streaming path is implemented;
+real Docker OAuth, model availability and usage remain unverified by native
+authorization evidence. See the [provider contract](apps/assistant.md#provider-and-action-boundary).
 
 The browser and container must run on the same computer. The callback uses the
 Docker host's published loopback port: for `TUXEDO_PORT=8001`, its exact URL is

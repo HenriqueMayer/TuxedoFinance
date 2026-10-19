@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """Account authorization lifecycle, isolated from financial data and inference."""
 from datetime import timedelta
+from dataclasses import dataclass, field
 from functools import wraps
 import uuid
 
@@ -487,6 +488,48 @@ def refresh_connection(user, connection_id, transport=None):
             return connection
     except VaultError:
         raise ConnectionError('vault_unavailable') from None
+
+
+@dataclass(frozen=True)
+class AuthorizedAccessToken:
+    value: str = field(repr=False)
+
+    def __str__(self):
+        return '<redacted access token>'
+
+
+@_public_errors
+def get_authorized_access_token(user, connection_id):
+    """Return only a token after fresh ownership/grant checks, outside DB locks."""
+    _enabled()
+    _outside_transaction()
+    if getattr(settings, 'ASSISTANT_OPENAI_INFERENCE_ENABLED', False) is not True:
+        raise ConnectionError('disabled')
+    connection = _connection(user, connection_id)
+    if not connection.is_active or connection.status != ProviderConnection.Status.READY:
+        raise ConnectionError('reconnect_required')
+    vault = _vault()
+    for refreshed in (False, True):
+        with vault.lock(connection.pk):
+            connection = _connection(user, connection_id)
+            credentials = vault.read(connection.pk)
+            expiry = _validate_credentials(credentials, vault, expected=connection)
+            if (not connection.is_active or connection.status != ProviderConnection.Status.READY
+                    or credentials.get('capability') != 'plan_authorized'
+                    or not {'resource.invoke', 'chatgpt.tokens.use.direct'} <= set(credentials['scopes'])
+                    or not expiry):
+                raise ConnectionError('reconnect_required')
+            value = credentials.get('access_token')
+            if (not isinstance(value, str) or not value or len(value) > 16384
+                    or any(ord(char) < 33 or ord(char) > 126 for char in value)):
+                raise ConnectionError('credentials_invalid')
+            if expiry > timezone.now() + timedelta(seconds=60) or refreshed:
+                if expiry <= timezone.now():
+                    raise ConnectionError('reconnect_required')
+                return AuthorizedAccessToken(value)
+        # Release the record lock before entering the existing refresh owner;
+        # it serializes rotations and re-reads the newest token under its lock.
+        refresh_connection(user, connection_id)
 
 
 @_public_errors

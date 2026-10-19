@@ -42,7 +42,21 @@
 .assistant-composer { padding-top: 16px; border-top: 1px solid var(--ui-line); }
 .assistant-composer > label { display: block; font-size: 13px; margin-bottom: 8px; }
 body.tuxedo-ui .assistant-composer textarea.entry-input { min-height: 76px; width: 100%; font-size: 13px; line-height: 1.5; opacity: .7; }
-.assistant-composer > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.assistant-composer:not(form) > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.assistant-composer--ready { display: grid; gap: 14px; }
+body.tuxedo-ui .assistant-composer--ready textarea.entry-input { min-height: 96px; max-height: 240px; opacity: 1; resize: vertical; }
+.assistant-composer--ready .entry-checkbox-choice { align-items: start; font-size: 12px; }
+.assistant-composer--ready .entry-checkbox-choice label { font-size: 12px; line-height: 1.5; }
+.assistant-send-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.assistant-send-status { color: var(--ui-muted); font-size: 12px; line-height: 1.6; }
+.assistant-send-status:empty { display: none; }
+.assistant-send-status--error { color: var(--ui-danger); }
+.assistant-account-actions { display: flex; flex-wrap: wrap; align-items: start; gap: 12px; }
+.assistant-disconnect { min-width: 0; }
+.assistant-disconnect > summary { display: inline-flex; list-style: none; cursor: pointer; }
+.assistant-disconnect > summary::-webkit-details-marker { display: none; }
+.assistant-disconnect-body { display: grid; gap: 12px; max-width: 36ch; padding: 16px 0 0; font-size: 13px; }
+.assistant-disconnect-body p { color: var(--ui-muted); line-height: 1.6; }
 .assistant-composer .subtle-copy { font-size: 12px; }
 .assistant-composer button { font-size: 13px !important; }
 .assistant-delete { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--ui-line); }
@@ -52,6 +66,10 @@ body.tuxedo-ui .assistant-composer textarea.entry-input { min-height: 76px; widt
 .assistant-error { padding: 12px; margin-block: 12px; border-left: 2px solid var(--ui-danger); background: var(--ui-danger-ground); font-size: 13px; }
 .assistant-message { border-bottom: 1px solid var(--ui-line); padding-bottom: 16px; font-size: 14px; line-height: 1.65; }
 .assistant-message-role { color: var(--ui-muted); font-size: 12px; font-weight: 500; margin-bottom: 8px; }
+.assistant-message-text { white-space: pre-wrap; }
+.assistant-partial { color: var(--ui-muted); margin-top: 10px; font-size: 12px; }
+.assistant-references { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; }
+.assistant-references a { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; color: var(--ui-muted); font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
 .assistant-request-status { font-size: 13px; padding: 12px 20px; color: var(--ui-muted); }
 .assistant-request-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-inline: 12px; }
 .assistant-cancel { align-self: start; margin-inline: 12px; }

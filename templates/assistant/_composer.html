@@ -1,0 +1,28 @@
+{% load i18n %}
+{% if provider_state == 'ready' and models %}
+<form method="post" action="{% if conversation %}{% url 'assistant:send' conversation.pk %}{% else %}{% url 'assistant:send-new' %}{% endif %}" class="assistant-composer assistant-composer--ready" hx-boost="false" autocomplete="off" novalidate data-assistant-send
+      data-sending="{% translate 'Writing a response…' %}" data-completed="{% translate 'Response complete.' %}"
+      data-cancelled="{% translate 'Response stopped. Partial text is kept locally.' %}"
+      data-failed="{% translate 'The response could not be completed. Refresh the conversation before sending again.' %}"
+      data-session-error="{% translate 'Your session or selected account changed. Reopen the conversation.' %}"
+      data-rate-error="{% translate 'Your plan is temporarily unavailable or its usage limit was reached. Try again later.' %}"
+      data-user-label="{% translate 'You' %}" data-assistant-label="{% translate 'Tuxedo assistant' %}">
+    {% csrf_token %}{{ send_form.scope }}{{ send_form.location }}{{ send_form.connection_id }}{{ send_form.request_id }}
+    {% for error in send_form.non_field_errors %}<p class="assistant-error" role="alert">{{ error }}</p>{% endfor %}
+    {% include 'partials/form_field.html' with field=send_form.model %}
+    {% include 'partials/form_field.html' with field=send_form.content %}
+    {% if scope %}{% include 'partials/form_field.html' with field=send_form.include_context %}{% endif %}
+    <p class="subtle-copy">{% translate 'Only this conversation and the context selected for this message are sent. History stays on this installation.' %}</p>
+    <p class="assistant-send-status" role="status" aria-live="polite" data-assistant-send-status></p>
+    <div class="assistant-send-actions">
+        <button type="submit" class="action-primary">{% translate 'Send message' %}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
+        <button type="button" class="action-link" data-assistant-stop hidden>{% translate 'Stop response' %}</button>
+    </div>
+</form>
+{% else %}
+<div class="assistant-composer">
+    <label for="{% if assistant_available %}assistant-panel-message{% else %}assistant-page-message{% endif %}">{% translate 'Message' %}</label>
+    <textarea id="{% if assistant_available %}assistant-panel-message{% else %}assistant-page-message{% endif %}" class="entry-input" rows="2" disabled placeholder="{% translate 'Connect a provider to send messages.' %}"></textarea>
+    <div><span class="subtle-copy">{% translate 'Sending is unavailable.' %}</span><button type="button" class="action-primary" disabled>{% translate 'Send message' %}</button></div>
+</div>
+{% endif %}

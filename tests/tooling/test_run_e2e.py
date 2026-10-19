@@ -35,6 +35,7 @@ assert Path(os.environ['TUXEDO_ENV_FILE']).read_text() == ''
 assert Path(os.environ['TUXEDO_DATA_DIR']) != root
 assert os.environ['SECRET_KEY'] != 'personal-secret'
 assert os.environ['ASSISTANT_OPENAI_AUTH_ENABLED'] == 'False'
+assert os.environ['ASSISTANT_OPENAI_INFERENCE_ENABLED'] == 'False'
 assert Path(os.environ['ASSISTANT_PRIVATE_DIR']).parent == Path(os.environ['TUXEDO_DATA_DIR'])
 assert os.environ['ASSISTANT_OPENAI_CALLBACK_URL'] == os.environ['E2E_BASE_URL'] + '/assistant/connections/callback/'
 assert 'ASSISTANT_FUTURE_SECRET' not in os.environ
@@ -103,6 +104,7 @@ class RunnerTests(unittest.TestCase):
             TUXEDO_ENV_FILE=str(self.root / '.env'), ALLOW_SIGNUPS='False', HTTPS='True',
             DJANGO_SETTINGS_MODULE='personal.settings', E2E_BASE_URL='http://127.0.0.1:1',
             ASSISTANT_OPENAI_AUTH_ENABLED='True', ASSISTANT_PRIVATE_DIR=str(self.private_dir),
+            ASSISTANT_OPENAI_INFERENCE_ENABLED='True',
             ASSISTANT_OPENAI_CALLBACK_URL='http://127.0.0.1:9000/personal-callback/',
             ASSISTANT_FUTURE_SECRET='personal-assistant-secret',
         )
@@ -131,7 +133,7 @@ class RunnerTests(unittest.TestCase):
         path = self.root / 'events.jsonl'
         return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
 
-    def verify_cleanup(self):
+    def verify_cleanup(self, settings_module='core.settings'):
         self.assertEqual((self.root / '.env').read_text(), 'personal-secret')
         self.assertEqual((self.root / 'db.sqlite3').read_bytes(), b'personal-database')
         self.assertEqual((self.private_dir / 'credential.enc').read_bytes(), b'preserve personal vault')
@@ -152,7 +154,7 @@ class RunnerTests(unittest.TestCase):
         migration = events[0]
         self.assertEqual(migration['signup'], 'True')
         self.assertEqual(migration['https'], 'False')
-        self.assertEqual(migration['settings'], 'core.settings')
+        self.assertEqual(migration['settings'], settings_module)
         self.assertNotEqual(migration['url'], self.env['E2E_BASE_URL'])
         self.assertFalse(Path(migration['env_file']).exists())
 
@@ -173,6 +175,21 @@ class RunnerTests(unittest.TestCase):
         output, _ = process.communicate(timeout=15)
         self.assertEqual(process.returncode, 7, output)
         self.verify_cleanup()
+
+    def test_assistant_fixture_mode_is_explicit_and_not_forwarded_to_playwright(self):
+        process = self.start('success', '--assistant-fixtures', '--grep', 'Streaming')
+        output, _ = process.communicate(timeout=15)
+        self.assertEqual(process.returncode, 0, output)
+        self.assertNotIn('--assistant-fixtures', self.events()[-1]['args'])
+        self.verify_cleanup(settings_module='tests.e2e.assistant_mock_settings')
+
+    def test_docker_refuses_the_local_assistant_fixture_settings(self):
+        with mock.patch.object(run_e2e, 'ROOT', self.root), mock.patch.object(
+            run_e2e.shutil, 'which', return_value=str(self.root / 'node'),
+        ), mock.patch.object(run_e2e, 'run_docker') as docker:
+            with self.assertRaisesRegex(RuntimeError, 'disposable local'):
+                run_e2e.run(['--docker-image', 'local:test', '--assistant-fixtures'])
+        docker.assert_not_called()
 
     def test_startup_failure_never_runs_browser(self):
         process = self.start('startup_failure')
@@ -236,6 +253,7 @@ class RunnerTests(unittest.TestCase):
         env = start.call_args.kwargs['env']
         self.assertEqual(env['E2E_BASE_URL'], app.url)
         self.assertEqual(env['ASSISTANT_OPENAI_AUTH_ENABLED'], 'False')
+        self.assertEqual(env['ASSISTANT_OPENAI_INFERENCE_ENABLED'], 'False')
         self.assertNotIn('ASSISTANT_PRIVATE_DIR', env)
         self.assertNotIn('ASSISTANT_OPENAI_CALLBACK_URL', env)
         self.assertNotIn('ASSISTANT_FUTURE_SECRET', env)

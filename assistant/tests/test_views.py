@@ -89,7 +89,7 @@ class AssistantViewTests(TestCase):
                 self.assertNotContains(response, '87,66')
                 self.assertNotContains(response, 'assistant-context-details')
                 self.assertNotContains(response, instant.isoformat())
-                snapshot = self.client.get(reverse('assistant:context'), {'scope': token},
+                snapshot = self.client.get(reverse('assistant:context'), {'scope': token, 'include_context': '1'},
                                            HTTP_ACCEPT_LANGUAGE=language).json()['context_snapshot']
                 self.assertEqual(snapshot['metrics'][0]['value'], '87.66')
                 self.assertEqual(snapshot['captured_at'], instant.isoformat())
@@ -184,7 +184,7 @@ class AssistantViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(read_scope(self.user, data['scope'])['filters'], {'month': '2026-10'})
-        self.assertEqual(data['context_snapshot']['metrics'], [])
+        self.assertNotIn('metrics', data['context_snapshot'])
         self.assert_private(response)
         for params in [{'scope': token, 'location': 'https://example.com/'},
                        {'location': '/dashboard/'}, {'scope': sign_scope(self.other, '/dashboard/')},

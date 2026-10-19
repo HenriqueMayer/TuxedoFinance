@@ -29,9 +29,9 @@ Settings, language, theme, project links and POST logout remain in account or
 utility controls. Primary navigation has no hover submenus. Option menus open
 deliberately; question-mark help keeps its separate hover/focus behavior.
 The authenticated assistant is a utility panel/native destination, not a sixth
-primary workspace. Its local foundation has no connected model or financial
-execution. Assistant settings owns default-disabled account-authorization
-preparation; account linking never replaces Django login or enables inference.
+primary workspace. It has no financial execution. Account authorization and
+model inference are separate default-off gates; account linking never replaces
+Django login or turns on inference automatically.
 See the [assistant guide](apps/assistant.md).
 
 ## Screens and route families
@@ -50,11 +50,12 @@ See the [assistant guide](apps/assistant.md).
 
 | Routes | Interface and actions | Preserved boundaries |
 |---|---|---|
-| `/assistant/`, `/assistant/<uuid>/` | Local conversation list/detail, explicit New conversation/Delete, compact current-page context link and unavailable provider/composer; fixed desktop overlay, mobile sheet and native full-page fallback. | Opening/closing preserves workspace/filter geometry. Stationary controls contain gentle artwork motion with reduced-motion support. Owner-scoped UUIDs, no-store responses, shared keyboard/focus/mobile clearance and no fake model reply. Outside `main`; whole-body HTMX navigation reconstructs the panel and refetches its owned conversation. |
+| `/assistant/`, `/assistant/<uuid>/` | Local history, New/Delete, compact page link, eligible model choice and per-request financial-context checkbox; streamed text/Cancel or explicit unavailable state; fixed desktop overlay, mobile sheet and native fallback. | No model preselection, checkbox initially unchecked, gate-off external silence, owned history, text-only output and verified links. Preserve workspace geometry, reduced motion, focus/mobile clearance and authorized HTMX reconstruction. |
 | `/assistant/conversations/new/`, `/assistant/<uuid>/delete/` | Explicit CSRF-protected local POSTs. | Create/delete owned conversation history only; no financial write. |
-| `/assistant/<uuid>/messages/` | Unavailable-provider recovery for a stale/direct POST. | HTTP 503 without saving a fake exchange; no external request or paid fallback. |
-| `/assistant/context/` | Timestamped/cutoff/currency-aware structured context with metrics, warnings and owned source links. | Signed expiring user-bound origin, allowlisted route/query, ownership rechecks, read-only collection and no DOM/unsent-form capture. |
-| `/assistant/connections/` | Owned ChatGPT account settings, local selected/status metadata, pending confirmation and explicit connection actions; empty/disconnected state by default. | No external request or vault initialization on GET; never seeds a fictitious linked account. Shared native forms and readable long identity text; provider/composer stays unavailable. |
+| `/assistant/messages/`, `/assistant/<uuid>/messages/` | Explicit chosen-model CSRF POST; SSE when requested, bounded wait/redirect without JavaScript. | Both gates/current account/catalogue choice required. UUID retries cannot duplicate generation; partial/failed/cancelled output retains its state. Gate-off returns unavailable without an external call or fake exchange. |
+| `/assistant/models/`, `/assistant/runs/<uuid>/cancel/` | Owned account model/state GET; explicit owner/session CSRF cancel POST. | No catalogue/refresh call with either gate off. No account/model fallback; cancellation cannot undo provider usage. |
+| `/assistant/context/` | Minimal page metadata by default; optional bounded financial metrics/warnings/verified references. | Signed owner-bound scope, date-period filters only in transmitted page metadata; explicit per-request opt-in, no DOM/unsent fields, no synchronization or model call. |
+| `/assistant/connections/` | Owned ChatGPT settings, selected/status metadata, pending confirmation and explicit connection actions. | Local/read-only GET, no fictitious account, shared native forms/long-identity wrapping. Account authorization does not turn on the inference gate. |
 | `/assistant/connections/start/`, `connections/<uuid>/authorize/` | Native CSRF POST for Continue with ChatGPT or Sign in again. | Real authorization disabled by default; explicit future opt-in and deliberate user action required. Leaves HTMX before the external handoff, without replacing Django login. |
 | `/assistant/connections/callback/`, `connections/callback/result/` | One-time loopback callback and generic result directing the owner to the original settings tab. | No immediate account attachment, callback-host session assumption, token/account rendering or reusable query. No-store/no-referrer; final confirmation belongs to the original authenticated session. |
 | `/assistant/connections/attempts/<uuid>/finish/`, `.../cancel/`, `connections/<uuid>/activate/`, `.../disconnect/` | Explicit native CSRF POSTs for reviewed account linking, attempt cancellation, local selection and deliberate disconnect confirmation. | Owner/session checks; no token fields in forms, browser storage or logs. Identity-only/reconnect/revocation-failure recovery stays explicit; financial data and conversations remain. |
@@ -185,8 +186,8 @@ protects both GET and POST entry into paused features:
   catalogue rollout; mapping it does not enable staff access or restyle it.
 - The static preview and Design Lab are reference surfaces, not alternate
   financial applications or runtime data sources.
-- Assistant proposal/simulation interfaces are contracts only. No provider,
-  action execution, Open Finance connector or unattended automation is enabled;
+- Assistant proposal/simulation interfaces are contracts only. The model provider
+  is separately gated; no financial action execution, Open Finance connector or unattended automation is enabled;
   they cannot bypass an unavailable feature's server gate.
 
 ## Adoption and verification

@@ -1,5 +1,5 @@
 {% load i18n %}
-<div class="assistant-content" data-assistant-content data-assistant-user="{{ request.user.pk|stringformat:'d' }}" data-assistant-scope="{{ scope }}" data-conversation-id="{{ conversation.pk|default:'' }}">
+<div class="assistant-content" data-assistant-content data-assistant-user="{{ request.user.pk|stringformat:'d' }}" data-assistant-scope="{{ scope }}" data-conversation-id="{{ conversation.pk|default:'' }}" data-provider-state="{{ provider_state }}">
     <div class="assistant-content-toolbar">
         <details class="assistant-history" {% if not conversation and conversations %}open{% endif %}>
             <summary class="quiet-action">{% translate 'History' %}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
@@ -28,27 +28,25 @@
     {% if scope_label %}
     <div class="assistant-scope">
         <span>{% translate 'Context' %}</span>
-        {% with origin=context_snapshot.sources.0 %}<a href="{{ origin.url }}" data-assistant-source data-assistant-context-link><span>{{ scope_label }}</span><span aria-hidden="true">↗</span></a>{% endwith %}
+        <a href="{{ scope_location }}" data-assistant-source data-assistant-context-link><span>{{ scope_label }}</span><span aria-hidden="true">↗</span></a>
     </div>
     {% endif %}
     {% if conversation %}<h3 class="mt-4 text-sm font-medium">{{ conversation.title|default:_('New conversation') }}</h3>{% endif %}
     <section class="assistant-transcript" aria-label="{% translate 'Messages' %}" tabindex="0">
         {% for message in chat_messages %}
-        <article class="assistant-message assistant-message--{{ message.role }}"><p class="assistant-message-role">{% if message.role == 'user' %}{% translate 'You' %}{% else %}{% translate 'Tuxedo assistant' %}{% endif %}</p><p>{{ message.content|linebreaksbr }}</p></article>
+        <article class="assistant-message assistant-message--{{ message.role }}"><p class="assistant-message-role">{% if message.role == 'user' %}{% translate 'You' %}{% else %}{% translate 'Tuxedo assistant' %}{% endif %}</p><p class="assistant-message-text">{{ message.content }}</p>
+            {% if message.generation_status and message.generation_status != 'completed' %}<p class="assistant-partial">{% if message.role == 'assistant' %}{% translate 'Partial response' %} · {% endif %}{% if message.generation_status == 'cancelled' %}{% translate 'Stopped' %}{% elif message.generation_status == 'running' %}{% translate 'In progress' %}{% else %}{% translate 'Not completed' %}{% endif %}</p>{% endif %}
+            {% if message.reference_sources %}<nav class="assistant-references" aria-label="{% translate 'References' %}">{% for reference in message.reference_sources %}<a href="{{ reference.url }}" data-assistant-source>{{ reference.label }} <span aria-hidden="true">↗</span></a>{% endfor %}</nav>{% endif %}
+        </article>
         {% empty %}
         <div class="assistant-empty">
             <svg class="assistant-bowtie" viewBox="0 0 100 48" fill="none" aria-hidden="true"><path d="m8 6 34 13v10L8 42z" fill="currentColor"/><rect x="44" y="16" width="12" height="16" rx="4" fill="currentColor"/><path d="M92 6 58 19v10l34 13z" stroke="currentColor" stroke-width="1.4"/><path d="M70 16v16m8-19v22" stroke="currentColor" stroke-width=".7"/></svg>
-            <h3>{% translate 'Provider not connected' %}</h3>
-            <p>{% translate 'Your chat is ready for a future AI connection. No financial data is being sent to a provider.' %}</p>
+            {% if provider_state == 'ready' %}<h3>{% translate 'How can I help?' %}</h3><p>{% translate 'Choose a model and write your message. Include the current page’s financial information only when it is needed.' %}</p>{% elif provider_state == 'reauth' %}<h3>{% translate 'Sign in again' %}</h3><p>{% translate 'Renew the selected account connection in assistant settings.' %}</p>{% elif provider_state == 'error' %}<h3>{% translate 'Models unavailable' %}</h3><p>{% translate 'Could not load models for this account. Refresh the conversation or review its connection.' %}</p>{% else %}<h3>{% translate 'Provider not connected' %}</h3><p>{% translate 'Your chat is ready for a future AI connection. No financial data is being sent to a provider.' %}</p>{% endif %}
             <a href="{% url 'assistant:connections' %}" class="quiet-action" data-assistant-source>{% translate 'Assistant settings' %} <span aria-hidden="true">↗</span></a>
         </div>
         {% endfor %}
     </section>
-    <div class="assistant-composer">
-        <label for="{% if assistant_available %}assistant-panel-message{% else %}assistant-page-message{% endif %}">{% translate 'Message' %}</label>
-        <textarea id="{% if assistant_available %}assistant-panel-message{% else %}assistant-page-message{% endif %}" class="entry-input" rows="2" disabled placeholder="{% translate 'Connect a provider in a future update to send messages.' %}"></textarea>
-        <div><span class="subtle-copy">{% translate 'Sending is unavailable.' %}</span><button type="button" class="action-primary" disabled>{% translate 'Send message' %}</button></div>
-    </div>
+    {% include 'assistant/_composer.html' %}
     {% if conversation %}
     <details class="assistant-delete">
         <summary class="quiet-action">{% translate 'Delete conversation' %}</summary>

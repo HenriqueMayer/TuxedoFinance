@@ -87,12 +87,12 @@ inside the fixed mark, with two stars on opposite sides of the orbit. Keep the
 cat at 28px inside the 48px orbit and retain the 60px launcher target.
 Never animate the button's target, focus ring or surrounding layout. Honor
 `prefers-reduced-motion` for both the launcher and header artwork, including the
-Design Lab specimen; keep the disconnected-provider status explicit.
+Design Lab specimen; keep provider availability and its recovery state explicit.
 
 Opening and closing are deliberate keyboard, pointer or touch actions. Preserve
 the workspace's scroll, selected filters and unsent form values; closing returns
 focus to the trigger when it still exists. The narrow-screen presentation keeps
-its heading, close control, conversation actions and unavailable composer inside
+its heading, close control, conversation actions, composer and cancellation state inside
 the viewport and above fixed navigation/safe areas. Visible focus, Escape and
 Tab/Shift+Tab behavior must match the panel's declared modal behavior; background
 content must not remain keyboard-active behind a modal surface.
@@ -112,7 +112,7 @@ without replaying a POST or automatically discarding a financial draft.
 Account connection settings use native POST/redirect forms outside HTMX. The
 ChatGPT sign-in control opens a separate tab, preserving the authenticated
 settings tab for final confirmation. It is disabled until authorization is deliberately enabled;
-an authorized account still does not enable inference in this delivery. The
+an authorized account still requires the separate inference gate. The
 settings link in the panel retains normal departure protection for edited
 financial forms. Callback pages contain no account or authorization code and
 require confirmation in the original authenticated settings session.
@@ -125,8 +125,18 @@ other pages retain the application's self-only form policy. Outbound redirects
 and callback pages retain `no-referrer`. Never exempt these POSTs from CSRF or
 trust a null origin to make the flow work.
 
-Keep the disconnected inference status visible and the real composer disabled;
-do not render fake streamed replies or an active Send action. The
+With either gate off, keep unavailable status explicit and Send disabled; never
+render a fake streamed reply. When eligible, the model picker starts empty and
+the Include financial context checkbox starts unchecked for each new request.
+It follows the shared form/checkbox contract, preserves invalid submitted values
+and does not scrape current-page drafts. Show plain streamed text, selected model,
+pending/terminal state, verified local references and a deliberate Cancel action.
+Enter adds a line; Ctrl/Command+Enter submits through the same validated form.
+Closing/replacing the panel or departing cancels its active stream and clears
+hidden text before an authorized reload. Never replay a POST on history restore.
+Native submission waits for the bounded result and redirects to owned local
+history without JavaScript. Preserve readable errors, empty model lists,
+partial-output status and keyboard/mobile access above fixed navigation. The
 [assistant guide](../apps/assistant.md) owns storage, routes, context and the
 gated authorization/provider/action boundaries. Browser validation must cover
 desktop/phone, both themes, real keyboard focus, HTMX navigation, account/logout

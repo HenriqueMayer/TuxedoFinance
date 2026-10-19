@@ -111,11 +111,14 @@ def run(args):
 
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--docker-image')
+    parser.add_argument('--assistant-fixtures', action='store_true')
     options, args = parser.parse_known_args(args)
     if args[:1] == ['--']:
         args = args[1:]
     command = [node, str(cli), 'test', '--config', str(ROOT / 'tests/playwright.config.js'), *args]
     if options.docker_image:
+        if options.assistant_fixtures:
+            raise RuntimeError('Synthetic assistant fixtures run only in the disposable local installation.')
         return run_docker(options.docker_image, command)
 
     runtime = ROOT / '.local/test-results/runtime'
@@ -136,6 +139,7 @@ def run(args):
             ASSISTANT_PRIVATE_DIR=str(data_dir / 'assistant-private'),
             ASSISTANT_OPENAI_CALLBACK_URL=f'{url}/assistant/connections/callback/',
             ASSISTANT_OPENAI_AUTH_ENABLED='False',
+            ASSISTANT_OPENAI_INFERENCE_ENABLED='False',
             SECRET_KEY=secrets.token_urlsafe(48),
             DEBUG='True',
             HTTPS='False',
@@ -145,6 +149,11 @@ def run(args):
             E2E_BASE_URL=url,
             PYTHONUNBUFFERED='1',
         )
+        if options.assistant_fixtures:
+            # The guarded test module replaces the provider before any model
+            # request. It is never installed into ordinary or Docker settings.
+            env.update(DJANGO_SETTINGS_MODULE='tests.e2e.assistant_mock_settings',
+                       E2E_ASSISTANT_FIXTURES='1')
         processes = []
         log_path = data_dir / 'server.log'
         print(f'Running browser tests on an isolated server at {url}', flush=True)

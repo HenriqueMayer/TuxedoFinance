@@ -15,7 +15,8 @@ find a case.
 | `e2e/planning/` | Budgets, goals, planning tools, scenarios and simulations. |
 | `e2e/transactions/` | Transaction forms, lists, splits, payment selection and export. |
 | `e2e/ingestion/` | Paused-import gates and owned read-only import history. |
-| `e2e/assistant/` | Local assistant history, responsive panel, draft continuity, session privacy and native fallback; no live provider. |
+| `e2e/assistant/` | Local history, responsive panel, draft continuity, session privacy, native fallback and streaming with an explicitly selected synthetic provider; no live provider. |
+| `e2e/assistant_mock_settings.py` | Runner-guarded synthetic catalogue/streaming settings; accepts only an owned disposable runtime and blocks external network, OAuth and inference transports. |
 | `e2e/catalogue/` | Design Lab components and local interactions using synthetic specimens. |
 | `e2e/shared/` | Cross-workspace contracts, authentication/public pages, history, keyboard behavior and shared UI. |
 | `e2e/helpers/` | Shared form/navigation actions, repository path resolution and bounded catalogue routing. |
@@ -39,8 +40,18 @@ npm run test:unit
 npm run test:e2e -- --list
 npm run test:e2e -- tests/e2e/banking
 npm run test:e2e -- tests/e2e/catalogue
+npm run test:e2e -- --assistant-fixtures tests/e2e/assistant/streaming.spec.js
 npm run test:preview
 ```
+
+The ordinary runner keeps real authorization/inference gates off and discards
+inherited assistant settings. `--assistant-fixtures` explicitly selects
+`e2e/assistant_mock_settings.py` for the native disposable runner only; it refuses
+Docker mode and any path outside its owned temporary runtime/empty environment
+file. The model catalogue and responses are synthetic, credentials are neither
+read nor created, and external sockets/provider transports are blocked. Do not
+select that settings module manually for an installation. These browser cases
+verify UI/lifecycle behavior, not real account eligibility, quota or model quality.
 
 For Django tests, use the isolated environment in the contributor guide. Within
 that environment, `uv run python manage.py test banking` selects an app, and

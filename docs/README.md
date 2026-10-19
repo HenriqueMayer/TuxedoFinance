@@ -52,12 +52,13 @@ releases, persistent volumes and isolated restore rehearsals.
 - [apps/sandbox.md](apps/sandbox.md) — private planning drafts, salary/budget
   scenarios, commitment snapshots and contribution/yield simulations.
 - [apps/assistant.md](apps/assistant.md) — local conversations, signed owned
-  context, unavailable-provider foundation and gated OpenAI account settings,
-  OAuth lifecycle and encrypted vault preparation. An
+  context, gated OpenAI account settings/vault, account-specific model selection,
+  streaming, cancellation and retained local history. An
   [owner-approved native account link](reviews/assistant-native-sign-in-2026-10-19.md)
   was observed; Docker real OAuth, broader eligibility, model access/limits,
-  inference/streaming, real refresh/revocation and action execution remain
-  unverified or unimplemented as described in the app guide.
+  live inference/streaming and real refresh/revocation remain unverified by that
+  observation. Both gates default off; financial context is a separate explicit
+  per-request choice. Financial execution remains unimplemented.
 
 ## Repository layout
 
