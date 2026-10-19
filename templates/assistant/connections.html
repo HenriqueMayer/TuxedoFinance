@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Assistant settings' %} - Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6">
+    <header class="space-y-2">
+        <div class="assistant-heading">{% include 'assistant/_mark.html' %}<h1 class="page-title">{% translate 'Assistant settings' %}</h1></div>
+        <p class="subtle-copy">{% translate 'Manage the ChatGPT account linked to your local Tuxedo Finance user.' %}</p>
+    </header>
+    <section class="surface-panel space-y-4" aria-labelledby="assistant-connection-title">
+        <div class="panel-heading"><h2 id="assistant-connection-title" class="section-title">ChatGPT</h2><span class="status-badge">{% translate 'Connection preparation' %}</span></div>
+        <p>{% translate 'Your database and conversation history stay on this installation. Future responses will send only your question and the context needed to answer it.' %}</p>
+        <p class="subtle-copy">{% translate 'Account authorization and AI responses are separate. Sending messages remains unavailable in this delivery.' %}</p>
+        {% if not auth_enabled %}<p class="subtle-copy" role="status">{% translate 'Real sign-in is disabled. This screen does not contact OpenAI or consume your plan.' %}</p>{% endif %}
+        <form method="post" action="{% url 'assistant:connection-start' %}" target="_blank" rel="noopener noreferrer" autocomplete="off" hx-boost="false" novalidate>
+            {% csrf_token %}<button type="submit" class="assistant-connect-button" {% if not auth_enabled %}disabled{% endif %}>{% translate 'Continue with ChatGPT' %}</button>
+        </form>
+        <p class="subtle-copy">{% translate 'Sign-in opens in a new tab. Use the computer running Tuxedo Finance, then return here to confirm the account. Your Tuxedo Finance login stays unchanged.' %}</p>
+    </section>
+    {% for item in pending_authorizations %}
+    <section class="surface-panel space-y-4" aria-label="{% translate 'Pending authorization' %}">
+        {% if item.preview %}
+        <h2 class="section-title">{% translate 'Confirm account link' %}</h2>
+        <p class="assistant-account-identity">{{ item.preview.email|default:item.preview.subject }}</p>
+        <p class="subtle-copy assistant-account-identity">{% translate 'Registration' %}: <code>{{ item.preview.client_id }}</code></p>
+        <p class="subtle-copy">{% translate 'Only confirm the ChatGPT account you intended to link. This does not enable model requests.' %}</p>
+        {% else %}
+        <h2 class="section-title">{% translate 'Waiting for authorization' %}</h2>
+        <p class="subtle-copy">{% translate 'Return to this tab and refresh after completing the browser authorization.' %}</p>
+        {% endif %}
+        <div class="form-actions">
+            {% if item.preview %}<form method="post" action="{% url 'assistant:connection-finish' item.attempt.pk %}" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-primary">{% translate 'Confirm account link' %}</button></form>{% endif %}
+            <form method="post" action="{% url 'assistant:connection-cancel' item.attempt.pk %}" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-secondary">{% translate 'Cancel authorization' %}</button></form>
+        </div>
+    </section>
+    {% endfor %}
+    <section class="space-y-4" aria-labelledby="assistant-accounts-title">
+        <h2 id="assistant-accounts-title" class="section-title">{% translate 'Linked accounts' %}</h2>
+        {% for connection in connections %}
+        <article class="surface-panel space-y-4">
+            <div class="panel-heading"><h3 class="assistant-account-identity">{{ connection.email|default:connection.subject }}</h3>{% if connection.is_active %}<span class="status-badge">{% translate 'Selected' %}</span>{% endif %}</div>
+            <p class="subtle-copy assistant-account-identity">{% translate 'Registration' %}: <code>{{ connection.client_id }}</code></p>
+            <p class="subtle-copy">{% if connection.status == 'ready' %}{% translate 'Account authorized. AI responses remain unavailable.' %}{% elif connection.status == 'identity_only' %}{% translate 'Identity verified; permission to use the ChatGPT plan was not granted.' %}{% elif connection.status == 'reconnect' %}{% translate 'Sign in again to renew this connection.' %}{% else %}{% translate 'Disconnected. The registration is retained for a later sign-in.' %}{% endif %}</p>
+            <div class="form-actions">
+                {% if not connection.is_active and connection.status != 'disconnected' %}<form method="post" action="{% url 'assistant:connection-activate' connection.pk %}" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-secondary">{% translate 'Use this account' %}</button></form>{% endif %}
+                <form method="post" action="{% url 'assistant:connection-authorize' connection.pk %}" target="_blank" rel="noopener noreferrer" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<button type="submit" class="action-secondary" {% if not auth_enabled %}disabled{% endif %}>{% translate 'Sign in again' %}</button></form>
+                {% if connection.status != 'disconnected' %}<details class="assistant-delete"><summary class="quiet-action">{% translate 'Disconnect account' %}</summary><form method="post" action="{% url 'assistant:connection-disconnect' connection.pk %}" autocomplete="off" hx-boost="false" novalidate>{% csrf_token %}<p>{% translate 'Remove the local credentials for this connection? Conversations and financial records are kept.' %}</p><button type="submit" class="action-danger">{% translate 'Confirm disconnection' %}</button></form></details>{% endif %}
+            </div>
+        </article>
+        {% empty %}<p class="surface-panel subtle-copy">{% translate 'No ChatGPT account is linked.' %}</p>{% endfor %}
+    </section>
+</div>
+{% endblock %}

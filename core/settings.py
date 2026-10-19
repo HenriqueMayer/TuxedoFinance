@@ -49,6 +49,18 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# Explicit opt-in for later account validation. Authentication never enables
+# model generation; the provider remains disconnected in this delivery.
+ASSISTANT_OPENAI_AUTH_ENABLED = os.environ.get('ASSISTANT_OPENAI_AUTH_ENABLED', 'False').strip().lower() in {
+    '1', 'true', 'yes', 'on'
+}
+ASSISTANT_OPENAI_CALLBACK_URL = os.environ.get(
+    'ASSISTANT_OPENAI_CALLBACK_URL', 'http://127.0.0.1:8000/assistant/connections/callback/'
+)
+ASSISTANT_PRIVATE_DIR = Path(os.environ.get(
+    'ASSISTANT_PRIVATE_DIR', str(Path(os.environ.get('TUXEDO_DATA_DIR', BASE_DIR)) / 'assistant-private')
+))
+
 
 # Application definition
 
@@ -250,6 +262,9 @@ LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'assistant_oauth': {'()': 'assistant.connections.logging.OAuthRedactionFilter'},
+    },
     'formatters': {
         'app': {
             'format': '[{asctime}] {levelname} {name}: {message}',
@@ -260,6 +275,7 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'app',
+            'filters': ['assistant_oauth'],
         },
     },
     'root': {
@@ -267,6 +283,11 @@ LOGGING = {
         'level': LOG_LEVEL,
     },
     'loggers': {
+        'django.server': {
+            'handlers': ['console'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
         'django.request': {
             'handlers': ['console'],
             'level': 'ERROR',

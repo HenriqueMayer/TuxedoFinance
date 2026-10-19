@@ -1,13 +1,16 @@
 # `assistant`
 
-**Current status:** Local assistant foundation under Unreleased after `0.10.0`.
-No provider is connected. The application does not generate model answers,
-consume a ChatGPT plan, initiate bank payments or execute financial actions.
-The developer version is unchanged; this is preparation for later evolution,
-not a released integration.
+**Current status:** Local assistant foundation and OpenAI account-authorization
+preparation under Unreleased after `0.10.0`. Real authorization is disabled by
+default; no real account or model request was used to validate this delivery.
+The provider and composer remain disconnected. The application does not generate
+model answers, consume a ChatGPT plan, initiate bank payments or execute
+financial actions. The developer version is unchanged; this is unreleased
+preparation, not a verified live integration.
 
-The app owns private conversation storage, a provider-unavailable state,
-structured financial context and explicit future provider/action contracts.
+The app owns private conversation storage, user-owned connection metadata, an
+encrypted local credential vault, a provider-unavailable state, structured
+financial context and explicit future provider/action contracts.
 The existing Django account remains the authorization boundary. The
 [Open Finance study](../reviews/open-finance-personal-study-2026-10-18.md)
 is separate research, not a data source for this assistant.
@@ -15,8 +18,9 @@ is separate research, not a data source for this assistant.
 ## Routes and local storage
 
 Follow the normal [upgrade steps](../operations.md#updating-a-native-installation)
-before opening chat in an existing installation. The new migration only adds
-assistant tables. Use disposable data for validation as described in Contributing.
+before opening chat in an existing installation. The additive assistant
+migrations create conversation and authorization tables. They do not alter
+financial records. Use disposable data for validation as described in Contributing.
 
 | Route | Behavior |
 |---|---|
@@ -26,6 +30,12 @@ assistant tables. Use disposable data for validation as described in Contributin
 | `/assistant/<uuid>/delete/` | CSRF-protected POST deleting only the owned conversation and its messages. |
 | `/assistant/<uuid>/messages/` | Returns provider-unavailable HTTP 503; no fake user message, answer or successful inference is saved. |
 | `/assistant/context/` | Authenticated GET collecting a bounded, read-only structured snapshot for an authorized originating route. |
+| `/assistant/connections/` | Authenticated, owner-scoped settings GET: local account metadata and pending authorization status; no vault initialization or external request. |
+| `/assistant/connections/start/`, `/assistant/connections/<uuid>/authorize/` | Explicit CSRF-protected native POST starting a new link or reauthorization; refused while real authorization is disabled. |
+| `/assistant/connections/callback/` | One-time loopback OAuth GET; validates the handoff without requiring a callback-host cookie and redirects to the neutral result page. It does not attach an account to a Django user. |
+| `/assistant/connections/callback/result/` | Generic callback result GET, without authorization codes, state, tokens or account details. |
+| `/assistant/connections/attempts/<uuid>/finish/`, `.../cancel/` | CSRF-protected POST confirming or cancelling an owned attempt from its original authenticated Django session. |
+| `/assistant/connections/<uuid>/activate/`, `.../disconnect/` | CSRF-protected owner POST selecting local account metadata or clearing reusable credentials; conversations and financial records remain. |
 
 The `X-Tuxedo-Assistant: panel` request header selects the assistant HTML
 fragment. It is a presentation choice, not authentication or permission to read
@@ -128,9 +138,10 @@ page memory; it is not permission to replay its content after a session change.
 ## Provider and action boundary
 
 The provider boundary defines future response streaming, cancellation and error
-handling. It is not a running model, background worker, credential store or
-automatic fallback. The current unavailable state remains authoritative until a
-separately approved provider implementation exists.
+handling. Account authorization has its own service and vault; it does not
+connect this boundary to a running model or background worker. The current
+unavailable state remains authoritative until a separately approved provider
+implementation exists. There is no automatic paid API-key fallback.
 
 | Python interface | Current contract |
 |---|---|
@@ -184,35 +195,145 @@ financial correctness or injection resistance of a live model. No provider or
 real-model evaluation is part of this implementation. Any later model-backed
 evaluation needs its own approved account/context/usage scope and evidence.
 
-## Planned OpenAI connection
+<a id="planned-openai-connection"></a>
 
-**Planned, not implemented. Official documentation checked 2026-10-18.**
-The intended next provider is an explicit Sign in with ChatGPT connection linked
-to an already authenticated Django user. It does not replace local login, grant
-another user's financial access or enable a paid API-key fallback.
+## OpenAI authorization preparation
 
-[OpenAI's quickstart](https://developers.openai.com/siwc/quickstart) distinguishes
-identity scopes from optional ChatGPT-plan inference permission and distinguishes
-partner website sign-in from the local/open-source plan-usage route.
-[The plan-usage overview](https://developers.openai.com/siwc/token-sharing-open-source)
-documents eligible local applications and user/workspace-bound registrations;
-paid/remotely hosted deployment has a separate access process. This repository's
-PolyForm Noncommercial license is not proof of eligibility under an open-source
-program. Confirm the actual local/deployment route and terms before building it.
+**Implemented preparation, with real authorization disabled. Official
+documentation checked 2026-10-19.** Settings exposes the owned account lifecycle
+without replacing Django login or enabling inference. Synthetic accounts,
+signed-token fixtures and injected transports belong only in isolated tests;
+the application never seeds or displays a fabricated connected account.
+
+### Authorization gate and local callback
+
+`ASSISTANT_OPENAI_AUTH_ENABLED` defaults to `False`. Its explicit environment
+opt-in is reserved for later, separately approved account validation. Opening
+the assistant or its settings does not enable it, initialize the vault, contact
+OpenAI, refresh a token or consume plan usage. Setting the flag alone does not
+start authorization; the owner must submit the native Continue with ChatGPT
+POST, which opens authorization in a new tab while preserving the original
+settings tab for final confirmation. This delivery was verified with mocks,
+without real sign-in or provider requests. Even a later successfully linked
+account cannot enable the disconnected composer or model adapter.
+
+`ASSISTANT_OPENAI_CALLBACK_URL` defaults to
+`http://127.0.0.1:8000/assistant/connections/callback/`. The prepared protocol
+accepts only HTTP, the literal `127.0.0.1`, an optional valid port and that exact
+path, without credentials, query or fragment. Do not substitute `localhost`, a
+LAN address, HTTPS or another callback path. The browser must run on the same
+computer as the native service or Docker host; a phone's loopback address points
+to the phone. For Docker, use the published host port, as described in the
+[Docker guide](../docker.md#assistant-authorization-preparation).
+
+The callback host can differ from the original `localhost` session host. A
+validated callback therefore stages the verified identity without logging the
+visitor into Django or immediately attaching the account. The owner returns to
+the original settings tab, refreshes it, reviews the identity and submits Confirm
+account link. A different Django user or browser session cannot finish that
+handoff. Callback pages use no-store and no-referrer responses and promptly
+redirect away from the authorization query.
+
+### Protocol and account lifecycle
+
+`assistant.connections.oauth` prepares the public-client authorization-code
+flow with fresh state, nonce and PKCE S256, following the official
+[registration and sign-in guide](https://developers.openai.com/siwc/token-sharing-open-source/sign-in).
+The initial dynamic registration uses `dynamic_agent_client`; later sign-ins
+reuse the saved issued client ID. The stable installation host ID is independent
+of the selected Django or ChatGPT user. Issuer, signature, audience, expiry,
+nonce, client identity and granted scopes are checked before credentials become
+an eligible confirmation. Identity-only permission remains distinct from the
+`resource.invoke` and `chatgpt.tokens.use.direct` plan scopes.
+
+`assistant.connections.service` owns ten-minute, one-time, owner/session-bound
+attempts, with at most five open attempts per owner. SQLite contains digests of
+state and session binding; raw state, nonce, PKCE verifier and staged credentials
+stay encrypted in the vault. A claimed or interrupted callback is not replayed.
+Expiry/cancellation prevents final confirmation and clears pending secrets on
+the corresponding lifecycle operation. Account selection is local metadata;
+each Django user may have multiple registrations and at most one selected
+connection. Settings and confirmation show the stable issued client ID beside
+the account identity so registrations sharing an email remain distinguishable.
+`ready` means the verified account granted plan permission, not that this
+delivery can generate responses.
+
+The prepared refresh service serializes each connection's full read/refresh/write
+sequence across threads and processes. It retains a rotated refresh token before
+a waiting refresh proceeds; `invalid_grant` removes reusable credentials and
+requires sign-in again. Network waits and filesystem lock acquisition occur
+outside SQLite transactions. No scheduler or settings GET invokes refresh.
+Disconnect clears reusable local tokens while retaining registration identity
+for later sign-in. Remote revocation is attempted only when authorization is
+enabled and a refresh token is present; failure is disclosed and local clearing
+still proceeds. The UI directs the owner to review ChatGPT app access when
+remote revocation was not confirmed. The
+[accounts and sessions guide](https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions)
+is the upstream lifecycle reference.
+
+### Private vault and recovery
+
+`ASSISTANT_PRIVATE_DIR` defaults to `assistant-private` beside the configured
+`db.sqlite3` (`TUXEDO_DATA_DIR/assistant-private`, or the project root's
+`assistant-private` when no data directory is set). An explicit path selects
+another private directory; changing it does not move existing files. Initialization
+is an explicit lifecycle action, never a constructor or settings GET side effect.
+The directory is `0700`; regular files are `0600`, owned by the application OS
+user. Symlinks, hard-linked files, foreign ownership and unsafe reachable writable
+ancestors are refused. The vault does not relax existing installation permissions.
+
+The independent `vault.key` uses Fernet authenticated encryption and is never
+derived from `SECRET_KEY`. A protected encrypted key check detects a wrong key;
+each credential record is bound to its UUID and limited to 128 KiB of JSON.
+Atomic ciphertext replacement preserves the prior record on a failed replace.
+The protected `host-id` stores one persistent `urn:uuid:` UUIDv4 across restarts
+and reauthorizations. POSIX permissions and `flock` are required: Linux, macOS
+and Linux containers are the supported vault environments for this slice.
+Native Windows vault operations fail closed; ordinary application imports and
+unconnected pages remain available.
+
+Back up the complete directory together with its database recovery point; a
+database-only backup contains connection metadata but no usable credentials.
+Keep the key, encrypted records and host ID together, protect/encrypt their
+backup, and retain the application OS ownership and private modes on restore.
+Do not commit, print, attach or copy the key/token material into diagnostics,
+browser storage or settings forms. Application logging redacts callback queries
+and credential fields; any additional server/proxy/access logging needs the same
+protection before a later real validation.
+
+Missing/wrong keys or a mismatched host fail closed. Never regenerate a key over
+existing ciphertext or edit a stored host ID to bypass recovery checks. Restore
+the matching complete backup; a missing key cannot be recovered from Django's
+signing key. Restoring the directory preserves the original host identity and
+is a recovery procedure, not a way to clone authorization to a second concurrent
+installation. A new host requires its own identity and a separately reviewed
+authorization. See [operations](../operations.md#assistant-data-and-integrations)
+for the backup boundary.
+
+### Eligibility and later inference
+
+[OpenAI's quickstart](https://developers.openai.com/siwc/quickstart) separates
+identity scopes from plan permission. The
+[plan-usage overview](https://developers.openai.com/siwc/token-sharing-open-source)
+documents local/open-source clients and user/workspace-bound registrations;
+paid or remotely hosted deployment has a separate access process. This
+repository's PolyForm Noncommercial license is not proof of eligibility under
+that program. Actual deployment eligibility, account access and authorization
+have not been validated in this delivery.
 
 [ChatGPT's user guide](https://learn.chatgpt.com/docs/sign-in-with-chatgpt)
-describes eligible Plus/Pro users authorizing plan usage, shared existing limits
-and access/usage management. This permission does not expose the user's ChatGPT
-conversations or memories and does not create an extra allowance. Availability,
-model access and limits must be checked for the actual account; the application
-must explain unavailable or exhausted usage without changing billing routes.
+describes eligible Plus/Pro users, shared existing usage limits and access
+management. Plan permission grants neither ChatGPT conversations/memories nor a
+new allowance. A later model adapter must separately verify account/model access
+and current limits, send only deliberately selected context/history and preserve
+explicit unavailable/exhausted states without automatic paid fallback.
 
 The current [preview contract](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
-requires streamed HTTP Responses requests with `store: false`; HTTP continuation
-does not provide persistent server conversation storage. A later adapter must
-check that contract again, manage OAuth credentials securely per linked user and
-send only deliberately selected local context/history. No such authorization,
-credential, network request or live inference is part of this foundation.
+requires HTTP Responses requests with `store: false` and `stream: true`; HTTP
+continuation does not provide persistent server conversation storage. No
+Responses API call, financial context transmission or live-model evaluation is
+part of this authorization preparation. Recheck that contract before implementing
+the separately approved inference slice.
 
 ## Later automation
 

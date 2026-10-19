@@ -88,6 +88,8 @@ from `.env.docker.example` (the release asset is named `docker.env.example`):
 | `ALLOW_SIGNUPS` | Default `True`; set `False` after creating the intended accounts |
 | `HTTPS` | Default `False`; set `True` only with a correctly configured TLS proxy |
 | `LOG_LEVEL` | Default `INFO` |
+| `ASSISTANT_OPENAI_AUTH_ENABLED` | Default `False`; reserved for a later separately approved real-account authorization validation; does not enable responses |
+| `ASSISTANT_OPENAI_CALLBACK_URL` | Container value derived by Compose from the published `TUXEDO_PORT` and exact `/assistant/connections/callback/` path |
 
 The Compose service fixes `DEBUG=False`, `TUXEDO_DATA_DIR=/data` and
 `TUXEDO_ENV_FILE=/dev/null`. The native checkout's `.env` and database are not
@@ -98,6 +100,43 @@ must remain together on local storage. Use one web service, without replicas or
 network filesystems. Failed migrations or an unwritable volume stop startup
 instead of resetting data. Django does not reject every schema from a newer
 version; follow the backup and restore procedure before changing image versions.
+
+## Assistant authorization preparation
+
+The Unreleased source checkout prepares OpenAI account authorization; published
+`v0.10.0` does not contain this change. Real sign-in is disabled by default and
+no real account or model calls were used for this delivery. Leave the explicit
+authorization flag disabled until a later approved validation. Opening settings
+does not initialize private storage or contact OpenAI, and linking an account
+cannot enable the disconnected provider/composer.
+
+The browser and container must run on the same computer. The callback uses the
+Docker host's published loopback port: for `TUXEDO_PORT=8001`, its exact URL is
+`http://127.0.0.1:8001/assistant/connections/callback/`, even though the container
+still listens on port 8000. Compose derives the callback from `TUXEDO_PORT`, so
+changing the published port updates both together. `localhost`, LAN
+addresses, HTTPS and alternate callback paths are refused by this prepared
+protocol. After authorization, only the original authenticated settings tab
+can submit the final account-link confirmation. Do not expose the port or add
+a tunnel as a callback workaround. The
+[assistant guide](apps/assistant.md#openai-authorization-preparation) owns the
+protocol, original-session handoff and unverified deployment-eligibility limits.
+
+The default vault is `/data/assistant-private` in the existing named volume.
+It uses the container's UID/GID `10001:10001`, directory mode `0700`, file mode
+`0600`, an independent encryption key and a persistent host ID. The Linux
+container supplies the required POSIX permissions and process locks. Compose
+does not expose a separate private-path setting; any deliberate custom
+configuration must keep the whole vault on persistent private storage. Keep
+the database and complete vault in the same stopped-writer recovery point;
+the SQLite backup commands below copy only the database. Back up the vault
+separately while the service remains stopped, and restore its key, encrypted
+records, host ID, ownership and modes before resuming connection actions.
+Never regenerate a missing key over existing ciphertext. Follow the
+[credential recovery boundary](operations.md#assistant-data-and-integrations)
+and keep backup credentials encrypted and out of logs/Git. A recovery copy
+preserves one installation's host identity; do not run it as a second concurrent
+authorized host.
 
 ## Routine commands
 

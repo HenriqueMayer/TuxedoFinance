@@ -79,10 +79,14 @@ import os
 import subprocess
 import tempfile
 
+from scripts.docker_smoke import isolated_environment
+
 with tempfile.TemporaryDirectory(prefix="tuxedo-check.") as check_data:
-    env = os.environ.copy()
+    env = isolated_environment()
     env.update(
         TUXEDO_DATA_DIR=check_data, TUXEDO_ENV_FILE="/dev/null",
+        ASSISTANT_PRIVATE_DIR=os.path.join(check_data, "assistant-private"),
+        ASSISTANT_OPENAI_CALLBACK_URL="http://127.0.0.1:8000/assistant/connections/callback/",
         SECRET_KEY="local-validation-only", DEBUG="True", HTTPS="False",
         ALLOW_SIGNUPS="True", DJANGO_SETTINGS_MODULE="core.settings",
     )
@@ -157,9 +161,13 @@ import os
 import subprocess
 import tempfile
 
+from scripts.docker_smoke import isolated_environment
+
 with tempfile.TemporaryDirectory(prefix="tuxedo-messages.") as message_data:
-    env = os.environ.copy()
+    env = isolated_environment()
     env.update(TUXEDO_DATA_DIR=message_data, TUXEDO_ENV_FILE="/dev/null",
+               ASSISTANT_PRIVATE_DIR=os.path.join(message_data, "assistant-private"),
+               ASSISTANT_OPENAI_CALLBACK_URL="http://127.0.0.1:8000/assistant/connections/callback/",
                SECRET_KEY="local-validation-only", DJANGO_SETTINGS_MODULE="core.settings")
     subprocess.run(["uv", "run", "python", "manage.py", "makemessages",
                     "-l", "pt_BR", "--no-wrap"], env=env, check=True)
@@ -188,6 +196,10 @@ uses an empty `.env`, generates an ephemeral signing key, and enables signup.
 It migrates that database, starts its own Django server on a free loopback port,
 and passes the URL to Playwright. It never reuses an existing server or the
 installation's `TUXEDO_DATA_DIR`, `.env`, or `E2E_BASE_URL`.
+Both native and Docker runners discard inherited assistant configuration and
+force real authorization off. Native runs bind the private vault and callback
+to their disposable data directory and loopback port; Docker keeps the vault in
+its disposable data volume. These checks never authorize a real account.
 
 The executor forwards Playwright arguments and returns the suite's exit code:
 

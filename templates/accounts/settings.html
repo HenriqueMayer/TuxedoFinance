@@ -36,5 +36,10 @@
             </a>
         </div>
     </form>
+    <section class="surface-panel space-y-3" aria-labelledby="assistant-settings-title">
+        <h2 class="section-title" id="assistant-settings-title">{% translate 'Tuxedo assistant' %}</h2>
+        <p class="subtle-copy">{% translate 'Manage the ChatGPT account linked to your local Tuxedo Finance user.' %}</p>
+        <a class="action-secondary" href="{% url 'assistant:connections' %}">{% translate 'Assistant settings' %}</a>
+    </section>
 </div>
 {% endblock %}

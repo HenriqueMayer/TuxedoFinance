@@ -16,11 +16,39 @@ class DockerIsolationTests(TestCase):
             'TUXEDO_ENV_FILE': '/private-config', 'E2E_BASE_URL': 'http://personal-server',
             'COMPOSE_FILE': '/personal-compose.yaml', 'COMPOSE_PROJECT_NAME': 'personal',
             'DJANGO_SETTINGS_MODULE': 'private.settings', 'DEBUG': 'False', 'HTTPS': 'True', 'ALLOW_SIGNUPS': 'False',
+            'ASSISTANT_OPENAI_AUTH_ENABLED': 'True', 'ASSISTANT_PRIVATE_DIR': '/private-assistant-vault',
+            'ASSISTANT_OPENAI_CALLBACK_URL': 'http://127.0.0.1:9000/personal-callback/',
+            'ASSISTANT_FUTURE_SECRET': 'personal-assistant-secret',
         }
         with mock.patch.dict(os.environ, private):
             env = isolated_environment()
         for key in private:
-            self.assertNotIn(key, env)
+            if key != 'ASSISTANT_OPENAI_AUTH_ENABLED':
+                self.assertNotIn(key, env)
+        self.assertEqual(env['ASSISTANT_OPENAI_AUTH_ENABLED'], 'False')
+
+    def test_compose_subprocess_and_owned_config_keep_authorization_disabled(self):
+        with tempfile.TemporaryDirectory(prefix='tuxedo-docker-auth-isolation-') as directory:
+            root = Path(directory)
+            (root / 'compose.yaml').write_text('services: {}\n')
+            inherited = {
+                'ASSISTANT_OPENAI_AUTH_ENABLED': 'True',
+                'ASSISTANT_PRIVATE_DIR': '/personal-assistant-private',
+                'ASSISTANT_OPENAI_CALLBACK_URL': 'http://127.0.0.1:9000/personal-callback/',
+            }
+            with mock.patch.object(docker_smoke, 'ROOT', root), mock.patch.dict(os.environ, inherited), mock.patch.object(
+                docker_smoke.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, b'log', b''),
+            ) as run:
+                with Installation('local:test') as app:
+                    config = (Path(app.directory.name) / '.env').read_text()
+                    self.assertIn('ASSISTANT_OPENAI_AUTH_ENABLED=False\n', config)
+                    self.assertNotIn('personal-assistant-private', config)
+                    self.assertNotIn('personal-callback', config)
+                    app.compose('config')
+                    env = run.call_args.kwargs['env']
+                    self.assertEqual(env['ASSISTANT_OPENAI_AUTH_ENABLED'], 'False')
+                    self.assertNotIn('ASSISTANT_PRIVATE_DIR', env)
+                    self.assertNotIn('ASSISTANT_OPENAI_CALLBACK_URL', env)
 
     def test_each_run_owns_a_distinct_compose_project(self):
         first, second = Installation('local:test'), Installation('local:test')

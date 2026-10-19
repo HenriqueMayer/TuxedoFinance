@@ -20,11 +20,15 @@ file. Process environment variables always take priority.
 | `TUXEDO_DATA_DIR` | Directory containing `db.sqlite3`; create the directory before use | Project root |
 | `TUXEDO_ENV_FILE` | Environment file path, selected through the process environment | Project-root `.env` |
 | `LOG_LEVEL` | Application log level | `INFO` |
+| `ASSISTANT_OPENAI_AUTH_ENABLED` | Explicit real-authorization opt-in reserved for later approved account validation; never enables model responses | `False` |
+| `ASSISTANT_OPENAI_CALLBACK_URL` | Exact local OAuth callback; literal HTTP `127.0.0.1`, service port and `/assistant/connections/callback/` | `http://127.0.0.1:8000/assistant/connections/callback/` |
+| `ASSISTANT_PRIVATE_DIR` | Private credential vault path; changing it does not move existing material | `assistant-private` beside the configured database |
 
 `DEBUG` and `HTTPS` are enabled only by the exact value `True`.
-`ALLOW_SIGNUPS` accepts `1`, `true`, `yes`, or `on`, ignoring case and surrounding
-whitespace. Use an absolute path for an external data directory or environment
-file. Changing the data directory does not move an existing database.
+`ALLOW_SIGNUPS` and `ASSISTANT_OPENAI_AUTH_ENABLED` accept `1`, `true`, `yes`, or
+`on`, ignoring case and surrounding whitespace. Use an absolute path for an
+external data directory or environment file. Changing the data directory does
+not move an existing database.
 
 Generate a signing key during initial setup as shown in the README; retain it
 for subsequent starts. `scripts/init_local.py` creates `.env` exclusively with
@@ -43,23 +47,46 @@ signing key across container recreation.
 
 ## Assistant data and integrations
 
-The [assistant foundation](apps/assistant.md) runs locally with no provider
-credentials, model calls, bank connection or background worker. There is no
-operator configuration that enables ChatGPT-plan usage, paid API-key fallback
-or Open Finance in this implementation. A disabled composer is the expected
-unavailable-provider state, not a setup failure to resolve by inserting a key.
+The [assistant](apps/assistant.md) includes OpenAI account-authorization
+preparation, disabled by default and verified only with isolated synthetic
+transports. No real account authorization or model request was performed for
+this delivery. Leave `ASSISTANT_OPENAI_AUTH_ENABLED=False` until a separately
+approved account validation. The provider/composer remains disconnected even if
+a later authorization succeeds; a disabled composer is the expected state.
+There is no paid API-key fallback, bank connection or background worker.
+Opening settings does not initialize the vault or contact OpenAI.
 
 Conversation/message data belongs to the authenticated user and remains in the
 installation database until deletion. Protect it with the same access, backup
 and retention policy as financial records. Deleting a conversation from the
 active database does not erase older owner-managed backup copies. The
 structured-context endpoint is read-only and does not synchronize projections.
-Apply the new assistant migration through the ordinary backed-up update workflow
-before running this source checkout; it only adds local conversation tables.
+Apply the additive assistant migrations through the ordinary backed-up update
+workflow before running this source checkout. They add conversation and
+user-owned authorization metadata tables, without changing financial records.
 
-Later provider authorization would need separate user-linked secure credential
-storage, usage/permission controls and explicit disclosure of transmitted
-context. Bank synchronization additionally needs an approved delivery strategy:
+The SQLite database retains account identity, scopes, expiry, connection state
+and digests for short-lived authorization attempts. Reusable tokens and pending
+OAuth secrets belong only in the encrypted private vault. Its independent key,
+encrypted records and stable host identity must be backed up together with the
+database recovery point. The SQLite-only recipe below does not include them.
+Stop all writers for that paired backup and protect/encrypt the complete vault
+copy; credential encryption does not protect a backup containing its key.
+
+On restoration, retain the application OS ownership, directory mode `0700` and
+file mode `0600`, and restore the matching key, ciphertext and host identity
+before using connection actions. Missing/wrong keys fail closed; never replace
+a key over existing ciphertext or derive one from `SECRET_KEY`. Restore the
+complete matching backup instead. Linux/macOS or a Linux container are required
+for this POSIX vault; native Windows vault use fails closed. Ordinary
+unconnected pages remain available. The owning
+[authorization guide](apps/assistant.md#openai-authorization-preparation) defines
+the callback/session handoff, private storage, recovery and eligibility limits.
+Keep credentials out of Git, browser storage and diagnostics; external access
+logging must redact callback queries before any later real validation.
+
+Later inference needs its own approved context/usage scope. Bank synchronization
+additionally needs an approved delivery strategy:
 provider webhooks cannot reach an ordinary loopback-only service by themselves.
 Do not expose the installation, configure a tunnel, reuse another application's
 tokens or copy financial data to a provider as a workaround. Follow the

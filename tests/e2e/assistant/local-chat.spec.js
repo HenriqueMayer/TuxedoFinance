@@ -55,7 +55,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
             const close = panel.getByRole('button', {name: c.close, exact: true});
             await close.focus();
             await close.press('Shift+Tab');
-            await expect(panel.locator('.assistant-transcript')).toBeFocused();
+            await expect(panel.locator('.assistant-empty a')).toBeFocused();
             const box = await panel.boundingBox();
             expect(box.x).toBeGreaterThanOrEqual(0);
             expect(box.width).toBeLessThanOrEqual(width);

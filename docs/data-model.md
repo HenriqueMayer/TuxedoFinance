@@ -35,6 +35,9 @@ erDiagram
     USER ||--o{ IMPORT_BATCH : reviews
     USER ||--o{ CONVERSATION : owns
     CONVERSATION ||--o{ MESSAGE : contains
+    USER ||--o{ PROVIDER_CONNECTION : owns
+    USER ||--o{ AUTHORIZATION_ATTEMPT : authorizes
+    PROVIDER_CONNECTION |o--o{ AUTHORIZATION_ATTEMPT : links
 
     BANK ||--o{ BANK_ACCOUNT : contains
     BANK_ACCOUNT ||--o{ BANK_MOVEMENT : posts
@@ -552,10 +555,39 @@ Context is a bounded read-only snapshot, not another ledger or a source of new
 balances. Its signed, expiring origin scope is bound to the current owner and
 allowlisted route/query. Collection rechecks object ownership, retains cutoff,
 currency and evidence warnings, and never writes derived financial rows.
-Provider tokens, bank credentials and external-observation schemas are not
-introduced by this foundation. Action/simulation contracts do not post records.
-The incremental `assistant/0001_initial.py` migration adds only conversation
-tables; it does not import, modify or synchronize financial records.
+Action/simulation contracts do not post records. The incremental
+`assistant/0001_initial.py` migration adds only conversation tables; it does not
+import, modify or synchronize financial records.
+
+### Authorization metadata
+
+The additive `assistant.0002_providerconnection_authorizationattempt_and_more`
+migration adds two UUID-keyed models for the default-disabled authorization
+preparation. `ProviderConnection` belongs to one Django user and records provider,
+issuer, subject, issued client ID, optional email, granted scopes, token expiry,
+connection status, local selection and timestamps. The database enforces a
+unique `(user, client_id, issuer, subject)` registration and at most one active
+connection per user. `ready`, `identity_only`, `reconnect` and `disconnected`
+describe account authorization metadata; none connects the model provider.
+
+`AuthorizationAttempt` belongs to one user and stores digests of the original
+session binding and state, an independent vault UUID, optional connection,
+expiry/consumption timestamps, lifecycle status and a bounded error code.
+The state digest is unique. The optional connection uses `SET_NULL`; user
+deletion cascades the metadata. Raw state, nonce, PKCE verifier and pending or
+linked tokens are never fields on either model: encrypted filesystem records
+hold them under the attempt's vault UUID or connection UUID. Django row
+deletion alone is not a filesystem credential-cleanup procedure.
+
+The vault uses an independent key and stable host identity, outside the SQLite
+schema and separate from financial records or conversation history. Disconnect
+removes reusable local tokens and retains registration metadata for later
+sign-in. Database-only backup/restore cannot recover authorization credentials.
+See the owning [authorization contract](apps/assistant.md#openai-authorization-preparation)
+and [recovery boundary](operations.md#assistant-data-and-integrations).
+No real account was authorized for this delivery; synthetic account fixtures
+remain confined to isolated tests. Bank/external-observation schemas and model
+generation remain outside this slice.
 
 ## Dashboard formulas
 

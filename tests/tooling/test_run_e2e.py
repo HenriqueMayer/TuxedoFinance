@@ -27,10 +27,17 @@ with (root / 'events.jsonl').open('a') as stream:
     stream.write(json.dumps({'phase': sys.argv[1], 'pid': os.getpid(),
         'data': os.environ['TUXEDO_DATA_DIR'], 'url': os.environ['E2E_BASE_URL'],
         'env_file': os.environ['TUXEDO_ENV_FILE'], 'signup': os.environ['ALLOW_SIGNUPS'],
-        'https': os.environ['HTTPS'], 'settings': os.environ['DJANGO_SETTINGS_MODULE']}) + '\\n')
+        'https': os.environ['HTTPS'], 'settings': os.environ['DJANGO_SETTINGS_MODULE'],
+        'auth_enabled': os.environ['ASSISTANT_OPENAI_AUTH_ENABLED'],
+        'private_dir': os.environ['ASSISTANT_PRIVATE_DIR'],
+        'callback': os.environ['ASSISTANT_OPENAI_CALLBACK_URL']}) + '\\n')
 assert Path(os.environ['TUXEDO_ENV_FILE']).read_text() == ''
 assert Path(os.environ['TUXEDO_DATA_DIR']) != root
 assert os.environ['SECRET_KEY'] != 'personal-secret'
+assert os.environ['ASSISTANT_OPENAI_AUTH_ENABLED'] == 'False'
+assert Path(os.environ['ASSISTANT_PRIVATE_DIR']).parent == Path(os.environ['TUXEDO_DATA_DIR'])
+assert os.environ['ASSISTANT_OPENAI_CALLBACK_URL'] == os.environ['E2E_BASE_URL'] + '/assistant/connections/callback/'
+assert 'ASSISTANT_FUTURE_SECRET' not in os.environ
 mode = (root / 'mode').read_text()
 if sys.argv[1] == 'migrate':
     if mode == 'migration_failure':
@@ -54,7 +61,10 @@ from pathlib import Path
 root = Path.cwd()
 with (root / 'events.jsonl').open('a') as stream:
     stream.write(json.dumps({'phase': 'browser', 'pid': os.getpid(),
-        'args': sys.argv[1:], 'data': os.environ['TUXEDO_DATA_DIR']}) + '\\n')
+        'args': sys.argv[1:], 'data': os.environ['TUXEDO_DATA_DIR'],
+        'auth_enabled': os.environ['ASSISTANT_OPENAI_AUTH_ENABLED'],
+        'private_dir': os.environ['ASSISTANT_PRIVATE_DIR'],
+        'callback': os.environ['ASSISTANT_OPENAI_CALLBACK_URL']}) + '\\n')
 output = root / '.local/test-results/browser'
 output.mkdir(parents=True, exist_ok=True)
 (output / 'browser-artifact.txt').write_text('diagnostic')
@@ -82,6 +92,9 @@ class RunnerTests(unittest.TestCase):
         node.chmod(0o755)
         (self.root / '.env').write_text('personal-secret')
         (self.root / 'db.sqlite3').write_bytes(b'personal-database')
+        self.private_dir = self.root / 'personal-assistant-private'
+        self.private_dir.mkdir(mode=0o700)
+        (self.private_dir / 'credential.enc').write_bytes(b'preserve personal vault')
         (self.root / 'test-results').mkdir()
         (self.root / 'test-results/legacy-artifact.txt').write_text('preserve legacy output')
         self.env = dict(
@@ -89,6 +102,9 @@ class RunnerTests(unittest.TestCase):
             SECRET_KEY='personal-secret', TUXEDO_DATA_DIR=str(self.root),
             TUXEDO_ENV_FILE=str(self.root / '.env'), ALLOW_SIGNUPS='False', HTTPS='True',
             DJANGO_SETTINGS_MODULE='personal.settings', E2E_BASE_URL='http://127.0.0.1:1',
+            ASSISTANT_OPENAI_AUTH_ENABLED='True', ASSISTANT_PRIVATE_DIR=str(self.private_dir),
+            ASSISTANT_OPENAI_CALLBACK_URL='http://127.0.0.1:9000/personal-callback/',
+            ASSISTANT_FUTURE_SECRET='personal-assistant-secret',
         )
 
     def start(self, mode, *args):
@@ -118,6 +134,7 @@ class RunnerTests(unittest.TestCase):
     def verify_cleanup(self):
         self.assertEqual((self.root / '.env').read_text(), 'personal-secret')
         self.assertEqual((self.root / 'db.sqlite3').read_bytes(), b'personal-database')
+        self.assertEqual((self.private_dir / 'credential.enc').read_bytes(), b'preserve personal vault')
         self.assertTrue((self.root / '.local/test-results/e2e-server.log').is_file())
         self.assertEqual((self.root / 'test-results/legacy-artifact.txt').read_text(), 'preserve legacy output')
         events = self.events()
@@ -125,6 +142,11 @@ class RunnerTests(unittest.TestCase):
         for event in events:
             self.assertEqual(Path(event['data']).parent, self.root / '.local/test-results/runtime')
             self.assertFalse(Path(event['data']).exists())
+            self.assertEqual(event['auth_enabled'], 'False')
+            self.assertEqual(Path(event['private_dir']), Path(event['data']) / 'assistant-private')
+            self.assertNotEqual(event['private_dir'], self.env['ASSISTANT_PRIVATE_DIR'])
+            self.assertTrue(event['callback'].endswith('/assistant/connections/callback/'))
+            self.assertNotEqual(event['callback'], self.env['ASSISTANT_OPENAI_CALLBACK_URL'])
             with self.assertRaises(ProcessLookupError):
                 os.kill(event['pid'], 0)
         migration = events[0]
@@ -196,3 +218,24 @@ class RunnerTests(unittest.TestCase):
             'test', '--config', str(self.root / 'tests/playwright.config.js'),
             '--grep', 'dashboard with spaces', '--output', '/tmp/explicit-browser-output',
         ])
+
+    def test_docker_browser_subprocess_discards_personal_authorization_settings(self):
+        installation = mock.MagicMock()
+        app = installation.__enter__.return_value
+        app.url = 'http://127.0.0.1:32123'
+        browser = mock.MagicMock()
+        browser.wait.return_value = 0
+        with mock.patch.dict(os.environ, self.env), mock.patch.object(
+            run_e2e, 'Installation', return_value=installation,
+        ), mock.patch.object(run_e2e.subprocess, 'Popen', return_value=browser) as start, mock.patch.object(
+            run_e2e, 'stop',
+        ) as stop:
+            self.assertEqual(run_e2e.run_docker('local:test', ['fixture-browser']), 0)
+        app.start.assert_called_once_with()
+        stop.assert_called_once_with(browser)
+        env = start.call_args.kwargs['env']
+        self.assertEqual(env['E2E_BASE_URL'], app.url)
+        self.assertEqual(env['ASSISTANT_OPENAI_AUTH_ENABLED'], 'False')
+        self.assertNotIn('ASSISTANT_PRIVATE_DIR', env)
+        self.assertNotIn('ASSISTANT_OPENAI_CALLBACK_URL', env)
+        self.assertNotIn('ASSISTANT_FUTURE_SECRET', env)

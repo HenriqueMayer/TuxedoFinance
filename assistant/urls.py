@@ -1,10 +1,20 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 from django.urls import path
 from assistant import views
+from assistant import connection_views
 
 app_name = 'assistant'
 urlpatterns = [
     path('', views.index, name='index'),
+    path('connections/', connection_views.index, name='connections'),
+    path('connections/start/', connection_views.start, name='connection-start'),
+    path('connections/callback/', connection_views.callback, name='connection-callback'),
+    path('connections/callback/result/', connection_views.callback_result, name='connection-callback-result'),
+    path('connections/attempts/<uuid:pk>/finish/', connection_views.finish, name='connection-finish'),
+    path('connections/attempts/<uuid:pk>/cancel/', connection_views.cancel, name='connection-cancel'),
+    path('connections/<uuid:pk>/authorize/', connection_views.start, name='connection-authorize'),
+    path('connections/<uuid:pk>/activate/', connection_views.activate, name='connection-activate'),
+    path('connections/<uuid:pk>/disconnect/', connection_views.disconnect, name='connection-disconnect'),
     path('context/', views.context_snapshot, name='context'),
     path('conversations/new/', views.create, name='create'),
     path('<uuid:pk>/', views.detail, name='detail'),

@@ -31,11 +31,17 @@ unavailable and no model response or financial execution is fabricated.
 Provider streaming/cancellation and action/simulation interfaces are preparation
 only, with no action execution endpoint.
 
-The next planned provider is an explicit Sign in with ChatGPT connection linked
-to the current Django user, subject to the official local-app flow and account
-eligibility. It does not replace local authentication or introduce paid API-key
-fallback. Actual OAuth, token storage, model calls and any external financial
-context require their separately approved implementation and validation.
+The implemented [OpenAI authorization preparation](apps/assistant.md#openai-authorization-preparation)
+adds owner-scoped account settings, a gated OAuth lifecycle and an encrypted
+private vault. Real authorization is disabled by default; isolated mocks verify
+the preparation without signing in to a real account or consuming plan usage.
+Django authentication remains authoritative, and account linking cannot enable
+the disconnected model provider or a paid API-key fallback.
+
+Real-account eligibility and authorization validation remain a separate approved
+step. Inference transport, account/model access validation and transmitting
+financial context are later implementation work; none is established by the
+prepared protocol or local account status.
 Opt-in assistance while the application is in use is later work; no daemon,
 unattended automation or financial writes are enabled. Later goals, budgets,
 alerts and transaction creation/categorization may use previously enabled

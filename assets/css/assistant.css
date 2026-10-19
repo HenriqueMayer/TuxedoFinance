@@ -10,6 +10,10 @@
 .assistant-panel { position: fixed; z-index: 45; inset: var(--assistant-viewport-top, 0px) 0 auto; height: var(--assistant-viewport-height, 100dvh); display: flex; flex-direction: column; min-width: 0; background: var(--ui-surface); color: var(--ui-ink); border: 1px solid var(--ui-line); overflow: hidden; animation: assistant-enter 200ms cubic-bezier(.22,1,.36,1); }
 .assistant-panel-header { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--ui-line); }
 .assistant-heading { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.assistant-connect-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 20px; border: 1px solid var(--ui-line); border-radius: 10px; background: #111; color: #fff; font-weight: 500; }
+.assistant-connect-button:disabled { opacity: .55; cursor: not-allowed; }
+.assistant-connect-button:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; }
+.assistant-account-identity { min-width: 0; overflow-wrap: anywhere; font-weight: 500; }
 .assistant-panel-header h2 { font-size: 15px; font-weight: 600; letter-spacing: -.03em; }
 .assistant-status { display: block; margin-top: 2px; font-size: 12px; color: var(--ui-muted); }
 .assistant-panel-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }

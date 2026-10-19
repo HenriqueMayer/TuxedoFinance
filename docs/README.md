@@ -52,7 +52,9 @@ releases, persistent volumes and isolated restore rehearsals.
 - [apps/sandbox.md](apps/sandbox.md) — private planning drafts, salary/budget
   scenarios, commitment snapshots and contribution/yield simulations.
 - [apps/assistant.md](apps/assistant.md) — local conversations, signed owned
-  context and unavailable-provider foundation; OpenAI and action execution remain planned.
+  context, unavailable-provider foundation and gated OpenAI account settings,
+  OAuth lifecycle and encrypted vault preparation. Real-account validation,
+  model inference and action execution remain pending.
 
 ## Repository layout
 
@@ -120,6 +122,9 @@ Dependency maintenance and local database operations are documented in
 backup storage, permissions, encryption and retention, and for rehearsing a
 restore before relying on a backup.
 
-The root `db.sqlite3` and `.env` are local runtime files and are ignored by Git.
+The root `db.sqlite3`, `.env` and default `assistant-private` vault are local
+runtime files/directories and are ignored by Git.
 A clean clone creates its database with `manage.py migrate`; each installation
-owner is responsible for protecting and backing up these files.
+owner is responsible for protecting and backing up these files. A database-only
+backup cannot restore prepared account credentials; follow the
+[assistant recovery boundary](operations.md#assistant-data-and-integrations).

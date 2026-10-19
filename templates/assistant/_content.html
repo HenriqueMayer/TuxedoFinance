@@ -40,6 +40,7 @@
             <svg class="assistant-bowtie" viewBox="0 0 100 48" fill="none" aria-hidden="true"><path d="m8 6 34 13v10L8 42z" fill="currentColor"/><rect x="44" y="16" width="12" height="16" rx="4" fill="currentColor"/><path d="M92 6 58 19v10l34 13z" stroke="currentColor" stroke-width="1.4"/><path d="M70 16v16m8-19v22" stroke="currentColor" stroke-width=".7"/></svg>
             <h3>{% translate 'Provider not connected' %}</h3>
             <p>{% translate 'Your chat is ready for a future AI connection. No financial data is being sent to a provider.' %}</p>
+            <a href="{% url 'assistant:connections' %}" class="quiet-action" data-assistant-source>{% translate 'Assistant settings' %} <span aria-hidden="true">↗</span></a>
         </div>
         {% endfor %}
     </section>

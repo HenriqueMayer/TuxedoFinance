@@ -31,6 +31,7 @@ and [interface map](../interface-map.md) for present behavior.
 | [Personal Open Finance feasibility — 2026-10-18](open-finance-personal-study-2026-10-18.md) | Public primary-source study for Nubank, Inter and Mercado Pago PF, the unresolved 6–8-hour production route, and proposed source-preserving reconciliation; no live account, credentials or integration. |
 | [Local assistant foundation — 2026-10-18](assistant-foundation-2026-10-18.md) | Local chat/context contracts, synthetic Design Lab, privacy/draft/browser validation and preserved installation boundaries; provider remains disconnected. |
 | [Assistant overlay and compact context — 2026-10-18](assistant-overlay-2026-10-18.md) | Fixed desktop overlay, compact location links, gentle artwork motion and short-phone history containment, with isolated regression evidence. |
+| [Assistant authorization preparation — 2026-10-19](assistant-authorization-2026-10-19.md) | Default-disabled account settings, session-bound OAuth handoff, encrypted vault, refresh/recovery and synthetic browser/container validation; no live account or inference. |
 
 The [coverage baseline](../coverage-baseline.md) explains the measurement policy
 and distinguishes historical measurements from the CI floor. The health review's

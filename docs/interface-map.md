@@ -30,7 +30,9 @@ utility controls. Primary navigation has no hover submenus. Option menus open
 deliberately; question-mark help keeps its separate hover/focus behavior.
 The authenticated assistant is a utility panel/native destination, not a sixth
 primary workspace. Its local foundation has no connected model or financial
-execution. See the [assistant guide](apps/assistant.md).
+execution. Assistant settings owns default-disabled account-authorization
+preparation; account linking never replaces Django login or enables inference.
+See the [assistant guide](apps/assistant.md).
 
 ## Screens and route families
 
@@ -52,6 +54,10 @@ execution. See the [assistant guide](apps/assistant.md).
 | `/assistant/conversations/new/`, `/assistant/<uuid>/delete/` | Explicit CSRF-protected local POSTs. | Create/delete owned conversation history only; no financial write. |
 | `/assistant/<uuid>/messages/` | Unavailable-provider recovery for a stale/direct POST. | HTTP 503 without saving a fake exchange; no external request or paid fallback. |
 | `/assistant/context/` | Timestamped/cutoff/currency-aware structured context with metrics, warnings and owned source links. | Signed expiring user-bound origin, allowlisted route/query, ownership rechecks, read-only collection and no DOM/unsent-form capture. |
+| `/assistant/connections/` | Owned ChatGPT account settings, local selected/status metadata, pending confirmation and explicit connection actions; empty/disconnected state by default. | No external request or vault initialization on GET; never seeds a fictitious linked account. Shared native forms and readable long identity text; provider/composer stays unavailable. |
+| `/assistant/connections/start/`, `connections/<uuid>/authorize/` | Native CSRF POST for Continue with ChatGPT or Sign in again. | Real authorization disabled by default; explicit future opt-in and deliberate user action required. Leaves HTMX before the external handoff, without replacing Django login. |
+| `/assistant/connections/callback/`, `connections/callback/result/` | One-time loopback callback and generic result directing the owner to the original settings tab. | No immediate account attachment, callback-host session assumption, token/account rendering or reusable query. No-store/no-referrer; final confirmation belongs to the original authenticated session. |
+| `/assistant/connections/attempts/<uuid>/finish/`, `.../cancel/`, `connections/<uuid>/activate/`, `.../disconnect/` | Explicit native CSRF POSTs for reviewed account linking, attempt cancellation, local selection and deliberate disconnect confirmation. | Owner/session checks; no token fields in forms, browser storage or logs. Identity-only/reconnect/revocation-failure recovery stays explicit; financial data and conversations remain. |
 
 ### Home and reporting
 

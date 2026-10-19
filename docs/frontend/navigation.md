@@ -109,10 +109,18 @@ Custom assistant fetches respect asset-recovery headers before inserting HTML;
 recovery offers a validated native GET through the ordinary unsaved-edit guard,
 without replaying a POST or automatically discarding a financial draft.
 
-No provider is configured in this foundation. Keep that status visible and the
-real composer disabled; do not render fake streamed replies or an active Send
-action. The [assistant guide](../apps/assistant.md) owns storage, routes, context
-and the planned provider/action boundaries. Browser validation must cover
+Account connection settings use native POST/redirect forms outside HTMX. The
+ChatGPT sign-in control opens a separate tab, preserving the authenticated
+settings tab for final confirmation. It is disabled until authorization is deliberately enabled;
+an authorized account still does not enable inference in this delivery. The
+settings link in the panel retains normal departure protection for edited
+financial forms. Callback pages contain no account or authorization code and
+require confirmation in the original authenticated settings session.
+
+Keep the disconnected inference status visible and the real composer disabled;
+do not render fake streamed replies or an active Send action. The
+[assistant guide](../apps/assistant.md) owns storage, routes, context and the
+gated authorization/provider/action boundaries. Browser validation must cover
 desktop/phone, both themes, real keyboard focus, HTMX navigation, account/logout
 boundaries and the native page.
 

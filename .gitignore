@@ -15,6 +15,7 @@ env/
 # Each installation owns its local database. Keep the root database and its
 # transient journal/WAL files out of version control.
 /db.sqlite3
+/assistant-private/
 db.sqlite3-journal
 db.sqlite3-shm
 db.sqlite3-wal

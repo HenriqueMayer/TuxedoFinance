@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 02:35+0000\n"
+"POT-Creation-Date: 2026-10-19 03:31+0000\n"
 "PO-Revision-Date: 2026-10-16 00:12+0000\n"
 "Last-Translator: Tuxedo Finance contributors\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -74,6 +74,46 @@ msgstr "Bem-vindo ao Tuxedo Finance, %(username)s. Sua conta está pronta."
 #: accounts/views.py:67
 msgid "Your settings were updated."
 msgstr "Suas configurações foram atualizadas."
+
+#: assistant/connection_views.py:25
+msgid "Real sign-in is disabled in this delivery. No account was contacted."
+msgstr "O login real está desativado nesta entrega. Nenhuma conta foi contatada."
+
+#: assistant/connection_views.py:27
+msgid "This authorization is unavailable. Start again from the original settings tab."
+msgstr "Esta autorização está indisponível. Comece novamente pela aba original das configurações."
+
+#: assistant/connection_views.py:29
+msgid "Finish or cancel an existing authorization before starting another."
+msgstr "Conclua ou cancele uma autorização existente antes de iniciar outra."
+
+#: assistant/connection_views.py:31
+msgid "The local credential vault is unavailable. Check its key and permissions before trying again."
+msgstr "O cofre local de credenciais está indisponível. Verifique a chave e as permissões antes de tentar novamente."
+
+#: assistant/connection_views.py:33
+msgid "The connection could not be updated. Your financial data and conversations were kept."
+msgstr "Não foi possível atualizar a conexão. Seus dados financeiros e conversas foram mantidos."
+
+#: assistant/connection_views.py:107
+msgid "Account linked locally. AI responses remain unavailable in this delivery."
+msgstr "Conta vinculada localmente. As respostas de IA continuam indisponíveis nesta entrega."
+
+#: assistant/connection_views.py:120
+msgid "Authorization cancelled."
+msgstr "Autorização cancelada."
+
+#: assistant/connection_views.py:133
+msgid "Account selected. This does not enable AI responses."
+msgstr "Conta selecionada. Isso não habilita respostas de IA."
+
+#: assistant/connection_views.py:147
+msgid "Account disconnected and renewable access revoked."
+msgstr "Conta desconectada e acesso renovável revogado."
+
+#: assistant/connection_views.py:149
+msgid "Local credentials removed. Remote revocation was not confirmed; review app access in ChatGPT settings."
+msgstr "Credenciais locais removidas. A revogação remota não foi confirmada; revise o acesso do aplicativo nas configurações do ChatGPT."
 
 #: assistant/context.py:45 core/workspace_navigation.py:10
 #: templates/pages/landing.html:55
@@ -233,7 +273,7 @@ msgstr "Os valores mantêm suas moedas originais; nenhuma conversão de moeda fo
 msgid "Conversation title"
 msgstr "Título da conversa"
 
-#: assistant/forms.py:12 templates/assistant/_content.html:47
+#: assistant/forms.py:12 templates/assistant/_content.html:48
 msgid "Message"
 msgstr "Mensagem"
 
@@ -1235,11 +1275,11 @@ msgstr "%(created)s categorias importadas; %(skipped)s categorias existentes ign
 msgid "Enter a valid date."
 msgstr "Informe uma data válida."
 
-#: core/settings.py:163
+#: core/settings.py:175
 msgid "English"
 msgstr "Inglês"
 
-#: core/settings.py:164
+#: core/settings.py:176
 msgid "Brazilian Portuguese"
 msgstr "Português brasileiro"
 
@@ -3265,6 +3305,22 @@ msgstr "Salvar configurações"
 msgid "Cancel"
 msgstr "Cancelar"
 
+#: templates/accounts/settings.html:40 templates/assistant/_content.html:37
+#: templates/assistant/_dock.html:14 templates/assistant/index.html:3
+#: templates/assistant/index.html:7
+msgid "Tuxedo assistant"
+msgstr "Assistente Tuxedo"
+
+#: templates/accounts/settings.html:41 templates/assistant/connections.html:8
+msgid "Manage the ChatGPT account linked to your local Tuxedo Finance user."
+msgstr "Gerencie a conta ChatGPT vinculada ao seu usuário local do Tuxedo Finance."
+
+#: templates/accounts/settings.html:42 templates/assistant/_content.html:43
+#: templates/assistant/connections.html:3
+#: templates/assistant/connections.html:7
+msgid "Assistant settings"
+msgstr "Configurações do assistente"
+
 #: templates/accounts/signup.html:11
 msgid "Registration closed"
 msgstr "Cadastros encerrados"
@@ -3341,11 +3397,6 @@ msgstr "Mensagens"
 msgid "You"
 msgstr "Você"
 
-#: templates/assistant/_content.html:37 templates/assistant/_dock.html:14
-#: templates/assistant/index.html:3 templates/assistant/index.html:7
-msgid "Tuxedo assistant"
-msgstr "Assistente Tuxedo"
-
 #: templates/assistant/_content.html:41
 msgid "Provider not connected"
 msgstr "Provedor não conectado"
@@ -3354,27 +3405,27 @@ msgstr "Provedor não conectado"
 msgid "Your chat is ready for a future AI connection. No financial data is being sent to a provider."
 msgstr "O chat está preparado para uma futura conexão com IA. Nenhum dado financeiro está sendo enviado a um provedor."
 
-#: templates/assistant/_content.html:48
+#: templates/assistant/_content.html:49
 msgid "Connect a provider in a future update to send messages."
 msgstr "Conecte um provedor em uma futura atualização para enviar mensagens."
 
-#: templates/assistant/_content.html:49
+#: templates/assistant/_content.html:50
 msgid "Sending is unavailable."
 msgstr "O envio está indisponível."
 
-#: templates/assistant/_content.html:49
+#: templates/assistant/_content.html:50
 msgid "Send message"
 msgstr "Enviar mensagem"
 
-#: templates/assistant/_content.html:53
+#: templates/assistant/_content.html:54
 msgid "Delete conversation"
 msgstr "Excluir conversa"
 
-#: templates/assistant/_content.html:56
+#: templates/assistant/_content.html:57
 msgid "Delete this conversation and its messages? Financial records will be kept."
 msgstr "Excluir esta conversa e suas mensagens? Os registros financeiros serão mantidos."
 
-#: templates/assistant/_content.html:57
+#: templates/assistant/_content.html:58
 msgid "Confirm deletion"
 msgstr "Confirmar exclusão"
 
@@ -3417,6 +3468,127 @@ msgstr "Abrir página completa"
 #: templates/assistant/_dock.html:22
 msgid "Cancel loading"
 msgstr "Cancelar carregamento"
+
+#: templates/assistant/connection_callback.html:3
+#: templates/assistant/connection_callback.html:6
+msgid "ChatGPT authorization"
+msgstr "Autorização do ChatGPT"
+
+#: templates/assistant/connection_callback.html:7
+msgid "Authorization received. Return to the original Tuxedo Finance settings tab and confirm the account link."
+msgstr "Autorização recebida. Volte à aba original das configurações do Tuxedo Finance e confirme o vínculo da conta."
+
+#: templates/assistant/connection_callback.html:7
+msgid "Authorization could not be completed. Return to the original settings tab and start again."
+msgstr "Não foi possível concluir a autorização. Volte à aba original das configurações e comece novamente."
+
+#: templates/assistant/connection_callback.html:8
+msgid "No account is linked until you confirm it in the original authenticated session. No model request was sent."
+msgstr "Nenhuma conta será vinculada até sua confirmação na sessão autenticada original. Nenhuma solicitação a modelos foi enviada."
+
+#: templates/assistant/connections.html:11
+msgid "Connection preparation"
+msgstr "Preparação da conexão"
+
+#: templates/assistant/connections.html:12
+msgid "Your database and conversation history stay on this installation. Future responses will send only your question and the context needed to answer it."
+msgstr "Seu banco de dados e histórico de conversas ficam nesta instalação. As respostas futuras enviarão apenas sua pergunta e o contexto necessário para respondê-la."
+
+#: templates/assistant/connections.html:13
+msgid "Account authorization and AI responses are separate. Sending messages remains unavailable in this delivery."
+msgstr "A autorização da conta e as respostas de IA são etapas separadas. O envio de mensagens continua indisponível nesta entrega."
+
+#: templates/assistant/connections.html:14
+msgid "Real sign-in is disabled. This screen does not contact OpenAI or consume your plan."
+msgstr "O login real está desativado. Esta tela não contata a OpenAI nem consome seu plano."
+
+#: templates/assistant/connections.html:16
+msgid "Continue with ChatGPT"
+msgstr "Continuar com ChatGPT"
+
+#: templates/assistant/connections.html:18
+msgid "Sign-in opens in a new tab. Use the computer running Tuxedo Finance, then return here to confirm the account. Your Tuxedo Finance login stays unchanged."
+msgstr "O login abre em uma nova aba. Use o computador que executa o Tuxedo Finance e volte aqui para confirmar a conta. Seu login no Tuxedo Finance permanece igual."
+
+#: templates/assistant/connections.html:21
+msgid "Pending authorization"
+msgstr "Autorização pendente"
+
+#: templates/assistant/connections.html:23
+#: templates/assistant/connections.html:32
+msgid "Confirm account link"
+msgstr "Confirmar vínculo da conta"
+
+#: templates/assistant/connections.html:25
+#: templates/assistant/connections.html:42
+msgid "Registration"
+msgstr "Registro da conexão"
+
+#: templates/assistant/connections.html:26
+msgid "Only confirm the ChatGPT account you intended to link. This does not enable model requests."
+msgstr "Confirme apenas a conta ChatGPT que você pretendia vincular. Isso não habilita solicitações a modelos."
+
+#: templates/assistant/connections.html:28
+msgid "Waiting for authorization"
+msgstr "Aguardando autorização"
+
+#: templates/assistant/connections.html:29
+msgid "Return to this tab and refresh after completing the browser authorization."
+msgstr "Volte a esta aba e atualize após concluir a autorização no navegador."
+
+#: templates/assistant/connections.html:33
+msgid "Cancel authorization"
+msgstr "Cancelar autorização"
+
+#: templates/assistant/connections.html:38
+msgid "Linked accounts"
+msgstr "Contas vinculadas"
+
+#: templates/assistant/connections.html:41
+#: templates/partials/chart_selection.html:3
+#: templates/transactions/list.html:70 templates/transactions/list.html:92
+msgid "Selected"
+msgstr "Selecionado"
+
+#: templates/assistant/connections.html:43
+msgid "Account authorized. AI responses remain unavailable."
+msgstr "Conta autorizada. As respostas de IA continuam indisponíveis."
+
+#: templates/assistant/connections.html:43
+msgid "Identity verified; permission to use the ChatGPT plan was not granted."
+msgstr "Identidade verificada; a permissão para usar o plano ChatGPT não foi concedida."
+
+#: templates/assistant/connections.html:43
+msgid "Sign in again to renew this connection."
+msgstr "Entre novamente para renovar esta conexão."
+
+#: templates/assistant/connections.html:43
+msgid "Disconnected. The registration is retained for a later sign-in."
+msgstr "Desconectada. O registro é mantido para um próximo login."
+
+#: templates/assistant/connections.html:45
+msgid "Use this account"
+msgstr "Usar esta conta"
+
+#: templates/assistant/connections.html:46
+msgid "Sign in again"
+msgstr "Entrar novamente"
+
+#: templates/assistant/connections.html:47
+msgid "Disconnect account"
+msgstr "Desconectar conta"
+
+#: templates/assistant/connections.html:47
+msgid "Remove the local credentials for this connection? Conversations and financial records are kept."
+msgstr "Remover as credenciais locais desta conexão? As conversas e os registros financeiros serão mantidos."
+
+#: templates/assistant/connections.html:47
+msgid "Confirm disconnection"
+msgstr "Confirmar desconexão"
+
+#: templates/assistant/connections.html:50
+msgid "No ChatGPT account is linked."
+msgstr "Nenhuma conta ChatGPT está vinculada."
 
 #: templates/assistant/index.html:7
 msgid "Conversations stored on this installation."
@@ -5971,11 +6143,6 @@ msgstr "Cotações ausentes"
 #: templates/partials/chart_selection.html:3
 msgid "Selected total"
 msgstr "Total selecionado"
-
-#: templates/partials/chart_selection.html:3
-#: templates/transactions/list.html:70 templates/transactions/list.html:92
-msgid "Selected"
-msgstr "Selecionado"
 
 #: templates/partials/chart_selection.html:8
 msgid "Net change in selected period"

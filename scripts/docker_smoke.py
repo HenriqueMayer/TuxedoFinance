@@ -25,11 +25,14 @@ ROOT = Path(__file__).resolve().parent.parent
 def isolated_environment():
     env = os.environ.copy()
     for key in list(env):
-        if key.startswith(('COMPOSE_', 'TUXEDO_', 'E2E_')) or key in {
+        if key.startswith(('COMPOSE_', 'TUXEDO_', 'E2E_', 'ASSISTANT_')) or key in {
             'SECRET_KEY', 'DEBUG', 'HTTPS', 'ALLOWED_HOSTS', 'ALLOW_SIGNUPS', 'LOG_LEVEL',
             'DJANGO_SETTINGS_MODULE',
         }:
             del env[key]
+    # A test subprocess must never opt into account authorization or inherit an
+    # installation's vault path, even when the developer enabled it in the shell.
+    env['ASSISTANT_OPENAI_AUTH_ENABLED'] = 'False'
     return env
 
 
@@ -50,7 +53,7 @@ class Installation:
         env_file = directory / '.env'
         env_file.write_text(
             f'TUXEDO_IMAGE={self.image}\nSECRET_KEY={secrets.token_urlsafe(64)}\n'
-            'TUXEDO_PORT=0\nALLOW_SIGNUPS=True\n'
+            'TUXEDO_PORT=0\nALLOW_SIGNUPS=True\nASSISTANT_OPENAI_AUTH_ENABLED=False\n'
         )
         env_file.chmod(0o600)
         self.command = [

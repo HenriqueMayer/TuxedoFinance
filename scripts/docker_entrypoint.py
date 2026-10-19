@@ -25,6 +25,9 @@ def main():
         command = [
             'gunicorn', 'core.wsgi:application', '--bind', '0.0.0.0:8000',
             '--workers', '1', '--threads', '4', '--access-logfile', '-',
+            # OAuth codes arrive in the query. Access logs retain method/path
+            # and status, never request queries or authorization headers.
+            '--access-logformat', '%(h)s %(t)s "%(m)s %(U)s %(H)s" %(s)s %(b)s',
             '--error-logfile', '-', '--worker-tmp-dir', '/tmp',
             '--no-control-socket',
         ]
