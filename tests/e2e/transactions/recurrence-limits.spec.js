@@ -198,8 +198,8 @@ for (const theme of ['light', 'dark']) {
             bank: data.bank, name: accountName, currency: 'BRL',
             opening_balance: '137.42', opening_date: '2020-01-01',
         });
-        await page.goto('/dashboard/reports/');
-        await expect(page.getByRole('heading', { name: 'Reports', exact: true })).toBeVisible();
+        await page.goto('/analytics/');
+        await expect(page.getByRole('heading', { name: 'Analytics', exact: true })).toBeVisible();
         await expect(page.locator('#reports-charts')).toBeVisible();
         await expect(page.locator('#report-summary .metric-panel').first()).toContainText(/137[,.]42/);
         const revision = await page.locator('meta[name="tuxedo-assets"]').getAttribute('content');

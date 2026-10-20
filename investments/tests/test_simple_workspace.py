@@ -159,7 +159,7 @@ class SimpleInvestmentWorkspaceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['form'].errors)
         self.assertEqual(Asset.objects.filter(user=self.user).count(), 1)
-        for route in ['investments:charts', 'investments:operations', 'investments:prices', 'investments:settings']:
+        for route in ['analytics:investments', 'investments:operations', 'investments:prices', 'investments:settings']:
             self.assertEqual(self.client.get(reverse(route)).status_code, 200)
 
     def test_brazilian_decimal_opening_retains_bound_input_before_recovery(self):

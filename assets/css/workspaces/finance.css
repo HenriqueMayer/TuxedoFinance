@@ -97,3 +97,18 @@ html:has(.finance-workspace) { scrollbar-gutter:stable; }
   .investment-value-details { flex-basis:100%; }
   .investment-value-details > summary { margin-left:0; }
 }
+
+/* Position emojis identify holdings; bank markers continue to identify institutions. */
+.investment-position-identity { display:flex; align-items:center; gap:.375rem; min-width:0; }
+.investment-icon-action { display:inline-flex; align-items:center; justify-content:center; flex:0 0 2.75rem; min-width:2.75rem; min-height:2.75rem; border-radius:.5rem; font-size:1.375rem; line-height:1; }
+.investment-icon-action:hover { background:rgb(26 46 38 / .06); }
+.investment-icon-action:focus-visible { outline:2px solid var(--color-caramel); outline-offset:2px; }
+.dark .investment-icon-action:hover { background:rgb(250 248 243 / .08); }
+.investment-position-emoji { display:inline-flex; align-items:center; justify-content:center; min-width:1.5rem; font-size:1.25rem; line-height:1.5; }
+.investment-appearance .entry-segment-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; }
+.investment-appearance .entry-segment-options label { min-width:0; justify-content:flex-start; padding:.625rem .75rem; overflow-wrap:anywhere; }
+.investment-sections { overflow-x:auto; flex-wrap:nowrap; }
+.investment-sections > a { flex-shrink:0; }
+/* Keep shared section spacing independent of older compact finance overrides. */
+.finance-workspace .investment-sections { margin-bottom:1.5rem; }
+@media (max-width:639px) { .investment-appearance .entry-segment-options { grid-template-columns:repeat(2,minmax(0,1fr)); } .investment-appearance .entry-segment-options label { font-size:.8125rem; padding:.625rem .5rem; } }

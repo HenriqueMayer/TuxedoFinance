@@ -34,6 +34,7 @@ from banking.services import create_transfer
 from categories.models import Category
 from investments.models import Asset, Investment, InvestmentProduct
 from investments.services import refresh_fx_snapshot, sync_investment_ledger
+from investments.appearance import save_position_appearance
 from planning.models import CategoryBudget
 from transactions.models import Transaction
 from transactions.services import sync_user_ledger
@@ -371,6 +372,9 @@ def seed_profile(language: str, password: str) -> None:
             opening_date=add_months(today, -12, 1),
             opening_product=reserve_product,
         )
+        # Synthetic position identity never assigns financial purpose or reserves.
+        save_position_appearance(user, brokerage, equity, 'investment')
+        save_position_appearance(user, reserve_product, reserve, 'piggy')
         make_investment(
             user=user, product=brokerage, asset=equity,
             kind=Investment.Kind.DEPOSIT,

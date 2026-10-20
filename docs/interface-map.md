@@ -14,22 +14,23 @@ Abbreviated paths in a row retain that row's application prefix.
 
 ## Navigation and access
 
-The desktop sidebar and mobile dock have the same five destinations. Secondary
+The desktop sidebar and mobile dock have the same six destinations. Secondary
 screens belong to their workspace; an editor retains its workspace context.
 
 | Destination | Entry route | Secondary destinations |
 |---|---|---|
-| Home | `/dashboard/` | Dashboard and Reports. Net worth remains under review. |
+| Home | `/dashboard/` | Operational dashboard, selected-month indicators, live cash and outstanding invoices. Net worth remains under review. |
 | Transactions | `/transactions/` | Transactions and Categories; existing import provenance remains readable. New statement imports remain under review. |
 | Accounts | `/banking/` | Accounts, Invoices and Exchange rates. Banks, cards, cash positions and loyalty belong to this workspace. |
-| Investments | `/investments/` | My investments, History, and deliberate More options for Analyses, Observed prices and Full configuration. |
+| Investments | `/investments/` | My investments, History, Prices and Setup. Appearance belongs to each product/asset position. |
 | Plan | `/planning/` | This month, Goals and Tools; salary/yield scenarios, saved drafts and signals belong to Tools. |
+| Analytics | `/analytics/` | Finances and Investments; existing charts and the six-month outlook retain their financial scopes. |
 
 Settings, language, theme, project links and POST logout remain in account or
 utility controls. Primary navigation has no hover submenus. Option menus open
 deliberately; question-mark help keeps its separate hover/focus behavior.
-The authenticated assistant is a utility panel/native destination, not a sixth
-primary workspace. Supported local changes require separate reviewed confirmation;
+The authenticated assistant is a utility panel/native destination, outside the six
+primary workspaces. Supported local changes require separate reviewed confirmation;
 the chat cannot initiate real payments, transfers or unattended execution. Account authorization and
 model inference are separate default-off gates; account linking never replaces
 Django login or turns on inference automatically.
@@ -68,9 +69,9 @@ See the [assistant guide](apps/assistant.md).
 
 | Routes | Interface and actions | Filters and interaction contracts |
 |---|---|---|
-| `/dashboard/` | New transaction; planning availability; current account balances with bank markers; monthly performance, expense categories, outstanding invoices and six-month outlook; FX warnings and contextual help. | Month arrows/reset affect their owning period. Account shortcuts reveal the exact bank row. Outstanding invoices include overdue obligations independently of that month; All invoices opens the complete card overview. Wide tables scroll locally. |
-| `/dashboard/reports/` | Current balance, monthly result, twelve-month change; balance/cash-flow, instrument, installment/recurrence and category charts; legends, notices and source details. | Independent window/month/current/Last 12 months controls preserve the other query parameters. The legacy ALL value covers the current month plus eleven prior months. HTMX GET replaces the owning charts and updates history without a POST departure warning. |
-| `/dashboard/chart-details/` | Composition amounts, source links and generated-operation context. | Signed/user-owned scope, discreet source disclosures, no arbitrary editor for an aggregate. Home/Reports source links retain query and owning-chart anchor for editor Save/Cancel. Shared chart composition behavior applies. |
+| `/dashboard/` | New transaction; planning availability; current account balances with bank markers; monthly indicators and outstanding invoices; selected-month Analytics shortcut, FX warnings and contextual help. | Month arrows/reset affect their owning period. Account shortcuts reveal the exact bank row. Outstanding invoices include overdue obligations independently of that month; All invoices opens the complete card overview. Wide tables scroll locally. |
+| `/analytics/` (legacy `/dashboard/reports/` redirects) | Current balance, monthly result, twelve-month change; balance/cash-flow, instrument, installment/recurrence and category charts; six-month outlook; legends, notices and source details. | Independent window/month/current/Last 12 months controls preserve the other query parameters. The legacy ALL value covers the current month plus eleven prior months. HTMX GET replaces the owning charts and updates history without a POST departure warning. |
+| `/dashboard/chart-details/` | Composition amounts, source links and generated-operation context. | Signed/user-owned scope, discreet source disclosures, no arbitrary editor for an aggregate. Analytics source links retain query and owning-chart anchor for editor Save/Cancel. Shared chart composition behavior applies. |
 | `/dashboard/wealth/` | Dated assets/debt/net-worth metrics, completeness notices and monthly series. | **Paused:** redirects through the review gate; remains absent from product navigation. See [review boundaries](#review-and-framework-boundaries). |
 
 ### Transactions and categories
@@ -110,13 +111,13 @@ See the [assistant guide](apps/assistant.md).
 | Routes | Interface and actions | Filters and conditional controls |
 |---|---|---|
 | `/investments/` | Position/value summary, holding rows with saved bank markers, contextual history, Add investment and holding actions. | Search and purpose scope (all/investments/remunerated cash), stable Clear and live GET results. Scope also updates the History destination. |
-| `/investments/positions/<product>/<asset>/`, `positions/<product>/<asset>/update/` | Cost, dated price, results, operations/configuration; Contribute, Redeem, Record yield and unit-price actions. | Mode-specific actions and archive locks. Dated prices affect valuation, not quantity or bank cash. |
+| `/investments/positions/<product>/<asset>/`, `positions/<product>/<asset>/update/` | Per-position emoji and cosmetic Personalization POST; cost, dated price, results, operations/configuration; Contribute, Redeem, Record yield and unit-price actions. | Native curated icon choices with explicit Save, owned position validation and no financial write side effects. Mode-specific actions and archive locks. Dated prices affect valuation, not quantity or bank cash. |
 | `/investments/operations/` | Searchable operation history, source/funding information, Edit/Delete and pagination. | Purpose/type/bank/product/asset/currency/class/date criteria; shared record search and live consultation. |
-| `/investments/add/` | Guided existing/new institution, name, valuation mode, currency/purpose/planning inclusion, opening position and optional code/class. | Monetary versus units branches; opening date reveal; explicit initial choices and nested errors. Opening holdings do not imply a bank debit. |
+| `/investments/add/` | Guided existing/new institution, name, position emoji, valuation mode, currency/purpose/planning inclusion, opening position and optional code/class. | Monetary versus units branches; opening date reveal; explicit initial choices and nested errors. Opening holdings do not imply a bank debit. |
 | `/investments/create/`, `/<id>/edit/`, `/<id>/delete/`, `/yield-preview/` | Product/asset/type/date, monetary amount/yield/final balance or units/unit price; funding/destination/cash/points; advanced fees/reason/notes; optional FX capture; preview and confirmation. | Native yield-mode segments, shared record search, mode-specific fields, deliberate stale-value clearing and nested error recovery. HTMX preview retains the original submitted context. |
 | `/investments/settings/`, `/products/...`, `/assets/...` | Compact institution-marked product/asset catalogues; grouped complete registration for identity, purpose, valuation and opening holdings; direct Edit/Archive/Restore and deliberate secondary menus. | Historical opening protection and unavailable-new-operation guards remain; archive preserves balances/history and its stable action focus. |
 | `/investments/prices/` and create/edit/delete | Dated unit price/source table, always-available shared asset filter, observation editor, pagination and confirmation. | Invalid/foreign asset criteria return errors and no rows. Exact precision, owned asset and local source; no external quote feed. |
-| `/investments/charts/` | Scope-aligned current valuation summary/warnings, total/flow chart windows, previous/next and composition controls. | Summary and charts refresh together. Position source history stops at the plotted month's end; source-editor returns retain chart scope/windows/anchor. Financial calculations remain unchanged. |
+| `/analytics/investments/` | Scope-aligned current valuation summary/warnings, total/flow chart windows, previous/next and composition controls. | Summary and charts refresh together. Position source history stops at the plotted month's end; source-editor returns retain chart scope/windows/anchor. `/investments/charts/` redirects here with its query. Financial calculations remain unchanged. |
 
 ### Planning and scenarios
 
@@ -135,7 +136,7 @@ See the [assistant guide](apps/assistant.md).
 
 | Component | Shared implementation / presentation | Required behavior |
 |---|---|---|
-| Shell and sections | `base.html`, sidebar/mobile/navigation partials, `core.workspace_navigation`, `section-nav`. | Five equivalent destinations, active context, fixed-navigation clearance, native links and authorized history restoration. |
+| Shell and sections | `base.html`, sidebar/mobile/navigation partials, `core.workspace_navigation`, `section-nav`. | Six equivalent destinations, active context, fixed-navigation clearance, native links and authorized history restoration. |
 | Panels and ledger | `surface-panel`, `stat_card`, `page-title`, `section-title`, `metric-label`, `data-table`, `planning-sheet-input`. | Thin dividers, compact editorial spacing, readable status/empty/error states, local overflow instead of clipped columns. |
 | Actions | `action-primary`, `action-link`, `quiet-action`, `action-danger`, `icon-action`, `form-actions`; transaction action equivalents. | Balanced content, stable geometry, visible focus, adequate touch targets, sentence-case labels and reduced-motion support. Destructive actions remain explicit. |
 | Ordinary fields | `partials/form_field.html`, `field_label.html`, `form_control`, `entry-input`, `entry-checkbox-choice`, `workspace-form` / `workspace-form-page`. | Native labels/types, single booleans beside their label/help, shared errors, server validation, no-JavaScript submission, preserved identifiers and autocomplete rules. |

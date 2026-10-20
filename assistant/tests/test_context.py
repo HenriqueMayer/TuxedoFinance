@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import UserPreference
-from assistant.context import MAX_ROWS, collect_context, normalize_location
+from assistant.context import MAX_ROWS, ScopeError, collect_context, normalize_location, scope_label
 from assistant.tests.support import make_finances, make_owner
 from banking.models import BankAccount, BankMovement
 from transactions.models import Transaction, TransactionSplit
@@ -68,7 +68,7 @@ class AssistantFinancialContextTests(TestCase):
         self.assertTrue(all(query['sql'].lstrip().upper().startswith('SELECT') for query in queries))
 
     def test_filtered_or_editor_pages_never_broaden_to_current_account_totals(self):
-        locations = ['/dashboard/?month=2026-09', '/dashboard/reports/',
+        locations = ['/dashboard/?month=2026-09', '/analytics/',
                      '/banking/invoices/?month=2026-10', f'/banking/accounts/{self.account.pk}/edit/',
                      '/transactions/?month=2026-10', f'/transactions/?category={self.category.pk}',
                      '/transactions/create/?account=' + str(self.account.pk), '/investments/', '/planning/']
@@ -78,6 +78,25 @@ class AssistantFinancialContextTests(TestCase):
                 self.assertEqual(snapshot['metrics'], [])
                 self.assertEqual(len(snapshot['sources']), 1)
                 self.assertTrue(snapshot['warnings'])
+
+    def test_analytics_filters_keep_their_page_scope_without_copying_financial_history(self):
+        finance = '/analytics/?month=2026-09&charts_offset=-1&instrument_month=ALL&installment_month=2026-10'
+        investments = '/analytics/investments/?scope=cash&total_offset=-2&flow_offset=1'
+        for location, route in ((finance, 'analytics:index'), (investments, 'analytics:investments')):
+            with self.subTest(location=location):
+                scope = normalize_location(self.user, location)
+                self.assertEqual(scope['route'], route)
+                self.assertIn('Analytics', scope_label(scope))
+                with CaptureQueriesContext(connection) as queries:
+                    snapshot = self.collect(location)
+                self.assertTrue(all(query['sql'].lstrip().upper().startswith('SELECT') for query in queries))
+                self.assertEqual(snapshot['metrics'], [])
+                self.assertEqual(snapshot['sources'][0]['url'], scope['location'])
+        for location in ('/analytics/?scope=cash', '/analytics/investments/?month=2026-10',
+                         '/analytics/investments/?scope=unknown', '/analytics/investments/?total_offset=1.5',
+                         '/analytics/investments/?flow_offset=1201', '/analytics/?charts_offset=-1201'):
+            with self.subTest(invalid=location), self.assertRaises(ScopeError):
+                normalize_location(self.user, location)
 
     def test_transactions_are_dated_sources_not_realized_split_or_recurrence_totals(self):
         self.item.is_fixed = True

@@ -3,9 +3,9 @@
 <div class="period-navigation" data-period-navigation>
     <div class="period-navigation-rail">
         {% if instrument_previous_month %}
-            <a id="instrument-previous" href="{% querystring instrument_month=instrument_previous_month %}"
+            <a data-analytics-param="instrument_month" id="instrument-previous" href="{% querystring instrument_month=instrument_previous_month %}"
                hx-get="{% querystring instrument_month=instrument_previous_month %}"
-               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#finance-analytics:queue all"
                aria-label="{% translate 'Previous month' %}"
                class="icon-action shrink-0">&larr;</a>
         {% else %}
@@ -13,9 +13,9 @@
         {% endif %}
         <p id="instrument-window" class="period-navigation-caption text-sm font-semibold text-forest dark:text-cream">{{ instrument_window_label }}</p>
         {% if instrument_next_month %}
-            <a id="instrument-next" href="{% querystring instrument_month=instrument_next_month %}"
+            <a data-analytics-param="instrument_month" id="instrument-next" href="{% querystring instrument_month=instrument_next_month %}"
                hx-get="{% querystring instrument_month=instrument_next_month %}"
-               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#finance-analytics:queue all"
                aria-label="{% translate 'Next month' %}"
                class="icon-action shrink-0">&rarr;</a>
         {% else %}
@@ -26,17 +26,17 @@
         {% if instrument_month_param == instrument_current_month %}
             <span id="instrument-current" tabindex="-1" aria-current="date" class="period-navigation-choice text-sm text-forest/70 focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">{% translate 'Current month' %}</span>
         {% else %}
-            <a id="instrument-current" href="{% querystring instrument_month=instrument_current_month %}"
+            <a data-analytics-param="instrument_month" id="instrument-current" href="{% querystring instrument_month=instrument_current_month %}"
                hx-get="{% querystring instrument_month=instrument_current_month %}"
-               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#finance-analytics:queue all"
                class="quiet-action period-navigation-choice">{% translate 'Current month' %}</a>
         {% endif %}
         {% if instrument_month_param == 'ALL' %}
             <span id="instrument-all" tabindex="-1" aria-current="true" class="period-navigation-choice text-sm text-forest/70 focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:text-night-muted">{% translate 'Last 12 months' %}</span>
         {% else %}
-            <a id="instrument-all" href="{% querystring instrument_month='ALL' %}"
+            <a data-analytics-param="instrument_month" id="instrument-all" href="{% querystring instrument_month='ALL' %}"
                hx-get="{% querystring instrument_month='ALL' %}"
-               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#reports-charts:replace"
+               hx-target="#reports-charts" hx-swap="outerHTML" hx-push-url="true" hx-sync="#finance-analytics:queue all"
                class="quiet-action period-navigation-choice">{% translate 'Last 12 months' %}</a>
         {% endif %}
     </div>

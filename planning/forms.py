@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from categories.models import Category
 from core.dates import configure_date_fields
+from investments.appearance import icon_identity, position_appearance_map
 from planning.models import CategoryBudget, FinancialGoal, GoalAllocation, SignalSettings
 from planning.services import goal_sources, reserved_by_source, validate_allocation
 from sandbox.forms import parse_month
@@ -53,6 +54,7 @@ def reservation_source_choices(user, sources, *, instance=None):
             name = asset.name if product.name == asset.name else f'{asset.name} · {product.name}'
             labels[key] = f'{name} · {product.bank.name}'
     counts = Counter((labels[key], source['currency']) for key, source in sources.items())
+    appearances = position_appearance_map(user)
     choices = [('', _('Select a cash source'))]
     for key, source in sources.items():
         named = (reserves['accounts'].get(source['account'].pk, Decimal('0'))
@@ -64,6 +66,11 @@ def reservation_source_choices(user, sources, *, instance=None):
         label = labels[key]
         if source['asset'] and counts[(label, source['currency'])] > 1:
             label += f" ({source['asset'].code})"
+        if source['product']:
+            # Identity belongs to this position, after textual disambiguation;
+            # bank accounts keep their institution identity and source values.
+            pair = (source['product'].pk, source['asset'].pk)
+            label = f"{icon_identity(appearances.get(pair))['emoji']} {label}"
         choices.append((key, f"{label} · {source['currency']} {available:.2f}"))
     return choices
 

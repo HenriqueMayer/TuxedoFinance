@@ -244,8 +244,8 @@ For valuation limitations and a dated competitor comparison, see the
 
 ## Charts
 
-Analyses at `/investments/charts/`, reached through the deliberate More menu,
-uses the existing responsive
+Analyses at `/analytics/investments/`, reached through the primary Analytics
+workspace, uses the existing responsive
 SVG charts and exact selection/composition data. Its Overall, Portfolio and
 Remunerated cash filter scopes both the historical position curve and monthly
 deposits, withdrawals and internal yields. Overall includes both purposes;
@@ -255,7 +255,9 @@ each cutoff, or remaining cost with a missing-price warning. Its recorded
 performance table separates valuation, cost, cumulative realized result and
 unrealized result. Monthly operation-flow bars retain recorded deposits,
 withdrawals and yields with their historical FX evidence. Position value and
-results also appear above the portfolio; Observed prices is the separate quote editor.
+results also appear above the portfolio; Prices is the separate local quote editor.
+The legacy `/investments/charts/` route redirects to the canonical analytical
+destination with its query and fragment context.
 
 Changing the scope immediately applies the filter while preserving each chart's
 month window, focus and scroll. The Filter button is the no-JavaScript fallback.
@@ -386,8 +388,11 @@ a date and never debit an account. Zero holdings
 may retain `opening_product` as their configured placement without an opening
 movement or invented cost/date; first-operation actions remain available.
 
-History, Analyses and Full configuration remain accessible through contextual
-links and a deliberate More menu. Simulations stay in Plan → Tools. The Update
+My investments, History, Prices and Setup are direct section tabs. Prices
+retains local dated observations, and Setup retains product/asset configuration.
+The tabs retain the shared 24px separation from page content and scroll
+horizontally on narrow screens without changing native link activation.
+Analytics is a separate primary workspace; simulations stay in Plan → Tools. The Update
 screen chooses contribution, withdrawal, yield or local unit-price observation,
 then opens the existing financial form with owned, compatible shortcut context.
 Partial valuations, missing prices and unknown opening dates remain visible;
@@ -417,3 +422,24 @@ balance and operations stay recorded and negative amounts still reduce available
 money. The atomic service validates owned compatible sources, and changes require
 a deliberate CSRF-protected POST. Archiving an asset is a separate visibility
 rule and must never be used as an availability exclusion.
+
+
+## Position appearance
+
+A cosmetic preference belongs to one owned `(user, product, asset)` position,
+not to the global asset or to its bank. The same asset can therefore use a
+different emoji at another institution. A missing preference displays General
+(💰); applying the migration does not backfill or reinterpret financial records.
+
+The guided investment form accepts an optional curated icon. Existing positions
+expose Personalization in their detail page, reached by the row icon. The
+separate explicit Save POST validates the position, owner and stable icon key;
+it does not create operations, change holdings, synchronize cash or alter
+planning participation. Native labelled choices remain available without
+JavaScript, with selected values and server errors preserved.
+
+The catalogue contains Piggy bank, Emergency reserve, Home, Goal, General,
+Investment, Long term, Travel, Education, Vehicle, Vacation and Security.
+The label is cosmetic: Emergency reserve does not reserve money, and Home does
+not assign a goal. Position identity is consistent in holdings, details,
+updates, history and goal sources. Bank headings retain their bank markers.

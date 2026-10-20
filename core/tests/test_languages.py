@@ -125,7 +125,7 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, 'data-app-navigation="desktop"')
         self.assertContains(response, 'data-app-navigation="mobile"')
         self.assertNotContains(response, 'data-nav-menu')
-        for area in ('home', 'transactions', 'accounts', 'investments', 'plan'):
+        for area in ('home', 'transactions', 'accounts', 'investments', 'plan', 'analytics'):
             self.assertContains(response, f'id="app-desktop-{area}-link"')
             self.assertContains(response, f'id="app-mobile-{area}-link"')
         self.assertContains(response, 'aria-label="Settings"')
@@ -147,7 +147,7 @@ class LanguageSelectionTests(TestCase):
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'pt-br'
 
         response = self.client.get(
-            reverse('dashboard:reports'),
+            reverse('analytics:index'),
             HTTP_HX_REQUEST='true',
         )
 

@@ -43,7 +43,7 @@ for (const theme of ['light', 'dark']) {
     test(`report month arrows stay independent (${theme})`, async ({ page }, info) => {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         const [current, previous, future] = await seed(page, info);
-        await page.goto(`/dashboard/reports/?charts_offset=1&installment_month=${current}`);
+        await page.goto(`/analytics/?charts_offset=1&installment_month=${current}`);
         await expect(page.locator('#instrument-month')).toHaveCount(0);
         await expect(page.locator('#reports-charts').getByRole('button', { name: 'Filter', exact: true })).toHaveCount(0);
         for (const [id, month, amount] of [
@@ -110,7 +110,7 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('#instrument-current')).toBeFocused();
         await instrument.screenshot({ path: info.outputPath(`month-arrows-${theme}.png`) });
 
-        await page.goto('/dashboard/reports/?instrument_month=2026-13&installment_month=invalid');
+        await page.goto('/analytics/?instrument_month=2026-13&installment_month=invalid');
         await expect(page.locator('#instrument-current')).toHaveText('Current month');
         await expect(page.locator('#installment-all')).toHaveText('Last 12 months');
         await expect(page.locator('#installment-window')).toHaveText('Last 12 months');
@@ -128,7 +128,7 @@ test('report month arrows work without JavaScript', async ({ browser }, info) =>
     const page = await context.newPage();
     try {
         const [current, previous, future] = await seed(page, info);
-        await page.goto(`/dashboard/reports/?charts_offset=1&installment_month=${current}`);
+        await page.goto(`/analytics/?charts_offset=1&installment_month=${current}`);
         for (const [id, month] of [['installment-previous', previous], ['installment-next', current], ['installment-next', future], ['installment-all', 'ALL'], ['installment-current', current]]) {
             await page.locator(`#${id}`).press('Enter');
             await expect(page).toHaveURL(new RegExp(`installment_month=${month}`));
@@ -154,7 +154,7 @@ for (const [theme, width, javaScriptEnabled] of [['light', 1280, true], ['dark',
             const page = await context.newPage();
             if (javaScriptEnabled) await page.addInitScript(value => localStorage.setItem('theme', value), theme);
             await seed(page, info);
-            await page.goto('/dashboard/reports/?charts_offset=-1&instrument_month=2020-03&installment_month=ALL');
+            await page.goto('/analytics/?charts_offset=-1&instrument_month=2020-03&installment_month=ALL');
             const shortcut = page.locator('#instrument-activity').getByRole('link', {name: 'New transaction', exact: true});
             await expect(shortcut).toBeVisible();
             await page.locator('#instrument-previous').press('Enter');

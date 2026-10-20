@@ -134,7 +134,7 @@ for (const theme of ['light', 'dark']) {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         const dialogs = [];
         page.on('dialog', async dialog => { dialogs.push(dialog.type()); await dialog.dismiss(); });
-        await page.goto('/investments/charts/');
+        await page.goto('/analytics/investments/');
         const scope = page.locator('#investment-chart-scope');
         await expect(page.getByRole('button', {name: 'Filter', exact: true})).toHaveCount(0);
         await scope.focus();
@@ -151,15 +151,15 @@ for (const theme of ['light', 'dark']) {
         await page.goBack();
         await expect(page).toHaveURL(/scope=cash/);
         await expect(scope).toHaveValue('cash');
-        const chart = page.locator('[data-chart-selection]').first();
+        const chart = page.locator('#investment-evolution');
         await chart.locator('[data-point]').last().press('Enter');
         await expect(chart.locator('[data-selection-summary]')).toBeVisible();
         await page.screenshot({path: info.outputPath(`chart-filter-${theme}.png`)});
         // Native navigation also exercises beforeunload after a filtered chart.
-        await page.goto('/dashboard/reports/');
+        await page.goto('/analytics/');
         await page.locator('#report-balance-next').press('Enter');
         await expect(page).toHaveURL(/charts_offset=1/);
-        const report = page.locator('[data-chart-selection]').first();
+        const report = page.locator('#balance-evolution');
         await report.locator('[data-point]').first().press('Enter');
         await report.locator('[data-point]').last().press('Shift+Space');
         await expect(report.locator('[data-selection-summary]')).toBeVisible();

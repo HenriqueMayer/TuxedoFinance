@@ -101,8 +101,9 @@ reserved row; appearing reset actions and unavailable bounds must not move or
 exchange the arrows. Internal departure confirmation uses the shared accessible
 dialog; tab-close and refresh warnings remain browser-owned.
 
-The same five direct destinations appear in the desktop sidebar and mobile
-bottom navigation. Keep secondary pages in the owning workspace's section tabs
+The same six direct destinations appear in the desktop sidebar and mobile
+bottom navigation. Analytics owns financial/investment charts; Home keeps operational
+indicators. Compact mobile labels retain the full accessible identity. Keep secondary pages in the owning workspace's section tabs
 or deliberate options; do not restore hover submenus on primary navigation.
 Fixed navigation must not cover focused form controls, searchable choices or
 the last page action. Save/Cancel preserve an explicit, validated local origin

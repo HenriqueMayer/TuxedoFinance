@@ -12,8 +12,10 @@ from django.urls import reverse
 from django.utils import translation
 
 from accounts.models import UserPreference
-from investments.models import Asset
-from planning.forms import GoalCreationForm, SignalSettingsForm
+from banking.models import BankMovement
+from investments.appearance import save_position_appearance
+from investments.models import Asset, Investment, InvestmentProduct
+from planning.forms import GoalAllocationForm, GoalCreationForm, SignalSettingsForm
 from planning.models import CategoryBudget, SignalSettings
 from planning.services import goal_progress
 from planning.tests.fixtures import PlanningFixture
@@ -65,7 +67,7 @@ class PlanningSubareaTests(PlanningFixture):
         self.asset.save(update_fields=['name'])
         key = f'pot:{self.product.pk}:{self.asset.pk}'
         choices = dict(GoalCreationForm(user=self.user).fields['source'].choices)
-        self.assertEqual(choices[key], f'{self.product.name} · {self.bank.name} · BRL 500.00')
+        self.assertEqual(choices[key], f'💰 {self.product.name} · {self.bank.name} · BRL 500.00')
         self.assertEqual(choices[f'account:{self.account.pk}'], f'{self.account.name} · {self.bank.name} · BRL 1000.00')
         duplicate = Asset.objects.create(user=self.user, name=self.product.name, code='SECOND-CASH',
             currency='BRL', asset_class='LIQUIDITY', valuation_mode='MONETARY', opening_balance='25',
@@ -73,6 +75,28 @@ class PlanningSubareaTests(PlanningFixture):
         choices = dict(GoalCreationForm(user=self.user).fields['source'].choices)
         self.assertIn(f'({self.asset.code})', choices[key])
         self.assertIn(f'({duplicate.code})', choices[f'pot:{self.product.pk}:{duplicate.pk}'])
+
+    def test_reservation_choices_use_position_identity_without_changing_sources(self):
+        second = InvestmentProduct.objects.create(user=self.user, bank=self.bank,
+            name='Another reserve', purpose='MONTHLY_CASH')
+        Investment.objects.create(user=self.user, product=second, asset=self.asset,
+            kind='YIELD', amount='25', date=self.today)
+        initial = list(GoalCreationForm(user=self.user).fields['source'].choices)
+        save_position_appearance(self.user, self.product, self.asset, 'reserve')
+        save_position_appearance(self.user, second, self.asset, 'home')
+        goal = self.goal()
+        expected = {
+            f'pot:{self.product.pk}:{self.asset.pk}': f'🛟 {self.asset.name} · {self.product.name} · {self.bank.name} · BRL 500.00',
+            f'pot:{second.pk}:{self.asset.pk}': f'🏠 {self.asset.name} · {second.name} · {self.bank.name} · BRL 25.00',
+            f'account:{self.account.pk}': f'{self.account.name} · {self.bank.name} · BRL 1000.00',
+        }
+        for form in (GoalCreationForm(user=self.user), GoalAllocationForm(user=self.user, goal=goal)):
+            with self.subTest(form=type(form).__name__):
+                choices = list(form.fields['source'].choices)
+                self.assertEqual([key for key, _ in choices], [key for key, _ in initial])
+                self.assertEqual(dict(choices), {**dict(initial), **expected})
+                self.assertNotIn(f'account:{self.private_account.pk}', dict(choices))
+        self.assertFalse(BankMovement.objects.exists())
 
     def test_progress_attributes_accept_decimal_context_without_localizing_machine_values(self):
         goal = self.goal(target_amount='400')

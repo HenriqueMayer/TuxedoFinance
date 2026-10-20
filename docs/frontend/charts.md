@@ -4,19 +4,24 @@
 
 ## Dashboard
 
-Metric cards separate concepts instead of collapsing them into one balance:
+Home separates planning availability from selected-month performance:
 
-- available cash, selected-month balance change, and projected closing balance;
+- available planning funds, with their account, cash-pot and reserved components;
 - income, expenses, investments, and withdrawals as separate performance metrics;
 - current-month values through today with the remaining plan shown underneath;
 - complete values for past months and explicitly planned values for future months.
 
-Current Balance remains distinct from the projected month-end close. Credit-card
+Home keeps operational account and invoice previews. Its Analytics shortcut
+retains the selected month. Analytics owns the category breakdown, projected
+closing balance and financial/investment charts; their calculations stay separate
+from Home's live availability.
+
+Current Balance in Analytics remains distinct from the projected month-end close. Credit-card
 purchases belong to the statement month but affect cash only when the invoice is
 settled. Own transfers may appear in activity but are visually neutral and
 absent from income/expense charts. Projected figures are labeled and never
-presented as posted cash. A compact top-six category breakdown follows the same
-month-to-date, completed-month, or planned-month context as the metrics. Live bank
+presented as posted cash. The top-six category breakdown in Analytics follows the
+same month-to-date, completed-month, or planned-month context as the metrics. Live bank
 accounts and outstanding invoices are limited to five rows each. Accounts link
 directly to their bank row without the shell's generic scroll-to-top override.
 Outstanding invoices include overdue obligations, independently of the selected
@@ -138,7 +143,7 @@ preserving its transaction edit lock. Links retain native modified-click behavio
 and shared browser Back/Forward. Opening an editor does not submit a financial
 change. Close the panel before navigation, remove cached panel copies on HTMX
 history restoration, and retain the report's period and scroll context.
-On Home, Reports and Investment analyses, the shared source-link renderer adds an explicit `next`
+In Analytics Finances and Investments, the shared source-link renderer adds an explicit `next`
 containing the current query and stable owning-chart anchor. Only server-reversed
 consultation origins and same-origin HTTP(S) targets participate; existing
 destination validation and ownership checks still apply. Save/Cancel use that

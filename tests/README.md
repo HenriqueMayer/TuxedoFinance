@@ -54,6 +54,9 @@ file. The model catalogue and responses are synthetic, credentials are neither
 read nor created, and external sockets/provider transports are blocked. Do not
 select that settings module manually for an installation. These browser cases
 verify UI/lifecycle behavior, not real account eligibility, quota or model quality.
+Select only specs with the explicit `E2E_ASSISTANT_FIXTURES` guard for this mode.
+Connection-preparation specs require the ordinary disabled-provider runner;
+selecting the entire assistant directory mixes these incompatible configurations.
 
 For Django tests, use the isolated environment in the contributor guide. Within
 that environment, `uv run python manage.py test banking` selects an app, and

@@ -87,7 +87,7 @@ for (const theme of ['light','dark']) {
         const observed=[];
         for (const width of [1280,390]) {
             await page.setViewportSize({width,height:width===390?640:900});
-            await page.goto(`/dashboard/reports/?instrument_month=${data.month}&installment_month=${data.month}`);
+            await page.goto(`/analytics/?instrument_month=${data.month}&installment_month=${data.month}`);
             await expect(page.locator('#reports-charts')).toBeVisible();
             observed.push(await observations(page));
             await screenshot(page,info,`01-overview-${theme}-${width}.png`);
@@ -167,7 +167,7 @@ for (const theme of ['light','dark']) {
                 for (const character of ['W','C']) {
                     const name=character.repeat(97);
                     await post(page,`/banking/accounts/${data.account}/edit/`,{bank:data.bank,name,currency:'BRL',opening_balance:'2000',opening_date:'2020-01-01',planning_enabled:'on',reserved_amount:'0'});
-                    await page.goto(`/dashboard/reports/?instrument_month=${data.month}&installment_month=${data.month}`);
+                    await page.goto(`/analytics/?instrument_month=${data.month}&installment_month=${data.month}`);
                     await page.evaluate(()=>document.fonts.ready);
                     const mark=page.locator('#instrument-activity [data-chart-layer="instrument-interactions"] [data-point][data-series="0"]').first();
                     await expect(mark).toHaveAttribute('aria-label',new RegExp(name));
@@ -194,7 +194,7 @@ test('Reports native month controls retain independent filters in Portuguese', a
     try {
         const page=await context.newPage();const data=await seed(page,info);
         await context.addCookies([{name:'django_language',value:'pt-br',url:info.project.use.baseURL}]);
-        await page.goto(`/dashboard/reports/?charts_offset=-1&instrument_month=${data.month}&installment_month=${data.month}`);
+        await page.goto(`/analytics/?charts_offset=-1&instrument_month=${data.month}&installment_month=${data.month}`);
         for(const id of ['installment-all','instrument-all']) {
             await page.locator(`#${id}`).press('Enter');
             await expect(page).toHaveURL(/charts_offset=-1/);

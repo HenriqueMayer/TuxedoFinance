@@ -644,7 +644,7 @@
         }
         function updateContext() {
             const view = document.querySelector('section[data-lab-view]:not([hidden])');
-            const labels = {home: 'Home', transactions: 'Transactions', accounts: 'Accounts', investments: 'Investments', plan: 'Plan'};
+            const labels = {home: 'Home', transactions: 'Transactions', accounts: 'Accounts', investments: 'Investments', plan: 'Plan', analytics: 'Analytics'};
             const destination = view?.dataset.labView || 'home';
             const scope = shell.querySelector('[data-lab-assistant-scope]');
             scope.querySelector('span').textContent = `${labels[destination]} · October 2026 · BRL`;
@@ -887,3 +887,16 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize, { once: true });
     else initialize();
 }());
+
+(function () {
+    'use strict';
+    document.querySelectorAll('[data-lab-position-form]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const selected = form.querySelector('input[name="icon"]:checked');
+            if (!selected) return;
+            form.closest('[data-lab-view]').querySelector('[data-lab-position-icon]').textContent = selected.dataset.emoji;
+            form.querySelector('[data-lab-position-status]').textContent = 'Icon updated in this synthetic example. No balance or financial record changed.';
+        });
+    });
+})();

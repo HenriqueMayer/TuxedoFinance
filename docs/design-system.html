@@ -26,7 +26,7 @@
 
     <!-- Application and catalogue share compiled tokens and components. -->
     <link rel="stylesheet" href="../static/css/app.css">
-    <link rel="stylesheet" href="design-system.css?v=a797c5332406">
+    <link rel="stylesheet" href="design-system.css?v=caefac44e24b">
 </head>
 <body data-design-lab class="min-h-screen bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
 
@@ -110,7 +110,7 @@
 
                 <nav id="lab-bowtie-map" class="lab-bowtie-map" data-bowtie-map aria-label="Workspace previews">
                     <ol>
-                        <li><a href="#lab-view-home" data-lab-feature-link="home" data-bowtie-map-link="left" aria-label="Home" aria-describedby="lab-map-home-description"><span class="lab-map-number" aria-hidden="true">01</span><span class="lab-map-copy"><strong>Home</strong><span id="lab-map-home-description" class="lab-map-description">Balances, upcoming bills and reports.</span></span><span class="lab-map-arrow" aria-hidden="true">↗</span></a></li>
+                        <li><a href="#lab-view-home" data-lab-feature-link="home" data-bowtie-map-link="left" aria-label="Home" aria-describedby="lab-map-home-description"><span class="lab-map-number" aria-hidden="true">01</span><span class="lab-map-copy"><strong>Home</strong><span id="lab-map-home-description" class="lab-map-description">Available funds, monthly indicators and upcoming bills.</span></span><span class="lab-map-arrow" aria-hidden="true">↗</span></a></li>
                         <li><a href="#lab-view-transactions" data-lab-feature-link="transactions" data-bowtie-map-link="ledger" aria-label="Transactions" aria-describedby="lab-map-transactions-description"><span class="lab-map-number" aria-hidden="true">02</span><span class="lab-map-copy"><strong>Transactions</strong><span id="lab-map-transactions-description" class="lab-map-description">Income, expenses and categories.</span></span><span class="lab-map-arrow" aria-hidden="true">↗</span></a></li>
                         <li><a href="#lab-view-accounts" data-lab-feature-link="accounts" data-bowtie-map-link="knot" aria-label="Accounts" aria-describedby="lab-map-accounts-description"><span class="lab-map-number" aria-hidden="true">03</span><span class="lab-map-copy"><strong>Accounts</strong><span id="lab-map-accounts-description" class="lab-map-description">Bank accounts, cards and invoices.</span></span><span class="lab-map-arrow" aria-hidden="true">↗</span></a></li>
                         <li><a href="#lab-view-investments" data-lab-feature-link="investments" data-bowtie-map-link="rings" aria-label="Investments" aria-describedby="lab-map-investments-description"><span class="lab-map-number" aria-hidden="true">04</span><span class="lab-map-copy"><strong>Investments</strong><span id="lab-map-investments-description" class="lab-map-description">Holdings, movements and dated prices.</span></span><span class="lab-map-arrow" aria-hidden="true">↗</span></a></li>
@@ -171,7 +171,7 @@
         <div>
             <span class="text-caramel-ink dark:text-caramel-light uppercase tracking-widest text-xs font-medium block mb-4">01 / Typography</span>
             <h2 class="font-sans text-4xl tracking-tight font-semibold">Typography.</h2>
-            <p class="mt-4 max-w-2xl text-base font-normal leading-relaxed text-forest/70 dark:text-night-muted">Inter 400&ndash;700 is used throughout. Headings use semibold weight, body copy starts at 16px, supporting text starts at 14px, and compact labels start at 12px. The mobile bottom bar is the sole exception: its five complete destination labels use 10&ndash;11px, never below 10px, with touch targets of at least 44 &times; 44px. Narrow screens use tighter spacing rather than truncation or reduced targets. Monetary data keeps tabular numerals.</p>
+            <p class="mt-4 max-w-2xl text-base font-normal leading-relaxed text-forest/70 dark:text-night-muted">Inter 400&ndash;700 is used throughout. Headings use semibold weight, body copy starts at 16px, supporting text starts at 14px, and compact labels start at 12px. The mobile bottom bar is the sole exception: its six compact destination labels use 10&ndash;11px, never below 10px, with touch targets of at least 44 &times; 44px. Narrow screens use tighter spacing rather than truncation or reduced targets. Monetary data keeps tabular numerals.</p>
         </div>
 
         <div class="divide-y divide-forest/10 dark:divide-cream/10 border-y border-forest/10 dark:border-cream/10">
@@ -326,7 +326,7 @@
             <span class="lab-eyebrow">03 / Workspace</span>
             <h2 id="lab-nav-title">Workspace navigation.</h2>
         </div>
-        <p>Five destinations with one active selection. Try the links with Tab and Enter; at narrow widths the rail becomes a contained bottom dock.</p>
+        <p>Six destinations with one active selection. Try the links with Tab and Enter; at narrow widths the rail becomes a contained bottom dock.</p>
     </div>
     <div class="lab-workspace" id="lab-workspace-example">
         <aside class="lab-workspace-rail">
@@ -339,11 +339,11 @@
                     </svg>
                     <span>Home</span>
                 </a>
-                <a href="#lab-view-transactions" data-lab-destination="transactions">
+                <a href="#lab-view-transactions" data-lab-destination="transactions" aria-label="Transactions">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/>
                     </svg>
-                    <span>Transactions</span>
+                    <span class="lab-nav-label-full">Transactions</span><span class="lab-nav-label-short" aria-hidden="true">Entries</span>
                 </a>
                 <a href="#lab-view-accounts" data-lab-destination="accounts">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -351,11 +351,11 @@
                     </svg>
                     <span>Accounts</span>
                 </a>
-                <a href="#lab-view-investments" data-lab-destination="investments">
+                <a href="#lab-view-investments" data-lab-destination="investments" aria-label="Investments">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M4 20h16M6 16v-4m6 4V8m6 8V4"/>
                     </svg>
-                    <span>Investments</span>
+                    <span class="lab-nav-label-full">Investments</span><span class="lab-nav-label-short" aria-hidden="true">Invest</span>
                 </a>
                 <a href="#lab-view-plan" data-lab-destination="plan">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -363,6 +363,7 @@
                     </svg>
                     <span>Plan</span>
                 </a>
+                <a href="#lab-view-analytics" data-lab-destination="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 15l4-5 4 3 5-7"/></svg><span>Analytics</span></a>
             </nav>
             <p class="lab-rail-footer">Your personal ledger.</p>
         </aside>
@@ -391,20 +392,14 @@
                     <a href="#forms" class="lab-button">New entry <span class="lab-arrow" aria-hidden="true">↗</span>
                     </a>
                 </div>
-                <nav class="lab-local-tabs" aria-label="Home sections">
-                    <a href="#lab-view-home" aria-current="page">Overview</a>
-                    <a href="#data">Reports</a>
-                </nav>
+<p class="lab-prototype-note"><a href="#lab-view-analytics" data-lab-feature-link="analytics">View analyses for this month ↗</a></p>
                 <div class="lab-balance">
                     <div>
                         <p>Available for planning</p>
                         <strong>
                             <small>BRL</small> 4,750.00</strong>
                     </div>
-                    <svg class="lab-sparkline" viewBox="0 0 150 56" fill="none" aria-hidden="true">
-                        <path d="M1 51h148" stroke="currentColor" stroke-opacity=".2"/>
-                        <path d="m2 42 20-6 20 5 20-22 20 7 20-14 20 4 24-12" stroke="currentColor" stroke-width="2"/>
-                    </svg>
+
                 </div>
                 <div class="lab-ledger-rows">
                     <div>
@@ -501,12 +496,11 @@
                     </a>
                 </div>
                 <nav class="lab-local-tabs" aria-label=" Investment sections">
-                    <a href="#lab-view-investments" aria-current="page">Holdings</a>
-                    <a href="#data">Analysis</a>
+                    <a href="#lab-view-investments" aria-current="page">My investments</a><a href="#data">History</a><a href="#forms">Prices</a><a href="#lab-position-personalization">Setup</a>
                 </nav>
                 <div class="lab-ledger-rows">
                     <div>
-                        <p>Remunerated cash<small>Monetary position · Available on redemption</small>
+                        <p><span data-lab-position-icon aria-hidden="true">💰</span> Remunerated cash<small>Monetary position · Available on redemption</small>
                         </p>
                         <strong>BRL 1,500.00</strong>
                     </div>
@@ -516,6 +510,18 @@
                         <a class="lab-text-link" href="#workspaces">View example ↗</a>
                     </div>
                 </div>
+                <details id="lab-position-personalization" class="lab-position-personalization explanation-disclosure"><summary>Personalization</summary><form method="get" action="#lab-view-investments" data-lab-position-form><fieldset><legend class="field-label">Position icon</legend><div class="lab-position-icons"><label><input type="radio" name="icon" value="piggy" data-emoji="🐷"><span aria-hidden="true">🐷</span><span>Piggy bank</span></label><label><input type="radio" name="icon" value="reserve" data-emoji="🛟"><span aria-hidden="true">🛟</span><span>Emergency reserve</span></label><label><input type="radio" name="icon" value="home" data-emoji="🏠"><span aria-hidden="true">🏠</span><span>Home</span></label><label><input type="radio" name="icon" value="goal" data-emoji="🎯"><span aria-hidden="true">🎯</span><span>Goal</span></label><label><input type="radio" name="icon" value="general" data-emoji="💰" checked><span aria-hidden="true">💰</span><span>General</span></label><label><input type="radio" name="icon" value="investment" data-emoji="📈"><span aria-hidden="true">📈</span><span>Investment</span></label><label><input type="radio" name="icon" value="long_term" data-emoji="🌱"><span aria-hidden="true">🌱</span><span>Long term</span></label><label><input type="radio" name="icon" value="travel" data-emoji="✈️"><span aria-hidden="true">✈️</span><span>Travel</span></label><label><input type="radio" name="icon" value="education" data-emoji="🎓"><span aria-hidden="true">🎓</span><span>Education</span></label><label><input type="radio" name="icon" value="vehicle" data-emoji="🚗"><span aria-hidden="true">🚗</span><span>Vehicle</span></label><label><input type="radio" name="icon" value="vacation" data-emoji="🏖️"><span aria-hidden="true">🏖️</span><span>Vacation</span></label><label><input type="radio" name="icon" value="security" data-emoji="🔒"><span aria-hidden="true">🔒</span><span>Security</span></label></div></fieldset><button type="submit" class="action-primary">Save icon</button><p class="subtle-copy" role="status" data-lab-position-status>Each application keeps its own icon; balances and planning choices are unchanged.</p><noscript><p class="subtle-copy">These are native choices. This static example does not persist settings.</p></noscript></form></details>
+            </section>
+            <section id="lab-view-analytics" class="lab-workspace-view" data-lab-view="analytics" aria-labelledby="lab-view-analytics-title">
+                <div class="lab-view-top"><div><span class="lab-eyebrow">Analytics workspace</span><h3 id="lab-view-analytics-title">Finances and investments.</h3><p>Charts retain their own periods, currencies and source details.</p></div></div>
+                <nav class="lab-local-tabs" aria-label="Analytics sections"><a href="#lab-analytics-finances" aria-current="page">Finances</a><a href="#lab-analytics-investments">Investments</a></nav>
+                <div id="lab-analytics-finances" class="lab-balance"><div><p>Bank balance evolution</p><strong><small>BRL</small> 4,250.00</strong></div>                    <svg class="lab-sparkline" viewBox="0 0 150 56" fill="none" aria-hidden="true">
+                        <path d="M1 51h148" stroke="currentColor" stroke-opacity=".2"/>
+                        <path d="m2 42 20-6 20 5 20-22 20 7 20-14 20 4 24-12" stroke="currentColor" stroke-width="2"/>
+                    </svg></div>
+                <div class="lab-ledger-rows"><div><p>Expense composition<small>Fixed, installments and one-off activity</small></p><a class="lab-text-link" href="#data">Inspect the chart pattern ↗</a></div><div><p>Six-month outlook<small>Statement activity stays separate from bank payment dates</small></p><span>Recorded and planned</span></div></div>
+                <div id="lab-analytics-investments" class="lab-view-footer"><span>Investment evolution · Deposits · Withdrawals · Yields</span><a class="lab-text-link" href="#compact-finance-title">Inspect position evidence ↗</a></div>
+                <p class="lab-prototype-note">Synthetic display. The application reuses its existing financial calculations and composition controls.</p>
             </section>
             <section id="lab-view-plan" class="lab-workspace-view" data-lab-view="plan" aria-labelledby="lab-view-plan-title">
                 <div class="lab-view-top">
@@ -550,8 +556,8 @@
     </div>
     <div class="lab-principles">
         <div>
-            <h3>Five visible destinations.</h3>
-            <p>The same five labels stay present. Settings need a deliberate activation; primary links never become hover menus.</p>
+            <h3>Six visible destinations.</h3>
+            <p>The same six destinations stay present. Settings need a deliberate activation; primary links never become hover menus.</p>
         </div>
         <div>
             <h3>One workspace surface.</h3>
@@ -1181,11 +1187,11 @@
             <span class="lab-eyebrow">10 / Workspace patterns</span>
             <h2>Planning workspaces and financial rows</h2>
         </div>
-        <p>Five direct areas, shared reading groups and clearly labelled financial rows keep everyday tasks easy to find.</p>
+        <p>Six direct areas, shared reading groups and clearly labelled financial rows keep everyday tasks easy to find.</p>
     </div>
     <div class="space-y-8">
-        <p class="subtle-copy">Primary navigation: Home, Transactions, Accounts, Investments, Plan. Reports sit under Home; Categories under Transactions. Preserve the original palette, typography, wordmark and shared control contracts. A workspace uses contrasting surface cards to separate reading groups. Keep tables and rows inside each group; avoid nesting cards. Explanations belong in shared question-mark help beside headings or labels, while errors and incomplete-value warnings remain visible.</p>
-    <nav class="section-nav mt-6" aria-label="Example investment sections"><a href="#compact-finance" aria-current="page">My investments</a><a href="#workspaces">History</a><a href="#forms">More options</a></nav>
+        <p class="subtle-copy">Primary navigation: Home, Transactions, Accounts, Investments, Plan, Analytics. Analytics gathers financial and investment charts; Categories stays under Transactions. Preserve the original palette, typography, wordmark and shared control contracts. A workspace uses contrasting surface cards to separate reading groups. Keep tables and rows inside each group; avoid nesting cards. Explanations belong in shared question-mark help beside headings or labels, while errors and incomplete-value warnings remain visible.</p>
+    <nav class="section-nav mt-6" aria-label="Example investment sections"><a href="#compact-finance" aria-current="page">My investments</a><a href="#workspaces">History</a><a href="#forms">Prices</a><a href="#lab-position-personalization">Setup</a></nav>
     <p class="subtle-copy mt-3">Incomplete investment setup highlights Configure investments and shows an ordered Bank → Product → Asset guide with Ready/Pending states and one next-step action. Configured products are grouped by bank; assets keep a separate catalog. Planned or unavailable resources have no navigation entry or account shortcut; their redesign belongs in the documentation.</p>
     <section class="lab-specimen banking-workspace space-y-4" aria-labelledby="bank-card-title">
         <div class="panel-heading"><h3 id="bank-card-title" class="lab-specimen-title section-title">Everyday bank</h3><a href="#forms" class="lab-sample-action action-primary">Add account</a></div>
@@ -1285,7 +1291,7 @@
     <div class="lab-principles">
         <div>
             <h3>Shared components.</h3>
-            <p>Inter, semantic colors, visible labels, five direct workspaces and shared searchable choices. The catalogue also shows bank identity markers, account detail, card debt and conditional entry states; it is a component reference, not a simplified replacement for these distinctions.</p>
+            <p>Inter, semantic colors, visible labels, six direct workspaces and shared searchable choices. The catalogue also shows bank identity markers, account detail, card debt and conditional entry states; it is a component reference, not a simplified replacement for these distinctions.</p>
         </div>
         <div>
             <h3>Layout and hierarchy.</h3>
@@ -1394,7 +1400,7 @@
 <script src="design-system-layers.js?v=dc84f7eb1cfd" defer></script>
 <script src="../static/js/date-picker.js?v=56f29700f264" defer></script>
 <script src="design-system-calendar.js?v=bf1a89ac0411" defer></script>
-<script src="design-system.js?v=ea93d6df1eaf" defer></script>
+<script src="design-system.js?v=372880ea843a" defer></script>
 <script src="../static/js/theme.js"></script>
 <script src="../static/js/preferred-dates.js" defer></script>
 <script src="../static/js/project-menu.js"></script>

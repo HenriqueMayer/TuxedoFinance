@@ -51,7 +51,7 @@ class InvestmentFxReviewTests(TestCase):
         self.assertEqual(response.context['native_totals'], [('USD', Decimal('100'))])
         self.assertNotContains(response, 'Current total incomplete')
         self.assertNotIn('chart_total', response.context)
-        charts = self.client.get(reverse('investments:charts'))
+        charts = self.client.get(reverse('analytics:investments'))
         issue = charts.context['chart_fx_issues'][0]
         self.assertEqual(issue['reason'], 'opening')
         self.assertLess(issue['date'], self.today)
@@ -85,7 +85,7 @@ class InvestmentFxReviewTests(TestCase):
         preference = UserPreference.for_user(self.user)
         preference.base_currency = 'USD'
         preference.save()
-        charts = self.client.get(reverse('investments:charts'))
+        charts = self.client.get(reverse('analytics:investments'))
         self.assertEqual(charts.context['chart_missing_rate_currencies'], [])
         operation.refresh_from_db()
         self.assertEqual(operation.fx_rate, Decimal('5'))
@@ -121,7 +121,7 @@ class InvestmentFxReviewTests(TestCase):
         preference = UserPreference.for_user(self.user)
         preference.base_currency = 'EUR'
         preference.save()
-        response = self.client.get(reverse('investments:charts'))
+        response = self.client.get(reverse('analytics:investments'))
         issue = next(row for row in response.context['chart_fx_issues'] if row.get('operation_url'))
         self.assertEqual(issue['reason'], 'base')
         self.assertEqual(issue['snapshot_target'], 'BRL')
@@ -133,7 +133,7 @@ class InvestmentFxReviewTests(TestCase):
         preference = UserPreference.for_user(self.user)
         preference.base_currency = 'EUR'
         preference.save()
-        response = self.client.get(reverse('investments:charts'))
+        response = self.client.get(reverse('analytics:investments'))
         issue = next(row for row in response.context['chart_fx_issues'] if row.get('operation_url'))
         self.assertEqual(issue['reason'], 'snapshot')
         self.assertIn('to_currency=EUR', issue['rate_url'])

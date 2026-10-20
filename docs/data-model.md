@@ -774,3 +774,16 @@ balance/quantity/cost are zero. Such configuration has no opening event or date,
 contributes no money and supports the first explicit operation. Nonzero openings
 retain their date, owner, compatibility and cost requirements; financial replay
 continues to test `has_opening_position` rather than mere placement membership.
+
+
+### Position appearance
+
+`PositionAppearance(user, product, asset, icon)` has one unique preference per
+owned product/asset pair. Stable allowlisted keys map to the twelve curated
+Unicode icons; missing preferences display `general` (💰). Different positions
+of the same asset can retain different icons.
+
+`investments.0011_position_appearance` only adds the cosmetic preference table.
+It performs no financial backfill, date inference, posting, planning inclusion
+change or bank movement. Appearance saving validates the user, both records and
+their existing/configured placement independently of financial operation forms.

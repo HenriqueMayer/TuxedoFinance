@@ -70,7 +70,7 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         await expect(history).toContainText(/\+BRL 25[,.]00/);
         await expect(history).toContainText('28/10/2026');await expect(history).toContainText('Redemption reference');
         await history.screenshot({path:info.outputPath(`redemption-${theme}.png`)});
-        await page.goto('/dashboard/reports/?instrument_month=2026-10');
+        await page.goto('/analytics/?instrument_month=2026-10');
         const mark=page.locator('#instrument-activity [data-chart-layer="instrument-interactions"] [data-point]').first();
         await mark.focus();await page.keyboard.press('Control');
         const composition=page.getByRole('region',{name:language==='en'?'Composition details':'Detalhes da composição',exact:true});
@@ -78,10 +78,10 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         const source=composition.getByRole('link');
         const sourceUrl=new URL(await source.getAttribute('href'),page.url());
         expect(sourceUrl.pathname).toMatch(/^\/banking\/rewards\/\d+\/edit\/$/);
-        expect(sourceUrl.searchParams.get('next')).toBe('/dashboard/reports/?instrument_month=2026-10#instrument-activity');
+        expect(sourceUrl.searchParams.get('next')).toBe('/analytics/?instrument_month=2026-10#instrument-activity');
         await source.press('Enter');
         const sourceEdit=page.getByRole('form',{name:language==='en'?'Edit redemption':'Editar resgate',exact:true});
-        const reportOrigin='/dashboard/reports/?instrument_month=2026-10#instrument-activity';
+        const reportOrigin='/analytics/?instrument_month=2026-10#instrument-activity';
         await expect(sourceEdit).toBeVisible();
         await expect(sourceEdit.locator('input[name="next"]')).toHaveValue(reportOrigin);
         await expect(sourceEdit.getByRole('link',{name:language==='en'?'Cancel':'Cancelar',exact:true})).toHaveAttribute('href',reportOrigin);

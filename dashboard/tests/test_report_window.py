@@ -13,7 +13,7 @@ from transactions.models import Transaction
 @patch('django.utils.timezone.localdate', return_value=date(2026, 9, 20))
 class InstrumentMonthTests(DashboardFixture):
     def test_empty_report_shortcut_preserves_period_after_full_and_partial_gets(self, localdate):
-        origin = reverse('dashboard:reports') + '?charts_offset=-1&instrument_month=2026-07&installment_month=ALL'
+        origin = reverse('analytics:index') + '?charts_offset=-1&instrument_month=2026-07&installment_month=ALL'
         target = with_return_url(reverse('transactions:create'), origin, fragment='instrument-activity')
         for htmx in (False, True):
             with self.subTest(htmx=htmx):
@@ -29,7 +29,7 @@ class InstrumentMonthTests(DashboardFixture):
         for offset in (-1, 0, 2):
             for htmx in (False, True):
                 with self.subTest(offset=offset, htmx=htmx):
-                    response = self.client.get(reverse('dashboard:reports'), {
+                    response = self.client.get(reverse('analytics:index'), {
                         'charts_offset': offset, 'installment_month': '2026-08',
                     }, **({'HTTP_HX_REQUEST': 'true', 'HTTP_HX_TARGET': 'reports-charts'} if htmx else {}))
                     self.assertEqual(response.status_code, 200)
@@ -52,7 +52,7 @@ class InstrumentMonthTests(DashboardFixture):
                          transaction_type=Transaction.TransactionType.INCOME)
         self.transaction(date=date(2026, 10, 1), amount='100')
         for offset in (0, 2):
-            response = self.client.get(reverse('dashboard:reports'), {
+            response = self.client.get(reverse('analytics:index'), {
                 'charts_offset': offset, 'instrument_month': '2026-09',
                 'installment_month': '2026-08',
             }, HTTP_HX_REQUEST='true', HTTP_HX_TARGET='reports-charts')
@@ -76,7 +76,7 @@ class InstrumentMonthTests(DashboardFixture):
                                             ('2026-13', '2026-09', '35'),
                                             ('2026-00', '2026-09', '35')]:
             with self.subTest(period=period):
-                response = self.client.get(reverse('dashboard:reports'), {'instrument_month': period})
+                response = self.client.get(reverse('analytics:index'), {'instrument_month': period})
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.context['instrument_month_param'], selected)
                 self.assertEqual(response.context['instrument_activity']['expense_total'], Decimal(expected))
@@ -89,7 +89,7 @@ class InstrumentMonthTests(DashboardFixture):
         self.transaction(date=date(2025, 9, 30), amount='99')
         self.transaction(date=date(2025, 10, 1), amount='12')
         self.transaction(date=date(2026, 9, 1), amount='35')
-        response = self.client.get(reverse('dashboard:reports'), {
+        response = self.client.get(reverse('analytics:index'), {
             'instrument_month': 'ALL', 'installment_month': 'ALL',
         })
         self.assertEqual(response.context['instrument_activity']['expense_total'], Decimal('47'))
@@ -107,7 +107,7 @@ class InstrumentMonthTests(DashboardFixture):
             ('2026-12', '2026-11', '2027-01', '20'),
             ('2027-01', '2026-12', '2027-02', '40'),
         ]:
-            response = self.client.get(reverse('dashboard:reports'), {'instrument_month': month})
+            response = self.client.get(reverse('analytics:index'), {'instrument_month': month})
             self.assertEqual(response.context['instrument_previous_month'], previous)
             self.assertEqual(response.context['instrument_next_month'], following)
             self.assertEqual(response.context['instrument_activity']['expense_total'], Decimal(amount))
@@ -118,10 +118,10 @@ class InstrumentMonthTests(DashboardFixture):
 
     def test_navigation_stops_at_representable_date_boundaries(self, localdate):
         for month, direction in [('0001-01', 'previous'), ('9999-12', 'next')]:
-            response = self.client.get(reverse('dashboard:reports'), {'instrument_month': month})
+            response = self.client.get(reverse('analytics:index'), {'instrument_month': month})
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.context[f'instrument_{direction}_month'])
 
-            response = self.client.get(reverse('dashboard:reports'), {'installment_month': month})
+            response = self.client.get(reverse('analytics:index'), {'installment_month': month})
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.context[f'installment_{direction}_month'])

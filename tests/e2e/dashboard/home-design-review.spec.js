@@ -58,39 +58,45 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 360]) {
         // Consume fixture success notices before comparing stable period slots.
         await page.reload();
         await capture(page, info, '01-current', observations);
-        const category = page.locator('[aria-labelledby="category-heading"] [data-point]').first();
+        await expect(page.locator('#category-heading, #outlook-heading')).toHaveCount(0);
         const invoice = page.locator('main a[href*="/banking/invoices/"]').filter({hasText: data.names.card});
+        observations.push({name: 'invoice-name', ...await invoice.evaluate(element => ({width: element.clientWidth, textWidth: element.scrollWidth}))});
+        const identity = observations.find(item => item.name === 'invoice-name');
+        expect(identity.textWidth).toBeLessThanOrEqual(identity.width);
+        await expect(invoice.locator('xpath=ancestor::li').locator('.card-miniature')).toHaveCount(1);
+        await page.locator('main').getByRole('link', {name: width < 640 ? 'Análises' : 'Analytics', exact: true}).press('Enter');
+        await expect(page).toHaveURL(url => url.pathname === '/analytics/' && url.searchParams.get('month') === data.month);
+        const categoryChart = page.locator('#finance-monthly-analysis [aria-labelledby="category-heading"]');
+        const category = categoryChart.locator('[data-point]').first();
         observations.push({name: 'category-target', ...await category.evaluate(element => {
             const box = element.getBoundingClientRect(); const label = element.querySelector('span');
             return {height: box.height, labelWidth: label.clientWidth, labelTextWidth: label.scrollWidth};
         })});
-        observations.push({name: 'invoice-name', ...await invoice.evaluate(element => ({width: element.clientWidth, textWidth: element.scrollWidth}))});
         const target = observations.find(item => item.name === 'category-target');
         expect(target.height).toBeGreaterThanOrEqual(44);
         expect(target.labelTextWidth).toBeLessThanOrEqual(target.labelWidth);
-        const identity = observations.find(item => item.name === 'invoice-name');
-        expect(identity.textWidth).toBeLessThanOrEqual(identity.width);
-        await expect(invoice.locator('xpath=ancestor::li').locator('.card-miniature')).toHaveCount(1);
         await category.focus();
         await page.keyboard.press('Enter');
         await capture(page, info, '02-category-selected', observations);
-        const summary = page.locator('[data-selection-period]');
+        const summary = categoryChart.locator('[data-selection-period]');
+        await expect(summary).toHaveText(data.names.category);
         expect(await summary.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
         await page.keyboard.press('Control');
-        const panel = page.locator('.chart-composition:visible');
+        const panel = page.locator(`#${await category.getAttribute('aria-controls')}`);
+        await expect(panel).toBeVisible();
         await expect(panel).toContainText(data.names.category);
         await capture(page, info, '03-composition', observations);
         const source = panel.getByRole('link', {name: /Home source/}).first();
         const sourceUrl = new URL(await source.getAttribute('href'), page.url());
         expect(sourceUrl.pathname).toMatch(/^\/transactions\/\d+\/edit\/$/);
-        expect(sourceUrl.searchParams.get('next')).toBe('/dashboard/#category-heading');
+        expect(sourceUrl.searchParams.get('next')).toBe(`/analytics/?month=${data.month}#category-heading`);
         await source.press('Enter');
-        await expect(page.locator('main input[name="next"]')).toHaveValue('/dashboard/#category-heading');
+        await expect(page.locator('main input[name="next"]')).toHaveValue(`/analytics/?month=${data.month}#category-heading`);
         await page.getByRole('link', {name: width < 640 ? 'Cancelar' : 'Cancel', exact: true}).press('Enter');
-        await expect(page).toHaveURL(url => url.pathname + url.hash === '/dashboard/#category-heading');
+        await expect(page).toHaveURL(url => url.pathname + url.search + url.hash === `/analytics/?month=${data.month}#category-heading`);
         await expect(page.locator('#category-heading')).toBeInViewport();
         await page.goto('/dashboard/');
-        const navigation = page.locator('[data-period-navigation]').first();
+        const navigation = page.locator('[aria-labelledby="performance-heading"] [data-period-navigation]');
         const currentCaption = await page.locator('#selected-period-heading').textContent();
         await navigation.scrollIntoViewIfNeeded();
         const before = await navigation.locator('.period-navigation-rail').boundingBox();
@@ -115,6 +121,8 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 360]) {
         await page.goto(`/dashboard/?month=${date.toISOString().slice(0, 7)}`);
         await expect(navigation.locator('.period-navigation-rail > :last-child')).toHaveAttribute('aria-disabled', 'true');
         await capture(page, info, '06-forecast-limit', observations);
+        await page.locator('main').getByRole('link', {name: width < 640 ? 'Análises' : 'Analytics', exact: true}).press('Enter');
+        await expect(page).toHaveURL(url => url.pathname === '/analytics/');
         const table = page.locator('[role="region"][aria-labelledby="outlook-heading"]');
         await table.focus();
         await expect(table).toBeFocused();
@@ -128,14 +136,14 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 360]) {
     });
 }
 
-test('Home native period, references and outlook retain keyboard access', async ({browser}, info) => {
+test('Home native period, references and Analytics outlook retain keyboard access', async ({browser}, info) => {
     const context = await browser.newContext({javaScriptEnabled: false, viewport: {width: 360, height: 640}});
     try {
         const page = await context.newPage();
         const data = await seed(page, info), observations = [];
         await page.goto('/dashboard/');
         await page.reload();
-        const navigation = page.locator('[data-period-navigation]').first();
+        const navigation = page.locator('[aria-labelledby="performance-heading"] [data-period-navigation]');
         await navigation.getByRole('link', {name: 'Previous month', exact: true}).press('Enter');
         await expect(page).not.toHaveURL(/\/dashboard\/$/);
         await navigation.getByRole('link', {name: 'Back to this month', exact: true}).press('Enter');
@@ -145,6 +153,8 @@ test('Home native period, references and outlook retain keyboard access', async 
         await expect(page.locator('main input[name="next"]')).toHaveValue('/dashboard/');
         await page.getByRole('link', {name: 'Cancel', exact: true}).press('Enter');
         await expect(page).toHaveURL(/\/dashboard\/$/);
+        await page.locator('main').getByRole('link', {name: 'Analytics', exact: true}).press('Enter');
+        await expect(page).toHaveURL(url => url.pathname === '/analytics/');
         const table = page.locator('[role="region"][aria-labelledby="outlook-heading"]');
         await table.focus();
         await page.keyboard.press('ArrowRight');

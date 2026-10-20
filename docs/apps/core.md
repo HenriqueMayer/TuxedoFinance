@@ -17,7 +17,7 @@ priority over `.env`, including in CI.
 | `core/dates.py` | Preferred complete-date widgets and parsing; machine dates remain ISO. |
 | `core/widgets.py` | Shared native segmented-choice rendering for approved short options. |
 | `core/navigation.py` | Explicit validated local return destinations; never inferred from Referer. |
-| `core/workspace_navigation.py` | The five shared desktop/mobile workspaces and their available secondary sections. |
+| `core/workspace_navigation.py` | The six shared desktop/mobile workspaces and their available secondary sections. |
 | `core/features.py` | Server review gates for paused interfaces, preserving their underlying records. |
 | `core/assets.py` / `core/middleware.py` | Content-versioned frontend assets, stale-document recovery and private HTML cache policy. |
 | `core/currencies.py` | The supported-currency registry — symbol **and** number format per entry (FR02A/FR16). |

@@ -10,7 +10,7 @@ Pages artifact.
 |---|---|
 | `scripts/preview/capture_preview.sh` | Creates isolated temporary storage, starts Django locally, validates all captures and cleans up. |
 | `scripts/preview/seed_preview_data.py` | Populates two disposable, localized profiles with synthetic financial data. |
-| `scripts/preview/capture_preview.js` | Signs in to the temporary profiles and captures seven areas in both themes and languages (28 images). |
+| `scripts/preview/capture_preview.js` | Signs in to the temporary profiles and captures eight views in both themes and languages (32 images). |
 | `scripts/preview/serve.py` | Owns the loopback capture server and serves the committed static tour for tests. |
 | `tests/preview/playwright.config.js` | Serves and validates the static English and Portuguese tours. |
 
@@ -21,15 +21,16 @@ publishes only `preview/` after changes reach `main`.
 The tour uses the application's editorial language: short factual copy, the
 bow-tie wordmark, local Inter typography, subtle ledger dividers
 and balanced actions. The font license is included in `preview/assets/OFL.txt`.
-The five direct destinations match the application's desktop sidebar and phone
-dock; Reports stays under Home's section tabs, and New entry belongs to
-Transactions. The preview opens directly on the dashboard, without a large
+The six direct destinations match the application's desktop sidebar and phone
+dock. Analytics contains Finances and Investments; New entry belongs to
+Transactions. The old `#reports` fragment and `reports-*.png` image paths remain
+compatible aliases for financial analysis. The preview opens directly on the dashboard, without a large
 introduction or video. Home and Transactions expose New entry as a direct action
 to a separate view of the actual application form, including its credit-card
 miniatures. These are synthetic captures, not an editable financial session.
 With JavaScript, native hash
 links show one workspace at a time and preserve browser Back/Forward and the
-current section when switching languages. Without JavaScript, all seven sections
+current section when switching languages. Without JavaScript, all eight sections
 remain readable through the same anchors. Existing section anchors and image
 paths remain valid.
 Its dark theme matches

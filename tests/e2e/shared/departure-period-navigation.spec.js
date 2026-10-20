@@ -123,7 +123,7 @@ for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
         await page.setViewportSize({width, height: 844});
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await page.goto('/dashboard/');
-        let navigation = page.locator('[data-period-navigation]').first();
+        let navigation = page.locator('[aria-labelledby="performance-heading"] [data-period-navigation]');
         await navigation.scrollIntoViewIfNeeded();
         let before = await railPositions(navigation);
         await navigation.getByRole('link', {name: 'Next month', exact: true}).press('Enter');
@@ -134,16 +134,16 @@ for (const theme of ['light', 'dark']) for (const width of [390, 1440]) {
         await expect(navigation.getByRole('link', {name: 'Back to this month', exact: true})).toHaveCount(0);
         await navigation.scrollIntoViewIfNeeded();
         sameArrows(before, await railPositions(navigation));
-        await page.goto('/dashboard/reports/');
-        navigation = page.locator('[data-period-navigation]').first();
+        await page.goto('/analytics/');
+        navigation = page.locator('#balance-evolution [data-period-navigation]');
         await navigation.scrollIntoViewIfNeeded();
         before = await railPositions(navigation);
         await navigation.getByRole('link', {name: 'Next window', exact: true}).press('Enter');
         await expect(navigation.getByRole('link', {name: 'Back to today', exact: true})).toBeVisible();
         await navigation.scrollIntoViewIfNeeded();
         sameArrows(before, await railPositions(navigation));
-        await page.goto('/investments/charts/');
-        navigation = page.locator('[data-period-navigation]').first();
+        await page.goto('/analytics/investments/');
+        navigation = page.locator('#investment-evolution [data-period-navigation]');
         await navigation.scrollIntoViewIfNeeded();
         before = await railPositions(navigation);
         await navigation.getByRole('link', {name: 'Next window', exact: true}).press('Enter');
@@ -184,7 +184,7 @@ test('period arrows retain native GET links without JavaScript', async ({browser
     try {
         await signup(page, info);
         await page.goto('/dashboard/');
-        const navigation = page.locator('[data-period-navigation]').first();
+        const navigation = page.locator('[aria-labelledby="performance-heading"] [data-period-navigation]');
         await navigation.scrollIntoViewIfNeeded();
         const before = await railPositions(navigation);
         await navigation.getByRole('link', {name: 'Next month', exact: true}).press('Enter');
@@ -194,5 +194,21 @@ test('period arrows retain native GET links without JavaScript', async ({browser
         await navigation.getByRole('link', {name: 'Back to this month', exact: true}).press('Enter');
         await expect(page).toHaveURL(/\/dashboard\/$/);
         await expect(page.locator('#departure-confirm')).toBeHidden();
+        for (const [path, owner] of [['/analytics/', '#balance-evolution'],
+            ['/analytics/investments/', '#investment-evolution']]) {
+            await page.goto(path);
+            const windowNavigation = page.locator(`${owner} [data-period-navigation]`);
+            await windowNavigation.scrollIntoViewIfNeeded();
+            const windowBefore = await railPositions(windowNavigation);
+            await windowNavigation.getByRole('link', {name: 'Next window', exact: true}).press('Enter');
+            await expect(windowNavigation.getByRole('link', {name: 'Back to today', exact: true})).toBeVisible();
+            await windowNavigation.scrollIntoViewIfNeeded();
+            sameArrows(windowBefore, await railPositions(windowNavigation));
+            await windowNavigation.getByRole('link', {name: 'Back to today', exact: true}).press('Enter');
+            await expect(windowNavigation.getByRole('link', {name: 'Back to today', exact: true})).toHaveCount(0);
+            await windowNavigation.scrollIntoViewIfNeeded();
+            sameArrows(windowBefore, await railPositions(windowNavigation));
+            await expect(page.locator('#departure-confirm')).toBeHidden();
+        }
     } finally { await context.close(); }
 });

@@ -15,7 +15,7 @@ async function signUp(page, testInfo) {
 for (const dark of [false, true]) {
     test(`report forecast boundary retains keyboard focus (${dark ? 'dark' : 'light'})`, async ({ page }, testInfo) => {
         await signUp(page, testInfo);
-        await page.goto('/dashboard/reports/?charts_offset=4');
+        await page.goto('/analytics/?charts_offset=4');
         await page.evaluate(value => {
             document.documentElement.classList.toggle('dark', value);
             localStorage.setItem('theme', value ? 'dark' : 'light');
@@ -66,7 +66,7 @@ test('report forecast limit works without JavaScript', async ({ browser }, testI
     const page = await context.newPage();
     try {
         await signUp(page, testInfo);
-        await page.goto('/dashboard/reports/?charts_offset=4');
+        await page.goto('/analytics/?charts_offset=4');
         await page.locator('#report-balance-next').press('Enter');
         await expect(page).toHaveURL(/charts_offset=5/);
         await expect(page.locator('#report-balance-next')).toHaveAttribute('aria-label', 'Forecast limit');

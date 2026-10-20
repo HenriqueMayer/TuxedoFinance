@@ -4,8 +4,8 @@
     {% if position_rows %}<div class="investment-list-heading" aria-hidden="true"><span>{% translate 'Investment' %}</span><span>{% translate 'Registered value' %}</span><span></span></div>{% endif %}
     {% for row in position_rows %}
         {# Keep the existing device anchors: Save/Cancel returns to the exact visible row. #}
-        <article id="{{ row.anchor }}" class="investment-position-row scroll-mt-24 hidden sm:block">{% include 'investments/_position_card.html' with update_url=row.update_url %}</article>
-        <article id="{{ row.anchor }}-mobile" class="investment-position-row scroll-mt-24 sm:hidden">{% include 'investments/_position_card.html' with update_url=row.mobile_update_url %}</article>
+        <article id="{{ row.anchor }}" class="investment-position-row scroll-mt-24 hidden sm:block">{% include 'investments/_position_card.html' with update_url=row.update_url appearance_url=row.appearance_url %}</article>
+        <article id="{{ row.anchor }}-mobile" class="investment-position-row scroll-mt-24 sm:hidden">{% include 'investments/_position_card.html' with update_url=row.mobile_update_url appearance_url=row.mobile_appearance_url %}</article>
     {% empty %}
         <div class="space-y-3 py-4"><p class="subtle-copy">{% if has_archived_positions and not search_query %}{% translate 'No active positions in this section.' %}{% elif search_query or position_scope != 'all' %}{% translate 'No positions match these filters.' %}{% else %}{% translate 'Add what you already hold, or start with a zero balance and record the first operation.' %}{% endif %}</p>{% url 'investments:guided_create' as add_url %}<a class="action-link" href="{% contextual_url add_url %}">{% translate 'Add investment' %}</a></div>
     {% endfor %}

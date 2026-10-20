@@ -15,7 +15,7 @@ async function signUp(page, testInfo) {
 
 for (const language of ['en', 'pt-br']) {
     for (const theme of ['light', 'dark']) {
-        test(`five destinations fit desktop sidebar and mobile dock (${language}, ${theme})`, async ({ page }, testInfo) => {
+        test(`six destinations fit desktop sidebar and mobile dock (${language}, ${theme})`, async ({ page }, testInfo) => {
             await page.addInitScript(value => localStorage.setItem('theme', value), theme);
             await signUp(page, testInfo);
             const csrf = await page.locator('[name="csrfmiddlewaretoken"]').first().inputValue();
@@ -25,13 +25,14 @@ for (const language of ['en', 'pt-br']) {
             await page.reload();
             await expect(page.locator('html')).toHaveAttribute('lang', language);
             const navigation = page.getByRole('navigation', { name: language === 'en' ? 'Main navigation' : 'Navegação principal', exact: true });
-            const labels = await navigation.locator('.app-navigation-label').allTextContents();
-            expect(labels).toHaveLength(5);
+            const labels = language === 'en'
+                ? {desktop: ['Home', 'Transactions', 'Accounts', 'Investments', 'Plan', 'Analytics'], mobile: ['Home', 'Entries', 'Accounts', 'Invest', 'Plan', 'Analytics']}
+                : {desktop: ['Início', 'Transações', 'Contas', 'Investimentos', 'Planejar', 'Análises'], mobile: ['Início', 'Transações', 'Contas', 'Investir', 'Planejar', 'Análises']};
             for (const width of [320, 390, 768, 1023, 1024, 1280, 1440, 1920]) {
                 await page.setViewportSize({ width, height: 900 });
                 await expect(navigation).toHaveCount(1);
                 await expect(navigation).toHaveAttribute('data-app-navigation', width < 1024 ? 'mobile' : 'desktop');
-                await expect(navigation.locator('.app-navigation-label')).toHaveText(labels);
+                await expect(navigation.locator('.app-navigation-label')).toHaveText(width < 1024 ? labels.mobile : labels.desktop);
                 await expect(navigation.locator('summary, details')).toHaveCount(0);
                 const geometry = await navigation.getByRole('link').evaluateAll(elements => elements.map(link => {
                     const box = link.getBoundingClientRect();
@@ -64,7 +65,7 @@ for (const language of ['en', 'pt-br']) {
                 if (language === 'pt-br' && width === 320) {
                     // Real navigation must fit the longest Portuguese label
                     // when active, as well as when inactive.
-                    for (let index = 0; index < 5; index++) {
+                    for (let index = 0; index < 6; index++) {
                         await navigation.getByRole('link').nth(index).click();
                         await expect(navigation.getByRole('link').nth(index)).toHaveAttribute('aria-current', 'page');
                         await expect(navigation.locator('[aria-current="page"]')).toHaveCount(1);

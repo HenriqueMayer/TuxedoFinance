@@ -23,6 +23,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('i18n/', include('django.conf.urls.i18n')),
     path('dashboard/', include('dashboard.urls')),
+    path('analytics/', include('dashboard.analytics_urls')),
     path('transactions/', include('transactions.urls')),
     path('categories/', include('categories.urls')),
     path('banking/', include('banking.urls')),

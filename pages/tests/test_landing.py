@@ -17,6 +17,7 @@ class LandingBrandTests(TestCase):
         self.assertContains(response, 'js/paper-layers.js')
         self.assertContains(response, 'id="public-bowtie-map"')
         self.assertContains(response, 'data-bowtie-map-link=', count=5)
+        self.assertContains(response, 'Available funds, monthly indicators and upcoming bills.')
         self.assertContains(response, 'href="#feature-transactions"')
         self.assertContains(response, 'href="#feature-accounts"')
         self.assertContains(response, 'href="#feature-investments"')
@@ -24,7 +25,7 @@ class LandingBrandTests(TestCase):
         self.assertNotContains(response, 'data-bowtie-fragment')
         self.assertContains(response, 'A local application to record income and expenses')
         for label in ('Transactions and categories', 'Accounts and cards',
-                      'Recurrences and installments', 'Investments', 'Reports',
+                      'Recurrences and installments', 'Investments', 'Analytics',
                       'Budgets and goals', 'Salary sandbox'):
             self.assertContains(response, label)
         for removed in ('Sample dashboard preview', 'Understand your cash flow',
@@ -42,6 +43,8 @@ class LandingBrandTests(TestCase):
         self.assertContains(response, 'Suas finanças<br> de forma <span>clara</span>.')
         self.assertContains(response, 'Aplicação local para registrar receitas e despesas')
         self.assertContains(response, 'Transações e categorias')
+        self.assertContains(response, 'Análises')
+        self.assertContains(response, 'Recursos disponíveis, indicadores do mês e próximas faturas.')
         self.assertContains(response, 'Funcionalidades')
         self.assertContains(response, 'Simulação salarial')
         self.assertContains(response, 'Criar conta')

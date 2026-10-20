@@ -14,10 +14,11 @@ async function createAccount(page, testInfo) {
     await page.goto('/banking/');
 }
 
-const destinations = ['Home', 'Transactions', 'Accounts', 'Investments', 'Plan'];
+const destinations = ['Home', 'Transactions', 'Accounts', 'Investments', 'Plan', 'Analytics'];
+const mobileDestinations = ['Home', 'Entries', 'Accounts', 'Invest', 'Plan', 'Analytics'];
 
 for (const dark of [false, true]) {
-    test(`five direct workspaces retain keyboard order and secondary discovery (${dark ? 'dark' : 'light'})`, async ({ page }, testInfo) => {
+    test(`six direct workspaces retain keyboard order and secondary discovery (${dark ? 'dark' : 'light'})`, async ({ page }, testInfo) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await createAccount(page, testInfo);
         await page.evaluate(value => {
@@ -38,18 +39,18 @@ for (const dark of [false, true]) {
             const link = navigation.getByRole('link', { name, exact: true });
             await expect(link).toBeFocused();
             expect(await link.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid');
-            if (name !== 'Plan') await page.keyboard.press('Tab');
+            if (name !== 'Analytics') await page.keyboard.press('Tab');
         }
         await page.keyboard.press('Enter');
-        await expect(page).toHaveURL(/\/planning\/$/);
-        await expect(navigation.getByRole('link', { name: 'Plan', exact: true })).toHaveAttribute('aria-current', 'page');
+        await expect(page).toHaveURL(/\/analytics\/$/);
+        await expect(navigation.getByRole('link', { name: 'Analytics', exact: true })).toHaveAttribute('aria-current', 'page');
         await navigation.getByRole('link', { name: 'Home', exact: true }).press('Enter');
         await expect(page).toHaveURL(/\/dashboard\/$/);
-        const home = page.getByRole('navigation', { name: 'Home sections' });
-        await expect(home.getByRole('link')).toHaveText(['Dashboard', 'Reports']);
-        await home.getByRole('link', { name: 'Reports', exact: true }).click();
-        await expect(page).toHaveURL(/\/dashboard\/reports\/$/);
-        await expect(home.getByRole('link', { name: 'Reports', exact: true })).toHaveAttribute('aria-current', 'page');
+        await expect(page.getByRole('navigation', { name: 'Home sections' })).toHaveCount(0);
+        await navigation.getByRole('link', { name: 'Analytics', exact: true }).click();
+        const analytics = page.getByRole('navigation', { name: 'Analytics sections' });
+        await expect(analytics.getByRole('link')).toHaveText(['Finances', 'Investments']);
+        await expect(analytics.getByRole('link', { name: 'Finances', exact: true })).toHaveAttribute('aria-current', 'page');
         await navigation.getByRole('link', { name: 'Transactions', exact: true }).click();
         const activity = page.getByRole('navigation', { name: 'Transaction sections' });
         await expect(activity.getByRole('link')).toHaveText(['Transactions', 'Categories']);
@@ -112,7 +113,7 @@ test('option buttons require activation, retain portal help and leave content ac
     await expect(options).not.toHaveAttribute('open', '');
     await expect(tooltip).toBeHidden();
     await page.goto('/transactions/create/');
-    const advanced = page.locator('main details').first();
+    const advanced = page.locator('main details.entry-advanced');
     await advanced.locator('summary').hover();
     await expect(advanced).not.toHaveAttribute('open', '');
 });
@@ -148,7 +149,7 @@ test('mobile bottom destinations remain direct and account dialog preserves focu
         await createAccount(page, testInfo);
         const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
         await expect(navigation).toHaveAttribute('data-app-navigation', 'mobile');
-        await expect(navigation.locator('.app-navigation-label')).toHaveText(destinations);
+        await expect(navigation.locator('.app-navigation-label')).toHaveText(mobileDestinations);
         const dock = await navigation.boundingBox();
         expect(dock.y + dock.height).toBeCloseTo(740, 0);
         await navigation.getByRole('link', { name: 'Home', exact: true }).tap();
@@ -198,10 +199,10 @@ for (const width of [1440, 390]) {
         try {
             await createAccount(page, testInfo);
             const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
-            await expect(navigation.locator('.app-navigation-label')).toHaveText(destinations);
+            await expect(navigation.locator('.app-navigation-label')).toHaveText(width < 1024 ? mobileDestinations : destinations);
             await navigation.getByRole('link', { name: 'Home', exact: true }).press('Enter');
-            await page.getByRole('navigation', { name: 'Home sections' }).getByRole('link', { name: 'Reports', exact: true }).click();
-            await expect(page).toHaveURL(/\/dashboard\/reports\/$/);
+            await navigation.getByRole('link', { name: 'Analytics', exact: true }).click();
+            await expect(page).toHaveURL(/\/analytics\/$/);
             await navigation.getByRole('link', { name: 'Plan', exact: true }).click();
             await expect(page).toHaveURL(/\/planning\/$/);
             await navigation.getByRole('link', { name: 'Accounts', exact: true }).click();
@@ -217,12 +218,12 @@ for (const width of [1440, 390]) {
         await page.setViewportSize({ width, height: 800 });
         await page.emulateMedia({ reducedMotion: 'reduce' });
         await createAccount(page, info);
-        await page.goto('/dashboard/reports/');
+        await page.goto('/analytics/');
         const target = page.locator('#report-summary');
         // Put a genuine report anchor below the fold, then reach it through
         // keyboard section navigation rather than scrolling it in the test.
         await target.evaluate(el => { el.style.marginTop = '32rem'; });
-        const link = page.getByRole('navigation', { name: 'Home sections' }).getByRole('link', { name: 'Reports', exact: true });
+        const link = page.getByRole('navigation', { name: 'Analytics sections' }).getByRole('link', { name: 'Finances', exact: true });
         await link.evaluate(el => {
             el.href = '#report-summary';
             el.setAttribute('hx-boost', 'false');

@@ -108,9 +108,9 @@ test('authenticated navigation remains usable at tablet widths', async ({ page }
     await expect(navigation.getByRole('link', { name: 'Home', exact: true })).toBeVisible();
     await page.setViewportSize({ width: 1023, height: 900 });
     await expect(navigation).toHaveAttribute('data-app-navigation', 'mobile');
-    await expect(navigation.getByRole('link')).toHaveCount(5);
+    await expect(navigation.getByRole('link')).toHaveCount(6);
     await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeVisible();
-    await expect(page.locator('main nav').getByRole('link', { name: 'Reports', exact: true })).toBeVisible();
+    await expect(navigation.getByRole('link', { name: 'Analytics', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -119,8 +119,9 @@ test('dashboard keeps current, past, and future month states clear and responsiv
 
     await expect(page.getByText('Available cash today')).toHaveCount(0);
     await expect(page.getByText('Income through today')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Expenses by category' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Six-month outlook' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Expenses by category' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Six-month outlook' })).toHaveCount(0);
+    await expect(page.locator('main header a[href^="/analytics/?month="]')).toBeVisible();
 
     await page.getByRole('link', { name: 'Previous month' }).click();
     await expect(page.getByText('Completed month', { exact: true })).toBeVisible();
@@ -323,26 +324,44 @@ test('salary sandbox keeps the simplified calculation responsive and accessible'
 
 test('reports keep the next-window control stable when returning to today becomes available', async ({ page }, testInfo) => {
     await createAccount(page, testInfo);
-    await page.goto('/dashboard/reports/');
+    await page.goto('/analytics/');
 
-    const evolution = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Balance evolution' }) });
+    const evolution = page.locator('#balance-evolution');
     const nextWindow = evolution.getByRole('link', { name: 'Next window' });
+    // Finance now has monthly analyses above this chart. Measure after the
+    // same initial reveal that a real click would otherwise perform for us.
+    await nextWindow.scrollIntoViewIfNeeded();
+    await expect(nextWindow).toBeInViewport();
     const initialBox = await nextWindow.boundingBox();
+
+    async function settledControlBox(control) {
+        await expect(page.locator('#reports-charts')).not.toHaveClass(/htmx-settling/);
+        // Shared island navigation restores position on the next animation
+        // frame after settling; compare geometry after that restoration.
+        await control.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        return control.boundingBox();
+    }
 
     await nextWindow.click();
     await expect(page).toHaveURL(/charts_offset=1/);
     await expect(evolution.getByRole('link', { name: 'Back to today' })).toBeVisible();
 
     const nextAfterFirstSwap = evolution.getByRole('link', { name: 'Next window' });
-    const movedBox = await nextAfterFirstSwap.boundingBox();
+    const movedBox = await settledControlBox(nextAfterFirstSwap);
     expect(movedBox.x).toBeCloseTo(initialBox.x, 0);
     expect(movedBox.y).toBeCloseTo(initialBox.y, 0);
 
     await nextAfterFirstSwap.click();
     await expect(page).toHaveURL(/charts_offset=2/);
+    const secondBox = await settledControlBox(nextAfterFirstSwap);
+    expect(secondBox.x).toBeCloseTo(initialBox.x, 0);
+    expect(secondBox.y).toBeCloseTo(initialBox.y, 0);
     await evolution.getByRole('link', { name: 'Back to today' }).click();
     await expect(page).toHaveURL(/charts_offset=0/);
     await expect(evolution.getByRole('link', { name: 'Back to today' })).toHaveCount(0);
+    const resetBox = await settledControlBox(nextAfterFirstSwap);
+    expect(resetBox.x).toBeCloseTo(initialBox.x, 0);
+    expect(resetBox.y).toBeCloseTo(initialBox.y, 0);
 
     await page.setViewportSize({ width: 390, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -350,7 +369,7 @@ test('reports keep the next-window control stable when returning to today become
 
 test('report cards explain the month and chart window by keyboard and without JavaScript', async ({ page, browser }, testInfo) => {
     await createAccount(page, testInfo);
-    await page.goto('/dashboard/reports/');
+    await page.goto('/analytics/');
     const summary = page.locator('#report-summary');
     await expect(summary.locator(':scope > div')).toHaveCount(3);
     await expect(summary).toContainText('Balance now');
@@ -365,10 +384,10 @@ test('report cards explain the month and chart window by keyboard and without Ja
     expect(desktopBox.height).toBeLessThan(340);
     await page.mouse.move(desktopBox.x + 20, desktopBox.y + 20);
     await expect(panel).toBeHidden();
-    await page.getByRole('heading', { name: 'Reports', exact: true }).hover();
+    await page.getByRole('heading', { name: 'Analytics', exact: true }).hover();
     await expect(panel).toBeHidden();
     await netHelp.hover();
-    await page.getByRole('heading', { name: 'Reports', exact: true }).click();
+    await page.getByRole('heading', { name: 'Analytics', exact: true }).click();
     await expect(panel).toBeHidden();
     const monthHelp = summary.getByRole('button', { name: 'Explain Projected (month)', exact: true });
     await monthHelp.hover();
@@ -377,7 +396,7 @@ test('report cards explain the month and chart window by keyboard and without Ja
     await expect(page.getByRole('tooltip')).toHaveCount(1);
     await expect(page.locator('#report-month-help')).toBeHidden();
     await netHelp.click();
-    await page.getByRole('heading', { name: 'Reports', exact: true }).hover();
+    await page.getByRole('heading', { name: 'Analytics', exact: true }).hover();
     await expect(panel).toBeHidden();
     await monthHelp.focus();
     await page.keyboard.press('Tab');
@@ -510,7 +529,7 @@ test('dark forms, menus and charts retain contrast and keyboard interaction', as
     expect(await menu.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(16, 16, 16)');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeFocused();
-    await page.goto('/dashboard/reports/');
+    await page.goto('/analytics/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.goto('/sandbox/');

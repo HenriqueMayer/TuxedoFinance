@@ -29,7 +29,7 @@ class ReportPresentationTests(DashboardFixture):
         self.transaction(date=date(2026, 9, 1), amount='12.34')
         for htmx in (False, True):
             with self.subTest(htmx=htmx):
-                response = self.client.get(reverse('dashboard:reports'),
+                response = self.client.get(reverse('analytics:index'),
                     HTTP_HX_REQUEST='true' if htmx else 'false')
                 elements = Elements(response.content.decode())
                 pans = [attrs for tag, attrs in elements.tags
@@ -49,7 +49,7 @@ class ReportPresentationTests(DashboardFixture):
         self.account.save(update_fields=['name'])
         self.transaction(date=date(2026, 9, 1), amount='12.34', title='Source one')
         self.transaction(date=date(2026, 9, 2), amount='56.78', title='Source two')
-        response = self.client.get(reverse('dashboard:reports'), {'instrument_month': '2026-09'})
+        response = self.client.get(reverse('analytics:index'), {'instrument_month': '2026-09'})
         self.assertContains(response, f'<title>{self.bank.name}</title>', html=True)
         self.assertContains(response, self.account.name)
         selection = response.context['instrument_selection']['points'][0]
@@ -63,7 +63,7 @@ class ReportPresentationTests(DashboardFixture):
     def test_selected_shortcuts_keep_native_destinations_and_independent_filters(self, localdate):
         for period, current in [('2026-09', 'current'), ('ALL', 'all')]:
             with self.subTest(period=period):
-                response = self.client.get(reverse('dashboard:reports'), {
+                response = self.client.get(reverse('analytics:index'), {
                     'charts_offset': '-1', 'instrument_month': period, 'installment_month': period,
                 })
                 elements = Elements(response.content.decode())

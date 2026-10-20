@@ -237,7 +237,7 @@
 
   @media (max-width: 359px) {
     .app-layout .app-bottom-navigation { padding-inline: 0; }
-    .app-layout .app-bottom-navigation .app-navigation-link { letter-spacing: -.04em; }
+    .app-layout .app-bottom-navigation .app-navigation-link { letter-spacing: -.045em; }
   }
 
   @media (min-width: 640px) {

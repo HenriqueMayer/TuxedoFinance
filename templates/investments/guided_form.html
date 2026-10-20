@@ -15,6 +15,11 @@
             {% include 'partials/form_field.html' with field=form.valuation_mode %}
         </div>
         </fieldset>
+        <details class="explanation-disclosure finance-entry-section investment-appearance"{% if form.icon.errors %} open{% endif %}>
+            <summary>{% translate 'Personalization' %}</summary>
+            <div class="mt-4">{% include 'partials/form_field.html' with field=form.icon %}</div>
+            <p class="subtle-copy mt-3">{% translate 'The icon identifies this application only. It does not change its purpose or availability for planning.' %}</p>
+        </details>
         <fieldset id="guided-values" data-has-errors="{% if form.currency.errors or form.purpose.errors or form.opening_balance.errors or form.opening_quantity.errors or form.opening_unit_price.errors or form.opening_date.errors %}true{% else %}false{% endif %}" class="finance-entry-group finance-entry-section">
             <legend class="section-title">{% translate 'Existing holdings' %}</legend>
             <div class="finance-entry-grid">

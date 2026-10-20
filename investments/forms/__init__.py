@@ -10,6 +10,7 @@ from .setup import (
     GuidedInvestmentForm,
     InvestmentProductForm,
     AssetForm,
+    PositionAppearanceForm,
 )
 from .filters import (
     InvestmentChartFilterForm,
@@ -29,6 +30,7 @@ __all__ = [
     'InvestmentForm',
     'InvestmentProductForm',
     'AssetForm',
+    'PositionAppearanceForm',
     'PriceObservationFilterForm',
     'PriceObservationForm',
 ]

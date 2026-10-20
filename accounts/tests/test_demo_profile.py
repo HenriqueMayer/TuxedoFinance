@@ -226,9 +226,9 @@ class DemoProfileContentTests(TestCase):
 
     def test_populated_pages_render_in_both_interface_languages(self):
         routes = (
-            'dashboard:index', 'dashboard:reports', 'transactions:list',
+            'dashboard:index', 'analytics:index', 'transactions:list',
             'categories:list', 'banking:list', 'banking:exchange_rates',
-            'investments:list', 'investments:charts', 'investments:operations',
+            'investments:list', 'analytics:investments', 'investments:operations',
             'investments:settings', 'sandbox:index', 'sandbox:simulation',
             'sandbox:drafts', 'accounts:settings', 'planning:index', 'planning:tools',
             'planning:goals', 'planning:signals', 'banking:invoices', 'investments:prices',

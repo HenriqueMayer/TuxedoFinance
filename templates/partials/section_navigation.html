@@ -1,5 +1,5 @@
 {% load i18n %}
-{% if APP_SECTIONS %}
+{% if APP_SECTIONS|length > 1 %}
 <nav class="section-nav mb-6" aria-label="{{ APP_SECTION_LABEL }}">
     {% for section in APP_SECTIONS %}
     <a href="{{ section.url }}"{% if section.active %} aria-current="page"{% endif %}>{{ section.label }}</a>

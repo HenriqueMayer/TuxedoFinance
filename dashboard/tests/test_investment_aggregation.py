@@ -53,7 +53,7 @@ class InvestmentAggregationTests(DashboardFixture):
         current_month = next(
             row for row in evolution['months'] if row['is_current_month']
         )
-        response = self.client.get(reverse('dashboard:reports'))
+        response = self.client.get(reverse('analytics:index'))
 
         self.assertEqual(summary['investment_month'], Decimal('200.00'))
         self.assertEqual(summary['expense_month'], Decimal('0.00'))

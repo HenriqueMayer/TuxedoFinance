@@ -140,7 +140,7 @@ def _measure(count, samples, directory):
         'initial_sync_ms': round(initial_sync_ms, 3),
         'sync': profile(lambda: sync_user_ledger(user)),
         'dashboard': profile(lambda: read('/dashboard/')),
-        'reports': profile(lambda: read('/dashboard/reports/')),
+        'reports': profile(lambda: read('/analytics/')),
         'environment': {'python': platform.python_version(), 'django': django.get_version(),
                         'sqlite': sqlite3.sqlite_version, 'platform': platform.platform(),
                         'as_of': today.isoformat(), 'debug': True},

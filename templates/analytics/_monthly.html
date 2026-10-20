@@ -1,0 +1,10 @@
+{% load i18n %}
+<div id="finance-monthly-analysis" hx-request='{"noHeaders":false}' class="space-y-6" data-preserve-view>
+    <div class="panel-heading">
+        <h2 class="section-title">{% translate 'Monthly analysis' %}</h2>
+        {% include 'dashboard/_month_navigation.html' with analytics_navigation=True %}
+    </div>
+    {% if monthly_missing_currencies %}<p role="status" class="subtle-copy">{% translate 'Totals exclude currencies without a rate to the configured currency:' %} {{ monthly_missing_currencies|join:', ' }}.</p>{% endif %}
+    {% include 'analytics/_categories.html' %}
+    {% include 'analytics/_outlook.html' %}
+</div>

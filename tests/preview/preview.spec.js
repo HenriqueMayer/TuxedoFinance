@@ -3,8 +3,8 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 const browserErrors = new WeakMap();
-const workspaces = ['dashboard', 'reports', 'transactions', 'banking', 'investments', 'planning', 'new-entry'];
-const primary = ['dashboard', 'transactions', 'banking', 'investments', 'planning'];
+const workspaces = ['dashboard', 'analytics', 'analytics-investments', 'transactions', 'banking', 'investments', 'planning', 'new-entry'];
+const primary = ['dashboard', 'transactions', 'banking', 'investments', 'planning', 'analytics'];
 
 test.beforeEach(async ({ page }) => {
     const errors = [];
@@ -29,7 +29,7 @@ async function setTheme(page, theme) {
 async function expectScreenshots(page, language) {
     const initialURL = page.url();
     const initialTheme = await page.locator('html').getAttribute('data-theme');
-    await expect(page.locator('[data-lightbox] img')).toHaveCount(14);
+    await expect(page.locator('[data-lightbox] img')).toHaveCount(16);
     for (const workspace of workspaces) {
         const url = new URL(initialURL);
         url.hash = workspace;
@@ -43,7 +43,7 @@ async function expectScreenshots(page, language) {
             await expect.poll(() => image.evaluate(element => (
                 element.complete && element.naturalWidth === 1440 && element.naturalHeight === 1000
             ))).toBe(true);
-            await expect(image).toHaveAttribute('src', new RegExp(`images/${language}/${workspace}-${theme}\\.png$`));
+            await expect(image).toHaveAttribute('src', new RegExp(`images/${language}/${workspace === 'analytics' ? 'reports' : workspace}-${theme}\\.png$`));
         }
     }
     const records = await page.locator('[data-lightbox] img').evaluateAll(images => images.map(image => ({
@@ -112,7 +112,7 @@ test('local HTML files support language navigation without JavaScript', async ({
         const englishURL = pathToFileURL(path.resolve(__dirname, '../../preview/index.html')).href;
         const portugueseURL = pathToFileURL(path.resolve(__dirname, '../../preview/pt-br/index.html')).href;
         await page.goto(englishURL);
-        await expect(page.locator('[data-workspace-view]:visible')).toHaveCount(7);
+        await expect(page.locator('[data-workspace-view]:visible')).toHaveCount(8);
         await page.locator('#dashboard [data-workspace-link="new-entry"]').focus();
         await page.keyboard.press('Enter');
         await expect(page).toHaveURL(`${englishURL}#new-entry`);
@@ -124,7 +124,7 @@ test('local HTML files support language navigation without JavaScript', async ({
         await page.getByRole('link', { name: 'PT', exact: true }).click();
         await expect(page).toHaveURL(portugueseURL);
         await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
-        await expect(page.locator('[data-workspace-view]:visible')).toHaveCount(7);
+        await expect(page.locator('[data-workspace-view]:visible')).toHaveCount(8);
         await page.getByRole('link', { name: 'PT', exact: true }).click();
         await expect(page).toHaveURL(portugueseURL);
         await page.getByRole('link', { name: 'EN', exact: true }).click();
@@ -174,12 +174,12 @@ test('expanded screenshots close accessibly and restore focus', async ({ page })
 });
 
 test('mobile tour remains readable without horizontal overflow', async ({ page }) => {
-    for (const width of [1024, 390]) {
+    for (const width of [1024, 390, 320]) {
         await page.setViewportSize({ width, height: 844 });
         await page.goto('/pt-br/');
         await expect(page.locator('#dashboard h1')).toBeVisible();
         const links = page.locator('[data-primary-navigation] a');
-        await expect(links).toHaveCount(5);
+        await expect(links).toHaveCount(6);
         for (const link of await links.all()) {
             await expect(link).toBeVisible();
             const bounds = await link.boundingBox();
@@ -199,7 +199,7 @@ test('mobile tour remains readable without horizontal overflow', async ({ page }
 });
 
 for (const [language, url] of [['en', '/'], ['pt-br', '/pt-br/']]) {
-    for (const width of [1440, 390]) {
+    for (const width of [1440, 390, 320]) {
         for (const theme of ['light', 'dark']) {
             test(`editorial tour keeps keyboard actions and viewport bounds (${language}, ${width}, ${theme})`, async ({ page }, testInfo) => {
                 await page.setViewportSize({ width, height: 900 });
@@ -213,7 +213,7 @@ for (const [language, url] of [['en', '/'], ['pt-br', '/pt-br/']]) {
                 await page.goBack();
                 await expect(page.locator('html')).toHaveAttribute('data-workspace', 'dashboard');
                 const links = page.locator('[data-primary-navigation] a');
-                await expect(links).toHaveCount(5);
+                await expect(links).toHaveCount(6);
                 for (let index = 0; index < primary.length; index += 1) {
                     const link = links.nth(index);
                     await link.focus();
@@ -225,6 +225,14 @@ for (const [language, url] of [['en', '/'], ['pt-br', '/pt-br/']]) {
                     expect(bounds.x).toBeGreaterThanOrEqual(0);
                     expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
                     expect(bounds.height).toBeGreaterThanOrEqual(44);
+                    expect(bounds.width).toBeGreaterThanOrEqual(44);
+                    if (width < 580) {
+                        const labels = language === 'en'
+                            ? ['Home', 'Entries', 'Accounts', 'Invest', 'Plan', 'Analytics']
+                            : ['Início', 'Transações', 'Contas', 'Investir', 'Planejar', 'Análises'];
+                        await expect(link.locator('span:visible')).toHaveText(labels[index]);
+                        expect(await link.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(10);
+                    }
                     await expect(page.locator(`#${primary[index]} .screen-${theme}`)).toBeVisible();
                     if (primary[index] === 'transactions') {
                         await openEntryFrom(page, 'transactions', theme);
@@ -241,26 +249,26 @@ for (const [language, url] of [['en', '/'], ['pt-br', '/pt-br/']]) {
                 await page.keyboard.press('Escape');
                 await expect(page.locator('#image-dialog')).toBeHidden();
                 await expect(screenshot).toBeFocused();
-                const original = page.locator('#planning .capture-original:visible');
+                const original = page.locator('#analytics .capture-original:visible');
                 await original.focus();
                 const bounds = await original.boundingBox();
                 const dock = await page.locator('[data-primary-navigation]').boundingBox();
-                if (width === 390) expect(bounds.y + bounds.height).toBeLessThanOrEqual(dock.y);
+                if (width < 768) expect(bounds.y + bounds.height).toBeLessThanOrEqual(dock.y);
             });
         }
     }
 }
 
-test('workspace hashes preserve history, Reports and entry ownership, and language context', async ({ page }) => {
+test('workspace hashes preserve history, Analytics and entry ownership, and language context', async ({ page }) => {
     await page.goto('/');
-    await page.locator('#dashboard [data-workspace-link="reports"]').focus();
+    await page.locator('#dashboard [data-workspace-link="analytics"]').focus();
     await page.keyboard.press('Enter');
-    await expect(page.locator('html')).toHaveAttribute('data-workspace', 'reports');
-    await expect(page.locator('[data-primary-navigation] [data-workspace-link="dashboard"]')).toHaveAttribute('aria-current', 'page');
-    await expect(page.locator('#reports [data-workspace-link="reports"]')).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator('html')).toHaveAttribute('data-workspace', 'analytics');
+    await expect(page.locator('[data-primary-navigation] [data-workspace-link="analytics"]')).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator('#analytics [data-workspace-link="analytics"]')).toHaveAttribute('aria-current', 'page');
     await page.locator('[data-primary-navigation] [data-workspace-link="transactions"]').click();
     await page.goBack();
-    await expect(page.locator('html')).toHaveAttribute('data-workspace', 'reports');
+    await expect(page.locator('html')).toHaveAttribute('data-workspace', 'analytics');
     await page.goForward();
     await expect(page.locator('html')).toHaveAttribute('data-workspace', 'transactions');
     await openEntryFrom(page, 'transactions', await page.locator('html').getAttribute('data-theme'));
@@ -278,6 +286,13 @@ test('workspace hashes preserve history, Reports and entry ownership, and langua
     await page.getByRole('link', { name: 'EN', exact: true }).click();
     await expect(page).toHaveURL(/\/index\.html#new-entry$/);
     await expect(page.locator('#new-entry .screen-dark')).toBeVisible();
+    await page.goto('/#reports');
+    await expect(page.locator('html')).toHaveAttribute('data-workspace', 'analytics');
+    await expect(page.locator('[data-primary-navigation] [data-workspace-link="analytics"]')).toHaveAttribute('aria-current', 'page');
+    await page.locator('#analytics [data-workspace-link="analytics-investments"]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('html')).toHaveAttribute('data-workspace', 'analytics-investments');
+    await expect(page.locator('[data-primary-navigation] [data-workspace-link="analytics"]')).toHaveAttribute('aria-current', 'page');
     await page.goto('/#unknown-workspace');
     await expect(page.locator('html')).toHaveAttribute('data-workspace', 'dashboard');
     await page.goto('/#dashboard-preview');
@@ -290,7 +305,8 @@ test('workspace hashes preserve history, Reports and entry ownership, and langua
 test('history navigation closes a replaced screenshot without focusing its hidden owner', async ({ page }) => {
     await page.goto('/');
     await page.locator('[data-primary-navigation] [data-workspace-link="transactions"]').click();
-    await page.locator('[data-lightbox]:visible').click();
+    await expect(page.locator('html')).toHaveAttribute('data-workspace', 'transactions');
+    await page.locator('#transactions [data-lightbox]:visible').click();
     await expect(page.locator('#image-dialog')).toBeVisible();
     await page.goBack();
     await expect(page.locator('#image-dialog')).toBeHidden();

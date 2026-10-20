@@ -47,6 +47,8 @@ releases, persistent volumes and isolated restore rehearsals.
   filters and settlement behavior.
 - [apps/dashboard.md](apps/dashboard.md) — cash, cash-flow, liabilities,
   investments and net-worth read models; the net-worth interface is paused.
+- [apps/analytics.md](apps/analytics.md) — the shared financial/investment analysis
+  workspace and compatible chart routes, reusing existing financial services.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
   banks/accounts for provider and cash endpoints, with asset lifecycle and
   archived-position visibility rules, weighted cost and local dated quotes.

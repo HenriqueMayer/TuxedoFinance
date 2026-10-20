@@ -24,20 +24,22 @@ themes. Your records stay on your installation.
 
 <a id="-features"></a>
 <a id="five-workspaces"></a>
+<a id="six-workspaces"></a>
 
 ## What's in the app
 
 | Workspace | What you can do |
 |---|---|
-| **Home** | Review balances, upcoming commitments and financial reports. |
+| **Home** | Review available funds, monthly indicators and upcoming commitments. |
 | **Transactions** | Record income and expenses, split categories, manage recurrences and installments, export CSV. |
 | **Accounts** | Organize bank accounts, PIX, cards, invoices, transfers and loyalty. |
-| **Investments** | Track holdings, movements, cash pots and dated prices. |
+| **Investments** | Track holdings, movements, cash pots and dated prices; choose an emoji for each holding. |
 | **Plan** | Set category limits, reserve existing balances for goals and compare simulations. |
+| **Analytics** | Explore financial and investment charts, category expenses and cash-flow projections. |
 
-**In the unreleased source:** the optional [Tuxedo assistant](docs/apps/assistant.md)
-can consult your saved finances, simulate scenarios and prepare changes for your
-confirmation. Its ChatGPT connection is off by default; when enabled, relevant
+**In the unreleased source:** Analytics, position icons and the optional
+[Tuxedo assistant](docs/apps/assistant.md) are included. The assistant can consult your saved finances, simulate scenarios and prepare
+changes for your confirmation. Its ChatGPT connection is off by default; when enabled, relevant
 records and necessary conversation history are sent to OpenAI. Open Finance
 remains on the [roadmap](docs/roadmap.md#personal-open-finance-study).
 

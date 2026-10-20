@@ -1,6 +1,7 @@
 from django.urls import path
 
 from investments import views
+from dashboard.analytics import legacy_analytics
 
 
 app_name = 'investments'
@@ -10,7 +11,7 @@ urlpatterns = [
     path('add/', views.guided_investment, name='guided_create'),
     path('positions/<int:product_pk>/<int:asset_pk>/', views.position_detail, name='position_detail'),
     path('positions/<int:product_pk>/<int:asset_pk>/update/', views.position_update, name='position_update'),
-    path('charts/', views.InvestmentChartsView.as_view(), name='charts'),
+    path('charts/', legacy_analytics, {'destination': 'analytics:investments'}, name='charts'),
     path('operations/', views.InvestmentOperationsView.as_view(), name='operations'),
     path('prices/', views.PriceObservationListView.as_view(), name='prices'),
     path('prices/create/', views.PriceObservationCreateView.as_view(), name='create_price'),

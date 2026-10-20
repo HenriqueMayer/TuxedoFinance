@@ -64,7 +64,7 @@ test(`guided investments and contextual updates (${width}, ${theme})`, async ({ 
     await expect(page.locator('#guided-date')).toBeVisible();
     await page.screenshot({ path: info.outputPath(`guided-investment-error-${width}-${theme}.png`), fullPage: true });
     await page.locator('#id_opening_date').fill('01/01/2026');
-    await page.locator('#guided-investment-form > details > summary').press('Enter');
+    await page.locator('#guided-investment-form').getByText('Advanced options', { exact: true }).press('Enter');
     const classificationHelp = page.locator('[data-help-trigger][aria-controls="id_asset_class-help"]');
     const classificationCopy = page.locator('#id_asset_class-help');
     await classificationHelp.hover();
@@ -107,13 +107,11 @@ test(`guided investments and contextual updates (${width}, ${theme})`, async ({ 
     await expect(search).toBeFocused();
     await page.getByRole('link', { name: 'Clear filters', exact: true }).press('Enter');
     await expect(page.locator('#investment-position-list')).toContainText('Routine pot');
-    const more = page.locator('[data-investment-more]');
-    await expect(more).not.toHaveAttribute('open', '');
-    await more.locator('summary').hover();
-    await expect(more).not.toHaveAttribute('open', '');
-    await more.locator('summary').press('Enter');
-    await expect(more.getByRole('link', { name: 'Full configuration', exact: true })).toBeVisible();
-    await more.locator('summary').press('Escape');
+    const tabs = page.getByRole('navigation', { name: 'Investment sections' });
+    await expect(tabs.getByRole('link')).toHaveText(['My investments', 'History', 'Prices', 'Setup']);
+    await expect(tabs.locator('details')).toHaveCount(0);
+    await tabs.getByRole('link', { name: 'Setup', exact: true }).focus();
+    await expect(tabs.getByRole('link', { name: 'Setup', exact: true })).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: info.outputPath(`investment-routine-${width}-${theme}.png`), fullPage: true });
 });
@@ -170,7 +168,8 @@ test('Portuguese decimal openings retain the date through partial input and nati
             const page = await context.newPage();
             await signup(page, info);
             await page.goto('/investments/add/');
-            await expect(page.locator('#guided-investment-form > details')).not.toHaveAttribute('open', '');
+            const advanced = page.locator('#guided-investment-form > details').filter({ has: page.locator('#id_code') });
+            await expect(advanced).not.toHaveAttribute('open', '');
             await page.locator('#id_new_institution').check();
             await page.locator('#id_institution_name').fill('Instituição local');
             await page.locator('#id_name').fill('Caixa fracionário');

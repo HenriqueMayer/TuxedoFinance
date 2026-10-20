@@ -242,7 +242,7 @@ class LedgerProjectionRecoveryTests(ProjectionGuardFixture, TestCase):
         before = self.financial_state()
         for url in (
             reverse('dashboard:index'),
-            reverse('dashboard:reports'),
+            reverse('analytics:index'),
             reverse('banking:list'),
             reverse('banking:detail', args=[self.bank.pk]),
             reverse('banking:invoices'),

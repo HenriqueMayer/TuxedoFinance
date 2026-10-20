@@ -293,7 +293,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
         operation.full_clean()
         operation.save()
 
-        response = self.client.get(reverse('investments:charts'))
+        response = self.client.get(reverse('analytics:investments'))
         content = response.content.decode()
 
         self.assertContains(response, 'group-hover:opacity-100')
@@ -314,7 +314,7 @@ class InvestmentFormAndViewTests(InvestmentFixtureMixin, TestCase):
     def test_portfolio_links_to_separate_charts_and_operations(self):
         response = self.client.get(reverse('investments:list'))
         self.assertNotContains(response, 'id="investments-charts"')
-        self.assertContains(response, reverse('investments:charts'))
+        self.assertContains(response, reverse('analytics:index'))
         self.assertContains(response, reverse('investments:operations'))
 
     def test_movement_pagination_uses_a_position_preserving_htmx_island(self):

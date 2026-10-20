@@ -1,0 +1,5 @@
+{% load i18n %}
+<nav class="section-nav" aria-label="{% translate 'Analytics sections' %}">
+    <a href="{% url 'analytics:index' %}"{% if request.resolver_match.url_name == 'index' %} aria-current="page"{% endif %}>{% translate 'Finances' %}</a>
+    <a href="{% url 'analytics:investments' %}"{% if request.resolver_match.url_name == 'investments' %} aria-current="page"{% endif %}>{% translate 'Investments' %}</a>
+</nav>

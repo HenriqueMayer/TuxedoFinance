@@ -16,7 +16,7 @@ class ForecastWindowTests(DashboardFixture):
         self.transaction(date=date(2026, 9, 28), is_fixed=True)
 
     def test_reports_last_window_includes_late_month_cash_settlements(self, localdate):
-        response = self.client.get(reverse('dashboard:reports'), {'charts_offset': 5})
+        response = self.client.get(reverse('analytics:index'), {'charts_offset': 5})
 
         self.assertEqual(response.context['charts_offset'], 5)
         self.assertTrue(response.context['has_previous_window'])
@@ -33,7 +33,7 @@ class ForecastWindowTests(DashboardFixture):
         for offset in (6, 24):
             with self.subTest(offset=offset):
                 response = self.client.get(
-                    reverse('dashboard:reports'), {'charts_offset': offset},
+                    reverse('analytics:index'), {'charts_offset': offset},
                     HTTP_HX_REQUEST='true', HTTP_HX_TARGET='reports-charts',
                 )
                 self.assertEqual(response.context['charts_offset'], 0)
@@ -44,7 +44,7 @@ class ForecastWindowTests(DashboardFixture):
                 )
 
     def test_reports_allow_past_windows_and_require_representable_opening(self, localdate):
-        response = self.client.get(reverse('dashboard:reports'), {'charts_offset': -24})
+        response = self.client.get(reverse('analytics:index'), {'charts_offset': -24})
 
         self.assertEqual(response.context['charts_offset'], -24)
         self.assertTrue(response.context['has_previous_window'])

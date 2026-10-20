@@ -1,7 +1,7 @@
 {% load i18n l10n %}
 <div id="investments-charts" hx-request='{"noHeaders":false}' class="space-y-8" data-preserve-view>
     {% if selected_section == 'charts' %}
-    <form method="get" action="{% url 'investments:charts' %}" hx-get="{% url 'investments:charts' %}" hx-target="#investments-charts" hx-swap="outerHTML show:none" hx-push-url="true" hx-trigger="change, submit" class="flex flex-wrap items-end gap-4">
+    <form method="get" action="{% url 'analytics:investments' %}" hx-get="{% url 'analytics:investments' %}" hx-target="#investments-charts" hx-swap="outerHTML show:none" hx-push-url="true" hx-trigger="change, submit" class="flex flex-wrap items-end gap-4">
         {% include 'partials/form_field.html' with field=chart_filter.scope %}
         <input type="hidden" name="total_offset" value="{{ total_offset|stringformat:'d' }}">
         <input type="hidden" name="flow_offset" value="{{ flow_offset|stringformat:'d' }}">

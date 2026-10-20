@@ -27,6 +27,7 @@ MAX_LOCATION = 2048
 MAX_ROWS = 20
 
 _ROUTES = {
+    'analytics': {'index', 'investments'},
     'dashboard': {'index', 'reports'},
     'transactions': {'list', 'create', 'update', 'split'},
     'categories': {'list', 'create', 'update'},
@@ -42,7 +43,7 @@ _ROUTES = {
     'ingestion': {'history', 'detail'},
     'accounts': {'settings'},
 }
-_LABELS = {'dashboard': gettext_noop('Home'), 'transactions': gettext_noop('Transactions'),
+_LABELS = {'analytics': gettext_noop('Analytics'), 'dashboard': gettext_noop('Home'), 'transactions': gettext_noop('Transactions'),
            'categories': gettext_noop('Categories'), 'banking': gettext_noop('Accounts'),
            'investments': gettext_noop('Investments'), 'planning': gettext_noop('Plan'),
            'sandbox': gettext_noop('Planning tools'), 'ingestion': gettext_noop('Reviewed statements'),
@@ -54,6 +55,8 @@ _RECORD_FILTERS = {'bank': 'banking.Bank', 'account': 'banking.BankAccount',
                    'category': 'categories.Category', 'product': 'investments.InvestmentProduct',
                    'asset': 'investments.Asset', 'parent': 'categories.Category'}
 _FILTERS = {
+    'analytics': {'month', 'charts_offset', 'instrument_month', 'installment_month',
+                  'scope', 'total_offset', 'flow_offset'},
     'dashboard': {'month', 'charts_offset', 'instrument_month', 'installment_month'},
     'transactions': {'q', 'month', 'date', 'type', 'category', 'recurrence', 'sort', 'page',
                      'account', 'credit_card', 'debit_card', 'transaction_type'},
@@ -67,7 +70,12 @@ _FILTERS = {
     'ingestion': {'q', 'page'},
     'accounts': set(),
 }
+_ROUTE_FILTERS = {
+    'analytics:index': {'month', 'charts_offset', 'instrument_month', 'installment_month'},
+    'analytics:investments': {'scope', 'total_offset', 'flow_offset'},
+}
 _ENUMS = {
+    ('analytics', 'scope'): {'portfolio', 'cash', 'all'},
     ('transactions', 'type'): {'INCOME', 'EXPENSE'},
     ('transactions', 'transaction_type'): {'INCOME', 'EXPENSE'},
     ('transactions', 'recurrence'): {'fixed', 'installment', 'oneoff'},
@@ -152,7 +160,8 @@ def normalize_location(user, location):
             if value and not safe_local_url(value):
                 raise ScopeError(_('Invalid assistant context.'))
             continue  # Navigation origins never widen the financial context.
-        if key not in _FILTERS[match.namespace] or len(value) > 160:
+        allowed_filters = _ROUTE_FILTERS.get(match.view_name, _FILTERS[match.namespace])
+        if key not in allowed_filters or len(value) > 160:
             raise ScopeError(_('Unsupported assistant context filter.'))
         if not value:
             continue
@@ -175,10 +184,11 @@ def normalize_location(user, location):
                     raise ValueError
             except ValueError:
                 raise ScopeError(_('Invalid assistant context date.')) from None
-        elif key in {'page', 'charts_offset'}:
+        elif key in {'page', 'charts_offset', 'total_offset', 'flow_offset'}:
             try:
                 number = int(value)
-                if str(number) != value or not (-1200 <= number <= 1200 if key == 'charts_offset' else 1 <= number <= 10000):
+                is_offset = key in {'charts_offset', 'total_offset', 'flow_offset'}
+                if str(number) != value or not (-1200 <= number <= 1200 if is_offset else 1 <= number <= 10000):
                     raise ValueError
             except ValueError:
                 raise ScopeError(_('Invalid assistant context filter.')) from None

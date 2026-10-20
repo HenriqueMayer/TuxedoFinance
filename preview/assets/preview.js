@@ -32,7 +32,7 @@
         var current = destination.view.id;
         workspaceLinks.forEach(function (link) {
             // Secondary areas keep their parent selected in primary navigation.
-            var parent = { reports: 'dashboard', 'new-entry': 'transactions' };
+            var parent = { 'analytics-investments': 'analytics', 'new-entry': 'transactions' };
             var owner = link.closest('[data-primary-navigation]') ? (parent[current] || current) : current;
             if (link.dataset.workspaceLink === owner) link.setAttribute('aria-current', 'page');
             else link.removeAttribute('aria-current');

@@ -147,7 +147,7 @@ and paused-feature gates.
 ## Interface and recovery
 
 The authenticated shell offers the assistant as a utility, preserving the same
-five primary destinations. Its fixed desktop overlay lives outside `main` and
+six primary destinations. Its fixed desktop overlay lives outside `main` and
 never reserves width or changes page/filter/form geometry. Narrow screens retain
 the accessible modal sheet. Chat controls never submit or capture an unrelated financial draft.
 The compact conversation layout keeps local history, the current-page link and

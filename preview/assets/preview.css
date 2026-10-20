@@ -214,8 +214,8 @@ a, button { touch-action: manipulation; }
 .button-primary { border-color: var(--caramel); background: var(--caramel); color: var(--forest-deep); }
 .button:hover { box-shadow: 0 3px 8px rgb(16 30 24 / 9%); }
 
-.workspace-tabs { display: flex; min-width: 0; gap: 1.5rem; margin-bottom: 1.75rem; border-bottom: 1px solid var(--line); }
-.workspace-tabs a { position: relative; display: inline-flex; min-height: 48px; align-items: center; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; text-decoration: none; }
+.workspace-tabs { display: flex; overflow-x: auto; min-width: 0; gap: 1.5rem; margin-bottom: 1.75rem; border-bottom: 1px solid var(--line); }
+.workspace-tabs a { position: relative; display: inline-flex; flex-shrink: 0; min-height: 48px; align-items: center; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; text-decoration: none; }
 .workspace-tabs a[aria-current="page"] { border-color: var(--caramel-ink); color: var(--ink); }
 :root[data-theme="dark"] .workspace-tabs a[aria-current="page"] { border-color: var(--caramel-light); }
 .workspace-tabs a:hover { color: var(--ink); }
@@ -283,11 +283,11 @@ figcaption { min-width: 0; color: var(--muted); font-size: 12px; }
     .workspace-shell { display: block; }
     .workspace-sidebar { position: fixed; z-index: 30; top: auto; right: 0; bottom: 0; left: 0; min-height: 0; padding: .35rem .25rem max(.35rem, env(safe-area-inset-bottom)); border: 0; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 97%, transparent); backdrop-filter: blur(12px); }
     .tour-nav { flex-direction: row; justify-content: space-between; gap: 0; }
-    .tour-nav a { min-width: 0; min-height: 62px; flex: 1 1 20%; flex-direction: column; justify-content: center; gap: 4px; padding: .5rem .15rem; font-size: 12px; line-height: 1.25; letter-spacing: -.03em; text-align: center; }
+    .tour-nav a { min-width: 0; min-height: 62px; flex: 1 1 calc(100% / 6); flex-direction: column; justify-content: center; gap: 4px; padding: .5rem 0; font-size: clamp(10px, 2.8vw, 11px); line-height: 1.25; letter-spacing: -.03em; text-align: center; }
     .tour-nav a::before { top: 0; bottom: auto; left: calc(50% - 10px); width: 20px; height: 2px; transform: scaleX(.5); }
     .tour-nav a[aria-current="page"] { background: var(--ground); }
     .tour-nav a[aria-current="page"]::before { transform: scaleX(1); }
-    .tour-nav a span { max-width: 100%; overflow-wrap: anywhere; }
+    .tour-nav a span { max-width: 100%; white-space: nowrap; }
 
     .main { padding: 1.25rem 1rem 2.5rem; }
     .section-heading { align-items: start; }

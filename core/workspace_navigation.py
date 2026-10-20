@@ -2,7 +2,7 @@
 """Shared workspace destinations, independent of financial records."""
 
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from core.features import feature_available
 
 
@@ -12,11 +12,17 @@ AREAS = (
     ('accounts', _('Accounts'), 'banking:list', ('banking',)),
     ('investments', _('Investments'), 'investments:list', ('investments',)),
     ('plan', _('Plan'), 'planning:index', ('planning', 'sandbox')),
+    ('analytics', _('Analytics'), 'analytics:index', ('analytics',)),
 )
+
+# Compact visible labels keep all six direct destinations readable on phones;
+# accessible names and desktop labels retain the full workspace identity.
+MOBILE_LABELS = {'transactions': pgettext_lazy('compact workspace navigation', 'Entries'),
+                 'investments': _('Invest')}
 
 
 def workspace_navigation(request):
-    """Keep desktop, mobile and nested editors in the same five workspaces."""
+    """Keep desktop, mobile and nested editors in the same six workspaces."""
     if not request.user.is_authenticated:
         return {}
     match = request.resolver_match
@@ -24,7 +30,8 @@ def workspace_navigation(request):
     url_name = match.url_name if match else ''
     active = next((key for key, _, _, namespaces in AREAS if namespace in namespaces), None)
     navigation = [
-        {'key': key, 'label': label, 'url': reverse(route), 'active': key == active}
+        {'key': key, 'label': label, 'mobile_label': MOBILE_LABELS.get(key, label),
+         'url': reverse(route), 'active': key == active}
         for key, label, route, _ in AREAS
     ]
     sections = []
@@ -33,7 +40,6 @@ def workspace_navigation(request):
         section_label = _('Home sections')
         sections = [
             (_('Dashboard'), 'dashboard:index', url_name == 'index'),
-            (_('Reports'), 'dashboard:reports', url_name == 'reports'),
             (_('Net worth'), 'dashboard:wealth', url_name == 'wealth'),
         ]
     elif active == 'transactions':

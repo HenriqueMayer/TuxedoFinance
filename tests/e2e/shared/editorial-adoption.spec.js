@@ -69,7 +69,7 @@ for (const theme of ['light', 'dark']) {
         const navigation = page.getByRole('navigation', {name: 'Main navigation', exact: true});
         await expect(page.locator('.app-sidebar')).toHaveCSS('background-color',
             theme === 'dark' ? 'rgb(38, 38, 38)' : 'rgb(235, 231, 222)');
-        await expect(navigation.locator('.app-navigation-label')).toHaveText(['Home', 'Transactions', 'Accounts', 'Investments', 'Plan']);
+        await expect(navigation.locator('.app-navigation-label')).toHaveText(['Home', 'Transactions', 'Accounts', 'Investments', 'Plan', 'Analytics']);
         await expect(navigation.locator('.app-navigation-number')).toHaveCount(0);
         await expect(navigation.getByRole('link', {name: 'Transactions', exact: true})).toHaveAttribute('aria-current', 'page');
         await expect(navigation.locator('summary, details')).toHaveCount(0);

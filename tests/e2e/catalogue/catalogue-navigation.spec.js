@@ -31,8 +31,8 @@ for (const theme of ['light', 'dark']) {
         const sample = page.locator('#lab-workspace-example');
         await expect(sample.locator('.lab-rail-brand')).toHaveAttribute('href', '#public-homepage');
         const navigation = sample.getByRole('navigation', {name: 'Workspace navigation', exact: true});
-        const names = ['Home', 'Transactions', 'Accounts', 'Investments', 'Plan'];
-        await expect(navigation.getByRole('link')).toHaveCount(5);
+        const names = ['Home', 'Transactions', 'Accounts', 'Investments', 'Plan', 'Analytics'];
+        await expect(navigation.getByRole('link')).toHaveCount(6);
         await expect(page.locator('[data-lab-navigation]')).toHaveCount(1);
         await expect(page.locator('section#shell, section#dashboard')).toHaveCount(0);
         await expect(page.locator('#navigation > #shell, #navigation > #dashboard')).toHaveCount(2);
@@ -55,11 +55,12 @@ for (const theme of ['light', 'dark']) {
         for (const width of [1440, 390, 320]) {
             await page.setViewportSize({width, height: 900});
             await expect(navigation).toBeVisible();
-            await expect(navigation.getByRole('link')).toHaveCount(5);
+            await expect(navigation.getByRole('link')).toHaveCount(6);
             for (const [index, name] of names.entries()) {
                 const link = navigation.getByRole('link', {name, exact: true});
-                await expect(link.locator('span')).toHaveText([name]);
-                await expect(link).toHaveAttribute('href', '#lab-view-' + ['home', 'transactions', 'accounts', 'investments', 'plan'][index]);
+                const compact = {Transactions: 'Entries', Investments: 'Invest'};
+                await expect(link.locator('span:visible')).toHaveText([width <= 760 ? (compact[name] || name) : name]);
+                await expect(link).toHaveAttribute('href', '#lab-view-' + ['home', 'transactions', 'accounts', 'investments', 'plan', 'analytics'][index]);
                 const target = await link.boundingBox();
                 expect(target.width).toBeGreaterThanOrEqual(44);
                 expect(target.height).toBeGreaterThanOrEqual(44);

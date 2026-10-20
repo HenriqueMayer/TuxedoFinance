@@ -74,7 +74,7 @@ for (const theme of ['light', 'dark']) for (const width of [1280, 390]) {
         await expect(page).toHaveURL(url => url.pathname + url.search === origin);
         await expect(page.locator('#departure-confirm')).toBeHidden();
 
-        const navigation = page.locator('[data-period-navigation]').first();
+        const navigation = page.locator('[aria-labelledby="performance-heading"] [data-period-navigation]');
         await navigation.getByRole('link', {name: 'Previous month', exact: true}).press('Enter');
         await expect(page).toHaveURL(/month=2026-08$/);
         await navigation.getByRole('link', {name: 'Next month', exact: true}).press('Enter');

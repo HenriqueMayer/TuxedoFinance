@@ -24,8 +24,9 @@ assets change to avoid stale review sessions.
 Paper Layers is the sole homepage illustration. Five complete local SVG planes
 rotate smoothly from a large, centered horizontal bow tie into a vertical
 workspace structure: left paper, ledger rules, knot, contour rings and right
-paper correspond to Home, Transactions, Accounts, Investments and Plan. Hovering
-the painted bow tie reveals the five workspace descriptions and native preview
+paper correspond to five feature highlights: Home, Transactions, Accounts,
+Investments and Plan. The application workspace separately exposes Analytics as
+a sixth primary destination. Hovering the painted bow tie reveals the five descriptions and native preview
 links; empty illustration space does not activate a hover preview. A stable,
 invisible folded silhouette keeps rotation from losing the entering pointer.
 The index retains its layout space while closed, but is invisible, inert and
@@ -55,15 +56,15 @@ endpoints are cached with a ResizeObserver. One bounded `requestAnimationFrame`
 loop updates SVG transforms and paths, stopping when settled, offscreen or on
 window deactivation. Reduced motion keeps a static diagram and instant map
 revelation through hover or SVG activation, without animation frames. Without
-JavaScript the complete drawing and a native five-link workspace index remain
+JavaScript the complete drawing and a native five-link feature index remain
 available. Copy describes features and actions directly; the accent under
 “clear” remains decorative.
 
 The validated [Workspace example](../design-system.html#navigation) is the only
 catalogue shell. The former `#shell` destination remains an alias of
 `#navigation`; the obsolete shell and mobile overlay specimen are removed.
-Five native links choose contained Home, Transactions, Accounts, Investments and
-Plan examples with JavaScript and retain their anchor destinations without it.
+Six native links choose contained Home, Transactions, Accounts, Investments,
+Plan and Analytics examples with JavaScript and retain their anchor destinations without it.
 The account options use a deliberate native `details.lab-account-menu`
 disclosure. The toolbar calls this section Workspace and the shared component
 examples Patterns; section numbering runs from 00 / Homepage through 13 / Design
@@ -217,3 +218,11 @@ scenario shows native amount, date, category and payment instrument before
 Confirm preview or Discard preview. These controls change only page-memory demo
 state and make no HTTP write, provider request or financial posting. The native
 reading fallback describes the same review boundary.
+
+
+The investment specimen exposes My investments, History, Prices and Setup as
+explicit local tabs. Its Personalization disclosure uses twelve labelled native
+radio choices and an explicit Save icon action; only the current synthetic
+document changes. The application stores the corresponding preference per
+owned product/asset position. Analytics owns the sample chart; Home retains
+operational indicators without a decorative analytical sparkline.

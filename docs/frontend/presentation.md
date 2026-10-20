@@ -5,7 +5,7 @@
 ## Editorial application adoption
 
 The validated catalogue direction applies across the public homepage,
-authentication, five workspaces and their secondary editors. The
+authentication, six workspaces and their secondary editors. The
 [interface map](../interface-map.md) records every route family, shared control and
 domain exception. Django templates, owned records, financial validation and
 existing URLs continue to define the application; styling does not enable
@@ -50,9 +50,9 @@ Keep the measure in confirmation summaries appropriate to the record: monetary
 operations show money, unit operations retain their quantity precision, and
 loyalty entries use translated directions with their program's unit name.
 
-The application shell uses the same five direct destinations on its desktop
-sidebar and mobile bottom navigation: Home, Transactions, Accounts, Investments
-and Plan. Icons, labels, quieter surfaces and restrained active/hover feedback
+The application shell uses the same six direct destinations on its desktop
+sidebar and mobile bottom navigation: Home, Transactions, Accounts, Investments,
+Plan and Analytics. Icons, labels, quieter surfaces and restrained active/hover feedback
 follow the Workspace specimen; decorative destination numbers are omitted.
 Section tabs retain each workspace's
 secondary destinations. Deliberate user menus, native links, shared Back/Forward,
@@ -63,8 +63,9 @@ navigation styling never substitutes color for a destination or financial state.
 The transaction sheet follows the catalogue's compact reading order and uniform
 controls while retaining category splits, recurrence, installments, invoice
 selection, account/card metadata, contextual Save/Cancel and rendered Django
-errors. Only `transaction_type` and `payment_channel` use the native
-`SegmentedChoice` radio widget. Their fieldsets have real legends and individual
+errors. Transaction `transaction_type` and `payment_channel` use the native
+`SegmentedChoice` radio widget; curated position icons reuse that native
+short-choice contract. Their fieldsets have real legends and individual
 option labels; visual selection and focus do not resize their targets. New
 groups remain unselected unless an owned shortcut explicitly supplies context.
 Bound invalid POSTs and edited records retain their choices. Native form POSTs

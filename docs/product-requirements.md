@@ -73,7 +73,7 @@ implementation; they are not all navigation destinations or published features.
 
 | Surface | Current source-checkout status |
 |---|---|
-| Home/Reports, Transactions/Categories, Accounts, Investments and Plan | Available under the current shared interface contracts. Unreleased changes still need owner acceptance and a separate release decision. |
+| Home, Analytics, Transactions/Categories, Accounts, Investments and Plan | Available under the current shared interface contracts. Unreleased changes still need owner acceptance and a separate release decision. |
 | Local statement operations (FR34) | Paused: upload, mapping, review, confirmation and undo are gated on GET/POST. Owned confirmed/undone provenance remains read-only. |
 | Dated net-worth interface (FR38) | Paused: old screen requests return to Home; calculations and source data remain available to their existing consumers. |
 | Assistant foundation (FR39) | Owned local conversations, targeted default financial reads and canonical simulations; persistent changes require reviewed user confirmation. |
@@ -499,7 +499,7 @@ financial history, not an immutable bank statement or return percentage.
   text maintains WCAG AA contrast; user-facing labels do not render below 12px,
   except for the approved [mobile navigation labels](frontend/navigation.md#root-layout-and-navigation)
   at 10–11px, never below 10px, with touch targets of at least 44 × 44px.
-- The same five workspace destinations appear in desktop and mobile navigation.
+- The same six workspace destinations appear in desktop and mobile navigation.
   Secondary work stays in its owning section; paused resources are not links or
   disabled promotional entries. Native navigation remains available.
 - Forms, help, filters, menus, dates, period controls and departure/history

@@ -10,6 +10,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from core.currencies import CURRENCIES
+from investments.appearance import DEFAULT_ICON, ICON_CHOICES, ICON_KEYS
 
 
 POSITIVE_8DP = MinValueValidator(Decimal('0.00000001'))
@@ -239,6 +240,41 @@ class PositionPlanningSetting(models.Model):
                 errors['asset'] = _('Select an asset that belongs to you.')
             elif self.asset.valuation_mode != Asset.ValuationMode.MONETARY:
                 errors['asset'] = _('Planning exclusions apply only to monetary assets.')
+        if errors:
+            raise ValidationError(errors)
+
+
+class PositionAppearance(models.Model):
+    """One position's visual identity never changes another holding of its asset."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name='position_appearances')
+    product = models.ForeignKey(InvestmentProduct, on_delete=models.CASCADE,
+                                related_name='position_appearances')
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='position_appearances')
+    icon = models.CharField(max_length=20, choices=ICON_CHOICES, default=DEFAULT_ICON)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'product', 'asset'],
+                                    name='investments_unique_position_appearance'),
+            models.CheckConstraint(condition=models.Q(icon__in=ICON_KEYS),
+                                   name='investments_position_icon_allowed'),
+        ]
+
+    def clean(self):
+        errors = {}
+        if self.product_id and (self.product.user_id != self.user_id
+                                or self.product.bank.user_id != self.user_id):
+            errors['product'] = _('Select a product that belongs to you.')
+        if self.asset_id and self.asset.user_id != self.user_id:
+            errors['asset'] = _('Select an asset that belongs to you.')
+        if not errors and self.product_id and self.asset_id:
+            # Zero configured positions and future operations still establish
+            # a real pair; arbitrary owned products/assets do not.
+            if self.asset.opening_product_id != self.product_id and not Investment.objects.filter(
+                    user_id=self.user_id, product_id=self.product_id, asset_id=self.asset_id).exists():
+                errors['asset'] = _('This application does not hold the selected asset.')
         if errors:
             raise ValidationError(errors)
 

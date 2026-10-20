@@ -21,7 +21,7 @@ async function seed(page, info) {
     await post(page, '/banking/accounts/create/', {bank, name: 'Daily account', currency: 'BRL',
         opening_balance: '5000', opening_date: '2020-01-01', planning_enabled: 'on', pix_enabled: 'on'});
     await post(page, '/investments/add/', {institution: bank, name: 'Travel reserve', currency: 'BRL',
-        valuation_mode: 'MONETARY', purpose: 'MONTHLY_CASH', opening_balance: '500', opening_date: '2020-01-01'});
+        valuation_mode: 'MONETARY', purpose: 'MONTHLY_CASH', opening_balance: '500', opening_date: '2020-01-01', icon: 'travel'});
     await post(page, '/categories/create/', {name: 'Daily food', transaction_type: 'EXPENSE'});
     await page.goto('/transactions/create/');
     const account = await page.locator('#id_bank_account option').filter({hasText: 'Daily account'}).getAttribute('value');
@@ -156,6 +156,8 @@ test(`complete planning setup keeps grouped rules, source context and native act
     await page.goto(goal); await ready(page);
     await expect(page.getByRole('link', {name: 'Daily account', exact: true})).toBeVisible();
     await expect(page.getByRole('link', {name: 'Travel reserve', exact: true})).toBeVisible();
+    await expect(page.locator('main article').filter({has: page.getByRole('link', {name: 'Travel reserve', exact: true})})
+        .locator('.investment-position-emoji')).toHaveText('✈️');
     expect((await page.locator('progress').boundingBox()).height).toBeLessThanOrEqual(8);
     await expect(page.locator('.monthly-outlook .money-highlight')).toContainText(/1[.,]200[.,]00/);
     await page.screenshot({path: info.outputPath(`goal-sources-${width}-${theme}.png`), fullPage: true});
@@ -181,7 +183,7 @@ test(`complete planning setup keeps grouped rules, source context and native act
     await expect(reserve).toBeFocused();
     await page.keyboard.press('Space');
     await expect(page.locator('#goal-source-search')).toBeVisible();
-    await expect(page.locator(`#id_source option[value="${pot}"]`)).toHaveText('Travel reserve · Planning bank · BRL 300.00');
+    await expect(page.locator(`#id_source option[value="${pot}"]`)).toHaveText('✈️ Travel reserve · Planning bank · BRL 300.00');
     await selectChoice(page.locator('#id_source'), pot);
     await page.locator('#id_name').fill('Complete planning target');
     await page.locator('#id_target_amount').fill('2000');

@@ -29,7 +29,7 @@ class InvestmentChartsTests(InvestmentFixtureMixin, TestCase):
     def test_chart_scope_filters_openings_flows_and_signed_details(self):
         for scope, total, flow in (('', '30500', '10500'), ('portfolio', '10000', '10000'), ('cash', '20500', '500')):
             with self.subTest(scope=scope):
-                response = self.client.get(reverse('investments:charts'), {'scope': scope})
+                response = self.client.get(reverse('analytics:investments'), {'scope': scope})
                 self.assertEqual(response.context['total_selection']['points'][-1]['values'], [total])
                 self.assertEqual(response.context['flow_selection']['points'][-1]['values'][2], flow)
                 self.assertEqual(response.context['selected_section'], 'charts')
@@ -43,16 +43,16 @@ class InvestmentChartsTests(InvestmentFixtureMixin, TestCase):
 
     def test_empty_user_and_opening_only_positions_have_chart_workspace(self):
         Investment.objects.filter(user=self.user).delete()
-        response = self.client.get(reverse('investments:charts'), {'scope': 'cash'})
+        response = self.client.get(reverse('analytics:investments'), {'scope': 'cash'})
         self.assertEqual(response.context['total_selection']['points'][-1]['values'], ['20000'])
         other = User.objects.create_user('chart-other')
         self.client.force_login(other)
-        response = self.client.get(reverse('investments:charts'))
+        response = self.client.get(reverse('analytics:investments'))
         self.assertEqual(response.context['total_selection']['points'][-1]['values'], ['0'])
         self.assertNotContains(response, 'Cash pot')
 
     def test_chart_filter_and_period_navigation_support_htmx(self):
-        response = self.client.get(reverse('investments:charts'), {'scope': 'cash', 'total_offset': '-1'},
+        response = self.client.get(reverse('analytics:investments'), {'scope': 'cash', 'total_offset': '-1'},
             HTTP_HX_REQUEST='true', HTTP_HX_TARGET='investments-charts')
         self.assertContains(response, 'id="investment-chart-scope"')
         self.assertContains(response, 'scope=cash')

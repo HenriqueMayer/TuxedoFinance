@@ -9,15 +9,16 @@ authenticated navbar, messages, content block and footer. The authenticated
 navigation becomes:
 
 ```text
-Home | Transactions | Accounts | Investments | Plan
+Home | Transactions | Accounts | Investments | Plan | Analytics
 ```
 
 `Accounts` remains active for nested bank, account, card, invoice, movement and
-loyalty routes. `core.workspace_navigation` supplies the same five labels,
-destinations and active states to a persistent desktop sidebar at `lg` (1024px)
+loyalty routes. `core.workspace_navigation` supplies the same six destinations
+and active states to a persistent desktop sidebar at `lg` (1024px)
 and a fixed bottom navigation below that breakpoint. Primary links navigate
-directly, without hover submenus. Workspace section tabs keep reports,
-categories, invoices and exchange rates discoverable. Paused net-worth and
+directly, without hover submenus. Analytics owns financial and investment charts; Home retains operational
+indicators and records. Workspace section tabs keep categories, invoices,
+exchange rates and investment setup discoverable. Paused net-worth and
 statement-import interfaces stay out of navigation.
 
 The Tuxedo Finance brand in the desktop sidebar and mobile toolbar opens the
@@ -27,13 +28,15 @@ Brand links use the shared native/HTMX navigation and unsaved-edit protection.
 
 The body reserves room for the sidebar and bottom bar, including the mobile
 safe area. Searchable-choice viewport calculations also account for the bar.
-The bottom bar is the sole compact-label typography exception: its five full
+The bottom bar is the sole compact-label typography exception: its six
 labels use 10–11px, never below 10px, with tighter spacing on narrow screens.
+Compact labels use Entries and Invest in English and Investir in Portuguese;
+accessible names retain the full workspace identity.
 Mobile active labels keep medium weight so complete labels fit at 320px;
 foreground color and the caramel background identify the selected destination.
 Every destination retains a touch target of at least 44 × 44px and visible
 keyboard focus. Check complete labels in both languages, including the active
-semibold state at 320px.
+medium-weight state at 320px.
 
 The mobile account-options dialog contains settings, language, theme, project
 documentation and logout. It slides in, locks page scrolling, makes background
@@ -64,7 +67,7 @@ listener instead of an inline event handler and retains its `noscript` submit.
 
 ## Assistant panel
 
-The authenticated assistant is a utility alongside the five direct workspace
+The authenticated assistant is a utility alongside the six direct workspace
 destinations. Its native `/assistant/` link remains usable without JavaScript.
 The enhanced panel belongs outside `main` so its actions cannot submit or
 capture a financial draft. Whole-body HTMX navigation reconstructs the panel;
@@ -271,7 +274,7 @@ cross-cutting rules to `AGENTS.md` so future changes preserve them.
 This contract is mandatory for every new or changed **?** help icon. Reuse
 `partials/help_popover.html`, `static/js/help-popovers.js` and the `.help-*`
 components in `assets/css/shared/primitives.css`, imported by the Tailwind entry.
-Reports and Sandbox share this behavior;
+Analytics and Sandbox share this behavior;
 do not add independent click-to-pin tooltips or use a native title as the only help.
 
 | Interaction | Required behavior |

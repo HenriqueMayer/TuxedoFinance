@@ -25,6 +25,13 @@ else
     local_db_fingerprint='missing'
 fi
 
+# A public synthetic capture must never inherit a live provider or private vault.
+for preview_assistant_setting in ${!ASSISTANT_@}; do
+    unset "$preview_assistant_setting"
+done
+export ASSISTANT_OPENAI_AUTH_ENABLED=False ASSISTANT_OPENAI_INFERENCE_ENABLED=False
+export ASSISTANT_PRIVATE_DIR="$data_dir/assistant-private"
+export ASSISTANT_OPENAI_CALLBACK_URL=http://127.0.0.1:8000/assistant/connections/callback/
 export TUXEDO_DATA_DIR="$data_dir"
 export TUXEDO_ENV_FILE=/dev/null
 export DJANGO_SETTINGS_MODULE=core.settings
@@ -62,7 +69,7 @@ kill -0 "$server_pid" 2>/dev/null || { cat "$server_log" >&2; exit 1; }
 node scripts/preview/capture_preview.js
 
 for language in en pt-br; do
-    for name in dashboard-light dashboard-dark reports-light reports-dark transactions-light transactions-dark new-entry-light new-entry-dark banking-light banking-dark investments-light investments-dark planning-light planning-dark; do
+    for name in dashboard-light dashboard-dark reports-light reports-dark analytics-investments-light analytics-investments-dark transactions-light transactions-dark new-entry-light new-entry-dark banking-light banking-dark investments-light investments-dark planning-light planning-dark; do
         image="$image_stage/$language/$name.png"
         [[ -s "$image" ]] || { echo "Missing capture: $image" >&2; exit 1; }
         dimensions=$(file "$image")

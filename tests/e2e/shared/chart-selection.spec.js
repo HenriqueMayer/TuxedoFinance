@@ -63,7 +63,7 @@ for (const theme of ['light','dark']) {
         await page.goto('/transactions/create/');
         const categories=await page.locator('#id_category option').evaluateAll(options=>options.filter(option=>option.textContent.startsWith('Panel category')).map(option=>option.value));
         for(const category of categories)await post(page,'/transactions/create/',{title:'Panel expense',category,amount:'1',transaction_type:'EXPENSE',payment_channel:'ACCOUNT',bank_account:account,date,installments:'1'});
-        await page.goto('/dashboard/reports/?instrument_month=ALL');
+        await page.goto('/analytics/?instrument_month=ALL');
         const bar=page.locator('#instrument-activity [data-chart-layer="instrument-interactions"] [data-point]').first();
         const panel=page.getByRole('region',{name:'Composition details',exact:true});
         await bar.hover();await page.keyboard.down('Control');
@@ -127,7 +127,7 @@ for (const theme of ['light','dark']) {
         const errors=[];page.on('pageerror',error=>errors.push(error.message));
         await page.addInitScript(theme=>localStorage.setItem('theme',theme),theme);
         await seed(page,info);await seedExpenses(page);
-        await page.goto('/dashboard/reports/?instrument_month=ALL&installment_month=ALL');
+        await page.goto('/analytics/?instrument_month=ALL&installment_month=ALL');
         await expect(page.locator('[data-selection-start], #id_range_start')).toHaveCount(0);
         await expect(page.getByRole('heading',{name:'Where the money goes',exact:true})).toHaveCount(0);
         const donut=page.locator('#installments'), slices=donut.locator('[data-chart-layer="recurrence-interactions"] [data-point]');
@@ -171,7 +171,7 @@ for (const theme of ['light','dark']) {
         await page.mouse.move(to.x+to.width/2,to.y+to.height/2,{steps:8});await page.mouse.up();
         await expect(balance.locator('[data-selection-summary]')).toBeVisible();
         await page.getByRole('heading',{level:1}).click();await expect(balance.locator('[data-selection-summary]')).toBeHidden();
-        await page.goto('/investments/charts/');
+        await page.goto('/analytics/investments/');
         const total=page.locator('[data-chart-selection]').first(), marks=total.locator('[data-point]');
         await marks.first().press('Enter');await marks.last().press('Space');
         await expect(total.locator('[data-selection-values]')).toContainText('1,010.00');
@@ -196,7 +196,7 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
             await post(page,'/transactions/create/',{title,category,amount,transaction_type:'EXPENSE',payment_channel:'ACCOUNT',bank_account:account,date:eventDate,installments:'1'});
         }
         await page.context().addCookies([{name:'django_language',value:language,url:info.project.use.baseURL}]);
-        const month=date.slice(0,7),path=`/dashboard/reports/?instrument_month=${month}&installment_month=${month}`;
+        const month=date.slice(0,7),path=`/analytics/?instrument_month=${month}&installment_month=${month}`;
         await page.goto(path);
         const bar=page.locator('#instrument-activity [data-chart-layer="instrument-interactions"] [data-point]').first();
         const panel=page.getByRole('region',{name:language==='en'?'Composition details':'Detalhes da composição',exact:true});
@@ -234,7 +234,7 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
         await post(page, '/investments/create/', {...holding, kind: 'YIELD', yield_input_mode: 'YIELD_AMOUNT',
             amount: '1', fees: '0', date: new Date(Date.UTC(year, monthNumber, 1)).toISOString().slice(0, 10),
             reason: 'After plotted cutoff'});
-        await page.goto('/investments/charts/');
+        await page.goto('/analytics/investments/');
         const total=page.locator('[data-chart-selection]').first(),mark=total.locator('[data-point]').last();
         await mark.focus();await page.keyboard.press('Control');await expect(panel).toBeFocused();
         // The plotted holding includes opening capital; its link must open
@@ -259,7 +259,7 @@ for(const [theme,language] of [['light','en'],['dark','pt-br']]){
 }
 
 test('browser Back retains contextual navigation through investment operations',async({page},info)=>{
-    await seed(page,info);await page.goto('/dashboard/reports/');
+    await seed(page,info);await page.goto('/analytics/');
     await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Investments',exact:true}).click();
     await page.locator('#investment-operations-link').click();
     await expect(page).toHaveURL(/\/investments\/operations\//);
@@ -303,7 +303,7 @@ test('Shift-click sums chosen bars independently of the intervening series',asyn
     const date=new Date().toISOString().slice(0,10);
     await post(page,'/transactions/create/',{title:'Second expense',category:expense,amount:'40',transaction_type:'EXPENSE',payment_channel:'ACCOUNT',bank_account:second,date,installments:'1'});
     await post(page,'/transactions/create/',{title:'Income',category:income,amount:'100',transaction_type:'INCOME',payment_channel:'ACCOUNT',bank_account:first,date,installments:'1'});
-    await page.goto('/dashboard/reports/?instrument_month=ALL');
+    await page.goto('/analytics/?instrument_month=ALL');
     const instrument=page.locator('#instrument-activity'), expenses=instrument.locator('[data-point][data-series="0"]');
     await expenses.first().click();await expenses.last().click({modifiers:['Shift']});
     await expect(instrument.locator('[data-selection-values]')).toContainText('70.00');
@@ -320,7 +320,7 @@ test('touch selection, held composition, and native bank colors remain usable on
     await seed(page,info);await seedExpenses(page);
     const context=await browser.newContext({hasTouch:true,viewport:{width:390,height:844},storageState:await page.context().storageState()});
     try {
-        const mobile=await context.newPage();await mobile.goto('/dashboard/reports/?installment_month=ALL');
+        const mobile=await context.newPage();await mobile.goto('/analytics/?installment_month=ALL');
         const donut=mobile.locator('#installments'), legend=donut.locator('[data-legend-item]');
         await legend.first().tap();await legend.last().tap();
         await expect(donut.locator('[data-donut-total]')).toContainText('30.00');
@@ -343,7 +343,7 @@ test('touch selection, held composition, and native bank colors remain usable on
         await bankLink.press('Enter');
         await p.locator('[id^="bank-detail-options-"] > summary').press('Enter');
         await expect(p.getByRole('link',{name:'Change marker color',exact:true})).toBeVisible();
-        await p.goto('/dashboard/reports/');await expect(p.locator('[data-balance-range] svg[data-selection-surface]')).toBeVisible();
+        await p.goto('/analytics/');await expect(p.locator('[data-balance-range] svg[data-selection-surface]')).toBeVisible();
         await expect(p.locator('[data-selection-start], #id_range_start')).toHaveCount(0);
     } finally {await native.close();}
 });

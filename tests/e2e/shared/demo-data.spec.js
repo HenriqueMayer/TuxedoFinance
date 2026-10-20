@@ -30,8 +30,8 @@ for (const language of ['pt', 'en']) {
         for (const theme of ['light', 'dark']) {
             await page.evaluate(value => localStorage.setItem('theme', value), theme);
             for (const route of [
-                '/dashboard/', '/dashboard/reports/', '/transactions/', '/banking/',
-                '/banking/exchange-rates/', '/investments/', '/investments/charts/',
+                '/dashboard/', '/analytics/', '/transactions/', '/banking/',
+                '/banking/exchange-rates/', '/investments/', '/analytics/investments/',
                 '/investments/operations/', '/sandbox/drafts/',
             ]) {
                 const response = await page.goto(route);

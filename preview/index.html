@@ -24,7 +24,7 @@
         })();
     </script>
     <link rel="preload" href="assets/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="assets/preview.css?v=6">
+    <link rel="stylesheet" href="assets/preview.css?v=7">
     <script src="assets/preview.js" defer></script>
 </head>
 <body>
@@ -50,23 +50,21 @@
         <aside class="workspace-sidebar">
             <nav class="tour-nav" aria-label="Workspaces" data-primary-navigation>
                 <a href="#dashboard" data-workspace-link="dashboard" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg><span>Home</span></a>
-                <a href="#transactions" data-workspace-link="transactions"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></svg><span>Transactions</span></a>
+                <a href="#transactions" data-workspace-link="transactions" aria-label="Transactions"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></svg><span class="nav-label-full">Transactions</span><span class="nav-label-short" aria-hidden="true">Entries</span></a>
                 <a href="#banking" data-workspace-link="banking"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 9-5 9 5H3Zm2 4v7m7-7v7m7-7v7M2 22h20"/></svg><span>Accounts</span></a>
-                <a href="#investments" data-workspace-link="investments"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17v-5m7 5V7m7 10V3M2 22h20"/></svg><span>Investments</span></a>
+                <a href="#investments" data-workspace-link="investments" aria-label="Investments"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17v-5m7 5V7m7 10V3M2 22h20"/></svg><span class="nav-label-full">Investments</span><span class="nav-label-short" aria-hidden="true">Invest</span></a>
                 <a href="#planning" data-workspace-link="planning"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6m10-6v6M3 11h18m-13 6 3 3 6-6"/></svg><span>Plan</span></a>
+                <a href="#analytics" data-workspace-link="analytics"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 15l4-5 4 3 5-7"/></svg><span>Analytics</span></a>
             </nav>
         </aside>
         <main class="main" id="main" tabindex="-1">
             <section class="tour-section" id="dashboard" data-workspace-view aria-labelledby="dashboard-title">
                 <span id="top"></span>
-                <nav class="workspace-tabs" aria-label="Home">
-                    <a href="#dashboard" data-workspace-link="dashboard" aria-current="page">Overview</a>
-                    <a href="#reports" data-workspace-link="reports">Reports</a>
-                </nav>
                 <div class="section-heading" id="dashboard-preview">
                     <div><h1 id="dashboard-title">Home</h1></div>
                     <a class="button button-primary" href="#new-entry" data-workspace-link="new-entry">New entry <span aria-hidden="true">＋</span></a>
                 </div>
+                <p class="section-copy"><a href="#analytics" data-workspace-link="analytics">View analyses <span aria-hidden="true">↗</span></a></p>
                 <div class="screenshot-grid">
                     <figure class="screen-light">
                         <figcaption class="capture-heading"><span>Home · Light theme</span><a href="images/en/dashboard-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
@@ -78,23 +76,44 @@
                     </figure>
                 </div>
             </section>
-            <section class="tour-section" id="reports" data-workspace-view aria-labelledby="reports-title">
-                <nav class="workspace-tabs" aria-label="Home">
-                    <a href="#dashboard" data-workspace-link="dashboard">Overview</a>
-                    <a href="#reports" data-workspace-link="reports" aria-current="page">Reports</a>
+            <section class="tour-section" id="analytics" data-workspace-view aria-labelledby="analytics-title">
+                <span id="reports"></span>
+                <nav class="workspace-tabs" aria-label="Analytics">
+                    <a href="#analytics" data-workspace-link="analytics" aria-current="page">Finances</a>
+                    <a href="#analytics-investments" data-workspace-link="analytics-investments">Investments</a>
                 </nav>
                 <div class="section-heading">
-                    <div><h2 id="reports-title">Reports</h2></div>
+                    <div><h2 id="analytics-title">Analytics</h2></div>
                     <p class="section-copy">Explore balance history, cash flow and expenses by period, category and payment method.</p>
                 </div>
                 <div class="screenshot-grid">
                     <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Reports · Balance history and cash flow · Light theme</span><a href="images/en/reports-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/reports-light.png" data-lightbox><img src="images/en/reports-light.png" width="1440" height="1000" alt="Tuxedo Finance reports page with summary values and a balance evolution chart based on synthetic data — light theme" loading="lazy" decoding="async"></a>
+                        <figcaption class="capture-heading"><span>Analytics · Monthly analysis and category expenses · Light theme</span><a href="images/en/reports-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/reports-light.png" data-lightbox><img src="images/en/reports-light.png" width="1440" height="1000" alt="Tuxedo Finance financial analysis page with monthly category expenses and a six-month outlook based on synthetic data — light theme" loading="lazy" decoding="async"></a>
                     </figure>
                     <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Reports · Balance history and cash flow · Dark theme</span><a href="images/en/reports-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/reports-dark.png" data-lightbox><img src="images/en/reports-dark.png" width="1440" height="1000" alt="Tuxedo Finance reports page with summary values and a balance evolution chart based on synthetic data — dark theme" loading="lazy" decoding="async"></a>
+                        <figcaption class="capture-heading"><span>Analytics · Monthly analysis and category expenses · Dark theme</span><a href="images/en/reports-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/reports-dark.png" data-lightbox><img src="images/en/reports-dark.png" width="1440" height="1000" alt="Tuxedo Finance financial analysis page with monthly category expenses and a six-month outlook based on synthetic data — dark theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="analytics-investments" data-workspace-view aria-labelledby="analytics-investments-title">
+                <nav class="workspace-tabs" aria-label="Analytics">
+                    <a href="#analytics" data-workspace-link="analytics">Finances</a>
+                    <a href="#analytics-investments" data-workspace-link="analytics-investments" aria-current="page">Investments</a>
+                </nav>
+                <div class="section-heading">
+                    <div><h2 id="analytics-investments-title">Analytics · Investments</h2></div>
+                    <p class="section-copy">Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Analytics · Investments · Light theme</span><a href="images/en/analytics-investments-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/analytics-investments-light.png" data-lightbox><img src="images/en/analytics-investments-light.png" width="1440" height="1000" alt="Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates." loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Analytics · Investments · Dark theme</span><a href="images/en/analytics-investments-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/analytics-investments-dark.png" data-lightbox><img src="images/en/analytics-investments-dark.png" width="1440" height="1000" alt="Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates." loading="lazy" decoding="async"></a>
                     </figure>
                 </div>
             </section>

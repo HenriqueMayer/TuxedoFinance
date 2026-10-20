@@ -52,7 +52,7 @@ for (const theme of ['light', 'dark']) for (const width of [1280, 390]) {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await page.setViewportSize({width, height: 900});
         const data = await seed(page, info);
-        await page.goto('/investments/charts/?total_offset=-1&flow_offset=0');
+        await page.goto('/analytics/investments/?total_offset=-1&flow_offset=0');
         const performance = page.locator('#investment-performance');
         const cost = performance.locator('dd').first();
         await expect(cost).toContainText(/550[,.]00/);
@@ -74,8 +74,8 @@ for (const theme of ['light', 'dark']) for (const width of [1280, 390]) {
 
         const rateOrigin = '/investments/?scope=portfolio&q=Foreign';
         await page.goto(rateOrigin);
-        const marker = page.locator('#investment-position-list article:visible .bank-marker').first();
-        await expect(marker).toHaveAttribute('style', /#315D50/);
+        const marker = page.locator('#investment-position-list article:visible .investment-icon-action').first();
+        await expect(marker).toContainText('💰');
         await page.locator('#position-value-details > summary').press('Enter');
         const rate = page.locator('#position-value-details a[href*="exchange-rates/"][href*="/edit/"]');
         await rate.press('Enter');
@@ -153,7 +153,7 @@ test('investment result scopes and price editors retain native mobile submission
     try {
         const page = await context.newPage();
         const data = await seed(page, info);
-        await page.goto('/investments/charts/?total_offset=-1&flow_offset=0');
+        await page.goto('/analytics/investments/?total_offset=-1&flow_offset=0');
         await page.locator('#investment-chart-scope').selectOption('cash');
         await page.getByRole('button', {name: 'Filter', exact: true}).press('Enter');
         await expect(page.locator('#investment-performance dd').first()).toContainText(/100[,.]00/);

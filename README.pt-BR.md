@@ -24,20 +24,22 @@ escuro. Seus registros ficam na sua instalação.
 
 <a id="-funcionalidades"></a>
 <a id="cinco-áreas"></a>
+<a id="seis-áreas"></a>
 
 ## O que tem no app
 
 | Área | O que você pode fazer |
 |---|---|
-| **Início** | Conferir saldos, compromissos próximos e relatórios financeiros. |
+| **Início** | Conferir recursos disponíveis, indicadores do mês e compromissos próximos. |
 | **Transações** | Registrar receitas e despesas, dividir categorias, gerenciar recorrências e parcelas, exportar CSV. |
 | **Contas** | Organizar contas bancárias, PIX, cartões, faturas, transferências e fidelidade. |
-| **Investimentos** | Acompanhar posições, movimentações, cofrinhos e preços datados. |
+| **Investimentos** | Acompanhar posições, movimentações, cofrinhos e preços datados; escolher um emoji para cada aplicação. |
 | **Planejar** | Definir limites por categoria, reservar saldos existentes para metas e comparar simulações. |
+| **Análises** | Explorar gráficos financeiros e de investimentos, despesas por categoria e projeções de fluxo. |
 
-**No código ainda não publicado:** o [assistente Tuxedo](docs/apps/assistant.md)
-opcional pode consultar suas finanças salvas, simular cenários e preparar alterações
-para sua confirmação. A conexão com o ChatGPT vem desativada; quando habilitada,
+**No código ainda não publicado:** estão incluídos Análises, os ícones por
+aplicação e o [assistente Tuxedo](docs/apps/assistant.md) opcional. O assistente pode consultar suas finanças salvas, simular cenários e
+preparar alterações para sua confirmação. A conexão com o ChatGPT vem desativada; quando habilitada,
 registros relevantes e o histórico necessário da conversa são enviados à OpenAI.
 O Open Finance permanece no [roadmap](docs/roadmap.md#personal-open-finance-study).
 

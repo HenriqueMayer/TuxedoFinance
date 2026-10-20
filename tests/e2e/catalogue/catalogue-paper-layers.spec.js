@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 const {openCatalogue} = require('../helpers/catalogue');
 
 const mapEntries = [
-    {layer: 'left', destination: 'home', title: 'Home', description: 'Balances, upcoming bills and reports.'},
+    {layer: 'left', destination: 'home', title: 'Home', description: 'Available funds, monthly indicators and upcoming bills.'},
     {layer: 'ledger', destination: 'transactions', title: 'Transactions', description: 'Income, expenses and categories.'},
     {layer: 'knot', destination: 'accounts', title: 'Accounts', description: 'Bank accounts, cards and invoices.'},
     {layer: 'rings', destination: 'investments', title: 'Investments', description: 'Holdings, movements and dated prices.'},
@@ -177,7 +177,7 @@ async function expectSelectedDestination(page, entry, enhanced = true) {
     await expect(page).toHaveURL(url => url.hash === `#lab-view-${entry.destination}`);
     const target = page.locator(`[data-lab-view="${entry.destination}"]`);
     await expect(target).toBeVisible();
-    await expect(page.locator('[data-lab-view]:not([hidden])')).toHaveCount(enhanced ? 1 : 5);
+    await expect(page.locator('[data-lab-view]:not([hidden])')).toHaveCount(enhanced ? 1 : 6);
     if (enhanced) {
         await expect(page.locator(`[data-lab-destination="${entry.destination}"]`)).toHaveAttribute('aria-current', 'page');
     }

@@ -52,9 +52,8 @@ for (const theme of ['light', 'dark']) {
         await expect(page).toHaveURL(/operations\/\?section=portfolio$/);
         const tabs = page.getByRole('navigation', { name: 'Investment sections' });
         await expect(tabs.getByRole('link', { name: 'History', exact: true })).toHaveAttribute('aria-current', 'page');
-        await tabs.locator('[data-investment-more] > summary').press('Enter');
-        await expect(tabs.getByRole('button', { name: 'Simulate returns' })).toHaveAttribute('aria-disabled', 'true');
-        await tabs.locator('[data-investment-more] > summary').press('Escape');
+        await expect(tabs.getByRole('link')).toHaveText(['My investments', 'History', 'Prices', 'Setup']);
+        await expect(tabs.locator('details')).toHaveCount(0);
         await expect(page.locator('#investments-charts')).toHaveCount(0);
         const history = page.locator('#investment-movements');
         await expect(history).toContainText('Page 1 of 2');
@@ -126,7 +125,7 @@ for (const theme of ['light', 'dark']) {
     test(`investment chart scopes and contextual operation labels (${theme})`, async ({ page }, info) => {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await seed(page, info, 1);
-        await page.goto('/investments/charts/');
+        await page.goto('/analytics/investments/');
         const chart = page.locator('[data-chart-selection]').first();
         await chart.locator('[data-point]').last().press('Enter');
         await expect(chart.locator('[data-selection-values]')).toContainText('1,015.00');
@@ -192,7 +191,7 @@ test('chart scopes retain native GET filtering without JavaScript', async ({ pag
     const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false });
     try {
         const native = await context.newPage();
-        await native.goto('/investments/charts/');
+        await native.goto('/analytics/investments/');
         await native.locator('#investment-chart-scope').selectOption('cash');
         await native.getByRole('button', { name: 'Filter', exact: true }).press('Enter');
         await expect(native.locator('#investment-chart-scope')).toHaveValue('cash');
@@ -211,10 +210,9 @@ for (const theme of ['light', 'dark']) {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         try {
             await seed(page, info, 1);
-            await page.goto('/investments/charts/');
-            await expect(page.locator('[data-investment-more] > summary')).toHaveAttribute('aria-current', 'true');
-            await page.locator('[data-investment-more] > summary').press('Enter');
-            await expect(page.getByRole('link', { name: 'Análises', exact: true })).toBeVisible();
+            await page.goto('/analytics/investments/');
+            await expect(page.locator('[data-nav-item=analytics]:visible')).toHaveAttribute('aria-current', 'page');
+            await expect(page.getByRole('navigation', { name: 'Seções de análises', exact: true }).getByRole('link', { name: 'Investimentos', exact: true })).toHaveAttribute('aria-current', 'page');
             await expect(page.locator('#investment-chart-scope option:checked')).toHaveText('Geral');
             await page.locator('#investment-chart-scope').selectOption('cash');
             await expect(page).toHaveURL(/scope=cash/);

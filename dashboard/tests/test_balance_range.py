@@ -18,7 +18,7 @@ class ChartCompositionTests(DashboardFixture):
         parent = Category.objects.create(user=self.user, name='Food')
         child = Category.objects.create(user=self.user, name='Cafe', parent_category=parent)
         self.transaction(amount='123.45', category=child)
-        response = self.client.get(reverse('dashboard:reports'))
+        response = self.client.get(reverse('analytics:index'))
         endpoint = response.context['instrument_selection']['points'][0]['details'][0]
         self.assertEqual([{key: row[key] for key in ('label', 'cents')} for row in self.client.get(endpoint).json()['rows']], [{'label':'Food > Cafe', 'cents':'12345'}])
         other = get_user_model().objects.create_user('other-chart', password='test')
@@ -27,14 +27,14 @@ class ChartCompositionTests(DashboardFixture):
         self.assertEqual(self.client.get(reverse('dashboard:chart_details'), {'token':'invalid'}).status_code, 400)
 
     def test_removed_report_and_manual_selectors(self):
-        response = self.client.get(reverse('dashboard:reports'))
+        response = self.client.get(reverse('analytics:index'))
         self.assertNotContains(response, 'id="where"')
         self.assertNotContains(response, 'data-selection-start')
         self.assertNotContains(response, 'id_range_start')
         self.assertEqual(response.context['balance_selection']['mode'], 'change')
 
     def test_balance_composition_preserves_opening_accounts(self):
-        response = self.client.get(reverse('dashboard:reports'))
+        response = self.client.get(reverse('analytics:index'))
         endpoint = response.context['balance_selection']['points'][0]['details'][0]
         result = self.client.get(endpoint)
         self.assertEqual(result.status_code, 200)

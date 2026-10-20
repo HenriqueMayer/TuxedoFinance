@@ -234,7 +234,7 @@ for (const theme of ['light', 'dark']) {
     });
 
     for (const width of [1440, 390]) {
-        test(`catalogue experiment keeps five destinations and local keyboard recovery (${width}, ${theme})`, async ({ page }, info) => {
+        test(`catalogue experiment keeps six destinations and local keyboard recovery (${width}, ${theme})`, async ({ page }, info) => {
             await page.setViewportSize({ width, height: 900 });
             await page.addInitScript(value => localStorage.setItem('theme', value), theme);
             if (theme === 'dark' && width === 390) await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -246,10 +246,10 @@ for (const theme of ['light', 'dark']) {
                 if (request.method() !== 'GET' || ['xhr', 'fetch'].includes(request.resourceType())) writes.push(request.url());
             });
             const navigation = page.locator('[data-lab-navigation]');
-            await expect(navigation.getByRole('link')).toHaveCount(5);
+            await expect(navigation.getByRole('link')).toHaveCount(6);
             await expect(navigation.locator('[role="tab"]')).toHaveCount(0);
             const historyLength = await page.evaluate(() => history.length);
-            for (const destination of ['home', 'transactions', 'accounts', 'investments', 'plan']) {
+            for (const destination of ['home', 'transactions', 'accounts', 'investments', 'plan', 'analytics']) {
                 const link = navigation.locator(`[data-lab-destination="${destination}"]`);
                 await link.focus();
                 await link.press('Enter');
@@ -358,10 +358,10 @@ test('catalogue experiment preserves native links and a read-only GET without Ja
     try {
         const page = await context.newPage();
         await openCatalogue(page);
-        await expect(page.locator('section[data-lab-view]:not([hidden])')).toHaveCount(5);
+        await expect(page.locator('section[data-lab-view]:not([hidden])')).toHaveCount(6);
         await page.locator('[data-lab-destination="plan"]').press('Enter');
         await expect(page).toHaveURL(/#lab-view-plan$/);
-        await expect(page.locator('section[data-lab-view]:not([hidden])')).toHaveCount(5);
+        await expect(page.locator('section[data-lab-view]:not([hidden])')).toHaveCount(6);
         const type = page.locator('#lab-entry-type-expense');
         const amount = page.locator('#lab-entry-amount');
         await submitPreview(page);
@@ -414,15 +414,27 @@ for (const theme of ['light', 'dark']) {
             for (const edge of ['left', 'right', 'bottom']) expect(outlineSpace[edge]).toBeGreaterThanOrEqual(-1);
             const targets = await navigation.getByRole('link').evaluateAll(links => links.map(link => {
                 const bounds = link.getBoundingClientRect();
-                const label = link.querySelector(':scope > span').getBoundingClientRect();
-                return {name: link.textContent.trim(), width: bounds.width, height: bounds.height,
-                    labelSpace: {left: label.left - bounds.left, right: bounds.right - label.right,
+                // Compact destinations have separate desktop/phone spans; measure only painted labels.
+                const labels = [...link.querySelectorAll(':scope > span')].filter(span => {
+                    const rect = span.getBoundingClientRect();
+                    return getComputedStyle(span).visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+                });
+                const label = labels[0]?.getBoundingClientRect();
+                return {name: link.getAttribute('aria-label') || link.textContent.trim(),
+                    width: bounds.width, height: bounds.height, labelCount: labels.length,
+                    labelText: labels[0]?.textContent.trim(),
+                    labelSpace: label && {left: label.left - bounds.left, right: bounds.right - label.right,
                         top: label.top - bounds.top, bottom: bounds.bottom - label.bottom}};
             }));
-            expect(targets).toHaveLength(5);
+            expect(targets).toHaveLength(6);
+            expect(targets.map(target => target.labelText)).toEqual([
+                'Home', width <= 760 ? 'Entries' : 'Transactions', 'Accounts',
+                width <= 760 ? 'Invest' : 'Investments', 'Plan', 'Analytics',
+            ]);
             for (const target of targets) {
                 expect(target.width, `${target.name} width at ${width}px`).toBeGreaterThanOrEqual(44);
                 expect(target.height, `${target.name} height at ${width}px`).toBeGreaterThanOrEqual(44);
+                expect(target.labelCount, `${target.name} has exactly one visible label at ${width}px`).toBe(1);
                 for (const [edge, space] of Object.entries(target.labelSpace)) {
                     expect(space, `${target.name} label ${edge} containment at ${width}px`).toBeGreaterThanOrEqual(0);
                 }

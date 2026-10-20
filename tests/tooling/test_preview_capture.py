@@ -119,6 +119,10 @@ root = pathlib.Path.cwd()
 args = sys.argv[1:]
 if args[:3] == ['run', 'python', '-c']:
     os.execv(sys.executable, [sys.executable, '-c', args[3]])
+assert os.environ['ASSISTANT_OPENAI_AUTH_ENABLED'] == 'False'
+assert os.environ['ASSISTANT_OPENAI_INFERENCE_ENABLED'] == 'False'
+assert pathlib.Path(os.environ['ASSISTANT_PRIVATE_DIR']).parent == pathlib.Path(os.environ['TUXEDO_DATA_DIR'])
+assert 'ASSISTANT_OPENAI_CLIENT_ID' not in os.environ
 if 'scripts/preview/serve.py' in args:
     if os.environ['FIXTURE_MODE'] == 'startup-failure': sys.exit(6)
     class Handler(http.server.BaseHTTPRequestHandler):
@@ -142,7 +146,7 @@ if os.environ['FIXTURE_MODE'] == 'capture-failure': sys.exit(9)
 for language in ['en', 'pt-br']:
     target = pathlib.Path(os.environ['PREVIEW_OUTPUT_DIR'], language)
     target.mkdir()
-    for area in ['dashboard', 'reports', 'transactions', 'new-entry', 'banking', 'investments', 'planning']:
+    for area in ['dashboard', 'reports', 'analytics-investments', 'transactions', 'new-entry', 'banking', 'investments', 'planning']:
         for theme in ['light', 'dark']:
             if os.environ['FIXTURE_MODE'] == 'missing-entry' and language == 'pt-br' and area == 'new-entry' and theme == 'dark':
                 continue
@@ -175,7 +179,9 @@ class PreviewCaptureCleanupTests(TestCase):
             config.write_text('fixture-only-preserved')
             events = root / 'events.json'
             env = {'PATH': f'{bin_dir}{os.pathsep}{os.environ["PATH"]}', 'TMPDIR': str(runtime),
-                   'FIXTURE_MODE': mode, 'FIXTURE_EVENTS': str(events)}
+                   'FIXTURE_MODE': mode, 'FIXTURE_EVENTS': str(events),
+                   'ASSISTANT_OPENAI_AUTH_ENABLED': 'True', 'ASSISTANT_OPENAI_INFERENCE_ENABLED': 'True',
+                   'ASSISTANT_PRIVATE_DIR': '/owner/private-vault', 'ASSISTANT_OPENAI_CLIENT_ID': 'fixture-only'}
             result = subprocess.run(['bash', str(script)], cwd=root, env=env,
                                     capture_output=True, timeout=20)
             self.assertEqual(database.read_bytes(), b'unchanged fixture database')
@@ -189,7 +195,7 @@ class PreviewCaptureCleanupTests(TestCase):
                     os.kill(event['pid'], 0)
             if mode == 'success':
                 self.assertEqual(result.returncode, 0, result.stderr.decode())
-                self.assertEqual(len(list((root / 'preview/images').rglob('*.png'))), 28)
+                self.assertEqual(len(list((root / 'preview/images').rglob('*.png'))), 32)
                 self.assertEqual(image.read_bytes(), b'staged fixture image')
             else:
                 self.assertNotEqual(result.returncode, 0)

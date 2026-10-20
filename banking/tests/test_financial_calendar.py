@@ -221,7 +221,7 @@ class FinancialCalendarTests(TestCase):
             home = self.client.get(reverse('dashboard:index'))
             self.assertEqual(home.status_code, 200)
             self.assertEqual(home.context['current_balance'], Decimal('900.00'))
-            reports = self.client.get(reverse('dashboard:reports'))
+            reports = self.client.get(reverse('analytics:index'))
             self.assertEqual(reports.status_code, 200)
             self.assertEqual(reports.context['evolution']['balance_today'], Decimal('900.00'))
 

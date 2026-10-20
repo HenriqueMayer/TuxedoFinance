@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n navigation %}
+{% load i18n navigation investment_identity %}
 {% block title %}{{ goal.name }} — Tuxedo Finance{% endblock %}
 {% block content %}
 <div class="space-y-6">
@@ -10,7 +10,7 @@
         {% if row.allocations %}<div class="surface-panel divide-y divide-forest/10 dark:divide-cream/10">
         {% for detail in row.allocations %}<article class="space-y-4 py-4 first:pt-0 last:pb-0" aria-labelledby="reservation-{{ detail.allocation.pk|stringformat:'d' }}">
             <header class="flex items-start gap-3">
-                {% if detail.source.account %}<span aria-hidden="true" class="bank-marker shrink-0" style="--bank-color: {{ detail.source.account.bank.color|default:'#B88D57' }}"></span>{% elif detail.source.product %}<span aria-hidden="true" class="bank-marker shrink-0" style="--bank-color: {{ detail.source.product.bank.color|default:'#B88D57' }}"></span>{% endif %}
+                {% if detail.source.account %}<span aria-hidden="true" class="bank-marker shrink-0" style="--bank-color: {{ detail.source.account.bank.color|default:'#B88D57' }}"></span>{% elif detail.source.product %}<span aria-hidden="true" class="investment-position-emoji shrink-0">{% position_icon detail.source.product detail.source.asset %}</span>{% endif %}
                 <div class="min-w-0">
                     <h3 id="reservation-{{ detail.allocation.pk|stringformat:'d' }}" class="font-semibold break-words">{% if detail.source %}{# The account fragment owns scrolling, including sources inside Reserves. #}<a class="investment-name" href="{{ detail.source.url }}"{% if detail.source.account %} hx-swap="innerHTML show:none"{% endif %}>{% if detail.source.account %}{{ detail.source.account.name }}{% else %}{{ detail.source.asset.name }}{% endif %}</a>{% else %}{{ detail.allocation.source_label }}{% endif %}</h3>
                     {% if detail.source.account %}<p class="subtle-copy mt-1">{{ detail.source.account.bank.name }} · {{ detail.allocation.source_currency }}</p>{% elif detail.source.product %}<p class="subtle-copy mt-1">{{ detail.source.product.bank.name }}{% if detail.source.product.name != detail.source.asset.name %} · {{ detail.source.product.name }}{% endif %} · {{ detail.allocation.source_currency }}</p><p class="subtle-copy mt-1 break-words">{{ detail.source.asset.code }}</p>{% endif %}

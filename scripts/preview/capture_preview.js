@@ -17,7 +17,8 @@ const profiles = [
 
 const screens = [
     ['dashboard-light.png', '/dashboard/'],
-    ['reports-light.png', '/dashboard/reports/'],
+    ['reports-light.png', '/analytics/'],
+    ['analytics-investments-light.png', '/analytics/investments/'],
     ['transactions-light.png', '/transactions/'],
     ['new-entry-light.png', '/transactions/create/'],
     ['banking-light.png', '/banking/'],

@@ -72,7 +72,8 @@ are not part of the current product.
 ## Planning workspaces and shared presentation
 
 The primary navigation is **Home / Transactions / Accounts / Investments / Plan**.
-Home contains Dashboard and Reports. Transactions contains the ledger and
+Home contains operational indicators; Analytics contains Finances and Investments
+analysis. Transactions contains the ledger and
 Categories. Planned Net worth and Imports have no tabs, review badges or account
 menu entries; their roadmap lives in documentation. Old operation URLs still
 stop at server gates; owned confirmed import provenance remains read-only.
@@ -95,9 +96,9 @@ The investment entry screen is My investments. Add investment is a guided,
 atomic institution/product/asset registration with explicit purpose and valuation
 mode. It accepts a zero opening without creating cash or financial evidence;
 nonzero openings require a date. Update opens a contextual choice of contribution,
-withdrawal, yield or local price, retaining server financial validation. Full
-configuration and analyses remain in a deliberate More menu; simulations are
-reachable through Plan → Tools. See the investment guide for the zero-position
+withdrawal, yield or local price, retaining server financial validation. My investments, History, Prices and Setup are explicit section tabs; analyses
+live in the primary Analytics workspace. Simulations are reachable through
+Plan → Tools. See the investment guide for the zero-position
 configuration rule and the distinction between acquisition cost and market price.
 Asset configuration separates active assets from a native Archived assets
 disclosure. Archive/Restore use deliberate, CSRF-protected POSTs. Same-page
@@ -115,9 +116,10 @@ empty state rather than first-operation guidance. Existing Operations navigation
 keeps history accessible, and restoring an asset makes its positions visible.
 The History
 page owns operation search, purpose/type/record filters and pagination. The holdings
-list and each position detail provide scoped history. Charts under More → Analyses filters historical positions and flows by Overall, Portfolio or
-Remunerated cash; scope and independent month windows survive GET/HTMX updates.
-The charts destination remains accessible through the secondary More menu. Old movement-filter
+list and each position detail provide scoped history. Analytics → Investments filters historical positions and flows by Overall,
+Portfolio or Remunerated cash; scope and independent month windows survive GET/HTMX updates.
+The charts destination is `/analytics/investments/`; its former investment
+route remains a compatible redirect. Old movement-filter
 URLs redirect to the new page. Chart navigation and operation pagination keep
 separate HTMX regions. Operation forms return to an explicit originating
 position or filtered history after Save/Cancel, using `core.navigation` and the

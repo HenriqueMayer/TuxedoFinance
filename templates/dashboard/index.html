@@ -20,6 +20,7 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
     <header class="workspace-header">
         <h1 class="page-title">{% translate "Dashboard" %}</h1>
         <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'analytics:index' %}?month={{ selected_month_param }}" class="quiet-action">{% translate "Analytics" %}</a>
             <a href="{% contextual_url create_url %}" class="action-primary">{% translate "New transaction" %}</a>
         </div>
     </header>
@@ -77,41 +78,9 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
         {% endif %}
     </section>
 
-    <div class="grid items-start gap-6 xl:grid-cols-12">
-        <div class="min-w-0 space-y-6 xl:col-span-7">
-            <section aria-labelledby="category-heading" class="surface-panel">
-                <div class="panel-heading">
-                    <div>
-                        <div class="label-with-help">
-                            {% translate "Expenses by category" as category_label %}
-                            <h2 id="category-heading" class="section-title">{{ category_label }}</h2>
-                            {% include 'partials/help_popover.html' with help_id='dashboard-category-help' help_label=category_label help_template='dashboard/_category_period_help.html' %}
-                        </div>
-                    </div>
-                </div>
-                {% if expense_categories %}
-                    {% comment %}One readable ledger column keeps category names and exact values legible inside the already split workspace layout.{% endcomment %}
-                    <div data-chart-selection><ol data-selection-surface class="mt-5 grid gap-3">
-                        {% for category in expense_categories %}
-                            <li class="home-category-mark" data-point="{{ forloop.counter0 }}" data-series="0">
-                                <div class="home-category-line text-sm">
-                                    <span class="home-category-label font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</span>
-                                    <span class="home-category-value tabular-nums text-forest/70 dark:text-night-muted">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }} &middot; {{ category.share|floatformat:1 }}%</span>
-                                </div>
-                                <div class="mt-2 h-2 overflow-hidden rounded-full bg-forest/10 dark:bg-cream/10" role="img" aria-label="{{ category.name }}: {{ category.share|floatformat:1 }}%">
-                                    <div class="h-full rounded-full bg-expense dark:bg-expense-light" style="width: {{ category.bar_width|unlocalize }}%"></div>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ol>{% include 'partials/chart_selection.html' with selection=category_selection %}</div>
-                {% else %}
-                    <div class="mt-5 text-sm text-forest/70 dark:text-night-muted">
-                        {% if is_future_month %}{% translate "No categorized expenses are planned for this month." %}
-                        {% elif is_current_month %}{% translate "No categorized expenses through today." %}
-                        {% else %}{% translate "No categorized expenses were recorded for this month." %}{% endif %}
-                    </div>
-                {% endif %}
-            </section>
+    <div class="grid items-start gap-6 lg:grid-cols-2">
+        <div class="min-w-0 space-y-6">
+
 
             <section class="surface-panel">
                 <div class="panel-heading">
@@ -142,7 +111,7 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
             </section>
         </div>
 
-        <section class="surface-panel xl:col-span-5">
+        <section class="surface-panel">
             <div class="panel-heading">
                 <div>
                     <div class="label-with-help">
@@ -177,45 +146,6 @@ Month navigation is a plain `?month=YYYY-MM` link pair with no JavaScript.
         </section>
     </div>
 
-    <section aria-labelledby="outlook-heading" class="surface-panel space-y-4">
-        <div class="label-with-help">
-            {% translate "Six-month outlook" as outlook_label %}
-            {% translate "Activity by statement month; bank closing balances follow payment due dates." as outlook_help %}
-            <h2 id="outlook-heading" class="section-title">{{ outlook_label }}</h2>
-            {% include 'partials/help_popover.html' with help_id='dashboard-outlook-help' help_label=outlook_label help_text=outlook_help %}
-        </div>
-        {% comment %}The native horizontal table stays inside its panel and can be scrolled by keyboard without panning the page.{% endcomment %}
-        <div class="reporting-table-scroll overflow-x-auto" role="region" aria-labelledby="outlook-heading" tabindex="0">
-            <table class="w-full min-w-[48rem] text-sm">
-                <thead>
-                    <tr class="border-b border-forest/10 text-left text-sm font-medium text-forest/70 dark:border-cream/10 dark:text-night-muted">
-                        <th scope="col" class="px-4 py-2.5 font-medium">{% translate "Month" %}</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{% translate "Income" %}</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{% translate "Expenses" %}</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{% translate "Investments" %}</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{% translate "Withdrawals" %}</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{% translate "Net activity" %}</th>
-                        <th scope="col" class="px-4 py-2.5 text-right font-medium">{% translate "Projected balance" %}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-forest/10 dark:divide-cream/10">
-                    {% for row in outlook %}
-                        <tr class="{% if row.is_selected_month %}bg-white dark:bg-night-raised/40{% endif %}">
-                            <td class="whitespace-nowrap px-4 py-2.5 font-medium text-forest dark:text-cream">
-                                {{ row.date|date:'M Y' }}
-                                {% if row.is_current_month %}<span class="ml-1.5 inline-flex items-center rounded-full border border-forest/30 px-2 py-0.5 text-xs font-medium text-forest/70 dark:border-cream/20 dark:text-night-muted">{% translate "Now" %}</span>{% endif %}
-                            </td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-income dark:text-income-light">{{ CURRENCY_SYMBOL }} {{ row.income|floatformat:2 }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-expense dark:text-expense-light">{{ CURRENCY_SYMBOL }} {{ row.expenses|floatformat:2 }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-investment dark:text-investment-light">{{ CURRENCY_SYMBOL }} {{ row.investments|floatformat:2 }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-forest/70 dark:text-night-muted">{{ CURRENCY_SYMBOL }} {{ row.withdrawals|floatformat:2 }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums {% if row.balance < 0 %}text-expense dark:text-expense-light{% else %}text-forest dark:text-cream{% endif %}">{{ CURRENCY_SYMBOL }} {{ row.balance|floatformat:2 }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums {% if row.projected_balance < 0 %}text-expense dark:text-expense-light{% else %}text-forest dark:text-cream{% endif %}">{{ CURRENCY_SYMBOL }} {{ row.projected_balance|floatformat:2 }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
+
 </div>
 {% endblock %}

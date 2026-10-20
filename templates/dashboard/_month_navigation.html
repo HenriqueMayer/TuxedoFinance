@@ -1,27 +1,28 @@
 {% load i18n %}
     <div role="group" aria-labelledby="selected-period-heading" class="period-navigation" data-period-navigation>
             <div class="period-navigation-rail">
-                {% if has_previous_month %}<a href="?month={{ previous_month_param }}" aria-label="{% translate 'Previous month' %}"
+                {# Analytics swaps restore focus by ID, including a link replaced at the monthly limit. #}
+                {% if has_previous_month %}<a data-analytics-param="month" href="{% querystring month=previous_month_param %}"{% if analytics_navigation %} id="analytics-month-previous" hx-get="{% querystring month=previous_month_param %}" hx-target="#finance-monthly-analysis" hx-swap="outerHTML show:none" hx-push-url="true" hx-sync="#finance-analytics:queue all"{% endif %} aria-label="{% translate 'Previous month' %}"
                    class="icon-action shrink-0">
                     &larr;
-                </a>{% else %}<span aria-disabled="true" aria-label="{% translate 'Previous month' %}" class="period-navigation-unavailable">&larr;</span>{% endif %}
+                </a>{% else %}<span{% if analytics_navigation %} id="analytics-month-previous" tabindex="-1"{% endif %} aria-disabled="true" aria-label="{% translate 'Previous month' %}" class="period-navigation-unavailable">&larr;</span>{% endif %}
                 <div class="period-navigation-caption">
-                    <p id="selected-period-heading" class="text-base font-semibold text-forest dark:text-cream">{{ selected_month_date|date:'F Y' }}</p>
+                    <p id="selected-period-heading" class="text-base font-semibold text-forest dark:text-cream{% if analytics_navigation %} focus:outline-hidden focus:ring-2 focus:ring-caramel/40{% endif %}">{{ selected_month_date|date:'F Y' }}</p>
                     <p class="text-sm text-forest/70 dark:text-night-muted">
                         {% if is_current_month %}{% blocktranslate with cutoff=period_cutoff|date:USER_DATE_FORMAT %}Progress through {{ cutoff }}{% endblocktranslate %}
                         {% elif is_future_month %}{% translate "Planned month" %}
                         {% else %}{% translate "Completed month" %}{% endif %}
                     </p>
                 </div>
-                {% if has_next_month %}<a href="?month={{ next_month_param }}" aria-label="{% translate 'Next month' %}"
+                {% if has_next_month %}<a data-analytics-param="month" href="{% querystring month=next_month_param %}"{% if analytics_navigation %} id="analytics-month-next" hx-get="{% querystring month=next_month_param %}" hx-target="#finance-monthly-analysis" hx-swap="outerHTML show:none" hx-push-url="true" hx-sync="#finance-analytics:queue all"{% endif %} aria-label="{% translate 'Next month' %}"
                    class="icon-action shrink-0">
                     &rarr;
-                </a>{% else %}<span aria-disabled="true" aria-label="{% translate 'Forecast limit' %}" class="period-navigation-unavailable">&rarr;</span>{% endif %}
+                </a>{% else %}<span{% if analytics_navigation %} id="analytics-month-next" tabindex="-1"{% endif %} aria-disabled="true" aria-label="{% translate 'Forecast limit' %}" class="period-navigation-unavailable">&rarr;</span>{% endif %}
             </div>
             <div class="period-navigation-reset">
             {% if not has_next_month %}<span class="subtle-copy mr-auto">{% translate 'Forecast limit' %}</span>{% endif %}
             {% if not is_current_month %}
-                <a href="{% url 'dashboard:index' %}"
+                <a data-analytics-param="month" href="{% if analytics_navigation %}{% querystring month=None %}{% else %}{% url 'dashboard:index' %}{% endif %}"{% if analytics_navigation %} id="analytics-month-current" hx-get="{% querystring month=None %}" hx-target="#finance-monthly-analysis" hx-swap="outerHTML show:none" hx-push-url="true" hx-sync="#finance-analytics:queue all"{% endif %}
                    class="quiet-action">
                     {% translate "Back to this month" %}
                 </a>

@@ -122,7 +122,7 @@ for (const theme of ['light', 'dark']) {
         await expect(holding).toContainText('252');
         await expect(holding).toContainText('Statement consulted locally');
         await page.screenshot({ path: info.outputPath(`valuation-${theme}.png`), fullPage: true });
-        await page.goto('/investments/charts/');
+        await page.goto('/analytics/investments/');
         await expect(page.getByRole('heading', { name: 'Recorded performance history' })).toBeVisible();
         await page.setViewportSize({ width: 390, height: 740 });
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

@@ -1,0 +1,34 @@
+{% load i18n l10n %}
+            <section aria-labelledby="category-heading" class="surface-panel">
+                <div class="panel-heading">
+                    <div>
+                        <div class="label-with-help">
+                            {% translate "Expenses by category" as category_label %}
+                            <h2 id="category-heading" class="section-title">{{ category_label }}</h2>
+                            {% include 'partials/help_popover.html' with help_id='dashboard-category-help' help_label=category_label help_template='dashboard/_category_period_help.html' %}
+                        </div>
+                    </div>
+                </div>
+                {% if expense_categories %}
+                    {% comment %}One readable ledger column keeps category names and exact values legible inside the already split workspace layout.{% endcomment %}
+                    <div data-chart-selection><ol data-selection-surface class="mt-5 grid gap-3">
+                        {% for category in expense_categories %}
+                            <li class="home-category-mark" data-point="{{ forloop.counter0 }}" data-series="0">
+                                <div class="home-category-line text-sm">
+                                    <span class="home-category-label font-medium text-forest/90 dark:text-cream/90">{{ category.name }}</span>
+                                    <span class="home-category-value tabular-nums text-forest/70 dark:text-night-muted">{{ CURRENCY_SYMBOL }} {{ category.total|floatformat:2 }} &middot; {{ category.share|floatformat:1 }}%</span>
+                                </div>
+                                <div class="mt-2 h-2 overflow-hidden rounded-full bg-forest/10 dark:bg-cream/10" role="img" aria-label="{{ category.name }}: {{ category.share|floatformat:1 }}%">
+                                    <div class="h-full rounded-full bg-expense dark:bg-expense-light" style="width: {{ category.bar_width|unlocalize }}%"></div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ol>{% include 'partials/chart_selection.html' with selection=category_selection %}</div>
+                {% else %}
+                    <div class="mt-5 text-sm text-forest/70 dark:text-night-muted">
+                        {% if is_future_month %}{% translate "No categorized expenses are planned for this month." %}
+                        {% elif is_current_month %}{% translate "No categorized expenses through today." %}
+                        {% else %}{% translate "No categorized expenses were recorded for this month." %}{% endif %}
+                    </div>
+                {% endif %}
+            </section>

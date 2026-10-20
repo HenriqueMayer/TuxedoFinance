@@ -55,11 +55,13 @@ class InvestmentSetupNavigationTests(TestCase):
         response = self.client.get(reverse('investments:settings'))
         self.assertNotContains(response, 'Private')
 
-    def test_simulation_notice_has_no_destination_and_planning_keeps_its_link(self):
+    def test_direct_tabs_replace_more_and_planning_keeps_its_simulation(self):
         for route in ['investments:list', 'investments:settings', 'investments:operations']:
             response = self.client.get(reverse(route))
-            self.assertContains(response, 'aria-disabled="true"')
-            self.assertContains(response, 'To simulate investment returns, open Plan')
+            self.assertNotContains(response, 'data-investment-more')
+            self.assertNotContains(response, 'investment-simulation-notice')
+            self.assertContains(response, reverse('investments:prices'))
+            self.assertContains(response, reverse('investments:settings'))
             self.assertNotContains(response, 'data-workspace-shortcut')
             self.assertContains(response, reverse('planning:index'))
         planning = self.client.get(reverse('planning:index'))
@@ -67,9 +69,11 @@ class InvestmentSetupNavigationTests(TestCase):
         tools = self.client.get(reverse('planning:tools'))
         self.assertContains(tools, reverse('sandbox:simulation'))
 
-    def test_portuguese_setup_and_notice_are_translated(self):
+    def test_portuguese_setup_tabs_are_translated(self):
         self.client.cookies['django_language'] = 'pt-br'
         response = self.client.get(reverse('investments:list'))
         self.assertContains(response, 'Adicionar aplicação')
-        self.assertContains(response, 'Planejar → Simulação de rendimentos')
+        self.assertContains(response, 'Seções de investimentos')
+        self.assertContains(response, reverse('investments:prices'))
+        self.assertContains(response, reverse('investments:settings'))
         self.assertNotContains(response, 'To simulate investment returns')

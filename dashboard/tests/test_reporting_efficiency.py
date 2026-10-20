@@ -30,7 +30,7 @@ class ReportingEfficiencyTests(DashboardFixture):
         other = get_user_model().objects.create_user('foreign-reporting-owner')
         own = self.transaction()
         foreign = Transaction(user=other)
-        for service in (get_account_evolution, get_instrument_activity, get_expenses_by_recurrence):
+        for service in (get_account_evolution, get_instrument_activity, get_expenses_by_recurrence, get_dashboard_summary):
             for sources in ([foreign], [own, foreign]):
                 with self.subTest(service=service.__name__, mixed=len(sources) > 1):
                     with self.assertRaisesRegex(ValueError, 'exactly one user'):
@@ -38,9 +38,9 @@ class ReportingEfficiencyTests(DashboardFixture):
 
     def test_reports_share_one_owned_source_read_across_chart_islands(self):
         self.transaction()
-        self.client.get(reverse('dashboard:reports'))
+        self.client.get(reverse('analytics:index'))
         with CaptureQueriesContext(connection) as captured:
-            response = self.client.get(reverse('dashboard:reports'))
+            response = self.client.get(reverse('analytics:index'))
         source_reads = [query for query in captured if 'FROM "transactions_transaction"' in query['sql']]
         # One read guards recurrence before SQLite's writer; another reloads
         # sources inside reconciliation. All three chart islands still share
@@ -68,7 +68,7 @@ class ReportingEfficiencyTests(DashboardFixture):
     def test_warm_dashboard_and_reports_gets_do_not_rewrite_ledger(self):
         UserPreference.for_user(self.user)
         self.transaction(is_fixed=True)
-        for name in ('dashboard:index', 'dashboard:reports'):
+        for name in ('dashboard:index', 'analytics:index'):
             self.assertEqual(self.client.get(reverse(name)).status_code, 200)
             before = list(BankMovement.objects.order_by('pk').values())
             with CaptureQueriesContext(connection) as queries:

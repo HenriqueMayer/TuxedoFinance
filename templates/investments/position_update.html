@@ -1,7 +1,7 @@
-{% extends 'base.html' %}{% load i18n %}
+{% extends 'base.html' %}{% load i18n investment_identity %}
 {% block title %}{% translate 'Update' %} · {{ position.name }} — Tuxedo Finance{% endblock %}
 {% block content %}<div class="finance-entry-page space-y-6">
-    <header><h1 class="page-title flex min-w-0 items-start gap-3"><span class="bank-marker mt-1 shrink-0" style="--bank-color:{{ product.bank.color|default:'#B88D57' }}" aria-hidden="true"></span><span class="min-w-0 break-words">{% translate 'Update' %} · {{ position.name }}</span></h1><p class="subtle-copy mt-2 break-words">{{ product.bank.name }}{% if product.name != position.name %} · {{ product.name }}{% endif %}</p></header>
+    <header><h1 class="page-title flex min-w-0 items-start gap-3"><span class="investment-position-emoji shrink-0" aria-hidden="true">{% position_icon product position.id %}</span><span class="min-w-0 break-words">{% translate 'Update' %} · {{ position.name }}</span></h1><p class="subtle-copy mt-2 break-words">{{ product.bank.name }}{% if product.name != position.name %} · {{ product.name }}{% endif %}</p></header>
     <p class="subtle-copy">{% translate 'What happened to this holding?' %}</p>
     {% if position.is_archived %}<p role="status" class="surface-panel">{% translate 'This asset is archived. Restore it in Investment Settings to record new operations.' %} <a class="quiet-action" href="{{ configuration_url }}" hx-swap="innerHTML show:none">{% translate 'Review configuration' %}</a></p>
     {% else %}<div class="surface-panel position-update-actions" aria-label="{% translate 'Update actions' %}">

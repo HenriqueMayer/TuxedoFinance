@@ -4,18 +4,22 @@
 from datetime import date
 from decimal import Decimal
 from urllib.parse import urlencode
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Max
+from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from banking.services import MissingExchangeRate, latest_exchange_rate
 from dashboard.selection import selection_data, attach_details
 from dashboard.charts import build_bar_chart, build_line_chart
-from investments.forms import InvestmentChartFilterForm
+from investments.forms import InvestmentChartFilterForm, PositionAppearanceForm
+from investments.appearance import DEFAULT_ICON, position_appearance_map, save_position_appearance
 from investments.models import Asset, Investment, InvestmentProduct, PositionPlanningSetting
 from investments.positions import get_portfolio_valuation
 from investments.services import TIMESERIES_MONTHS, get_monthly_flow_in_base, get_portfolio_groups, get_total_in_base_timeseries
@@ -72,6 +76,7 @@ def _asset_configuration_url(request, asset):
 
 
 @login_required
+@require_http_methods(['GET', 'POST'])
 def position_detail(request, product_pk, asset_pk):
     product = get_object_or_404(InvestmentProduct.objects.select_related('bank'), user=request.user,
                               bank__user=request.user, pk=product_pk)
@@ -79,6 +84,19 @@ def position_detail(request, product_pk, asset_pk):
     row = _position_row(request.user, product, asset)
     planning_enabled = PositionPlanningSetting.objects.filter(user=request.user, product=product, asset=asset).values_list('planning_enabled', flat=True).first()
     detail_url = reverse('investments:position_detail', args=[product.pk, asset.pk])
+    appearance_destination = return_url(request, detail_url + '#position-personalization')
+    current_icon = position_appearance_map(request.user).get((product.pk, asset.pk), DEFAULT_ICON)
+    appearance_form = PositionAppearanceForm(request.POST if request.method == 'POST' else None,
+                                             prefix='appearance', initial={'icon': current_icon})
+    if request.method == 'POST':
+        if request.POST.get('action') != 'appearance':
+            return HttpResponseBadRequest(_('Choose a valid personalization action.'))
+        if appearance_form.is_valid():
+            # This branch updates cosmetic metadata only. It must not call a
+            # financial synchronization or reinterpret the opening/history.
+            save_position_appearance(request.user, product, asset, appearance_form.cleaned_data['icon'])
+            messages.success(request, _('Application icon saved.'))
+            return redirect(appearance_destination)
     history_url = reverse('investments:operations') + '?' + urlencode({'product': product.pk, 'asset': asset.pk})
     update_url = reverse('investments:position_update', args=[product.pk, asset.pk])
     operations = Investment.objects.filter(user=request.user, product=product, asset=asset).order_by('-date', '-created_at', '-pk')[:10]
@@ -89,6 +107,7 @@ def position_detail(request, product_pk, asset_pk):
         'product_edit_url': with_return_url(reverse('investments:update_product', args=[product.pk]), request.get_full_path()),
         'configuration_url': _asset_configuration_url(request, asset),
         'recent_operations': operations, 'detail_url': detail_url,
+        'appearance_form': appearance_form, 'appearance_return_url': appearance_destination,
         'planning_enabled': planning_enabled is not False})
 
 
@@ -223,6 +242,10 @@ class InvestmentListView(LoginRequiredMixin, TemplateView):
                     asset['anchor'] = f"position-{product['id']}-{asset['id']}"
                     asset['planning_enabled'] = planning_flags.get((product['id'], asset['id']), True)
                     asset['detail_url'] = reverse('investments:position_detail', args=[product['id'], asset['id']])
+                    asset['appearance_url'] = with_return_url(asset['detail_url'], self.request.get_full_path(),
+                        fragment=asset['anchor']) + '#position-personalization'
+                    asset['mobile_appearance_url'] = with_return_url(asset['detail_url'], self.request.get_full_path(),
+                        fragment=asset['anchor'] + '-mobile') + '#position-personalization'
                     asset['history_url'] = reverse('investments:operations') + '?' + urlencode({'product': product['id'], 'asset': asset['id']})
                     asset['update_url'] = with_return_url(reverse('investments:position_update', args=[product['id'], asset['id']]),
                         self.request.get_full_path(), fragment=asset['anchor'])

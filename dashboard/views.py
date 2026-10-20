@@ -98,6 +98,27 @@ def _is_offset_window_safe(year, month):
     )
 
 
+def monthly_context(request, conversion, *, transactions=None, category_selection=False):
+    """Retain the dashboard's dated month semantics in the analytical workspace."""
+    year, month = _selected_month(request, _is_projectable)
+    context = get_dashboard_summary(request.user, year, month, conversion=conversion,
+                                    transactions=transactions)
+    today = timezone.localdate()
+    if category_selection:
+        context['category_selection'] = selection_data(
+            context['expense_categories'], [('total', _('Expenses'))], label='name')
+        cutoff = min(today, date(year, month, monthrange(year, month)[1])) if (year, month) <= (today.year, today.month) else None
+        attach_details(context['category_selection'], request.user, 'categories',
+                       context['expense_categories'], ['expenses'], period=f'{year:04d}-{month:02d}',
+                       cutoff=cutoff.isoformat() if cutoff else None)
+    context['selected_month_param'] = f'{year:04d}-{month:02d}'
+    for direction, step in (('previous', -1), ('next', 1)):
+        adjacent_year, adjacent_month = add_months(year, month, step)
+        context[f'{direction}_month_param'] = f'{adjacent_year:04d}-{adjacent_month:02d}'
+        context[f'has_{direction}_month'] = _is_projectable(adjacent_year, adjacent_month)
+    return context
+
+
 class DashboardIndexView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/index.html'
 
@@ -105,21 +126,7 @@ class DashboardIndexView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         sync_user_ledger(self.request.user)
         conversion = ConversionContext(self.request.user)
-        year, month = _selected_month(self.request, _is_projectable)
-        context.update(get_dashboard_summary(self.request.user, year, month, conversion=conversion))
-        context['category_selection'] = selection_data(context['expense_categories'], [('total', _('Expenses'))], label='name')
-        today = timezone.localdate()
-        cutoff = min(today, date(year, month, monthrange(year, month)[1])) if (year, month) <= (today.year, today.month) else None
-        attach_details(context['category_selection'], self.request.user, 'categories',
-            context['expense_categories'], ['expenses'], period=f'{year:04d}-{month:02d}',
-            cutoff=cutoff.isoformat() if cutoff else None)
-        context['selected_month_param'] = f'{year:04d}-{month:02d}'
-        previous_year, previous_month = add_months(year, month, -1)
-        next_year, next_month = add_months(year, month, 1)
-        context['previous_month_param'] = f'{previous_year:04d}-{previous_month:02d}'
-        context['next_month_param'] = f'{next_year:04d}-{next_month:02d}'
-        context['has_previous_month'] = _is_projectable(previous_year, previous_month)
-        context['has_next_month'] = _is_projectable(next_year, next_month)
+        context.update(monthly_context(self.request, conversion))
         from ingestion.models import ImportBatch
         # Staged statements are decisions awaiting review, never posted cash.
         pending = ImportBatch.objects.filter(user=self.request.user, status__in=[ImportBatch.Status.STAGED, ImportBatch.Status.READY]).select_related('account') if feature_available('imports') else ImportBatch.objects.none()
@@ -132,7 +139,9 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/reports.html'
 
     def get_template_names(self):
-        if self.request.headers.get('HX-Request') == 'true':
+        if self.request.headers.get('HX-Request') == 'true' and self.request.headers.get('HX-Boosted') != 'true':
+            if self.request.headers.get('HX-Target') == 'finance-monthly-analysis':
+                return ['analytics/_monthly.html']
             return ['dashboard/_reports_charts.html']
         return [self.template_name]
 
@@ -285,6 +294,13 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             | set(activity['missing_currencies'])
             | set(recurrence['missing_currencies'])
         )
+        report_missing = context['missing_currencies']
+        # One categorized source read serves the month and every independent
+        # chart window; moving screens must not rehydrate the private history.
+        context.update(monthly_context(self.request, conversion, transactions=transactions,
+                                       category_selection=True))
+        context['monthly_missing_currencies'] = context['missing_currencies']
+        context['missing_currencies'] = sorted(set(report_missing) | set(context['missing_currencies']))
         return context
 
     @staticmethod

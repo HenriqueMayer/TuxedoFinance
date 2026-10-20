@@ -20,8 +20,8 @@ class DashboardPageContractTests(DashboardFixture):
         response = self.client.get(reverse('dashboard:index'))
 
         self.assertContains(response, 'Desempenho do mês')
-        self.assertContains(response, 'Despesas por categoria')
-        self.assertContains(response, 'Perspectiva de seis meses')
+        self.assertNotContains(response, 'Despesas por categoria')
+        self.assertNotContains(response, 'Perspectiva de seis meses')
         self.assertNotContains(response, 'Posição dos saldos')
 
     def test_index_explains_current_month_performance_and_categories(self):
@@ -37,8 +37,8 @@ class DashboardPageContractTests(DashboardFixture):
         )
         self.assertContains(response, 'Income through today')
         self.assertContains(response, 'remaining planned')
-        self.assertContains(response, 'Expenses by category')
-        self.assertContains(response, 'Groceries')
+        self.assertNotContains(response, 'Expenses by category')
+        self.assertNotContains(response, 'Groceries')
         self.assertNotContains(response, 'Explore in Reports')
 
     def test_index_uses_period_appropriate_past_and_future_labels(self):
@@ -98,7 +98,7 @@ class DashboardPageContractTests(DashboardFixture):
         self.assertContains(response, 'href="/banking/invoices/%s/?next=' % response.context['open_invoices_preview'][0].pk)
 
     def test_views_sync_before_render_and_show_current_headings(self):
-        for name in ('dashboard:index', 'dashboard:reports'):
+        for name in ('dashboard:index', 'analytics:index'):
             with self.subTest(name=name), patch(
                 'dashboard.views.sync_user_ledger'
             ) as ledger_sync:
@@ -106,7 +106,7 @@ class DashboardPageContractTests(DashboardFixture):
                 self.assertEqual(response.status_code, 200)
                 ledger_sync.assert_called_once_with(self.user)
 
-        response = self.client.get(reverse('dashboard:reports'))
+        response = self.client.get(reverse('analytics:index'))
         self.assertContains(response, 'Balance evolution')
         self.assertContains(response, 'Monthly cash flow')
         self.assertContains(response, 'How much is on installments')
@@ -115,7 +115,7 @@ class DashboardPageContractTests(DashboardFixture):
 
     def test_htmx_partial_and_window_range_remain_intact(self):
         response = self.client.get(
-            reverse('dashboard:reports'), HTTP_HX_REQUEST='true'
+            reverse('analytics:index'), HTTP_HX_REQUEST='true'
         )
         self.assertNotContains(response, '<html')
         self.assertContains(response, 'id="reports-charts"')
@@ -138,7 +138,7 @@ class DashboardPageContractTests(DashboardFixture):
             amount='123.00', transaction_type=Transaction.TransactionType.INCOME,
             date=date(2026, 10, 5),
         )
-        response = self.client.get(reverse('dashboard:reports'))
+        response = self.client.get(reverse('analytics:index'))
         evolution = response.context['evolution']
         self.assertEqual(evolution['balance_today'], Decimal('1500.00'))
         self.assertEqual(evolution['current_month']['balance'], Decimal('300.00'))
@@ -151,7 +151,7 @@ class DashboardPageContractTests(DashboardFixture):
         self.assertNotContains(response, 'Projected (end of window)')
 
         shifted = self.client.get(
-            reverse('dashboard:reports'), {'charts_offset': 1}, HTTP_HX_REQUEST='true'
+            reverse('analytics:index'), {'charts_offset': 1}, HTTP_HX_REQUEST='true'
         )
         self.assertEqual(shifted.context['evolution']['current_month']['balance'], Decimal('123.00'))
         self.assertEqual(shifted.context['evolution']['balance_today'], Decimal('1500.00'))
@@ -164,7 +164,7 @@ class DashboardPageContractTests(DashboardFixture):
     def test_report_charts_have_foreground_mouse_and_keyboard_tooltips(self):
         self.transaction(amount='123.45')
 
-        response = self.client.get(reverse('dashboard:reports'))
+        response = self.client.get(reverse('analytics:index'))
         content = response.content.decode()
 
         self.assertContains(response, 'group-hover:opacity-100')

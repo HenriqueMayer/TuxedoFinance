@@ -31,15 +31,15 @@ async function seed(page, info) {
 }
 
 for (const [theme, language] of [['light', 'en'], ['dark', 'pt-br']]) {
-for (const workspace of ['home', 'reports']) {
+for (const workspace of ['categories', 'reports']) {
     test(`chart source Cancel, Back and Save retain exact context (${workspace}, ${theme})`, async ({page}, info) => {
         await page.setViewportSize({width: 1440, height: 800});
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         const {month} = await seed(page, info);
         await page.context().addCookies([{name: 'django_language', value: language, url: info.project.use.baseURL}]);
-        const path = workspace === 'home' ? `/dashboard/?month=${month}`
-            : `/dashboard/reports/?charts_offset=-1&instrument_month=${month}&installment_month=${month}`;
-        const anchor = workspace === 'home' ? 'category-heading' : 'instrument-activity';
+        const path = workspace === 'categories' ? `/analytics/?month=${month}`
+            : `/analytics/?charts_offset=-1&instrument_month=${month}&installment_month=${month}`;
+        const anchor = workspace === 'categories' ? 'category-heading' : 'instrument-activity';
         const origin = `${path}#${anchor}`;
         // An already contextualized owned target keeps its own query/hash, but
         // must never retain an externally supplied return destination.
@@ -56,7 +56,7 @@ for (const workspace of ['home', 'reports']) {
             await route.fulfill({response, body: JSON.stringify(data), contentType: 'application/json'});
         });
         await page.goto(path);
-        const mark = page.locator(workspace === 'home'
+        const mark = page.locator(workspace === 'categories'
             ? '[aria-labelledby="category-heading"] [data-point]' : '#instrument-activity [data-point]').first();
         const panel = page.locator('.chart-composition:visible');
         async function openSource() {
@@ -107,7 +107,7 @@ test('balance composition opens the exact account in the viewport including rese
         await post(page, '/banking/accounts/create/', {bank, name: `A context ${index}`, currency: 'BRL',
             opening_balance: '0', opening_date: '2020-01-01', planning_enabled: 'on'});
     }
-    const path = '/dashboard/reports/?charts_offset=0';
+    const path = '/analytics/?charts_offset=0';
     for (const reserved of [true, false]) {
         if (!reserved) {
             await post(page, `/banking/accounts/${account}/edit/`, {bank, name: 'Context account', currency: 'BRL',

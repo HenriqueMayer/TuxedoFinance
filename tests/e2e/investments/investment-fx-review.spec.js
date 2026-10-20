@@ -102,8 +102,7 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('#id_asset')).toHaveValue(data.asset);
         await expect(page.locator('#id_kind')).toHaveValue('YIELD');
         await page.goto('/investments/');
-        await page.locator('[data-investment-more] > summary').press('Enter');
-        await page.getByRole('link', { name: 'Analyses', exact: true }).press('Enter');
+        await page.goto('/analytics/investments/');
         const warning = page.locator('#investment-chart-fx-warning');
         await expect(warning).toContainText('Historical conversion incomplete');
         await warning.locator('summary').press('Enter');
@@ -114,7 +113,7 @@ for (const theme of ['light', 'dark']) {
         });
         await expect(opening).toHaveCount(1);
         await expect(opening).toContainText('Opening position:');
-        const chartsOrigin = '/investments/charts/#investments-charts';
+        const chartsOrigin = '/analytics/investments/#investments-charts';
         const register = opening.getByRole('link', { name: 'Register exchange rate' });
         const target = new URL(await register.getAttribute('href'), page.url());
         // Context is another query parameter, not part of the dated rate value.
@@ -223,8 +222,7 @@ test('Portuguese mobile investment diagnostics and filters work without JavaScri
         await mobile.goto('/investments/');
         await expect(mobile.locator('#investment-fx-warning')).toHaveCount(0);
         await expect(mobile.locator('#investment-total')).toContainText('550,00');
-        await mobile.locator('[data-investment-more] > summary').press('Enter');
-        await mobile.getByRole('link', { name: 'Análises', exact: true }).press('Enter');
+        await mobile.goto('/analytics/investments/');
         const warning = mobile.locator('#investment-chart-fx-warning');
         await warning.locator('summary').press('Enter');
         await expect(warning).toContainText('Posição inicial:');

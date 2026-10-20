@@ -1,8 +1,8 @@
-{% extends 'base.html' %}{% load i18n navigation %}
+{% extends 'base.html' %}{% load i18n navigation investment_identity %}
 {% block title %}{{ position.name }} — Tuxedo Finance{% endblock %}
 {% block content %}<div class="finance-entry-page space-y-6">
     {% include 'investments/_sections.html' %}
-    <header class="workspace-header"><div class="min-w-0 flex-1"><h1 class="page-title flex min-w-0 items-start gap-3"><span class="bank-marker mt-1 shrink-0" style="--bank-color:{{ product.bank.color|default:'#B88D57' }}" aria-hidden="true"></span><span class="min-w-0 break-words">{{ position.name }}</span></h1><p class="subtle-copy mt-2 break-words">{{ product.bank.name }}{% if product.name != position.name %} · {{ product.name }}{% endif %} · {{ position.currency }}</p></div>{% if not position.is_archived %}<a href="{{ update_url }}" class="action-primary">{% translate 'Update' %}</a>{% endif %}</header>
+    <header class="workspace-header"><div class="min-w-0 flex-1"><h1 class="page-title flex min-w-0 items-start gap-3"><span class="investment-position-emoji shrink-0" aria-hidden="true">{% position_icon product position.id %}</span><span class="min-w-0 break-words">{{ position.name }}</span></h1><p class="subtle-copy mt-2 break-words">{{ product.bank.name }}{% if product.name != position.name %} · {{ product.name }}{% endif %} · {{ position.currency }}</p></div>{% if not position.is_archived %}<a href="{{ update_url }}" class="action-primary">{% translate 'Update' %}</a>{% endif %}</header>
     <section class="surface-panel space-y-3">
         <p class="subtle-copy">{% translate 'Registered value' %}</p><p class="text-3xl font-semibold tabular-nums">{{ position.currency }} {{ position.valuation|floatformat:2 }}</p>
         {% if position.valuation_mode == 'UNITS' %}<p class="subtle-copy">{% blocktranslate with quantity=position.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% if position.price_observation %} · {% translate 'Local unit price' %}{% else %} · {% translate 'At remaining acquisition cost' %}{% endif %}</p>{% else %}<p class="subtle-copy">{% translate 'Recorded balance' %}</p>{% endif %}
@@ -16,5 +16,14 @@
     </section>
     {% if position.valuation_mode == 'UNITS' %}<section class="surface-panel">{% include 'investments/_position_details.html' with expand_details=True %}</section>{% endif %}
     <section class="surface-panel space-y-4"><div class="panel-heading"><h2 class="section-title">{% translate 'Recent operations' %}</h2><a class="quiet-action" href="{{ history_url }}">{% translate 'Full history' %}</a></div><ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for operation in recent_operations %}<li class="panel-heading py-3"><div><p>{{ operation.get_kind_display }} · {{ operation.date|date:USER_DATE_FORMAT }}</p><p class="subtle-copy">{% if position.valuation_mode == 'UNITS' %}{{ operation.quantity.normalize }} {% translate 'units at' %} {{ operation.unit_price.normalize }}{% else %}{{ operation.amount|floatformat:2 }}{% endif %} · {{ position.currency }}</p></div>{% url 'investments:update' operation.pk as edit_url %}<a class="quiet-action" href="{% contextual_url edit_url %}">{% translate 'Edit' %}</a></li>{% empty %}<li class="subtle-copy">{% translate 'No operations recorded here yet.' %}</li>{% endfor %}</ul></section>
+    <section id="position-personalization" class="surface-panel investment-appearance space-y-4 scroll-mt-24" aria-labelledby="position-personalization-heading">
+        <h2 id="position-personalization-heading" class="section-title">{% translate 'Personalization' %}</h2>
+        <form method="post" action="{{ detail_url }}#position-personalization" autocomplete="off" hx-boost="false" novalidate class="finance-entry-form space-y-4">
+            {% csrf_token %}<input type="hidden" name="action" value="appearance"><input type="hidden" name="next" value="{{ appearance_return_url }}">
+            {% include 'partials/form_field.html' with field=appearance_form.icon %}
+            <p class="subtle-copy">{% translate 'The icon identifies this application only. It does not change its purpose or availability for planning.' %}</p>
+            <div class="form-actions"><button type="submit" class="action-primary">{% translate 'Save icon' %}</button></div>
+        </form>
+    </section>
     <details class="surface-panel explanation-disclosure"><summary>{% translate 'Configuration' %}</summary><div class="mt-4 flex flex-wrap gap-4"><a href="{{ asset_edit_url }}" class="quiet-action">{% translate 'Edit holding details' %}</a><a href="{{ product_edit_url }}" class="quiet-action">{% translate 'Edit institution and purpose' %}</a></div></details>
 </div>{% endblock %}

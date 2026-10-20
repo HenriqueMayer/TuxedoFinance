@@ -11,17 +11,14 @@ write derived movements and invoices. See the
 
 ## Overview
 
-The main screen presents:
+The main screen presents live planning availability, selected-month income,
+expenses, investment deposits and withdrawals, bank balances and outstanding
+invoices. These operational indicators retain their existing cutoff and
+statement-month rules. Its Analytics shortcut carries the selected month.
 
-- a live available-cash total and compact native balances by bank account;
-- selected-month opening, balance change and closing balance;
-- income, expenses, investment deposits and withdrawals for the selected month;
-- a top-six categorized-expense breakdown;
-- compact open-invoice previews and upcoming due dates;
-- a six-month outlook from recurring transactions and scheduled invoice payments.
-
-Reports remains accessible through the workspace's section tabs; the category
-summary has no separate Reports shortcut.
+All charts and the six-month outlook live in the primary
+[Analytics workspace](analytics.md). Home no longer duplicates category charts
+or a Reports section tab. The chart services remain in their existing owners.
 
 Account shortcuts open the exact owned account row, including accounts outside
 planning availability. They retain the native fragment and bypass the shell's
@@ -83,6 +80,11 @@ The live account and open-invoice panels always describe today, even while
 another month is selected.
 
 ## Reports
+
+Financial reports are presented at `/analytics/` under Finances. The existing
+`/dashboard/reports/` entry redirects there, retaining query parameters and
+fragment context. The legacy heading remains a stable documentation anchor.
+
 
 The summary has three cards:
 
@@ -153,7 +155,7 @@ without summing sale proceeds as remaining holdings. Source amounts reconcile to
 including fractional FX cents; missing conversions remain explicitly incomplete.
 Navigation retains the report period and browser Back/Forward context. See the
 [chart interaction contract](../frontend/charts.md#chart-selection-and-composition).
-From Home and Reports, composition source links also carry the current query and
+From Analytics, composition source links also carry the current query and
 the owning chart's anchor as a validated local return destination. Existing
 editors use it for Save/Cancel; their ownership checks and generated-record locks
 remain unchanged.
@@ -169,7 +171,7 @@ into the editor's Save/Cancel context.
 
 The twelve-month evolution window contains five months before its anchor and
 six after it. Its anchor can move at most five months beyond the current month,
-so the displayed window ends eleven months from now. The dashboard's six-month
+so the displayed window ends eleven months from now. Analytics' six-month
 outlook can start at most six months ahead and shares that same final month.
 The ledger synchronizes through today's day twelve months ahead, which does not
 cover that last calendar month's late payments. Neither screen therefore shows
@@ -257,7 +259,7 @@ at that limit.
 
 The net-worth interface is absent from navigation; its route-level review gate
 returns old requests to Dashboard. Its redesign is tracked in documentation. `wealth_snapshot` and financial calculations remain available
-to their existing consumers. Dashboard and Reports retain their organization;
+to their existing consumers. Home and Analytics retain their separate operational and analytical roles;
 paused pending-import calls to action are not shown while review is unavailable.
 Per-position cash participation changes planning availability, preserving actual
 balances, debt, history and wealth calculations.

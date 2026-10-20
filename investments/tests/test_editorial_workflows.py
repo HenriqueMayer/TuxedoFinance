@@ -34,7 +34,7 @@ class InvestmentEditorialWorkflowTests(TestCase):
             opening_balance='10', opening_date=date(2020, 1, 1))
 
     def test_chart_partial_includes_scoped_results_and_evidence_notices(self):
-        chart_url = reverse('investments:charts')
+        chart_url = reverse('analytics:investments')
         overall = self.client.get(chart_url)
         self.assertEqual(overall.context['portfolio_snapshot']['cost_total'], Decimal('500'))
         self.assertContains(overall, 'id="investment-performance"', count=1)
@@ -68,7 +68,7 @@ class InvestmentEditorialWorkflowTests(TestCase):
         foreign = self.foreign_asset()
         operation = Investment.objects.create(user=self.user, product=self.product, asset=foreign,
             kind='YIELD', amount='2', date=date(2026, 1, 10))
-        origin = reverse('investments:charts') + '?scope=portfolio&total_offset=-1&flow_offset=0'
+        origin = reverse('analytics:investments') + '?scope=portfolio&total_offset=-1&flow_offset=0'
         response = self.client.get(origin)
         self.assertTrue(response.context['chart_fx_issues'])
         for issue in response.context['chart_fx_issues']:
@@ -106,11 +106,14 @@ class InvestmentEditorialWorkflowTests(TestCase):
             'unit_price': '123.12345678', 'source': 'Local statement', 'next': origin}),
             origin, fetch_redirect_response=False)
 
-    def test_position_markers_use_the_registered_bank_color(self):
+    def test_positions_use_general_emoji_and_institutions_keep_registered_color(self):
         response = self.client.get(reverse('investments:list'))
-        self.assertContains(response, 'style="--bank-color:#315D50"')
+        self.assertContains(response, '💰')
+        self.assertNotContains(response, 'class="bank-marker shrink-0"')
+        configuration = self.client.get(reverse('investments:settings'))
+        self.assertContains(configuration, '#315D50')
         detail = self.client.get(reverse('investments:position_detail', args=[self.product.pk, self.share.pk]))
-        self.assertContains(detail, 'style="--bank-color:#315D50"')
+        self.assertContains(detail, '💰')
 
     def test_archived_configuration_links_keep_the_owned_record_and_origin(self):
         self.share.is_archived = True

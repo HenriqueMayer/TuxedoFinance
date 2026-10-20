@@ -48,6 +48,8 @@ def create_guided_investment(user, values):
         opening_unit_price=values['opening_unit_price'], opening_date=values['opening_date'])
     asset.full_clean()
     asset.save()
+    from investments.appearance import DEFAULT_ICON, save_position_appearance
+    save_position_appearance(user, product, asset, values.get('icon') or DEFAULT_ICON)
     if product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH:
         setting = PositionPlanningSetting(user=user, product=product, asset=asset,
                                           planning_enabled=values['planning_enabled'])

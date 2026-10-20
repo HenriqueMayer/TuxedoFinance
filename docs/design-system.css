@@ -200,8 +200,8 @@
 .lab-view-top { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
 .lab-view-top h3 { font-size: 30px; line-height: 1.2; letter-spacing: -.045em; font-weight: 600; }
 .lab-view-top p { max-width: 430px; font-size: 14px; line-height: 1.6; color: var(--lab-muted); margin-top: 8px; }
-.lab-local-tabs { display: flex; gap: 24px; margin-top: 26px; border-bottom: 1px solid var(--lab-line); }
-.lab-local-tabs a { min-height: 44px; padding: 12px 0; font-size: 14px; border-bottom: 2px solid transparent; }
+.lab-local-tabs { display: flex; overflow-x: auto; gap: 24px; margin-top: 26px; border-bottom: 1px solid var(--lab-line); }
+.lab-local-tabs a { flex-shrink: 0; min-height: 44px; padding: 12px 0; font-size: 14px; border-bottom: 2px solid transparent; }
 .lab-local-tabs a[aria-current] { border-color: var(--lab-accent); }
 .lab-balance { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 30px 0 24px; }
 .lab-balance p { color: var(--lab-muted); font-size: 14px; }
@@ -442,7 +442,7 @@
     .lab-rail-brand, .lab-rail-footer { display: none; }
     /* Long labels earn space before the remaining destinations share it.
        Keep complete names and 44px targets even inside a narrow preview. */
-    .lab-workspace-links { display: grid; grid-template-columns: minmax(44px,1fr) minmax(max-content,1.25fr) minmax(44px,1fr) minmax(max-content,1.25fr) minmax(44px,1fr); gap: 0; }
+    .lab-workspace-links { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; }
     .lab-workspace-links a { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 6px; padding: 10px 2px; min-width: 0; min-height: 64px; font-size: 10px; }
     .lab-workspace-links a::before { top: 0; bottom: auto; left: 10px; right: 10px; width: auto; height: 3px; border-radius: 0 0 2px 2px; }
     .lab-workspace-links a[aria-current] { border-radius: 8px; margin-right: 0; padding-right: 2px; }
@@ -664,4 +664,22 @@
 }
 @media print {
     [data-lab-assistant-shell] { display: none !important; }
+}
+
+/* Position identity remains a native short choice; it has no financial meaning. */
+.lab-nav-label-short { display: none; }
+.lab-position-personalization { margin-top: 24px; }
+.lab-position-personalization > summary { min-height: 44px; padding-block: 12px; cursor: pointer; }
+.lab-position-personalization form { display: grid; gap: 16px; margin-top: 12px; }
+.lab-position-icons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.lab-position-icons label { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px; border: 1px solid var(--lab-line); border-radius: 10px; font-size: 12px; cursor: pointer; }
+.lab-position-icons label:has(:checked) { border-color: var(--lab-accent-ink); background: var(--lab-ground); }
+.lab-position-icons input { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--lab-accent-ink); }
+.lab-position-icons label > span:first-of-type { font-size: 20px; flex-shrink: 0; }
+.lab-position-icons label > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.lab-position-personalization [data-lab-position-status] { min-height: 40px; }
+@media (max-width: 760px) {
+    .lab-workspace-links .lab-nav-label-full { display: none; }
+    .lab-workspace-links .lab-nav-label-short { display: inline; }
+    .lab-position-icons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

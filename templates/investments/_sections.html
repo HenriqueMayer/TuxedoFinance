@@ -1,7 +1,8 @@
 {% load i18n %}
-<nav class="section-nav" aria-label="{% translate 'Investment sections' %}">
+<nav class="section-nav investment-sections" aria-label="{% translate 'Investment sections' %}">
     <a href="{% url 'investments:list' %}"{% if selected_section == 'positions' %} aria-current="page"{% endif %}>{% translate 'My investments' %}</a>
     {# The live position scope must also refresh this contextual history destination. #}
     <a id="investment-operations-link"{% if selected_section == 'positions' %} data-live-fragment="investment-position-filters"{% endif %} href="{% url 'investments:operations' %}{% if position_scope == 'cash' or position_scope == 'portfolio' %}?section={{ position_scope }}{% endif %}"{% if selected_section == 'operations' %} aria-current="page"{% endif %}>{% translate 'History' %}</a>
-    <details class="secondary-actions compact-menu" data-investment-more><summary class="text-sm"{% if selected_section == 'charts' or selected_section == 'prices' or request.resolver_match.url_name == 'settings' %} aria-current="true"{% endif %}>{% translate 'More' %}</summary><div class="secondary-actions-panel"><a href="{% url 'investments:charts' %}">{% translate 'Analyses' %}</a><a href="{% url 'investments:prices' %}">{% translate 'Observed prices' %}</a><a href="{% url 'investments:settings' %}">{% translate 'Full configuration' %}</a>{% include 'investments/_simulation_notice.html' with notice_id='investment-simulation-notice' %}</div></details>
+    <a href="{% url 'investments:prices' %}"{% if selected_section == 'prices' %} aria-current="page"{% endif %}>{% translate 'Prices' %}</a>
+    <a href="{% url 'investments:settings' %}"{% if request.resolver_match.url_name == 'settings' %} aria-current="page"{% endif %}>{% translate 'Setup' %}</a>
 </nav>

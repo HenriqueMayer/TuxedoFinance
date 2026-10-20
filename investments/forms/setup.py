@@ -5,9 +5,11 @@ from decimal import Decimal
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from core.dates import configure_date_fields
+from core.widgets import SegmentedChoice
 from banking.models import Bank
 from accounts.models import UserPreference
 from investments.models import Asset, InvestmentProduct, CURRENCY_CHOICES
+from investments.appearance import DEFAULT_ICON, ICON_CHOICES
 from ._styles import INPUT_CLASSES
 
 
@@ -19,6 +21,8 @@ class GuidedInvestmentForm(forms.Form):
         label=_('Institution'), empty_label=_('Choose an institution'))
     institution_name = forms.CharField(required=False, max_length=100, label=_('Institution name'))
     name = forms.CharField(max_length=100, label=_('Investment name'))
+    icon = forms.ChoiceField(required=False, initial=DEFAULT_ICON, choices=ICON_CHOICES,
+                             label=_('Application icon'), widget=SegmentedChoice)
     valuation_mode = forms.ChoiceField(label=_('How do you record it?'), choices=[
         ('', _('Choose a value type')), ('MONETARY', _('Balance in money')),
         ('UNITS', _('Units and acquisition cost'))])
@@ -52,7 +56,9 @@ class GuidedInvestmentForm(forms.Form):
         self.initial.setdefault('currency', UserPreference.for_user(user).base_currency)
         configure_date_fields(self, user)
         for name, field in self.fields.items():
-            if isinstance(field, forms.BooleanField):
+            if isinstance(field.widget, SegmentedChoice):
+                field.widget.attrs['class'] = 'entry-segment-options'
+            elif isinstance(field, forms.BooleanField):
                 field.widget.attrs['class'] = 'h-4 w-4 rounded border-forest/30 text-caramel focus:ring-caramel'
             else:
                 field.widget.attrs['class'] = INPUT_CLASSES
@@ -103,6 +109,14 @@ class GuidedInvestmentForm(forms.Form):
                 user=self.user, bank=data['institution'], name=data['name']).exists():
             self.add_error('name', _('This institution already has an investment with this name. Use its existing position or the full configuration.'))
         return data
+
+    def clean_icon(self):
+        return self.cleaned_data.get('icon') or DEFAULT_ICON
+
+
+class PositionAppearanceForm(forms.Form):
+    icon = forms.ChoiceField(label=_('Application icon'), choices=ICON_CHOICES,
+                             widget=SegmentedChoice(attrs={'class': 'entry-segment-options'}))
 
 
 class InvestmentProductForm(forms.ModelForm):

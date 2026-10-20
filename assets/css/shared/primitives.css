@@ -64,7 +64,7 @@
   .app-navigation-link { @apply flex min-h-12 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-forest/70 transition-colors hover:bg-forest/5 hover:text-forest focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel dark:text-night-muted dark:hover:bg-cream/5 dark:hover:text-cream; }
   .app-navigation-link svg { @apply h-5 w-5 shrink-0; }
   .app-navigation-link[aria-current="page"] { @apply bg-caramel/15 font-semibold text-forest dark:bg-caramel/20 dark:text-cream; }
-  .app-bottom-navigation { @apply fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-forest/15 bg-white px-1 pt-1 dark:border-cream/15 dark:bg-night-surface lg:hidden; padding-bottom: calc(.25rem + env(safe-area-inset-bottom, 0px)); }
+  .app-bottom-navigation { @apply fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-forest/15 bg-white px-1 pt-1 dark:border-cream/15 dark:bg-night-surface lg:hidden; padding-bottom: calc(.25rem + env(safe-area-inset-bottom, 0px)); }
   .app-bottom-navigation .app-navigation-link { @apply min-w-0 flex-col justify-start gap-1 px-0 py-2 text-center; min-height: 4rem; font-size: clamp(.625rem, 2.8vw, .6875rem); letter-spacing: -.015em; }
   .app-bottom-navigation .app-navigation-link span { white-space: nowrap; }
   /* Color and background identify the active mobile destination without making long labels wider. */

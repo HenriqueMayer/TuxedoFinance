@@ -1,4 +1,4 @@
-{% load i18n navigation %}
+{% load i18n navigation investment_identity %}
 {% url 'investments:operations' as list_url %}
 <section id="investment-movements"
          hx-request='{"noHeaders":false}'
@@ -40,7 +40,7 @@
                     <li class="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <div class="flex gap-2">
-                                <span class="bank-marker shrink-0" style="--bank-color:{{ investment.product.bank.color|default:'#B88D57' }}" aria-hidden="true"></span><strong class="text-base font-semibold">{{ investment.asset.code }}</strong>
+                                <span class="investment-position-emoji shrink-0" aria-hidden="true">{% position_icon investment.product investment.asset %}</span><strong class="text-base font-semibold">{{ investment.asset.code }}</strong>
                                 <span class="text-sm">{{ investment.get_kind_display }}</span>
                             </div>
                             <p class="text-xs text-forest/70 dark:text-night-muted">{{ investment.product.bank.name }} / {{ investment.product.name }} - {{ investment.date|date:USER_DATE_FORMAT }}</p>

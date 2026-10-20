@@ -376,12 +376,12 @@ def _banking_expenses_for_month(user, year, month, cutoff=None, *, sources=None,
     return total, sorted(missing)
 
 
-def get_dashboard_summary(user, year=None, month=None, *, conversion=None):
+def get_dashboard_summary(user, year=None, month=None, *, conversion=None, transactions=None):
     conversion = _conversion_context(user, conversion)
     today = timezone.localdate()
     year = year or today.year
     month = month or today.month
-    transactions = _transactions(user)
+    transactions = _report_transactions(user, transactions)
     selected = _monthly_totals(user, transactions, year, month, conversion=conversion)
     current = get_ledger_snapshot(user, today, conversion=conversion)
     current_previous_year, current_previous_month = add_months(

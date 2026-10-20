@@ -72,10 +72,11 @@ async function checkHelp(page, label, id) {
 }
 
 async function openAnalyses(page) {
-    const sections = page.getByRole('navigation', { name: 'Investment sections' });
-    await sections.locator('[data-investment-more] > summary').press('Enter');
-    await sections.getByRole('link', { name: 'Analyses', exact: true }).press('Enter');
-    await expect(page).toHaveURL(/\/investments\/charts\/$/);
+    await page.getByRole('navigation', { name: 'Main navigation', exact: true })
+        .getByRole('link', { name: 'Analytics', exact: true }).press('Enter');
+    await page.getByRole('navigation', { name: 'Analytics sections' })
+        .getByRole('link', { name: 'Investments', exact: true }).press('Enter');
+    await expect(page).toHaveURL(/\/analytics\/investments\/$/);
 }
 
 for (const dark of [false, true]) {
@@ -86,11 +87,12 @@ for (const dark of [false, true]) {
         await seed(page, testInfo);
         await page.goto('/dashboard/');
         await checkHelp(page, 'Month performance', 'dashboard-performance-help');
-        await checkHelp(page, 'Six-month outlook', 'dashboard-outlook-help');
-        await expect(page.locator('[aria-labelledby="category-heading"]')).toHaveClass(/surface-panel/);
+        await expect(page.locator('[aria-labelledby="category-heading"]')).toHaveCount(0);
         await expect(page.locator('[aria-labelledby="performance-heading"] .metric-panel')).toHaveCount(4);
 
-        await page.goto('/dashboard/reports/');
+        await page.goto('/analytics/');
+        await checkHelp(page, 'Six-month outlook', 'dashboard-outlook-help');
+        await expect(page.locator('[aria-labelledby="category-heading"]')).toHaveClass(/surface-panel/);
         await checkHelp(page, 'Balance evolution', 'report-balance-help');
         await page.locator('#report-balance-next').click();
         await expect(page).toHaveURL(/charts_offset=1/);
@@ -147,10 +149,10 @@ test('contextual help remains available without JavaScript and on touch', async 
         const offline = await native.newPage();
         for (const [path, label, text] of [
             ['/dashboard/', 'Month performance', 'available cash changes'],
-            ['/dashboard/reports/', 'Balance evolution', 'close of each month'],
-            ['/dashboard/reports/', 'Income and expenses by account or card', 'release Ctrl to scroll the panel'],
-            ['/investments/charts/', 'Investment evolution', 'latest price observed by that date'],
-            ['/investments/charts/', 'Monthly flow', 'current on each entry’s date'],
+            ['/analytics/', 'Balance evolution', 'close of each month'],
+            ['/analytics/', 'Income and expenses by account or card', 'release Ctrl to scroll the panel'],
+            ['/analytics/investments/', 'Investment evolution', 'latest price observed by that date'],
+            ['/analytics/investments/', 'Monthly flow', 'current on each entry’s date'],
             ['/investments/settings/', 'Investment Settings', 'Manage products and assets here. Find banks, accounts, loyalty programs, and exchange rates in Accounts.'],
         ]) {
             await offline.goto(path);
@@ -165,7 +167,7 @@ test('contextual help remains available without JavaScript and on touch', async 
     const touch = await browser.newContext({ storageState, hasTouch: true, isMobile: true, viewport: { width: 390, height: 740 } });
     try {
         const mobile = await touch.newPage();
-        await mobile.goto('/investments/charts/');
+        await mobile.goto('/analytics/investments/');
         const trigger = mobile.getByRole('button', { name: 'Explain Investment evolution', exact: true });
         await trigger.tap();
         await expect(mobile.locator('#investment-evolution-help')).toBeVisible();

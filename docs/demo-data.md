@@ -98,15 +98,15 @@ the record labels follow the chosen dataset language.
 
 | Area | Route | What to explore |
 |---|---|---|
-| Overview | `/dashboard/` | Current cash, monthly income and expenses, expense categories, investments, upcoming card settlements and the six-month outlook. Compare the current month with earlier months. |
-| Reports | `/dashboard/reports/` | Balance evolution, monthly cash flow, installment commitments and income/expenses by account or card. Change the period and select chart values. |
+| Overview | `/dashboard/` | Planning availability, monthly income, expenses, investments and withdrawals, current account balances and upcoming card settlements. Compare months or open Analytics for the selected month. |
+| Financial analysis | `/analytics/` | Category expenses, the six-month outlook, balance evolution, monthly cash flow, installment commitments and income/expenses by account or card. Change independent periods and select chart values. |
 | Activity | `/transactions/` and `/categories/` | Salary and additional income, household expenses, one-off purchases, fixed recurrences and installments, with categories and subcategories. Filter by category and recurrence, export CSV, or split a transaction between categories without changing its payment. |
 | Banks | `/banking/`, then select a bank | Accounts in BRL, USD and EUR; PIX, debit cards and physical/virtual/additional credit cards; planning exclusions and partial reserves. Open Transfer to try moving funds between owned accounts. |
 | Invoices | `/banking/invoices/` | Compare legacy automatic invoices with the synthetic confirmed-payment card: an overdue invoice and a partially paid invoice, with an explicit bank debit for its confirmed payment. |
 | Loyalty | `/banking/`, then select Aurora Demo Bank or More options | The bank-linked miles program and independent cashback program have seeded balances. Open Points entry to explore awards, purchases, adjustments, expiration and redemptions, or Redeem points for a monetary redemption. |
 | Exchange rates | `/banking/exchange-rates/` | Dated synthetic USD/BRL and EUR/BRL rates, with create, edit and delete actions. The sample transfers and investment operations retain their historical FX snapshots. |
 | Investments | `/investments/`, `/investments/operations/` and `/investments/settings/` | Monetary and unit-based opening positions, account/points-funded deposits, withdrawals, fees and manually entered yields. Configuration includes all six asset classes and both product purposes. |
-| Investment charts | `/investments/charts/` | Compare Overall, Portfolio and Remunerated cash across the investment history. |
+| Investment charts | `/analytics/investments/` | Compare Overall, Portfolio and Remunerated cash across the investment history. |
 | Local prices | `/investments/prices/` | Inspect dated, explicitly synthetic observations for the three unit assets, their historical valuations and results with known opening dates and declared fee currencies. These observations are not a market feed. |
 | Budgets | `/planning/budgets/` | Compare current and previous monthly category limits, recorded spending and known forecasts; copy a month and inspect an exceeded limit. |
 | Goals | `/planning/goals/` | Inspect emergency, travel and monthly-buffer targets backed by an account or monetary cash pot. The travel target uses USD; reservations reuse existing funds and do not create money or duplicate legacy reserves. |
