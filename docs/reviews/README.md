@@ -11,6 +11,11 @@ and [interface map](../interface-map.md) for present behavior.
 
 | Record | Scope and status |
 |---|---|
+| [Public-source review and documentation alignment — 2026-10-20](public-source-readiness-2026-10-20.md) | Current-source secret/security review with explicit partial manual coverage, dependency audits, corrected assistant disclosures and synthetic preview refresh; isolated validation and publication hold. |
+| [Assistant reference presentation — 2026-10-20](assistant-reference-presentation-2026-10-20.md) | One verified source footer, historical-message rendering, preserved raw Markdown and versioned attribution instructions; isolated desktop/phone validation. |
+| [Assistant tool-response compatibility — 2026-10-20](assistant-tool-response-2026-10-20.md) | Completed streaming items, optional namespace parsing, strict tool validation and private diagnostics; isolated regressions and a successful bounded live synthetic tool loop. |
+| [Assistant application access and Markdown copy — 2026-10-20](assistant-access-and-copy-2026-10-20.md) | Complete/message Markdown exports, default owned cross-workspace evidence, canonical CLT/category-cut simulations and reviewed transaction edits/deletion; isolated validation and unchanged local data. |
+| [Assistant actions and response feedback — 2026-10-19](assistant-actions-and-feedback-2026-10-19.md) | Safe Markdown, waiting/writing feedback, four explicitly confirmed local actions, minimal tool data, preserved financial drafts and shared Planning spacing; isolated validation and live-provider limits. |
 | [Meu Pluggy Inter bill pilot — 2026-10-19](open-finance-pilot-2026-10-19.md) | Operator-only bounded read command, synthetic preparation, private daily evidence, zero-query ledger preservation and unexercised real consent/coverage boundary. |
 | [Personal intraday Open Finance alternatives — 2026-10-19](open-finance-intraday-study-2026-10-19.md) | Retained 6–8-hour PF target, personal REST/MCP and commercial alternatives, conditional Banco MCP lead, resource freshness and unresolved selection requirements; research only. |
 | [Tuxedo identity and financial premises — 2026-10-19](assistant-financial-premises-2026-10-19.md) | Original v3 persona/PF instructions, inspected plugin methodology and provenance, verified current absence of browsing/news tools and future external-evidence boundaries. |

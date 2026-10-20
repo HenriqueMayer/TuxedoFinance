@@ -80,6 +80,8 @@ Accounts includes Invoices and Exchange rates. Investments opens a simple list
 of holdings with Update beside each row; history, analyses and full configuration
 remain secondary. Plan opens the monthly cash outlook and budgets, with three
 sections: This month, Goals and Tools. Signals and simulations live in Tools.
+The shared section navigation retains its 24px space before the page header;
+workspace density overrides must not compress that separation.
 Existing domain URLs retain ownership and safe contextual return behavior;
 `/planning/budgets/?month=…` redirects to the same month at `/planning/`.
 Account settings and language live in account options. Primary links navigate

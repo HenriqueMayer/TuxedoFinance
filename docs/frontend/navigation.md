@@ -89,6 +89,10 @@ to the right in a restrained paper-colored bubble; assistant text reads naturall
 on the left, with references beside that answer. Keep role labels available to
 assistive technology without repeating a visible assistant heading before every
 answer. Use compact, readable chat typography and restrained message spacing.
+Show verified source links once in the answer's footer. Enhanced rendering can
+omit only a final reference-only paragraph whose destinations and source labels
+all match that footer; retain explanatory labels, other prose and inert unverified links. Raw message storage,
+Markdown copy/download and the native escaped-text fallback stay intact.
 Keep the transcript as the independently scrolling area, above a persistent
 composer. History/actions and the composer must not disappear while reading an
 older message. Long replies wrap without widening the panel.
@@ -110,13 +114,14 @@ adjacent Close control remains available without restoring the panel. It
 does not cancel a generation. The tab reflects a pending/completed reply without
 moving its target; restoring first performs an authenticated GET and restores
 temporary text only when both user and Django session still match; temporary
-model/effort and context consent also require the same linked account. A changed
-account keeps its freshly authorized saved settings and unchecked consent. Never store
+model/effort also require the same linked account. A changed
+account keeps its freshly authorized saved settings. Never store
 an unsent chat draft in browser storage. Close discards that temporary composer
 state, cancels the active reply and returns the ordinary launcher; it does not
 delete saved conversation history or the last explicitly saved model/effort.
 Those preferences live in the local owned account record, are revalidated on
-load, and never carry financial-context consent. Preserve the workspace's scroll, selected
+load. Owned tool reads remain independent of the visible page or any legacy
+initial-snapshot parameter. Preserve the workspace's scroll, selected
 filters and unsent financial form values. Minimize returns focus to the restore
 tab, Close to the launcher. The narrow-screen presentation keeps
 its heading, window controls, conversation actions, composer and cancellation state inside
@@ -124,7 +129,7 @@ the viewport and above fixed navigation/safe areas. Visible focus, Escape and
 Tab/Shift+Tab behavior must match the panel's declared modal behavior; background
 content must not remain keyboard-active behind a modal surface. When the visual
 viewport is shorter than 400px, trim secondary header text and keyboard hints
-and cap the editor at 44px, while keeping Context, model/context controls and
+and cap the editor at 44px, while keeping Context, model/effort controls and
 Send/Stop reachable. Honor the visual viewport rather than only height media
 queries, because opening a software keyboard does not resize every browser
 layout viewport. The native chat page can scroll vertically and retains a
@@ -165,14 +170,12 @@ With either gate off, keep unavailable status explicit and Send disabled; never
 render a fake streamed reply. When eligible, the model picker starts empty until
 an explicit selection is saved for that local user and linked account; later
 loads restore only catalogue-valid saved model/effort choices. The
-Use page data checkbox starts unchecked for each new request.
-It follows the shared form/checkbox contract, preserves invalid submitted values
-and does not scrape current-page drafts. Show plain streamed text, selected model,
+assistant reads owned saved information through tools by default, independent of the page. No per-request data checkbox is shown and current-page drafts are never scraped. Show safe Markdown, selected model,
 pending/terminal state, verified local references and a deliberate Stop action.
 The message editor starts at one line and grows to a bounded height; extra lines
 scroll internally. Keep Model and Reasoning effort in a deliberate Chat settings
 gear disclosure below it, with a single-line model/effort caption and the
-per-request context checkbox. Long selection names truncate visually without
+available Send/Stop controls. Long selection names truncate visually without
 losing their full accessible text or widening the chat. Its upward surface stays
 inside the panel and scrolls internally on short viewports. Keep native labelled
 selects and 44px targets;

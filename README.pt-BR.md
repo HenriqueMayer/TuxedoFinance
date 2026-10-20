@@ -35,6 +35,12 @@ escuro. Seus registros ficam na sua instalação.
 | **Investimentos** | Acompanhar posições, movimentações, cofrinhos e preços datados. |
 | **Planejar** | Definir limites por categoria, reservar saldos existentes para metas e comparar simulações. |
 
+**No código ainda não publicado:** o [assistente Tuxedo](docs/apps/assistant.md)
+opcional pode consultar suas finanças salvas, simular cenários e preparar alterações
+para sua confirmação. A conexão com o ChatGPT vem desativada; quando habilitada,
+registros relevantes e o histórico necessário da conversa são enviados à OpenAI.
+O Open Finance permanece no [roadmap](docs/roadmap.md#personal-open-finance-study).
+
 <a id="-instalação-inicial"></a>
 
 ## Instalação

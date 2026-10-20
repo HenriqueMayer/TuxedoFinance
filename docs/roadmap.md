@@ -12,6 +12,14 @@ On **2026-10-19**, the owner paused further improvements to test the current
 application before publishing the next version. Preserve the existing work and
 installation data; keep the developer version unchanged during this hold.
 
+The owner subsequently requested focused chat progress/Markdown, confirmed local
+actions and Planning spacing fixes. These adjustments reopen only that scope;
+Open Finance and other deferred work remain paused, and the publication hold stays.
+
+On 2026-10-20, the owner also requested Markdown copying, default owned financial
+consultations, canonical monthly simulations and reviewed transaction edits/deletion.
+This focused assistant scope does not reopen Open Finance or publication.
+
 - Await the owner's functional testing and acceptance feedback. Record findings
   before planning further adjustments; do not continue feature expansion now.
 - Complete the applicable [release checks](versioning.md#preparing-a-release),
@@ -41,12 +49,19 @@ The hidden net-worth URL returns to Dashboard. Moving a feature out of navigatio
 does not enable it or erase financial source records. The owner must validate
 branch changes before authorizing any integration into `main` or publication.
 
-## Assistant foundation and later provider
+<a id="assistant-foundation-and-later-provider"></a>
+
+## Assistant and optional provider
 
 The [assistant foundation](apps/assistant.md) provides local conversations and
-bounded, read-only owned context. The implemented model catalogue/streaming path
+bounded owned consultations, canonical monthly simulations and Markdown
+presentation/copying. The implemented model catalogue/streaming path
 is separately gated and defaults off; an unavailable composer never fabricates
-responses. Action/simulation interfaces remain contracts with no execution endpoint.
+responses. Six local changes have a separate user-confirmed execution path:
+transaction creation, categorization, editing and deletion, goal creation and
+category-budget creation. Other action interfaces remain proposals or future
+work. See the
+[confirmed action scope](assistant/actions.md).
 
 The implemented [OpenAI authorization preparation](apps/assistant.md#openai-authorization-preparation)
 adds owner-scoped account settings, a gated OAuth lifecycle and an encrypted
@@ -58,19 +73,25 @@ were preserved and no model listing, inference or financial export occurred.
 Django authentication remains authoritative, and account linking cannot enable
 the separate inference gate or a paid API-key fallback.
 
-Real Docker OAuth, broader license/program eligibility, model access and
-limits/quotas, streaming, and real token refresh/revocation remain unverified.
+Later [bounded streaming](reviews/assistant-streaming-2026-10-19.md) and
+[tool-response validation](reviews/assistant-tool-response-2026-10-20.md) record
+separate synthetic successes. Real Docker OAuth/inference, broader eligibility,
+general model availability/quotas and real token refresh/revocation are not
+established by those observations.
 The [gated provider](apps/assistant.md#provider-and-action-boundary) now implements
 account-specific model selection, streaming, cancellation and local run history.
-With either gate off it makes no external model request. Financial context is
-unchecked by default and included only for an explicitly selected request.
+With either gate off it makes no external model request. A connected request
+sends the question, bounded recent history and minimized page metadata;
+targeted tools retrieve relevant owned records or run local calculations as
+needed. The optional initial-page snapshot parameter does not restrict that
+tool access. The assistant does not copy the whole database into each request.
 Implemented transport does not establish live availability, allowance or model
 quality; those require separate bounded evidence.
-Opt-in assistance while the application is in use is later work; no daemon,
-unattended automation or financial writes are enabled. Later goals, budgets,
-alerts and transaction creation/categorization may use previously enabled
-bounded rules where supported; otherwise they require the applicable explicit
-review decision. Fresh server validation always applies.
+Automated assistance while the application is in use remains later work. There
+is no daemon, unattended model invocation, payment, bank transfer or automatic
+financial write. The six supported local changes always require the separate
+reviewed confirmation and fresh server validation; chat text cannot confirm
+them. Any later automation requires its own explicitly bounded rule and review.
 
 ## Financial news and external evidence
 

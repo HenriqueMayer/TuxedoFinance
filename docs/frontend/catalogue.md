@@ -207,3 +207,13 @@ reduced motion and native fallback with
 The application adopts the common presentation through shared components;
 catalogue examples remain synthetic and never write application data. See the
 interface map for the retained framework and paused-feature boundaries.
+
+The assistant specimen reuses `static/js/assistant-markdown.js` for the bounded
+display subset used by the application. It never renders model HTML or creates
+actionable model-supplied links; verified synthetic source links stay separate.
+Its Thinking and Writing phases are labelled synthetic progress, with the same
+Stop/recovery and stationary composer behavior. The optional transaction-review
+scenario shows native amount, date, category and payment instrument before
+Confirm preview or Discard preview. These controls change only page-memory demo
+state and make no HTTP write, provider request or financial posting. The native
+reading fallback describes the same review boundary.

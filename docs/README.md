@@ -23,6 +23,8 @@ releases, persistent volumes and isolated restore rehearsals.
 | [Intraday Open Finance alternatives](reviews/open-finance-intraday-study-2026-10-19.md) | Follow-up retaining the 6–8-hour requirement, personal REST/MCP candidates and outstanding provider/resource/local-delivery evidence. |
 | [Meu Pluggy bill pilot](open-finance-pilot.md) | Operator-only free personal Inter bill probe, offline preparation, hidden credential setup, daily observation reuse and preserved ledger/import gates. |
 | [Tuxedo financial premises](assistant/financial-premises.md) | Assistant identity, original personal-finance reasoning rules, inspected plugin methodology and future news/source boundaries; browsing is not enabled. |
+| [Confirmed assistant actions](assistant/actions.md) | Local proposal tools, minimal choices, immutable review, explicit confirmation and preserved financial validation. |
+| [Assistant consultations](assistant/consultation.md) | Default owned financial reads, canonical monthly CLT simulation and separation from persistent changes. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
 | [data-model.md](data-model.md) | Models, relationships, accounting rules, FX and migration compatibility. |
 | [frontend.md](frontend.md) | Entry index for the responsibility-specific frontend contracts: runtime, presentation, forms, catalogue, navigation, charts, consultation and workspace compositions. Earlier section URLs remain available. |
@@ -56,12 +58,12 @@ releases, persistent volumes and isolated restore rehearsals.
   scenarios, commitment snapshots and contribution/yield simulations.
 - [apps/assistant.md](apps/assistant.md) — local conversations, signed owned
   context, gated OpenAI account settings/vault, account-specific model selection,
-  streaming, cancellation and retained local history. An
-  [owner-approved native account link](reviews/assistant-native-sign-in-2026-10-19.md)
-  was observed; Docker real OAuth, broader eligibility, model access/limits,
-  live inference/streaming and real refresh/revocation remain unverified by that
-  observation. Both gates default off; financial context is a separate explicit
-  per-request choice. Financial execution remains unimplemented.
+  streaming, cancellation, safe Markdown and private history/export. Targeted
+  owned consultations and canonical monthly simulations are available to the
+  connected assistant; six local changes require separate reviewed confirmation.
+  Authorization and inference default off, with no paid API-key fallback or
+  bank connection. Live-provider observations and their limits belong in the
+  [dated reviews](reviews/README.md), not a guarantee for another installation.
 
 ## Repository layout
 

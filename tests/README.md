@@ -15,13 +15,13 @@ find a case.
 | `e2e/planning/` | Budgets, goals, planning tools, scenarios and simulations. |
 | `e2e/transactions/` | Transaction forms, lists, splits, payment selection and export. |
 | `e2e/ingestion/` | Paused-import gates and owned read-only import history. |
-| `e2e/assistant/` | Local history, responsive overlay, independent transcript/composer scrolling, Enter/Shift+Enter, compact model/effort settings and menu focus, supported-pair validation, short-view controls, window-style minimize/restore and explicit close, authorized draft restoration, session privacy, native fallback and streaming with an explicitly selected synthetic provider; no live provider. |
-| `e2e/assistant_mock_settings.py` | Runner-guarded synthetic catalogue/streaming settings; accepts only an owned disposable runtime and blocks external network, OAuth and inference transports. |
+| `e2e/assistant/` | Local history, responsive overlay, independent transcript/composer scrolling, Enter/Shift+Enter, compact model/effort settings and menu focus, supported-pair validation, short-view controls, window-style minimize/restore and explicit close, authorized draft restoration, session privacy, native fallback, safe Markdown/progress and confirmed local actions through an explicitly selected synthetic provider; no live provider. |
+| `e2e/assistant_mock_settings.py` | Runner-guarded synthetic catalogue/streaming/consultation settings; calls real local read, calculation and proposal tools against disposable fixtures, and blocks external network, OAuth and inference transports. |
 | `e2e/catalogue/` | Design Lab components and local interactions using synthetic specimens. |
 | `e2e/shared/` | Cross-workspace contracts, authentication/public pages, history, keyboard behavior and shared UI. |
 | `e2e/helpers/` | Shared form/navigation actions, repository path resolution and bounded catalogue routing. |
 | `preview/` | Static bilingual tour tests and their independent Playwright configuration. |
-| `tooling/` | Standard-library Python tests for repository commands and dependency-free JavaScript amount/allocation tests. |
+| `tooling/` | Standard-library Python tests for repository commands and dependency-free JavaScript amount/allocation and safe Markdown tests. |
 
 Documentation checks run with `uv run python scripts/check_docs.py` and are
 covered by `tooling/test_check_docs.py`. They validate source paths, local
@@ -41,6 +41,8 @@ npm run test:e2e -- --list
 npm run test:e2e -- tests/e2e/banking
 npm run test:e2e -- tests/e2e/catalogue
 npm run test:e2e -- --assistant-fixtures tests/e2e/assistant/streaming.spec.js
+npm run test:e2e -- --assistant-fixtures tests/e2e/assistant/actions.spec.js tests/e2e/assistant/rich-text-progress.spec.js
+npm run test:e2e -- --assistant-fixtures tests/e2e/assistant/copy-markdown.spec.js tests/e2e/assistant/consultation.spec.js
 npm run test:preview
 ```
 

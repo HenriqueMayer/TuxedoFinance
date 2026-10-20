@@ -9,7 +9,8 @@ That observation did not establish live model availability or streaming. With
 either gate off, the provider/composer remains unavailable and makes no model
 catalogue or inference request. When both are explicitly enabled, an eligible
 selected account can load its models and submit a chosen-model request. No
-financial execution, bank payment or paid API-key fallback is implemented.
+bank payment or paid API-key fallback is implemented. Local financial proposals
+have a separate explicit user confirmation path described below.
 
 A later [bounded streaming validation](../reviews/assistant-streaming-2026-10-19.md)
 completed a short owner-authorized synthetic request through the ChatGPT-plan
@@ -18,7 +19,7 @@ availability or live Docker inference.
 
 The app owns private conversation storage, user-owned connection metadata, an
 encrypted local credential vault, a provider-unavailable state, structured
-financial context and explicit future provider/action contracts.
+financial context, targeted read/calculation tools and confirmed local actions.
 The existing Django account remains the authorization boundary. The
 [Open Finance study](../reviews/open-finance-personal-study-2026-10-18.md)
 is separate research, not a data source for this assistant.
@@ -38,8 +39,10 @@ in Contributing.
 | `/assistant/<uuid>/` | Read an owned conversation; UUIDs do not replace ownership checks. |
 | `/assistant/conversations/new/` | CSRF-protected POST creating an empty local conversation. |
 | `/assistant/<uuid>/delete/` | CSRF-protected POST deleting only the owned conversation and its messages. |
+| `/assistant/<uuid>/export/`, `.../messages/<message-uuid>/export/` | Authenticated owner GET/HEAD exporting raw Markdown for the complete conversation or one message; private download and enhanced clipboard paths never call a provider. |
 | `/assistant/messages/`, `/assistant/<uuid>/messages/` | CSRF-protected POST for a new/existing owned conversation; validates selected account/model/context, streams SSE to an enhanced client or waits and redirects natively. Gate-off requests return unavailable without a fake exchange. |
 | `/assistant/models/` | Authenticated owned-account catalogue/state GET; no external call with either gate off. |
+| `/assistant/actions/<uuid>/confirm/`, `.../cancel/` | Owned-session CSRF POST confirming or discarding an immutable local proposal; model text cannot confirm. |
 | `/assistant/preferences/` | CSRF-protected POST remembering only the selected owned account's validated model and reasoning effort. No message or financial context is accepted. |
 | `/assistant/runs/<uuid>/cancel/` | CSRF-protected owner/session POST cancelling a generation run; no financial rollback. |
 | `/assistant/context/` | Authenticated read-only context GET: minimal page metadata by default; bounded financial evidence only with explicit `include_context=1`. It never calls a model. |
@@ -87,11 +90,14 @@ object ID, label, total or arbitrary URL as financial authority.
 
 `assistant.context_request.build_context` returns timestamp, financial cutoff,
 language and optional current-page label/route/date-period filters by default.
-It does not collect financial metrics or preferences without the request's
-unchecked-by-default Use page data choice. Free-text search and
-record-filter IDs are omitted from transmitted page metadata. No scope remains
-finance-free even when the choice is submitted. With the choice enabled, the
-existing bounded collector supplies reporting/native currencies, metrics,
+It does not eagerly collect financial metrics or preferences. Free-text search
+and record-filter IDs are omitted from transmitted page metadata. The compatible
+`include_context` parameter can request a bounded initial-page snapshot; without
+a signed origin it supplies no financial figures. It is separate from the
+default [owned consultation tools](../assistant/consultation.md), which retrieve
+only evidence needed for the question from any supported owned workspace.
+The current composer has no page-data checkbox and the page is not an access
+boundary. The optional snapshot supplies reporting/native currencies, metrics,
 evidence warnings and verified owned references. Labels become bounded plain
 text; notes, raw HTML, unsent fields and other model fields are excluded. The compact
 Context block shows only the current workspace/period and its authorized origin
@@ -104,12 +110,12 @@ unknown. Incomplete evidence
 must remain explicit in any later answer rather than being treated as a zero
 balance or a complete ledger review. Page location is a UI cue, not a claim that
 every customer record was fetched or a replacement for server-side ownership.
-Future agent queries may consult the authenticated user's financial data beyond
-the page currently open, retrieving what the question needs rather than copying
-the whole database into each request. This streaming implementation retains the
-bounded collector below; broader query tools remain later work.
+Targeted tools can consult saved records beyond the page currently open without
+copying the whole database into each request. Their separate evidence and
+calculation contract lives in the [consultation guide](../assistant/consultation.md).
+The retained optional initial-page collector has these narrower surfaces:
 
-| Current context surface | Collected evidence |
+| Optional initial-page snapshot surface | Collected evidence |
 |---|---|
 | Unfiltered Home and Accounts/bank detail | Up to 20 owned account balances at today's financial cutoff, each in its native currency, with source links and unknown-opening warnings. |
 | Unfiltered Transactions/list or owned editor/split | Up to 20 stored source amounts linked to owned banking instruments, with date, income/expense and recurring/installment/future-source labels, plus editor links where permitted. Unlinked cash sources are not copied. These are not realized cash flows, account balances, split totals or billed-month installment totals. |
@@ -143,7 +149,7 @@ and paused-feature gates.
 The authenticated shell offers the assistant as a utility, preserving the same
 five primary destinations. Its fixed desktop overlay lives outside `main` and
 never reserves width or changes page/filter/form geometry. Narrow screens retain
-the accessible modal sheet. Chat actions never submit or capture a financial draft.
+the accessible modal sheet. Chat controls never submit or capture an unrelated financial draft.
 The compact conversation layout keeps local history, the current-page link and
 a persistent composer available while the transcript scrolls. Short software-
 keyboard viewports use compact chrome and a 44px editor cap; the native full
@@ -155,10 +161,10 @@ current draft, model/effort choices and active reply behind a restore tab in the
 current document. The restore tab also exposes Close without reopening the panel.
 Restore reauthorizes the user/session before revealing content;
 an expired or different session discards hidden temporary state. Close cancels
-the reply and clears the unsent message and per-request context consent without
+the reply and clears the unsent message and temporary request state without
 deleting saved history or deliberately saved model/effort preferences.
 If the linked account changes while minimized, retain same-session unsent text
-but use the new account's fresh settings and unchecked context consent.
+but use the new account's freshly authorized settings.
 History, the compact current-page badge and New/Delete actions share one toolbar
 above the transcript. Context and message-role labels remain accessible without
 repeated visible headings. Center the empty-state artwork and copy. Compact chat
@@ -168,9 +174,10 @@ deliberate Chat settings gear holds the labelled native Model and Reasoning
 effort selects; a single-line caption identifies the selection without occupying
 the message area. Long captions retain their full accessible text. The enhanced
 keyboard hint appears while the composer is focused, without moving its layout.
-The native context checkbox remains beside the gear and Send/Stop. Their visual faces may be smaller, but
+The page badge remains orientation; the composer has no financial-access
+checkbox. The gear and Send/Stop remain available. Their visual faces may be smaller, but
 interactive targets, including the editor and page link, remain at least 44px.
-Native model and per-request context controls retain their validated submission
+Native model/effort controls retain their validated submission
 contracts. Settings use a native disclosure without a focus trap: Escape closes
 it before minimizing chat, and outside click or Tab-away dismisses it. The bounded
 settings surface opens above the composer and scrolls internally on short screens.
@@ -191,11 +198,48 @@ context and deleted conversation are explicit states. They must not display a
 simulated model reply or imply an external connection. Conversation creation
 and deletion are explicit local POSTs, not financial mutations. Native requests
 retain CSRF, ownership and server-rendered recovery.
+While an enhanced send waits for the first text, show a compact Thinking state
+inside the transcript, including time spent waiting for response headers. Change
+to Writing a response only when text actually arrives. These states describe
+request progress; they do not claim that financial records have been consulted
+or calculations performed. The workspace remains usable and Stop remains
+reachable. Completion, cancellation, invalid input and failures remove the waiting
+indicator; reduced-motion preferences disable its decorative animation.
+
+Assistant replies use a local, dependency-free Markdown presentation subset on
+initial display and during streaming: paragraphs, emphasis, headings, simple
+lists, quotes, code, rules and pipe tables. Raw HTML is literal text. Model-made
+links and images remain inert labelled text; only the separately validated local
+references are actionable. Rendering creates allowlisted DOM elements and text
+nodes without assigning provider text to HTML. The existing 16,000-character
+reply bound applies before parsing; nested formatting and table columns are
+bounded. This is not a full CommonMark parser. User messages retain their plain
+text, and native requests without JavaScript retain escaped, readable Markdown
+source rather than execute a second renderer.
+The enhanced view keeps one server-verified reference footer. It omits a final
+paragraph consisting only of Markdown links when every destination and source
+label match that message's authorized footer. An ISO month suffix is equivalent
+only when it matches the single month in that authorized URL. This applies after stream completion
+and when reopening saved history. Inline explanations, code, quoted text,
+images, explanatory link labels and unverified or differently filtered links stay visible and inert.
+The original message and Markdown exports are unchanged; generated text never
+creates an active link or expands the server's reference scope.
 Closing or replacing the panel clears hidden transcript/context HTML before an
 authorized reload. Minimize retains it only in the hidden current-document panel;
 the restore GET must validate the same user and session before revealing it or
 reapplying temporary choices. The selected owned conversation identifier is not
 permission to replay its content after a session change.
+
+## Markdown copying
+
+Conversation options include Copy conversation as Markdown; each message has
+Copy as Markdown below its content. Authenticated export routes preserve raw
+Markdown, complete history beyond the 200-message UI limit and verified local
+references/action-review state. Native links download `.md` without JavaScript.
+Enhanced copies fetch fresh owned content and reauthorize the same user/session
+after the body finishes, before writing to the clipboard. Live partial text also
+requires fresh authorization. A failed clipboard operation exposes a deliberate
+download fallback. Exports never resolve a provider or collect financial context.
 
 ## Saved chat settings
 
@@ -220,8 +264,8 @@ Native redirects and enhanced completion GETs do not put model/effort into the
 URL, allowing subsequent loads to use the latest preference. Explicit legacy
 GET values and bound POST errors retain precedence for recovery.
 
-Closing, creating a conversation and reloading keep saved settings, while drafts
-and per-request financial-context consent retain their separate lifecycle.
+Closing, creating a conversation and reloading keep saved settings, while
+temporary drafts retain their separate lifecycle.
 The browser stores no preference in local/session storage. Saving preferences
 does not update the connection's credential-lifecycle timestamp, enable a
 provider, generate a message or change its billing route. Model default persists
@@ -267,22 +311,26 @@ and server-side compatibility validation without JavaScript.
 | Python interface | Current contract |
 |---|---|
 | `assistant.providers.get_provider(user, connection_id)` | Resolves the explicitly gated owned selected account to `OpenAIProvider`; returns `DisconnectedProvider` when unavailable. Tokens stay in the server process/vault. |
-| `providers.base.GenerationRequest` | Explicit model slug, optional validated reasoning effort, JSON context up to 32,000 characters, bounded `ChatTurn` tuple, language (`en`/`pt-br`) and supported instruction version. The chat service supplies at most eight prior completed messages plus the current question; constructor validation alone does not authorize context or a model/effort pair. |
+| `providers.base.GenerationRequest` | Explicit model/effort, JSON context up to 32,000 characters, bounded history, language and instruction version; optional bounded function schemas and a server-owned proposal callback. Constructor validation does not authorize records or writes. |
 | `ChatTurn` | User/assistant role with bounded text. Prior history is limited to 4,000 characters per supplied message; full local history is not automatically transmitted. |
 | `ProviderEvent` | Typed `text`, `error` or `done` event; per-event text/code bounds. `ProviderUnavailable`, `ProviderCancelled` and `ProviderError` expose stable error codes rather than adapter exception text. |
 | `CancellationToken` and `stream_response` | Typed terminal/error handling, registered transport closure and explicit completion; EOF/incomplete/interrupted streams never imply success. Provider I/O is refused inside a database transaction. |
 | `assistant.actions.preview_action` | Shape-only allowlisted proposal, returned as an immutable `ActionPreview`; no object lookup, simulation of financial results or execution. |
+| `assistant.tooling` / `assistant.action_service` | Bounded owned choice lookup and canonical review preparation; a distinct authenticated confirmation runs ordinary financial validation and services. |
 
 Responses use public `/v1/responses` HTTP SSE with `store: false`, `stream: true`
 and no server-conversation/continuation ID. Explicit effort uses
 `reasoning: {"effort": "<advertised level>"}`; Model default omits that field.
-The current question, minimized
-context and selected recent history are the outbound content. No tools, hosted
-connectors, model-side financial actions, automatic retry or paid fallback are
-supplied. The [preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
+The current question, minimized context and up to nineteen completed history
+turns are the initial outbound content. Nine local functions provide targeted
+consultations, canonical monthly CLT simulations, owned choices and six
+preparation actions. Reads and simulations need no extra confirmation; proposals
+cannot confirm or write financial records. See
+[application consultations](../assistant/consultation.md). Hosted connectors, automatic
+retry and paid fallback are not supplied. The [preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 remain the upstream request contract.
 
-The enhanced UI renders streamed deltas as text, exposes Cancel and keeps
+The enhanced UI renders streamed deltas through its safe Markdown subset, exposes Cancel and keeps
 references as separately verified local links. The native POST waits for the
 bounded run and redirects to its owned history, without JavaScript. Runs retain
 explicit terminal status, at most 16,000 output characters and a 90-second budget;
@@ -332,16 +380,17 @@ saved transaction. These Python proposal shapes are not executable UI commands:
 | `budget.create` | Category, `YYYY-MM`, currency and amount; no limit or copied budget is saved. |
 | `alert.propose` | Allowlisted suggested kind, summary and local source URL; no signal, notification, watcher or automatic decision is created. |
 
-No execution endpoint is exposed. Future mutations must use canonical financial services,
-revalidate ownership/current state and apply the explicitly authorized bounded
-rule or review decision; model text cannot expand that authorization. Stopping
-a stream would not by itself undo an already confirmed action, so any future
-implementation must keep generation and confirmation separate.
+The legacy shape-only helper above remains unchanged. The separate
+[confirmed action workflow](../assistant/actions.md) supports those first four actions and transaction update/delete through `ActionProposal`, additive migration `0006` and native POST
+confirmation cards. Alert proposals remain non-executable. User/session ownership,
+expiry, current financial state and canonical forms/services are checked again
+when confirming; a provider response cannot confirm. Stopping a stream cannot
+undo an already confirmed action.
 
 ## Versioned instructions and evaluation limits
 
-`assistant.prompts.INSTRUCTIONS_VERSION` is `v3`; `load_instructions` defaults to
-`assistant/prompts/v3/system.txt`, retains explicit v1/v2 loading for historical
+`assistant.prompts.INSTRUCTIONS_VERSION` is `v6`; `load_instructions` defaults to
+`assistant/prompts/v6/system.txt`, retains explicit v1/v2/v3/v4/v5 loading for historical
 requests and refuses unknown versions. The
 instructions require supplied owned source links, explicit missing/stale/bounded
 evidence and separation of native currency, source amounts, installments,
@@ -361,7 +410,13 @@ has no live web/news verification tools and does not inherit ChatGPT/Codex
 plugins. Pasted articles remain unverified data. The
 [financial premises and research boundaries](../assistant/financial-premises.md)
 own methodology provenance and future-news acceptance requirements; reading
-that document does not connect a tool or provider.
+that document does not connect a tool or provider. V4 preserves those premises,
+adds concise Markdown and distinguishes tool-prepared proposals from
+application-recorded execution. V5 enables owned application reads by default and directs requested monthly scenarios to canonical calculation tools; only ambiguous inputs need clarification. Chat text cannot confirm a proposal.
+V6 preserves those rules and aligns source attribution with the automatically
+rendered reference footer. It uses source labels in explanatory prose where
+useful, without repeating paths, Markdown links or source lists. Missing or
+incomplete evidence still requires an explicit explanation.
 
 These are versioned local instructions and interface guards. Offline tests can
 check deterministic boundaries and fixtures; they do not establish the quality,
@@ -493,7 +548,9 @@ installation. A new host requires its own identity and a separately reviewed
 authorization. See [operations](../operations.md#assistant-data-and-integrations)
 for the backup boundary.
 
-### Eligibility and later inference
+<a id="eligibility-and-later-inference"></a>
+
+### Eligibility and connected inference
 
 [OpenAI's quickstart](https://developers.openai.com/siwc/quickstart) separates
 identity scopes from plan permission. The
@@ -502,25 +559,28 @@ documents local/open-source clients and user/workspace-bound registrations;
 paid or remotely hosted deployment has a separate access process. This
 repository's PolyForm Noncommercial license is not proof of eligibility under
 that program. The observed native authorization is bounded evidence for that
-owner and installation, not a license/program eligibility guarantee. Real Docker
-OAuth, other accounts/deployments, model access, limits/quotas, streaming, and
-real token refresh/revocation remain unverified; see the
-[native validation limits](../reviews/assistant-native-sign-in-2026-10-19.md).
+owner and installation, not a license/program eligibility guarantee. Later
+[bounded streaming](../reviews/assistant-streaming-2026-10-19.md) and
+[tool-response validation](../reviews/assistant-tool-response-2026-10-20.md)
+record separate synthetic successes. Real Docker OAuth/inference, other
+accounts/deployments, general model availability, limits/quotas and real token
+refresh/revocation are not established by those observations.
 
 [ChatGPT's user guide](https://learn.chatgpt.com/docs/sign-in-with-chatgpt)
 describes eligible Plus/Pro users, shared existing usage limits and access
 management. Plan permission grants neither ChatGPT conversations/memories nor a
 new allowance. The gated adapter checks the account catalogue and sends only
-the selected question/history and explicitly opted-in context. Preserve
+the question, bounded recent history and necessary owned evidence, with targeted
+reads/calculations when requested by the model's supported tools. Preserve
 explicit unavailable/exhausted states without automatic paid fallback.
 
 The current [preview contract](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 requires HTTP Responses requests with `store: false` and `stream: true`; HTTP
-continuation does not provide persistent server conversation storage. No
-live Responses API success, quota availability or financial correctness is
-established by the earlier authorization observation. The streaming code path
-exists behind its own gate; current validation evidence belongs in dated reviews,
-and isolated synthetic tests do not prove a particular live account can infer.
+continuation does not provide persistent server conversation storage. A successful
+synthetic request does not establish future quota, financial-answer quality or
+instruction compliance. Streaming remains behind its own gate; validation
+evidence belongs in dated reviews and cannot guarantee another installation's
+live account access.
 
 ## Later automation
 

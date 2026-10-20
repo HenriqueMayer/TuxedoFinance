@@ -63,9 +63,13 @@ provider/composer unavailable after account linking. With either gate off, no
 model catalogue, inference or inference-triggered credential refresh is sent.
 With both enabled, opening a ready composer may fetch the account catalogue and
 refresh expiring credentials before Send; each message then requires explicit
-model selection. Financial evidence is a separate per-request unchecked opt-in.
-The owner-approved native validation enables both flags only in the server
-process; `.env` and both repository defaults remain unchanged. The public model
+model selection or a previously selected model still valid for that account.
+The initial request contains minimized page metadata and bounded recent history.
+Owned read/calculation tools retrieve the relevant saved evidence on demand;
+the visible page does not restrict which owned workspace can be consulted.
+The optional initial-page snapshot parameter is separate from this tool access.
+The owner-approved native validation used process-only opt-in; `.env` and both
+repository defaults remained unchanged. The public model
 and response endpoints use ChatGPT-plan OAuth exclusively. The adapter never
 reads `OPENAI_API_KEY`, exposes no separate API organization/key/billing
 configuration and never selects paid fallback. Bounded, mapped diagnostics are documented in the
@@ -84,7 +88,13 @@ active database does not erase older owner-managed backup copies. The
 structured-context endpoint is read-only and does not synchronize projections.
 Apply the additive assistant migrations through the ordinary backed-up update
 workflow before running this source checkout. They add conversation,
-user-owned authorization and generation-run metadata, without changing financial records.
+user-owned authorization, generation-run and action-review metadata, without
+changing financial records. Migration `0006_actionproposal` adds local review
+records. A separate [action confirmation](assistant/actions.md) can create,
+categorize, edit or delete a transaction, create a goal or create a category
+budget. Each proposal revalidates ownership, the session and current financial
+state. Reads and simulations do not save financial records; deleting chat
+history does not delete previously confirmed domain records.
 
 The SQLite database retains account identity, scopes, expiry, connection state
 and digests for short-lived authorization attempts. Reusable tokens and pending
@@ -106,7 +116,8 @@ the callback/session handoff, private storage, recovery and eligibility limits.
 Keep credentials out of Git, browser storage and diagnostics; external access
 logging must redact callback queries before any later real validation.
 
-Later inference needs its own approved context/usage scope. Bank synchronization
+Live model validation needs its own approved context/usage scope; an earlier
+bounded test does not authorize additional calls. Bank synchronization
 additionally needs an approved delivery strategy:
 provider webhooks cannot reach an ordinary loopback-only service by themselves.
 Do not expose the installation, configure a tunnel, reuse another application's
@@ -122,6 +133,10 @@ uses synthetic data; live mode requires the owner's official bank/provider setup
 and hidden one-shot credentials. It reads only the selected personal proxy/card
 and saves a minimized private observation under ignored `.local/open-finance-pilot/`.
 It never queries or changes the application database or stores credentials.
+
+Real pilot setup and bank authorization remain paused in the
+[roadmap](roadmap.md#personal-open-finance-study); the command's presence does
+not enable synchronization in an installation.
 
 The private files contain financial evidence and require owner-only POSIX access.
 Decide explicitly whether to retain/encrypt/back up those observations; this is

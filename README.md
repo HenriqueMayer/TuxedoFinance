@@ -35,6 +35,12 @@ themes. Your records stay on your installation.
 | **Investments** | Track holdings, movements, cash pots and dated prices. |
 | **Plan** | Set category limits, reserve existing balances for goals and compare simulations. |
 
+**In the unreleased source:** the optional [Tuxedo assistant](docs/apps/assistant.md)
+can consult your saved finances, simulate scenarios and prepare changes for your
+confirmation. Its ChatGPT connection is off by default; when enabled, relevant
+records and necessary conversation history are sent to OpenAI. Open Finance
+remains on the [roadmap](docs/roadmap.md#personal-open-finance-study).
+
 <a id="-quick-start"></a>
 
 ## Quick start

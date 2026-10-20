@@ -15,6 +15,13 @@ earlier versions. This document is the human reference; the bounded system
 instructions carry the runtime rules. A Markdown file is not a connected tool,
 an automatic knowledge retriever or proof of model compliance.
 
+The current `v6` instructions preserve those premises, safe Markdown and
+[reviewed local actions](actions.md). The user confirms each supported write in
+the application; neither model text nor these instructions can execute one. [Owned consultations and monthly simulations](consultation.md) are available without additional confirmation, independently of the visible page.
+Source attribution uses the application's verified reference footer, with plain
+source labels in explanatory prose where needed. Instructions do not duplicate
+that footer or treat it as proof that missing evidence is complete.
+
 Today the application connects to OpenAI for authorized sign-in, model discovery
 and response streaming. It supplies **no browsing/news tool**. It cannot check
 today's news, live prices, current interest rates or newly changed rules. It

@@ -141,6 +141,46 @@ reviews stay in the installation database. No bank connection, external quote
 feed, AI service or presentation CDN is required. Inter's font and license are
 included in `static/fonts/`.
 
+## Assistant review
+
+A disposable copy does not authorize connecting an account or sending copied
+financial information to a model. The preview helper inherits explicit process
+settings; keep real authorization and inference off during this walkthrough:
+
+```bash
+ASSISTANT_OPENAI_AUTH_ENABLED=False ASSISTANT_OPENAI_INFERENCE_ENABLED=False uv run python scripts/preview_branch.py
+```
+
+Check the unavailable-provider state, local history, Markdown copying and
+Minimize/Restore/Close on computer and phone in both themes. A retained selected
+account can remain visible as metadata while sending is disabled. Opening chat
+must preserve an edited financial form, workspace geometry and focus; logout or
+an account change must not reveal the previous user's transcript through history.
+
+Streaming, canonical simulation and confirmed-action interactions use synthetic
+fixtures through the isolated browser runner, without a linked account:
+
+```bash
+npm run test:e2e -- tests/e2e/assistant/connections.spec.js tests/e2e/shared/history-privacy.spec.js
+npm run test:e2e -- --assistant-fixtures \
+  tests/e2e/assistant/streaming.spec.js \
+  tests/e2e/assistant/chat-ux.spec.js \
+  tests/e2e/assistant/actions.spec.js \
+  tests/e2e/assistant/consultation.spec.js \
+  tests/e2e/assistant/copy-markdown.spec.js
+```
+
+Connection preparation cases require the ordinary disabled gates; do not select
+the synthetic ready-provider configuration for those cases.
+
+Those cases exercise model/effort preferences, thinking/writing/cancellation,
+targeted reads, monthly simulation, private exports and reviewed local changes.
+Reads/simulations must not save records; only the separate confirmation can
+create, categorize, edit or delete a transaction, create a goal or create a
+category budget. Repeat confirmation must not duplicate the write. Real model
+validation has a separate approved account/context/usage scope and does not
+follow from this manual acceptance checklist. Open Finance remains paused.
+
 ## Automated validation
 
 Current validation commands and isolation rules live in

@@ -106,13 +106,16 @@ version; follow the backup and restore procedure before changing image versions.
 
 The Unreleased source checkout prepares OpenAI account authorization; published
 `v0.10.0` does not contain this change. Real sign-in is disabled by default and
-no real account or model calls were used for this delivery. Leave the explicit
-authorization flag disabled until a later approved validation. Opening settings
+inference has its own default-disabled flag. Leave both off unless intentionally
+connecting the installation. Opening settings
 does not initialize private storage or contact OpenAI, and linking an account
 does not enable the separate inference gate. With either gate off, catalogue
 and inference make no external request. The gated streaming path is implemented;
-real Docker OAuth, model availability and usage remain unverified by native
-authorization evidence. See the [provider contract](apps/assistant.md#provider-and-action-boundary).
+bounded native sign-in, streaming and tool-response observations are recorded in
+the [assistant guide](apps/assistant.md#eligibility-and-connected-inference).
+They do not establish real Docker OAuth/inference, model availability or usage
+for another installation. There is no paid API-key fallback. See the
+[provider contract](apps/assistant.md#provider-and-action-boundary).
 
 The browser and container must run on the same computer. The callback uses the
 Docker host's published loopback port: for `TUXEDO_PORT=8001`, its exact URL is

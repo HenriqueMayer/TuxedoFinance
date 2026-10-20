@@ -43,7 +43,7 @@ investments/   # products, assets, position operations and valuation
 planning/      # category budgets, existing-cash goals and local review signals
 ingestion/     # explicitly reviewed local statements and guarded import undo
 sandbox/       # private planning drafts and isolated simulations
-assistant/     # local conversations, owned read-only context and provider contracts
+assistant/     # local chat, owned consultations, provider transport and reviewed actions
 ```
 
 `banking/` owns every settlement instrument and the account ledger. `Bank` is
@@ -68,9 +68,13 @@ package solely to reduce line counts.
   imports; category views retain HTTP, messages and response handling.
 - `assistant.context` normalizes/signs authorized page scopes and collects
   bounded stored evidence without calling workspace views or ledger projection.
-  `assistant.providers.base` owns the disconnected streaming/cancellation
-  interface; `assistant.actions` owns shape-only, non-executable previews and
-  `assistant.prompts` owns versioned instructions. None is a financial writer.
+  `assistant.consultation` and `assistant.simulation_tools` provide targeted
+  read-only evidence and canonical monthly calculations.
+  `assistant.providers.base` owns the provider-neutral streaming/cancellation
+  interface; `assistant.actions` retains legacy shape-only previews.
+  `assistant.tooling` dispatches bounded reads and review preparation, while
+  `assistant.action_service` executes a separately confirmed proposal through
+  canonical domain forms/services. `assistant.prompts` owns versioned instructions.
 - Each app owns `tests/test_*.py` and the support modules it needs. Test package
   initializers do not reexport test classes. The [test index](../tests/README.md)
   explains discovery, fixture imports and isolated execution.
@@ -105,8 +109,10 @@ Arrows mean "calls or imports", not ownership.
   confirmation calls canonical transaction, payment or transfer services;
   matching an existing movement does not create a second source.
 - `assistant` owns conversation data and server-built owned context. Context
-  reads never synchronize the ledger or call mutation services. The provider is
-  unavailable; proposal/simulation contracts expose no execution endpoint.
+  reads and simulations never synchronize the ledger or call mutation services.
+  Its provider defaults off. A separate owner/session-bound confirmation can
+  execute one of the supported local proposals through domain services; model
+  text and read tools cannot authorize that execution.
 - `dashboard` query services compose the ledgers without posting records. Its
   views first call transaction synchronization, which can write derived banking
   records. The app owns no financial model.
@@ -203,8 +209,11 @@ cutoff/currency/evidence warnings. It never scrapes DOM/form contents or invokes
 repair financial projections.
 
 The assistant's implemented provider follows the separate authorization/inference
-gates in its owning guide; neither gate enables financial execution or banking
-tools. The explicit [Inter bill pilot](open-finance-pilot.md) is an operator-only
+gates in its owning guide. With both enabled, the selected eligible account can
+answer using bounded owned read/calculation tools. Six local changes have a
+separate [review and confirmation](assistant/actions.md) boundary; the provider
+has no confirmation tool, real payment or bank-transfer capability.
+The explicit [Inter bill pilot](open-finance-pilot.md) is an operator-only
 ingestion command, outside the assistant and all web routes. Its fixed-origin
 provider client and private artifact store perform no database queries or ledger
 writes. One-shot hidden credentials are not assistant-vault data, and the
@@ -299,8 +308,8 @@ The route namespaces remain domain-based:
 | `/planning/` | `planning` | operational budgets, backed goals, reservations and local signals |
 | `/imports/` | `ingestion` | paused CSV/OFX operations; owned posted history remains read-only |
 | `/sandbox/` | `sandbox` | authenticated planning workspace and explicit draft persistence |
-| `/assistant/` | `assistant` | owned local conversations/context, separately gated ChatGPT-plan streaming and saved model/effort preferences; no browsing or financial execution |
-| `/i18n/set_language/` | Django i18n | persist the selected interface language and redirect back |
+| `/assistant/` | `assistant` | owned local conversations, targeted consultations/simulations, separately gated ChatGPT-plan streaming, saved model/effort and reviewed local changes; no browsing, bank connection or unattended execution |
+| `/i18n/setlang/` | Django i18n | persist the selected interface language and redirect back |
 
 All authenticated CBVs constrain root querysets to `request.user`; forms also
 scope every foreign-key choice. Ownership is revalidated in posting services,

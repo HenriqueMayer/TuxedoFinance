@@ -1,6 +1,6 @@
 # PRD — Tuxedo Finance
 
-**Status:** Approved baseline, local-finance evolution, assistant foundation and gated authorization preparation
+**Status:** Approved baseline, local-finance evolution and gated assistant with reviewed local actions
 
 **Current release:** 0.10.0
 **Implementation beyond release:** The v1 candidate remains on `feat/personal-finance-evolution`; the assistant continuation is on `feat/tuxedo-assistant-foundation`. Publication and owner validation are separate steps.
@@ -27,25 +27,32 @@ wealth. It preserves the local installation and default automatic settlement.
 No external bank/broker integration or publication is implied by this scope.
 
 The separately confirmed assistant foundation adds private local conversations,
-a persistent utility panel/native page and bounded read-only financial context.
+a persistent utility panel/native page, bounded owned consultations, canonical
+monthly simulations, safe Markdown and conversation/message exports.
 The implemented [OpenAI authorization preparation](apps/assistant.md#openai-authorization-preparation)
 adds default-disabled account settings, an OAuth lifecycle and an encrypted
 credential vault linked to the Django user. It preserves local login and has
-independent default-off authorization/inference gates and no financial execution
-or paid fallback. The gated catalogue and streaming path is implemented; model
+independent default-off authorization/inference gates and no paid fallback.
+Six supported local changes require separate owner/session-bound review
+confirmation; there is no real payment, bank transfer or unattended execution.
+The gated catalogue and streaming path is implemented; model
 availability still depends on the selected account and explicit model choice.
 [Owner-approved native sign-in and local confirmation](reviews/assistant-native-sign-in-2026-10-19.md)
 were observed without model listing, inference, financial export or changes to
-financial records. Broader deployment/program eligibility and inference remain
-unverified; the native observation does not establish Docker real OAuth, model
+financial records. The native observation does not establish broader
+deployment/program eligibility, Docker real OAuth, model
 access/limits, streaming or real refresh/revocation. A later
 [bounded streaming validation](reviews/assistant-streaming-2026-10-19.md)
 completed a synthetic ChatGPT-plan request without financial context; this does
 not establish financial-answer quality, all-model access or live Docker inference.
+The [tool-response follow-up](reviews/assistant-tool-response-2026-10-20.md)
+records a separate bounded synthetic tool/continuation check, without authorizing
+further model calls or proving general instruction compliance.
 The broader personal Open Finance study remains research. A separately approved
 [Inter bill pilot](open-finance-pilot.md) provides an explicit operator-only read
 command with daily private observations; it does not synchronize the ledger or
-enable a product connection screen.
+enable a product connection screen. Real pilot setup remains paused in the
+[roadmap](roadmap.md#personal-open-finance-study).
 
 The assistant's identity is **Tuxedo, your financial assistant** (**Tuxedo, o seu
 assistente financeiro** in Brazilian Portuguese). Versioned
@@ -69,7 +76,7 @@ implementation; they are not all navigation destinations or published features.
 | Home/Reports, Transactions/Categories, Accounts, Investments and Plan | Available under the current shared interface contracts. Unreleased changes still need owner acceptance and a separate release decision. |
 | Local statement operations (FR34) | Paused: upload, mapping, review, confirmation and undo are gated on GET/POST. Owned confirmed/undone provenance remains read-only. |
 | Dated net-worth interface (FR38) | Paused: old screen requests return to Home; calculations and source data remain available to their existing consumers. |
-| Assistant foundation (FR39) | Owned local conversations and minimized request context; financial evidence requires a per-request unchecked opt-in. No financial execution endpoint. |
+| Assistant foundation (FR39) | Owned local conversations, targeted default financial reads and canonical simulations; persistent changes require reviewed user confirmation. |
 | OpenAI authorization preparation (FR40) | Gated account settings, OAuth lifecycle and encrypted vault; authorization defaults off. Native account linking was observed, without proving inference or wider deployment eligibility. |
 | Gated streaming chat (FR41) | Implemented selected-account model catalogue, explicit model choice, SSE/native submission, cancellation and local run history; inference independently defaults off. Live model access/allowance and output quality are not established by code or synthetic tests. |
 | Personal Open Finance | Broader PF 6–8-hour aggregation remains research. The separately approved daily Inter bill probe is implemented as an operator-only command; live personal-proxy bill coverage remains unverified. No payment initiation, automatic ledger import or unattended synchronization. |
@@ -131,11 +138,15 @@ availability or permission to re-enable a paused workflow.
 - Dated wealth including full incurred installment debt and retained card credits,
   without treating forecasts or goal earmarks as new assets.
 - Local owner-scoped assistant conversations, signed expiring route context and
-  read-only financial snapshots with explicit unavailable-provider behavior.
+  targeted financial consultations, safe Markdown and private history exports,
+  with explicit unavailable-provider behavior.
 - Explicitly gated account-model selection and streaming/native responses, with
-  cancellation, idempotent local run history and per-request financial context
-  opt-in. With either gate off, no external model request occurs.
-- Proposed-action/simulation contracts without a daemon or financial execution.
+  optional model-compatible effort, saved preferences, cancellation and
+  idempotent local run history. With either gate off, no external model request
+  occurs. Connected requests send only bounded history and relevant owned evidence.
+- Canonical monthly simulations without saving and six separately confirmed local
+  changes: transaction creation/categorization/editing/deletion, goal creation and
+  category-budget creation. No model-side confirmation or unattended execution.
 - Default-disabled, owner-scoped ChatGPT account settings, OAuth lifecycle and
   encrypted private vault preparation, with isolated synthetic coverage and
   owner-approved native authorization validation within its dated evidence limits.
@@ -154,7 +165,7 @@ availability or permission to re-enable a paused workflow.
   Inter bill pilot is the scoped exception; research does not enable other integrations.
 - Broader deployment/program eligibility guarantees, Docker real OAuth, model
   access/limits or live response-quality guarantees, real refresh/revocation validation,
-  action execution, unattended automation and automatic paid-provider fallback
+  real payments/transfers, unattended automation and automatic paid-provider fallback
   in this delivery. Live authorization still requires the owner's approval.
 - Market-price, FX or loyalty-provider feeds; local prices and rates are manual.
 - Tax-lot/tax reporting, automatic investment accrual and annualized,
@@ -207,9 +218,9 @@ availability or permission to re-enable a paused workflow.
 | FR36 | Dated openings | Require dates for new nonzero account/asset openings, include known openings only from their date and disclose migrated unknown baselines without inventing history. |
 | FR37 | Investment results | Replay weighted cost per product/asset after valid edits/deletion, preserve yield entry values and actual cash, and apply only explicitly declared asset-currency fees. Local quotes expose valuation and missing-price cost fallbacks. |
 | FR38 | Dated wealth | Compose dated cash and position valuation, incurred card debt including future installments, and card credits; exclude future recurring occurrences, duplicated settlements and goal earmarks. |
-| FR39 | Local assistant foundation | Persist owned conversations; minimize signed route context by default and collect bounded financial evidence only through explicit per-request opt-in, preserving cutoff/native currency/warnings without financial writes. |
+| FR39 | Local assistant foundation | Persist owned conversations; minimize signed route metadata and enable bounded owner-scoped application consultations by default, preserving cutoff/native currency/warnings. Simulations calculate without saving; persistent writes require a separate review confirmation. |
 | FR40 | Gated account authorization preparation | Prepare owner/session-bound ChatGPT linking, account selection and encrypted credentials; authorization defaults off and requires owner approval, independently of inference. |
-| FR41 | Gated selected-model chat | Require both gates, an eligible owned selected connection and explicit catalogue model choice; support text streaming, cancellation, bounded native fallback and idempotent local run/partial-history states, without tools or automatic paid fallback. |
+| FR41 | Gated selected-model chat | Require both gates, an eligible owned selected connection and validated catalogue model choice; support streaming, cancellation, bounded native fallback, idempotent local history and bounded read/simulation/proposal tools. No model-side confirmation or paid fallback. |
 
 ## 5. Domain Rules
 
@@ -362,9 +373,11 @@ serve explicitly labeled current or selected-date valuations elsewhere.
   local user input, terminal run state and bounded completed/partial output.
   Local history remains until explicit deletion and is covered
   by the installation's ordinary database/backup responsibilities.
-- Proposed actions and simulations are not execution. Later financial writes
-  require canonical services, fresh ownership/state checks and the applicable
-  explicitly enabled bounded rule or review decision. No such execution exists now.
+- Proposed actions and simulations are not execution. The
+  [confirmed action workflow](assistant/actions.md) supports creation of
+  transactions, goals and budgets, source categorization and transaction edits/deletion only after a separate
+  owner/session-bound review POST, using canonical services and fresh state checks.
+  Model text cannot confirm; financial automation remains unavailable.
 - The [prepared ChatGPT authorization lifecycle](apps/assistant.md#openai-authorization-preparation)
   links accounts to the Django user, keeps credentials in the private encrypted
   vault and requires the original session's final confirmation. Default-disabled

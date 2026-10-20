@@ -58,6 +58,12 @@ colors or reuse a light capture in a dark shell. All screenshots come from the
 checked-out application, including unreleased changes. Local regeneration does
 not publish the tour or change the application version.
 
+The current captures also show the assistant launcher in the application shell.
+They do not demonstrate a connected chat, authorize an account or call a model.
+Assistant availability in an installation follows the separate default-disabled
+authorization/inference gates described in the [assistant guide](apps/assistant.md).
+The public tour contains no credentials, conversation history or bank connection.
+
 Both root READMEs link directly to the tour instead of embedding a static
 screenshot or demo video. The preview remains the primary action. Earlier
 recordings and review frames stay under ignored `.local/` as historical evidence;
@@ -99,6 +105,11 @@ npx playwright install chromium
 npm run test:preview
 npm run preview:capture
 ```
+
+Keep both `ASSISTANT_OPENAI_AUTH_ENABLED` and
+`ASSISTANT_OPENAI_INFERENCE_ENABLED` set to `False` when capturing. Public images
+must come from the disposable profiles, including when a development server has
+an independently authorized assistant connection.
 
 `npm run preview:capture` refuses to seed the repository workspace, generates
 ephemeral credentials, stages every image before replacing versioned captures,

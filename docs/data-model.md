@@ -557,7 +557,8 @@ Context is a bounded read-only snapshot, not another ledger or a source of new
 balances. Its signed, expiring origin scope is bound to the current owner and
 allowlisted route/query. Collection rechecks object ownership, retains cutoff,
 currency and evidence warnings, and never writes derived financial rows.
-Action/simulation contracts do not post records. The incremental
+Read tools, simulations and proposal preparation do not post financial records;
+only the separate reviewed confirmation can call mutation services. The incremental
 `assistant/0001_initial.py` migration adds only conversation tables; it does not
 import, modify or synchronize financial records.
 
@@ -589,8 +590,9 @@ See the owning [authorization contract](apps/assistant.md#openai-authorization-p
 and [recovery boundary](operations.md#assistant-data-and-integrations).
 The [native authorization observation](reviews/assistant-native-sign-in-2026-10-19.md)
 is bounded account-link evidence; synthetic fixtures remain confined to isolated
-tests. Bank/external-observation schemas and financial execution remain outside
-this slice. Model transport has its own default-off gate.
+tests. Bank/external-observation schemas remain outside the assistant. Linking
+an account does not confirm any local financial proposal; model transport has
+its own default-off gate.
 
 ### Generation runs
 
@@ -605,13 +607,36 @@ a crashed worker becomes failed/interrupted on the next eligible deliberate
 send after its 90-second budget, without automatically resubmitting a POST.
 
 Context JSON is constructed per request and is not copied into the run row;
-the row retains the opt-in flag, source-location/reference metadata and cutoff.
+the row retains the legacy initial-snapshot flag, source-location/reference
+metadata and cutoff, including verified references returned by targeted tools.
 The user question and any bounded completed or partial output remain local
 messages. Failed/cancelled exchanges keep explicit status and are excluded from
 later completed-history selection. Conversation deletion cascades its runs and
 messages; ordinary private backup retention still applies. These records have
 no accounting effect. See the [streaming contract](apps/assistant.md#provider-and-action-boundary)
 for gates, history/context minimization, cancellation and limits.
+
+### Reviewed action proposals
+
+Additive migration `assistant.0006_actionproposal` adds `ActionProposal`, a
+UUID-keyed private review record belonging to an owned conversation. It retains
+an optional message/run, request UUID, session digest, allowlisted action name,
+normalized parameters, review summary, dependency digest, expiry, status and
+result metadata. `(conversation, request_id)` is unique. Proposal preparation
+does not save financial records, and an incomplete generation cannot expose an
+executable review.
+
+Only a separate authenticated, CSRF-protected confirmation can claim a pending
+proposal and run canonical domain validation/services. It rechecks owner/session,
+completed run, expiry and current dependencies; repeated confirmation returns
+the recorded result rather than posting twice. Model text cannot confirm.
+The [action guide](assistant/actions.md) owns the six supported changes and
+failure/recovery behavior.
+
+Deleting a conversation cascades its review metadata; message deletion sets its
+optional proposal link to null. Neither operation reverses a previously
+confirmed financial record. Proposal parameters and summaries remain private
+financial data under the database's existing access and backup policy.
 
 ## Dashboard formulas
 
