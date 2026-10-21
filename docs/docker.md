@@ -299,11 +299,15 @@ remove only their own resources. They never consume the developer's `.env`,
 The lifecycle runner checks non-root operation, configuration failures, assets,
 translations, financial-record persistence, repeated startup, backup/restore,
 shutdown and health checks. The browser runner exercises the real container.
-CI also rehearses an upgrade from v0.3.0 with synthetic owners, accounts in
+CI also rehearses upgrades from v0.3.0, v0.4.0, v0.9.0, v0.9.1 and v0.10.0 with
+synthetic owners, accounts in
 different currencies, preferences, dated transactions, installments, fixed
 commitments, invoices, transfers, FX evidence, loyalty balances and monetary/unit
 opening positions. It compares every existing field before and after the upgrade
-and restore, and verifies conservative defaults for new planning settings.
+and restore, and verifies conservative defaults for planning settings, card
+appearance and installment numbering. New invoice-credit, position-emoji and
+assistant tables remain empty; disabled providers create no private vault and
+make no authorization or inference request.
 
 See [versioning.md](versioning.md#container-releases) for release publication
 and first-publication access verification.
