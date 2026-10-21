@@ -2,9 +2,9 @@
 
 **Status:** Approved baseline, local-finance evolution and gated assistant with reviewed local actions
 
-**Release candidate:** 0.11.0
-**Release decision:** The owner explicitly authorized committing the completed work, merging into `main` and publishing the Docker release on 2026-10-21. Exact-revision release validation is underway; this authorization does not mark unperformed manual acceptance complete or reopen gated interfaces and deferred integrations.
-**Previous published release:** 0.10.0
+**Release version:** 0.11.0
+**Release decision:** The owner explicitly authorized committing the completed work, merging into `main` and publishing the Docker release on 2026-10-21. Exact-revision checks and distribution status are recorded in [release PR #36](https://github.com/HenriqueMayer/TuxedoFinance/pull/36); this authorization does not mark unperformed manual acceptance complete or reopen gated interfaces and deferred integrations.
+**Previous upgrade baseline:** 0.10.0
 **Migration policy:** Preserve released installations through incremental migrations
 **Product:** Django personal finance tracker
 

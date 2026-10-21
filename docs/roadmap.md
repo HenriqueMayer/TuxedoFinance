@@ -3,8 +3,9 @@
 # Paused features and planned integrations
 
 Availability follows the current source checkout and its feature gates.
-Version `0.11.0` is the release candidate; merge and Docker publication were
-explicitly authorized on **2026-10-21**, with release validation underway.
+Merge and Docker publication of version `0.11.0` were explicitly authorized
+on **2026-10-21**. The [release PR](https://github.com/HenriqueMayer/TuxedoFinance/pull/36)
+records exact-revision validation and distribution status.
 Delivered behavior belongs in the
 [app guides](README.md#per-app-reference); dated evidence belongs in the
 [review index](reviews/README.md).

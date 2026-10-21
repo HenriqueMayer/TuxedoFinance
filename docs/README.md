@@ -135,7 +135,7 @@ preview paths into installation instructions.
 
 ## Documentation status
 
-These documents describe the `0.11.0` release candidate. The owner authorized
+These documents describe version `0.11.0`. The owner authorized
 merge and Docker publication on 2026-10-21; automated release checks and any
 remaining manual acceptance retain their own recorded status. This is not a
 claim of v1 acceptance or general eligibility for optional providers. Supported

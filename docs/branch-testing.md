@@ -1,8 +1,9 @@
 # Personal finance branch testing
 
-The current checkout prepares the `0.11.0` personal-finance and assistant release.
+This walkthrough covers the `0.11.0` personal-finance and assistant release.
 The owner authorized merge into `main` and Docker publication on 2026-10-21;
-release validation is underway. This walkthrough records manual owner acceptance
+[release PR #36](https://github.com/HenriqueMayer/TuxedoFinance/pull/36) records
+automated validation and distribution status. This walkthrough records manual owner acceptance
 separately. Running it does not complete unchecked acceptance items, change the
 version or publish a container, tag or release. The
 [PRD status table](product-requirements.md#current-delivery-status) distinguishes
