@@ -283,7 +283,9 @@ for (const [theme, language] of [['light', 'en'], ['dark', 'pt-br']]) {
                 ? ['Edit bank', 'Change marker color', 'Add loyalty program', 'Delete']
                 : ['Editar banco', 'Alterar cor do marcador', 'Adicionar programa de fidelidade', 'Excluir'];
             for (const name of names) await expect(panel.getByRole('link', { name, exact: true })).toBeVisible();
-            await page.getByRole('heading', { name: 'Touch bank', exact: true }).tap();
+            // The bank title bar is a Minimize link; dismiss the menu through
+            // a noninteractive workspace heading without leaving this detail.
+            await page.getByRole('heading', { name: language === 'en' ? 'Accounts' : 'Contas', exact: true, level: 1 }).tap();
             await expect(detailOptions).not.toHaveAttribute('open', '');
             await page.screenshot({ path: info.outputPath(`compact-bank-touch-${theme}-${language}.png`), fullPage: true });
         } finally { await context.close(); }
