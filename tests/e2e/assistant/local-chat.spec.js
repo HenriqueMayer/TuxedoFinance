@@ -20,6 +20,77 @@ const copy = {
     pt: {open: 'Abrir assistente Tuxedo', close: 'Fechar assistente', minimize: 'Minimizar assistente', restore: 'Restaurar assistente', new: 'Nova conversa',
         unavailable: 'Provedor não conectado', history: 'Histórico', remove: 'Excluir conversa', confirm: 'Confirmar exclusão'},
 };
+
+for (const [width, theme, language] of [[1440, 'light', 'en'], [390, 'dark', 'pt']]) {
+    test(`Confirmed assistant deletion supersedes a pending read (${width}, ${theme}, ${language})`, async ({page}, info) => {
+        await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+        await page.setViewportSize({width, height: 844});
+        await signup(page, info, '-pending-read');
+        await post(page, '/i18n/setlang/', {language: language === 'pt' ? 'pt-br' : 'en', next: '/transactions/create/'});
+        await page.goto('/transactions/create/');
+        const draft = 'Private financial draft survives a pending assistant read';
+        await page.locator('#id_title').fill(draft);
+        const c = copy[language], panel = page.locator('#assistant-panel');
+        await page.getByRole('button', {name: c.open, exact: true}).press('Enter');
+        await expect(panel.locator('[data-assistant-content]')).toBeVisible();
+        await expect(panel).not.toHaveAttribute('aria-busy', 'true');
+        await panel.getByRole('button', {name: c.new, exact: true}).press('Enter');
+        await expect(panel.locator('[data-conversation-id]')).toHaveAttribute('data-conversation-id', /[a-f0-9-]{36}/);
+        await expect(panel).not.toHaveAttribute('aria-busy', 'true');
+        const id = await panel.locator('[data-conversation-id]').getAttribute('data-conversation-id');
+        const history = panel.locator('.assistant-history');
+        if (!await history.getAttribute('open')) await history.locator('summary').press('Enter');
+        const link = history.getByRole('link', {name: new RegExp(c.new)});
+        const href = await link.getAttribute('href');
+        let releaseRead, readStarted, readFinished, releaseWrite, writeStarted;
+        const readReady = new Promise(resolve => { readStarted = resolve; });
+        const readDone = new Promise(resolve => { readFinished = resolve; });
+        const holdRead = new Promise(resolve => { releaseRead = resolve; });
+        const writeReady = new Promise(resolve => { writeStarted = resolve; });
+        const holdWrite = new Promise(resolve => { releaseWrite = resolve; });
+        let deletePosts = 0;
+        page.on('request', request => {
+            if (request.method() === 'POST' && new URL(request.url()).pathname === `/assistant/${id}/delete/`) deletePosts++;
+        });
+        await page.route(url => url.pathname === `/assistant/${id}/`, async route => {
+            const response = await route.fetch();
+            readStarted();
+            await holdRead;
+            try { await route.fulfill({response}); } catch (_) { /* The superseded GET is aborted. */ }
+            finally { readFinished(); }
+        }, {times: 1});
+        await page.route(url => url.pathname === `/assistant/${id}/delete/`, async route => {
+            const response = await route.fetch({maxRedirects: 0});
+            writeStarted();
+            await holdWrite;
+            await route.fulfill({response});
+        }, {times: 1});
+        try {
+            await link.press('Enter');
+            await readReady;
+            await expect(panel).toHaveAttribute('aria-busy', 'true');
+            await panel.locator('.assistant-delete > summary').press('Enter');
+            const confirm = panel.getByRole('button', {name: c.confirm, exact: true});
+            await confirm.press('Enter');
+            await writeReady;
+            await expect(confirm).toBeDisabled();
+            // Exercise the pending-write guard independently of button disabling.
+            await panel.locator('.assistant-delete form').evaluate(form => form.requestSubmit());
+            releaseWrite();
+            await expect(panel.locator('[data-conversation-id]')).toHaveAttribute('data-conversation-id', '');
+            releaseRead();
+            await readDone;
+            await expect(panel).not.toHaveAttribute('aria-busy', 'true');
+            await expect(panel.locator('[data-conversation-id]')).toHaveAttribute('data-conversation-id', '');
+            expect(deletePosts).toBe(1);
+            expect((await page.request.get(href)).status()).toBe(404);
+            await panel.getByRole('button', {name: c.close, exact: true}).press('Enter');
+            await expect(page.locator('#id_title')).toHaveValue(draft);
+            await expect(page.locator('#departure-confirm')).toBeHidden();
+        } finally { releaseRead(); releaseWrite(); }
+    });
+}
+
 for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (const language of ['en', 'pt']) {
     test(`Local assistant preserves financial drafts (${theme}, ${width}, ${language})`, async ({page}, info) => {
         const errors = [];
@@ -96,6 +167,10 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
         await expect(restore).toBeFocused();
         await expect(title).toHaveValue('Private draft that must survive chat');
         await restore.press('Enter');
+        // A hidden retained UUID is not readiness: restoration first replaces
+        // the transcript after authorization, then exposes its fresh controls.
+        await expect(panel).toBeVisible();
+        await expect(page.locator('[data-assistant-restore]')).not.toHaveAttribute('aria-busy', 'true');
         await expect(panel.locator('[data-conversation-id]')).toHaveAttribute('data-conversation-id', conversation);
         const history = panel.locator('.assistant-history');
         if (!await history.getAttribute('open')) await history.locator('summary').press('Enter');

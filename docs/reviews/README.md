@@ -11,6 +11,7 @@ and [interface map](../interface-map.md) for present behavior.
 
 | Record | Scope and status |
 |---|---|
+| [Release browser races — 2026-10-21](release-browser-races-2026-10-21.md) | Controlled delayed-history and assistant-confirmation regressions, native document-readiness correction and final-release validation boundaries. |
 | [Documentation and roadmap alignment — 2026-10-21](documentation-readiness-2026-10-21.md) | Bilingual READMEs/preview, current capability inventory and owner walkthrough; delivered work removed from future planning, paused integrations and publication hold retained. |
 | [Shared compact workspace density — 2026-10-21](workspace-density-2026-10-21.md) | One heading/summary scale across six areas, preserved values and expanding evidence, synthetic preview/crop refresh and scoped bilingual desktop/phone validation. |
 | [Bank title bar and account hierarchy — 2026-10-21](bank-account-hierarchy-2026-10-21.md) | Institution header artwork, title-bar-only native Minimize target and distinct account surfaces; preserved financial controls/data, focused desktop/phone, theme, language and native-navigation evidence. |

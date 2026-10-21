@@ -4,7 +4,7 @@
     if (window.TuxedoAssistant) return;
     const wide = matchMedia('(min-width: 1280px)');
     let memory = {owner: '', open: false, minimized: false, conversation: ''};
-    let pending = null, restoring = null, minimizedView = null, returnFocus = null, lastURL = '', previousOverflow = null;
+    let pending = null, pendingWrite = false, restoring = null, minimizedView = null, returnFocus = null, lastURL = '', previousOverflow = null;
     const inertElements = new Map();
     const shell = () => document.querySelector('[data-assistant-shell]');
     const panel = () => shell()?.querySelector('#assistant-panel');
@@ -85,6 +85,7 @@
     function abort() {
         if (pending) pending.abort();
         pending = null;
+        pendingWrite = false;
         panel()?.removeAttribute('aria-busy');
         const button = shell()?.querySelector('[data-assistant-cancel]');
         if (button) button.hidden = true;
@@ -237,6 +238,7 @@
         abort();
         const controller = new AbortController();
         pending = controller;
+        pendingWrite = Boolean(form);
         const url = requestURL(path);
         const preserveDraft = !!form?.matches('[data-assistant-action]');
         // A failed POST is never replayed by Retry. Refresh the authorized
@@ -333,6 +335,7 @@
         } finally {
             if (pending === controller) {
                 pending = null;
+                pendingWrite = false;
                 panel()?.removeAttribute('aria-busy');
                 root.querySelector('[data-assistant-cancel]').hidden = true;
                 form?.querySelectorAll('button').forEach(button => { button.disabled = false; });
@@ -387,7 +390,9 @@
     window.addEventListener('submit', event => {
         if (!shell()?.contains(event.target) || !event.target.matches('[data-assistant-form]')) return;
         event.preventDefault(); event.stopPropagation();
-        if (!pending) load(event.target.action, event.target, event.target.matches('[data-assistant-action]')
+        // An explicit confirmation supersedes a pending history GET. Keep
+        // writes single-flight; a failed POST is still recovered by GET only.
+        if (!pendingWrite) load(event.target.action, event.target, event.target.matches('[data-assistant-action]')
             ? window.TuxedoAssistantChat?.capture(content().querySelector('[data-assistant-content]')) : null);
     }, true);
     document.addEventListener('keydown', event => {

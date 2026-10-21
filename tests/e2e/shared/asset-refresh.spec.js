@@ -64,6 +64,10 @@ for (const legacy of [false, true]) {
         await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement)
             .getPropertyValue('--asset-refresh-probe').trim())).toBe('');
         expect(documents).toEqual(['/transactions/']);
+        // The redirect loads a new document. Native links intentionally work
+        // before its deferred scripts finish; wait for them before asserting
+        // that the next navigation uses HTMX in the current document.
+        await page.waitForLoadState('load');
         const revision = await page.locator('meta[name="tuxedo-assets"]').getAttribute('content');
         expect(revision).toMatch(/^[a-f0-9]{20}$/);
         await page.evaluate(() => { window.assetDocumentMarker = 'current document'; });

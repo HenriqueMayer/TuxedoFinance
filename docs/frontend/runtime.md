@@ -83,6 +83,12 @@ cache at initialization and before history traversal. Cache-miss requests carry
 the document's asset revision, and login/asset redirects finish with native GETs
 so the URL, document head and form targets remain coherent.
 
+Only the latest requested restoration may replace the workspace. A new history
+cache miss cancels its older pending GET; an actual superseding body request
+also cancels that read. Cancellation waits until the replacement request is
+allowed, so declining an unsaved-edit departure does not discard a pending
+restoration. Never cancel or replay a financial POST as history recovery.
+
 Authenticated HTML also uses `Cache-Control: private, no-store, no-cache`.
 The browser's separate BFCache can restore a frozen document without loading
 scripts again: on a persisted page hide, the document is hidden; on a persisted

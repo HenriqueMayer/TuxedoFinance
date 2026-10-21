@@ -11,7 +11,16 @@
     discardDomHistory();
     window.addEventListener('popstate', discardDomHistory, true);
     const revision = document.head.querySelector('meta[name="tuxedo-assets"]')?.content;
+    let pendingHistory = null;
+    function abortPendingHistory() {
+        const previous = pendingHistory;
+        pendingHistory = null;
+        if (previous) previous.abort();
+    }
     document.addEventListener('htmx:beforeSend', event => {
+        // A confirmed body request supersedes the pending history response.
+        // beforeRequest/popstate can still be cancelled by departure checks.
+        if (event.detail.target === document.body) abortPendingHistory();
         if (!revision) return;
         const path = event.detail.requestConfig?.path;
         if (path && new URL(path, window.location.href).origin !== window.location.origin) return;
@@ -20,8 +29,17 @@
         event.detail.xhr.setRequestHeader('X-Tuxedo-Assets', revision);
     });
     document.addEventListener('htmx:historyCacheMiss', event => {
+        if (event.defaultPrevented) return;
+        const xhr = event.detail.xhr;
+        // History requests bypass HTMX's ordinary request synchronization.
+        // Keep only the latest authorized GET, without caching private HTML.
+        abortPendingHistory();
+        pendingHistory = xhr;
+        xhr.addEventListener('loadend', () => {
+            if (pendingHistory === xhr) pendingHistory = null;
+        }, {once: true});
         // HTMX's history GET bypasses beforeSend and must request full HTML.
-        if (revision) event.detail.xhr.setRequestHeader('X-Tuxedo-Assets', revision);
+        if (revision) xhr.setRequestHeader('X-Tuxedo-Assets', revision);
     });
     document.addEventListener('htmx:historyCacheMissLoad', event => {
         const {xhr, path} = event.detail;

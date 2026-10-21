@@ -18,6 +18,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Cancel superseded private-history reads so rapid Back/Forward navigation cannot replace the latest workspace with an older response. Let explicit assistant confirmations supersede pending conversation reads while keeping duplicate writes and automatic POST retries blocked.
 - Align bilingual READMEs, preview descriptions and current requirements with the six workspaces and implemented assistant capabilities. Remove delivered work from future planning while preserving paused integrations, release acceptance and existing public anchors.
 - Offer six compact color shortcuts and a custom native picker for bank markers and card colors on both creation and editing; keep gradient colors compact without changing saved appearance or financial settings.
 - Clarify the date attached to an account's opening balance and move its optional planning reserve into a deliberate disclosure, preserving cutoffs, existing values and validation.

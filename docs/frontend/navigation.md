@@ -160,6 +160,11 @@ Custom assistant fetches respect asset-recovery headers before inserting HTML;
 recovery offers a validated native GET through the ordinary unsaved-edit guard,
 without replaying a POST or automatically discarding a financial draft.
 
+An explicit local confirmation may supersede a pending conversation read; the
+old read must not swallow the action or restore deleted conversation HTML.
+Keep duplicate writes blocked while a POST is pending. An interrupted write
+still requires an authorized history refresh rather than automatic POST retry.
+
 Account connection settings use native POST/redirect forms outside HTMX. The
 ChatGPT sign-in control opens a separate tab, preserving the authenticated
 settings tab for final confirmation. It is disabled until authorization is deliberately enabled;
