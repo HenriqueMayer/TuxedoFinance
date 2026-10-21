@@ -2,8 +2,9 @@
 
 **Status:** Approved baseline, local-finance evolution and gated assistant with reviewed local actions
 
-**Current release:** 0.10.0
-**Implementation beyond release:** This document describes the current checkout and its Unreleased implementation. Owner acceptance and a separate release decision remain pending; retained code, gated interfaces and dated validation are not published feature availability.
+**Release candidate:** 0.11.0
+**Release decision:** The owner explicitly authorized committing the completed work, merging into `main` and publishing the Docker release on 2026-10-21. Exact-revision release validation is underway; this authorization does not mark unperformed manual acceptance complete or reopen gated interfaces and deferred integrations.
+**Previous published release:** 0.10.0
 **Migration policy:** Preserve released installations through incremental migrations
 **Product:** Django personal finance tracker
 
@@ -19,14 +20,14 @@ combines a gross-salary monthly plan, existing expense forecasts, optional
 private drafts and contribution/yield simulations. Monthly cash
 pots and optional account reserves make money available for planning explicit.
 
-The Unreleased implementation adds exact category splits, operational budgets,
+Version 0.11.0 adds exact category splits, operational budgets,
 goals backed by existing cash, deterministic local review signals, optional
 manual card payment confirmation, native invoice credits, dated openings,
 weighted investment cost and local price observations. CSV/OFX statement
 operations and dated-wealth calculations are retained, but their interfaces
 remain paused. The implementation preserves the local installation and default
 automatic settlement.
-No external bank/broker integration or publication is implied by this scope.
+No external bank/broker integration is enabled by this release scope.
 
 The assistant foundation adds private local conversations,
 a persistent utility panel/native page, bounded owned consultations, canonical
@@ -581,9 +582,9 @@ financial history, not an immutable bank statement or return percentage.
 Checked items record retained implementation, not a fresh test run, owner
 acceptance or a claim that every feature shipped in `0.10.0`. Paused or gated
 items below stay unavailable through their ordinary product workflows unless
-their distinct review/authorization conditions are met. The current Unreleased
-checkout still requires the owner's manual acceptance before a separate
-merge/release decision.
+their distinct review/authorization conditions are met. Merge and Docker release
+were explicitly authorized on 2026-10-21. Exact-checkout validation and the manual
+walkthrough below retain their own evidence and completion status.
 
 - [x] One bank can hold multiple accounts with independent currencies/opening balances.
 - [x] Account balance exactly reconciles to its applicable opening and effective movements.
@@ -608,7 +609,9 @@ merge/release decision.
 - [x] Monetary yields can derive the stored yield from a new total balance without creating a bank movement.
 - [x] The authenticated planning workspace supports salary estimates, explicit private drafts and isolated simulations.
 
-### Unreleased implementation
+<a id="unreleased-implementation"></a>
+
+### Version 0.11.0 implementation
 
 - [x] Optional manual invoices preserve automatic behavior before the selected
       boundary, confirm partial actual-date payments once and retain card credit
@@ -640,7 +643,8 @@ merge/release decision.
       and shared compact summaries are presentation features, not new
       financial metrics or financial writes.
 - [ ] Owner completes the exact-checkout manual acceptance walkthrough on
-      disposable data and then explicitly approves any merge or publication.
+      disposable data. The separate merge and Docker release decision was
+      authorized on 2026-10-21; this item records only the walkthrough.
 
 ## 13. Release validation
 

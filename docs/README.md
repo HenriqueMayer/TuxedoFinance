@@ -1,7 +1,8 @@
 # Tuxedo Finance Documentation
 
-Technical and product documentation for the current code, including unreleased
-changes listed in the changelog. Technical guides are maintained in English;
+Technical and product documentation for the current `0.11.0` release candidate.
+Merge and Docker publication were authorized on 2026-10-21; release validation
+is underway. Technical guides are maintained in English;
 the root README is available in [English](../README.md) and
 [Português (Brasil)](../README.pt-BR.md).
 
@@ -46,7 +47,7 @@ the [interface map](interface-map.md), with shared title/summary geometry in the
 
 | Boundary | Current reference |
 |---|---|
-| Local financial workspaces | Owning app guides below; current-checkout implementation still requires owner acceptance and a separate release decision. |
+| Local financial workspaces | Owning app guides below; release 0.11.0 is authorized, with exact-revision checks and remaining manual acceptance recorded separately. |
 | Paused statement operations and net-worth interface | [Roadmap](roadmap.md) and [code-level review gates](../core/features.py); retained calculations and owned posted-import provenance do not reopen these screens. |
 | Optional assistant | [Assistant guide](apps/assistant.md) and [six confirmed local actions](assistant/actions.md); ChatGPT authorization/inference independently default off, with no paid API-key fallback or Internet/news tool. |
 | Paused real Open Finance pilot | [Operator guide](open-finance-pilot.md) and [roadmap decision](roadmap.md#personal-open-finance-study); read-only command preparation does not connect the application or write its ledger. |
@@ -134,8 +135,10 @@ preview paths into installation instructions.
 
 ## Documentation status
 
-These documents describe `0.10.0` and the changes under `Unreleased`; they do not
-mark the v1 candidate accepted or authorize publication. Supported
+These documents describe the `0.11.0` release candidate. The owner authorized
+merge and Docker publication on 2026-10-21; automated release checks and any
+remaining manual acceptance retain their own recorded status. This is not a
+claim of v1 acceptance or general eligibility for optional providers. Supported
 released installations use the committed incremental migrations and preserve
 existing records. The historical clean reset applied only to pre-release legacy
 schemas; it is not an instruction to reset a released installation. See

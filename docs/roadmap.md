@@ -2,26 +2,30 @@
 
 # Paused features and planned integrations
 
-Availability follows the current source checkout, not a scheduled release.
-The developer version remains `0.10.0`. Unreleased work does not establish v1
-readiness or authorize publication. Delivered behavior belongs in the
+Availability follows the current source checkout and its feature gates.
+Version `0.11.0` is the release candidate; merge and Docker publication were
+explicitly authorized on **2026-10-21**, with release validation underway.
+Delivered behavior belongs in the
 [app guides](README.md#per-app-reference); dated evidence belongs in the
 [review index](reviews/README.md).
 
-## Current milestone: validation hold
+<a id="current-milestone-validation-hold"></a>
 
-The owner paused broader improvements on **2026-10-19** to test the application
-before the next release. Later focused requests authorize only their stated
-scope; they do not reopen deferred integrations or the publication hold.
+## Current milestone: release 0.11.0
 
-- Await owner testing and acceptance feedback; record findings before agreeing
-  further work. Preserve installation data and the developer version.
+The owner paused broader improvements on **2026-10-19**, then explicitly
+authorized committing the completed work, merging into `main` and publishing
+the Docker release on **2026-10-21**. This release decision does not reopen
+deferred integrations or establish completion of every manual acceptance item.
+
 - Complete the applicable [release checks](versioning.md#preparing-a-release),
-  including isolated application/browser, preview and Docker validation. Focused
-  checks and historical successes do not establish release acceptance.
+  including isolated application/browser, preview and Docker validation. Record
+  exact-revision results and remaining manual checks before publication;
+  historical successes do not establish this candidate's validation status.
+- Preserve installation data and supported upgrades. Record further owner
+  testing feedback without marking unperformed walkthrough items complete.
 - Resume deferred implementation or real bank setup only after an owner request.
-  A bank connection is not a release prerequisite. Merging, tagging, releasing
-  and publication still require separate explicit authorization.
+  A bank connection is not a release prerequisite or part of this authorization.
 
 ## Paused interfaces
 

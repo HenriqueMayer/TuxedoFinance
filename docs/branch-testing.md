@@ -1,9 +1,10 @@
 # Personal finance branch testing
 
-The current checkout includes unreleased personal-finance and assistant work.
-This walkthrough supports manual owner acceptance before any separate decision
-to integrate into `main` or publish. Running it does not accept the candidate,
-change its version or publish a container, tag or release. The
+The current checkout prepares the `0.11.0` personal-finance and assistant release.
+The owner authorized merge into `main` and Docker publication on 2026-10-21;
+release validation is underway. This walkthrough records manual owner acceptance
+separately. Running it does not complete unchecked acceptance items, change the
+version or publish a container, tag or release. The
 [PRD status table](product-requirements.md#current-delivery-status) distinguishes
 current interfaces from paused and gated capabilities.
 
@@ -100,10 +101,10 @@ filters, help and departure behavior. In both themes on computer and phone:
    owned confirmed/undone import history remains read-only. The redesign roadmap
    is documentation, not an application page.
 
-The static tour captures the checked-out application, including unreleased
-changes, as described in [preview maintenance](preview.md). This disposable
-interactive preview supports owner acceptance; no integration, bank
-connection, Cloudflare deployment or publication is implied by these tests.
+The static tour captures the checked-out application, as described in
+[preview maintenance](preview.md). This disposable interactive preview supports
+owner acceptance; test execution itself does not enable a bank connection or
+perform integration, Cloudflare deployment or publication.
 
 ## Acceptance checklist
 
@@ -165,7 +166,8 @@ context externally; it is outside this provider-disabled walkthrough. Inter's
 font and license are included in `static/fonts/`.
 
 - [ ] Owner completes the manual checks for the exact checkout and records any
-      remaining issues before separately approving integration or publication.
+      remaining issues. Merge and Docker publication were separately authorized
+      on 2026-10-21; this item records only the walkthrough.
 
 ## Assistant review
 

@@ -7,6 +7,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-21
+
 ### Assistant consultations and exports
 
 - Copy one chat message or the complete conversation as Markdown, with an authenticated native download fallback.
@@ -58,7 +60,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Add selected-account model choices and streamed assistant replies behind a separate default-off inference gate. Require a validated selected model and bounded relevant owned financial context; retain native submission, Cancel, verified local references and bounded completed/partial history. Keep unavailable states honest and retries idempotent; financial changes require separate confirmation and no paid fallback exists. Add guarded synthetic streaming browser fixtures without live account or provider access.
 - Prepare owner-scoped ChatGPT account settings and local OAuth authorization, disabled by default. Keep tokens and PKCE in an encrypted private vault, require confirmation in the originating Django session, serialize refresh and preserve local disconnect. A separately approved native account link was observed; it does not itself enable the inference gate or prove live model access and usage limits.
 - Add a local assistant foundation with private conversations, an authenticated utility panel and native page, signed bounded financial context and explicit provider-unavailable recovery. Apply its incremental migrations before opening chat. With either provider gate off the composer stays unavailable. Financial consultations are read-only; supported changes use separate reviewed confirmation. No paid fallback, bank connection or unattended financial execution is enabled.
-- Document a dated personal Open Finance study for Nubank, Inter and Mercado Pago, including the unresolved 6–8-hour PF production route, resource-specific cadence, costs/consent/local delivery limits and source-preserving reconciliation. Keep statement operations paused; the study enables no bank/provider execution and the developer version is unchanged.
+- Document a dated personal Open Finance study for Nubank, Inter and Mercado Pago, including the unresolved 6–8-hour PF production route, resource-specific cadence, costs/consent/local delivery limits and source-preserving reconciliation. Keep statement operations paused; the study enables no bank/provider execution without changing financial records.
 - Add one calendar engine shared by complete-date application fields and the catalogue's entry/card-editor dates. Preserve preferred DMY/MDY application text, ISO helpers, ordinary keyboard editing, invalid POST recovery and native fallbacks; support whole-field activation, a modal keyboard grid, month/year jumps, limits, leap days, touch, both themes and reduced motion.
 - Add persisted debit/credit-card appearance with six color shortcuts, custom base colors and optional gradients on creation and editing. Keep owned record selection, cycle/settlement settings, native POSTs and existing clients intact; protect essential preview text from arbitrary color backgrounds. Existing cards receive Graphite without changing financial records; apply the banking migration before starting the updated application.
 - Add a catalogue-only credit-card editor with bank/account choices, editable nicknames, six color shortcuts and custom colors/gradients on creation and editing. Keep required cycle days empty, preserve real card-type/settlement fields and independent native GET forms, and hold preview changes only in the current document without automatically choosing a card.
@@ -424,7 +426,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.8.2...v0.9.0
