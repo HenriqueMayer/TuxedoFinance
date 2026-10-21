@@ -2,6 +2,8 @@
 from django.urls import path
 from assistant import views
 from assistant import connection_views
+from assistant import action_views
+from assistant import export_views
 
 app_name = 'assistant'
 urlpatterns = [
@@ -20,8 +22,12 @@ urlpatterns = [
     path('preferences/', views.preferences, name='preferences'),
     path('messages/', views.send_new, name='send-new'),
     path('runs/<uuid:pk>/cancel/', views.cancel_run, name='cancel-run'),
+    path('actions/<uuid:pk>/confirm/', action_views.confirm, name='action-confirm'),
+    path('actions/<uuid:pk>/cancel/', action_views.cancel, name='action-cancel'),
     path('conversations/new/', views.create, name='create'),
     path('<uuid:pk>/', views.detail, name='detail'),
+    path('<uuid:pk>/export/', export_views.conversation, name='export-conversation'),
+    path('<uuid:pk>/messages/<uuid:message_pk>/export/', export_views.message, name='export-message'),
     path('<uuid:pk>/delete/', views.delete, name='delete'),
     path('<uuid:pk>/messages/', views.send, name='send'),
 ]

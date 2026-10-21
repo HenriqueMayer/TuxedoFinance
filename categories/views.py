@@ -207,6 +207,9 @@ class CategoryDeleteView(ReturnContextMixin, LoginRequiredMixin, DeleteView):
         try:
             response = super().form_valid(form)
         except ProtectedError:
+            if self.object.invoice_credits.exists():
+                messages.error(self.request, _('This category cannot be deleted while it is used by invoice credits.'))
+                return redirect(self.get_return_url())
             messages.error(
                 self.request,
                 _('"%(name)s" cannot be deleted because it is still used by existing transactions or budgets.')
@@ -229,6 +232,9 @@ def delete_all_categories(request):
     destination = return_url(request, reverse('categories:list'))
 
     if request.method == 'POST':
+        if categories.filter(invoice_credits__isnull=False).exists():
+            messages.error(request, _('Categories cannot be deleted while they are used by invoice credits.'))
+            return redirect(destination)
         if categories.filter(Q(transactions__isnull=False) | Q(transaction_splits__isnull=False) | Q(budgets__isnull=False)).exists():
             messages.error(
                 request,

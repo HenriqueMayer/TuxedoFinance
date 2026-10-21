@@ -55,13 +55,11 @@ for (const theme of ['light', 'dark']) {
         for (const width of [1280, 390]) {
             await page.setViewportSize({width, height: 900});
             await page.goto('/banking/');
-            await expect(page.locator('main h1')).toHaveCSS('font-size', width < 640 ? '28px' : '32px');
-            const options = page.locator('.workspace-header .secondary-actions > summary');
-            await expectControl(options, 12);
-            await options.press('Enter');
-            await expect(page.locator('.workspace-header .secondary-actions')).toHaveAttribute('open', '');
-            await options.press('Escape');
-            await expect(page.locator('.workspace-header .secondary-actions')).not.toHaveAttribute('open', '');
+            await expect(page.locator('main h1')).toHaveCSS('font-size', '24px');
+            await expect(page.locator('#banking-workspace > .workspace-header .secondary-actions')).toHaveCount(0);
+            const loyalty = page.getByRole('navigation', {name:'Account sections'}).getByRole('link',{name:'Loyalty',exact:true});
+            await expect(loyalty).toBeVisible();
+            expect((await loyalty.boundingBox()).height).toBeGreaterThanOrEqual(44);
 
             await page.goto(`/banking/${bank}/`);
             const compact = page.locator('.workspace-header .compact-menu > summary');

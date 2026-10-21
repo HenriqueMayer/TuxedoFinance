@@ -131,7 +131,10 @@ def budget_progress(user, month, *, as_of=None):
         'actual': ZERO, 'forecast': ZERO, 'missing_currencies': set(), 'rate_date': rate_date,
     } for budget in budgets]
     rates = {}
-    for operation in _transactions(user).filter(transaction_type=Transaction.TransactionType.EXPENSE):
+    from banking.credit_reporting import invoice_credit_occurrences
+    operations = list(_transactions(user).filter(transaction_type=Transaction.TransactionType.EXPENSE))
+    operations.extend(invoice_credit_occurrences(user))
+    for operation in operations:
         portions = _allocations_for_month(operation, month.year, month.month)
         if not portions:
             continue

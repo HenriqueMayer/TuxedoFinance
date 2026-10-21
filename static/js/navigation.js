@@ -5,6 +5,13 @@
     var preservedIslandViews = new WeakMap();
     var preservedPageViews = new WeakMap();
 
+    // Native focus may leave a partly visible tab's label clipped. Reveal the
+    // whole link within its horizontal rail without changing keyboard focus.
+    document.addEventListener('focusin', function (event) {
+        var tab = event.target.closest('.banking-sections > a');
+        if (tab) tab.scrollIntoView({block: 'nearest', inline: 'nearest', behavior: 'instant'});
+    });
+
     // A query/filter change is an update to the current page. Only navigation
     // to a different path should inherit the shell's show:window:top behavior.
     document.addEventListener('htmx:beforeSwap', function (event) {

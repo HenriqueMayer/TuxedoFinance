@@ -1,0 +1,11 @@
+{% load i18n navigation %}
+<ul class="loyalty-entry-list">
+    {% for entry in entries %}<li id="loyalty-entry-{{ entry.pk|stringformat:'d' }}" class="loyalty-entry">
+        <div class="min-w-0"><p class="font-medium">{{ entry.get_kind_display }}</p><p class="subtle-copy">{{ entry.date|date:USER_DATE_FORMAT }}</p>{% if entry.notes %}<p class="subtle-copy break-words whitespace-pre-line">{{ entry.notes }}</p>{% endif %}</div>
+        <p class="tabular-nums font-medium break-words">{% if entry.direction == 'CREDIT' %}+{% else %}−{% endif %}{{ entry.amount|floatformat:2 }} {{ program.unit_name }}</p>
+        <div class="banking-row-actions">
+            {% if entry.redemption_id %}{% url 'banking:redemption_update' entry.redemption_id as redemption_edit %}<a class="quiet-action" href="{% contextual_url redemption_edit %}">{% translate 'Edit redemption' %}</a>
+            {% elif not entry.generated_entry %}{% url 'banking:entry_update' entry.pk as entry_edit %}<a class="quiet-action" href="{% contextual_url entry_edit %}">{% translate 'Edit' %}</a>{% url 'banking:entry_delete' entry.pk as entry_delete %}<a class="quiet-action text-expense dark:text-expense-light" href="{% contextual_url entry_delete %}">{% translate 'Delete' %}</a>{% endif %}
+        </div>
+    </li>{% empty %}<li class="subtle-copy py-3">{% if has_filters %}{% translate 'No matching entries.' %}{% else %}{% translate 'No entries yet.' %}{% endif %}</li>{% endfor %}
+</ul>

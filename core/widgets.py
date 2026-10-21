@@ -1,5 +1,40 @@
 """Shared native presentation widgets. SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0"""
+import re
+
 from django import forms
+from django.utils.translation import gettext_lazy as _
+
+
+class ColorPicker(forms.TextInput):
+    """A native color field with optional progressive preset shortcuts."""
+
+    input_type = 'color'
+    is_color_picker = True
+    color_presets = (
+        ('#111111', _('Black')),
+        ('#64788C', _('Blue gray')),
+        ('#820AD1', _('Purple')),
+        ('#245FBA', _('Blue')),
+        ('#E87524', _('Orange')),
+        ('#C6A173', _('Gold')),
+    )
+
+    def __init__(self, attrs=None, *, presets=True):
+        super().__init__(attrs)
+        if not presets:
+            self.color_presets = ()
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        control_attrs = context['widget']['attrs']
+        # Browsers replace malformed native color values with black. Retain an
+        # invalid bound value as editable text beside its server error instead.
+        if value and not re.fullmatch(r'#[0-9a-fA-F]{6}', str(value)):
+            context['widget']['type'] = 'text'
+            control_attrs['class'] = f"{control_attrs.get('class', '')} entry-input color-picker-recovery".strip()
+        elif self.color_presets and control_attrs.get('id'):
+            control_attrs['list'] = f"{control_attrs['id']}-palette"
+        return context
 
 
 class _ChoiceMetadata:

@@ -6,21 +6,15 @@ from django import forms
 from django.utils import timezone
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
-from core.widgets import SegmentedChoice
+from core.widgets import ColorPicker
 from banking.models import BankAccount, CreditCard, DebitCard
-from .base import INPUT_CLASSES, OwnedModelForm
+from .base import OwnedModelForm
 
 
 class CardForm(OwnedModelForm):
     use_gradient = forms.BooleanField(required=False, label=_('Use a gradient'))
     is_card_form = True
     appearance_fields = ('color', 'use_gradient', 'gradient_end', 'gradient_angle')
-    color_presets = (
-        ('#253330', _('Graphite')),
-        ('#5B3E7C', _('Plum')),
-        ('#C6A173', _('Copper')),
-        ('#315D50', _('Forest')),
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,21 +26,13 @@ class CardForm(OwnedModelForm):
         self.appearance_submitted = self.is_bound and any(
             self.add_prefix(name) in self.data for name in self.appearance_fields
         )
-        if not self.instance.pk:
-            self.fields['color'] = forms.ChoiceField(
-                choices=self.color_presets, required=False, label=_('Card color'),
-                initial='#253330', widget=SegmentedChoice(attrs={'class': 'entry-segment-options'}),
-            )
-        else:
-            self.fields['color'].required = False
-            self.fields['color'].label = _('Card color')
-            self.fields['color'].widget = forms.TextInput(attrs={
-                'type': 'color', 'class': INPUT_CLASSES,
-            })
+        # Presets are shortcuts, never an enum: custom HEX colors work on both
+        # create and edit, while the model remains the validation authority.
+        self.fields['color'].required = False
+        self.fields['color'].label = _('Card color')
+        self.fields['color'].widget = ColorPicker()
         self.fields['gradient_end'].label = _('Gradient end color')
-        self.fields['gradient_end'].widget = forms.TextInput(attrs={
-            'type': 'color', 'class': INPUT_CLASSES,
-        })
+        self.fields['gradient_end'].widget = ColorPicker(presets=False)
         self.fields['gradient_angle'].label = _('Gradient angle')
         self.fields['gradient_angle'].required = False
         self.fields['gradient_angle'].widget.attrs.update({'min': 0, 'max': 359, 'step': 1})

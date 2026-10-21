@@ -65,13 +65,15 @@ class CardAppearanceTests(TestCase):
             with self.subTest(model=model.__name__), self.assertRaises(IntegrityError), transaction.atomic():
                 model.objects.create(user=self.user, account=self.account, name='Invalid', gradient_angle=360, **extra)
 
-    def test_creation_preserves_original_posts_and_offers_the_four_base_presets(self):
+    def test_creation_preserves_original_posts_and_accepts_presets_and_custom_colors(self):
         for _, form_type, extra in self.card_types():
             initial = form_type(user=self.user)
             self.assertFalse(initial['use_gradient'].value())
             self.assertEqual(initial['gradient_end'].value(), '#253330')
             self.assertEqual(initial['gradient_angle'].value(), 135)
-            for preset in (None, '#253330', '#5B3E7C', '#C6A173', '#315D50'):
+            self.assertEqual(len(initial.fields['color'].widget.color_presets), 6)
+            for preset in (None, '#253330', '#111111', '#64788C', '#820AD1',
+                           '#245FBA', '#E87524', '#C6A173', '#ffffff'):
                 with self.subTest(form=form_type.__name__, preset=preset):
                     data = {'account': self.account.pk, 'name': f'Daily {preset}', **extra}
                     if preset:
@@ -79,13 +81,50 @@ class CardAppearanceTests(TestCase):
                     form = form_type(data, user=self.user)
                     self.assertTrue(form.is_valid(), form.errors)
                     card = form.save()
-                    self.assertEqual(card.color, preset or '#253330')
+                    self.assertEqual(card.color, (preset or '#253330').upper())
                     self.assertEqual(card.gradient_end, '')
                     self.assertIn('use_gradient', form.fields)
                     self.assertIn('gradient_end', form.fields)
-            forged = form_type({'account': self.account.pk, 'name': 'Custom create', 'color': '#FFFFFF', **extra}, user=self.user)
-            self.assertFalse(forged.is_valid())
-            self.assertIn('color', forged.errors)
+            for invalid in ('red', '#FFF', '#12345Z', '#ffffff;position:fixed'):
+                form = form_type({'account': self.account.pk, 'name': 'Invalid custom',
+                                  'color': invalid, **extra}, user=self.user)
+                self.assertFalse(form.is_valid())
+                self.assertIn('color', form.errors)
+
+    def test_color_widget_keeps_native_values_and_a_labelled_datalist_on_create_and_edit(self):
+        self.client.force_login(self.user)
+        card = DebitCard.objects.create(user=self.user, account=self.account,
+                                        name='Custom card', color='#ABCDEF')
+        for url in (reverse('banking:debit_card_create'),
+                    reverse('banking:debit_card_update', args=[card.pk])):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertContains(response, 'data-color-picker', count=2)
+                self.assertContains(response, 'id="id_color-palette"')
+                self.assertContains(response, 'list="id_color-palette"')
+                self.assertContains(response, 'value="#820AD1" label="Purple"')
+                controls = InputAttributes()
+                controls.feed(response.content.decode())
+                self.assertEqual(controls.inputs['color']['type'], 'color')
+                self.assertEqual(controls.inputs['color']['value'],
+                                 '#ABCDEF' if '/edit/' in url else '#253330')
+                self.assertNotIn('list', controls.inputs['gradient_end'])
+
+    def test_invalid_hex_values_remain_readable_and_editable_beside_server_errors(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse('banking:debit_card_create'), {
+            'account': self.account.pk, 'name': 'Bad color', 'color': '#12ZZ89',
+            'use_gradient': 'on', 'gradient_end': '#XX0011', 'gradient_angle': '135',
+        })
+        self.assertEqual(response.status_code, 200)
+        controls = InputAttributes()
+        controls.feed(response.content.decode())
+        for name, value in (('color', '#12ZZ89'), ('gradient_end', '#XX0011')):
+            with self.subTest(field=name):
+                self.assertEqual(controls.inputs[name]['type'], 'text')
+                self.assertEqual(controls.inputs[name]['value'], value)
+                self.assertEqual(controls.inputs[name]['aria-invalid'], 'true')
+                self.assertContains(response, f'id="id_{name}-error-1"')
 
     def test_creation_can_persist_a_gradient_without_changing_financial_fields(self):
         for _, form_type, extra in self.card_types():

@@ -24,6 +24,8 @@ shared searchable enhancement; visual adoption must not replace that contract.
         {% include 'partials/segmented_choice_field.html' with field=field %}
     {% elif field.field.widget.is_preferred_date %}
         {% include 'partials/preferred_date_field.html' with field=field %}
+    {% elif field.field.widget.is_color_picker %}
+        {% include 'partials/color_picker_field.html' with field=field %}
     {% else %}
     <div class="space-y-2" data-form-field>
         {% include 'partials/field_label.html' %}

@@ -3,12 +3,9 @@
    Ordinary field/choice geometry and touch targets retain their contracts. */
 /* Legacy configured colors need explicit local variables for native progress. */
 .finance-workspace { --color-caramel:theme('colors.caramel.DEFAULT'); --color-caramel-ink:theme('colors.caramel.ink'); --color-caramel-light:theme('colors.caramel.light'); }
-.finance-workspace .page-title { font-size:1.5rem; line-height:1.875rem; }
-.finance-workspace .section-title { font-size:1rem; line-height:1.5rem; }
 .finance-workspace .surface-panel { border-radius:.75rem; padding:1rem; }
 .finance-workspace .action-link,.finance-workspace .action-primary { border-radius:.5rem; padding:.375rem .75rem; font-size:.875rem; line-height:1.25rem; letter-spacing:normal; text-transform:none; min-height:2.75rem; }
 .finance-workspace [data-investment-more] > summary { width:auto; font-size:.875rem; }
-.finance-workspace .section-nav { margin-bottom:.25rem; }
 .finance-workspace .consultation-bar { border-radius:.75rem; }
 .finance-workspace .consultation-bar input:not([type="checkbox"]),.finance-workspace .consultation-bar select,.finance-workspace .filter-disclosure > summary { border-radius:.5rem; }
 html:has(.finance-workspace) { scrollbar-gutter:stable; }

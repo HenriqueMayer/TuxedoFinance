@@ -1,7 +1,18 @@
 {% extends 'base.html' %}{% load i18n navigation %}
 {% block title %}{% translate 'Invoices' %} — Tuxedo Finance{% endblock %}
 {% block content %}
-<div class="banking-workspace space-y-4"><header class="workspace-header"><div class="min-w-0">{% if selected_card %}<p class="subtle-copy mb-1">{% translate 'Invoices' %}</p><h1 class="page-title break-words">{{ selected_card.name }}</h1><p class="subtle-copy mt-2 break-words">{{ selected_card.account.bank.name }} · {{ selected_card.account.name }} · {{ selected_card.account.currency }}</p>{% else %}<h1 class="page-title">{% translate 'Invoices' %}</h1><p class="subtle-copy mt-2">{% translate 'Choose a card to see its invoices.' %}</p>{% endif %}</div></header>
+<div class="banking-workspace space-y-4">
+<header class="workspace-header invoice-workspace-heading">
+    {% if selected_card %}
+    <div class="invoice-identity">
+        {% include 'banking/_card_miniature.html' with card=selected_card only %}
+        <div class="min-w-0"><p class="subtle-copy mb-1">{% translate 'Invoices' %}</p><h1 class="page-title break-words">{{ selected_card.name }}</h1><p class="subtle-copy mt-2 break-words">{{ selected_card.account.bank.name }} · {{ selected_card.account.name }} · {{ selected_card.account.currency }}</p></div>
+    </div>
+    {% url 'banking:credit_card_update' selected_card.pk as settings_url %}<a class="quiet-action" href="{% contextual_url settings_url %}">{% translate 'Card settings' %}</a>
+    {% else %}
+    <div class="min-w-0"><h1 class="page-title">{% translate 'Invoices' %}</h1><p class="subtle-copy mt-2">{% translate 'Choose a card to see its invoices.' %}</p></div>
+    {% endif %}
+</header>
 {% if selected_card %}<p class="subtle-copy">{% translate 'Automatic cards settle on their due date. For confirmed mode, record the actual payments; outstanding amounts remain in the forecast.' %}</p>{% endif %}
 {% comment %}Pin the endpoint: an omitted action follows location during Back, confusing overview and card-history restoration.{% endcomment %}
 <form id="invoice-filter-form" action="{{ request.path }}" method="get" hx-boost="false" novalidate data-live-filters data-live-results="invoice-results" class="consultation-bar bank-consultation bank-invoice-consultation">

@@ -271,22 +271,31 @@ test('browser Back retains contextual navigation through investment operations',
 test('bank color palette, arbitrary color and marker edit preserve the bank',async({page},info)=>{
     await seed(page,info);await page.goto('/banking/create/');
     await page.locator('#id_name').fill('Colored bank');
+    await page.getByRole('button',{name:'Purple',exact:true}).press('Enter');
+    await expect(page.locator('#id_color')).toHaveValue('#820ad1');
     await page.locator('#id_color').evaluate(input=>input.type='text');await page.locator('#id_color').fill('invalid');
     await page.getByRole('button',{name:'Save',exact:true}).click();
     await expect(page.locator('[data-field-error]')).toContainText('Enter a color in #RRGGBB format.');
     await expect(page.locator('#id_name')).toHaveValue('Colored bank');
-    await page.getByRole('button',{name:'Use color #6E42A1',exact:true}).press('Enter');
-    await expect(page.locator('#id_color')).toHaveValue('#6e42a1');
+    // A malformed bound HEX stays readable instead of being coerced to black
+    // by a native color input. Repair that text before checking the saved marker.
+    await expect(page.locator('#id_color')).toHaveAttribute('type','text');
+    await expect(page.locator('#id_color')).toHaveValue('invalid');
+    await page.locator('#id_color').focus();
+    await page.keyboard.press('ControlOrMeta+A');
+    await page.keyboard.type('#820ad1');
+    await expect(page.locator('#id_color')).toHaveValue('#820ad1');
     await page.getByRole('button',{name:'Save',exact:true}).click();
     const bankLink=page.locator('.bank-overview-card').filter({hasText:'Colored bank'});
-    await expect(bankLink).toHaveCSS('border-inline-start-color','rgb(110, 66, 161)');
+    await expect(bankLink.locator('.bank-overview-identity')).toHaveCSS('border-inline-start-color','rgb(130, 10, 209)');
     await page.screenshot({path:info.outputPath('bank-list-marker.png')});
     await bankLink.press('Enter');
     await page.locator('[id^="bank-detail-options-"] > summary').press('Enter');
     await page.getByRole('link',{name:'Change marker color',exact:true}).press('Enter');
     await page.locator('#id_color').fill('#1278ab');await page.getByRole('button',{name:'Save',exact:true}).click();
     await expect(page.getByRole('heading',{name:'Colored bank',exact:true})).toBeVisible();
-    await expect(page.locator('.bank-marker')).toHaveCSS('background-color','rgb(18, 120, 171)');
+    await expect(page.locator('#bank-workspace-panel')).toHaveCSS('border-top-color','rgb(18, 120, 171)');
+    await expect(page.locator('.bank-marker')).toHaveCount(0);
     await page.screenshot({path:info.outputPath('bank-marker.png')});
 });
 

@@ -1,11 +1,13 @@
 {% load i18n %}
+<section class="bank-directory surface-panel" aria-labelledby="bank-directory-title">
+    <header class="bank-directory-heading"><h2 id="bank-directory-title" class="section-title">{% translate 'Your banks' %}</h2><p class="subtle-copy">{% blocktranslate count count=banks|length %}{{ count }} institution{% plural %}{{ count }} institutions{% endblocktranslate %}</p></header>
 <div id="bank-results" class="bank-overview-grid">
     {% for bank in banks %}
     {% url 'banking:detail' bank.pk as bank_destination %}
     <a id="bank-{{ bank.pk|stringformat:'d' }}" href="{{ bank_destination }}" hx-get="{{ bank_destination }}" hx-target="#banking-workspace" hx-select="#banking-workspace" hx-swap="outerHTML show:none" hx-push-url="true" hx-sync="#banking-workspace:replace" class="bank-overview-card bank-workspace-tab" style="--bank-color: {{ bank.color|default:'#B88D57' }}" data-bank-open="{{ bank.pk|stringformat:'d' }}">
-        <div class="min-w-0"><span class="block break-words text-base font-semibold">{{ bank.name }}</span><p class="subtle-copy mt-1">{% blocktranslate count count=bank.account_count %}{{ count }} account{% plural %}{{ count }} accounts{% endblocktranslate %} · {% blocktranslate count count=bank.card_count %}{{ count }} card{% plural %}{{ count }} cards{% endblocktranslate %}</p></div>
+        <div class="bank-overview-identity">{% include 'banking/_institution_miniature.html' %}<div class="min-w-0"><span class="block break-words text-base font-semibold">{{ bank.name }}</span><p class="subtle-copy mt-1">{% blocktranslate count count=bank.account_count %}{{ count }} account{% plural %}{{ count }} accounts{% endblocktranslate %} · {% blocktranslate count count=bank.card_count %}{{ count }} card{% plural %}{{ count }} cards{% endblocktranslate %}</p></div></div>
         <svg aria-hidden="true" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 7 7-7 7"/></svg>
     </a>
     {% empty %}<p class="subtle-copy py-6">{% translate 'No banks yet' %}. {% translate 'Add a bank, then create its currency-specific accounts and cards.' %}</p>{% endfor %}
 </div>
-{% if independent_programs %}<section class="banking-section"><h2 class="section-title">{% translate 'Independent loyalty programs' %}</h2><ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for program in independent_programs %}<li class="flex flex-wrap items-center justify-between gap-3 py-3"><div><a class="font-medium" href="{% url 'banking:program_update' program.pk %}">{{ program.name }}</a><p class="subtle-copy">{{ program.displayed_balance|floatformat:2 }} {{ program.unit_name }}</p></div><a href="{% url 'banking:entry_create' %}?program={{ program.pk|stringformat:'d' }}" class="quiet-action">{% translate 'Entry' %}</a></li>{% endfor %}</ul></section>{% endif %}
+</section>

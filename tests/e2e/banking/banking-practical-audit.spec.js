@@ -218,7 +218,7 @@ for (const theme of ['light', 'dark']) {
             await expectChoiceFits(bankInput, {id: 'id_bank', selected: data.bank}, data.names.bank);
             await capture('09b', 'bank-choice-focus');
             if (width === 1280) {
-                const fields = await Promise.all(['#id_currency', '#id_opening_balance'].map(id => page.locator(id).boundingBox()));
+                const fields = await Promise.all(['#id_opening_balance', '#id_opening_date'].map(id => page.locator(id).boundingBox()));
                 expect(Math.abs(fields[0].y - fields[1].y)).toBeLessThan(2);
             }
             await page.goto('/banking/loyalty/create/');
@@ -324,6 +324,7 @@ for (const theme of ['light', 'dark']) {
             await expect(page.locator('#id_bank')).toBeVisible();
             await page.locator('#id_name').fill('Native account edit');
             await page.locator('#id_pix_enabled').press('Space');
+            await page.locator('#account-planning-adjustments > summary').press('Enter');
             await page.locator('#id_reserved_amount').fill('-1');
             await page.getByRole('button', {name: 'Save', exact: true}).press('Enter');
             await expect(page.locator('#id_reserved_amount')).toHaveAttribute('aria-invalid', 'true');

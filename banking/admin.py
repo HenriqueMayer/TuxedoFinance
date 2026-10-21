@@ -6,6 +6,7 @@ from banking.models import (
     BankMovement,
     BankTransfer,
     CardInvoice,
+    CardInvoiceCredit,
     CreditCard,
     DebitCard,
     ExchangeRate,
@@ -37,6 +38,29 @@ class BankMovementAdmin(admin.ModelAdmin):
 class CardInvoiceAdmin(admin.ModelAdmin):
     list_display = ('card', 'reference_month', 'due_date', 'amount', 'status')
     list_filter = ('status',)
+
+
+@admin.register(CardInvoiceCredit)
+class CardInvoiceCreditAdmin(admin.ModelAdmin):
+    list_display = ('title', 'date', 'reference_month', 'card', 'amount', 'user')
+    list_filter = ('reference_month',)
+    readonly_fields = ('idempotency_key',)
+
+    def save_model(self, request, obj, form, change):
+        from banking.credits import save_invoice_credit
+
+        save_invoice_credit(obj, user=obj.user)
+
+    def delete_model(self, request, obj):
+        from banking.credits import delete_invoice_credit
+
+        delete_invoice_credit(obj, user=obj.user)
+
+    def delete_queryset(self, request, queryset):
+        from banking.credits import delete_invoice_credit
+
+        for credit in queryset:
+            delete_invoice_credit(credit, user=credit.user)
 
 
 @admin.register(LoyaltyEntry)

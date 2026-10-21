@@ -1,0 +1,57 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* One compact scale for authenticated workspace headings and opening values.
+   Panels grow with evidence/errors; this never fixes heights or shrinks fields,
+   chart canvases, editor sheets or the shared 44px activation targets. */
+.workspace-density {
+    --workspace-title-size: 1.5rem;
+    --workspace-section-size: 1.125rem;
+    --workspace-summary-size: 1.5rem;
+    --workspace-panel-padding: 1rem;
+}
+body.tuxedo-ui .workspace-density .page-title,
+[data-design-lab] .workspace-density .page-title {
+    font-size: var(--workspace-title-size); line-height: 1.25;
+}
+body.tuxedo-ui .workspace-density .section-title,
+[data-design-lab] .workspace-density .section-title {
+    font-size: var(--workspace-section-size); line-height: 1.5rem;
+}
+body.tuxedo-ui .workspace-density .workspace-header,
+[data-design-lab] .workspace-density .workspace-header { gap: .75rem; }
+body.tuxedo-ui .workspace-density :is(.workspace-summary, .metric-panel),
+[data-design-lab] .workspace-density :is(.workspace-summary, .metric-panel) {
+    padding: var(--workspace-panel-padding); border-radius: .875rem;
+}
+body.tuxedo-ui .workspace-density .workspace-summary .workspace-summary-value,
+[data-design-lab] .workspace-density .workspace-summary .workspace-summary-value {
+    margin-top: .25rem; font-size: var(--workspace-summary-size);
+    line-height: 1.25; overflow-wrap: anywhere;
+}
+body.tuxedo-ui .workspace-density .workspace-summary .workspace-summary-label,
+[data-design-lab] .workspace-density .workspace-summary .workspace-summary-label {
+    font-size: .875rem; line-height: 1.25rem; font-weight: 500;
+}
+body.tuxedo-ui .workspace-density .workspace-summary .workspace-summary-caption,
+[data-design-lab] .workspace-density .workspace-summary .workspace-summary-caption {
+    font-size: .75rem; line-height: 1.125rem;
+}
+body.tuxedo-ui .workspace-density .workspace-summary-currency,
+[data-design-lab] .workspace-density .workspace-summary-currency {
+    font-size: .875rem; line-height: 1.25rem; font-weight: 400; color: var(--ui-muted);
+}
+body.tuxedo-ui .workspace-density .workspace-summary-metrics > div,
+[data-design-lab] .workspace-density .workspace-summary-metrics > div { min-width: 0; }
+body.tuxedo-ui .workspace-density .workspace-summary-metrics dt,
+[data-design-lab] .workspace-density .workspace-summary-metrics dt { font-size: .75rem; line-height: 1.125rem; }
+body.tuxedo-ui .workspace-density .workspace-summary-metrics dd,
+[data-design-lab] .workspace-density .workspace-summary-metrics dd {
+    margin-top: .25rem; font-size: .875rem; line-height: 1.25rem; overflow-wrap: anywhere;
+}
+.monthly-summary-heading { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; }
+.monthly-summary-heading .monthly-period { margin: 0; }
+@media (min-width:900px) {
+    .workspace-summary.monthly-planning-summary .monthly-outlook-metrics {
+        grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem;
+    }
+    .monthly-summary-heading .monthly-period { margin-inline-start: auto; }
+}

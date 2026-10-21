@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from banking.models import BankMovement, CardInvoice, LoyaltyEntry, RewardRedemption
+from banking.models import BankMovement, CardInvoice, CardInvoiceCredit, LoyaltyEntry, RewardRedemption
 from transactions.models import Transaction
 from transactions.projection import occurrence_months, projection_horizon, validate_occurrences
 from banking.services import sync_redemption_iof_transaction
@@ -136,6 +136,13 @@ def _sync_user_ledger(user, through_date, horizon):
             cash_amount__gt=ZERO,
         ).select_related('funding_credit_card')
     )
+    invoice_credits = list(CardInvoiceCredit.objects.select_for_update().filter(
+        user=user,
+    ).select_related('card__account'))
+    credits_by_key = {}
+    for credit in invoice_credits:
+        key = (credit.card_id, credit.reference_month)
+        credits_by_key[key] = credits_by_key.get(key, ZERO) + credit.amount
     computed = {}
     for item in credit_transactions:
         for reference_month in occurrence_months(item, horizon):
@@ -148,6 +155,11 @@ def _sync_user_ledger(user, through_date, horizon):
         if reference_month <= horizon:
             key = (entry.funding_credit_card_id, reference_month)
             computed[key] = computed.get(key, ZERO) + entry.cash_amount
+    for key in credits_by_key:
+        if key[1] <= horizon:
+            # A statement with only credit must remain discoverable, including
+            # excess credit that cannot be represented as a negative bill.
+            computed.setdefault(key, ZERO)
 
     existing = list(
         CardInvoice.objects.select_for_update().filter(user=user)
@@ -157,6 +169,7 @@ def _sync_user_ledger(user, through_date, horizon):
     cards.update(
         {item.funding_credit_card_id: item.funding_credit_card for item in loyalty_purchases}
     )
+    cards.update({credit.card_id: credit.card for credit in invoice_credits})
     for invoice in existing:
         cards[invoice.card_id] = invoice.card
 
@@ -177,6 +190,8 @@ def _sync_user_ledger(user, through_date, horizon):
         ), ZERO)
     desired_invoice_keys = set()
     for key, amount in computed.items():
+        gross_amount = amount
+        amount = max(ZERO, amount - credits_by_key.get(key, ZERO))
         card_id, reference_month = key
         card = cards[card_id]
         due_date = card.due_date_for(reference_month)
@@ -187,8 +202,23 @@ def _sync_user_ledger(user, through_date, horizon):
         # including a sticky manual mode and confirmed payments at the cutoff.
         original_amount, original_due_date = invoice.amount, invoice.due_date
         invoice.amount, invoice.due_date = amount, due_date
-        projection = invoice_projection(invoice, through_date)
+        credits_at_cutoff = sum((
+            credit.amount for credit in invoice_credits
+            if (credit.card_id, credit.reference_month) == key and credit.date <= through_date
+        ), ZERO)
+        projection = invoice_projection(
+            invoice, through_date,
+            statement_amount=max(ZERO, gross_amount - credits_at_cutoff),
+        )
         invoice.amount, invoice.due_date = original_amount, original_due_date
+        if not projection['manual_settlement']:
+            # A credit posted after settlement remains a card asset; it cannot
+            # retroactively reduce the bank debit made on the due date.
+            credits_at_due = sum((
+                credit.amount for credit in invoice_credits
+                if (credit.card_id, credit.reference_month) == key and credit.date <= due_date
+            ), ZERO)
+            projection['movement_amount'] = max(ZERO, gross_amount - credits_at_due)
         values = {
             'due_date': due_date, 'amount': amount,
             **{field: projection[field] for field in ('status', 'paid_at', 'manual_settlement')},
@@ -199,7 +229,7 @@ def _sync_user_ledger(user, through_date, horizon):
             invoice.save()
         else:
             _save_derived_changes(invoice, values)
-        if projection['movement_amount'] is None:
+        if projection['movement_amount'] is None or projection['movement_amount'] <= ZERO:
             continue
         source_key = f'invoice:{invoice.pk}'
         desired_invoice_keys.add(source_key)

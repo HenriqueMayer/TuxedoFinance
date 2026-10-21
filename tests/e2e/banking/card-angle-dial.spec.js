@@ -38,7 +38,8 @@ async function fillCard(page, kind, account, name) {
         await page.locator('#id_closing_day').fill('20');
         await page.locator('#id_due_day').fill('28');
     }
-    await page.getByRole('radio', {name: 'Plum', exact: true}).press('Space');
+    // The native custom input works with and without progressive preset buttons.
+    await page.locator('#id_color').fill('#820ad1');
 }
 
 async function recordId(page, kind, name) {
@@ -222,7 +223,7 @@ for (const theme of ['light', 'dark']) {
         const card = await recordId(page, 'debit', name);
         await page.goto(`/banking/debit-cards/${card}/edit/`);
         await angle(page, Number(stopped));
-        await expect(page.locator('#id_color')).toHaveValue('#5b3e7c');
+        await expect(page.locator('#id_color')).toHaveValue('#820ad1');
         await expect(page.locator('#id_gradient_end')).toHaveValue('#c6a173');
     });
 }

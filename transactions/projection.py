@@ -40,13 +40,19 @@ def occurrence_window(item, horizon):
     start = item.billed_month if item.is_credit_card else item.date.replace(day=1)
     if start is None:
         return None, 0
+    skipped = getattr(item, 'installment_start', 1) - 1 if item.is_installment_plan else 0
+    if skipped:
+        index = month_index(start) + skipped
+        if index > month_index(date.max):
+            return None, 0
+        start = month_at(index)
     count = max(0, month_index(horizon) - month_index(start) + 1)
     if item.is_fixed:
         if item.last_fixed_offset is not None:
             # fixed_until is an event offset; billing can shift its last month.
             count = min(count, item.last_fixed_offset + 1)
     else:
-        count = min(count, item.installments if item.is_installment_plan else 1)
+        count = min(count, item.installments - skipped if item.is_installment_plan else 1)
     if count and not item.is_credit_card:
         last = month_at(month_index(start) + count - 1)
         effective = last.replace(day=min(item.date.day, monthrange(last.year, last.month)[1]))

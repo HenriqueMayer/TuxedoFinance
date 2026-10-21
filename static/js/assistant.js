@@ -238,6 +238,7 @@
         const controller = new AbortController();
         pending = controller;
         const url = requestURL(path);
+        const preserveDraft = !!form?.matches('[data-assistant-action]');
         // A failed POST is never replayed by Retry. Refresh the authorized
         // history first; the original mutation may already have completed.
         lastURL = form ? root.dataset.assistantUrl : url.pathname + url.search;
@@ -288,7 +289,8 @@
             }
             // An owned 400 fragment contains recoverable context/form errors.
             // Keep those server explanations visible without broadening scope.
-            if (!response.ok && response.status !== 400) throw new Error('Assistant request failed');
+            if (!response.ok && response.status !== 400
+                    && !(preserveDraft && [409, 422, 503].includes(response.status))) throw new Error('Assistant request failed');
             const focused = panel().contains(document.activeElement);
             let restoration = view;
             if (view) {
@@ -298,8 +300,24 @@
                     if (!restoration.focus && document.activeElement === document.body) restoration.focus = view.focus;
                 }
             }
+            const previous = preserveDraft ? content().querySelector('[data-assistant-content]') : null;
+            const previousForm = previous?.querySelector('[data-assistant-send]');
+            // A local confirmation refreshes only its transcript. Retain the
+            // latest unsent chat draft after owner/session/account revalidation;
+            // neither this request nor this snapshot reads a financial form.
+            const keepDraft = previousForm && previous.dataset.assistantUser === next.dataset.assistantUser
+                && previous.dataset.assistantSession === next.dataset.assistantSession
+                && previousForm.elements.connection_id.value === next.querySelector('[name="connection_id"]')?.value;
+            if (keepDraft) {
+                const nextForm = next.querySelector('[data-assistant-send]');
+                nextForm.elements.content.value = previousForm.elements.content.value;
+                nextForm.elements.model.value = previousForm.elements.model.value;
+                nextForm.elements.reasoning_effort.value = previousForm.elements.reasoning_effort.value;
+                if (nextForm.elements.include_context) nextForm.elements.include_context.checked = previousForm.elements.include_context?.checked || false;
+            }
             content().replaceChildren(document.adoptNode(next));
             window.TuxedoAssistantChat?.initialize(next, {view: restoration && memory.minimized ? {...restoration, focus: null} : restoration});
+            if (keepDraft) window.TuxedoAssistantChat?.refreshSettings(next.querySelector('[data-assistant-send]'));
             memory.conversation = next.dataset.conversationId || '';
             const canonical = new URL(response.url);
             lastURL = canonical.pathname + canonical.search;
@@ -369,7 +387,8 @@
     window.addEventListener('submit', event => {
         if (!shell()?.contains(event.target) || !event.target.matches('[data-assistant-form]')) return;
         event.preventDefault(); event.stopPropagation();
-        if (!pending) load(event.target.action, event.target);
+        if (!pending) load(event.target.action, event.target, event.target.matches('[data-assistant-action]')
+            ? window.TuxedoAssistantChat?.capture(content().querySelector('[data-assistant-content]')) : null);
     }, true);
     document.addEventListener('keydown', event => {
         const box = panel();

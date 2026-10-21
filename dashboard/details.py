@@ -16,6 +16,7 @@ from django.views.decorators.cache import never_cache
 
 from accounts.models import UserPreference
 from banking.models import LoyaltyEntry
+from banking.credit_reporting import InvoiceCreditOccurrence
 from banking.services import ConversionContext, MissingExchangeRate
 from categories.models import Category
 from dashboard.services import (_transactions, _transaction_category_values, _transaction_occurrence_date,
@@ -153,7 +154,10 @@ def composition(user, query, *, conversion=None):
             recurrence = 'installment' if item.is_installment_plan else 'fixed' if item.is_fixed else 'one_off'
             if query.get('recurrence') and recurrence != query['recurrence']:
                 continue
-            if item.reward_redemption_id:
+            if isinstance(item, InvoiceCreditOccurrence):
+                url = item.source_url
+                action = _('Open invoice credit')
+            elif item.reward_redemption_id:
                 url = reverse('banking:redemption_update', args=[item.reward_redemption_id])
                 action = _('Open reward redemption')
             else:
@@ -169,7 +173,8 @@ def composition(user, query, *, conversion=None):
                 ):
                     if query.get('category') and category.pk != query['category']:
                         continue
-                    add(path(category.pk), value, f'transaction:{item.pk}',
+                    source_key = item.source_key if isinstance(item, InvoiceCreditOccurrence) else f'transaction:{item.pk}'
+                    add(path(category.pk), value, source_key,
                         dated(item.display_title, item.date), url, action)
         if scope == 'cashflow' and series == 'expenses':
             for year, month in targets:

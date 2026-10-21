@@ -8,12 +8,27 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from banking.models import BankMovement, CardInvoice, InvoicePayment
+from banking.models import BankMovement, CardInvoice, CardInvoiceCredit, InvoicePayment
 
 ZERO = Decimal('0.00')
 
 
-def invoice_projection(invoice, through_date):
+def _statement_amount_at(invoice, through_date):
+    """Exclude future credit forecasts from today's settlement evidence."""
+    if not CardInvoiceCredit.objects.filter(
+        user_id=invoice.user_id, card_id=invoice.card_id,
+        reference_month=invoice.reference_month, date__gt=through_date,
+    ).exists():
+        return invoice.amount
+    from banking.credits import invoice_credit_totals
+
+    return max(ZERO, invoice.gross_amount - invoice_credit_totals(
+        invoice.user, card_id=invoice.card_id,
+        reference_month=invoice.reference_month, as_of=through_date,
+    ))
+
+
+def invoice_projection(invoice, through_date, *, statement_amount=None):
     """Manual mode is sticky for an invoice, preserving confirmed evidence."""
     manual = invoice.manual_settlement or bool(
         invoice.card.manual_settlement_from and invoice.due_date >= invoice.card.manual_settlement_from
@@ -21,9 +36,13 @@ def invoice_projection(invoice, through_date):
     if not manual:
         return {'status': CardInvoice.Status.PAID if invoice.due_date <= through_date else CardInvoice.Status.SCHEDULED,
                 'paid_at': invoice.paid_at, 'manual_settlement': False, 'movement_amount': invoice.amount}
+    if statement_amount is None:
+        # Payment edits may refresh outside the source reconciliation loop.
+        # A future credit is a forecast, not evidence of settlement today.
+        statement_amount = _statement_amount_at(invoice, through_date)
     payments = [payment for payment in invoice.payments.all() if payment.date <= through_date] if invoice.pk else []
     paid = sum((payment.amount for payment in payments), ZERO)
-    if invoice.amount <= paid and (payments or invoice.amount == ZERO):
+    if statement_amount <= paid and (payments or statement_amount == ZERO):
         status = CardInvoice.Status.PAID
     elif paid > ZERO:
         status = CardInvoice.Status.PARTIAL
@@ -41,7 +60,9 @@ def manual_invoice_obligations(user, as_of):
     rows = []
     for invoice in invoices:
         paid = sum((payment.amount for payment in invoice.payments.all() if payment.date <= as_of), ZERO)
-        invoice.remaining_amount_at_cutoff = max(ZERO, invoice.amount - paid)
+        # Today's net statement may include credits posted after this read's
+        # cutoff. Historical obligations only use credits already posted.
+        invoice.remaining_amount_at_cutoff = max(ZERO, _statement_amount_at(invoice, as_of) - paid)
         # A temporary attribute avoids confusing current remaining_amount with
         # a historical or forecast cutoff selected by the caller.
         if invoice.remaining_amount_at_cutoff:
@@ -61,7 +82,7 @@ def save_invoice_payment(payment):
             return previous
     payment.full_clean()
     others = invoice.payments.exclude(pk=payment.pk).aggregate(total=Sum('amount'))['total'] or ZERO
-    if others + payment.amount > invoice.amount:
+    if others + payment.amount > _statement_amount_at(invoice, timezone.localdate()):
         raise ValidationError({'amount': _('Payments cannot exceed the current invoice amount.')})
     payment.save()
     key = f'invoice-payment:{payment.pk}'

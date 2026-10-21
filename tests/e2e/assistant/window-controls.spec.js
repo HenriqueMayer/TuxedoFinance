@@ -62,9 +62,8 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expectTargetInViewport(close, width, 844);
         await configure(panel);
         const input = panel.locator('[data-assistant-send] textarea');
-        const consent = panel.locator('input[name="include_context"]');
         await input.fill('A private unsent chat draft');
-        await consent.focus(); await consent.press('Space');
+        await expect(panel.locator('input[name="include_context"]')).toHaveCount(0);
         await minimize.press('Enter');
         await expect(panel).toBeHidden();
         const dock = page.locator('[data-assistant-minimized]');
@@ -100,7 +99,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(input).toHaveValue('A private unsent chat draft');
         await expect(panel.locator('select[name="model"]')).toHaveValue('mock-mini');
         await expect(panel.locator('select[name="reasoning_effort"]')).toHaveValue('high');
-        await expect(panel.locator('input[name="include_context"]')).toBeChecked();
+        await expect(panel.locator('input[name="include_context"]')).toHaveCount(0);
         await expect(minimize).toBeFocused();
         await page.screenshot({path: info.outputPath(`assistant-tab-restored-${theme}-${width}.png`)});
         await input.press('Escape');
@@ -114,7 +113,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(launcher).toBeFocused();
         await launcher.press('Enter');
         await expect(panel.locator('[data-assistant-send] textarea')).toHaveValue('');
-        await expect(panel.locator('input[name="include_context"]')).not.toBeChecked();
+        await expect(panel.locator('input[name="include_context"]')).toHaveCount(0);
         await expect(panel.locator('select[name="model"]')).toHaveValue('mock-mini');
         await expect(panel.locator('select[name="reasoning_effort"]')).toHaveValue('high');
         await close.press('Enter');
@@ -301,7 +300,7 @@ test('Restoring a minimized transcript preserves an earlier reading position', a
     await page.screenshot({path: info.outputPath('assistant-restored-transcript-position.png')});
 });
 
-test('Restoring after a selected ChatGPT account change keeps fresh settings and requires context consent again', async ({page}, info) => {
+test('Restoring after a selected ChatGPT account change keeps fresh settings and a same-user draft', async ({page}, info) => {
     await signup(page, info);
     await page.goto('/banking/');
     await page.getByRole('button', {name: 'Open Tuxedo assistant', exact: true}).press('Enter');
@@ -312,8 +311,6 @@ test('Restoring after a selected ChatGPT account change keeps fresh settings and
     const nextConnection = 'd6626ba1-31b4-4a38-9de9-2d99014781af';
     expect(previousConnection).not.toBe(nextConnection);
     await form.locator('textarea').fill('An unsent text draft may stay with the same local user');
-    await form.locator('input[name="include_context"]').focus();
-    await form.locator('input[name="include_context"]').press('Space');
     await panel.getByRole('button', {name: 'Minimize assistant', exact: true}).press('Enter');
     await page.route(/\/assistant\/(?:\?.*)?$/, async route => {
         if (route.request().method() !== 'GET') return route.continue();
@@ -328,7 +325,6 @@ test('Restoring after a selected ChatGPT account change keeps fresh settings and
             for (const [name, value] of [['model', 'mock-standard'], ['reasoning_effort', 'low']]) {
                 for (const option of form.elements[name].options) option.toggleAttribute('selected', option.value === value);
             }
-            form.elements.include_context.removeAttribute('checked');
             return document.documentElement.outerHTML;
         }, {html: await response.text(), connection: nextConnection});
         await route.fulfill({response, body});
@@ -339,5 +335,5 @@ test('Restoring after a selected ChatGPT account change keeps fresh settings and
     await expect(panel.locator('[data-assistant-send] textarea')).toHaveValue('An unsent text draft may stay with the same local user');
     await expect(panel.locator('select[name="model"]')).toHaveValue('mock-standard');
     await expect(panel.locator('select[name="reasoning_effort"]')).toHaveValue('low');
-    await expect(panel.locator('input[name="include_context"]')).not.toBeChecked();
+    await expect(panel.locator('input[name="include_context"]')).toHaveCount(0);
 });

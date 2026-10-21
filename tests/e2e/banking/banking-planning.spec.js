@@ -53,10 +53,11 @@ for (const dark of [false, true]) {
         await page.screenshot({ path: testInfo.outputPath(`banks-mobile-${dark ? 'dark' : 'light'}.png`), fullPage: true });
         await row.locator('details[name="account-updates"] > summary').press('Enter');
         await row.getByRole('link', { name: 'Edit Monthly account and reserve' }).click();
-        await page.getByLabel('Reserved amount', { exact: true }).fill('-1');
+        await expect(page.locator('#account-planning-adjustments')).toHaveAttribute('open', '');
+        await page.getByLabel('Keep outside monthly planning', { exact: true }).fill('-1');
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await expect(page.locator('[role="alert"]').first()).toBeVisible();
-        await expect(page.getByLabel('Reserved amount', { exact: true })).toHaveValue('-1');
+        await expect(page.getByLabel('Keep outside monthly planning', { exact: true })).toHaveValue('-1');
     });
 }
 

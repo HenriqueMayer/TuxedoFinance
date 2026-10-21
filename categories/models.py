@@ -81,6 +81,8 @@ class Category(models.Model):
             })
         if self.pk and self.transaction_type and self.transaction_splits.exclude(transaction__transaction_type=self.transaction_type).exists():
             raise ValidationError({'transaction_type': _('This category has splits of another transaction type.')})
+        if self.pk and self.transaction_type == self.TransactionType.INCOME and self.invoice_credits.exists():
+            raise ValidationError({'transaction_type': _('This category has invoice credits and must remain available for expenses.')})
         if self.pk:
             from planning.services import validate_budget_category_change
             validate_budget_category_change(self)

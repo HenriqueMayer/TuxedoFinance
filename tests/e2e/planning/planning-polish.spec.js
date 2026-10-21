@@ -97,6 +97,14 @@ test(`planning long-name screens, choices and short-mobile actions (${theme})`, 
             ['reserve', `${data.goal}reserve/`],
         ]) {
             await page.goto(route); await record(page, info, `${width}-${name}`, observations);
+            if (name === 'month') {
+                // Finance density must retain the shell's separation between tabs and page content.
+                const sections = page.locator('main > .section-nav');
+                await expect(sections).toHaveCSS('margin-bottom', '24px');
+                const tabs = await sections.boundingBox();
+                const heading = await page.locator('main h1').boundingBox();
+                expect(heading.y - (tabs.y + tabs.height)).toBeGreaterThanOrEqual(24);
+            }
             if (name === 'goal-detail' || name === 'goal-unbroken') {
                 const title = await page.locator('main h1').boundingBox();
                 expect(title.x + title.width).toBeLessThanOrEqual(width - 16);

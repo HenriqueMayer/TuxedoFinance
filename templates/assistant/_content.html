@@ -1,5 +1,7 @@
 {% load i18n %}
-<div class="assistant-content" data-assistant-content data-assistant-user="{{ request.user.pk|stringformat:'d' }}" data-assistant-session="{{ ui_session }}" data-assistant-scope="{{ scope }}" data-conversation-id="{{ conversation.pk|default:'' }}" data-provider-state="{{ provider_state }}">
+<div class="assistant-content" data-assistant-content data-assistant-user="{{ request.user.pk|stringformat:'d' }}" data-assistant-session="{{ ui_session }}" data-assistant-scope="{{ scope }}" data-conversation-id="{{ conversation.pk|default:'' }}" data-provider-state="{{ provider_state }}"
+     data-copy-message-label="{% translate 'Copy as Markdown' %}" data-copy-download-label="{% translate 'Download Markdown' %}"
+     data-copy-pending="{% translate 'Copying…' %}" data-copy-success="{% translate 'Copied.' %}" data-copy-failed="{% translate 'Could not copy. Download the Markdown file instead.' %}">
     <div class="assistant-content-toolbar">
         <details class="assistant-history" data-assistant-menu>
             <summary class="quiet-action">{% translate 'History' %}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
@@ -20,7 +22,7 @@
             {% endif %}
             <div class="assistant-history-footer">
                 <a href="{% url 'assistant:connections' %}" class="quiet-action" data-assistant-source>{% translate 'Assistant settings' %} <span aria-hidden="true">↗</span></a>
-                <p class="subtle-copy">{% translate 'Only this conversation and the context selected for this message are sent. History stays on this installation.' %}</p>
+                <p class="subtle-copy">{% translate 'The assistant can consult relevant saved financial records to answer. Your question, necessary history and consulted records are sent to OpenAI; history stays on this installation.' %}</p>
             </div>
             </div>
         </details>
@@ -36,12 +38,17 @@
         </form>
         {% if conversation %}
         <details class="assistant-delete" data-assistant-menu>
-            <summary class="icon-action" aria-label="{% translate 'Delete conversation' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></summary>
+            <summary class="icon-action" aria-label="{% translate 'Conversation options' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></summary>
+            <div class="assistant-conversation-menu">
+            {% url 'assistant:export-conversation' conversation.pk as export_url %}
+            {% translate 'Copy conversation as Markdown' as copy_label %}
+            {% include 'assistant/_copy.html' with copy_label_visible=True %}
             <form method="post" action="{% url 'assistant:delete' conversation.pk %}" autocomplete="off" hx-boost="false" novalidate data-assistant-form>
                 {% csrf_token %}<input type="hidden" name="scope" value="{{ scope }}">
                 <p>{% translate 'Delete this conversation and its messages? Financial records will be kept.' %}</p>
                 <button type="submit" class="action-danger">{% translate 'Confirm deletion' %}</button>
             </form>
+            </div>
         </details>
         {% endif %}
     </div>
@@ -50,9 +57,13 @@
     {% if conversation %}<h3 class="assistant-conversation-title{% if not conversation.title %} sr-only{% endif %}">{{ conversation.title|default:_('New conversation') }}</h3>{% endif %}
     <section class="assistant-transcript" data-assistant-transcript aria-label="{% translate 'Messages' %}" tabindex="0">
         {% for message in chat_messages %}
-        <article class="assistant-message assistant-message--{{ message.role }}"><p class="assistant-message-role">{% if message.role == 'user' %}{% translate 'You' %}{% else %}{% translate 'Tuxedo assistant' %}{% endif %}</p><p class="assistant-message-text">{{ message.content }}</p>
+        <article class="assistant-message assistant-message--{{ message.role }}"><p class="assistant-message-role">{% if message.role == 'user' %}{% translate 'You' %}{% else %}{% translate 'Tuxedo assistant' %}{% endif %}</p><div class="assistant-message-text"{% if message.role == 'assistant' %} data-assistant-markdown{% endif %}>{{ message.content }}</div>
             {% if message.generation_status and message.generation_status != 'completed' %}<p class="assistant-partial">{% if message.role == 'assistant' %}{% translate 'Partial response' %} · {% endif %}{% if message.generation_status == 'cancelled' %}{% translate 'Stopped' %}{% elif message.generation_status == 'running' %}{% translate 'In progress' %}{% else %}{% translate 'Not completed' %}{% endif %}</p>{% endif %}
-            {% if message.reference_sources %}<nav class="assistant-references" aria-label="{% translate 'References' %}">{% for reference in message.reference_sources %}<a href="{{ reference.url }}" data-assistant-source>{{ reference.label }} <span aria-hidden="true">↗</span></a>{% endfor %}</nav>{% endif %}
+            {% if message.reference_sources %}<nav class="assistant-references" aria-label="{% translate 'References' %}">{% for reference in message.reference_sources %}<a href="{{ reference.url }}" data-assistant-source data-assistant-source-label="{{ reference.label }}">{{ reference.label }} <span aria-hidden="true">↗</span></a>{% endfor %}</nav>{% endif %}
+            {% include 'assistant/_actions.html' %}
+            {% url 'assistant:export-message' conversation.pk message.pk as export_url %}
+            {% translate 'Copy as Markdown' as copy_label %}
+            {% include 'assistant/_copy.html' with copy_label_visible=False %}
         </article>
         {% empty %}
         <div class="assistant-empty">

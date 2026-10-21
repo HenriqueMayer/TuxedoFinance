@@ -33,7 +33,7 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = (
             'title', 'amount', 'transaction_type', 'category', 'payment_channel',
-            'bank_account', 'debit_card', 'credit_card', 'installments',
+            'bank_account', 'debit_card', 'credit_card', 'installments', 'installment_start',
             'billing_override', 'date', 'is_fixed', 'fixed_until', 'notes',
         )
         widgets = {
@@ -44,6 +44,7 @@ class TransactionForm(forms.ModelForm):
             'installments': forms.NumberInput(
                 attrs={'step': '1', 'min': '1', 'max': str(Transaction.MAX_INSTALLMENTS)}
             ),
+            'installment_start': forms.NumberInput(attrs={'step': '1', 'min': '1', 'max': str(Transaction.MAX_INSTALLMENTS)}),
         }
         labels = {
             'title': _('Title'),
@@ -55,6 +56,7 @@ class TransactionForm(forms.ModelForm):
             'debit_card': _('Debit card'),
             'credit_card': _('Credit card'),
             'installments': _('Installments'),
+            'installment_start': _('First installment tracked'),
             'billing_override': _('Bill choice'),
             'date': _('Transaction date'),
             'is_fixed': _('Fixed / recurring transaction'),
@@ -62,6 +64,7 @@ class TransactionForm(forms.ModelForm):
             'notes': _('Notes'),
         }
         help_texts = {
+            'installment_start': _('Earlier installments stay outside local invoices and balances. The amount remains the full purchase total.'),
             'is_fixed': _(
                 'Repeats monthly; it cannot also be an installment plan.'
             ),
@@ -93,6 +96,7 @@ class TransactionForm(forms.ModelForm):
             f'{card.name} - {card.account.bank.name} > {card.account.name} ({card.account.currency})'
         )
         self.fields['installments'].required = False
+        self.fields['installment_start'].required = False
         self.fields['credit_card'].help_text = _(
             'Invoices follow the selected card settlement settings. Automatic mode records settlement on the due date; confirmed mode changes cash only after a confirmed payment. The app does not pay the bank.'
         )
@@ -209,6 +213,12 @@ class TransactionForm(forms.ModelForm):
     def clean_installments(self):
         installments = self.cleaned_data.get('installments')
         return 1 if installments is None else installments
+
+    def clean_installment_start(self):
+        value = self.cleaned_data.get('installment_start')
+        # Older clients omit this additive field; editing must not reintroduce
+        # already settled installments from a reviewed opening import.
+        return self.instance.installment_start if value is None and self.instance.pk else (value or 1)
 
     def clean(self):
         cleaned = super().clean()

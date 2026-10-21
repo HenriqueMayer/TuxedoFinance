@@ -1,0 +1,80 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Statement identity uses the same decorative miniature as the account and
+   instrument selectors. Status and financial evidence retain readable text. */
+body.tuxedo-ui .invoice-workspace-heading { align-items: center; }
+body.tuxedo-ui .invoice-identity {
+    display: flex; flex: 1 1 18rem; align-items: center; gap: 16px; min-width: 0; max-width: 100%;
+}
+body.tuxedo-ui .invoice-identity > .card-miniature { flex-shrink: 0; }
+body.tuxedo-ui .invoice-identity > .min-w-0 { flex: 1; }
+body.tuxedo-ui .invoice-history { padding-block: 0; }
+body.tuxedo-ui .invoice-history-head,
+body.tuxedo-ui .banking-workspace #invoice-results .invoice-history-row {
+    display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(6rem, .6fr) minmax(10rem, 1fr) 8rem;
+    align-items: center; gap: 16px;
+}
+body.tuxedo-ui .invoice-history-head {
+    padding-block: 12px; color: var(--ui-muted); font-size: 12px;
+    border-bottom: 1px solid var(--ui-line);
+}
+body.tuxedo-ui .invoice-history-head > :nth-child(3) { text-align: right; }
+body.tuxedo-ui .invoice-history-row { border-bottom: 1px solid var(--ui-line); }
+body.tuxedo-ui .invoice-history-row:last-child { border-bottom: 0; }
+body.tuxedo-ui .invoice-history-row > * { min-width: 0; }
+body.tuxedo-ui .invoice-history-period > .quiet-action { justify-content: flex-start; padding-inline: 0; font-weight: 600; }
+body.tuxedo-ui .invoice-history-amount { text-align: right; font-variant-numeric: tabular-nums; }
+body.tuxedo-ui .invoice-history-amount > strong { display: block; overflow-wrap: anywhere; font-size: 15px; }
+body.tuxedo-ui .invoice-history-amount > p { margin-top: 4px; }
+body.tuxedo-ui .invoice-history-action { justify-self: end; gap: 6px; white-space: nowrap; }
+body.tuxedo-ui .invoice-history-action > svg { width: 14px; height: 14px; flex-shrink: 0; }
+/* Row labels remain available to screen readers when visual column labels
+   are used on desktop; phones show them beside each group's value. */
+body.tuxedo-ui .invoice-mobile-label {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+body.tuxedo-ui .invoice-summary-grid {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr);
+    align-items: start; gap: 20px;
+}
+body.tuxedo-ui .invoice-summary-grid > div { min-width: 0; }
+body.tuxedo-ui .invoice-summary-grid dt { color: var(--ui-muted); font-size: 12px; margin-bottom: 8px; }
+body.tuxedo-ui .invoice-summary-grid dd { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+body.tuxedo-ui .invoice-summary-grid .invoice-summary-total { text-align: right; }
+body.tuxedo-ui .invoice-summary-grid .invoice-summary-total dd { font-size: 24px; font-weight: 600; line-height: 1.3; }
+body.tuxedo-ui .invoice-detail .invoice-evidence { border: 0; border-radius: 0; background: transparent; padding-inline: 0; }
+body.tuxedo-ui .invoice-detail .invoice-evidence + .invoice-evidence { border-top: 1px solid var(--ui-line); padding-top: 20px; }
+body.tuxedo-ui .invoice-source-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 8px; border-bottom: 1px solid var(--ui-line); }
+body.tuxedo-ui .invoice-source-row:last-child { border-bottom: 0; }
+body.tuxedo-ui .invoice-source-row > a { min-width: 0; padding-inline: 0; justify-content: flex-start; overflow-wrap: anywhere; }
+body.tuxedo-ui .invoice-source-row > span { flex-shrink: 0; font-size: 14px; }
+/* Scoped after density rules: statement navigation remains a 44px target on
+   fine-pointer desktops as well as phones. */
+body.tuxedo-ui .banking-workspace .invoice-workspace-heading .quiet-action,
+body.tuxedo-ui .banking-workspace .invoice-history .quiet-action { min-height: 44px; }
+body.tuxedo-ui .invoice-detail .quiet-action { min-height: 44px; }
+@media (max-width: 1023px) {
+    body.tuxedo-ui .invoice-history-head { display: none; }
+    body.tuxedo-ui .banking-workspace #invoice-results .invoice-history-row {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px;
+        padding-block: 16px;
+    }
+    body.tuxedo-ui .invoice-history-period { grid-column: 1 / -1; }
+    body.tuxedo-ui .invoice-mobile-label {
+        position: static; display: block; width: auto; height: auto; margin: 0 0 6px;
+        overflow: visible; clip: auto; white-space: normal; color: var(--ui-muted); font-size: 12px;
+    }
+    body.tuxedo-ui .invoice-history-status { align-self: start; }
+    body.tuxedo-ui .invoice-history-action { grid-column: 1 / -1; justify-self: end; }
+}
+@media (max-width: 639px) {
+    /* The shared header stacks vertically here. A desktop flex basis would
+       become a tall empty block; constrain its cross-axis for unbroken names. */
+    body.tuxedo-ui .invoice-identity { flex: 0 1 auto; width: 100%; gap: 12px; }
+    body.tuxedo-ui .invoice-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    body.tuxedo-ui .invoice-summary-grid .invoice-summary-total {
+        grid-column: 1 / -1; text-align: left; padding-top: 16px; border-top: 1px solid var(--ui-line);
+    }
+    body.tuxedo-ui .invoice-source-row { align-items: flex-start; flex-direction: column; gap: 4px; }
+    body.tuxedo-ui .invoice-source-row > span { align-self: flex-end; }
+}

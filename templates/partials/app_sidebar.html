@@ -1,7 +1,7 @@
 {% load i18n static %}
 <aside class="app-sidebar">
-    {% comment %}The brand opens the product homepage; Home opens the financial dashboard.{% endcomment %}
-    <a href="{% url 'pages:landing' %}" class="app-brand">
+    {% comment %}Inside the workspace, both the brand and Home return to the financial dashboard.{% endcomment %}
+    <a href="{% url 'dashboard:index' %}" class="app-brand">
         <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="" class="app-brand-mark">
         <span>Tuxedo Finance</span>
     </a>

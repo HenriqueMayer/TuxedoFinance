@@ -2,12 +2,15 @@
 """Confirmed invoice payments and read-only invoice criteria."""
 
 from django import forms
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+from categories.models import Category
 from sandbox.forms import parse_month
 from banking.models import (
     Bank,
     BankAccount,
     CardInvoice,
+    CardInvoiceCredit,
     InvoicePayment,
 )
 from .base import INPUT_CLASSES, OwnedModelForm
@@ -35,6 +38,41 @@ class InvoicePaymentForm(OwnedModelForm):
         if commit:
             payment.save()
         return payment
+
+
+class InvoiceCreditForm(OwnedModelForm):
+    """An explicit invoice context cannot be changed through posted identifiers."""
+
+    idempotency_key = forms.UUIDField(widget=forms.HiddenInput)
+
+    class Meta:
+        model = CardInvoiceCredit
+        fields = ('title', 'amount', 'date', 'category', 'notes')
+        labels = {
+            'title': _('Description'), 'amount': _('Credit amount'),
+            'date': _('Credit date'), 'category': _('Category'), 'notes': _('Notes'),
+        }
+        widgets = {
+            'amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0.01'}),
+            'notes': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def __init__(self, *args, card, reference_month, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance.card = card
+        self.instance.reference_month = reference_month
+        self.initial['idempotency_key'] = self.instance.idempotency_key
+        self.fields['category'].queryset = Category.objects.filter(user=self.user).filter(
+            Q(transaction_type=Category.TransactionType.EXPENSE)
+            | Q(transaction_type__isnull=True) | Q(transaction_type=''))
+
+    def save(self, commit=True):
+        credit = super().save(commit=False)
+        if not credit.pk:
+            credit.idempotency_key = self.cleaned_data['idempotency_key']
+        if commit:
+            credit.save()
+        return credit
 
 
 class InvoiceFilterForm(forms.Form):

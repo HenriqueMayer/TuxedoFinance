@@ -29,6 +29,7 @@
         const debitCard = document.getElementById('{{ form.debit_card.id_for_label }}');
         const creditCard = document.getElementById('{{ form.credit_card.id_for_label }}');
         const installments = document.getElementById('{{ form.installments.id_for_label }}');
+        const installmentStart = document.getElementById('{{ form.installment_start.id_for_label }}');
         const billingOverride = document.getElementById('{{ form.billing_override.id_for_label }}');
         const fixed = document.getElementById('{{ form.is_fixed.id_for_label }}');
         const fixedUntil = document.getElementById('{{ form.fixed_until.id_for_label }}');
@@ -39,6 +40,7 @@
             debit: document.getElementById('debit-card-fields'),
             credit: document.getElementById('credit-card-fields'),
             cardDetails: document.getElementById('credit-card-details'),
+            installmentStart: document.getElementById('installment-start-fields'),
             category: document.getElementById('category-fields'),
             fixedUntil: document.getElementById('fixed-until-fields'),
         };
@@ -67,8 +69,14 @@
         }
         function updateCardDetails(clearStale) {
             const inactive = channel.value !== 'CREDIT_CARD' || !creditCard.value;
-            if (inactive && clearStale) { installments.value = '1'; billingOverride.value = ''; }
+            if (inactive && clearStale) { installments.value = '1'; installmentStart.value = '1'; billingOverride.value = ''; }
             setHidden(groups.cardDetails, inactive, !clearStale);
+            updateInstallmentStart(clearStale);
+        }
+        function updateInstallmentStart(clearStale) {
+            const inactive = channel.value !== 'CREDIT_CARD' || !creditCard.value || fixed.checked || Number(installments.value) <= 1;
+            if (inactive && clearStale) installmentStart.value = '1';
+            setHidden(groups.installmentStart, inactive, !clearStale);
         }
         function updateBestPurchaseDay() {
             const option = creditCard.selectedOptions[0];
@@ -91,7 +99,7 @@
                 if (value !== 'ACCOUNT' && value !== 'PIX') bankAccount.value = '';
                 if (value === 'PIX' && bankAccount.selectedOptions[0] && bankAccount.selectedOptions[0].dataset.pixEnabled !== 'true') bankAccount.value = '';
                 if (value !== 'DEBIT_CARD') debitCard.value = '';
-                if (value !== 'CREDIT_CARD') { creditCard.value = ''; installments.value = '1'; billingOverride.value = ''; }
+                if (value !== 'CREDIT_CARD') { creditCard.value = ''; installments.value = '1'; installmentStart.value = '1'; billingOverride.value = ''; }
             }
             updateBestPurchaseDay();
             updateCardDetails(clearStale);
@@ -135,6 +143,7 @@
         function updateFixedFields(clearStale) {
             setHidden(groups.fixedUntil, !fixed.checked, !clearStale);
             if (!fixed.checked && clearStale) fixedUntil.value = '';
+            updateInstallmentStart(clearStale);
         }
 
         transactionType.form.addEventListener('tuxedo:restore', () => {
@@ -168,5 +177,6 @@
             window.TuxedoForms.refresh(split.form);
         });
         fixed.addEventListener('change', () => updateFixedFields(true));
+        installments.addEventListener('input', () => updateInstallmentStart(true));
     })();
 </script>

@@ -72,6 +72,10 @@ class Transaction(models.Model):
         default=1,
         validators=[MinValueValidator(1), MaxValueValidator(MAX_INSTALLMENTS)],
     )
+    installment_start = models.PositiveSmallIntegerField(
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(MAX_INSTALLMENTS)],
+    )
     billing_override = models.PositiveSmallIntegerField(
         choices=BillChoice.choices, null=True, blank=True, default=None
     )
@@ -92,6 +96,10 @@ class Transaction(models.Model):
             models.CheckConstraint(
                 condition=models.Q(amount__gt=0),
                 name='transactions_amount_gt_zero',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(installment_start__gte=1, installment_start__lte=models.F('installments')),
+                name='transactions_installment_start_range',
             ),
             models.CheckConstraint(
                 condition=(
@@ -188,6 +196,10 @@ class Transaction(models.Model):
                 errors['installments'] = _(
                     'A fixed transaction cannot use installments.'
                 )
+        if self.installment_start and self.installments and self.installment_start > self.installments:
+            errors['installment_start'] = _('The first tracked installment cannot exceed the installment count.')
+        if self.installment_start and self.installment_start > 1 and (not self.is_credit_card or self.is_fixed):
+            errors['installment_start'] = _('A later starting installment requires a non-recurring credit-card purchase.')
         if self.billing_override is not None and not self.is_credit_card:
             errors['billing_override'] = _(
                 'Bill choice is only available for credit cards.'
@@ -309,7 +321,9 @@ class Transaction(models.Model):
             last_offset = self.last_fixed_offset
             return ZERO if last_offset is not None and offset > last_offset else self.amount
         if self.is_installment_plan:
-            if offset >= self.installments:
+            # A reviewed opening import can omit already settled installments
+            # without changing the original purchase date, total or numbering.
+            if offset < self.installment_start - 1 or offset >= self.installments:
                 return ZERO
             if offset == 0:
                 return self.first_installment_amount
@@ -326,11 +340,11 @@ class Transaction(models.Model):
             return self.amount * (offset + 1)
         if self.is_installment_plan:
             paid = min(offset + 1, self.installments)
-            return (
-                self.amount
-                if paid == self.installments
-                else self.first_installment_amount + self.installment_amount * (paid - 1)
-            )
+            tracked = max(0, paid - self.installment_start + 1)
+            if not tracked:
+                return ZERO
+            return (self.first_installment_amount + self.installment_amount * (tracked - 1)
+                    if self.installment_start == 1 else self.installment_amount * tracked)
         return self.amount
 
     @staticmethod

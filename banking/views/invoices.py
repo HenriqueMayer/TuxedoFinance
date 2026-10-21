@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """Invoice consultations and explicitly confirmed payments."""
 
+from urllib.parse import urlsplit
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -12,15 +14,17 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import ListView
 from core.navigation import return_url, with_return_url
-from banking.forms import InvoiceFilterForm, InvoicePaymentForm
+from banking.forms import InvoiceCreditForm, InvoiceFilterForm, InvoicePaymentForm
 from banking.models import (
     Bank,
     CardInvoice,
+    CardInvoiceCredit,
     CreditCard,
     InvoicePayment,
 )
 from transactions.services import sync_user_ledger
 from banking.settlements import save_invoice_payment, delete_invoice_payment
+from banking.credits import save_invoice_credit, delete_invoice_credit
 from .base import _canonical_id
 
 
@@ -123,7 +127,9 @@ def _payment_errors(form, error):
 @login_required
 def invoice_detail(request, pk):
     sync_user_ledger(request.user)
-    invoice = get_object_or_404(CardInvoice.objects.select_related('card__account__bank').prefetch_related('payments__account'), pk=pk, user=request.user)
+    invoice = get_object_or_404(CardInvoice.objects.select_related('card__account__bank').prefetch_related('payments__account'),
+        pk=pk, user=request.user, card__user=request.user,
+        card__account__user=request.user, card__account__bank__user=request.user)
     form = InvoicePaymentForm(request.POST or None, user=request.user, invoice=invoice)
     if request.method == 'POST' and form.is_valid():
         try:
@@ -143,8 +149,81 @@ def invoice_detail(request, pk):
     # request.path alone would discard the filtered consultation after an edit.
     invoice_context_url = with_return_url(reverse('banking:invoice_detail', args=[pk]), return_url(request, ''))
     return render(request, 'banking/invoice_detail.html', {'invoice': invoice, 'form': form, 'sources': [(item, amount) for item, amount in sources if amount],
+        'credits': CardInvoiceCredit.objects.filter(user=request.user, card=invoice.card,
+            reference_month=invoice.reference_month).select_related('category').order_by('-date', '-pk'),
         'invoice_context_url': invoice_context_url,
         'return_url': return_url(request, reverse('banking:invoices'))})
+
+
+def _owned_invoice_credit(request, pk):
+    return get_object_or_404(CardInvoiceCredit.objects.select_related('card__account__bank', 'category'),
+        pk=pk, user=request.user, card__user=request.user,
+        card__account__user=request.user, card__account__bank__user=request.user)
+
+
+def _invoice_credit_destination(request, card, reference_month):
+    invoice = CardInvoice.objects.filter(user=request.user, card=card, reference_month=reference_month).first()
+    fallback = (reverse('banking:invoice_detail', args=[invoice.pk]) + '#invoice-credits'
+        if invoice else reverse('banking:card_invoices', args=[card.pk]))
+    return return_url(request, fallback)
+
+
+@login_required
+def invoice_credit_create(request, pk):
+    invoice = get_object_or_404(CardInvoice.objects.select_related('card__account__bank'),
+        pk=pk, user=request.user, card__user=request.user,
+        card__account__user=request.user, card__account__bank__user=request.user)
+    form = InvoiceCreditForm(request.POST or None, user=request.user,
+        card=invoice.card, reference_month=invoice.reference_month)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            save_invoice_credit(form.save(commit=False), user=request.user)
+        except ValidationError as error:
+            _payment_errors(form, error)
+        else:
+            messages.success(request, _('Invoice credit saved.'))
+            return redirect(_invoice_credit_destination(request, invoice.card, invoice.reference_month))
+    destination = _invoice_credit_destination(request, invoice.card, invoice.reference_month)
+    return render(request, 'banking/credit_form.html', {'form': form,
+        'form_title': _('Add invoice credit'), 'card': invoice.card,
+        'reference_month': invoice.reference_month, 'return_url': destination})
+
+
+@login_required
+def invoice_credit_edit(request, pk):
+    credit = _owned_invoice_credit(request, pk)
+    form = InvoiceCreditForm(request.POST or None, instance=credit, user=request.user,
+        card=credit.card, reference_month=credit.reference_month)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            save_invoice_credit(form.save(commit=False), user=request.user)
+        except ValidationError as error:
+            _payment_errors(form, error)
+        else:
+            messages.success(request, _('Invoice credit saved.'))
+            return redirect(_invoice_credit_destination(request, credit.card, credit.reference_month))
+    destination = _invoice_credit_destination(request, credit.card, credit.reference_month)
+    return render(request, 'banking/credit_form.html', {'form': form,
+        'form_title': _('Edit invoice credit'), 'card': credit.card,
+        'reference_month': credit.reference_month, 'return_url': destination})
+
+
+@login_required
+def invoice_credit_delete(request, pk):
+    credit = _owned_invoice_credit(request, pk)
+    destination = _invoice_credit_destination(request, credit.card, credit.reference_month)
+    if request.method == 'POST':
+        invoice = CardInvoice.objects.filter(user=request.user, card=credit.card,
+            reference_month=credit.reference_month).first()
+        delete_invoice_credit(credit, user=request.user)
+        # Removing the last source can remove a credit-only invoice. Never
+        # return the user to that now-missing detail page, even with an origin.
+        if (invoice and not CardInvoice.objects.filter(pk=invoice.pk, user=request.user).exists()
+                and urlsplit(destination).path == reverse('banking:invoice_detail', args=[invoice.pk])):
+            destination = reverse('banking:card_invoices', args=[credit.card_id])
+        messages.success(request, _('Invoice credit deleted.'))
+        return redirect(destination)
+    return render(request, 'banking/credit_delete.html', {'credit': credit, 'return_url': destination})
 
 
 @login_required

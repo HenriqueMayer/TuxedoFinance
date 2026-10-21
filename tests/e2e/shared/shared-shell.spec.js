@@ -21,15 +21,32 @@ function workspaceHome(page, width) {
         .getByRole('link', {name:'Home', exact:true});
 }
 
-async function expectAuthenticatedLanding(page, width, owner) {
-    await expect(page).toHaveURL(url => url.pathname === '/');
-    await expect(page.locator('#landing-title')).toBeVisible();
+async function expectDashboard(page, width, owner) {
+    await expect(page).toHaveURL(url => url.pathname === '/dashboard/');
+    await expect(page.getByRole('heading', {name:'Dashboard', exact:true})).toBeVisible();
     await expect(page.locator('main')).toHaveAttribute('data-workspace-user', owner);
-    const dashboard = page.getByRole('link', {name:'Open dashboard', exact:true});
-    await expect(dashboard).toBeVisible();
-    await expect(dashboard).toHaveAttribute('href', '/dashboard/');
     await expect(workspaceHome(page, width)).toHaveAttribute('href', '/dashboard/');
-    return dashboard;
+    await expect(workspaceHome(page, width)).toHaveAttribute('aria-current', 'page');
+    await expect(brand(page, width)).toHaveAttribute('href', '/dashboard/');
+    await expect(page.locator('#landing-title')).toHaveCount(0);
+}
+
+async function expectLogoutCover(page) {
+    const settings = await page.request.get('/accounts/settings/');
+    const token = (await settings.text()).match(/name="csrfmiddlewaretoken" value="([^"]+)"/)[1];
+    const response = await page.request.post('/accounts/logout/', {
+        form:{csrfmiddlewaretoken:token}, headers:{Referer:settings.url()}, maxRedirects:0,
+    });
+    expect(response.status()).toBe(302);
+    expect(response.headers().location).toBe('/');
+    await page.goto('/');
+    await expect(page.locator('#landing-title')).toBeVisible();
+    const publicBrand = page.locator('.public-navbar').getByRole('link', {name:'Tuxedo Finance', exact:true});
+    await expect(publicBrand).toHaveAttribute('href', '/');
+    await publicBrand.press('Enter');
+    await expect(page).toHaveURL(url => url.pathname === '/');
+    await expect(page.locator('.app-brand, .app-mobile-brand')).toHaveCount(0);
+    await expect(page.locator('.public-navbar').getByRole('link', {name:'Log in', exact:true})).toBeVisible();
 }
 
 for (const theme of ['light', 'dark']) {
@@ -66,7 +83,7 @@ for (const theme of ['light', 'dark']) {
 }
 
 for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
-    test(`workspace brand opens the homepage and preserves Home and departure recovery (${theme}, ${width})`, async ({page}, info) => {
+    test(`workspace brand opens the dashboard and preserves Home, logout and departure recovery (${theme}, ${width})`, async ({page}, info) => {
         await signup(page, info);
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await page.setViewportSize({width, height:844});
@@ -74,7 +91,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         const owner = await page.locator('main').getAttribute('data-workspace-user');
         const link = brand(page, width);
         await expect(link).toBeVisible();
-        await expect(link).toHaveAttribute('href', '/');
+        await expect(link).toHaveAttribute('href', '/dashboard/');
         await link.focus();
         await page.keyboard.press('Tab');
         await expect(link).not.toBeFocused();
@@ -84,14 +101,15 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(link).toHaveCSS('outline-width', '2px');
         await page.screenshot({path:info.outputPath(`brand-focus-${theme}-${width}.png`)});
         await page.keyboard.press('Enter');
-        await expectAuthenticatedLanding(page, width, owner);
-        await page.screenshot({path:info.outputPath(`brand-landing-${theme}-${width}.png`)});
+        await expectDashboard(page, width, owner);
+        await page.screenshot({path:info.outputPath(`brand-dashboard-${theme}-${width}.png`)});
         await workspaceHome(page, width).press('Enter');
-        await expect(page).toHaveURL(url => url.pathname === '/dashboard/');
+        await expectDashboard(page, width, owner);
+        await page.goto('/categories/');
         await brand(page, width).click();
-        const dashboard = await expectAuthenticatedLanding(page, width, owner);
-        await dashboard.press('Enter');
-        await expect(page).toHaveURL(url => url.pathname === '/dashboard/');
+        await expectDashboard(page, width, owner);
+        await page.goto('/');
+        await expectDashboard(page, width, owner);
 
         await page.goto('/transactions/create/');
         await page.locator('#id_title').fill('Keep this draft when leaving through the brand');
@@ -107,7 +125,8 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(brand(page, width)).toBeFocused();
         await brand(page, width).press('Enter');
         await dialog.getByRole('button', {name:'Leave page', exact:true}).press('Enter');
-        await expectAuthenticatedLanding(page, width, owner);
+        await expectDashboard(page, width, owner);
+        await expectLogoutCover(page);
     });
 }
 
@@ -120,17 +139,18 @@ test('workspace brand and Home retain native navigation without JavaScript', asy
             await signup(page, info);
             await page.goto('/categories/');
             const owner = await page.locator('main').getAttribute('data-workspace-user');
-            await expect(brand(page, width)).toHaveAttribute('href', '/');
+            await expect(brand(page, width)).toHaveAttribute('href', '/dashboard/');
             await brand(page, width).press('Enter');
-            await expectAuthenticatedLanding(page, width, owner);
+            await expectDashboard(page, width, owner);
             await workspaceHome(page, width).press('Enter');
-            await expect(page).toHaveURL(url => url.pathname === '/dashboard/');
+            await expectDashboard(page, width, owner);
+            await page.goto('/categories/');
             if (width < 1024) await brand(page, width).tap();
             else await brand(page, width).click();
-            const dashboard = await expectAuthenticatedLanding(page, width, owner);
-            await dashboard.press('Enter');
-            await expect(page).toHaveURL(url => url.pathname === '/dashboard/');
-            await expect(page.locator('main')).toHaveAttribute('data-workspace-user', owner);
+            await expectDashboard(page, width, owner);
+            await page.goto('/');
+            await expectDashboard(page, width, owner);
+            await expectLogoutCover(page);
         } finally {
             await context.close();
         }

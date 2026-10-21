@@ -63,16 +63,23 @@ class LandingBrandTests(TestCase):
         self.assertContains(response, f'href="{reverse("accounts:login")}"')
         self.assertNotContains(response, reverse('accounts:signup'))
 
-    def test_authenticated_homepage_links_to_dashboard(self):
+    def test_authenticated_homepage_redirects_to_dashboard(self):
         user = get_user_model().objects.create_user(username='landing-user')
         self.client.force_login(user)
-        response = self.client.get('/')
-        self.assertContains(response, 'Open dashboard')
-        self.assertNotContains(response, reverse('accounts:signup'))
-        self.assertNotContains(response, reverse('accounts:login'))
-        for route in ('dashboard:index', 'transactions:list', 'banking:list',
-                      'investments:list', 'planning:index'):
-            self.assertContains(response, f'href="{reverse(route)}"')
+        for method in (self.client.get, self.client.head):
+            with self.subTest(method=method.__name__):
+                response = method(reverse('pages:landing'))
+                self.assertRedirects(response, reverse('dashboard:index'),
+                                     fetch_redirect_response=False)
+
+    def test_logout_returns_to_public_cover(self):
+        user = get_user_model().objects.create_user(username='logout-user')
+        self.client.force_login(user)
+        response = self.client.post(reverse('accounts:logout'), follow=True)
+        self.assertEqual(response.redirect_chain, [(reverse('pages:landing'), 302)])
+        self.assertContains(response, 'id="landing-title"')
+        self.assertContains(response, reverse('accounts:login'))
+        self.assertNotContains(response, 'class="app-brand"')
 
     def test_shared_shell_exposes_wordmark_and_favicon(self):
         response = self.client.get('/')

@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from banking.models import CardInvoice, LoyaltyEntry
+from banking.models import CardInvoice, CardInvoiceCredit, LoyaltyEntry
 from banking.services import ConversionContext, MissingExchangeRate, account_balances
 from investments.positions import get_portfolio_valuation
 from transactions.models import Transaction
@@ -34,6 +34,12 @@ def card_debt(user, as_of):
     cards = {}
     items = Transaction.objects.filter(user=user, payment_channel='CREDIT_CARD', date__lte=as_of).select_related('credit_card__account__bank')
     for item in items:
+        if item.is_installment_plan and item.installment_start > 1 and _month(
+            item.billed_month, item.installment_start - 1,
+        ) > as_of.replace(day=1):
+            # An opening import proves the remaining balance from its first
+            # tracked month, not the historical unpaid balance before it.
+            continue
         cards[item.credit_card_id] = item.credit_card
         if item.is_fixed:
             final_offset = (as_of.year - item.date.year) * 12 + as_of.month - item.date.month
@@ -54,6 +60,9 @@ def card_debt(user, as_of):
         card = entry.funding_credit_card
         cards[card.pk] = card
         amounts[(card.pk, card.statement_month(entry.date))] += entry.cash_amount
+    for credit in CardInvoiceCredit.objects.filter(user=user, date__lte=as_of).select_related('card__account__bank'):
+        cards[credit.card_id] = credit.card
+        amounts[(credit.card_id, credit.reference_month)] -= credit.amount
     invoices = list(CardInvoice.objects.filter(user=user).select_related('card__account__bank', 'settlement_movement').prefetch_related('payments'))
     indexed = {(invoice.card_id, invoice.reference_month): invoice for invoice in invoices}
     for invoice in invoices:
@@ -75,7 +84,7 @@ def card_debt(user, as_of):
             # purchase date (an explicit current-bill override). Account for
             # its actual amount as card credit until the purchase is incurred.
             movement = getattr(invoice, 'settlement_movement', None) if invoice else None
-            paid = movement.amount if movement and movement.effective_date <= as_of else (amount if invoice is None and due <= as_of else ZERO)
+            paid = movement.amount if movement and movement.effective_date <= as_of else (max(ZERO, amount) if invoice is None and due <= as_of else ZERO)
         debt = amount - paid
         if debt:
             rows.append({'card': card, 'invoice': invoice, 'reference_month': key[1], 'amount': debt, 'currency': card.account.currency})

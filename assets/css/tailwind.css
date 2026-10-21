@@ -48,3 +48,9 @@
 .dark #transaction-filters input[aria-invalid="true"],.dark #transaction-filters select[aria-invalid="true"] { border-color:#ff8a80; }
 
 @import "./workspaces/finance.css";
+
+@import "./workspaces/accounts.css";
+@import "./workspaces/invoice-presentation.css";
+
+/* Shared density follows local workspaces so one scale owns the overview. */
+@import "./shared/workspace-density.css";

@@ -30,3 +30,25 @@ class BankColorTests(TestCase):
         other = get_user_model().objects.create_user('other-color', password='test')
         self.client.force_login(other)
         self.assertEqual(self.client.post(reverse('banking:color', args=[self.bank.pk]), {'color':'#000000'}).status_code, 404)
+
+    def test_bank_create_edit_and_marker_use_the_shared_native_color_picker(self):
+        for url in (reverse('banking:create'),
+                    reverse('banking:update', args=[self.bank.pk]),
+                    reverse('banking:color', args=[self.bank.pk])):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertContains(response, 'data-color-picker', count=1)
+                self.assertContains(response, 'list="id_color-palette"')
+                self.assertContains(response, 'value="#64788C" label="Blue gray"')
+                self.assertContains(response, 'data-color-presets')
+        response = self.client.post(reverse('banking:create'),
+                                    {'name': 'Custom bank', 'color': '#abcdef'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Bank.objects.get(user=self.user, name='Custom bank').color,
+                         '#ABCDEF')
+
+    def test_invalid_bank_hex_renders_raw_text_instead_of_sanitizing_to_black(self):
+        response = self.client.post(reverse('banking:color', args=[self.bank.pk]),
+                                    {'color': '#12ZZ89'})
+        self.assertContains(response, 'type="text" name="color" value="#12ZZ89"')
+        self.assertContains(response, 'aria-invalid="true"')

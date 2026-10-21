@@ -5,9 +5,9 @@
 <div class="investing-workspace space-y-4">
     {% include 'investments/_sections.html' %}
     <header class="workspace-header"><h1 class="page-title">{% translate 'My investments' %}</h1>{% include 'investments/_primary_action.html' %}</header>
-    <div id="position-value-summary" data-live-fragment="investment-position-filters" class="surface-panel space-y-3">
+    <div id="position-value-summary" data-live-fragment="investment-position-filters" class="surface-panel workspace-summary space-y-3">
     <div class="investment-summary-heading">
-        <div><p class="subtle-copy">{% if missing_rate_currencies %}{% translate 'Partial total' %}{% elif search_query %}{% translate 'Total before search' %}{% else %}{% translate 'Registered value' %}{% endif %}</p><p id="investment-total" class="text-2xl font-semibold tabular-nums mt-1">{{ base_currency }} {{ simulated_total|floatformat:2 }}</p><p class="subtle-copy mt-1">{% blocktranslate with date=today|date:USER_DATE_FORMAT %}As of {{ date }}{% endblocktranslate %}</p></div>
+        <div><p class="subtle-copy workspace-summary-label">{% if missing_rate_currencies %}{% translate 'Partial total' %}{% elif search_query %}{% translate 'Total before search' %}{% else %}{% translate 'Registered value' %}{% endif %}</p><p id="investment-total" class="workspace-summary-value text-2xl font-semibold tabular-nums mt-1"><span class="workspace-summary-currency">{{ base_currency }}</span> {{ simulated_total|floatformat:2 }}</p><p class="subtle-copy workspace-summary-caption mt-1">{% blocktranslate with date=today|date:USER_DATE_FORMAT %}As of {{ date }}{% endblocktranslate %}</p></div>
         <details id="position-value-details" class="investment-value-details explanation-disclosure"><summary>{% translate 'Value details' %}</summary><div class="space-y-3 mt-3">
             {% for currency, amount in native_totals %}<p class="tabular-nums">{{ currency }} {{ amount|floatformat:2 }}</p>{% endfor %}
             {% for rate in valuation_rates %}{% url 'banking:exchange_rate_update' rate.pk as rate_url %}<p><a class="quiet-action" href="{% contextual_url rate_url fragment='position-value-summary' %}">{{ rate.from_currency }}/{{ rate.to_currency }} · {{ rate.rate.normalize }} · {{ rate.effective_date|date:USER_DATE_FORMAT }}</a></p>{% endfor %}

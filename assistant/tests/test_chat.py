@@ -264,6 +264,120 @@ class StreamingChatTests(TransactionTestCase):
         self.assertEqual(self.provider.requests[0].model, 'synthetic-model')
         self.assertEqual(self.provider.requests[0].history[-1].content, request['content'])
 
+    def test_real_openai_loop_runs_monthly_simulation_with_omitted_namespace_and_no_financial_writes(self):
+        import io
+        from decimal import Decimal
+
+        from django.apps import apps
+
+        from assistant.connections import service
+        from assistant.models import ActionProposal
+        from assistant.providers import openai
+        from sandbox.models import ScenarioDraft
+        from sandbox.services import CltScenario, calculate_clt
+
+        make_finances(self.user, 'Owned monthly simulation')
+        make_finances(self.other, 'Foreign monthly simulation')
+        ScenarioDraft.objects.create(user=self.user, kind=ScenarioDraft.Kind.BUDGET,
+            name='Existing private draft', payload={'gross_salary': '5000', 'private': 'KEEP THIS DRAFT'})
+        question = 'Simule outubro de 2026 com salário bruto CLT de 6000 e desconto de 700.'
+        Message.objects.create(conversation=self.conversation, role='user', content=question)
+        Message.objects.create(conversation=self.conversation, role='assistant',
+                               content='O desconto é em folha ou uma despesa adicional?')
+        arguments = {'planning_month': '2026-10', 'gross_salary': '6000', 'clt_dependents': 0,
+            'clt_pension': '0', 'clt_transport': '0', 'clt_food': '0', 'clt_health': '0',
+            'clt_other': '700', 'extra_expenses': [], 'category_reductions': []}
+        payroll = calculate_clt(CltScenario(Decimal('6000'), other_deductions=Decimal('700'))).ordinary
+        self.assertEqual(payroll.net, Decimal('4273.39'))
+        item = {'type': 'function_call', 'id': 'fc_synthetic_month', 'name': 'simulate_month',
+            'call_id': 'call_synthetic_month', 'arguments': json.dumps(arguments), 'status': 'completed'}
+
+        def sse(*events):
+            return io.BytesIO(b''.join(b'data: ' + json.dumps(event).encode() + b'\n\n' for event in events))
+
+        answer = 'Simulação local concluída sem salvar alterações.'
+        sources = [sse({'type': 'response.output_item.done', 'output_index': 0, 'item': item},
+                       {'type': 'response.completed', 'response': {'output': []}}),
+                   sse({'type': 'response.output_text.delta', 'delta': answer},
+                       {'type': 'response.completed', 'response': {'output': []}})]
+        requests = []
+
+        def transport(method, url, *, access_token, data=None, stream=False, cancellation=None):
+            self.assertFalse(connection.in_atomic_block)
+            self.assertEqual(access_token, 'SYNTHETIC-MONTH-TOKEN')
+            if method == 'GET':
+                self.assertEqual(url, openai.MODELS_ENDPOINT)
+                self.assertFalse(stream)
+                return openai.TransportResponse(200, body={'models': [{'slug': 'synthetic-model',
+                    'display_name': 'Synthetic model', 'visibility': 'list'}]})
+            self.assertEqual((method, url, stream), ('POST', openai.RESPONSES_ENDPOINT, True))
+            if requests:
+                self.assertTrue(sources[0].closed)
+            requests.append(json.loads(json.dumps(data)))
+            return openai.TransportResponse(200, stream=sources[len(requests) - 1])
+
+        models = [model for model in apps.get_models() if model._meta.app_label in
+                  {'accounts', 'banking', 'categories', 'investments', 'planning', 'sandbox', 'transactions'}]
+
+        def financial_state():
+            return {model._meta.label: list(model.objects.order_by('pk').values()) for model in models}
+
+        original = financial_state()
+        preference = ProviderConnection.objects.filter(pk=self.account.pk).values().get()
+        data = self.data(content='Em folha.')
+        provider = openai.OpenAIProvider(self.user, self.account.pk, transport=transport)
+        with patch('assistant.chat.get_provider', return_value=provider), patch.object(
+                service, 'get_authorized_access_token',
+                return_value=service.AuthorizedAccessToken('SYNTHETIC-MONTH-TOKEN')), \
+                CaptureQueriesContext(connection) as queries:
+            run, stream = chat.start_run(self.user, self.client.session.session_key, data,
+                                         conversation=self.conversation, language='pt-br')
+            events = list(stream)
+
+        self.assertEqual([kind for kind, _payload in events], ['meta', 'text', 'done'])
+        self.assertEqual(events[1][1]['delta'], answer)
+        self.assertEqual(len(requests), 2)
+        self.assertTrue(all(source.closed for source in sources))
+        first, continued = requests
+        context = json.loads(first['input'][0]['content'].split('\n', 1)[1])
+        self.assertEqual(context['application_access']['read'], 'all_owned_financial_workspaces')
+        self.assertNotIn('metrics', context)
+        self.assertIn(question, [turn.get('content') for turn in first['input']])
+        self.assertEqual(first['input'][-1]['content'], 'Em folha.')
+        self.assertIn('simulate_month', [tool['name'] for tool in first['tools'][0]['tools']])
+        returned_call = next(row for row in continued['input'] if row.get('type') == 'function_call')
+        self.assertEqual(returned_call, item)
+        self.assertNotIn('namespace', returned_call)
+        tool_output = continued['input'][-1]
+        self.assertEqual((tool_output['type'], tool_output['call_id']), ('function_call_output', item['call_id']))
+        calculated = json.loads(tool_output['output'])
+        self.assertEqual(calculated['payroll']['net'], format(payroll.net, '.2f'))
+        self.assertEqual(calculated['payroll']['deductions'], '700.00')
+        self.assertEqual(calculated['forecast']['total'], '12.34')
+        self.assertEqual(calculated['forecast']['count'], 1)
+        self.assertEqual(calculated['budget'], {'net_income': '4273.39', 'registered_expenses': '12.34',
+            'additional_expenses': '0.00', 'remaining': '4261.05'})
+        self.assertTrue(calculated['complete'])
+        self.assertIs(calculated['saved'], False)
+        for request in requests:
+            self.assertIs(request['store'], False)
+            self.assertIs(request['stream'], True)
+            self.assertNotIn('previous_response_id', request)
+        run.refresh_from_db()
+        self.assertEqual(run.status, GenerationRun.Status.COMPLETED)
+        self.assertTrue(run.context_references['financial_tools_available'])
+        self.assertEqual(run.output_message.content, answer)
+        self.assertEqual(ActionProposal.objects.count(), 0)
+        self.assertEqual(financial_state(), original)
+        self.assertEqual(ProviderConnection.objects.filter(pk=self.account.pk).values().get(), preference)
+        writes = [row['sql'] for row in queries if row['sql'].lstrip().startswith(('INSERT', 'UPDATE', 'DELETE'))]
+        self.assertTrue(writes)
+        # Completion also issues the shared proposal-link UPDATE; this pure
+        # simulation has no proposal rows, as independently asserted above.
+        self.assertTrue(all(any(table in sql for table in ('assistant_conversation', 'assistant_message',
+                              'assistant_generationrun', 'assistant_actionproposal')) for sql in writes), writes)
+        self.assertFalse((Path(self.private.name) / 'private').exists())
+
     def test_repeated_uuid_replays_without_another_provider_call_and_conflicts_cannot_change_input(self):
         request = self.data()
         self.events(self.send(request))
@@ -326,13 +440,13 @@ class StreamingChatTests(TransactionTestCase):
         self.events(self.send(self.data(content='Retry question')))
         self.assertEqual([turn.content for turn in self.provider.requests[-1].history], ['Retry question'])
 
-    def test_history_uses_only_last_eight_completed_turns_and_bounds_each_to_four_thousand(self):
+    def test_history_preserves_nineteen_completed_turns_and_bounds_each_to_four_thousand(self):
         Message.objects.bulk_create([Message(conversation=self.conversation, role='assistant',
-                                             content=f'Legacy {number} ' + 'x' * 5000) for number in range(10)])
+                                             content=f'Legacy {number} ' + 'x' * 5000) for number in range(25)])
         self.events(self.send())
         history = self.provider.requests[0].history
-        self.assertEqual(len(history), 9)
-        self.assertTrue(history[0].content.startswith('Legacy 2 '))
+        self.assertEqual(len(history), 20)
+        self.assertTrue(history[0].content.startswith('Legacy 6 '))
         self.assertTrue(all(len(turn.content) <= 4000 for turn in history))
 
     def test_cancel_after_chunk_preserves_partial_and_closes_provider(self):

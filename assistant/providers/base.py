@@ -5,8 +5,8 @@ Adapters own bounded I/O timeouts and register a transport closer for active
 cancellation. Cancellation also runs between events; it cannot undo a separately
 confirmed operation.
 """
-from collections.abc import Iterator
-from dataclasses import dataclass
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass, field
 import json
 import re
 from threading import Event, Lock
@@ -99,6 +99,8 @@ class GenerationRequest:
     instructions_version: str = INSTRUCTIONS_VERSION
     model: str = ''
     reasoning_effort: str = ''
+    tools: tuple[dict, ...] = ()
+    tool_runner: Callable[[str, dict], dict] | None = field(default=None, repr=False, compare=False)
 
     def __post_init__(self):
         if (not isinstance(self.context_json, str) or len(self.context_json) > 32000
@@ -111,6 +113,29 @@ class GenerationRequest:
                 or not isinstance(self.reasoning_effort, str)
                 or self.reasoning_effort and self.reasoning_effort not in REASONING_EFFORTS):
             raise ValueError('Invalid bounded generation request.')
+        if (not isinstance(self.tools, tuple) or len(self.tools) > 10
+                or self.tool_runner is not None and not callable(self.tool_runner)
+                or bool(self.tools) != callable(self.tool_runner)):
+            raise ValueError('Invalid bounded tool contract.')
+        names = set()
+        for tool in self.tools:
+            if (not isinstance(tool, dict) or set(tool) - {'type', 'name', 'description', 'parameters', 'strict'}
+                    or tool.get('type') != 'function' or not valid_tool_name(tool.get('name'))
+                    or tool['name'] in names or not isinstance(tool.get('parameters'), dict)
+                    or tool['parameters'].get('type') != 'object'
+                    or 'description' in tool and not isinstance(tool['description'], str)
+                    or 'strict' in tool and type(tool['strict']) is not bool):
+                raise ValueError('Invalid bounded tool schema.')
+            names.add(tool['name'])
+        try:
+            # Keep a detached copy: callers cannot change the permitted functions
+            # through the original dictionaries after constructing this request.
+            encoded = json.dumps(self.tools, ensure_ascii=False, allow_nan=False)
+            if len(encoded.encode('utf-8')) > 32000:
+                raise ValueError('Invalid bounded tool schema.')
+            object.__setattr__(self, 'tools', tuple(json.loads(encoded)))
+        except (TypeError, RecursionError):
+            raise ValueError('Invalid bounded tool schema.') from None
 
     @property
     def instructions(self):
@@ -135,6 +160,10 @@ def reasoning_efforts(value):
 
 def valid_model(value):
     return isinstance(value, str) and bool(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,199}', value))
+
+
+def valid_tool_name(value):
+    return isinstance(value, str) and bool(re.fullmatch(r'[a-z][a-z0-9_]{0,63}', value))
 
 
 @dataclass(frozen=True)

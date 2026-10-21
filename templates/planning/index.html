@@ -1,7 +1,7 @@
 {% extends 'base.html' %}{% load i18n navigation %}
 {% block title %}{% translate 'Plan this month' %} — Tuxedo Finance{% endblock %}
 {% block content %}
-<div class="planning-workspace space-y-5">
+<div class="planning-workspace space-y-4">
     <header class="workspace-header">
         <h1 class="page-title">{% translate 'Plan this month' %}</h1>
         <form id="month-filters" action="{% url 'planning:index' %}" method="get" novalidate data-live-filters data-live-results="monthly-results" hx-boost="false" class="monthly-picker">
@@ -10,17 +10,16 @@
         </form>
     </header>
     <div id="monthly-results" class="space-y-5">
-        <section class="surface-panel monthly-outlook monthly-planning-summary" aria-labelledby="monthly-available">
+        <section class="surface-panel workspace-summary monthly-outlook monthly-planning-summary" aria-labelledby="monthly-available">
             <div class="monthly-outlook-main">
-                <p class="monthly-period">{{ month|date:'F Y' }}</p>
-                <div class="flex flex-wrap items-center gap-3"><h2 id="monthly-available" class="section-title">{% if outlook.is_past %}{% translate 'Available at month end' %}{% else %}{% translate 'After known commitments' %}{% endif %}</h2><span class="status-badge">{% if outlook.is_past %}{% translate 'Recorded' %}{% else %}{% translate 'Projection' %}{% endif %}</span></div>
+                <div class="monthly-summary-heading"><h2 id="monthly-available" class="section-title workspace-summary-label">{% if outlook.is_past %}{% translate 'Available at month end' %}{% else %}{% translate 'After known commitments' %}{% endif %}</h2><span class="status-badge">{% if outlook.is_past %}{% translate 'Recorded' %}{% else %}{% translate 'Projection' %}{% endif %}</span><p class="monthly-period workspace-summary-caption">{{ month|date:'F Y' }}</p></div>
                 {% if outlook.supported %}
-                <p data-monthly-available class="money-highlight tabular-nums mt-2{% if outlook.projected_available < 0 %} text-expense dark:text-expense-light{% endif %}">{{ outlook.base_currency }} {{ outlook.projected_available|floatformat:2 }}{% if not outlook.complete %} · {% translate 'Partial' %}{% endif %}</p>
-                <p class="subtle-copy mt-2">{% if outlook.is_past %}{% translate 'Based on recorded balances at month end and your current reserve settings.' %}{% else %}{% translate 'Includes known income, expenses and unpaid invoices through month end. Reserved money stays separate.' %}{% endif %}</p>
+                <p data-monthly-available class="money-highlight workspace-summary-value tabular-nums mt-2{% if outlook.projected_available < 0 %} text-expense dark:text-expense-light{% endif %}"><span class="workspace-summary-currency">{{ outlook.base_currency }}</span> {{ outlook.projected_available|floatformat:2 }}{% if not outlook.complete %} · {% translate 'Partial' %}{% endif %}</p>
+                <p class="subtle-copy workspace-summary-caption mt-2">{% if outlook.is_past %}{% translate 'Based on recorded balances at month end and your current reserve settings.' %}{% else %}{% translate 'Includes known income, expenses and unpaid invoices through month end. Reserved money stays separate.' %}{% endif %}</p>
                 {% else %}<p role="status" class="subtle-copy mt-3">{% translate 'Cash projections cover the current month and the next eleven months. You can still set limits for this month.' %}</p>{% endif %}
             </div>
             {% if outlook.supported %}
-            <dl class="monthly-outlook-metrics">
+            <dl class="monthly-outlook-metrics workspace-summary-metrics">
                 <div><dt>{% translate 'Available on' %} {{ outlook.cutoff|date:USER_DATE_FORMAT }}</dt><dd>{{ outlook.base_currency }} {{ outlook.recorded.available_total|floatformat:2 }}</dd></div>
                 <div><dt>{% translate 'Reserved at month end' %}</dt><dd>{{ outlook.base_currency }} {{ outlook.projected_reserved|floatformat:2 }}</dd></div>
             </dl>

@@ -4,12 +4,6 @@
         <h1 class="page-title">{% translate 'Accounts' %}</h1>
         <div class="flex flex-wrap gap-2">
             <a href="{% url 'banking:transfer_create' %}" class="quiet-action">{% translate 'Transfer' %}</a>
-            <details class="secondary-actions"><summary>{% translate 'More options' %}</summary><div class="secondary-actions-panel">
-                <a href="{% url 'banking:entry_create' %}">{% translate 'Points entry' %}</a>
-                <a href="{% url 'banking:redemption_create' %}">{% translate 'Redeem points' %}</a>
-                <a href="{% url 'banking:program_create' %}">{% translate 'Add loyalty program' %}</a>
-                <a href="{% url 'banking:exchange_rates' %}">{% translate 'Exchange rates' %}</a>
-            </div></details>
             <a href="{% url 'banking:create' %}" class="action-primary">{% translate 'New bank' %}</a>
         </div>
     </header>

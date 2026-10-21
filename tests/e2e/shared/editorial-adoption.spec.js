@@ -149,16 +149,21 @@ for (const theme of ['light', 'dark']) {
         await page.locator('#id_card_type').selectOption('PHYSICAL');
         await page.locator('#id_closing_day').fill('20');
         await page.locator('#id_due_day').fill('28');
-        const graphite = form.getByRole('radio', {name: 'Graphite', exact: true});
-        await expect(graphite).toBeChecked();
+        const black = form.getByRole('button', {name: 'Black', exact: true});
+        const purple = form.getByRole('button', {name: 'Purple', exact: true});
+        await expect(form.locator('#id_color')).toHaveValue('#253330');
         await expect(form.getByRole('checkbox', {name: 'Use a gradient', exact: true})).not.toBeChecked();
-        await graphite.focus();
+        await black.focus();
         await page.keyboard.press('Space');
-        await page.keyboard.press('ArrowRight');
-        await expect(form.getByRole('radio', {name: 'Plum', exact: true})).toBeChecked();
-        await expect(form.getByRole('radio', {name: 'Plum', exact: true})).toBeFocused();
+        await expect(black).toHaveAttribute('aria-pressed', 'true');
+        await page.keyboard.press('Tab');
+        await page.keyboard.press('Tab');
+        await expect(purple).toBeFocused();
+        await page.keyboard.press('Enter');
+        await expect(purple).toHaveAttribute('aria-pressed', 'true');
+        await expect(purple).toBeFocused();
         await expect(form.locator('[data-card-preview-name]')).toHaveText('Editorial plum card');
-        await expect(form.locator('[data-card-appearance-preview]')).toHaveCSS('--card-start', '#5B3E7C');
+        await expect(form.locator('[data-card-appearance-preview]')).toHaveCSS('--card-start', '#820AD1');
         await form.getByRole('button', {name: 'Save', exact: true}).press('Enter');
         await expect(page).not.toHaveURL(/\/credit-cards\/create\/$/);
 
@@ -168,7 +173,7 @@ for (const theme of ['light', 'dark']) {
         const card = await page.locator('#id_credit_card option').filter({hasText: /^Editorial plum card -/}).getAttribute('value');
         const editor = `/banking/credit-cards/${card}/edit/`;
         await page.goto(editor);
-        await expect(page.locator('#id_color')).toHaveValue('#5b3e7c');
+        await expect(page.locator('#id_color')).toHaveValue('#820ad1');
         await expect(page.locator('#id_account')).toHaveValue(account);
         await expect(page.locator('#id_closing_day')).toHaveValue('20');
         await expect(page.locator('#id_due_day')).toHaveValue('28');

@@ -52,7 +52,7 @@ async function scenario(panel, value) {
     const select = controls.getByLabel('Synthetic response', {exact:true});
     await select.focus();
     await select.press('Home');
-    for (let index = 0; index < ['answer', 'hold', 'error', 'disconnected'].indexOf(value); index++) {
+    for (let index = 0; index < ['answer', 'hold', 'error', 'disconnected', 'action'].indexOf(value); index++) {
         await select.press('ArrowDown');
     }
     await select.press('Tab');
@@ -137,7 +137,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         } else {
             await expect(page.locator('main')).toHaveAttribute('inert', '');
             await page.keyboard.press('Shift+Tab');
-            await expect(panel.getByRole('checkbox', {name:'Use page data', exact:true})).toBeFocused();
+            await expect(panel.getByRole('button', {name:'Preview reply', exact:true})).toBeFocused();
             await page.keyboard.press('Tab');
             await expect(panel.getByRole('button', {name:'Minimize assistant', exact:true})).toBeFocused();
         }
@@ -149,7 +149,6 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
             compactContext.getByRole('link'),
             panel.getByLabel('Your question about the example', {exact:true}),
             panel.locator('[data-lab-assistant-settings] > summary'),
-            panel.locator('.lab-assistant-context-choice'),
             panel.getByRole('button', {name:'Preview reply', exact:true}),
         ]) {
             const target = await control.boundingBox();
@@ -215,9 +214,14 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         const question = panel.getByLabel('Your question about the example', {exact:true});
         const send = panel.getByRole('button', {name:'Preview reply', exact:true});
         const notice = panel.locator('[data-lab-assistant-notice]');
+        await expect(panel.locator('input[name="include_context"]')).toHaveCount(0);
+        await question.focus();
+        await question.press('Tab');
+        await expect(settings.locator(':scope > summary')).toBeFocused();
+        await page.keyboard.press('Tab');
+        await expect(send).toBeFocused();
         await expect(question).toHaveAttribute('rows', '1');
         await question.fill('An unsent synthetic draft');
-        await panel.getByRole('checkbox', {name:'Use page data', exact:true}).check();
         await panel.getByRole('button', {name:'Minimize assistant', exact:true}).press('Enter');
         await expect(panel).toBeHidden();
         const restore = page.getByRole('button', {name:'Restore assistant', exact:true});
@@ -233,9 +237,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(question).toHaveValue('An unsent synthetic draft');
         await expect(model).toHaveValue('synthetic');
         await expect(effort).toHaveValue('high');
-        await expect(panel.getByRole('checkbox', {name:'Use page data', exact:true})).toBeChecked();
         await expect(panel.getByRole('button', {name:'Minimize assistant', exact:true})).toBeFocused();
-        await panel.getByRole('checkbox', {name:'Use page data', exact:true}).uncheck();
         await question.fill('First line');
         await question.press('Shift+Enter');
         await question.press('x');
@@ -246,7 +248,8 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await scenario(panel, 'hold');
         await question.fill('Keep my synthetic question');
         await send.press('Enter');
-        await expect(notice).toHaveText('Preparing a synthetic reply…');
+        await expect(notice).toHaveText('Thinking… · Synthetic preview');
+        await expect(panel.locator('[data-lab-assistant-thinking]')).toHaveText('Thinking…');
         await expect(panel.locator('form')).toHaveAttribute('aria-busy', 'true');
         await panel.getByRole('button', {name:'Minimize assistant', exact:true}).press('Enter');
         await expect(panel).toBeHidden();
@@ -267,19 +270,22 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(notice).toContainText('Questions are not sent');
         await scenario(panel, 'answer');
         await question.fill('What can I safely set aside?');
-        await panel.getByRole('checkbox', {name:'Use page data', exact:true}).check();
         await question.press('Enter');
+        await expect(notice).toHaveText('Thinking… · Synthetic preview');
+        await expect(notice).toHaveText('Writing… · Synthetic preview');
         await expect(notice).toContainText('Synthetic reply ready');
         const answer = panel.locator('[data-lab-assistant-message="assistant"]');
         await expect(answer).toContainText('BRL 700.00 unreserved');
         await expect(answer).toContainText('BRL 800.00 projection');
-        await expect(panel.getByRole('checkbox', {name:'Use page data', exact:true})).not.toBeChecked();
+        await expect(answer.locator('.assistant-message-markdown strong')).toHaveCount(4);
+        await expect(answer.locator('.assistant-message-markdown li')).toHaveCount(2);
         await expect(panel.locator('[data-lab-assistant-message="user"]')).toHaveCSS('align-self', 'flex-end');
         const composer = panel.locator('[data-lab-assistant-form]');
         const composerBox = await composer.boundingBox();
         await question.fill('A longer synthetic question about the example. '.repeat(24));
         await question.press('Enter');
         await expect(panel.locator('[data-lab-assistant-message="assistant"]')).toHaveCount(2);
+        await expect(notice).toContainText('Synthetic reply ready');
         const transcript = panel.locator('[data-lab-assistant-messages]');
         await expect.poll(() => transcript.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true);
         await transcript.evaluate(node => { node.scrollTop = 0; });
@@ -295,7 +301,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(answer).toHaveCount(0);
         await expect(model).toHaveValue('synthetic');
         await expect(effort).toHaveValue('high');
-        await expect(panel).toContainText('Consult this workspace.');
+        await expect(panel).toContainText('How can I help?');
         await question.fill('A conversation to delete');
         await send.press('Enter');
         await expect(notice).toContainText('Synthetic reply ready');
@@ -321,7 +327,6 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
         await expect(question).toHaveValue('');
         await expect(model).toHaveValue('synthetic');
         await expect(effort).toHaveValue('high');
-        await expect(panel.getByRole('checkbox', {name:'Use page data', exact:true})).not.toBeChecked();
         await expect(answer).not.toHaveCount(0);
         await panel.getByRole('button', {name:'Close assistant', exact:true}).press('Enter');
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -356,7 +361,7 @@ test('assistant sheet fits touch, short viewports and reduced motion', async ({b
             await input.fill('A line\n'.repeat(25));
             await expect(page.locator('[data-lab-assistant-shell]')).toHaveAttribute('data-lab-assistant-short', '');
             expect((await input.boundingBox()).height).toBeLessThanOrEqual(44);
-            for (const control of [input, panel.locator('[data-lab-assistant-settings] > summary'), panel.getByRole('checkbox', {name:'Use page data', exact:true}), panel.getByRole('button', {name:'Preview reply', exact:true}), panel.getByLabel('Current page context', {exact:true})]) {
+            for (const control of [input, panel.locator('[data-lab-assistant-settings] > summary'), panel.getByRole('button', {name:'Preview reply', exact:true}), panel.getByLabel('Current page context', {exact:true})]) {
                 await expect(control).toBeInViewport();
                 const bounds = await control.boundingBox();
                 expect(bounds.y + bounds.height).toBeLessThanOrEqual(320);
@@ -396,6 +401,7 @@ test('assistant specimen has a meaningful native reading fallback', async ({brow
         await fallback.locator('summary').press('Enter');
         await expect(fallback).toContainText('BRL 700.00 unreserved');
         await expect(fallback).toContainText('Questions are not sent');
+        await expect(fallback).toContainText('no application record is created');
         await fallback.getByRole('link', {name:'Inspect recorded cash and reserves', exact:true}).press('Enter');
         await expect(page).toHaveURL(/#lab-assistant-cash-source$/);
         await expect(page.locator('#lab-assistant-cash-source')).toBeInViewport();
@@ -403,3 +409,54 @@ test('assistant specimen has a meaningful native reading fallback', async ({brow
         await context.close();
     }
 });
+
+for (const theme of ['light', 'dark']) for (const width of [1440, 390]) {
+    test(`synthetic assistant reviews actions only in page memory (${theme}, ${width})`, async ({page}, info) => {
+        const writes = [], external = [];
+        const origin = new URL(info.project.use.baseURL).origin;
+        page.on('request', request => {
+            if (request.method() !== 'GET') writes.push(request.url());
+            if (new URL(request.url()).origin !== origin) external.push(request.url());
+        });
+        await page.setViewportSize({width, height:900});
+        await openCatalogue(page, {hash:'#assistant', theme});
+        await page.getByRole('button', {name:'Open Tuxedo assistant specimen', exact:true}).press('Enter');
+        const panel = page.locator('[data-lab-assistant-panel]');
+        await selectModel(panel);
+        await scenario(panel, 'action');
+        const question = panel.getByLabel('Your question about the example', {exact:true});
+        await question.fill('Prepare the synthetic groceries transaction.');
+        await question.press('Enter');
+        await expect(panel.locator('[data-lab-assistant-notice]')).toContainText('Synthetic reply ready');
+        const review = panel.locator('[data-lab-assistant-review]').first();
+        await expect(review).toHaveAttribute('data-lab-assistant-review', 'pending');
+        await expect(review).toContainText('BRL 42.50');
+        await expect(review).toContainText('Everyday bank · Daily account');
+        await expect(panel.locator('.assistant-message-markdown strong')).toContainText(['synthetic transaction', 'BRL 42.50']);
+        const confirm = review.getByRole('button', {name:'Confirm preview', exact:true});
+        const discard = review.getByRole('button', {name:'Discard preview', exact:true});
+        for (const control of [confirm, discard]) {
+            const box = await control.boundingBox();
+            expect(box.height).toBeGreaterThanOrEqual(44);
+            expect(box.width).toBeGreaterThanOrEqual(44);
+        }
+        await confirm.focus();
+        await expect(confirm).toBeInViewport();
+        await page.screenshot({path:info.outputPath(`assistant-review-${theme}-${width}.png`)});
+        await confirm.press('Enter');
+        await expect(review).toHaveAttribute('data-lab-assistant-review', 'confirmed');
+        await expect(review).toContainText('No financial record was saved.');
+        await expect(confirm).toHaveCount(0);
+        await expect(review).toBeFocused();
+        await question.fill('Prepare a second synthetic transaction to discard.');
+        await question.press('Enter');
+        const second = panel.locator('[data-lab-assistant-review]').last();
+        await expect(second).toHaveAttribute('data-lab-assistant-review', 'pending');
+        await second.getByRole('button', {name:'Discard preview', exact:true}).press('Enter');
+        await expect(second).toHaveAttribute('data-lab-assistant-review', 'discarded');
+        await expect(second).toContainText('Preview discarded. No financial record was saved.');
+        expect(writes).toEqual([]);
+        expect(external).toEqual([]);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    });
+}

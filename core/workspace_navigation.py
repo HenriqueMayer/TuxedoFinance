@@ -53,9 +53,11 @@ def workspace_navigation(request):
         section_label = _('Account sections')
         invoice = url_name.startswith(('invoice_', 'invoices')) or url_name == 'card_invoices'
         exchange = url_name.startswith('exchange_rate')
+        loyalty = url_name.startswith(('program', 'entry', 'redemption'))
         sections = [
-            (_('Accounts'), 'banking:list', not invoice and not exchange),
+            (_('Accounts'), 'banking:list', not invoice and not exchange and not loyalty),
             (_('Invoices'), 'banking:invoices', invoice),
+            (_('Loyalty'), 'banking:programs', loyalty),
             (_('Exchange rates'), 'banking:exchange_rates', exchange),
         ]
     return {

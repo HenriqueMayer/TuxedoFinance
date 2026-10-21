@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load i18n navigation %}
+{% block title %}{% if selected_program %}{{ selected_program.name }}{% else %}{% translate 'Loyalty' %}{% endif %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="banking-workspace space-y-4">
+    <header class="workspace-header">
+        <div class="min-w-0">
+            {% if selected_program %}<p class="subtle-copy mb-1">{% translate 'Points history' %}</p><h1 class="page-title break-words">{{ selected_program.name }}</h1><p class="subtle-copy mt-2">{% translate 'Balance' %}: <span class="tabular-nums font-medium">{{ selected_program.displayed_balance|floatformat:2 }} {{ selected_program.unit_name }}</span></p>
+            {% else %}<h1 class="page-title">{% translate 'Loyalty' %}</h1><p class="subtle-copy mt-2">{% translate 'Programs, points and miles, with their linked cards and local history.' %}</p>{% endif %}
+        </div>
+        <div class="banking-row-actions">
+            {% if selected_program %}{% url 'banking:entry_create' as entry_create %}{% with program_id=selected_program.pk|stringformat:'d' %}{% with target=entry_create|add:'?program='|add:program_id %}<a class="action-primary" href="{% contextual_url target %}">{% translate 'Add entry' %}</a>{% endwith %}{% endwith %}
+            {% else %}{% url 'banking:entry_create' as entry_create %}<a class="quiet-action" href="{% contextual_url entry_create %}">{% translate 'Points entry' %}</a>{% url 'banking:program_create' as program_create %}<a class="action-primary" href="{% contextual_url program_create %}">{% translate 'Add loyalty program' %}</a>{% endif %}
+        </div>
+    </header>
+    <form id="loyalty-filter-form" action="{{ request.path }}" method="get" hx-boost="false" novalidate data-live-filters data-live-results="loyalty-results" class="consultation-bar consultation-search-only">
+        <div class="consultation-search">{% include 'partials/form_field.html' with field=filter_form.q %}</div>
+        <span id="loyalty-clear-control" class="consultation-clear-control" data-live-fragment="loyalty-filter-form">{% if has_filters %}<a class="quiet-action" href="{{ loyalty_clear_url }}" data-live-reset data-live-link="loyalty-filter-form">{% translate 'Clear' %}</a>{% endif %}</span>
+        <button type="submit" data-live-submit class="action-link">{% translate 'Search' %}</button>
+    </form>
+    <div id="loyalty-result-meta" data-live-fragment="loyalty-filter-form" role="status" class="subtle-copy">
+        {% if selected_program %}{% blocktranslate count count=paginator.count %}{{ count }} entry{% plural %}{{ count }} entries{% endblocktranslate %}{% else %}{% blocktranslate count count=paginator.count %}{{ count }} program{% plural %}{{ count }} programs{% endblocktranslate %}{% endif %}
+    </div>
+    {% include 'banking/_loyalty_results.html' %}
+</div>
+{% endblock %}

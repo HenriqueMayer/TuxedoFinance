@@ -112,7 +112,7 @@ class BankingViewTests(TestCase):
         )
         program = LoyaltyProgram.objects.get(user=self.user, name='Miles')
         self.assertRedirects(create, reverse('banking:list'))
-        self.assertContains(self.client.get(reverse('banking:list')), 'Independent loyalty programs')
+        self.assertContains(self.client.get(reverse('banking:programs')), 'Miles')
         self.client.post(
             reverse('banking:program_update', args=[program.pk]),
             {'name': 'Travel Miles', 'bank': self.account.bank_id, 'cards': [], 'unit_name': 'Miles'},

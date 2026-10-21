@@ -65,6 +65,7 @@ class AssistantFixturesConfig(AppConfig):
     path = str(Path(__file__).resolve().parent)
 
     def ready(self):
+        import json
         import socket
         from threading import Event
 
@@ -119,6 +120,90 @@ class AssistantFixturesConfig(AppConfig):
             def stream(self, generation, cancellation):
                 cancellation.raise_if_cancelled()
                 content = generation.history[-1].content if generation.history else ''
+                if content == '[references]':
+                    result = generation.tool_runner('simulate_month', {
+                        'planning_month': '2026-10', 'gross_salary': '6000', 'clt_dependents': 0,
+                        'clt_pension': '0', 'clt_transport': '0', 'clt_food': '0', 'clt_health': '0',
+                        'clt_other': '700', 'extra_expenses': [], 'category_reductions': [],
+                    })
+                    if result.get('error'):
+                        yield ProviderEvent('text', text='Synthetic reference fixture failed: ' + result['error'])
+                    else:
+                        # These are the actual calculation's owned references,
+                        # deliberately repeated in a model-like Markdown footer.
+                        # Only the presentation layer should deduplicate them.
+                        footer = ' · '.join(f'[{row["label"]}]({row["url"]})' for row in result['references'])
+                        text = ('Premissas sintéticas: **desconto em folha BRL 700,00**, salário bruto BRL 6.000,00; '
+                                'cálculo hipotético. <estimativa>\n\n' + footer)
+                        for offset in range(0, len(text), 23):
+                            cancellation.raise_if_cancelled()
+                            yield ProviderEvent('text', text=text[offset:offset + 23])
+                    yield ProviderEvent('done')
+                    return
+                if content.startswith('[consult]'):
+                    # Return only a synthetic rendering of the real read/simulation
+                    # result. Prerequisites are ordinary POSTs in the browser test;
+                    # this provider never creates records during generation.
+                    payload = json.loads(content[len('[consult]'):])
+                    if payload['name'] not in {'read_financial_data', 'simulate_month'}:
+                        raise ValueError('Unsupported synthetic consultation.')
+                    result = generation.tool_runner(payload['name'], payload['arguments'])
+                    text = 'Synthetic consultation result.\n\n```json\n' + json.dumps(result, ensure_ascii=False) + '\n```'
+                    for offset in range(0, len(text), 2000):
+                        cancellation.raise_if_cancelled()
+                        yield ProviderEvent('text', text=text[offset:offset + 2000])
+                    yield ProviderEvent('done')
+                    return
+                marker = '[failed_action]' if content.startswith('[failed_action]') else '[action]'
+                if content.startswith(marker):
+                    # Exercise the real dispatcher and canonical validation.
+                    # Fixtures never create financial prerequisites or bypass
+                    # the separate human-confirmation HTTP boundary.
+                    payload = json.loads(content[len(marker):])
+                    result = generation.tool_runner(payload['name'], payload['arguments'])
+                    if result.get('error'):
+                        yield ProviderEvent('text', text='Synthetic action validation: ' + result['error'])
+                        yield ProviderEvent('done')
+                        return
+                    release = Event()
+                    unregister = cancellation.register_close(release.set)
+                    try:
+                        release.wait(.7)
+                        cancellation.raise_if_cancelled()
+                    finally:
+                        unregister()
+                    yield ProviderEvent('text', text='Synthetic proposal. **Review** its details before saving.')
+                    yield ProviderEvent('error', code='transport_error') if marker == '[failed_action]' else ProviderEvent('done')
+                    return
+                if '[thinking]' in content:
+                    release = Event()
+                    unregister = cancellation.register_close(release.set)
+                    try:
+                        # Distinguish waiting from actual output without a live
+                        # provider, and keep both phases observable by keyboard.
+                        release.wait(1.2)
+                        cancellation.raise_if_cancelled()
+                        yield ProviderEvent('text', text='Synthetic **value**')
+                        release.wait(1.2)
+                        cancellation.raise_if_cancelled()
+                        yield ProviderEvent('text', text=' is ready.')
+                        yield ProviderEvent('done')
+                    finally:
+                        unregister()
+                    return
+                if '[markdown]' in content:
+                    text = (
+                        '# Resumo\n\n**Valor**: `BRL 100,00`; *estimativa*.\n\n'
+                        '- Receita\n- Despesa\n\n> Dados sintéticos.\n\n'
+                        '| Tipo | Valor |\n| --- | ---: |\n| Previsto | **10,00** |\n\n'
+                        '```html\n<img src=x onerror="window.__assistantInjected=true">\n```\n\n'
+                        '<img src=x onerror="window.__assistantInjected=true">\n\n'
+                        '[Conta](/banking/123/) ![pixel](https://example.test/pixel) '
+                        '[x](javascript:alert(1))')
+                    for offset in range(0, len(text), 17):
+                        yield ProviderEvent('text', text=text[offset:offset + 17])
+                    yield ProviderEvent('done')
+                    return
                 if '[cancel]' in content:
                     release = Event()
                     unregister = cancellation.register_close(release.set)

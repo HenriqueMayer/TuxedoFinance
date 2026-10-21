@@ -23,7 +23,7 @@ from sandbox.forms import (
 from sandbox.models import ScenarioDraft
 from sandbox.planning import commitment_snapshot, simulate_yield, snapshot_total
 from dashboard.services import add_months
-from sandbox.services import BudgetInput, CltScenario, apply_variables, build_budget, calculate_clt, payroll_brackets
+from sandbox.services import calculate_monthly_plan as _calculate_budget
 from sandbox.tax_rules import get_tax_rules
 
 
@@ -65,39 +65,6 @@ def _expense_forecast(user, month, snapshot=None):
         total = None
         error = exc.message
     return snapshot, {'month': month, 'total': total, 'count': len(rows), 'error': error}
-
-
-def _calculate_budget(form, forecast, *, apply_clt=True):
-    if not form.is_valid():
-        return None
-    data = form.cleaned_data
-    if forecast['total'] is None:
-        form.add_error(None, forecast['error'])
-        return None
-    variables = variables_from_data(form.data, 'variable')
-    budget = BudgetInput(fixed_bills=forecast['total'], custom_variables=variables)
-    gross = data['gross_salary']
-    rules = get_tax_rules()
-    scenario = CltScenario(
-        gross, dependents=data.get('clt_dependents') or 0,
-        pension=data.get('clt_pension') or Decimal('0'),
-        vt_enabled=bool(data.get('clt_transport')), vt_cost=data.get('clt_transport') or Decimal('0'),
-        food_employee=data.get('clt_food') or Decimal('0'),
-        health_employee=data.get('clt_health') or Decimal('0'),
-        other_deductions=data.get('clt_other') or Decimal('0'),
-    )
-    payroll = calculate_clt(scenario, rules).ordinary if apply_clt else None
-    income = payroll.net if payroll else gross
-    return {
-        'mode': 'simple',
-        'budget': build_budget(income, budget, custom_variable_base=gross),
-        'gross': gross,
-        'payroll': payroll,
-        'tax_bands': payroll_brackets(payroll, rules) if payroll else None,
-        'tax_rule_year': get_tax_rules().year if payroll else None,
-        'variables': apply_variables(gross, variables),
-        'forecast': forecast,
-    }
 
 
 def _calculate_yield(form):

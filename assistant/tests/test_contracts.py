@@ -33,7 +33,7 @@ class OfflineProviderContractsTests(SimpleTestCase):
                     lambda: GenerationRequest('{}', history=(turn,) * 21),
                     lambda: GenerationRequest('{}', language='invalid'),
                     lambda: GenerationRequest('{}', instructions_version='../other'),
-                    lambda: GenerationRequest('{}', instructions_version='v4'),
+                    lambda: GenerationRequest('{}', instructions_version='v999'),
                     lambda: GenerationRequest('{}', reasoning_effort='unknown'),
                     lambda: GenerationRequest('{}', reasoning_effort=None)]
         for make_invalid in rejected:
@@ -44,7 +44,7 @@ class OfflineProviderContractsTests(SimpleTestCase):
     def test_versioned_instruction_fixture_obligations_are_present(self):
         cases = json.loads((Path(__file__).parent / 'offline_cases.json').read_text())
         instructions = ' '.join(load_instructions().split())
-        self.assertEqual(INSTRUCTIONS_VERSION, 'v3')
+        self.assertEqual(INSTRUCTIONS_VERSION, 'v6')
         for case in cases:
             with self.subTest(case=case['id']):
                 self.assertTrue(case['synthetic_only'])

@@ -204,6 +204,12 @@ test('loyalty multi-selection, purchase and redemption remain complete without J
         await edit.focus();
         await expect(edit).toBeFocused();
         await native.keyboard.press('Enter');
+        await native.waitForLoadState('load');
+        // With scripts disabled Chromium can stall its actionability frame
+        // check during the native bank-panel entry animation. Observe the
+        // settled rendered surface before scrolling the saved card selector.
+        await expect.poll(() => native.locator('#bank-workspace-panel')
+            .evaluate(element => getComputedStyle(element).transform)).toBe('none');
         await expect(native.locator('#id_redemption-iof_credit_card')).toHaveValue(data.cards[1]);
         await expect(native.locator('#id_redemption-points')).toHaveValue('100.25');
         await capture(native, info, '06-native-inline-redemption-390.png', native.locator('#id_redemption-iof_credit_card'));

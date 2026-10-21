@@ -13,11 +13,11 @@ from dashboard.services import add_months, get_ledger_snapshot
 ZERO = Decimal('0.00')
 
 
-def monthly_outlook(user, month):
+def monthly_outlook(user, month, *, conversion=None):
     today = timezone.localdate()
     end = date(month.year, month.month, monthrange(month.year, month.month)[1])
     cutoff = min(today, end)
-    conversion = ConversionContext(user)
+    conversion = ConversionContext(user) if conversion is None else conversion.check_user(user)
     recorded = get_planning_availability(user, cutoff, conversion=conversion)
     max_year, max_month = add_months(today.year, today.month, 11)
     supported = (month.year, month.month) <= (max_year, max_month)

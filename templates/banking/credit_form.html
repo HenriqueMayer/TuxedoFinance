@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ form_title }} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="banking-workspace workspace-form-page finance-entry-page space-y-4">
+    <header><h1 class="page-title">{{ form_title }}</h1><p class="subtle-copy mt-2 break-words">{{ card }} · {{ reference_month|date:'F Y' }}</p></header>
+    <form autocomplete="off" method="post" hx-boost="false" novalidate class="workspace-form surface-panel finance-entry-form space-y-5">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ return_url }}">
+        <p class="subtle-copy">{% translate 'Record a refund or adjustment already granted by the card issuer. It reduces this invoice without creating income or a bank payment.' %}</p>
+        {% for error in form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}{% endfor %}
+        <div class="finance-entry-grid">
+            <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.title %}</div>
+            {% include 'partials/form_field.html' with field=form.amount %}
+            {% include 'partials/form_field.html' with field=form.date %}
+            <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.category %}</div>
+            <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.notes %}</div>
+        </div>
+        <div class="form-actions"><button class="action-primary" type="submit">{% translate 'Save' %}</button><a class="quiet-action" href="{{ return_url }}">{% translate 'Cancel' %}</a></div>
+    </form>
+</div>
+{% endblock %}

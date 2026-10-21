@@ -59,7 +59,7 @@ for (const dark of [false, true]) {
         await expect(navigation.getByRole('link', { name: 'Transactions', exact: true })).toHaveAttribute('aria-current', 'page');
         await navigation.getByRole('link', { name: 'Accounts', exact: true }).click();
         const accounts = page.getByRole('navigation', { name: 'Account sections' });
-        await expect(accounts.getByRole('link')).toHaveText(['Accounts', 'Invoices', 'Exchange rates']);
+        await expect(accounts.getByRole('link')).toHaveText(['Accounts', 'Invoices', 'Loyalty', 'Exchange rates']);
         await accounts.getByRole('link', { name: 'Invoices', exact: true }).click();
         await expect(page).toHaveURL(/\/banking\/invoices\/$/);
         await expect(navigation.getByRole('link', { name: 'Accounts', exact: true })).toHaveAttribute('aria-current', 'page');

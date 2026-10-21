@@ -32,8 +32,9 @@ _ROUTES = {
     'transactions': {'list', 'create', 'update', 'split'},
     'categories': {'list', 'create', 'update'},
     'banking': {'list', 'detail', 'invoices', 'card_invoices', 'invoice_detail',
+                'invoice_credit_create', 'invoice_credit_edit', 'invoice_credit_delete',
                 'account_create', 'account_update', 'credit_card_create', 'credit_card_update',
-                'debit_card_create', 'debit_card_update', 'exchange_rates'},
+                'debit_card_create', 'debit_card_update', 'exchange_rates', 'programs', 'program_entries'},
     'investments': {'list', 'operations', 'charts', 'prices', 'settings', 'position_detail',
                     'position_update', 'guided_create', 'create', 'update', 'create_asset',
                     'update_asset', 'create_product', 'update_product'},
@@ -117,6 +118,9 @@ def _route_ownership(user, match):
         'categories:update': 'categories.Category', 'banking:detail': 'banking.Bank',
         'banking:account_update': 'banking.BankAccount', 'banking:credit_card_update': 'banking.CreditCard',
         'banking:debit_card_update': 'banking.DebitCard', 'banking:invoice_detail': 'banking.CardInvoice',
+        'banking:invoice_credit_create': 'banking.CardInvoice',
+        'banking:invoice_credit_edit': 'banking.CardInvoiceCredit',
+        'banking:invoice_credit_delete': 'banking.CardInvoiceCredit',
         'investments:update': 'investments.Investment', 'investments:update_asset': 'investments.Asset',
         'investments:update_product': 'investments.InvestmentProduct',
         'planning:budget_update': 'planning.CategoryBudget', 'planning:goal_detail': 'planning.FinancialGoal',
@@ -127,6 +131,8 @@ def _route_ownership(user, match):
         item = _owned(user, mappings[route], values['pk'])
         if route == 'ingestion:detail' and item.status not in {'CONFIRMED', 'UNDONE'}:
             raise ScopeError(_('This assistant context is no longer available.'))
+    elif route == 'banking:program_entries':
+        _owned(user, 'banking.LoyaltyProgram', values['program_pk'])
     elif route == 'banking:card_invoices':
         _owned(user, 'banking.CreditCard', values['card_pk'])
     elif route in {'investments:position_detail', 'investments:position_update'}:

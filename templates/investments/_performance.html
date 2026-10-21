@@ -1,7 +1,7 @@
 {% load i18n %}
-<section id="investment-performance" class="surface-panel space-y-4" aria-label="{% translate 'Position value and results' %}">
+<section id="investment-performance" class="surface-panel workspace-summary space-y-4" aria-label="{% translate 'Position value and results' %}">
     <h2 class="section-title">{% translate 'Position value and results' %}</h2>
-    <dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <dl class="workspace-summary-metrics grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div><dt class="subtle-copy">{% translate 'Remaining cost and monetary balances' %}</dt><dd class="number text-lg font-semibold">{{ portfolio_snapshot.base_currency }} {{ portfolio_snapshot.cost_total|floatformat:2 }}</dd></div>
         <div><dt class="subtle-copy">{% translate 'Realized result' %}</dt><dd class="number text-lg font-semibold">{{ portfolio_snapshot.base_currency }} {{ portfolio_snapshot.realized_total|floatformat:2 }}</dd></div>
         <div><dt class="subtle-copy">{% translate 'Unrealized result with observed prices' %}</dt><dd class="number text-lg font-semibold">{{ portfolio_snapshot.base_currency }} {{ portfolio_snapshot.unrealized_total|floatformat:2 }}</dd></div>

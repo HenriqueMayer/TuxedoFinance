@@ -9,7 +9,7 @@
     </header>
     <section class="surface-panel space-y-4" aria-labelledby="assistant-connection-title">
         <div class="panel-heading"><h2 id="assistant-connection-title" class="section-title">ChatGPT</h2><span class="status-badge">{% if chat_enabled %}{% translate 'Chat enabled' %}{% else %}{% translate 'Chat disabled' %}{% endif %}</span></div>
-        <p>{% translate 'Your database and history stay on this installation. Messages send only your question, necessary conversation history and the context you choose to include.' %}</p>
+        <p>{% translate 'Your database and history stay on this installation. To answer a message, the assistant sends your question, necessary conversation history and relevant saved financial records to OpenAI. Changes require your confirmation.' %}</p>
         <p class="subtle-copy">{% if chat_enabled %}{% translate 'Choose an available model in the assistant before sending a message. Requests use your ChatGPT plan.' %}{% else %}{% translate 'Chat is disabled in this installation’s configuration. Linked accounts and conversation history are kept.' %}{% endif %}</p>
         {% if not auth_enabled %}<p class="subtle-copy" role="status">{% translate 'Real sign-in is disabled on this installation. Existing account links are kept.' %}</p>{% endif %}
         <form method="post" action="{% url 'assistant:connection-start' %}" target="_blank" rel="noopener" autocomplete="off" hx-boost="false" novalidate>

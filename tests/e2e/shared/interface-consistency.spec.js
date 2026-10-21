@@ -95,6 +95,11 @@ for (const theme of ['light', 'dark']) {
                     if (path === '/banking/accounts/create/') {
                         const checkboxStates = [];
                         for (const id of ['id_pix_enabled', 'id_planning_enabled']) {
+                            if (id === 'id_planning_enabled') {
+                                const adjustments = page.locator('#account-planning-adjustments');
+                                await adjustments.locator(':scope > summary').press('Enter');
+                                await expect(adjustments).toHaveAttribute('open', '');
+                            }
                             const checkbox = page.locator(`#${id}`);
                             const label = page.locator(`label[for="${id}"]`);
                             const row = page.locator('.entry-checkbox-choice').filter({has: checkbox});
@@ -168,10 +173,11 @@ for (const theme of ['light', 'dark']) {
         const bankPanel = page.getByRole('region', {name: 'Interface bank', exact: true});
         await expect(bankPanel.getByRole('heading', {name: 'Interface bank', exact: true})).toBeVisible();
         // The open bank owns its identity in the internal window title bar.
-        const marker = bankPanel.locator('.bank-workspace-windowtitle .bank-marker');
-        await expect(marker).toHaveCount(1);
-        await expect(marker).toHaveAttribute('aria-hidden', 'true');
-        await expect(marker).toHaveCSS('background-color', 'rgb(49, 93, 80)');
+        const institution = bankPanel.locator('.bank-workspace-windowtitle .institution-miniature');
+        await expect(institution).toHaveCount(1);
+        await expect(institution).toHaveAttribute('aria-hidden', 'true');
+        await expect(bankPanel.locator('.bank-marker')).toHaveCount(0);
+        await expect(bankPanel).toHaveCSS('border-top-color', 'rgb(49, 93, 80)');
         const credit = page.locator('.credit-card-row').filter({hasText: 'Interface credit'});
         await expect(credit.locator('.card-miniature')).toHaveCSS('background-image',
             'linear-gradient(45deg, rgb(91, 62, 124), rgb(198, 161, 115))');

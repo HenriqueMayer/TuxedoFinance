@@ -44,6 +44,17 @@ async function expectScreenshots(page, language) {
                 element.complete && element.naturalWidth === 1440 && element.naturalHeight === 1000
             ))).toBe(true);
             await expect(image).toHaveAttribute('src', new RegExp(`images/${language}/${workspace === 'analytics' ? 'reports' : workspace}-${theme}\\.png$`));
+            if (workspace === 'dashboard') {
+                // The compact capture's opening balance panel spans y=157–249.
+                // Both its label and complete amount must survive the thumbnail crop.
+                const frame = await image.locator('..').boundingBox();
+                const rendered = await image.boundingBox();
+                for (const sourceY of [160, 249]) {
+                    const visibleY = rendered.y + sourceY * rendered.width / 1440;
+                    expect(visibleY).toBeGreaterThanOrEqual(frame.y);
+                    expect(visibleY).toBeLessThanOrEqual(frame.y + frame.height);
+                }
+            }
         }
     }
     const records = await page.locator('[data-lightbox] img').evaluateAll(images => images.map(image => ({

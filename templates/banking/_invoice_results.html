@@ -1,12 +1,17 @@
 {% load i18n navigation %}
 <div id="invoice-results" class="space-y-4" data-preserve-view>
     {% if invoices %}
-    <section class="banking-section" aria-label="{% blocktranslate with card=selected_card.name %}Invoices for {{ card }}{% endblocktranslate %}">
-        <ul class="divide-y divide-forest/10 dark:divide-cream/10">
+    <section class="banking-section invoice-history" aria-label="{% blocktranslate with card=selected_card.name %}Invoices for {{ card }}{% endblocktranslate %}">
+        {% comment %}The same reading order becomes labelled groups on phones;
+        values are the existing invoice properties, never cross-month totals.{% endcomment %}
+        <div class="invoice-history-head" aria-hidden="true"><span>{% translate 'Invoice month' %}</span><span>{% translate 'Status' %}</span><span>{% translate 'Invoice total' %}</span><span></span></div>
+        <ul>
         {% for invoice in invoices %}{% url 'banking:invoice_detail' invoice.pk as invoice_url %}
-            <li id="invoice-{{ invoice.pk|stringformat:'d' }}" class="flex flex-wrap items-center justify-between gap-4 py-4">
-                <div class="min-w-0"><a class="quiet-action" href="{% contextual_url invoice_url %}">{{ invoice.reference_month|date:'F Y' }}</a><p class="subtle-copy">{% translate 'Due' %} {{ invoice.due_date|date:USER_DATE_FORMAT }}</p></div>
-                <div class="flex flex-wrap items-center gap-3"><span class="status-badge">{{ invoice.get_status_display }}</span><div class="text-right"><p class="subtle-copy">{% translate 'Invoice total' %}</p><strong class="tabular-nums">{{ invoice.account.currency }} {{ invoice.amount|floatformat:2 }}</strong>{% if invoice.manual_settlement %}<p class="subtle-copy">{% translate 'Remaining' %}: {{ invoice.account.currency }} {{ invoice.remaining_amount|floatformat:2 }}</p>{% endif %}</div><a class="quiet-action" href="{% contextual_url invoice_url %}">{% translate 'View invoice' %}</a></div>
+            <li id="invoice-{{ invoice.pk|stringformat:'d' }}" class="invoice-history-row">
+                <div class="invoice-history-period"><a class="quiet-action" href="{% contextual_url invoice_url %}">{{ invoice.reference_month|date:'F Y' }}</a><p class="subtle-copy">{% translate 'Due' %} {{ invoice.due_date|date:USER_DATE_FORMAT }}</p></div>
+                <div class="invoice-history-status"><span class="invoice-mobile-label">{% translate 'Status' %}</span><span class="status-badge">{{ invoice.get_status_display }}</span></div>
+                <div class="invoice-history-amount"><span class="invoice-mobile-label">{% translate 'Invoice total' %}</span><strong class="tabular-nums">{{ invoice.account.currency }} {{ invoice.amount|floatformat:2 }}</strong>{% if invoice.manual_settlement %}<p class="subtle-copy">{% translate 'Remaining' %}: {{ invoice.account.currency }} {{ invoice.remaining_amount|floatformat:2 }}</p>{% endif %}</div>
+                <a class="quiet-action invoice-history-action" href="{% contextual_url invoice_url %}">{% translate 'View invoice' %}<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m9 5 7 7-7 7"/></svg></a>
             </li>
         {% endfor %}
         </ul>

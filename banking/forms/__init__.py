@@ -4,7 +4,7 @@
 from .base import INPUT_CLASSES, OwnedModelForm
 from .accounts import BankForm, BankColorForm, BankAccountForm
 from .cards import CardForm, DebitCardForm, CreditCardForm
-from .invoices import InvoicePaymentForm, InvoiceFilterForm
+from .invoices import InvoicePaymentForm, InvoiceCreditForm, InvoiceFilterForm
 from .loyalty import LoyaltyProgramForm, LoyaltyEntryForm, RewardRedemptionForm
 from .transfers import BankTransferForm
 from .exchange_rates import ExchangeRateForm, ExchangeRateFilterForm
@@ -21,6 +21,7 @@ __all__ = [
     'ExchangeRateForm',
     'INPUT_CLASSES',
     'InvoiceFilterForm',
+    'InvoiceCreditForm',
     'InvoicePaymentForm',
     'LoyaltyEntryForm',
     'LoyaltyProgramForm',

@@ -1,17 +1,22 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """Loyalty program, entry and reward-redemption workflows."""
 
+from django import forms
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.shortcuts import redirect, render
+from django.db.models import Case, Count, DecimalField, Exists, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Sum, Value, When
+from django.db.models.functions import Coalesce
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import CreateView, UpdateView
+from django.views.generic import CreateView, ListView, UpdateView
 from core.navigation import return_url, with_return_url
 from banking.forms import LoyaltyEntryForm, LoyaltyProgramForm, RewardRedemptionForm
 from banking.models import (
     Bank,
+    CreditCard,
     LoyaltyEntry,
     LoyaltyProgram,
     RewardRedemption,
@@ -30,6 +35,98 @@ from .base import (
     RelatedFormMixin,
 )
 from .workspace import BankDetailView
+
+
+class LoyaltySearchForm(forms.Form):
+    """A bounded native GET search, independent of financial entry forms."""
+
+    q = forms.CharField(label=_('Search'), required=False, max_length=200,
+                        widget=forms.SearchInput(attrs={'id': 'loyalty-filter-q', 'data-live-search': '',
+                                                       'placeholder': _('Name, bank or card')}))
+
+
+def _loyalty_programs(user):
+    # Search joins must never multiply point balances. Aggregate only owned
+    # entries in a separate subquery before matching any linked card names.
+    amount_field = DecimalField(max_digits=16, decimal_places=2)
+    entries = LoyaltyEntry.objects.filter(user=user, program_id=OuterRef('pk')).order_by().values('program_id')
+    totals = entries.annotate(total=Sum(Case(
+        When(direction=LoyaltyEntry.Direction.CREDIT, then=F('amount')),
+        default=-F('amount'), output_field=amount_field,
+    ))).values('total')
+    counts = entries.annotate(total=Count('pk')).values('total')
+    cards = CreditCard.objects.filter(user=user, account__user=user, account__bank__user=user).select_related('account__bank').order_by('name', 'pk')
+    return LoyaltyProgram.objects.filter(user=user).annotate(
+        displayed_balance=Coalesce(Subquery(totals, output_field=amount_field), Value(0), output_field=amount_field),
+        entry_count=Coalesce(Subquery(counts, output_field=IntegerField()), Value(0)),
+    ).prefetch_related(
+        Prefetch('bank', queryset=Bank.objects.filter(user=user), to_attr='display_bank'),
+        Prefetch('cards', queryset=cards, to_attr='display_cards'),
+    ).order_by('name', 'pk')
+
+
+def _loyalty_entries(user):
+    redemptions = RewardRedemption.objects.filter(loyalty_entry_id=OuterRef('pk'))
+    owned_redemptions = redemptions.filter(user=user, program__user=user,
+                                         target_account__user=user, target_account__bank__user=user)
+    return LoyaltyEntry.objects.filter(user=user, program__user=user).annotate(
+        generated_entry=Exists(redemptions),
+        redemption_id=Subquery(owned_redemptions.values('pk')[:1]),
+    ).order_by('-date', '-pk')
+
+
+class LoyaltyProgramListView(LoginRequiredMixin, ListView):
+    model = LoyaltyProgram
+    template_name = 'banking/loyalty.html'
+    context_object_name = 'programs'
+    paginate_by = 20
+
+    def get_queryset(self):
+        self.filter_form = LoyaltySearchForm(self.request.GET)
+        programs = _loyalty_programs(self.request.user)
+        if not self.filter_form.is_valid():
+            return programs.none()
+        query = self.filter_form.cleaned_data['q']
+        if query:
+            programs = programs.filter(
+                Q(name__icontains=query) | Q(unit_name__icontains=query)
+                | Q(bank__user=self.request.user, bank__name__icontains=query)
+                | Q(cards__user=self.request.user, cards__account__user=self.request.user,
+                    cards__account__bank__user=self.request.user, cards__name__icontains=query)
+            ).distinct()
+        return programs.prefetch_related(Prefetch('entries', queryset=_loyalty_entries(self.request.user)[:10],
+                                                  to_attr='recent_entries'))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(filter_form=self.filter_form,
+                       has_filters=bool(self.request.GET.get('q', '')),
+                       loyalty_clear_url=reverse('banking:programs'))
+        return context
+
+
+class LoyaltyEntryListView(LoginRequiredMixin, ListView):
+    model = LoyaltyEntry
+    template_name = 'banking/loyalty.html'
+    context_object_name = 'entries'
+    paginate_by = 30
+
+    def get_queryset(self):
+        self.program = get_object_or_404(_loyalty_programs(self.request.user), pk=self.kwargs['program_pk'])
+        self.filter_form = LoyaltySearchForm(self.request.GET)
+        self.filter_form.fields['q'].widget.attrs['placeholder'] = _('Search entry notes')
+        entries = _loyalty_entries(self.request.user).filter(program=self.program)
+        if not self.filter_form.is_valid():
+            return entries.none()
+        query = self.filter_form.cleaned_data['q']
+        return entries.filter(notes__icontains=query) if query else entries
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(selected_program=self.program, filter_form=self.filter_form,
+                       has_filters=bool(self.request.GET.get('q', '')),
+                       loyalty_clear_url=reverse('banking:program_entries', args=[self.program.pk]))
+        return context
 
 
 class LoyaltyProgramCreateView(RelatedFormMixin, CreateView):

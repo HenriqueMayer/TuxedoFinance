@@ -259,3 +259,45 @@ def payroll_brackets(payroll: PayPeriod, rules: TaxRuleSet) -> dict:
         'reduction_zero_limit': rules.irrf_reduction_zero_limit,
         'reduction_upper_limit': rules.irrf_reduction_upper_limit,
     }
+
+
+def calculate_monthly_plan(form, forecast, *, apply_clt=True):
+    """Calculate the salary workspace from a validated form and owned forecast.
+
+    Reads and persistence belong to the caller. Reusing this entry point keeps
+    chat simulations and existing saved-scenario calculations on one formula.
+    """
+    # The form imports CustomVariable from this module, so keep this dependency
+    # local rather than introducing a circular module import.
+    from sandbox.forms import variables_from_data
+
+    if not form.is_valid():
+        return None
+    data = form.cleaned_data
+    if forecast['total'] is None:
+        form.add_error(None, forecast['error'])
+        return None
+    variables = variables_from_data(form.data, 'variable')
+    budget = BudgetInput(fixed_bills=forecast['total'], custom_variables=variables)
+    gross = data['gross_salary']
+    rules = get_tax_rules()
+    scenario = CltScenario(
+        gross, dependents=data.get('clt_dependents') or 0,
+        pension=data.get('clt_pension') or Decimal('0'),
+        vt_enabled=bool(data.get('clt_transport')), vt_cost=data.get('clt_transport') or Decimal('0'),
+        food_employee=data.get('clt_food') or Decimal('0'),
+        health_employee=data.get('clt_health') or Decimal('0'),
+        other_deductions=data.get('clt_other') or Decimal('0'),
+    )
+    payroll = calculate_clt(scenario, rules).ordinary if apply_clt else None
+    income = payroll.net if payroll else gross
+    return {
+        'mode': 'simple',
+        'budget': build_budget(income, budget, custom_variable_base=gross),
+        'gross': gross,
+        'payroll': payroll,
+        'tax_bands': payroll_brackets(payroll, rules) if payroll else None,
+        'tax_rule_year': rules.year if payroll else None,
+        'variables': apply_variables(gross, variables),
+        'forecast': forecast,
+    }

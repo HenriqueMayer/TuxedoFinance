@@ -38,16 +38,17 @@ for (const theme of ['light', 'dark']) {
         await expect(help).toBeFocused();
 
         await page.goto('/banking/accounts/create/');
-        const reserve = page.getByRole('button', { name: 'Explain Reserved amount', exact: true });
+        await page.locator('#account-planning-adjustments > summary').press('Enter');
+        const reserve = page.getByRole('button', { name: 'Explain Keep outside monthly planning', exact: true });
         await reserve.press('Enter');
         await expect(page.locator('#id_reserved_amount-help')).toBeVisible();
         await page.keyboard.press('Escape');
-        await page.getByLabel('Reserved amount', { exact: true }).fill('-1');
+        await page.getByLabel('Keep outside monthly planning', { exact: true }).fill('-1');
         await page.getByRole('button', { name: 'Save', exact: true }).click();
-        await expect(page.getByLabel('Reserved amount', { exact: true })).toHaveValue('-1');
+        await expect(page.getByLabel('Keep outside monthly planning', { exact: true })).toHaveValue('-1');
         await expect(page.locator('#id_reserved_amount-error-1')).toBeVisible();
         await page.setViewportSize({ width: 390, height: 740 });
-        await page.getByRole('button', { name: 'Explain Reserved amount', exact: true }).press('Enter');
+        await page.getByRole('button', { name: 'Explain Keep outside monthly planning', exact: true }).press('Enter');
         const box = await page.locator('#id_reserved_amount-help').boundingBox();
         expect(box.x).toBeGreaterThanOrEqual(12);
         expect(box.x + box.width).toBeLessThanOrEqual(378);
@@ -61,8 +62,9 @@ test('native field help remains readable on mobile without JavaScript', async ({
         const page = await context.newPage();
         await signUp(page, testInfo);
         await page.goto('/banking/accounts/create/');
+        await page.locator('#account-planning-adjustments > summary').press('Enter');
         // Native summary exposes its own accessible name, without the hidden JS button.
-        const summary = page.locator('summary[aria-label="Explain Reserved amount"]');
+        const summary = page.locator('summary[aria-label="Explain Keep outside monthly planning"]');
         await summary.press('Enter');
         const content = summary.locator('..').locator('.help-fallback-content');
         await expect(content).toBeVisible();

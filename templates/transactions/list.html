@@ -10,7 +10,7 @@
 {% contextual_url create_url as create_url %}
 {% url 'transactions:list' as list_url %}
 {% url 'transactions:export' as export_url %}
-<div class="space-y-6">
+<div class="space-y-4">
     <div class="workspace-header">
         <div class="label-with-help">
             <h1 class="page-title">{% translate "Transactions" %}</h1>
@@ -164,6 +164,7 @@
                                     <p class="text-sm tabular-nums text-forest/70 dark:text-night-muted">
                                         {% blocktranslate with installments=transaction.installments currency=transaction.native_currency installment_amount=transaction.installment_amount|floatformat:2 %}{{ installments }}x {{ currency }} {{ installment_amount }} / month{% endblocktranslate %}
                                     </p>
+                                    {% if transaction.installment_start > 1 %}<p class="subtle-copy">{% blocktranslate with first=transaction.installment_start last=transaction.installments %}Tracking installments {{ first }}–{{ last }}{% endblocktranslate %}</p>{% endif %}
                                 {% endif %}
                             </div>
                             <div class="flex items-center gap-3">

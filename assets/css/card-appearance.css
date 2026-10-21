@@ -1,5 +1,23 @@
 /* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
 @layer components {
+  /* A color is a compact native control, never a full-width financial field. */
+  body.tuxedo-ui .color-picker-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  body.tuxedo-ui .color-picker-presets { display: flex; flex-wrap: wrap; gap: 2px; }
+  body.tuxedo-ui .color-picker-presets[hidden] { display: none; }
+  body.tuxedo-ui .color-picker-preset { display: inline-flex; flex: 0 0 44px; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 5px; border: 1px solid transparent; border-radius: 10px; background: transparent; cursor: pointer; }
+  body.tuxedo-ui .color-picker-preset > span { width: 28px; height: 28px; border: 1px solid rgb(127 127 127 / .35); border-radius: 50%; background: var(--color-preset); }
+  body.tuxedo-ui .color-picker-preset:is(:hover, [aria-pressed="true"]) { border-color: var(--ui-accent); background: var(--ui-ground); }
+  body.tuxedo-ui .color-picker-preset:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+  body.tuxedo-ui .color-picker-custom { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+  body.tuxedo-ui .color-picker-custom-label { max-width: 6rem; font-size: 12px; line-height: 1.5; color: var(--ui-muted); }
+  body.tuxedo-ui .color-picker input[type="color"] { flex: 0 0 48px; width: 48px; min-width: 48px; max-width: 48px; min-height: 44px; height: 44px; padding: 5px; border: 1px solid var(--ui-line); border-radius: 10px; background: var(--ui-paper); cursor: pointer; }
+  body.tuxedo-ui .color-picker input[type="color"]:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+  body.tuxedo-ui .color-picker-custom:has(.color-picker-recovery) { width: 100%; flex-wrap: wrap; }
+  body.tuxedo-ui .color-picker-recovery { min-width: 0; width: 100%; }
+  @media (max-width: 640px) {
+    /* Keep the custom picker beside a small two-row palette on phone forms. */
+    body.tuxedo-ui .color-picker-presets { max-width: 140px; }
+  }
   .card-appearance {
     display: grid;
     gap: 20px;
@@ -8,13 +26,6 @@
     border-top: 1px solid var(--workspace-line, rgb(26 46 38 / .18));
   }
   .card-appearance .section-title { font-size: 16px; }
-  .card-appearance input[type="color"] {
-    width: 100%;
-    min-height: 44px;
-    height: 44px;
-    padding: 5px;
-    border-radius: 10px;
-  }
   .card-appearance .card-gradient-toggle {
     width: 20px;
     height: 20px;

@@ -63,10 +63,16 @@ through the shared partials/form_field.html renderer (PRD §9.4).
         <div id="debit-card-fields" class="space-y-5" data-has-errors="{{ form.debit_card.errors|yesno:'true,false' }}">
             {% include 'partials/form_field.html' with field=form.debit_card %}
         </div>
-        <div id="credit-card-fields" class="space-y-5" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
+        <div id="credit-card-fields" class="space-y-5" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.installment_start.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
             {% include 'partials/form_field.html' with field=form.credit_card %}
-            <div id="credit-card-details" class="space-y-5" data-has-errors="{% if form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
+            <div id="credit-card-details" class="space-y-5" data-has-errors="{% if form.installments.errors or form.installment_start.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
                 {% include 'partials/form_field.html' with field=form.installments %}
+                <div id="installment-start-fields" data-has-errors="{{ form.installment_start.errors|yesno:'true,false' }}">
+                    <details class="explanation-disclosure"{% if form.installment_start.errors or form.instance.installment_start > 1 %} open{% endif %}>
+                        <summary>{% translate 'Already paying this purchase?' %}</summary>
+                        {% include 'partials/form_field.html' with field=form.installment_start %}
+                    </details>
+                </div>
                 {% include 'partials/form_field.html' with field=form.billing_override %}
                 <p id="credit-card-best-purchase" class="text-sm font-medium text-caramel-ink dark:text-caramel-light" aria-live="polite"></p>
             </div>

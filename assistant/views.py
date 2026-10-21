@@ -21,7 +21,8 @@ from assistant import chat
 from assistant.context import ScopeError, read_scope, scope_label, sign_normalized_scope
 from assistant.context_request import build_context
 from assistant.forms import CreateConversationForm, SaveChatSettingsForm, SendMessageForm
-from assistant.models import Conversation, GenerationRun, ProviderConnection
+from assistant.models import ActionProposal, Conversation, GenerationRun, ProviderConnection
+from core.navigation import safe_local_url
 
 
 def _scope(request, *, include_financial=False):
@@ -55,6 +56,17 @@ def _render(request, conversation=None, *, status=200, error=None, create_form=N
         by_message[run.input_message_id] = run
         if run.output_message_id:
             by_message[run.output_message_id] = run
+    proposals = {}
+    if conversation:
+        # Partial/failed generations never expose executable review controls.
+        for proposal in ActionProposal.objects.filter(
+                conversation=conversation, conversation__user=request.user,
+                message_id__in=message_ids, generation_run__status=GenerationRun.Status.COMPLETED,
+                generation_run__conversation=conversation):
+            run = by_message.get(proposal.message_id)
+            if run and run.pk == proposal.generation_run_id and run.output_message_id == proposal.message_id:
+                proposal.safe_result_url = safe_local_url(proposal.result_url)
+                proposals.setdefault(proposal.message_id, []).append(proposal)
     for message in messages:
         run = by_message.get(message.pk)
         message.generation_status = run.status if run else GenerationRun.Status.COMPLETED
@@ -62,6 +74,7 @@ def _render(request, conversation=None, *, status=200, error=None, create_form=N
         message.reference_sources = (run.context_references.get('references', [])
                                      if run and run.status == GenerationRun.Status.COMPLETED
                                      and message.role == 'assistant' else [])
+        message.review_actions = proposals.get(message.pk, []) if message.role == 'assistant' else []
     state = chat.composer_state(request.user)
     # Only the selected owned account's validated last choice is a default.
     # Explicit empty values and bound recovery forms must never resurrect it.

@@ -13,6 +13,7 @@ from banking.models import (
     RewardRedemption,
 )
 from banking.services import ConversionContext, MissingExchangeRate, account_balances, get_planning_availability
+from banking.credit_reporting import invoice_credit_occurrences
 from investments.models import Investment, InvestmentProduct
 from transactions.models import Transaction
 
@@ -50,7 +51,7 @@ def _transactions(user):
             'credit_card__account__bank',
         )
         .prefetch_related('splits__category')
-    )
+    ) + invoice_credit_occurrences(user)
 
 
 def _report_transactions(user, sources=None):
@@ -406,7 +407,11 @@ def get_dashboard_summary(user, year=None, month=None, *, conversion=None, trans
     else:
         period_kind = 'past'
         cutoff = _month_end(year, month)
-        through_cutoff = selected
+        # An explicitly back-referenced credit can be posted after month end.
+        # It adjusts the statement, but was not realized at this dated cutoff.
+        through_cutoff = _monthly_totals(
+            user, transactions, year, month, cutoff=cutoff, conversion=conversion,
+        )
     remaining = _remaining_flow(selected, through_cutoff)
 
     category_cutoff = cutoff if period_kind != 'future' else None
@@ -518,11 +523,11 @@ def _category_rows(totals):
     if not totals:
         return []
     ranked = sorted(totals.values(), key=lambda row: row['total'], reverse=True)
-    largest = ranked[0]['total']
-    overall = sum((row['total'] for row in ranked), ZERO)
+    largest = max(ZERO, ranked[0]['total'])
+    positive_total = sum((max(ZERO, row['total']) for row in ranked), ZERO)
     for row in ranked[:TOP_CATEGORIES]:
-        row['bar_width'] = round(float(row['total'] / largest) * 100, 2)
-        row['share'] = round(float(row['total'] / overall) * 100, 1)
+        row['bar_width'] = round(float(max(ZERO, row['total']) / largest) * 100, 2) if largest else 0
+        row['share'] = round(float(max(ZERO, row['total']) / positive_total) * 100, 1) if positive_total else 0
     return ranked[:TOP_CATEGORIES]
 
 
@@ -618,10 +623,11 @@ def _instrument_breakdown(user, transaction_type, year=None, month=None, months=
         row = rows.setdefault(key, {'key': key, 'label': label, 'total': ZERO})
         row['total'] += value
     overall = sum((row['total'] for row in rows.values()), ZERO)
+    positive_total = sum((max(ZERO, row['total']) for row in rows.values()), ZERO)
     ranked = sorted(rows.values(), key=lambda row: row['total'], reverse=True)
     shown = ranked[:TOP_INSTRUMENTS]
     for row in shown:
-        row['share'] = round(float(row['total'] / overall) * 100, 1) if overall else 0
+        row['share'] = round(float(max(ZERO, row['total']) / positive_total) * 100, 1) if positive_total else 0
     return {
         'total': overall,
         'instruments': shown,
@@ -848,15 +854,18 @@ def get_expenses_by_recurrence(user, year=None, month=None, months=1, *, convers
         ('one_off', _('One-off')),
     )
     slices = []
+    # A credit-only bucket is still part of the signed total. Pie geometry can
+    # only represent positive slices; composition retains its signed sources.
+    positive_total = sum((max(ZERO, value) for value in buckets.values()), ZERO)
     for key, name in order:
-        share = round(float(buckets[key] / overall) * 100, 1) if overall else 0
+        share = round(float(max(ZERO, buckets[key]) / positive_total) * 100, 1) if positive_total else 0
         slices.append(
             {
                 'name': name,
                 'tone': key,
                 'value': buckets[key],
                 'share': share,
-                'draw': bool(buckets[key]),
+                'draw': buckets[key] > ZERO,
             }
         )
     drawn = [row for row in slices if row['draw']]

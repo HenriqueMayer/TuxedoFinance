@@ -296,10 +296,81 @@ class CardInvoice(TimestampedModel):
     def overpaid_amount(self):
         return max(ZERO, self.confirmed_amount - self.amount) if self.manual_settlement else ZERO
 
+    @property
+    def credits_amount(self):
+        from banking.credits import invoice_credit_totals
+
+        return invoice_credit_totals(
+            self.user, card_id=self.card_id, reference_month=self.reference_month,
+        )
+
+    @property
+    def gross_amount(self):
+        from banking.credits import invoice_gross_amount
+
+        return invoice_gross_amount(self)
+
+    @property
+    def credit_balance(self):
+        # Credit beyond this statement's purchases remains a card asset. It
+        # must not become income, a payment or a fabricated bank movement.
+        return max(ZERO, self.credits_amount - self.gross_amount)
+
     def clean(self):
         errors = {}
         if self.card_id and self.user_id and self.card.user_id != self.user_id:
             errors['card'] = _('The card must belong to the invoice owner.')
+        if self.reference_month and self.reference_month.day != 1:
+            errors['reference_month'] = _('Reference month must be the first day of a month.')
+        if errors:
+            raise ValidationError(errors)
+
+
+class CardInvoiceCredit(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='card_invoice_credits',
+    )
+    card = models.ForeignKey(
+        CreditCard, on_delete=models.PROTECT, related_name='invoice_credits',
+    )
+    category = models.ForeignKey(
+        'categories.Category', on_delete=models.PROTECT, related_name='invoice_credits',
+    )
+    title = models.CharField(max_length=150)
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    date = models.DateField()
+    reference_month = models.DateField()
+    notes = models.TextField(blank=True)
+    idempotency_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    class Meta:
+        ordering = ['-date', '-pk']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0),
+                name='banking_invoice_credit_amount_gt_zero',
+            ),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def clean(self):
+        errors = {}
+        if self.card_id and self.user_id:
+            card = self.card
+            if any(owner != self.user_id for owner in (
+                card.user_id, card.account.user_id, card.account.bank.user_id,
+            )):
+                errors['card'] = _('The card must belong to the invoice owner.')
+            if card.account.predates_opening(self.date):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
+        if self.category_id:
+            if self.user_id and self.category.user_id != self.user_id:
+                errors['category'] = _('This category must belong to the credit owner.')
+            elif self.category.transaction_type not in (None, '', 'EXPENSE'):
+                errors['category'] = _('Choose an expense or unclassified category for an invoice credit.')
         if self.reference_month and self.reference_month.day != 1:
             errors['reference_month'] = _('Reference month must be the first day of a month.')
         if errors:

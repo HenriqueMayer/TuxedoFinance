@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """Owned, idempotent chat runs; provider waits never hold database transactions."""
 from importlib import import_module
+from dataclasses import replace
 from datetime import timedelta
 import json
 import re
@@ -19,9 +20,10 @@ from django.utils import timezone
 from django.utils.crypto import constant_time_compare, salted_hmac
 
 from assistant.context_request import build_context
-from assistant.models import Conversation, GenerationRun, Message, ProviderConnection
+from assistant.models import ActionProposal, Conversation, GenerationRun, Message, ProviderConnection
 from assistant.providers import get_provider
-from assistant.providers.base import CancellationToken, ChatTurn, GenerationRequest, reasoning_efforts, stream_response
+from assistant.providers.base import CancellationToken, ChatTurn, GenerationRequest, ProviderError, reasoning_efforts, stream_response
+from assistant.tooling import financial_tools, recorded_actions, run_tool
 
 
 CATALOG_SECONDS = 120
@@ -151,7 +153,7 @@ def _history(conversation):
                  | Q(generation_inputs__status=GenerationRun.Status.COMPLETED)
                  | Q(generation_result__isnull=True, generation_inputs__isnull=True))
     messages = list(Message.objects.filter(completed, conversation=conversation).distinct()
-                    .order_by('-created_at', '-pk')[:8])
+                    .order_by('-created_at', '-pk')[:19])
     return tuple(ChatTurn(message.role, message.content[:4000]) for message in reversed(messages))
 
 
@@ -226,6 +228,20 @@ def start_run(user, session_key, data, *, scope=None, conversation=None, languag
     if not getattr(provider, 'available', False):
         raise ChatError('unavailable', 503)
     context = build_context(user, scope, bool(data.get('include_context')))
+    # Workspace access is a tool capability, not a copy of every financial row.
+    # The current page is orientation only; tools can read other owned areas.
+    context['application_access'] = {'read': 'all_owned_financial_workspaces',
+        'simulations': 'available_without_saving_or_confirmation',
+        'writes': 'separate_review_and_confirmation_required'}
+    actions = recorded_actions(user, conversation)
+    if actions:
+        context['recorded_actions'] = actions
+        # Keep the original financial evidence budget authoritative. Recent
+        # action status is optional when a bounded page snapshot fills it.
+        while context['recorded_actions'] and len(json.dumps(context, ensure_ascii=True, separators=(',', ':'))) > 32000:
+            context['recorded_actions'].pop()
+        if not context['recorded_actions']:
+            del context['recorded_actions']
     request = GenerationRequest(json.dumps(context, ensure_ascii=True, separators=(',', ':')),
                                 history=_history(conversation) + (ChatTurn('user', data['content']),),
                                 language='pt-br' if language.lower().startswith('pt') else 'en', model=data['model'],
@@ -318,6 +334,7 @@ class RunStream:
         self.run, self.user, self.session_key = run, user, session_key
         self.provider, self.request, self.scope_token = provider, request, scope_token
         self.cancellation = CancellationToken()
+        self.request = replace(request, tools=financial_tools(), tool_runner=self._tool)
         with _LIVE_TOKENS_LOCK:
             _LIVE_TOKENS[str(run.pk)] = self.cancellation
         self.output = ''
@@ -341,6 +358,36 @@ class RunStream:
             return False
         return _session_authorized(self.user, self.session_key)
 
+    def _tool(self, name, arguments):
+        # A provider receives only a proposal callback, never a confirm/write
+        # function. Reauthorize around local reads just like streamed deltas.
+        self.cancellation.raise_if_cancelled()
+        if not self._authorized():
+            self.cancellation.cancel()
+            self.cancellation.raise_if_cancelled()
+        if time.monotonic() - self.started > MAX_RUN_SECONDS:
+            raise ProviderError('timeout')
+        result = run_tool(self.user, self.session_key, self.run, name, arguments)
+        self.cancellation.raise_if_cancelled()
+        if not self._authorized():
+            self.cancellation.cancel()
+            self.cancellation.raise_if_cancelled()
+        # References come from server calculations, never generated message
+        # links. Retain them for the transcript/replay without copying figures.
+        references = list(self.run.context_references.get('references', []))
+        from core.navigation import safe_local_url
+        for source in result.get('references', []):
+            if (isinstance(source, dict) and isinstance(source.get('label'), str)
+                    and len(source['label']) <= 160 and safe_local_url(source.get('url'))
+                    and not any(row['url'] == source['url'] for row in references)
+                    and len(references) < 20):
+                references.append({'label': source['label'], 'url': source['url']})
+        self.run.context_references = {**self.run.context_references, 'references': references,
+                                      'financial_tools_available': True}
+        GenerationRun.objects.filter(pk=self.run.pk, status=GenerationRun.Status.RUNNING).update(
+            context_references=self.run.context_references)
+        return result
+
     def _finish(self, status, code=''):
         if self.finished:
             return self.run
@@ -357,6 +404,9 @@ class RunStream:
                                                  role=Message.Role.ASSISTANT, content=self.output)
                 GenerationRun.objects.filter(pk=current.pk, output_message__isnull=True).update(output_message=message)
                 current.output_message = message
+            if current.status == GenerationRun.Status.COMPLETED and current.output_message_id:
+                ActionProposal.objects.filter(generation_run=current, conversation_id=current.conversation_id,
+                                               message__isnull=True).update(message_id=current.output_message_id)
             Conversation.objects.filter(pk=current.conversation_id, user=self.user).update(updated_at=timezone.now())
         self.run, self.finished = current, True
         return current

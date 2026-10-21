@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 """Bank identities and currency-specific account forms."""
 
+from decimal import Decimal, InvalidOperation
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from core.widgets import ColorPicker
 from banking.models import Bank, BankAccount
 from .base import OwnedModelForm
 
@@ -12,7 +15,7 @@ class BankForm(OwnedModelForm):
         model = Bank
         fields = ('name', 'color')
         labels = {'name': _('Name'), 'color': _('Marker color')}
-        widgets = {'color': forms.TextInput(attrs={'type': 'color', 'list': 'bank-color-palette'})}
+        widgets = {'color': ColorPicker()}
 
     def clean_color(self):
         return (self.cleaned_data.get('color') or self.instance.color or '#B88D57').upper()
@@ -41,20 +44,20 @@ class BankAccountForm(OwnedModelForm):
             'reserved_amount': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
         }
         help_texts = {
-            'opening_balance': _('Balance immediately before the first ledger movement.'),
-            'opening_date': _('Balance at the start of this date, before its movements. Legacy dates may remain unknown.'),
+            'opening_balance': _('Money already in the account before the movements you will record.'),
+            'opening_date': _('The balance applies from the start of this date, before that day\'s movements. Existing unknown dates may stay empty.'),
             'planning_enabled': _('Include this account in monthly planning. Negative balances remain visible.'),
-            'reserved_amount': _('Keep this amount outside planning. The account balance and history do not change.'),
+            'reserved_amount': _('An amount in this account\'s currency to exclude from monthly planning. It stays in your bank balance and does not create a transaction.'),
         }
         labels = {
             'bank': _('Bank'),
             'name': _('Name'),
             'currency': _('Currency'),
-            'opening_balance': _('Opening balance'),
-            'opening_date': _('Opening balance date'),
+            'opening_balance': _('Balance when tracking starts'),
+            'opening_date': _('Start tracking on'),
             'pix_enabled': _('Pix enabled'),
             'planning_enabled': _('Use in monthly planning'),
-            'reserved_amount': _('Reserved amount'),
+            'reserved_amount': _('Keep outside monthly planning'),
         }
 
     def __init__(self, *args, **kwargs):
@@ -62,6 +65,18 @@ class BankAccountForm(OwnedModelForm):
         self.fields['reserved_amount'].required = False
         if self.user is not None:
             self.fields['bank'].queryset = Bank.objects.filter(user=self.user)
+
+    @property
+    def planning_adjustments_open(self):
+        # Closing a disclosure never disables its fields. Surface saved settings
+        # and invalid bound input without replacing either with default values.
+        if self['reserved_amount'].errors or self['planning_enabled'].errors:
+            return True
+        try:
+            reserved = Decimal(str(self['reserved_amount'].value() or 0)) > 0
+        except (InvalidOperation, ValueError):
+            reserved = False
+        return reserved or not self['planning_enabled'].value()
 
     def clean_reserved_amount(self):
         return self.cleaned_data.get('reserved_amount') or 0

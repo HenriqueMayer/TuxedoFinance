@@ -256,7 +256,7 @@ class TransactionExportView(LoginRequiredMixin, View):
             'transaction_date', 'billed_month', 'title', 'transaction_type',
             'category', 'payment_channel', 'bank', 'account', 'credit_card',
             'currency', 'amount', 'total_amount', 'installments', 'is_fixed',
-            'fixed_until', 'notes', 'category_splits',
+            'fixed_until', 'notes', 'category_splits', 'installment_start',
         ))
 
         for item in transactions:
@@ -286,5 +286,6 @@ class TransactionExportView(LoginRequiredMixin, View):
                 item.fixed_until.isoformat() if item.fixed_until else '',
                 item.notes,
                 json.dumps([{'category_id': category.pk, 'category': category.name, 'amount': str(value)} for category, value in (item.category_allocations_for_month(*selected_month) if selected_month else item.category_allocations_for(amount))], ensure_ascii=False) if item.splits.all() else '',
+                item.installment_start,
             ), spreadsheet=spreadsheet))
         return response

@@ -49,7 +49,7 @@ def _programs(user):
         displayed_balance=Sum(
             Case(When(entries__direction='CREDIT', then=F('entries__amount')),
                  default=-F('entries__amount'), output_field=DecimalField()),
-            default=0,
+            filter=Q(entries__user=user), default=0,
         )
     )
 
@@ -199,7 +199,6 @@ class BankListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['independent_programs'] = _programs(self.request.user).filter(bank__isnull=True).prefetch_related('cards')
         context['availability'] = get_planning_availability(self.request.user)
         _decorate_banks(context['banks'], context['availability'])
         return context

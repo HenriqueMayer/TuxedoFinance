@@ -69,8 +69,8 @@ async function expectSeparateControls(...controls) {
     const bounds = await Promise.all(controls.map(control => control.boundingBox()));
     for (let index = 0; index < bounds.length; index += 1) for (const other of bounds.slice(index + 1)) {
         const current = bounds[index];
-        // Small screens may put consent on a second row. Either axis must
-        // separate the actual targets, even with a long native model label.
+        // Either axis must separate the actual targets, even with a long
+        // native model label in a narrow composer.
         expect(current.x + current.width <= other.x + 1 || other.x + other.width <= current.x + 1
             || current.y + current.height <= other.y + 1 || other.y + other.height <= current.y + 1).toBe(true);
     }
@@ -169,7 +169,6 @@ for (const theme of ['light', 'dark']) for (const viewport of [
         for (const control of [panel.locator('[data-assistant-minimize]'), panel.locator('[data-assistant-close]'), panel.locator('.assistant-history > summary'),
             panel.locator('.assistant-new'), panel.locator('[data-assistant-context-link]'),
             initialComposer.locator('textarea'), initialComposer.locator('[data-assistant-settings] > summary'),
-            initialComposer.locator('.assistant-composer-context label'),
             initialComposer.getByRole('button', {name: 'Send message', exact: true})]) {
             await expectMinimumTarget(control);
         }
@@ -283,7 +282,7 @@ test(`Phone focus and composer stay bounded (${viewport.width}x${viewport.height
     const form = panel.locator('[data-assistant-send]');
     await selectModel(panel, 'mock-mini');
     expect(await panel.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
-    await expectSeparateControls(form.locator('[data-assistant-settings] > summary'), form.locator('.assistant-composer-context label'),
+    await expectSeparateControls(form.locator('[data-assistant-settings] > summary'),
         form.getByRole('button', {name: 'Send message', exact: true}));
     const input = form.locator('textarea');
     const oneLine = await input.boundingBox();
@@ -298,7 +297,7 @@ test(`Phone focus and composer stay bounded (${viewport.width}x${viewport.height
     await expect(form.getByRole('button', {name: 'Send message', exact: true})).toBeFocused();
     await form.getByRole('button', {name: 'Send message', exact: true}).press('Tab');
     await expect(minimize).toBeFocused();
-    for (const control of [form.locator('[data-assistant-settings] > summary'), form.locator('input[name="include_context"]'), input]) {
+    for (const control of [form.locator('[data-assistant-settings] > summary'), input]) {
         await control.focus(); await expect(control).toBeFocused(); await expect(control).toBeInViewport();
         await control.press('Tab');
         expect(await panel.evaluate(node => node.contains(document.activeElement))).toBe(true);
@@ -385,7 +384,7 @@ for (const theme of ['light', 'dark']) for (const viewport of [
         await effort.focus(); await effort.press('End'); await effort.press('Tab');
         await expect(effort).toHaveValue('high');
         await expect(settings).not.toHaveAttribute('open');
-        await expect(form.locator('input[name="include_context"]')).toBeFocused();
+        await expect(form.getByRole('button', {name: sendName, exact: true})).toBeFocused();
         await summary.press('Enter');
         await model.selectOption('mock-mini');
         await expect(effort).toHaveValue('high');
@@ -418,8 +417,10 @@ for (const theme of ['light', 'dark']) for (const viewport of [
         await expect(settings).not.toHaveAttribute('open');
         await expect(summary).toBeFocused();
         await expect(panel).toBeVisible();
-        expect((await form.boundingBox()).height).toBe(compactHeight);
-        await expectSeparateControls(summary, form.locator('.assistant-composer-context label'),
+        // Native focus restoration can round the same layout by a fraction of
+        // a subpixel; retain a geometry check tighter than one CSS pixel.
+        expect((await form.boundingBox()).height).toBeCloseTo(compactHeight, 2);
+        await expectSeparateControls(summary,
             form.getByRole('button', {name: sendName, exact: true}));
         await form.locator('textarea').fill('[settings] Synthetic configuration only.');
         const posted = page.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/messages/'));
@@ -436,21 +437,19 @@ for (const theme of ['light', 'dark']) for (const viewport of [
         await expect(panel.locator('[data-assistant-send] textarea')).toBeFocused();
         await expectSavedSettings(page, 'mock-mini', 'high');
         // A new conversation reuses account settings, while Close still
-        // discards private unsent text and per-message context permission.
+        // discards private unsent text without changing saved preferences.
         const previousConversation = await panel.locator('[data-conversation-id]').getAttribute('data-conversation-id');
         await panel.locator('.assistant-new').press('Enter');
         await expect(panel.locator('[data-conversation-id]')).not.toHaveAttribute('data-conversation-id', previousConversation);
         await expect(panel.locator('select[name="model"]')).toHaveValue('mock-mini');
         await expect(panel.locator('select[name="reasoning_effort"]')).toHaveValue('high');
         await panel.locator('[data-assistant-send] textarea').fill('This unsent text must not be saved with preferences');
-        await panel.locator('input[name="include_context"]').focus();
-        await panel.locator('input[name="include_context"]').press('Space');
         const closeName = language === 'pt-br' ? 'Fechar assistente' : 'Close assistant';
         const openName = language === 'pt-br' ? 'Abrir assistente Tuxedo' : 'Open Tuxedo assistant';
         await panel.getByRole('button', {name: closeName, exact: true}).press('Enter');
         await page.getByRole('button', {name: openName, exact: true}).press('Enter');
         await expect(panel.locator('[data-assistant-send] textarea')).toHaveValue('');
-        await expect(panel.locator('input[name="include_context"]')).not.toBeChecked();
+        await expect(panel.locator('input[name="include_context"]')).toHaveCount(0);
         await expect(panel.locator('select[name="model"]')).toHaveValue('mock-mini');
         await expect(panel.locator('select[name="reasoning_effort"]')).toHaveValue('high');
         await page.reload();
@@ -511,7 +510,7 @@ test('The latest keyboard settings survive a delayed save and HTMX workspace nav
     await expect(panel.locator('select[name="model"]')).toHaveValue('mock-standard');
     await expect(panel.locator('select[name="reasoning_effort"]')).toHaveValue('medium');
     await expect(panel.locator('[data-assistant-send] textarea')).toHaveValue('');
-    await expect(panel.locator('input[name="include_context"]')).not.toBeChecked();
+    await expect(panel.locator('input[name="include_context"]')).toHaveCount(0);
 });
 
 test('Native message submission remembers settings for a fresh conversation without JavaScript', async ({browser}, info) => {
@@ -536,7 +535,7 @@ test('Native message submission remembers settings for a fresh conversation with
         await expect(page.locator('[data-assistant-send] select[name="model"]')).toHaveValue('mock-mini');
         await expect(page.locator('[data-assistant-send] select[name="reasoning_effort"]')).toHaveValue('high');
         await expect(page.locator('[data-assistant-send] textarea')).toHaveValue('');
-        // A fresh unscoped native page offers no page-data consent at all.
+        // Financial queries use owned tools rather than a composer checkbox.
         await expect(page.locator('input[name="include_context"]')).toHaveCount(0);
         await page.locator('.assistant-new').press('Enter');
         await expect(page.locator('[data-assistant-send] select[name="model"]')).toHaveValue('mock-mini');
@@ -557,7 +556,7 @@ test('A failed settings save can be retried without sending or discarding a chat
     const settings = panel.locator('[data-assistant-settings]');
     await settings.locator(':scope > summary').press('Enter');
     const effort = settings.locator('select[name="reasoning_effort"]');
-    await effort.focus(); await effort.press('End'); await effort.press('Tab');
+    await effort.focus(); await effort.press('End');
     await effort.press('Escape');
     await expect(settings).not.toHaveAttribute('open');
     await settings.locator(':scope > summary').press('Enter');
@@ -567,6 +566,6 @@ test('A failed settings save can be retried without sending or discarding a chat
     await expect(settings.locator('[data-assistant-preferences-status]')).toHaveText('Chat settings saved.');
     await expect(settings.locator('[data-assistant-preferences-retry]')).toBeHidden();
     await expect(panel.locator('[data-assistant-send] textarea')).toHaveValue('A private unsent draft stays in this document');
-    await expect(panel.locator('input[name="include_context"]')).not.toBeChecked();
+    await expect(panel.locator('input[name="include_context"]')).toHaveCount(0);
     expect(sends).toEqual([]);
 });

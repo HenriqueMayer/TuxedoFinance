@@ -9,6 +9,7 @@ server, and tests supply synthetic data without opening sockets.
 from dataclasses import dataclass, field
 import json
 import logging
+import re
 import socket
 import ssl
 from threading import Timer
@@ -34,6 +35,10 @@ MAX_ERROR_BYTES = 64 * 1024
 MAX_OUTPUT_CHARS = 16000
 READ_TIMEOUT = 15
 TOTAL_TIMEOUT = 90
+MAX_TOOL_ROUNDS = 5
+MAX_TOOL_CALLS = 10
+MAX_TOOL_BYTES = 16 * 1024
+MAX_TOOL_HISTORY_BYTES = 384 * 1024
 logger = logging.getLogger(__name__)
 
 # Provider messages/detail can echo submitted private text. Only these exact
@@ -58,8 +63,13 @@ _ERROR_CODE_MAP = {
 }
 _ERROR_TYPES = frozenset({'invalid_request_error', 'authentication_error', 'permission_error',
                           'rate_limit_error', 'server_error'})
-_ERROR_PARAMETERS = frozenset({'model', 'input', 'instructions', 'store', 'stream', 'reasoning', 'reasoning.effort'})
+_ERROR_PARAMETERS = frozenset({'model', 'input', 'instructions', 'store', 'stream', 'reasoning', 'reasoning.effort',
+                               'tools', 'include'})
 _PROTOCOL_ERRORS = frozenset({'unexpected_content_type', 'invalid_json', 'invalid_schema', 'invalid_sse'})
+_PROTOCOL_STAGES = frozenset({'tool_namespace', 'tool_name', 'tool_call_id', 'tool_status',
+                              'tool_arguments', 'tool_output', 'tool_result', 'response_output',
+                              'stream_item', 'response_output_shape', 'response_output_conflict',
+                              'response_output_missing', 'response_completion'})
 _CONTENT_TYPES = frozenset({'text/plain', 'application/json', 'application/octet-stream', 'text/event-stream'})
 _BODY_KINDS = frozenset({'sse_prefix', 'response_object', 'error_object', 'other'})
 
@@ -77,7 +87,7 @@ def _safe_error(body):
 
 
 def _diagnostic(status, detail, *, expected_content_type=None, actual_content_type=None,
-                body_kind=None, response_error=None):
+                body_kind=None, response_error=None, protocol_stage=None):
     safe = _safe_error(detail).get('error', {})
     response_error = _safe_error(response_error).get('error', {})
     code = safe.get('code', safe.get('type', 'unknown'))
@@ -87,6 +97,9 @@ def _diagnostic(status, detail, *, expected_content_type=None, actual_content_ty
     message = 'OpenAI provider failure status=%s code=%s param=%s'
     fields = [status if type(status) is int and 100 <= status <= 599 else 0,
               code, safe.get('param', response_error.get('param', 'unknown'))]
+    if protocol_stage is not None:
+        message += ' stage=%s'
+        fields.append(protocol_stage if protocol_stage in _PROTOCOL_STAGES else 'other')
     if expected_content_type is not None or actual_content_type is not None:
         message += ' expected_content_type=%s actual_content_type=%s'
         fields.extend([expected_content_type if expected_content_type in _CONTENT_TYPES else 'other',
@@ -208,7 +221,7 @@ class _HTTPStream:
 
 
 class HTTPTransport:
-    def __call__(self, method, url, *, access_token, data=None, stream=False, cancellation=None):
+    def __call__(self, method, url, *, access_token, data=None, stream=False, cancellation=None, deadline=None):
         _enabled()
         _outside_transaction()
         if (method, url, stream) not in {('GET', MODELS_ENDPOINT, False), ('POST', RESPONSES_ENDPOINT, True)}:
@@ -218,7 +231,7 @@ class HTTPTransport:
         if (not isinstance(access_token, str) or not access_token or len(access_token) > 16384
                 or any(ord(char) < 33 or ord(char) > 126 for char in access_token)):
             raise ProviderError('unauthorized')
-        deadline = time.monotonic() + TOTAL_TIMEOUT
+        deadline = time.monotonic() + TOTAL_TIMEOUT if deadline is None else deadline
         response_stream = None
         try:
             payload = None if data is None else json.dumps(data, ensure_ascii=False, allow_nan=False).encode('utf-8')
@@ -231,8 +244,11 @@ class HTTPTransport:
             opener = request.build_opener(request.ProxyHandler({}), _NoRedirects(),
                                           request.HTTPSHandler(context=ssl.create_default_context()))
             try:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise ProviderError('timeout')
                 response = opener.open(request.Request(url, data=payload, headers=headers, method=method),
-                                       timeout=READ_TIMEOUT)
+                                       timeout=min(READ_TIMEOUT, remaining))
             except error.HTTPError as rejected:
                 response = rejected
             response_stream = _HTTPStream(response, cancellation, deadline)
@@ -333,6 +349,74 @@ def _error_code(event):
     return _ERROR_CODE_MAP.get(safe.get('error', {}).get('code'), 'provider_error')
 
 
+def _unique_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError('Duplicate tool parameter.')
+        result[key] = value
+    return result
+
+
+def _reject_constant(value):
+    raise ValueError('Nonfinite tool parameter.')
+
+
+def _bounded_tool_json(value, limit):
+    try:
+        encoded = json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(',', ':'))
+        size = len(encoded.encode('utf-8'))
+    except (TypeError, ValueError, RecursionError, UnicodeError):
+        _invalid_response('invalid_schema')
+    if size > limit:
+        raise ProviderError('limit_exceeded')
+    return encoded
+
+
+def _remember_done_item(event, done_items):
+    index, item = event.get('output_index'), event.get('item')
+    if (type(index) is not int or not 0 <= index < 32 or index in done_items
+            or not isinstance(item, dict) or item.get('status', 'completed') != 'completed'):
+        _invalid_response('invalid_schema', protocol_stage='stream_item')
+    identifier = item.get('id')
+    if 'id' in item and (not isinstance(identifier, str) or not identifier or len(identifier) > 200):
+        _invalid_response('invalid_schema', protocol_stage='stream_item')
+    if identifier is not None and any(row.get('id') == identifier for row in done_items.values()):
+        _invalid_response('invalid_schema', protocol_stage='stream_item')
+    done_items[index] = item
+    _bounded_tool_json(list(done_items.values()), MAX_TOOL_HISTORY_BYTES)
+
+
+def _completed_output(response, done_items, observed_items, function_indexes, unindexed_output):
+    if (not isinstance(response, dict) or response.get('status', 'completed') != 'completed'
+            or response.get('error') is not None or response.get('incomplete_details') is not None):
+        _invalid_response('invalid_schema', protocol_stage='response_completion')
+    items = response.get('output', [])
+    if not isinstance(items, list) or len(items) > 32 or not all(isinstance(item, dict) for item in items):
+        _invalid_response('invalid_schema', protocol_stage='response_output_shape')
+    if items:
+        # A repeated final snapshot must agree with completed SSE items. Never
+        # execute both copies, or silently prefer a conflicting set of calls.
+        if any(index >= len(items) or item != items[index] for index, item in done_items.items()):
+            _invalid_response('invalid_schema', protocol_stage='response_output_conflict')
+    elif done_items:
+        # output_item.done is the complete item (including opaque reasoning).
+        # A compact response.completed need not repeat it. No partial/add/delta
+        # event is executable, and every observed output slot must be closed.
+        if (unindexed_output or set(done_items) != set(range(len(done_items)))
+                or not set(observed_items).issubset(done_items)
+                or any(index not in done_items or done_items[index].get('type') != 'function_call'
+                       for index in function_indexes)):
+            _invalid_response('invalid_schema', protocol_stage='response_output_missing')
+        items = [done_items[index] for index in range(len(done_items))]
+    for index, identity in observed_items.items():
+        if (index >= len(items) or any(items[index].get(key) != value for key, value in identity.items())):
+            _invalid_response('invalid_schema', protocol_stage='response_output_conflict')
+    if any(index >= len(items) or items[index].get('type') != 'function_call' for index in function_indexes):
+        _invalid_response('invalid_schema', protocol_stage='response_output_missing')
+    return items
+
+
 class OpenAIProvider:
     available = True
 
@@ -343,14 +427,17 @@ class OpenAIProvider:
     def __repr__(self):
         return 'OpenAIProvider()'
 
-    def _call(self, method, url, cancellation, *, data=None, stream=False):
+    def _call(self, method, url, cancellation, *, data=None, stream=False, deadline=None):
         _enabled()
         _outside_transaction()
         cancellation.raise_if_cancelled()
         try:
             token = service.get_authorized_access_token(self.user, self.connection_id)
+            # Preserve injected transports' signature; the native transport also
+            # applies the shared turn deadline to its socket and stream closer.
+            extra = {'deadline': deadline} if deadline is not None and isinstance(self.transport, HTTPTransport) else {}
             result = self.transport(method, url, access_token=token.value, data=data,
-                                    stream=stream, cancellation=cancellation)
+                                    stream=stream, cancellation=cancellation, **extra)
             try:
                 _status(result)
             except ProviderError:
@@ -414,13 +501,123 @@ class OpenAIProvider:
         # Blank means the provider's own default, never an inferred override.
         if generation.reasoning_effort:
             body['reasoning'] = {'effort': generation.reasoning_effort}
-        response = self._call('POST', RESPONSES_ENDPOINT, cancellation, data=body, stream=True)
+        if not generation.tools:
+            yield from self._stream_round(body, cancellation)
+            yield ProviderEvent('done')
+            return
+        # Only application-supplied functions are exposed, grouped for the
+        # ChatGPT subscription route. There are no hosted tools or paid fallback.
+        body['tools'] = [{'type': 'namespace', 'name': 'tuxedo',
+                          'description': 'Consult owned Tuxedo finances, calculate simulations and prepare changes for user review.',
+                          'tools': list(generation.tools)}]
+        body['include'] = ['reasoning.encrypted_content']
+        deadline, seen_calls = time.monotonic() + TOTAL_TIMEOUT, set()
+        total_text = 0
+        for round_index in range(MAX_TOOL_ROUNDS):
+            cancellation.raise_if_cancelled()
+            if time.monotonic() >= deadline:
+                raise ProviderError('timeout')
+            response_output = []
+            round_stream = self._stream_round(body, cancellation, deadline=deadline, output=response_output)
+            try:
+                for event in round_stream:
+                    total_text += len(event.text)
+                    if total_text > MAX_OUTPUT_CHARS:
+                        raise ProviderError('limit_exceeded')
+                    yield event
+            finally:
+                round_stream.close()
+            calls = self._tool_calls(response_output, generation, seen_calls)
+            if not calls:
+                yield ProviderEvent('done')
+                return
+            if round_index == MAX_TOOL_ROUNDS - 1 or len(seen_calls) + len(calls) > MAX_TOOL_CALLS:
+                raise ProviderError('limit_exceeded')
+            results = []
+            for call_id, name, arguments in calls:
+                cancellation.raise_if_cancelled()
+                if time.monotonic() >= deadline:
+                    raise ProviderError('timeout')
+                _outside_transaction()
+                # The owning service rechecks the session, run and record scope.
+                # This callback prepares proposals; generation never saves money.
+                try:
+                    result = generation.tool_runner(name, arguments)
+                except ProviderError:
+                    raise
+                except Exception:
+                    raise ProviderError('provider_error') from None
+                cancellation.raise_if_cancelled()
+                if time.monotonic() >= deadline:
+                    raise ProviderError('timeout')
+                _outside_transaction()
+                if not isinstance(result, dict):
+                    _invalid_response('invalid_schema', protocol_stage='tool_result')
+                encoded = _bounded_tool_json(result, MAX_TOOL_BYTES)
+                seen_calls.add(call_id)
+                results.append({'type': 'function_call_output', 'call_id': call_id, 'output': encoded})
+            # Stateless continuation requires every returned reasoning/call item,
+            # followed by its results. Never use previous_response_id here.
+            next_input = [*body['input'], *response_output, *results]
+            _bounded_tool_json(next_input, MAX_TOOL_HISTORY_BYTES)
+            body = {**body, 'input': next_input}
+
+    @staticmethod
+    def _tool_calls(output, generation, seen_calls):
+        allowed = {tool['name'] for tool in generation.tools}
+        calls, current = [], set()
+        for item in output:
+            kind = item.get('type')
+            if kind == 'function_call':
+                call_id, name, arguments = item.get('call_id'), item.get('name'), item.get('arguments')
+                # Responses declares namespace optional, including output calls.
+                # With one namespace and unique advertised names, an omitted
+                # namespace is unambiguous; an explicit foreign/null one is not.
+                if 'namespace' in item and item['namespace'] != 'tuxedo':
+                    _invalid_response('invalid_schema', protocol_stage='tool_namespace')
+                if not isinstance(name, str) or name not in allowed:
+                    _invalid_response('invalid_schema', protocol_stage='tool_name')
+                if (not isinstance(call_id, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,200}', call_id)
+                        or call_id in seen_calls or call_id in current):
+                    _invalid_response('invalid_schema', protocol_stage='tool_call_id')
+                if item.get('status', 'completed') != 'completed':
+                    _invalid_response('invalid_schema', protocol_stage='tool_status')
+                if not isinstance(arguments, str):
+                    _invalid_response('invalid_schema', protocol_stage='tool_arguments')
+                if len(arguments.encode('utf-8')) > MAX_TOOL_BYTES:
+                    raise ProviderError('limit_exceeded')
+                try:
+                    parsed = json.loads(arguments, object_pairs_hook=_unique_pairs,
+                                        parse_constant=_reject_constant)
+                except (ValueError, RecursionError):
+                    _invalid_response('invalid_json', protocol_stage='tool_arguments')
+                if not isinstance(parsed, dict):
+                    _invalid_response('invalid_schema', protocol_stage='tool_arguments')
+                _bounded_tool_json(parsed, MAX_TOOL_BYTES)
+                current.add(call_id)
+                calls.append((call_id, name, parsed))
+            elif kind == 'reasoning':
+                if not isinstance(item.get('summary', []), list):
+                    _invalid_response('invalid_schema', protocol_stage='tool_output')
+            elif kind == 'message':
+                if item.get('role') != 'assistant' or not isinstance(item.get('content'), list):
+                    _invalid_response('invalid_schema', protocol_stage='tool_output')
+            else:
+                _invalid_response('invalid_schema', protocol_stage='tool_output')
+        return calls
+
+    def _stream_round(self, body, cancellation, *, deadline=None, output=None):
+        response = self._call('POST', RESPONSES_ENDPOINT, cancellation, data=body, stream=True, deadline=deadline)
         source = response.stream
         if source is None or not callable(getattr(source, 'readline', None)):
             _invalid_response('invalid_schema')
         unregister = cancellation.register_close(source.close)
-        deadline = getattr(source, 'deadline', time.monotonic() + TOTAL_TIMEOUT)
+        deadline = (getattr(source, 'deadline', time.monotonic() + TOTAL_TIMEOUT) if deadline is None
+                    else min(deadline, getattr(source, 'deadline', deadline)))
         total = 0
+        saw_function = False
+        done_items, observed_items, function_indexes = {}, {}, set()
+        unindexed_output = False
         try:
             event_data, size = [], 0
             while True:
@@ -451,12 +648,33 @@ class OpenAIProvider:
                 if payload == b'[DONE]':
                     raise ProviderError('interrupted')
                 try:
-                    event = json.loads(payload.decode('utf-8'))
+                    event = json.loads(payload.decode('utf-8'), object_pairs_hook=_unique_pairs,
+                                       parse_constant=_reject_constant)
                 except (ValueError, UnicodeError, RecursionError):
                     _invalid_response('invalid_json')
                 if not isinstance(event, dict):
                     _invalid_response('invalid_schema')
                 kind = event.get('type')
+                if (isinstance(kind, str) and kind.startswith('response.function_call_arguments.')
+                        or kind in {'response.output_item.added', 'response.output_item.done'}
+                        and isinstance(event.get('item'), dict) and event['item'].get('type') == 'function_call'):
+                    saw_function = True
+                    index = event.get('output_index')
+                    if type(index) is int and 0 <= index < 32:
+                        function_indexes.add(index)
+                    else:
+                        unindexed_output = True
+                if output is not None and kind == 'response.output_item.added':
+                    index, item = event.get('output_index'), event.get('item')
+                    if type(index) is int and 0 <= index < 32 and isinstance(item, dict):
+                        identity = {key: item[key] for key in ('type', 'id') if key in item}
+                        if index in observed_items and observed_items[index] != identity:
+                            _invalid_response('invalid_schema', protocol_stage='stream_item')
+                        observed_items[index] = identity
+                    else:
+                        unindexed_output = True
+                if output is not None and kind == 'response.output_item.done':
+                    _remember_done_item(event, done_items)
                 if kind == 'response.output_text.delta':
                     delta = event.get('delta')
                     if not isinstance(delta, str):
@@ -467,7 +685,17 @@ class OpenAIProvider:
                     for offset in range(0, len(delta), 4000):
                         yield ProviderEvent('text', text=delta[offset:offset + 4000])
                 elif kind == 'response.completed':
-                    yield ProviderEvent('done')
+                    completed = event.get('response', {})
+                    items = _completed_output(completed, done_items, observed_items,
+                                              function_indexes, unindexed_output)
+                    if saw_function and not any(item.get('type') == 'function_call' for item in items):
+                        _invalid_response('invalid_schema', protocol_stage='response_output_missing')
+                    if output is None:
+                        if any(item.get('type') == 'function_call' for item in items):
+                            _invalid_response('invalid_schema', protocol_stage='response_output')
+                    else:
+                        _bounded_tool_json(items, MAX_TOOL_HISTORY_BYTES)
+                        output.extend(items)
                     return
                 elif kind == 'response.incomplete':
                     raise ProviderError('incomplete')

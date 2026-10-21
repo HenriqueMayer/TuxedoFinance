@@ -223,6 +223,11 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator(`#bank-detail-title-${banks[0]}`)).toHaveText('Everyday bank');
         await expect(page.locator('#bank-results')).toHaveCount(0);
         await expect(page.locator('#departure-confirm')).not.toBeVisible();
+        const title = await page.locator('.bank-workspace-windowtitle h2').boundingBox();
+        await page.mouse.click(title.x + title.width / 2, title.y + title.height / 2);
+        await expect(page.locator('#departure-confirm')).toBeVisible();
+        await page.locator('[data-departure-stay]').press('Enter');
+        await expect(amount).toHaveValue('30');
     });
 }
 
@@ -238,7 +243,9 @@ test('inline banking and exposed consultation retain complete native mobile navi
         await expect(page.locator('#bank-switch-form, #bank-workspace-choice, [data-bank-switch-link]')).toHaveCount(0);
         const minimize = page.getByRole('link', {name: 'Minimize Everyday bank', exact: true});
         await expect(minimize).toHaveText('Minimize');
-        await minimize.press('Enter');
+        // The title itself uses the same native link even without JavaScript.
+        const title = await page.locator('.bank-workspace-windowtitle h2').boundingBox();
+        await page.mouse.click(title.x + title.width / 2, title.y + title.height / 2);
         await expect(page.locator('.bank-workspace-tab')).toHaveCount(40);
         await page.locator(`#bank-${banks[1]}`).press('Enter');
         await expect(page).toHaveURL(new RegExp(`/banking/${banks[1]}/$`));

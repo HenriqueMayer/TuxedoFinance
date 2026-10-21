@@ -1,7 +1,7 @@
 {% load i18n %}
 {% if provider_state == 'ready' and models %}
 <form method="post" action="{% if conversation %}{% url 'assistant:send' conversation.pk %}{% else %}{% url 'assistant:send-new' %}{% endif %}" class="assistant-composer assistant-composer--ready" hx-boost="false" autocomplete="off" novalidate data-assistant-send
-      data-sending="{% translate 'Writing a response…' %}" data-completed="{% translate 'Response complete.' %}"
+      data-waiting="{% translate 'Thinking…' %}" data-sending="{% translate 'Writing a response…' %}" data-completed="{% translate 'Response complete.' %}"
       data-cancelled="{% translate 'Response stopped. Partial text is kept locally.' %}"
       data-failed="{% translate 'The response could not be completed. Refresh the conversation before sending again.' %}"
       data-session-error="{% translate 'Your session or selected account changed. Reopen the conversation.' %}"
@@ -30,7 +30,6 @@
                 </div>
             </details>
             <p class="assistant-model-caption" aria-hidden="true"><span data-assistant-model-caption>{% for model in models %}{% if model.slug == selected_model %}{{ model.display_name }}{% endif %}{% endfor %}</span><span data-assistant-effort-caption></span></p>
-            {% if scope %}<div class="assistant-composer-context">{% include 'partials/form_field.html' with field=send_form.include_context %}</div>{% endif %}
             <div class="assistant-send-actions">
                 <button type="submit" class="action-primary" aria-label="{% translate 'Send message' %}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
                 <button type="button" class="action-link" data-assistant-stop aria-label="{% translate 'Stop response' %}" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></button>

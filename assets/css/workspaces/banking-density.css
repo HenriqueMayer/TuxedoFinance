@@ -1,10 +1,7 @@
 /* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
 /* Banking density is local; ordinary fields retain their shared contracts.
    These scoped rules intentionally follow utilities. */
-.banking-workspace .page-title { font-size: 1.5rem; line-height: 1.875rem; }
 .banking-workspace .surface-panel { padding: 1rem; }
-.banking-workspace section > .section-title,
-.banking-workspace form > .section-title { font-size: 1rem; line-height: 1.5rem; }
 .banking-workspace details > summary { font-size: .875rem; }
 .banking-workspace .action-primary,
 .banking-workspace .action-link,
@@ -54,15 +51,4 @@
 .banking-workspace .status-badge { padding: .125rem .5rem; }
 @media (max-width: 767px) {
   .banking-workspace .banking-row-actions { justify-content: flex-start; }
-}
-/* Fine-pointer desktops can be denser without shrinking touch controls. */
-@media (min-width: 768px) and (pointer: fine) and (hover: hover) {
-  .banking-workspace .action-primary,
-  .banking-workspace .action-link,
-  .banking-workspace .quiet-action,
-  .banking-workspace .planning-visibility,
-  .banking-workspace .secondary-actions > summary,
-  .banking-workspace .secondary-actions-panel > a,
-  .banking-workspace .secondary-actions-panel > form > button { min-height: 2.25rem; }
-  .banking-workspace .secondary-actions.compact-menu > summary { width: 2.25rem; min-width: 2.25rem; }
 }

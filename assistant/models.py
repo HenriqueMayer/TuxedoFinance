@@ -130,3 +130,41 @@ class GenerationRun(models.Model):
         ordering = ['created_at', 'pk']
         constraints = [models.UniqueConstraint(
             fields=['conversation'], condition=models.Q(status='running'), name='assistant_one_running_generation')]
+
+
+class ActionProposal(models.Model):
+    """A reviewed local action, never permission derived from model output."""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Awaiting confirmation'
+        EXECUTING = 'executing', 'Executing'
+        EXECUTED = 'executed', 'Executed'
+        CANCELLED = 'cancelled', 'Cancelled'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE,
+                                     related_name='action_proposals')
+    message = models.ForeignKey(Message, on_delete=models.SET_NULL, null=True,
+                                blank=True, related_name='action_proposals')
+    generation_run = models.ForeignKey(GenerationRun, on_delete=models.CASCADE,
+                                       null=True, blank=True, related_name='action_proposals')
+    request_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    session_digest = models.CharField(max_length=64)
+    name = models.CharField(max_length=40)
+    parameters = models.JSONField(default=dict)
+    summary = models.JSONField(default=list)
+    dependency_digest = models.CharField(max_length=64)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
+    result = models.JSONField(default=dict)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def result_url(self):
+        return self.result.get('url', '') if isinstance(self.result, dict) else ''
+
+    class Meta:
+        ordering = ['created_at', 'pk']
+        constraints = [models.UniqueConstraint(fields=['conversation', 'request_id'],
+                                               name='assistant_action_request_unique')]

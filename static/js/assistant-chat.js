@@ -35,6 +35,8 @@
     function focusToken(root) {
         const element = document.activeElement;
         if (!root?.contains(element)) return null;
+        const proposal = element.closest('[data-assistant-proposal]');
+        if (proposal) return {proposal: proposal.dataset.assistantProposal};
         if (element.matches('[data-assistant-send] button[type="submit"]')) return {submit: true};
         if (!element.matches('input[name], select[name], textarea[name]')) return null;
         return {name: element.name, selectionStart: element.selectionStart, selectionEnd: element.selectionEnd};
@@ -158,6 +160,19 @@
         if (!settings.querySelector('[aria-invalid="true"]')) settingsChoices(form);
         sizeSettings(settings);
     }
+    function renderMessage(body, text) {
+        const references = [];
+        for (const link of body.parentElement.querySelectorAll('.assistant-references [data-assistant-source]')) {
+            let destination;
+            try { destination = new URL(link.getAttribute('href'), location.origin); } catch (_) { continue; }
+            if (destination.origin !== location.origin || destination.username || destination.password) continue;
+            references.push({url: destination.pathname + destination.search + destination.hash,
+                label: link.dataset.assistantSourceLabel || link.textContent.replace(/\s*↗\s*$/, '').trim()});
+        }
+        body._assistantRaw = text;
+        if (window.TuxedoAssistantMarkdown) window.TuxedoAssistantMarkdown.render(body, text, {references});
+        else body.textContent = text;
+    }
     function initialize(root = document, {view} = {}) {
         const roots = root.matches?.('[data-assistant-content]') ? [root] : root.querySelectorAll('[data-assistant-content]');
         roots.forEach(content => {
@@ -173,13 +188,19 @@
                 transcriptResize?.observe(transcript);
             }
             content.querySelectorAll('[data-assistant-send]').forEach(initializeSettings);
+            content.querySelectorAll('[data-assistant-markdown]').forEach(body => {
+                if (body.dataset.assistantMarkdown === 'rendered') return;
+                renderMessage(body, body.textContent);
+                body.dataset.assistantMarkdown = 'rendered';
+            });
             content.querySelectorAll('[data-assistant-send] textarea').forEach(resizeMessage);
             if (view?.follow === false) {
                 transcriptStates.get(transcript).follow = false;
                 transcript.scrollTop = view.scrollTop;
             } else if (first || view?.follow) tail(transcript);
             if (view?.focus) {
-                const selector = view.focus.submit ? '[data-assistant-send] button[type="submit"]'
+                const selector = view.focus.proposal ? `[data-assistant-proposal="${CSS.escape(view.focus.proposal)}"]`
+                    : view.focus.submit ? '[data-assistant-send] button[type="submit"]'
                     : `[data-assistant-send] [name="${CSS.escape(view.focus.name)}"]`;
                 const element = content.querySelector(selector);
                 if (element && !element.disabled) {
@@ -224,22 +245,105 @@
         if (!active) return;
         const state = active;
         state.stopped = true;
+        state.progress?.remove();
         cancelRemote(state);
         state.controller.abort();
         notice(state, state.form.dataset.cancelled);
     }
-    function message(transcript, role, label, text = '') {
+    function liveCopy(transcript, body, url) {
+        const root = transcript.closest('[data-assistant-content]');
+        const footer = document.createElement('div'); footer.className = 'assistant-copy-control';
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'assistant-copy-action';
+        button.setAttribute('data-assistant-copy', ''); button.dataset.assistantCopyLive = url;
+        button.setAttribute('aria-label', root.dataset.copyMessageLabel); button.title = root.dataset.copyMessageLabel;
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        for (const [key, value] of Object.entries({width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.6, 'aria-hidden': 'true'})) svg.setAttribute(key, value);
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M8 8h12v13H8zM16 8V3H3v13h5'); svg.append(path); button.append(svg);
+        const status = document.createElement('span'); status.className = 'assistant-copy-status';
+        status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.setAttribute('data-assistant-copy-status', '');
+        const download = document.createElement('button'); download.type = 'button'; download.className = 'quiet-action assistant-copy-download';
+        download.dataset.assistantCopyLocalDownload = url; download.hidden = true; download.textContent = root.dataset.copyDownloadLabel;
+        footer.append(button, status, download); body._assistantRaw = body.textContent;
+        footer.hidden = !body.textContent;
+        body.parentElement.append(footer);
+    }
+    function message(transcript, role, label, text = '', copyURL = '') {
         const article = document.createElement('article');
         article.className = `assistant-message assistant-message--${role}`;
         const heading = document.createElement('p');
         heading.className = 'assistant-message-role'; heading.textContent = label;
-        const body = document.createElement('p');
+        const body = document.createElement('div');
         body.className = 'assistant-message-text'; body.textContent = text;
         article.append(heading, body); transcript.append(article);
+        if (copyURL) liveCopy(transcript, body, copyURL);
         return body;
+    }
+    async function copyMarkdown(control, {download = false} = {}) {
+        const root = control.closest('[data-assistant-content]');
+        const footer = control.closest('.assistant-copy-control');
+        if (!root || !footer || control.getAttribute('aria-busy') === 'true') return;
+        const status = footer.querySelector('[data-assistant-copy-status]');
+        const fallback = footer.querySelector('[data-assistant-copy-download], [data-assistant-copy-local-download]');
+        const liveURL = control.dataset.assistantCopyLive || control.dataset.assistantCopyLocalDownload;
+        const body = control.closest('.assistant-message')?.querySelector('.assistant-message-text');
+        const raw = liveURL ? body?._assistantRaw : null;
+        const owner = root.dataset.assistantUser, session = root.dataset.assistantSession;
+        const current = () => root.isConnected && root.dataset.assistantUser === owner
+            && root.dataset.assistantSession === session && document.querySelector('[data-assistant-user]')?.dataset.assistantUser === owner;
+        control.setAttribute('aria-busy', 'true');
+        status.textContent = root.dataset.copyPending;
+        if (fallback) fallback.hidden = true;
+        try {
+            const destination = new URL(liveURL || control.href, location.origin);
+            if (destination.origin !== location.origin || !destination.pathname.startsWith('/assistant/')) throw new Error('Invalid copy source');
+            const response = await fetch(destination, {method: liveURL ? 'HEAD' : 'GET', headers: {'Accept': 'text/markdown'},
+                credentials: 'same-origin', cache: 'no-store'});
+            if (!response.ok || !(response.headers.get('Content-Type') || '').startsWith('text/markdown')
+                    || response.headers.get('X-Tuxedo-Assistant-User') !== owner
+                    || response.headers.get('X-Tuxedo-Assistant-Session') !== session || !current()) throw new Error('Copy source changed');
+            const markdown = liveURL ? raw : await response.text();
+            if (typeof markdown !== 'string' || !current()) throw new Error('Copy source unavailable');
+            if (!liveURL) {
+                // A complete-history download can take time. Reauthorize after
+                // reading it so another tab's logout/account switch cannot send
+                // an older in-flight transcript to the clipboard afterwards.
+                const authorization = await fetch(destination, {method: 'HEAD', credentials: 'same-origin', cache: 'no-store'});
+                if (!authorization.ok || authorization.headers.get('X-Tuxedo-Assistant-User') !== owner
+                        || authorization.headers.get('X-Tuxedo-Assistant-Session') !== session || !current()) throw new Error('Copy session changed');
+            }
+            if (download) {
+                const url = URL.createObjectURL(new Blob([markdown], {type: 'text/markdown;charset=utf-8'}));
+                const link = document.createElement('a'); link.href = url; link.download = 'tuxedo-message.md';
+                document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+                status.textContent = '';
+            } else {
+                if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+                await navigator.clipboard.writeText(markdown);
+                if (current()) status.textContent = root.dataset.copySuccess;
+            }
+        } catch (_) {
+            if (current()) {
+                status.textContent = root.dataset.copyFailed;
+                if (fallback) fallback.hidden = false;
+            }
+        } finally { control.removeAttribute('aria-busy'); }
+    }
+    function progress(transcript, label) {
+        const pending = document.createElement('div');
+        pending.className = 'assistant-response-progress';
+        pending.setAttribute('data-assistant-progress', '');
+        pending.setAttribute('role', 'status');
+        pending.setAttribute('aria-live', 'polite');
+        const dots = document.createElement('span');
+        dots.className = 'assistant-response-dots'; dots.setAttribute('aria-hidden', 'true');
+        for (let index = 0; index < 3; index += 1) dots.append(document.createElement('i'));
+        const text = document.createElement('span'); text.textContent = label;
+        pending.append(dots, text); transcript.append(pending); return pending;
     }
     function references(article, values) {
         if (!Array.isArray(values)) return;
+        article.querySelector(':scope > .assistant-references')?.remove();
         const nav = document.createElement('nav');
         nav.className = 'assistant-references';
         for (const source of values.slice(0, 20)) {
@@ -249,9 +353,10 @@
             if (destination.origin !== location.origin || destination.username || destination.password) continue;
             const link = document.createElement('a');
             link.href = destination.href; link.textContent = source.label;
+            link.dataset.assistantSourceLabel = source.label;
             link.setAttribute('data-assistant-source', ''); nav.append(link);
         }
-        if (nav.children.length) article.append(nav);
+        if (nav.children.length) article.insertBefore(nav, article.querySelector(':scope > .assistant-copy-control'));
     }
     async function refresh(state) {
         if (!state.detail || !valid(state)) return;
@@ -300,13 +405,16 @@
             focusBefore: focusToken(root)};
         active = state;
         const transcript = transcriptFor(root);
+        // Waiting starts before headers/meta arrive. It is a request state,
+        // never a claim that the model has consulted records or calculated.
+        updateTranscript(transcript, () => { state.progress = progress(transcript, form.dataset.waiting); }, true);
         const controls = Array.from(form.querySelectorAll('input,select,textarea,button[type="submit"]'));
         controls.forEach(control => { control.disabled = true; });
         const settings = form.querySelector('[data-assistant-settings]');
         if (settings) settings.open = false;
         form.querySelector('[data-assistant-stop]').hidden = false;
         form.setAttribute('aria-busy', 'true');
-        notice(state, form.dataset.sending);
+        notice(state, '');
         const timer = setTimeout(() => { state.timedOut = true; stop(); }, 100000);
         function consume(event) {
             if (!valid(state)) { stop(); return; }
@@ -325,8 +433,10 @@
                 root.dataset.conversationId = state.conversation;
                 updateTranscript(transcript, () => {
                     transcript.querySelector('.assistant-empty')?.remove();
-                    message(transcript, 'user', form.dataset.userLabel, data.get('content'));
-                    state.body = message(transcript, 'assistant', form.dataset.assistantLabel);
+                    const copyURL = `/assistant/${state.conversation}/export/`;
+                    message(transcript, 'user', form.dataset.userLabel, data.get('content'), copyURL);
+                    state.body = message(transcript, 'assistant', form.dataset.assistantLabel, '', copyURL);
+                    transcript.append(state.progress);
                 }, true);
                 return;
             }
@@ -334,16 +444,29 @@
             if (name === 'text') {
                 if (typeof value.delta !== 'string' || state.text.length + value.delta.length > 16000) throw new Error('Invalid stream text');
                 updateTranscript(transcript, () => {
-                    state.text += value.delta; state.body.textContent = state.text;
+                    state.text += value.delta;
+                    state.body._assistantRaw = state.text;
+                    state.body.parentElement.querySelector('.assistant-copy-control').hidden = !state.text;
+                    if (state.text) {
+                        state.progress.remove();
+                        notice(state, form.dataset.sending);
+                    }
+                    renderMessage(state.body, state.text);
                 });
             } else if (name === 'done') {
                 if (value.status !== 'completed') throw new Error('Incomplete stream');
                 state.completed = true;
-                updateTranscript(transcript, () => references(state.body.parentElement, value.references));
+                updateTranscript(transcript, () => {
+                    references(state.body.parentElement, value.references);
+                    renderMessage(state.body, state.text);
+                });
                 notice(state, form.dataset.completed);
             } else if (name === 'error') {
                 state.error = value.code || 'provider_error';
-                updateTranscript(transcript, () => references(state.body.parentElement, value.references));
+                updateTranscript(transcript, () => {
+                    references(state.body.parentElement, value.references);
+                    renderMessage(state.body, state.text);
+                });
                 throw new Error('Provider error');
             }
         }
@@ -407,6 +530,7 @@
             cancelRemote(state);
         } finally {
             clearTimeout(timer);
+            state.progress?.remove();
             if (active === state) active = null;
             if (valid(state) && state.completed) {
                 // Keep the old composer locked until its authorized replacement
@@ -430,6 +554,14 @@
         event.preventDefault(); event.stopPropagation(); send(event.target);
     }, true);
     window.addEventListener('click', event => {
+        const copy = event.target.closest?.('[data-assistant-copy], [data-assistant-copy-local-download]');
+        if (copy && !event.button && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+            event.preventDefault(); event.stopPropagation();
+            copy.closest('[data-assistant-content]')?.querySelectorAll('[data-assistant-menu][open]').forEach(menu => {
+                if (!menu.contains(copy)) menu.open = false;
+            });
+            copyMarkdown(copy, {download: copy.hasAttribute('data-assistant-copy-local-download')}); return;
+        }
         if (event.target.closest('[data-assistant-stop]')) { event.preventDefault(); stop(); }
         const retry = event.target.closest('[data-assistant-preferences-retry]');
         if (retry) { event.preventDefault(); savePreferences(retry.closest('[data-assistant-send]')); }

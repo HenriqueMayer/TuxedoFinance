@@ -185,9 +185,9 @@ def build_bar_chart(labels, series):
     top of earlier ones). Series without `stack` each occupy their own column,
     which is the original grouped-bar layout.
 
-    All values are totals, so they are never negative and every bar grows
-    upward from the baseline. The y-axis uses the tallest stack total, not the
-    tallest individual series.
+    Signed expense totals can include invoice credits. Positive and negative
+    portions stack separately around zero, preserving nonnegative SVG heights.
+    The y-axis uses the extents of each stack, not individual series.
 
     Callers must pass at least one label: with none there is no slot to divide
     the plot into, and the caller has an empty state to render anyway.
@@ -200,12 +200,18 @@ def build_bar_chart(labels, series):
             stack_order.append(key)
 
     stack_totals = []
+    negative_totals = []
     for index in range(count):
         totals = {key: 0.0 for key in stack_order}
+        negatives = {key: 0.0 for key in stack_order}
         for position, entry in enumerate(series):
-            totals[_stack_key(entry, position)] += entry['values'][index]
+            value = entry['values'][index]
+            destination = negatives if value < 0 else totals
+            destination[_stack_key(entry, position)] += value
         stack_totals.extend(totals.values())
-    bounds = (0.0, max([*stack_totals, 0.0]) * (1 + PADDING_RATIO) or 1.0)
+        negative_totals.extend(negatives.values())
+    bounds = (_bounds([*stack_totals, *negative_totals]) if any(negative_totals)
+              else (0.0, max([*stack_totals, 0.0]) * (1 + PADDING_RATIO) or 1.0))
 
     group_width = _slot_width(count) * GROUP_WIDTH_RATIO
     column_count = len(stack_order) or 1
@@ -219,24 +225,29 @@ def build_bar_chart(labels, series):
             rendered_width = bar_width * 0.86
             rendered_x = center - group_width / 2 + bar_width * column
             running = 0.0
+            negative_running = 0.0
             column_bars = []
             for position, entry in enumerate(series):
                 if _stack_key(entry, position) != key:
                     continue
                 value = entry['values'][index]
-                bottom_y = _y(running, bounds)
-                top_y = _y(running + value, bounds)
-                running += value
+                origin = negative_running if value < 0 else running
+                bottom_y = _y(origin, bounds)
+                top_y = _y(origin + value, bounds)
+                if value < 0:
+                    negative_running += value
+                else:
+                    running += value
                 column_bars.append(
                     {
                         'name': entry['name'],
                         'tone': entry['tone'],
                         'value': value,
                         'x': round(rendered_x, 2),
-                        'y': top_y,
-                        'value_y': round(top_y - VALUE_LABEL_OFFSET, 2),
+                        'y': min(bottom_y, top_y),
+                        'value_y': round(top_y - VALUE_LABEL_OFFSET if value >= 0 else top_y + VALUE_LABEL_OFFSET + 8, 2),
                         'width': round(rendered_width, 2),
-                        'height': round(bottom_y - top_y, 2),
+                        'height': round(abs(bottom_y - top_y), 2),
                         'is_stack_top': False,
                     }
                 )
@@ -246,12 +257,13 @@ def build_bar_chart(labels, series):
             tooltip_y = round(
                 max(4, stack_top_y - TOOLTIP_HEIGHT - TOOLTIP_GAP), 2
             )
-            visible = [bar for bar in column_bars if bar['value']]
-            if visible:
-                visible[-1]['is_stack_top'] = True
+            for sign in (1, -1):
+                visible = [bar for bar in column_bars if bar['value'] * sign > 0]
+                if visible:
+                    visible[-1]['is_stack_top'] = True
             for bar in column_bars:
                 bar['tooltip_x'] = round(tooltip_x, 2)
-                bar['tooltip_y'] = tooltip_y
+                bar['tooltip_y'] = min(HEIGHT - TOOLTIP_HEIGHT - 4, bar['y'] + bar['height'] + TOOLTIP_GAP) if bar['value'] < 0 else tooltip_y
             bars.extend(column_bars)
         groups.append({'label': label, 'center': center, 'bars': bars})
 
