@@ -35,6 +35,22 @@ releases, persistent volumes and isolated restore rehearsals.
 | [coverage-baseline.md](coverage-baseline.md) | Dated measurements, 70% combined line/branch floor, and report artifacts. |
 | [Review and validation archive](reviews/README.md) | Dated investigations, delivery evidence, measured baselines and superseded interface iterations with current pointers. |
 
+## Current checkout and feature status
+
+The [PRD delivery-status table](product-requirements.md#current-delivery-status)
+distinguishes implemented interfaces, paused workflows and optional gated
+connections. The six primary destinations are Home, Transactions, Accounts,
+Investments, Plan and Analytics. Their current sections and actions belong in
+the [interface map](interface-map.md), with shared title/summary geometry in the
+[compact workspace density contract](frontend/catalogue.md#compact-workspace-density).
+
+| Boundary | Current reference |
+|---|---|
+| Local financial workspaces | Owning app guides below; current-checkout implementation still requires owner acceptance and a separate release decision. |
+| Paused statement operations and net-worth interface | [Roadmap](roadmap.md) and [code-level review gates](../core/features.py); retained calculations and owned posted-import provenance do not reopen these screens. |
+| Optional assistant | [Assistant guide](apps/assistant.md) and [six confirmed local actions](assistant/actions.md); ChatGPT authorization/inference independently default off, with no paid API-key fallback or Internet/news tool. |
+| Paused real Open Finance pilot | [Operator guide](open-finance-pilot.md) and [roadmap decision](roadmap.md#personal-open-finance-study); read-only command preparation does not connect the application or write its ledger. |
+
 ## Per-app reference
 
 - [apps/core.md](apps/core.md) — project settings, currency registry and formatting.
@@ -42,7 +58,8 @@ releases, persistent volumes and isolated restore rehearsals.
 - [apps/accounts.md](apps/accounts.md) — native Django authentication and presentation preferences.
 - [apps/categories.md](apps/categories.md) — income/expense categories.
 - [apps/banking.md](apps/banking.md) — banks, accounts, movements, PIX, cards,
-  invoices, loyalty and historical FX.
+  native invoice credits, automatic/confirmed payments, loyalty and historical
+  FX; Accounts, Invoices, Loyalty and Exchange rates have explicit sections.
 - [apps/transactions.md](apps/transactions.md) — categorized economic events, progressive list
   filters and settlement behavior.
 - [apps/dashboard.md](apps/dashboard.md) — cash, cash-flow, liabilities,
@@ -52,8 +69,11 @@ releases, persistent volumes and isolated restore rehearsals.
 - [apps/investments.md](apps/investments.md) — separate position ledger using
   banks/accounts for provider and cash endpoints, with asset lifecycle and
   archived-position visibility rules, weighted cost and local dated quotes.
+  My investments, History, Prices and Setup expose the existing flows; an
+  independent curated emoji is a cosmetic product/asset-position preference.
 - [apps/planning.md](apps/planning.md) — category budgets, goals backed by
-  existing cash, reservations and deterministic local review signals.
+  existing cash, reservations and deterministic local review signals. This month,
+  Goals, Simulations and Alerts keep operational plans separate from scenarios.
 - [apps/ingestion.md](apps/ingestion.md) — paused local CSV/OFX operations,
   retained underlying services and available owned read-only posted history.
 - [apps/sandbox.md](apps/sandbox.md) — private planning drafts, salary/budget
@@ -114,7 +134,8 @@ preview paths into installation instructions.
 
 ## Documentation status
 
-These documents describe `0.10.0` and the changes under `Unreleased`. Supported
+These documents describe `0.10.0` and the changes under `Unreleased`; they do not
+mark the v1 candidate accepted or authorize publication. Supported
 released installations use the committed incremental migrations and preserve
 existing records. The historical clean reset applied only to pre-release legacy
 schemas; it is not an instruction to reset a released installation. See

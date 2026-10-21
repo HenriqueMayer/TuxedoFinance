@@ -27,6 +27,7 @@ erDiagram
     USER ||--o{ INVESTMENT : records
     USER ||--o{ PRICE_OBSERVATION : records
     USER ||--o{ INVOICE_PAYMENT : confirms
+    USER ||--o{ CARD_INVOICE_CREDIT : records
     USER ||--o{ CATEGORY_BUDGET : configures
     USER ||--o{ FINANCIAL_GOAL : owns
     USER ||--o{ GOAL_ALLOCATION : reserves
@@ -48,6 +49,7 @@ erDiagram
     BANK_ACCOUNT ||--o{ BANK_TRANSFER : sends
     BANK_ACCOUNT ||--o{ BANK_TRANSFER : receives
     CREDIT_CARD ||--o{ CARD_INVOICE : generates
+    CREDIT_CARD ||--o{ CARD_INVOICE_CREDIT : receives
     CARD_INVOICE |o--o| BANK_MOVEMENT : settles_as
     CARD_INVOICE ||--o{ INVOICE_PAYMENT : receives
     BANK_ACCOUNT ||--o{ INVOICE_PAYMENT : funds
@@ -57,6 +59,7 @@ erDiagram
 
     CATEGORY |o--o{ CATEGORY : parent_of
     CATEGORY ||--o{ TRANSACTION : classifies
+    CATEGORY ||--o{ CARD_INVOICE_CREDIT : classifies_credit
     TRANSACTION ||--o{ TRANSACTION_SPLIT : allocates
     CATEGORY ||--o{ TRANSACTION_SPLIT : classifies_share
     CATEGORY ||--o{ CATEGORY_BUDGET : limits
@@ -126,6 +129,7 @@ flowchart TD
     T[Transaction] --> Channel{Payment channel}
     Channel -->|Account, PIX or debit card| Immediate[Create or update immediate BankMovement]
     Channel -->|Credit card| Invoice[Derive CardInvoice total by card and statement month]
+    Credit[CardInvoiceCredit] -->|Subtract from matching statement sources| Invoice
     Invoice --> Mode{Settlement mode}
     Mode -->|Automatic default| Due[Create or update due-date BankMovement]
     Mode -->|Manual opt-in| Payment[Explicit InvoicePayment]
@@ -258,6 +262,13 @@ payments when saved. Later purchase corrections retain real payments and may
 produce card credit. Historical debt uses dated payment evidence, not today's
 status. See [manual settlement](apps/banking.md#optional-manual-settlement).
 
+`CardInvoiceCredit` is an independent owned statement source with a protected
+card/category, positive credit magnitude, posting date, explicit reference
+month, title/notes and unique immutable UUID. It reduces the matching invoice
+and dated debt, never creates bank income or a payment, and retains any excess
+as card credit. See [invoice credits](apps/banking.md#invoice-credits) for dated
+settlement, reporting and retry rules.
+
 ## Transactions
 
 | Field | Meaning |
@@ -271,6 +282,7 @@ status. See [manual settlement](apps/banking.md#optional-manual-settlement).
 | `payment_channel` | `PIX`, `DEBIT_CARD`, `CREDIT_CARD`, or `ACCOUNT`. |
 | settlement links | Exactly one owned account, debit card or credit card, according to the channel. |
 | recurrence fields | Optional schedule used to project future events. |
+| `installment_start` | First locally tracked installment, default 1; original date, full amount and total count remain unchanged. |
 | `reward_redemption` | Optional unique source of a generated IOF expense; not editable through transaction forms. |
 | timestamps | `created_at`, `updated_at`. |
 

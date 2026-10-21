@@ -239,9 +239,23 @@ Apply the banking migration before serving code that reads these fields. These
 presentation values do not change balances, currencies, billing cycles, card
 ownership or recorded invoice settlement modes.
 
-Creation offers four native appearance presets: Graphite, Plum, Copper and
-Forest; editing exposes a custom native base-color control. Both flows offer an
-explicit Use a gradient checkbox with a second color and angle. Turning it off clears its
+Creation and editing share the `ColorPicker` widget and
+`partials/color_picker_field.html`: six optional presets (Black, Blue gray,
+Purple, Blue, Orange and Gold) sit beside a native custom-color input. The same
+component styles bank marker creation and editing. Presets are shortcuts, not
+an allowed-value enumeration; any valid six-digit HEX color remains accepted.
+Each shortcut has a named 44px button, visible keyboard focus and a pressed
+state synchronized with the native value. `static/js/bank-colors.js` adds those
+buttons progressively; without JavaScript, the native color field and its
+labelled datalist retain complete submission. Existing record colors and model
+defaults are unchanged. Color inputs, including the gradient's second stop,
+remain compact 48×44px controls rather than full-width bars.
+Malformed bound colors render as ordinary text with their raw value and server
+error, because a native color input would silently replace that value with black.
+Corrected valid submissions return to the compact native picker.
+
+Both card flows offer an explicit Use a gradient checkbox with a second color
+and angle. Turning it off clears its
 second stop; older clients posting only the original card fields preserve the
 stored appearance. Account selection, duplicate-name checks and the prohibition
 on moving cards with existing activity to another account remain authoritative.

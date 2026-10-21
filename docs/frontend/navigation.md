@@ -18,13 +18,20 @@ and active states to a persistent desktop sidebar at `lg` (1024px)
 and a fixed bottom navigation below that breakpoint. Primary links navigate
 directly, without hover submenus. Analytics owns financial and investment charts; Home retains operational
 indicators and records. Workspace section tabs keep categories, invoices,
-exchange rates and investment setup discoverable. Paused net-worth and
+loyalty, exchange rates and investment setup discoverable. The Accounts rail reveals a
+focused link completely when its four tabs exceed the available width; focus
+and native horizontal scrolling remain intact. Accounts uses four
+explicit sections: Accounts, Invoices, Loyalty and Exchange rates. Its section
+rail scrolls horizontally on small screens, preserving full labels, at least
+44px targets, visible keyboard focus and the selected section in nested editors. Paused net-worth and
 statement-import interfaces stay out of navigation.
 
 The Tuxedo Finance brand in the desktop sidebar and mobile toolbar opens the
-product homepage (`/`) while retaining the signed-in session. Home/Início in
-the workspace navigation still opens the financial dashboard (`/dashboard/`).
-Brand links use the shared native/HTMX navigation and unsaved-edit protection.
+financial dashboard (`/dashboard/`), matching Home/Início in the workspace
+navigation. The product cover (`/`) is a public entry page and the destination
+after POST logout; an authenticated GET/HEAD to `/` redirects to the dashboard.
+The public navbar brand continues to open that cover. Brand links use the
+shared native/HTMX navigation and unsaved-edit protection.
 
 The body reserves room for the sidebar and bottom bar, including the mobile
 safe area. Searchable-choice viewport calculations also account for the bar.

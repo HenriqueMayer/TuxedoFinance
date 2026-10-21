@@ -39,7 +39,7 @@ restoration behavior.
 
 ## Compact consultation bars and month names
 
-Transactions, Categories, Invoices, Exchange rates, investment positions/history
+Transactions, Categories, Invoices, Loyalty, Exchange rates, investment positions/history
 and financial goals use `consultation-bar`, `consultation-search`
 and `consultation-actions`. Keep one primary text search; place less frequent
 criteria in a deliberate native `details.filter-disclosure`, except for the
@@ -61,11 +61,13 @@ its slot; opening the complete criteria adds a full-width row below it. Numeric
 active badges and screen-reader descriptions update independently. Keep the
 native submit fallback in its own row, including after a failed live request.
 
-Read-only import history has no optional criteria. Its
+Loyalty programs and read-only import history have no optional criteria. Their
 `consultation-search-only` variant reserves a narrow Clear slot beside the search
 instead of leaving an empty Filters track. The input's width and position stay
 fixed when Clear appears; native GET submission keeps its separate fallback row.
-This presentation does not enable the paused statement-import workflow.
+Loyalty searches program, institution and linked-card names without adding a
+second record picker. This presentation does not enable the paused
+statement-import workflow.
 
 Invoices and Exchange rates use `bank-consultation`, exposing their short
 criteria in a compact responsive grid. Invoices keeps month, bank and status

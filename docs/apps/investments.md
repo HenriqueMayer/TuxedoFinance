@@ -398,9 +398,12 @@ then opens the existing financial form with owned, compatible shortcut context.
 Partial valuations, missing prices and unknown opening dates remain visible;
 remaining acquisition cost is labelled as cost rather than a market quote.
 
-External market feeds, broker synchronization and agent integration remain
-outside the implemented local scope. Local dated quotes and position performance
-are implemented under Unreleased; they do not turn simulations into postings.
+External market feeds, broker synchronization and assistant investment
+operations remain outside the implemented local scope. The assistant can already
+[consult owned investment evidence](../assistant/consultation.md); reading a
+position does not authorize a contribution, withdrawal or price update. Local
+dated quotes and position performance are implemented under Unreleased; they do
+not turn simulations into postings.
 
 ## Position actions and return context
 

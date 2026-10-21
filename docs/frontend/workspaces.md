@@ -35,10 +35,11 @@ related invoices and ledger movements; a bound redemption error opens it. Explic
 fragments reveal their containing native disclosures after full or boosted
 page navigation; unrelated background updates do not reopen them.
 
-Banking templates mark their owning content with `.banking-workspace`. Compact
-panel/row padding and 16/24px section titles retain the ledger's density, while
-page titles follow the catalogue's shared 28/35px mobile and 32/40px desktop
-scale. Ordinary fields, global navigation and actions use the common components.
+Banking templates mark their owning content with `.banking-workspace`. The
+authenticated shell's [shared compact density](catalogue.md#compact-workspace-density)
+owns page/section title sizes, overview spacing and opening monetary summaries
+across all workspaces. Account rows retain their local grouping. Ordinary
+fields, form padding, global navigation and actions use the common components.
 
 Actions and menu items retain a minimum height of 44px for all pointer types;
 row ellipsis triggers also retain a 44px width and 8px corners. Header option

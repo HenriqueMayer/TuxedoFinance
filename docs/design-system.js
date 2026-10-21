@@ -262,11 +262,10 @@
         const cardKeys = ['bank', 'account', 'name', 'type', 'closing', 'due', 'manual', 'color', 'gradient', 'end', 'angle'];
         const cardFields = Object.fromEntries(cardKeys.map(key => [key, document.getElementById(`lab-card-${key}`)]));
         const hasEditor = editor && cardForm && cardList && cardPreview && cardError && cardKeys.every(key => cardFields[key]);
-        const presets = {GRAPHITE: '#253330', PLUM: '#5B3E7C', COPPER: '#C6A173', FOREST: '#315D50'};
         let editingCard = null;
         let nextCardId = 5001;
         function presetInputs() { return hasEditor ? Array.from(editor.querySelectorAll('input[name="card_preset"]')) : []; }
-        function presetColor(input) { return presets[input?.value?.toUpperCase()] || safeColor(input?.value); }
+        function presetColor(input) { return safeColor(input?.value); }
         function safeColor(color) { return /^#[0-9a-f]{6}$/i.test(color || '') ? color.toUpperCase() : '#253330'; }
         function optionText(field, key) { return Array.from(field.options).find(option => option.value === key)?.textContent.trim() || ''; }
         function updateEditorAvailability(clearAccount = false) {
@@ -292,14 +291,9 @@
             const accountGroup = cardFields.account.closest('.lab-field');
             if (accountGroup) accountGroup.hidden = !bank;
             editor.querySelectorAll('[data-lab-card-account-context]').forEach(group => { group.hidden = !bank; });
-            editor.querySelectorAll('[data-lab-card-edit-only]').forEach(group => {
-                group.hidden = !editingCard;
-                if ('disabled' in group) group.disabled = !available || !editingCard;
-                group.querySelectorAll('input, select, textarea, button').forEach(control => { control.disabled = !available || !editingCard; });
-            });
             editor.querySelectorAll('[data-lab-gradient-context]').forEach(group => {
-                const active = available && editingCard && cardFields.gradient.checked;
-                group.hidden = !editingCard || !cardFields.gradient.checked;
+                const active = available && cardFields.gradient.checked;
+                group.hidden = !cardFields.gradient.checked;
                 group.querySelectorAll('input, select').forEach(control => { control.disabled = !active; });
             });
             window.TuxedoForms?.refresh(editor);
@@ -313,11 +307,10 @@
                 end: safeColor(data.cardEnd || data.cardColor), angle: ['0', '45', '90', '135'].includes(data.cardAngle) ? data.cardAngle : '45'};
         }
         function editorRecord() {
-            const preset = presetColor(presetInputs().find(input => input.checked));
             return {id: editingCard?.dataset.cardId || '', name: cardFields.name.value.trim(), bank: cardFields.bank.value,
                 account: cardFields.account.value, type: cardFields.type.value, closing: cardFields.closing.value,
-                due: cardFields.due.value, manual: cardFields.manual.value, color: editingCard ? safeColor(cardFields.color.value) : preset,
-                gradient: Boolean(editingCard && cardFields.gradient.checked), end: safeColor(cardFields.end.value), angle: cardFields.angle.value};
+                due: cardFields.due.value, manual: cardFields.manual.value, color: safeColor(cardFields.color.value),
+                gradient: cardFields.gradient.checked, end: safeColor(cardFields.end.value), angle: cardFields.angle.value};
         }
         function luminance(color) {
             const channels = color.slice(1).match(/.{2}/g).map(channel => parseInt(channel, 16) / 255)
@@ -376,7 +369,7 @@
             cardFields.color.value = cardFields.end.value = '#253330';
             cardFields.gradient.checked = false;
             cardFields.angle.value = '45';
-            presetInputs().forEach((input, index) => { input.checked = presetColor(input) === '#253330' || (!index && !presetInputs().some(item => presetColor(item) === '#253330')); });
+            presetInputs().forEach(input => { input.checked = presetColor(input) === '#253330'; });
             editor.querySelector('[data-lab-card-editor-title]').textContent = 'New card';
             editor.querySelectorAll('details.lab-card-cycle').forEach(details => { details.open = false; });
             editor.querySelector('[data-lab-card-submit]').textContent = 'Preview card';
@@ -433,8 +426,9 @@
                 // selects; their DOM events still belong to this editor.
                 if (!event.target.matches('input, select, textarea')) return;
                 if (event.type === 'change' && event.target.name === 'card_preset') {
-                    cardFields.color.value = cardFields.end.value = presetColor(event.target);
-                    cardFields.gradient.checked = false;
+                    cardFields.color.value = presetColor(event.target);
+                } else if (event.target === cardFields.color) {
+                    presetInputs().forEach(input => { input.checked = presetColor(input) === safeColor(cardFields.color.value); });
                 }
                 updateEditorAvailability(event.type === 'change' && event.target === cardFields.bank);
                 renderCard(cardPreview, editorRecord());
@@ -541,7 +535,8 @@
         // account's catalogue rather than deriving support from a model name.
         const modelEfforts = {synthetic: ['low', 'medium', 'high'], 'synthetic-mini': ['low', 'high']};
         const wide = matchMedia('(min-width: 1280px)');
-        const reply = 'Synthetic example: BRL 1,000.00 in recorded cash minus BRL 300.00 already reserved leaves BRL 700.00 unreserved. The BRL 800.00 projection after known commitments is a different measure. Review upcoming bills before changing a goal. No financial record was changed.';
+        const reply = 'Synthetic example:\n\n**BRL 1,000.00** in recorded cash minus **BRL 300.00** already reserved leaves **BRL 700.00 unreserved**.\n\n- The **BRL 800.00 projection** after known commitments is a different measure.\n- Review upcoming bills before changing a goal.\n\nNo financial record was changed.';
+        const actionReply = 'Review this **synthetic transaction** before confirming. Its amount is **BRL 42.50**; this preview never saves an application record.';
         const threads = [{id: 1, title: 'October cash review', messages: [{role: 'Tuxedo · synthetic example', text: reply}]}];
         let nextId = 2, current, pending = null, originalScroll, originalOverflow;
 
@@ -571,27 +566,81 @@
                 const empty = document.createElement('div');
                 empty.className = 'lab-assistant-empty';
                 // Fixed specimen artwork/copy; user questions always use textContent.
-                empty.innerHTML = '<svg viewBox="0 0 90 44" fill="currentColor" aria-hidden="true"><path d="M2 2 38 16v12L2 42V2Zm86 0L52 16v12l36 14V2ZM39 14h12v16H39z"/></svg><h3>Consult this workspace.</h3><p>Ask about the example ledger. Answers include the period, currency and sources.</p><button type="button" class="lab-assistant-action" data-lab-assistant-prompt>What can I safely set aside?</button>';
+                empty.innerHTML = '<svg viewBox="0 0 90 44" fill="currentColor" aria-hidden="true"><path d="M2 2 38 16v12L2 42V2Zm86 0L52 16v12l36 14V2ZM39 14h12v16H39z"/></svg><h3>How can I help?</h3><p>Ask about the synthetic finances or a monthly plan. The page badge keeps your place.</p><button type="button" class="lab-assistant-action" data-lab-assistant-prompt>What can I safely set aside?</button>';
                 messages.append(empty);
             }
-            current.messages.forEach(message => {
+            current.messages.forEach((message, index) => {
                 const article = document.createElement('article');
                 article.className = 'lab-assistant-message';
                 article.dataset.labAssistantMessage = message.role === 'You' ? 'user' : 'assistant';
-                const role = document.createElement('strong'), text = document.createElement('p');
+                const role = document.createElement('strong'), text = document.createElement('div');
                 role.textContent = message.role;
-                text.textContent = message.text;
+                if (message.role === 'You') text.textContent = message.text;
+                else if (window.TuxedoAssistantMarkdown) window.TuxedoAssistantMarkdown.render(text, message.text);
+                else text.textContent = message.text;
                 article.append(role, text);
-                if (message.role !== 'You') {
+                if (message.role !== 'You' && message.sources !== false) {
                     const sources = document.createElement('details');
                     sources.className = 'lab-assistant-sources';
                     sources.innerHTML = '<summary>Sources used (2)</summary><a href="#lab-assistant-cash-source" data-lab-assistant-source="accounts">Recorded cash and reserves ↗</a><a href="#lab-assistant-projection-source" data-lab-assistant-source="plan">Known commitments projection ↗</a>';
                     article.append(sources);
                 }
+                if (message.proposal) {
+                    const review = document.createElement('section');
+                    review.className = 'lab-assistant-review';
+                    review.dataset.labAssistantReviewIndex = String(index);
+                    renderReview(review, message.proposal);
+                    article.append(review);
+                }
                 messages.append(article);
             });
+            if (pending && !pending.replyMessage) {
+                const thinking = document.createElement('p');
+                thinking.className = 'lab-assistant-notice';
+                thinking.dataset.labAssistantThinking = '';
+                thinking.setAttribute('role', 'status');
+                thinking.textContent = 'Thinking…';
+                messages.append(thinking);
+            }
             messages.scrollTop = messages.scrollHeight;
             renderHistory();
+        }
+        function renderReview(card, proposal) {
+            card.replaceChildren();
+            card.dataset.labAssistantReview = proposal.status;
+            card.tabIndex = -1;
+            const heading = document.createElement('h3'), disclaimer = document.createElement('p');
+            heading.textContent = 'Transaction preview';
+            disclaimer.textContent = 'Synthetic proposal · no application write';
+            card.append(heading, disclaimer);
+            const summary = document.createElement('dl');
+            [['Title', 'Saturday groceries'], ['Amount', 'BRL 42.50'], ['Type', 'Expense'],
+                ['Date', '2026-10-19'], ['Category', 'Groceries'], ['Payment', 'Everyday bank · Daily account']].forEach(([label, value]) => {
+                const row = document.createElement('div'), term = document.createElement('dt'), detail = document.createElement('dd');
+                term.textContent = label;
+                detail.textContent = value;
+                row.append(term, detail);
+                summary.append(row);
+            });
+            card.append(summary);
+            if (proposal.status === 'pending') {
+                const controls = document.createElement('div');
+                controls.className = 'lab-assistant-review-actions';
+                [['confirm', 'Confirm preview'], ['discard', 'Discard preview']].forEach(([action, label]) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'lab-assistant-action';
+                    button.dataset.labAssistantReviewAction = action;
+                    button.textContent = label;
+                    controls.append(button);
+                });
+                card.append(controls);
+            } else {
+                const result = document.createElement('p');
+                result.setAttribute('role', 'status');
+                result.textContent = proposal.status === 'confirmed' ? 'Confirmed in preview. No financial record was saved.' : 'Preview discarded. No financial record was saved.';
+                card.append(result);
+            }
         }
         function controls() {
             const disconnected = scenario.value === 'disconnected';
@@ -601,7 +650,6 @@
             send.hidden = Boolean(pending);
             form.elements.model.disabled = disconnected || Boolean(pending);
             effort.disabled = disconnected || Boolean(pending);
-            form.elements.include_context.disabled = disconnected || Boolean(pending);
             form.setAttribute('aria-busy', String(Boolean(pending)));
         }
         function configureModel(announce = false) {
@@ -625,7 +673,7 @@
             if (!pending) return;
             clearTimeout(pending.timer);
             question.value = pending.prompt;
-            pending.thread.messages.pop();
+            pending.thread.messages.splice(pending.initialLength);
             pending = null;
             renderMessages();
             controls();
@@ -636,7 +684,6 @@
             current = {id: nextId++, title: 'New conversation', messages: []};
             threads.push(current);
             question.value = '';
-            form.elements.include_context.checked = false;
             resizeComposer();
             status();
             renderMessages();
@@ -700,9 +747,8 @@
             if (!minimized) {
                 cancelPreview(false);
                 question.value = '';
-                // Preferences stay in this synthetic page instance; closing only
-                // clears the draft and its per-message context permission.
-                form.elements.include_context.checked = false;
+                // Preferences stay in this synthetic page instance; closing
+                // clears only the unsent draft and active reply.
                 configureModel();
                 status();
                 messages.replaceChildren();
@@ -745,6 +791,16 @@
             if (event.target.closest('[data-lab-assistant-new]')) { newThread(); question.focus(); }
             if (event.target.closest('[data-lab-assistant-prompt]')) { question.value = 'What can I safely set aside?'; question.focus(); }
             if (event.target.closest('[data-lab-assistant-cancel]')) { cancelPreview(); question.focus(); }
+            const reviewAction = event.target.closest('[data-lab-assistant-review-action]');
+            if (reviewAction) {
+                const card = reviewAction.closest('[data-lab-assistant-review]');
+                const proposal = current.messages[Number(card.dataset.labAssistantReviewIndex)]?.proposal;
+                if (proposal?.status === 'pending') {
+                    proposal.status = reviewAction.dataset.labAssistantReviewAction === 'confirm' ? 'confirmed' : 'discarded';
+                    renderReview(card, proposal);
+                    card.focus({preventScroll: true});
+                }
+            }
             const selected = event.target.closest('[data-lab-assistant-thread]');
             if (selected) {
                 cancelPreview(false);
@@ -782,9 +838,9 @@
             settings.open = false;
             current.title = prompt.slice(0, 48);
             current.messages.push({role: 'You', text: prompt});
-            pending = {thread: current, prompt, timer: null};
+            pending = {thread: current, prompt, timer: null, initialLength: current.messages.length - 1, replyMessage: null};
             renderMessages();
-            status('Preparing a synthetic reply…');
+            status('Thinking… · Synthetic preview', 'thinking');
             controls();
             cancel.focus();
             if (scenario.value === 'hold') return;
@@ -795,16 +851,28 @@
                     cancelPreview(false);
                     status('The example reply failed. Your question was kept; choose Example answer and try again.', 'error');
                 } else {
-                    pending.thread.messages.push({role: 'Tuxedo · synthetic example', text: reply});
-                    pending = null;
-                    question.value = '';
-                    form.elements.include_context.checked = false;
-                    resizeComposer();
+                    const action = scenario.value === 'action';
+                    const fullReply = action ? actionReply : reply;
+                    const message = {role: 'Tuxedo · synthetic example', text: fullReply.slice(0, 45), sources: false};
+                    pending.replyMessage = message;
+                    pending.thread.messages.push(message);
                     renderMessages();
-                    status('Synthetic reply ready. No provider or financial action was used.', 'ready');
-                    controls();
+                    status('Writing… · Synthetic preview', 'writing');
+                    pending.timer = setTimeout(() => {
+                        if (!pending) return;
+                        message.text = fullReply;
+                        message.sources = !action;
+                        if (action) message.proposal = {status: 'pending'};
+                        pending = null;
+                        question.value = '';
+                        resizeComposer();
+                        renderMessages();
+                        status('Synthetic reply ready. No provider or financial action was used.', 'ready');
+                        controls();
+                        if (!panel.hidden) question.focus();
+                    }, 600);
                 }
-                if (!panel.hidden) question.focus();
+                if (fail && !panel.hidden) question.focus();
             }, 600);
         });
         function resizeComposer() {

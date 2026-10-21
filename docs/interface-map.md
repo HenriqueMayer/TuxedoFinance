@@ -21,7 +21,7 @@ screens belong to their workspace; an editor retains its workspace context.
 |---|---|---|
 | Home | `/dashboard/` | Operational dashboard, selected-month indicators, live cash and outstanding invoices. Net worth remains under review. |
 | Transactions | `/transactions/` | Transactions and Categories; existing import provenance remains readable. New statement imports remain under review. |
-| Accounts | `/banking/` | Accounts, Invoices and Exchange rates. Banks, cards, cash positions and loyalty belong to this workspace. |
+| Accounts | `/banking/` | Accounts, Invoices, Loyalty and Exchange rates. Banks, cards and cash positions keep their existing institution context. |
 | Investments | `/investments/` | My investments, History, Prices and Setup. Appearance belongs to each product/asset position. |
 | Plan | `/planning/` | This month, Goals, Simulations and Alerts. Simulations has Salary, Yield and Saved drafts sections. |
 | Analytics | `/analytics/` | Finances and Investments; existing charts and the six-month outlook retain their financial scopes. |
@@ -42,7 +42,7 @@ See the [assistant guide](apps/assistant.md).
 
 | Routes | Interface and actions | Preserved boundaries |
 |---|---|---|
-| `/` | Product identity, factual description, Paper Layers illustration/workspace map, feature rows, login/signup or authenticated workspace action. | No financial queries on the public page. Signup links follow `ALLOW_SIGNUPS`. Illustration supports pointer, keyboard and touch, with reduced motion. |
+| `/` | Public product cover: identity, factual description, Paper Layers illustration/workspace map, feature rows and login/signup. | Authenticated GET/HEAD redirects to `/dashboard/`; POST logout returns anonymous visitors to this cover. No financial queries on the public page. Signup links follow `ALLOW_SIGNUPS`. Illustration supports pointer, keyboard and touch, with reduced motion. |
 | `/accounts/login/` | Username/password, Sign in, conditional signup link, credential and field errors, explicit local destination. | Native authentication autocomplete and no-JavaScript POST remain available. |
 | `/accounts/signup/` | Username/email/password confirmation, registration errors, Sign up or closed-registration state, login link. | Signup policy and server validation; no demo financial records are inserted by registration. |
 | `/accounts/settings/` | Consolidation currency and complete-date order, contextual help, Save/Cancel. | Preferences change presentation; native record currencies and calendar dates retain their meaning. |
@@ -92,17 +92,20 @@ See the [assistant guide](apps/assistant.md).
 
 | Routes | Interface and actions | Filters and conditional controls |
 |---|---|---|
-| `/banking/`, `/<id>/` | Always-visible balance breakdown; bank grid opens one full-width internal workspace with a labelled Minimize action. Accounts/reserves, cash pots, card miniatures, loyalty, activity and inline reward editing remain. | Existing native URLs and Back/Forward identify the selected panel. Minimize restores the grid's location/focus so another bank can be opened, including without JavaScript. Whole-workspace GET establishes its baseline; inner POSTs preserve errors and edited-state protection. |
+| `/banking/`, `/<id>/` | Always-visible balance breakdown; bank grid opens one full-width internal workspace. Shared institution artwork replaces its bookmark marker; the title bar and labelled Minimize affordance share one native link. Distinct account surfaces separate name/actions, amounts, cards and footer controls. Accounts/reserves, cash pots, loyalty, activity and inline reward editing remain. | Existing native URLs and Back/Forward identify the selected panel. Only the title bar minimizes; account content retains its own actions. Minimize restores the grid's location/focus so another bank can be opened, including without JavaScript and without an extra keyboard stop. Whole-workspace GET establishes its baseline; inner POSTs preserve errors and edited-state protection. |
 | `/banking/create/`, `/<id>/edit/`, `/<id>/color/`, `/<id>/delete/` | Bank name/color/palette, Save/Cancel and protected deletion. | Bank identity color is decorative, independent of financial status. |
 | `/banking/accounts/create/`, `accounts/<id>/edit/`, `accounts/<id>/delete/` | Bank/name/currency, opening balance/date, reserve and PIX settings. | Shared owned-bank selector, opening/history checks and native fallback. |
 | `/banking/accounts/<id>/planning/`, `cash-positions/<product>/<asset>/planning/` | Include/exclude balance and reservation controls. | Explicit POST, existing cash/reserve accounting and availability guards. |
 | `/banking/debit-cards/...`, `/banking/credit-cards/...` create/edit/delete | Account and nickname, own color presets/custom colors, optional gradient, circular angle control and live miniature; credit closing/due dates and settlement settings. | Native fallback for angle and colors; no autosave. Keep account ownership, invoice-cycle/history checks and color/angle validation. |
 | `/banking/transfers/create/` | Source/destination, amounts, date/notes, Save/Cancel. | Same-currency conservation, account ownership and opening-date validation. |
+| `/banking/loyalty/` | Owned programs, unit-specific balances, linked banks/cards, live search, pagination and native entry-history disclosures. | Points/miles are never summed across programs or presented as cash. Existing entry/redemption editors retain validated local origins and generated-entry locks. |
+| `/banking/loyalty/<id>/entries/` | Owned program identity, unit balance and paginated full points-entry history. | All entry/source links retain ownership and contextual origins; generated redemption entries use their source editor. |
 | `/banking/loyalty/...` create/edit/delete | Program/name/bank/unit and a searchable, illustrated multiple-card board with native checkboxes. | Owned compatible records; filtering retains selected cards; no new point valuation rule. |
 | `/banking/loyalty-entries/...` create/edit/delete | Program, kind/direction/amount/date/notes; illustrated invoice-award or purchase funding/account/card/cash branches. | New conditional choices start empty; deliberate transitions clear incompatible values; bound errors and financial postings survive. |
 | `/banking/rewards/redeem/`, `rewards/<id>/edit/` | Program/points, target account, cash/IOF/fees/date/notes. | Existing generated-operation editing, posting and contextual return rules. |
-| `/banking/invoices/`, `credit-cards/<id>/invoices/` | Card/bank/account/currency identity, invoice rows/status/counts, pagination and own-color miniatures. | Search and compact exposed month/bank/status criteria, stable Clear and live GET fallback. Automatic and confirmed modes keep their distinct meaning. |
-| `/banking/invoices/<id>/` | Due/status/total, confirmed/remaining payments, overpayment notices, card settings, payment/source links, account/amount/date/notes payment entry. | Explicit record of a payment already made; the application does not send money. Ownership and server settlement checks remain. |
+| `/banking/invoices/`, `credit-cards/<id>/invoices/` | Card/bank/account/currency identity, aligned month/due/status/total/remaining rows, pagination and own-color miniatures. Selected-card history stacks labelled values on phones. | Search and compact exposed month/bank/status criteria, stable Clear and live GET fallback. Automatic and confirmed modes keep their distinct meaning. |
+| `/banking/invoices/<id>/` | Readable card/bank/account identity with the existing miniature; due/status/net total, gross charges/credits, confirmed/remaining payments, excess credit, card settings, payment/source links and separate credit rows. | Credits reduce the statement and dated debt; confirmed payments record an actual bank debit. Neither action sends money. |
+| `/banking/invoices/<id>/credits/create/`, `invoice-credits/<id>/edit/`, `invoice-credits/<id>/delete/` | Description, positive credit magnitude, posting date, expense category, notes; Save/Cancel or confirmed delete. | Card/reference month fixed by owned server context, UUID retry protection, native date/choice/error recovery and validated origin. |
 | `/banking/invoice-payments/<id>/edit/`, `invoice-payments/<id>/delete/` | Payment editing or destructive reversal confirmation. | Original posting/reversal, contextual origin and native POST. |
 | `/banking/exchange-rates/` and create/edit/delete | Local dated rates, visible source-unit/target-value explanation, compact exposed currency/date criteria, Clear, pagination and row options. | Historical FX remains user-recorded; Decimal precision and source/destination/date validation remain. |
 
@@ -110,7 +113,7 @@ See the [assistant guide](apps/assistant.md).
 
 | Routes | Interface and actions | Filters and conditional controls |
 |---|---|---|
-| `/investments/` | Position/value summary, holding rows with saved bank markers, contextual history, Add investment and holding actions. | Search and purpose scope (all/investments/remunerated cash), stable Clear and live GET results. Scope also updates the History destination. |
+| `/investments/` | Position/value summary, per-position emojis and textual institution/product identity, contextual history, Add investment and holding actions. | Search and purpose scope (all/investments/remunerated cash), stable Clear and live GET results. Scope also updates the History destination. |
 | `/investments/positions/<product>/<asset>/`, `positions/<product>/<asset>/update/` | Per-position emoji and cosmetic Personalization POST; cost, dated price, results, operations/configuration; Contribute, Redeem, Record yield and unit-price actions. | Native curated icon choices with explicit Save, owned position validation and no financial write side effects. Mode-specific actions and archive locks. Dated prices affect valuation, not quantity or bank cash. |
 | `/investments/operations/` | Searchable operation history, source/funding information, Edit/Delete and pagination. | Purpose/type/bank/product/asset/currency/class/date criteria; shared record search and live consultation. |
 | `/investments/add/` | Guided existing/new institution, name, position emoji, valuation mode, currency/purpose/planning inclusion, opening position and optional code/class. | Monetary versus units branches; opening date reveal; explicit initial choices and nested errors. Opening holdings do not imply a bank debit. |
@@ -138,7 +141,7 @@ See the [assistant guide](apps/assistant.md).
 | Component | Shared implementation / presentation | Required behavior |
 |---|---|---|
 | Shell and sections | `base.html`, sidebar/mobile/navigation partials, `core.workspace_navigation`, `section-nav`. | Six equivalent destinations, active context, fixed-navigation clearance, native links and authorized history restoration. |
-| Panels and ledger | `surface-panel`, `stat_card`, `page-title`, `section-title`, `metric-label`, `data-table`, `planning-sheet-input`. | Thin dividers, compact editorial spacing, readable status/empty/error states, local overflow instead of clipped columns. |
+| Panels and ledger | `surface-panel`, `stat_card`, `page-title`, `section-title`, `metric-label`, `data-table`, `planning-sheet-input`; authenticated `main.workspace-density` and opt-in `workspace-summary` value/label/caption roles. | [Shared compact density](frontend/catalogue.md#compact-workspace-density) unifies headings, overview spacing and opening summaries across all six areas. Thin dividers, readable status/empty/error states and local overflow retain full content. No fixed/equal summary heights, form/chart compression, calculation changes or smaller action targets. |
 | Actions | `action-primary`, `action-link`, `quiet-action`, `action-danger`, `icon-action`, `form-actions`; transaction action equivalents. | Balanced content, stable geometry, visible focus, adequate touch targets, sentence-case labels and reduced-motion support. Destructive actions remain explicit. |
 | Ordinary fields | `partials/form_field.html`, `field_label.html`, `form_control`, `entry-input`, `entry-checkbox-choice`, `workspace-form` / `workspace-form-page`. | Native labels/types, single booleans beside their label/help, shared errors, server validation, no-JavaScript submission, preserved identifiers and autocomplete rules. |
 | Short choices | Native selects or `SegmentedChoice` / `entry-segment-options`. | Native keyboard/POST semantics. Use segments where approved, without converting long record lists into unsearchable button walls. |
@@ -192,8 +195,10 @@ protects both GET and POST entry into paused features:
   catalogue rollout; mapping it does not enable staff access or restyle it.
 - The static preview and Design Lab are reference surfaces, not alternate
   financial applications or runtime data sources.
-- The assistant provider is separately gated. Its supported local actions require
-  explicit user confirmation; other proposal/simulation interfaces remain contracts.
+- The assistant provider is separately gated. Bounded owned consultations and
+  canonical monthly simulations are implemented. Its six supported local writes
+  require separate reviewed user confirmation; unsupported actions remain
+  non-executable contracts.
   No assistant Open Finance tool or unattended automation is enabled, and actions
   cannot bypass an unavailable feature's server gate.
 - The [Inter bill pilot](open-finance-pilot.md) is an operator-only management

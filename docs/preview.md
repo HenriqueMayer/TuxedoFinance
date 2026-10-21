@@ -37,12 +37,14 @@ Its dark theme matches
 the application's `night` tokens in `assets/tailwind.config.js`: background `#101010`,
 surface `#1B1B1B`, raised/hover surface `#262626`, and muted text `#B8B8B8`.
 Caramel actions and the financial colors in application screenshots retain
-their meanings. Keep both language editions and their captions in sync with the
+their meanings. The captured authenticated headings and opening financial panels
+follow the [shared compact workspace scale](frontend/catalogue.md#compact-workspace-density).
+Panel height follows its evidence and expanded details rather than a fixed crop. Keep both language editions and their captions in sync with the
 current dashboard and transaction navigation when refreshing captures.
 The synthetic profiles also demonstrate a BRL 2,000 account reserve, an excluded
 USD account, a monthly cash pot, card appearance and explicit category budgets.
 The Accounts capture deliberately opens one synthetic institution's internal
-workspace. The Plan capture shows the current monthly availability and category
+workspace, including its institution icon, labelled Minimize action and separated account surfaces. The Plan capture shows the current monthly availability and category
 limits at `/planning/`, with direct This month, Goals, Simulations and Alerts
 section links. Salary, returns and private drafts are grouped within Simulations;
 there is no intermediate Tools directory. The captured budget limits do not
@@ -52,7 +54,7 @@ Captures use the complete 1440 × 1000 viewport, starting at its left edge, so t
 shared sidebar remains available in original images and the lightbox. The tour
 thumbnail crops the captured header/sidebar through CSS, avoiding a second
 navigation shell inside the interactive preview. Home and New entry also omit
-their captured duplicate section/title bars: their crop starts at y=230 and
+their captured duplicate section/title bars: their crop starts at y=150 and
 y=220 respectively, retaining the balance/form panels. The tour supplies the
 real headings and New entry action above those images. If the application frame's
 dimensions change, update the documented offsets in `preview.css` together with

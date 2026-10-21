@@ -89,6 +89,14 @@ remain distinct. Opening a bank disclosure shows local sample detail; it does
 not navigate, settle an invoice or imply a backend write. Application bank
 overview links retain their existing navigation.
 
+The Accounts examples show four explicit sections: Accounts, Invoices, Loyalty
+and Exchange rates. Their native links reach the existing account specimen and
+`#lab-banking-invoices`, `#lab-banking-loyalty` and `#lab-banking-rates` without a
+new catalogue router. The compact invoice example keeps statement debt separate
+from cash, and the loyalty example retains its own points unit and native
+entry disclosure. The catalogue's synthetic disclosures demonstrate presentation;
+the application uses authorized owned GET routes and existing financial POSTs.
+
 Catalogue CTAs center their label/icon group, use a 12px radius and retain a 44px
 minimum target. Brief color, border and click feedback may move only the arrow by
 up to 2px. Hover/focus never changes a button's shape, dimensions or surrounding
@@ -170,15 +178,16 @@ controls explicitly use `form="lab-card-form"`, which identifies an independent
 GET form beside the entry form; opening or submitting the editor cannot submit
 its fields as a transaction. The sequence is Bank (`#lab-card-bank`), an account
 filtered to that bank (`#lab-card-account`), then an editable Nickname
-(`#lab-card-name`). New previews offer Graphite, Plum, Copper and Forest color
-presets. Graphite is the appearance default. The billing-cycle disclosure keeps
+(`#lab-card-name`). New previews offer Black, Blue gray, Purple, Blue, Orange and
+Gold color shortcuts beside a native custom-color input. Graphite remains the
+appearance default until deliberately changed. The billing-cycle disclosure keeps
 required Closing day and Due
 day empty, constrained to 1–31; Card type defaults to Physical and the manual
 settlement start date is optional. These controls represent the real credit-card
 fields; the nickname corresponds to its existing `name` field.
 
-Editing a local card additionally exposes a native base-color input
-(`#lab-card-color`) and an optional gradient with a second color (`#lab-card-end`)
+Creating or editing a local card offers the native base-color input
+(`#lab-card-color`) and an optional gradient with a compact second color (`#lab-card-end`)
 and direction (`#lab-card-angle`). The preview protects text contrast when custom
 colors or gradients would make labels unreadable. Catalogue colors and gradients
 are local preview data; the application's persisted card appearance is described
@@ -226,3 +235,41 @@ radio choices and an explicit Save icon action; only the current synthetic
 document changes. The application stores the corresponding preference per
 owned product/asset position. Analytics owns the sample chart; Home retains
 operational indicators without a decorative analytical sparkline.
+
+## Compact workspace density
+
+The authenticated application shell uses `main.workspace-density` to share one
+type and spacing scale across Home, Transactions, Accounts, Investments, Plan
+and Analytics, including investment analysis. Editors within that shell retain
+the same page-title scale. The matching Design Lab specimen demonstrates these
+tokens with synthetic data; the public cover and authentication screens keep
+their own compositions.
+
+| Role | Shared scale |
+|---|---|
+| Page title | 24px type / 30px line height |
+| Section heading | 18px type / 24px line height |
+| Overview group spacing | 16px |
+| Opening summary and metric panel padding | 16px |
+| Primary summary value | 24px type / 30px line height |
+| Summary label | 14px type / 20px line height |
+| Summary caption | 12px type / 18px line height |
+| Primary summary currency prefix | 14px type / 20px line height, regular weight |
+
+Opening monetary summaries explicitly use `workspace-summary`, with
+`workspace-summary-value`, `workspace-summary-label` and
+`workspace-summary-caption` marking the corresponding content roles. Do not
+infer a monetary value from generic text or add a new metric just to fill a
+panel. `workspace-summary-currency` keeps the currency prefix readable and
+consistent beside every primary amount. Existing `metric-panel` components share the compact padding.
+
+The owning source, `assets/css/shared/workspace-density.css`, is imported last
+so this shared scale follows older workspace density rules. Keep these changes
+scoped to the authenticated shell and the matching catalogue specimen. Preserve
+theme tokens, number precision, existing content and financial meaning.
+
+Shared spacing does not require fixed or equal panel heights. Long translated
+labels wrap; warnings, missing-value notices and native details retain their
+space and can expand. Fields, entry-form padding, chart geometry and the 44px
+minimum action targets retain their existing contracts. Density changes must
+not clip information, compress controls or modify calculations.

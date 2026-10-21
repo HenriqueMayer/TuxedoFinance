@@ -11,7 +11,7 @@ themes. Your records stay on your installation.
 <a id="interface-preview"></a>
 
 <p align="center">
-  <a href="https://henriquemayer.github.io/TuxedoFinance/"><img src="docs/assets/preview-link.svg" width="320" height="64" alt="Open the Tuxedo Finance interface preview"></a>
+  <a href="https://henriquemayer.github.io/TuxedoFinance/"><img src="docs/assets/preview-link.svg" width="200" height="40" alt="Open the Tuxedo Finance interface preview"></a>
 </p>
 
 <p>
@@ -28,20 +28,23 @@ themes. Your records stay on your installation.
 
 ## What's in the app
 
+This table describes the current source checkout. The Docker quick start below
+installs the published **v0.10.0** release.
+
 | Workspace | What you can do |
 |---|---|
 | **Home** | Review available funds, monthly indicators and upcoming commitments. |
 | **Transactions** | Record income and expenses, split categories, manage recurrences and installments, export CSV. |
-| **Accounts** | Organize bank accounts, PIX, cards, invoices, transfers and loyalty. |
-| **Investments** | Track holdings, movements, cash pots and dated prices; choose an emoji for each holding. |
-| **Plan** | Review monthly limits, reserve balances for goals, compare simulations and review local signals. |
-| **Analytics** | Explore financial and investment charts, category expenses and cash-flow projections. |
+| **Accounts** | Manage accounts, PIX, transfers and cards; review invoices, credits, payments, loyalty and local exchange rates. |
+| **Investments** | Track holdings and cash pots, operations and local dated prices; configure investments and choose a position emoji. |
+| **Plan** | Set monthly category limits, back goals with existing balances, compare salary/yield scenarios and review local alerts. |
+| **Analytics** | Explore financial and investment charts, category expenses, account/card activity and cash-flow projections. |
 
-**In the unreleased source:** Analytics, position icons and the optional
-[Tuxedo assistant](docs/apps/assistant.md) are included. The assistant can consult your saved finances, simulate scenarios and prepare
-changes for your confirmation. Its ChatGPT connection is off by default; when enabled, relevant
-records and necessary conversation history are sent to OpenAI. Open Finance
-remains on the [roadmap](docs/roadmap.md#personal-open-finance-study).
+The optional [Tuxedo assistant](docs/apps/assistant.md) can consult saved
+finances, simulate scenarios and prepare supported changes for your confirmation.
+Its ChatGPT connection is off by default. When enabled, relevant records and
+necessary conversation history are sent to OpenAI. Open Finance remains on the
+[roadmap](docs/roadmap.md#personal-open-finance-study).
 
 <a id="-quick-start"></a>
 

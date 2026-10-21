@@ -26,7 +26,7 @@
 
     <!-- Application and catalogue share compiled tokens and components. -->
     <link rel="stylesheet" href="../static/css/app.css">
-    <link rel="stylesheet" href="design-system.css?v=08b56f82ee9f">
+    <link rel="stylesheet" href="design-system.css?v=177b810c5ca3">
 </head>
 <body data-design-lab class="min-h-screen bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
 
@@ -467,9 +467,11 @@
                         <p>Follow accounts, cards and bills without mixing their roles.</p>
                     </div>
                 </div>
-                <nav class="lab-local-tabs" aria-label=" Account sections">
-                    <a href="#lab-view-accounts" aria-current="page">Banks</a>
-                    <a href="#workspaces">Invoices</a>
+                <nav class="lab-local-tabs banking-sections" aria-label="Account sections">
+                    <a href="#lab-view-accounts" aria-current="page">Accounts</a>
+                    <a href="#lab-banking-invoices">Invoices</a>
+                    <a href="#lab-banking-loyalty">Loyalty</a>
+                    <a href="#lab-banking-rates">Exchange rates</a>
                 </nav>
                 <div class="lab-bank-grid" aria-label="Example banks">
                     <details class="bank-overview-card lab-bank-overview" style="--bank-color:#24594A">
@@ -677,15 +679,15 @@
                                         <div class="lab-field" data-lab-card-account-context><label for="lab-card-account">Account *</label><select form="lab-card-form" id="lab-card-account" name="card_account" class="lab-input" data-search-select required><option value="">Choose an account</option><option value="2001" data-bank="bank1">Checking</option><option value="2002" data-bank="bank1">Savings</option><option value="2003" data-bank="bank2">Checking</option></select></div>
                                     </div>
                                     <div class="lab-field"><label for="lab-card-name">Nickname *</label><input form="lab-card-form" id="lab-card-name" name="card_name" class="lab-input" placeholder="e.g. Daily card" maxlength="100" required></div>
-                                    <fieldset class="lab-choice-field lab-card-presets"><legend>Card color</legend><div class="lab-preset-row"><label class="lab-color-preset" style="--preset-color:#253330"><input form="lab-card-form" id="lab-card-preset-graphite" type="radio" name="card_preset" value="#253330" checked><span class="lab-preset-swatch" aria-hidden="true"></span><span>Graphite</span></label><label class="lab-color-preset" style="--preset-color:#5B3E7C"><input form="lab-card-form" id="lab-card-preset-plum" type="radio" name="card_preset" value="#5B3E7C" ><span class="lab-preset-swatch" aria-hidden="true"></span><span>Plum</span></label><label class="lab-color-preset" style="--preset-color:#C6A173"><input form="lab-card-form" id="lab-card-preset-copper" type="radio" name="card_preset" value="#C6A173" ><span class="lab-preset-swatch" aria-hidden="true"></span><span>Copper</span></label><label class="lab-color-preset" style="--preset-color:#315D50"><input form="lab-card-form" id="lab-card-preset-forest" type="radio" name="card_preset" value="#315D50" ><span class="lab-preset-swatch" aria-hidden="true"></span><span>Forest</span></label></div></fieldset>
-                                    <fieldset class="lab-card-custom lab-choice-field" data-lab-card-edit-only hidden disabled>
-                                        <legend>Custom appearance</legend>
-                                        <div class="lab-editor-row"><div class="lab-field"><label for="lab-card-color">Base color</label><input form="lab-card-form" id="lab-card-color" name="card_color" type="color" value="#253330" class="lab-color-input"></div><label class="lab-gradient-toggle"><input form="lab-card-form" id="lab-card-gradient" name="card_gradient" type="checkbox">Use gradient</label></div>
+                                    <fieldset class="lab-choice-field lab-card-presets"><legend>Card color</legend><div class="lab-preset-row"><label class="lab-color-preset" style="--preset-color:#111111" title="Black"><input form="lab-card-form" id="lab-card-preset-black" type="radio" name="card_preset" value="#111111" aria-label="Black"><span class="lab-preset-swatch" aria-hidden="true"></span></label><label class="lab-color-preset" style="--preset-color:#64788C" title="Blue gray"><input form="lab-card-form" id="lab-card-preset-blue-gray" type="radio" name="card_preset" value="#64788C" aria-label="Blue gray"><span class="lab-preset-swatch" aria-hidden="true"></span></label><label class="lab-color-preset" style="--preset-color:#820AD1" title="Purple"><input form="lab-card-form" id="lab-card-preset-purple" type="radio" name="card_preset" value="#820AD1" aria-label="Purple"><span class="lab-preset-swatch" aria-hidden="true"></span></label><label class="lab-color-preset" style="--preset-color:#245FBA" title="Blue"><input form="lab-card-form" id="lab-card-preset-blue" type="radio" name="card_preset" value="#245FBA" aria-label="Blue"><span class="lab-preset-swatch" aria-hidden="true"></span></label><label class="lab-color-preset" style="--preset-color:#E87524" title="Orange"><input form="lab-card-form" id="lab-card-preset-orange" type="radio" name="card_preset" value="#E87524" aria-label="Orange"><span class="lab-preset-swatch" aria-hidden="true"></span></label><label class="lab-color-preset" style="--preset-color:#C6A173" title="Gold"><input form="lab-card-form" id="lab-card-preset-gold" type="radio" name="card_preset" value="#C6A173" aria-label="Gold"><span class="lab-preset-swatch" aria-hidden="true"></span></label><div class="lab-custom-color"><label for="lab-card-color">Custom color</label><input form="lab-card-form" id="lab-card-color" name="card_color" type="color" value="#253330" class="lab-color-input"></div></div></fieldset>
+                                    <fieldset class="lab-card-custom lab-choice-field">
+                                        <legend>Gradient</legend>
+                                        <div class="lab-editor-row"><label class="lab-gradient-toggle"><input form="lab-card-form" id="lab-card-gradient" name="card_gradient" type="checkbox">Use gradient</label></div>
                                         <div class="lab-editor-row" data-lab-gradient-context><div class="lab-field"><label for="lab-card-end">Second color</label><input form="lab-card-form" id="lab-card-end" name="card_end" type="color" value="#5B3E7C" class="lab-color-input"></div><div class="lab-field"><label for="lab-card-angle">Direction</label><select form="lab-card-form" id="lab-card-angle" name="card_angle" class="lab-input"><option value="0">Up</option><option value="45">Diagonal</option><option value="90">Right</option><option value="135" selected>Down diagonal</option></select></div></div>
                                     </fieldset>
                                     <details class="lab-card-cycle"><summary><span>Billing cycle</span><span aria-hidden="true">+</span></summary><div class="lab-editor-row"><div class="lab-field"><label for="lab-card-closing">Closing day *</label><input form="lab-card-form" id="lab-card-closing" name="closing_day" type="number" min="1" max="31" class="lab-input" required></div><div class="lab-field"><label for="lab-card-due">Due day *</label><input form="lab-card-form" id="lab-card-due" name="due_day" type="number" min="1" max="31" class="lab-input" required></div><div class="lab-field"><label for="lab-card-type">Card type</label><select form="lab-card-form" id="lab-card-type" name="card_type" class="lab-input"><option value="PHYSICAL">Physical</option><option value="VIRTUAL">Virtual</option><option value="ADDITIONAL">Additional</option></select></div><div class="lab-field"><label for="lab-card-manual">Manual settlement from <span class="lab-optional">(optional)</span></label><div class="lab-date-field"><input form="lab-card-form" id="lab-card-manual" name="manual_settlement_from" type="date" class="lab-input" data-lab-calendar><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-11 4h3"/></svg></div></div></div></details>
                                 </div>
-                                <div class="lab-card-editor-preview"><div id="lab-card-preview" class="lab-card-option lab-card-option--preview" style="--card-start:#253330;--card-end:#253330;--card-angle:135deg;--card-ink:#FFFFFF"><span class="lab-card-copy"><span class="lab-card-kind">Credit · BRL</span><strong data-card-name>Your card</strong><span data-card-context>Bank · Account</span></span><svg class="lab-card-chip" viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="1" y="1" width="26" height="20" rx="4"/><path d="M10 1v20M18 1v20M1 8h9m8 0h9M1 14h9m8 0h9"/></svg></div><p>Choose a preset now. Custom colors and gradients are available when editing.</p></div>
+                                <div class="lab-card-editor-preview"><div id="lab-card-preview" class="lab-card-option lab-card-option--preview" style="--card-start:#253330;--card-end:#253330;--card-angle:135deg;--card-ink:#FFFFFF"><span class="lab-card-copy"><span class="lab-card-kind">Credit · BRL</span><strong data-card-name>Your card</strong><span data-card-context>Bank · Account</span></span><svg class="lab-card-chip" viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><rect x="1" y="1" width="26" height="20" rx="4"/><path d="M10 1v20M18 1v20M1 8h9m8 0h9M1 14h9m8 0h9"/></svg></div><p>Choose a preset or a custom color. Add an optional gradient before creating or editing the card.</p></div>
                             </div>
                             <p id="lab-card-error" class="lab-field-error" aria-live="polite" hidden></p>
                             <div class="lab-entry-actions"><button type="submit" form="lab-card-form" class="lab-button" data-lab-card-submit>Preview card</button><button type="button" class="lab-editor-cancel" data-lab-card-cancel>Cancel</button></div>
@@ -792,6 +794,7 @@
                     <span class="shrink-0 tabular-nums text-sm font-semibold text-caramel-ink dark:text-caramel-light">BRL 940.00</span>
                 </li>
             </ul>
+            <details class="explanation-disclosure mt-4"><summary>Invoice credits</summary><dl class="mt-3 space-y-2 text-sm"><div class="flex justify-between gap-3"><dt>Purchases and charges</dt><dd class="tabular-nums">BRL 960.00</dd></div><div class="flex justify-between gap-3"><dt>Refund or adjustment</dt><dd class="tabular-nums">− BRL 20.00</dd></div><div class="flex justify-between gap-3 font-semibold"><dt>Invoice total</dt><dd class="tabular-nums">BRL 940.00</dd></div></dl><p class="subtle-copy mt-3">A credit reduces the invoice. It is separate from income and confirmed bank payments.</p></details>
         </div>
     </div>
 
@@ -1181,7 +1184,7 @@
 </section>
 
 
-<section id="workspaces" class="lab-section lab-catalogue-section">
+<section id="workspaces" class="lab-section lab-catalogue-section workspace-density">
     <div class="lab-section-heading">
         <div>
             <span class="lab-eyebrow">10 / Workspace patterns</span>
@@ -1191,19 +1194,62 @@
     </div>
     <div class="space-y-8">
         <p class="subtle-copy">Primary navigation: Home, Transactions, Accounts, Investments, Plan, Analytics. Analytics gathers financial and investment charts; Categories stays under Transactions. Preserve the original palette, typography, wordmark and shared control contracts. A workspace uses contrasting surface cards to separate reading groups. Keep tables and rows inside each group; avoid nesting cards. Explanations belong in shared question-mark help beside headings or labels, while errors and incomplete-value warnings remain visible.</p>
+    <section id="lab-workspace-density" class="lab-specimen workspace-density space-y-4" aria-labelledby="lab-workspace-density-title">
+        <h3 id="lab-workspace-density-title" class="lab-specimen-title section-title">Compact workspace scale</h3>
+        <p class="subtle-copy">Use one scale across Home, Transactions, Accounts, Investments, Plan and Analytics: 24px page titles and primary amounts, 18px section headings, 16px summary padding, 14px labels and 12px dated evidence. Keep 44px actions and let warnings and details expand the surface.</p>
+        <header class="workspace-header"><h4 class="page-title">Overview</h4><a href="#forms" class="lab-sample-action action-primary">New entry</a></header>
+        <section class="surface-panel workspace-summary" aria-label="Compact summary example">
+            <p class="workspace-summary-label">Available for planning</p>
+            <p class="workspace-summary-value font-semibold tabular-nums"><span class="workspace-summary-currency">BRL</span> 4,600.00</p>
+            <p class="workspace-summary-caption subtle-copy mt-1">As of October 21, 2026</p>
+            <details class="explanation-disclosure mt-3"><summary>Value details</summary><p class="subtle-copy mt-2">Synthetic balances and set-aside amounts retain their separate meanings. Opening the disclosure grows this panel rather than hiding the evidence.</p></details>
+        </section>
+    </section>
     <nav class="section-nav mt-6" aria-label="Example investment sections"><a href="#compact-finance" aria-current="page">My investments</a><a href="#workspaces">History</a><a href="#forms">Prices</a><a href="#lab-position-personalization">Setup</a></nav>
     <p class="subtle-copy mt-3">Incomplete investment setup highlights Configure investments and shows an ordered Bank → Product → Asset guide with Ready/Pending states and one next-step action. Configured products are grouped by bank; assets keep a separate catalog. Planned or unavailable resources have no navigation entry or account shortcut; their redesign belongs in the documentation.</p>
+    <section id="lab-banking-navigation" class="lab-specimen space-y-3" aria-labelledby="lab-banking-navigation-title">
+        <h3 id="lab-banking-navigation-title" class="lab-specimen-title section-title">Explicit account sections</h3>
+        <p class="subtle-copy">Accounts keeps bank balances and daily actions together. Invoices, Loyalty and Exchange rates have direct section destinations.</p>
+        <nav class="section-nav banking-sections" aria-label="Example account sections"><a href="#bank-card-title" aria-current="page">Accounts</a><a href="#lab-banking-invoices">Invoices</a><a href="#lab-banking-loyalty">Loyalty</a><a href="#lab-banking-rates">Exchange rates</a></nav>
+        <div class="bank-directory"><div class="bank-overview-grid"><a id="lab-bank-institution" href="#bank-card-title" class="bank-overview-card bank-workspace-tab" style="--bank-color:#B88D57"><div class="bank-overview-identity"><span class="payment-choice-art institution-miniature" data-choice-kind="account" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9h18L12 3 3 9Zm2 3v6m7-6v6m7-6v6M3 21h18"/></svg></span><div class="min-w-0"><span class="block break-words text-base font-semibold">Everyday bank</span><p class="subtle-copy mt-1">2 accounts · 1 card</p></div></div><span aria-hidden="true">›</span></a></div></div>
+    </section>
     <section class="lab-specimen banking-workspace space-y-4" aria-labelledby="bank-card-title">
         <div class="panel-heading"><h3 id="bank-card-title" class="lab-specimen-title section-title">Everyday bank</h3><a href="#forms" class="lab-sample-action action-primary">Add account</a></div>
+        <div class="bank-account-list">
         <article class="bank-account-card" aria-label="Example account card">
             <header class="bank-account-header"><div><p class="text-sm font-medium">Everyday account</p><p class="subtle-copy">BRL</p></div><a href="#forms" class="lab-sample-action action-link">New transaction</a></header>
             <dl class="account-balance-grid"><div><dt>Balance</dt><dd>5,000.00</dd></div><div><dt>Set aside</dt><dd>2,000.00</dd></div><div><dt>Available</dt><dd class="font-semibold">3,000.00</dd></div></dl>
-            <div class="account-planning-action"><a href="#forms" class="lab-sample-action planning-visibility">Included</a></div>
-            <details class="account-configuration"><summary>Account details</summary><p class="subtle-copy">Opening balance: BRL 5,000.00</p><a href="#forms" class="lab-sample-action quiet-action">Edit / reserve</a></details>
+            <div class="account-secondary"><details class="account-configuration"><summary>Account details</summary><p class="subtle-copy">Opening balance: BRL 5,000.00</p><a href="#forms" class="lab-sample-action quiet-action">Edit / reserve</a></details><div class="account-planning-action"><a href="#forms" class="lab-sample-action planning-visibility">Included</a></div></div>
         </article>
+        <article class="bank-account-card" aria-label="Example international account">
+            <header class="bank-account-header"><div><p class="text-sm font-semibold">International account</p><p class="subtle-copy">USD</p></div><a href="#forms" class="lab-sample-action action-link">New transaction</a></header>
+            <dl class="account-balance-grid"><div><dt>Balance</dt><dd>200.00</dd></div><div><dt>Set aside</dt><dd>0.00</dd></div><div><dt>Available</dt><dd class="font-semibold">200.00</dd></div></dl>
+            <div class="account-secondary"><details class="account-configuration"><summary>Account details</summary><p class="subtle-copy">Opening balance: USD 200.00</p></details><div class="account-planning-action"><a href="#forms" class="lab-sample-action planning-visibility">Included</a></div></div>
+        </article>
+        </div>
         <details class="reserve-disclosure"><summary class="reserve-disclosure-summary">Reserves</summary><p class="subtle-copy">Set-aside accounts and cash pots keep their real balances and history.</p></details>
     </section>
-    <p class="mt-3 subtle-copy">Accounts opens a bank overview. Choosing a bank opens one full-width internal workspace with account cards, linked cards, reserves and recent activity; Minimize returns to the overview. Native currency belongs to the account heading; Balance, Set aside and Available retain three aligned figures on desktop and mobile. Daily actions and configuration remain separate from these amounts.</p>
+    <p class="mt-3 subtle-copy">Accounts opens a bank overview. Choosing a bank opens one full-width internal workspace with account cards, linked cards, reserves and recent activity; Minimize returns to the overview. Each account has a contrasting name/actions header, a bounded surface and its own footer. The shared institution miniature replaces the titlebar bookmark; its single native Minimize link covers only that bar. Native currency belongs to the account heading; Balance, Set aside and Available retain three aligned figures on desktop and mobile. Daily actions and configuration remain separate from these amounts.</p>
+    <section id="lab-banking-invoices" class="lab-specimen banking-workspace space-y-3" aria-labelledby="lab-banking-invoices-title">
+        <header class="panel-heading"><div class="card-miniature-heading"><span class="card-miniature" aria-hidden="true" style="--card-start:#1A2E26;--card-end:#101010;--card-angle:135deg"><svg viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="20" height="14" rx="3"/><path d="M2 8h20M9 2v14M15 2v14"/></svg></span><div><h3 id="lab-banking-invoices-title" class="lab-specimen-title section-title">Daily card invoices</h3><p class="subtle-copy">Everyday bank · Everyday account · BRL</p></div></div></header>
+        <p class="subtle-copy">The existing miniature follows the selected card into its statement history. Closing rules, due dates and confirmed payments retain their own meaning.</p>
+        <div class="invoice-history">
+            <div class="invoice-history-head" aria-hidden="true"><span>Invoice month</span><span>Status</span><span>Invoice total</span><span></span></div>
+            <ul><li class="invoice-history-row"><div class="invoice-history-period"><a href="#data" class="quiet-action">October 2026</a><p class="subtle-copy">Due November 10</p></div><div class="invoice-history-status"><span class="invoice-mobile-label">Status</span><span class="status-badge">Scheduled</span></div><div class="invoice-history-amount"><span class="invoice-mobile-label">Invoice total</span><strong class="tabular-nums">BRL 940.00</strong><p class="subtle-copy">Remaining · BRL 940.00</p></div><a href="#data" class="quiet-action invoice-history-action">View invoice <span aria-hidden="true">›</span></a></li></ul>
+        </div>
+        <details class="explanation-disclosure"><summary>Invoice credits and payments</summary><p class="subtle-copy mt-2">BRL 960.00 in purchases less BRL 20.00 in credits leaves BRL 940.00 payable. A confirmed bank payment changes cash once; purchases are not another cash debit.</p></details>
+    </section>
+    <section id="lab-banking-loyalty" class="lab-specimen banking-workspace space-y-3" aria-labelledby="lab-banking-loyalty-title">
+        <header class="panel-heading"><h3 id="lab-banking-loyalty-title" class="lab-specimen-title section-title">Loyalty programs</h3><a href="#forms" class="lab-sample-action action-link">Add loyalty program</a></header>
+        <div class="lab-banking-loyalty-row"><div><h4 class="text-sm font-semibold">Everyday rewards</h4><p class="subtle-copy">Everyday bank · Daily card</p></div><p class="tabular-nums"><strong>2,400.00</strong> <span class="subtle-copy">points</span></p></div>
+        <details class="explanation-disclosure"><summary>Recent entries</summary><div class="lab-banking-loyalty-row"><p class="subtle-copy">Invoice award · October 2026</p><p class="tabular-nums">+240.00 points</p></div><a href="apps/banking.md#workspace-sections" class="quiet-action">Full history</a></details>
+        <p class="subtle-copy">Independent and linked programs share one consultation. Each retains its own unit; points are not combined with cash or with another program.</p>
+    </section>
+    <section id="lab-banking-rates" class="lab-specimen banking-workspace space-y-3" aria-labelledby="lab-banking-rates-title">
+        <header class="panel-heading"><h3 id="lab-banking-rates-title" class="lab-specimen-title section-title">Local exchange rates</h3><a href="#forms" class="lab-sample-action action-link">Add exchange rate</a></header>
+        <p class="bank-rate-example">1 USD = 5.12 BRL · October 1, 2026</p>
+        <p class="subtle-copy">Dated reference rates stay separate from account balances. Updating a local reference never rewrites a captured financial operation.</p>
+    </section>
     <section id="planning-sheet-example" class="lab-specimen surface-panel" aria-labelledby="planning-sheet-title">
         <div class="panel-heading mb-4"><h3 id="planning-sheet-title" class="lab-specimen-title section-title">Monthly overrides</h3><span class="subtle-copy">Illustrative inputs</span></div>
         <p class="subtle-copy mb-4">Empty cells inherit the scenario defaults. Enter an amount only for a deliberate override; this catalogue does not save or calculate financial records.</p>
@@ -1249,7 +1295,7 @@
       <p class="subtle-copy">This month keeps its availability and category limits together. Goals, Simulations and Alerts have direct destinations; hypothetical scenarios never become financial records.</p>
       <nav class="section-nav planning-sections" aria-label="Example planning sections"><a href="#lab-planning-month" aria-current="page">This month</a><a href="#lab-planning-goals">Goals</a><a href="#lab-planning-simulations">Simulations</a><a href="#lab-planning-alerts">Alerts</a></nav>
     </section>
-    <section id="lab-planning-month" class="lab-specimen surface-panel monthly-outlook"><div class="monthly-outlook-main"><div class="flex flex-wrap items-center gap-3"><h4 class="section-title">After known commitments</h4><span class="status-badge">Projection</span></div><p class="money-highlight tabular-nums mt-2">BRL 800.00</p><p class="subtle-copy mt-2">Known income, expenses and unpaid invoices. Reserved money stays separate.</p></div><dl class="monthly-outlook-metrics"><div><dt>Recorded available cash</dt><dd>BRL 1,000.00</dd></div><div><dt>Reserved at month end</dt><dd>BRL 300.00</dd></div></dl><details class="explanation-disclosure monthly-calculation"><summary>How is this calculated?</summary><p class="subtle-copy mt-2">Use dated registered cash and known obligations. Category budgets are spending limits, not additional reservations.</p></details></section>
+    <section id="lab-planning-month" class="lab-specimen surface-panel workspace-summary monthly-outlook monthly-planning-summary"><div class="monthly-outlook-main"><div class="flex flex-wrap items-center gap-3"><h4 class="section-title workspace-summary-label">After known commitments</h4><span class="status-badge">Projection</span></div><p class="workspace-summary-value money-highlight tabular-nums mt-2"><span class="workspace-summary-currency">BRL</span> 800.00</p><p class="subtle-copy workspace-summary-caption mt-2">Known income, expenses and unpaid invoices. Reserved money stays separate.</p></div><dl class="monthly-outlook-metrics workspace-summary-metrics"><div><dt>Recorded available cash</dt><dd>BRL 1,000.00</dd></div><div><dt>Reserved at month end</dt><dd>BRL 300.00</dd></div></dl><details class="explanation-disclosure monthly-calculation"><summary>How is this calculated?</summary><p class="subtle-copy mt-2">Use dated registered cash and known obligations. Category budgets are spending limits, not additional reservations.</p></details></section>
     <section id="lab-planning-goals" class="space-y-3" aria-labelledby="lab-planning-goals-title">
       <h4 id="lab-planning-goals-title" class="section-title">Goals with backed progress</h4>
       <div class="lab-specimen surface-panel goal-list">
@@ -1279,7 +1325,7 @@
 <section id="assistant" class="lab-section" aria-labelledby="lab-assistant-specimen-title">
     <div class="lab-section-heading">
         <div><span class="lab-eyebrow">13 / Assistant</span><h2 id="lab-assistant-specimen-title">Tuxedo assistant.</h2></div>
-        <p>A Tuxedo companion for the current workspace. A gently animated cat mark opens an editorial conversation, with compact page context and references beside the replies.</p>
+        <p>A financial assistant across the saved workspaces. A gently animated cat mark opens an editorial conversation; the compact page badge keeps your place and verified references accompany replies.</p>
     </div>
     <div class="lab-assistant-introduction">
         <div><h3 class="section-title">Context, conversations and references.</h3><p>Wide screens use a fixed conversation overlay without resizing the workspace. Its compact titlebar groups Minimize and Close, with a single quiet toolbar for history, page context and conversation actions. Small visual controls retain 44px activation areas. Minimize keeps the current draft and reply behind a restore tab; Close clears the unsent draft and stops the reply without deleting history. Smaller screens open a focus-contained sheet. Reduced motion keeps the mark still.</p></div>
@@ -1290,7 +1336,7 @@
         <p>Local account settings prepare authorization and protected credential storage. Real sign-in is disabled by default; authorizing an account does not enable model responses.</p>
         <button type="button" class="assistant-connect-button" disabled>Continue with ChatGPT</button>
         <p class="subtle-copy">OAuth fixtures belong to isolated tests. This catalogue does not connect an account or send financial data.</p>
-        <p class="subtle-copy">The application has a separate default-off inference gate. When eligible, its account-specific model choice starts empty until the user makes an explicit choice. The application remembers the last valid model and reasoning effort for that local user and linked account; Use page data starts unchecked for each request. A deliberate settings gear holds the labelled native Model and Reasoning effort choices, leaving the message area free. Model default omits an effort override; explicit levels come from the selected account's catalogue and are checked for the selected model. The compact composer uses Enter to send and Shift+Enter for a new line; its labelled Send and Stop icons remain keyboard and touch accessible. Send streams plain text with verified local references; native submission waits for its bounded result. This static specimen remains synthetic and does not establish live model access, quota or output quality. See the <a href="apps/assistant.md#provider-and-action-boundary">assistant provider contract</a>.</p>
+        <p class="subtle-copy">The application has a separate default-off inference gate. When eligible, its account-specific model choice starts empty until the user makes an explicit choice. The application remembers the last valid model and reasoning effort for that local user and linked account. Saved financial information can be consulted on demand across workspaces; the page badge provides orientation rather than limiting access. Read-only consultations and monthly simulations need no confirmation and save no financial records or scenario drafts. A deliberate settings gear holds the labelled native Model and Reasoning effort choices, leaving the message area free. Model default omits an effort override; explicit levels come from the selected account's catalogue and are checked for the selected model. The compact composer uses Enter to send and Shift+Enter for a new line; its labelled Send and Stop icons remain keyboard and touch accessible. Thinking and Writing states follow actual response progress rather than implying that a financial calculation ran. Replies render a bounded Markdown subset; model HTML, links and images stay inert, while verified application references remain separate. Transaction creation, edits, categorization, deletion, goal and budget proposals require a separate Confirm action; generation alone never changes financial records. Native submission waits for its bounded result. This static specimen remains synthetic and does not establish live model access, quota or output quality. See the <a href="apps/assistant.md#provider-and-action-boundary">assistant provider contract</a>.</p>
     </div>
     <dl class="lab-assistant-reference-ledger" aria-label="Synthetic assistant reference ledger">
         <div id="lab-assistant-cash-source"><dt>Recorded cash and reserves</dt><dd>BRL 1,000.00 cash · BRL 300.00 reserved · BRL 700.00 unreserved</dd></div>
@@ -1304,7 +1350,8 @@
             <p><strong>Example question:</strong> What can I safely set aside?</p>
             <p><strong>Synthetic reply:</strong> The example has BRL 1,000.00 in recorded cash and BRL 300.00 already reserved, leaving BRL 700.00 unreserved. The BRL 800.00 projection after known commitments is a different measure. Review upcoming bills before changing a goal.</p>
             <p><a class="lab-text-link" href="#lab-assistant-cash-source">Inspect recorded cash and reserves</a> · <a class="lab-text-link" href="#lab-assistant-projection-source">Inspect the known commitments projection</a></p>
-            <p>When no provider is connected, the application states that clearly. Questions are not sent and no generated answer is implied. The interactive specimen additionally demonstrates loading, cancellation, errors and local conversation controls.</p>
+            <p><strong>Reviewed action:</strong> A synthetic transaction proposal shows its description, native amount, date, category and payment instrument before a deliberate confirmation. The interactive Confirm preview and Discard preview controls change this demonstration only; no application record is created.</p>
+            <p>When no provider is connected, the application states that clearly. Questions are not sent and no generated answer is implied. The interactive specimen additionally demonstrates Thinking, Writing, cancellation, errors and local conversation controls.</p>
         </div>
     </details>
 </section>
@@ -1391,15 +1438,13 @@
                 <div class="lab-assistant-context" aria-label="Current page context"><span class="lab-assistant-sr-only">Context</span><a href="#lab-view-home" data-lab-assistant-scope data-lab-assistant-source="home"><span>Home · October 2026 · BRL</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a></div>
                 <button type="button" class="lab-assistant-action" data-lab-assistant-new aria-label="New conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lab-assistant-sr-only">New</span></button>
                 <details class="lab-assistant-delete" data-lab-assistant-delete><summary aria-label="Delete this conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7"/></svg></summary><div><p>Delete only this synthetic conversation from the current preview?</p><button type="button" class="lab-assistant-action" data-lab-assistant-delete-confirm>Delete conversation</button></div></details>
-                <details class="lab-assistant-demo-controls"><summary aria-label="Scenarios"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4m4 0h8M4 17h8m4 0h4"/><circle cx="10" cy="7" r="2"/><circle cx="14" cy="17" r="2"/></svg><span class="lab-assistant-sr-only">Scenarios</span></summary><div><label for="lab-assistant-scenario">Synthetic response</label><select id="lab-assistant-scenario" data-lab-assistant-scenario><option value="answer">Example answer</option><option value="hold">Loading until cancelled</option><option value="error">Recoverable error</option><option value="disconnected">Provider disconnected</option></select><p>Design Lab only. No external requests.</p></div></details>
+                <details class="lab-assistant-demo-controls"><summary aria-label="Scenarios"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4m4 0h8M4 17h8m4 0h4"/><circle cx="10" cy="7" r="2"/><circle cx="14" cy="17" r="2"/></svg><span class="lab-assistant-sr-only">Scenarios</span></summary><div><label for="lab-assistant-scenario">Synthetic response</label><select id="lab-assistant-scenario" data-lab-assistant-scenario><option value="answer">Example answer</option><option value="hold">Loading until cancelled</option><option value="error">Recoverable error</option><option value="disconnected">Provider disconnected</option><option value="action">Review a synthetic transaction</option></select><p>Design Lab only. No external requests or financial writes.</p></div></details>
             </div>
             <div class="lab-assistant-messages" role="log" aria-label="Synthetic conversation" aria-live="polite" data-lab-assistant-messages></div>
             <form class="lab-assistant-composer" data-lab-assistant-form autocomplete="off" novalidate>
                 <label class="lab-assistant-sr-only" for="lab-assistant-question">Your question about the example</label>
                 <div class="lab-assistant-composer-input">
                     <textarea id="lab-assistant-question" name="question" rows="1" maxlength="1200" placeholder="Message Tuxedo…" aria-describedby="lab-assistant-input-help"></textarea>
-                    <button type="submit" class="lab-assistant-send" data-lab-assistant-send aria-label="Preview reply"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
-                    <button type="button" class="lab-assistant-send" data-lab-assistant-cancel aria-label="Stop preview" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button>
                     <div class="lab-assistant-composer-options">
                         <details class="lab-assistant-settings" data-lab-assistant-settings>
                             <summary aria-label="Chat settings"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.073.04.145.083.216.127.325.2.72.263 1.077.13l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.993a6.8 6.8 0 0 1 0 .255c-.008.38.137.753.43.994l1.003.827c.424.35.534.954.26 1.43l-1.296 2.247a1.125 1.125 0 0 1-1.37.491l-1.217-.456c-.357-.133-.752-.07-1.077.13a6.8 6.8 0 0 1-.216.127c-.332.184-.582.496-.645.87l-.213 1.281c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.8 6.8 0 0 1-.216-.127c-.325-.2-.72-.263-1.077-.13l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.241.438-.614.43-.994a6.8 6.8 0 0 1 0-.255c.008-.38-.137-.753-.43-.993l-1.003-.827a1.125 1.125 0 0 1-.26-1.431L4.856 6.38a1.125 1.125 0 0 1 1.37-.49l1.217.456c.357.133.752.07 1.077-.13.071-.044.143-.087.216-.127.332-.184.582-.496.645-.87l.213-1.281Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></summary>
@@ -1412,8 +1457,9 @@
                             </div>
                         </details>
                         <span class="lab-assistant-config-summary" data-lab-assistant-config-summary>Choose a model</span>
-                        <label class="lab-assistant-context-choice"><input type="checkbox" name="include_context"> Use page data</label>
                     </div>
+                    <button type="submit" class="lab-assistant-send" data-lab-assistant-send aria-label="Preview reply"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
+                    <button type="button" class="lab-assistant-send" data-lab-assistant-cancel aria-label="Stop preview" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button>
                 </div>
                 <p class="lab-assistant-notice" role="status" data-lab-assistant-notice hidden></p>
                 <p class="lab-assistant-privacy" id="lab-assistant-input-help">Enter sends · Shift+Enter adds a line</p>
@@ -1428,7 +1474,8 @@
 <script src="design-system-layers.js?v=dc84f7eb1cfd" defer></script>
 <script src="../static/js/date-picker.js?v=56f29700f264" defer></script>
 <script src="design-system-calendar.js?v=bf1a89ac0411" defer></script>
-<script src="design-system.js?v=372880ea843a" defer></script>
+<script src="../static/js/assistant-markdown.js?v=5ad6410fadb8" defer></script>
+<script src="design-system.js?v=d2fa90efb31f" defer></script>
 <script src="../static/js/theme.js"></script>
 <script src="../static/js/preferred-dates.js" defer></script>
 <script src="../static/js/project-menu.js"></script>

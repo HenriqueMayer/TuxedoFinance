@@ -34,6 +34,25 @@ projections through the authorized transaction list.
 
 ## Settlement behavior
 
+### Opening installment purchases
+
+`installment_start` defaults to 1 and identifies the first installment tracked
+locally. An existing purchase can therefore retain its original date, full
+purchase total and installment count while omitting installments settled before
+the local opening import. For example, starting at 9 of 12 projects installments
+9–12 only; it never creates the eight earlier invoices or cash debits.
+The source amount remains the original total, including original cent rounding.
+The remaining opening balance is not presented as a known card debt before its
+first tracked reference month.
+
+The optional **Already paying this purchase?** disclosure uses the shared
+integer field and appears only for an eligible installment purchase. Server
+validation requires `1 <= installment_start <= installments` and rejects a
+later start for recurring or non-credit sources. Bound errors stay recoverable
+and older POST clients that omit the field preserve an edited record's start.
+Monthly filtering, budgets, projections and debt use only tracked installments;
+category allocation still replays original capacities for correct cents.
+
 | Path | Transaction classification | Cash effect |
 |---|---|---|
 | External PIX received | `INCOME` | Immediate account credit. |
@@ -235,9 +254,13 @@ category's descendants.
 Authenticated users may export all their transactions or the active billed
 month as UTF-8 CSV. Full exports download as `transactions.csv`; a monthly
 export uses `transactions-YYYY-MM.csv`. The header is
-`transaction_date,billed_month,title,transaction_type,category,payment_channel,bank,account,credit_card,currency,amount,total_amount,installments,is_fixed,fixed_until,notes,category_splits`.
+`transaction_date,billed_month,title,transaction_type,category,payment_channel,bank,account,credit_card,currency,amount,total_amount,installments,is_fixed,fixed_until,notes,category_splits,installment_start`.
 For monthly exports, `amount` is the amount charged in that month while
 `total_amount` retains the original transaction amount.
+
+`installment_start` is additive source metadata; it prevents an opening import
+from silently restarting a partially settled plan. Separately recorded
+[invoice credits](banking.md#invoice-credits) are not transaction CSV rows.
 
 `category_splits` is empty for unsplit records or contains JSON objects with
 `category_id`, `category` and native `amount`. A monthly export includes that

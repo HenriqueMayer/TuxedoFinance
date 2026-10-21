@@ -11,7 +11,7 @@ escuro. Seus registros ficam na sua instalação.
 <a id="prévia-da-interface"></a>
 
 <p align="center">
-  <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/"><img src="docs/assets/preview-link.svg" width="320" height="64" alt="Abrir o preview da interface do Tuxedo Finance"></a>
+  <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/"><img src="docs/assets/preview-link.svg" width="200" height="40" alt="Abrir o preview da interface do Tuxedo Finance"></a>
 </p>
 
 <p>
@@ -28,20 +28,23 @@ escuro. Seus registros ficam na sua instalação.
 
 ## O que tem no app
 
+A tabela descreve o código atual do projeto. Os comandos Docker abaixo instalam
+a release publicada **v0.10.0**.
+
 | Área | O que você pode fazer |
 |---|---|
 | **Início** | Conferir recursos disponíveis, indicadores do mês e compromissos próximos. |
 | **Transações** | Registrar receitas e despesas, dividir categorias, gerenciar recorrências e parcelas, exportar CSV. |
-| **Contas** | Organizar contas bancárias, PIX, cartões, faturas, transferências e fidelidade. |
-| **Investimentos** | Acompanhar posições, movimentações, cofrinhos e preços datados; escolher um emoji para cada aplicação. |
-| **Planejar** | Rever limites do mês, reservar saldos para metas, comparar simulações e conferir alertas locais. |
-| **Análises** | Explorar gráficos financeiros e de investimentos, despesas por categoria e projeções de fluxo. |
+| **Contas** | Gerenciar contas, PIX, transferências e cartões; conferir faturas, créditos, pagamentos, fidelidade e câmbio local. |
+| **Investimentos** | Acompanhar aplicações e cofrinhos, operações e preços locais datados; configurar investimentos e escolher um emoji por aplicação. |
+| **Planejar** | Definir limites mensais por categoria, reservar saldos existentes para metas, comparar cenários de salário/rendimento e conferir alertas locais. |
+| **Análises** | Explorar gráficos financeiros e de investimentos, despesas por categoria, atividade por conta/cartão e projeções de fluxo. |
 
-**No código ainda não publicado:** estão incluídos Análises, os ícones por
-aplicação e o [assistente Tuxedo](docs/apps/assistant.md) opcional. O assistente pode consultar suas finanças salvas, simular cenários e
-preparar alterações para sua confirmação. A conexão com o ChatGPT vem desativada; quando habilitada,
-registros relevantes e o histórico necessário da conversa são enviados à OpenAI.
-O Open Finance permanece no [roadmap](docs/roadmap.md#personal-open-finance-study).
+O [assistente Tuxedo](docs/apps/assistant.md) opcional pode consultar suas finanças
+salvas, simular cenários e preparar as alterações disponíveis para sua confirmação.
+A conexão com o ChatGPT vem desativada. Quando habilitada, registros relevantes e
+o histórico necessário da conversa são enviados à OpenAI. O Open Finance permanece
+no [roadmap](docs/roadmap.md#personal-open-finance-study).
 
 <a id="-instalação-inicial"></a>
 

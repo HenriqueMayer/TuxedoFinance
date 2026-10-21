@@ -249,8 +249,8 @@ figcaption { min-width: 0; color: var(--muted); font-size: 12px; }
 }
 /* Home and entry already have real headings/actions above the image. Crop
    their captured duplicate titles too, keeping the balance/form panels intact. */
-#dashboard .screenshot-link { aspect-ratio: 1220 / 770; }
-#dashboard .screenshot-link img { top: -29.8701298701%; } /* -230 / 770 */
+#dashboard .screenshot-link { aspect-ratio: 1220 / 850; }
+#dashboard .screenshot-link img { top: -17.6470588235%; } /* -150 / 850 */
 #new-entry .screenshot-link { aspect-ratio: 1220 / 780; }
 #new-entry .screenshot-link img { top: -28.2051282051%; } /* -220 / 780 */
 .image-dialog { width: min(96vw, 1440px); max-width: none; max-height: 96dvh; padding: 0; border: 0; background: transparent; color: var(--cream); }

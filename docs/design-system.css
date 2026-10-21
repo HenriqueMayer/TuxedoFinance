@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
 /* Catalogue experiment only. No selector changes the application stylesheet. */
 [data-design-lab] {
+    --ui-muted: var(--lab-muted);
     --lab-paper: #FAF8F3;
     --lab-ground: #EBE7DE;
     --lab-ink: #1A2E26;
@@ -25,7 +26,7 @@
     --lab-control-line: #808080;
 }
 [data-design-lab] main > section { scroll-margin-top: calc(var(--lab-header) + 20px); }
-#lab-login, #lab-home-features, [id^="lab-planning-"] { scroll-margin-top: calc(var(--lab-header) + 20px); }
+#lab-login, #lab-home-features, #bank-card-title, [id^="lab-planning-"], [id^="lab-banking-"] { scroll-margin-top: calc(var(--lab-header) + 20px); }
 .lab-catalogue-toolbar {
     max-width: 1280px; margin: auto; padding: 12px 32px;
     display: flex; align-items: center; gap: 24px;
@@ -367,11 +368,14 @@
 .lab-card-editor-fields { display: grid; gap: 18px; min-width: 0; }
 .lab-editor-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .lab-preset-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.lab-color-preset { display: inline-flex; align-items: center; min-height: 44px; padding: 8px; gap: 6px; border: 1px solid var(--lab-line); border-radius: 8px; font-size: 12px; cursor: pointer; }
+.lab-color-preset { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 5px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; }
+.lab-color-preset input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .lab-color-preset:has(input:checked) { border-color: var(--lab-accent-ink); }
-.lab-preset-swatch { width: 14px; height: 14px; border-radius: 50%; background: var(--preset-color); border: 1px solid rgb(0 0 0 / .2); }
+.lab-preset-swatch { width: 28px; height: 28px; border-radius: 50%; background: var(--preset-color); border: 1px solid rgb(127 127 127 / .35); }
+.lab-custom-color { display: inline-flex; align-items: center; flex-direction: row-reverse; gap: 8px; }
+.lab-custom-color label { font-size: 12px; color: var(--lab-muted); }
 .lab-card-custom { display: grid; gap: 14px; }
-.lab-color-input { width: 100%; height: 44px; padding: 4px; border: 1px solid var(--lab-control-line); border-radius: 8px; background: var(--lab-surface); }
+.lab-color-input { width: 48px; min-width: 48px; max-width: 48px; height: 44px; padding: 4px; border: 1px solid var(--lab-control-line); border-radius: 8px; background: var(--lab-surface); }
 .lab-gradient-toggle { display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 14px; }
 .lab-gradient-toggle input { width: 18px; height: 18px; accent-color: var(--lab-accent-ink); }
 .lab-card-editor-preview { min-width: 0; }
@@ -601,6 +605,22 @@
 .lab-assistant-message { max-width: 100%; flex: none; font-size: 13px; line-height: 1.65; white-space: pre-wrap; }
 .lab-assistant-message[data-lab-assistant-message="user"] { align-self: flex-end; max-width: 88%; padding: 8px 12px; border-radius: 12px 12px 4px 12px; background: var(--lab-ground); }
 .lab-assistant-message > strong { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; clip-path: inset(50%); overflow: hidden; }
+.lab-assistant-message .assistant-message-markdown { white-space: normal; }
+.lab-assistant-message .assistant-message-markdown > * + * { margin-top: 10px; }
+.lab-assistant-message .assistant-message-markdown :is(ul, ol) { padding-left: 20px; list-style: revert; }
+.lab-assistant-message .assistant-message-markdown strong { font-weight: 600; }
+.lab-assistant-message .assistant-message-markdown :is(pre, .assistant-markdown-table) { max-width: 100%; overflow-x: auto; }
+.lab-assistant-review { margin-top: 12px; padding: 12px; border: 1px solid var(--lab-line); border-radius: 12px; white-space: normal; }
+.lab-assistant-review h3 { font-size: 13px; font-weight: 600; }
+.lab-assistant-review > p { margin-top: 5px; color: var(--lab-muted); font-size: 11px; }
+.lab-assistant-review dl { display: grid; gap: 6px; margin-block: 12px; font-size: 12px; }
+.lab-assistant-review dl > div { display: grid; grid-template-columns: minmax(66px, 1fr) minmax(0, 2fr); gap: 10px; }
+.lab-assistant-review dt { color: var(--lab-muted); }
+.lab-assistant-review dd { margin: 0; overflow-wrap: anywhere; }
+.lab-assistant-review-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.lab-assistant-review-actions button { padding-inline: 12px; }
+.lab-assistant-review-actions [data-lab-assistant-review-action="confirm"] { color: #101E18; background: var(--lab-accent); }
+.lab-assistant-review:focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: 2px; }
 .lab-assistant-sources { margin-top: 5px; }
 .lab-assistant-sources summary { min-height: 44px; align-content: center; cursor: pointer; font-size: 12px; color: var(--lab-muted); }
 .lab-assistant-sources a { display: flex; align-items: center; min-height: 44px; color: var(--lab-accent-ink); text-decoration: underline; text-underline-offset: 4px; font-size: 12px; }
@@ -628,9 +648,6 @@
 .lab-assistant-settings-body select { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--lab-line); border-radius: 8px; color: var(--lab-ink); background: var(--lab-paper); font: inherit; font-size: 13px; }
 .lab-assistant-settings-body p { margin-top: 10px; color: var(--lab-muted); font-size: 11px; line-height: 1.6; }
 .lab-assistant-config-summary { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lab-muted); font-size: 11px; }
-.lab-assistant-context-choice { display: flex; align-items: center; min-height: 44px; gap: 6px; padding-inline: 4px; border-radius: 8px; font-size: 11px; line-height: 1.4; color: var(--lab-muted); cursor: pointer; transition: color 160ms ease, background-color 160ms ease; }
-.lab-assistant-context-choice:is(:hover, :focus-within) { color: var(--lab-ink); background: var(--lab-ground); }
-.lab-assistant-context-choice input { flex: none; accent-color: var(--lab-accent-ink); }
 /* A reserved hint slot keeps Send still when the editor gains or loses focus. */
 .lab-assistant-privacy { position: absolute; inset-inline: 10px; bottom: 0; height: 12px; margin: 0; color: var(--lab-muted); font-size: 10px; line-height: 12px; text-align: center; opacity: 0; transition: opacity 160ms ease; }
 .lab-assistant-composer:focus-within .lab-assistant-privacy { opacity: 1; }
@@ -650,7 +667,6 @@
 [data-lab-assistant-short] .lab-assistant-composer { padding: 6px 10px; }
 [data-lab-assistant-short] .lab-assistant-composer textarea { min-height: 44px; padding-block: 11px; }
 [data-lab-assistant-short] .lab-assistant-composer-options { gap: 4px; }
-[data-lab-assistant-short] .lab-assistant-context-choice { flex: none; }
 [data-lab-assistant-short] .lab-assistant-messages { padding-block: 12px; }
 @media (max-width: 639px) { .lab-assistant-introduction { align-items: start; flex-direction: column; } }
 @media (max-width: 359px) { .lab-assistant-heading { gap: 6px; } }
@@ -682,4 +698,42 @@
     .lab-workspace-links .lab-nav-label-full { display: none; }
     .lab-workspace-links .lab-nav-label-short { display: inline; }
     .lab-position-icons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* The loyalty specimen retains a unit-specific balance beside its program. */
+.lab-banking-loyalty-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-block: 10px; }
+.lab-banking-loyalty-row > * { min-width: 0; overflow-wrap: anywhere; }
+
+/* The application scopes statement styles to its shell. Reuse the same
+   geometry here with catalogue tokens, without changing that shell gate. */
+#lab-banking-invoices .card-miniature-heading { display: flex; align-items: center; gap: 16px; min-width: 0; }
+#lab-banking-invoices .card-miniature-heading > div { min-width: 0; overflow-wrap: anywhere; }
+#lab-banking-invoices .card-miniature { display: flex; align-items: flex-end; justify-content: flex-end; flex: 0 0 64px; width: 64px; height: 40px; padding: 6px; border-radius: 8px; color: white; background: linear-gradient(var(--card-angle), var(--card-start), var(--card-end)); }
+#lab-banking-invoices .card-miniature svg { width: 18px; height: 14px; }
+#lab-banking-invoices .invoice-history-head, #lab-banking-invoices .invoice-history-row { display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(6rem, .6fr) minmax(10rem, 1fr) 8rem; align-items: center; gap: 16px; }
+#lab-banking-invoices .invoice-history-head { padding-block: 12px; color: var(--lab-muted); font-size: 12px; border-bottom: 1px solid var(--lab-line); }
+#lab-banking-invoices .invoice-history-head > :nth-child(3), #lab-banking-invoices .invoice-history-amount { text-align: right; }
+#lab-banking-invoices .invoice-history-row { padding-block: 12px; font-size: 14px; }
+#lab-banking-invoices .invoice-history-row > * { min-width: 0; overflow-wrap: anywhere; }
+#lab-banking-invoices .invoice-history-amount > strong { display: block; font-size: 15px; }
+#lab-banking-invoices .invoice-history-amount > p { margin-top: 4px; }
+#lab-banking-invoices .invoice-history-period > a { padding-inline: 0; font-weight: 600; }
+#lab-banking-invoices .invoice-mobile-label { display: none; }
+@media (max-width: 1023px) {
+    #lab-banking-invoices .invoice-history-head { display: none; }
+    #lab-banking-invoices .invoice-history-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding-block: 16px; }
+    #lab-banking-invoices .invoice-history-period, #lab-banking-invoices .invoice-history-action { grid-column: 1 / -1; }
+    #lab-banking-invoices .invoice-history-action { justify-self: end; }
+    #lab-banking-invoices .invoice-mobile-label { display: block; margin-bottom: 6px; color: var(--lab-muted); font-size: 12px; }
+}
+
+/* Institution identity reuses selector artwork in the bank overview. */
+[data-design-lab] .institution-miniature { display:flex; align-items:center; justify-content:center; flex:0 0 54px; width:54px; height:36px; border:1px solid var(--lab-line); border-radius:7px; background:var(--lab-paper); color:var(--lab-ink); }
+
+[data-design-lab] .bank-directory { --ui-line:var(--lab-line); --ui-paper:var(--lab-paper); }
+
+[data-design-lab] .banking-workspace { --ui-line:var(--lab-line); --ui-paper:var(--lab-paper); --ui-surface:var(--lab-surface); --ui-ground:var(--lab-ground); }
+@media (max-width:480px) {
+    /* The catalogue specimen has a narrower inset than the real workspace. */
+    [data-design-lab] .bank-account-list .account-balance-grid dd { font-size:.75rem; }
 }

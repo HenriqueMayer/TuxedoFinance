@@ -63,6 +63,12 @@ can be inspected with the owner-scoped, read-only
 `banking.services.movements_before_opening(user)` queryset; no migration or
 automatic rewrite repairs them. See [local review](../operations.md#review-opening-date-conflicts).
 
+The account editor presents these fields together as **Balance when tracking
+starts** and **Start tracking on**, with a visible explanation that the amount
+belongs to the start of that date, before its movements. This wording does not
+reinterpret an opening as current cash or an income transaction. A new nonzero
+baseline still requires a date; existing unknown dates are not inferred.
+
 Bank list and account detail views synchronize derived transactions and invoices
 before reading balances. These requests may write to the ledger; the balance
 helpers themselves only query it. The synchronization service lives in
@@ -143,6 +149,41 @@ Invoice properties and payment validation use the same Django current day as
 settlement and default balance reads. The operating system's local date must
 not independently include a payment, reject its date or mark an invoice overdue.
 See the shared [financial calendar](../operations.md#financial-calendar).
+
+### Invoice credits
+
+`CardInvoiceCredit` records a positive credit magnitude, owned card and expense
+category, title, actual posting date, explicit reference month, notes and unique
+confirmation UUID. It is a separate source, not income, a purchase with a
+negative stored amount, or a payment. The original purchase need not be known;
+matching a merchant alone never selects one of several purchases.
+
+From an invoice, **Add invoice credit** opens the shared native entry form.
+The invoice context fixes card/month on the server. Edit and confirmed delete
+preserve validated local origins, bound errors and the no-JavaScript path.
+The invoice shows gross charges, credits, net payable and separate credit rows.
+
+`banking.credits.save_invoice_credit` and `delete_invoice_credit` validate
+ownership, category compatibility, opening-date limits and immutable UUIDs,
+then reconcile atomically. Identical repeated confirmations return the original
+source; conflicting payloads fail. Synchronization never posts an immediate
+bank movement for a credit. Net invoice amount is `max(0, gross - credits)`;
+excess remains visible as an asset on that card/month, without automatic
+carry-forward or manufactured bank income.
+
+Automatic due-date cash uses only credits posted by that due date. A later
+credit therefore leaves historical cash intact and becomes card credit rather
+than rewriting an earlier settlement. Manual payments also retain their actual
+cash evidence. Dated obligations, wealth and realized reports apply posting-date
+cutoffs. Expense reports and budgets subtract the credit in its explicit
+reference month/category; scenario snapshots carry a distinct credit kind and
+subtract a positive override magnitude exactly once. Signed chart values retain
+their source links; positive-area composition drawings do not invent negative
+areas.
+
+This operator-reviewed source capability does not reopen the paused statement
+import interface or connect to a bank. Apply the additive banking/transactions
+migrations before starting the updated application.
 
 ## Loyalty
 
@@ -275,6 +316,15 @@ capped at its positive balance. An excluded account
 sets aside its positive balance. Negative balances remain visible in planning,
 and excluded funding never removes an invoice or other obligation.
 
+The account editor groups the inclusion checkbox and manual reserve under the
+native **Planning adjustments (optional)** disclosure. The reserve is labelled
+**Keep outside monthly planning**, with visible copy distinguishing it from
+account cash and explaining that goal reservations are not counted twice.
+The disclosure opens for a positive saved/bound reserve, an excluded account or
+field errors. Closing it never disables, clears or omits its controls; the same
+complete POST works without JavaScript. This is presentation only: the defaults,
+native-currency amount, date guards and availability formula remain unchanged.
+
 `banking.services.get_planning_availability(user, as_of=None)` returns bank
 balances, monetary cash pots, set-aside amounts, availability, reserve shortfall
 and missing currencies. Positions are calculated by product and asset, with
@@ -293,9 +343,46 @@ Bank overviews and account cards consume grouped balances instead of calling an
 aggregate for each account. The planning toggle uses an owned, CSRF-protected
 POST; the same change works with a normal form submission without JavaScript.
 
+## Workspace sections
+
+Accounts uses four direct section destinations: **Accounts**, **Invoices**,
+**Loyalty** and **Exchange rates**. The shared section rail scrolls horizontally
+on small screens without wrapping or widening the document. Editors retain the
+active owning section; section navigation never replaces a form's Save/Cancel.
+
+Accounts keeps the consolidated planning-availability snapshot above its
+institution index or open bank. The snapshot, the bank's real balances and card
+invoice debt retain separate labels and meanings. The existing bank grid and
+single internal workspace are preserved; Minimize returns to the institution
+index rather than inserting a second bank selector into the title bar.
+
+Invoices starts with the existing card overview, including cards with no
+matching invoices, and opens the selected card's history. Card appearance,
+closing/due rules and settlement behavior remain local to the existing card.
+The selected card and invoice detail reuse its decorative miniature beside a
+readable card, bank, account and currency identity. History rows align month/due
+date, status, total/remaining and actions on desktop; phones stack the same
+labelled amounts. No cross-card or cross-currency aggregate is introduced.
+
+Loyalty has a dedicated consultation at `/banking/loyalty/`. It lists the user's
+programs together, including independent programs and programs linked to banks
+or cards. Balances retain each program's own points/miles unit; they are not
+summed or converted into cash. One live text search and paginated results keep
+the consultation usable as the collection grows. Each program exposes linked
+cards, existing entry/redemption actions and a deliberate native disclosure of
+its ten most recent entries, with a link to the program's paginated full history
+at `/banking/loyalty/<id>/entries/`. Entry editing and deletion remain unavailable
+for entries owned by a reward redemption; those continue to be managed through
+their source.
+Explicit local origins keep program and entry editors' Save/Cancel in context.
+
+This reorganization adds read-only presentation and navigation. It does not
+change models, migrations, ledger services, funding eligibility, financial
+calculation, posting or deletion protection.
+
 ## Contextual daily actions
 
-The workspace is named Accounts. Its overview lists owned institutions as links;
+The Accounts overview lists owned institutions as links;
 opening one gives each account a card with a visible New transaction shortcut.
 The deliberate account menu retains Edit / reserve, own transfer, card creation
 and deletion. Validated account shortcuts and explicit local `next` origins
@@ -313,16 +400,22 @@ origin. Source editors and payment editors return to the same invoice section.
 
 ## Bank overview, details and dynamic consultation
 
-The overview shows all owned banks, using one link per institution with its name,
-color marker and account/card counts. It has no text filter. Retired overview
+The overview shows all owned banks, using one link per institution with its
+name, decorative neutral 54 × 36 institution miniature, color marker and
+account/card counts. The glyph reuses the shared account-selector artwork; it
+is part of the existing link and adds no control or keyboard stop. It has no text filter. Retired overview
 `q` parameters are ignored. Bank totals, monetary cash pots and set-aside amounts
 stay visible beside the all-bank available-money summary, without a disclosure.
 Missing-rate and reserve shortfall warnings remain visible.
 
 Opening an institution replaces the bank grid with one broad internal work
 surface while retaining the consolidated summary. Its compact tab bar names
-the institution and keeps a labelled Minimize action available. The bar stays
-within the workspace's document scroll. The overview remains the complete
+the institution beside the shared miniature instead of a bookmark marker, and
+keeps a labelled Minimize action available. The existing native Minimize link
+also covers the title bar, so clicking its title or empty space returns to the
+overview without adding another keyboard stop. Its hit area ends at the bar;
+account content and controls never minimize the workspace. The bar stays within
+the workspace's document scroll. The overview remains the complete
 colored institution index; minimize the current bank to choose another one.
 Forty banks therefore add no rows above the selected bank's accounts.
 
@@ -339,8 +432,12 @@ the navigation baseline. Inner planning and reward updates retain their
 existing fragments and validation contracts.
 
 Each bank page contains the institution's accounts, monetary cash pots, reserves
-and loyalty programs. An account card has three distinct layers: its name and
+and loyalty programs. The dedicated Loyalty section also exposes those programs
+across institutions. An account card has three distinct layers: its name and
 daily actions, a labelled Balance / Set aside / Available grid, then its cards.
+Each account has its own bordered surface and a subtly contrasting name/actions
+header, with space between accounts. The details and planning controls share
+the account footer, apart from its amounts and linked card actions.
 The planning participation POST stays outside the amount grid. Account details
 contains opening-balance evidence and debit-card administration. Its ellipsis
 menu retains editing/reserving, own transfer, both card creation actions and

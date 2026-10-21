@@ -1,16 +1,20 @@
 # Personal finance branch testing
 
-The work on `feat/personal-finance-evolution` is unreleased. It is intended for
-manual testing before the owner authorizes integration into `main`. The branch
-does not change the version or publish a container, tag or release.
+The current checkout includes unreleased personal-finance and assistant work.
+This walkthrough supports manual owner acceptance before any separate decision
+to integrate into `main` or publish. Running it does not accept the candidate,
+change its version or publish a container, tag or release. The
+[PRD status table](product-requirements.md#current-delivery-status) distinguishes
+current interfaces from paused and gated capabilities.
 
 ## Preview a disposable copy
 
-From this branch and with the locked dependencies installed:
+From the checkout under review and with the locked dependencies installed,
+explicitly keep real assistant authorization and inference off:
 
 ```bash
 uv sync --locked
-uv run python scripts/preview_branch.py
+ASSISTANT_OPENAI_AUTH_ENABLED=False ASSISTANT_OPENAI_INFERENCE_ENABLED=False uv run python scripts/preview_branch.py
 ```
 
 Open <http://127.0.0.1:8766/> and sign in with your existing user. The command
@@ -18,7 +22,7 @@ locates the installation's SQLite database using `TUXEDO_DATA_DIR` and the
 configured environment file. For a different source or a busy port:
 
 ```bash
-uv run python scripts/preview_branch.py --source-database /absolute/path/db.sqlite3 --port 8767
+ASSISTANT_OPENAI_AUTH_ENABLED=False ASSISTANT_OPENAI_INFERENCE_ENABLED=False uv run python scripts/preview_branch.py --source-database /absolute/path/db.sqlite3 --port 8767
 ```
 
 The helper uses SQLite's read-only online backup API, checks the copy's
@@ -41,7 +45,7 @@ To test on a phone, connect both devices to a trusted private network and supply
 this computer's LAN address, for example:
 
 ```bash
-uv run python scripts/preview_branch.py --bind 192.168.1.25
+ASSISTANT_OPENAI_AUTH_ENABLED=False ASSISTANT_OPENAI_INFERENCE_ENABLED=False uv run python scripts/preview_branch.py --bind 192.168.1.25
 ```
 
 Replace the example with the address assigned to your computer. Open
@@ -57,9 +61,14 @@ Use the [interface map](interface-map.md) for the current routes and component
 families, and the [shared interaction contracts](frontend.md) for keyboard,
 filters, help and departure behavior. In both themes on computer and phone:
 
-1. Follow each workspace's section tabs and source links. Confirm that shortcuts
-   reach the record or period described, and that Back/Forward and form
-   Save/Cancel retain the explicit local origin and its filters.
+1. Follow the same six direct destinations on desktop and phone: Home,
+   Transactions, Accounts, Investments, Plan and Analytics. Home keeps operational
+   indicators; Analytics has Finances and Investments with independent chart
+   periods. Check their section tabs and source links, including the selected
+   month when opening Analytics from Home. Back/Forward and form Save/Cancel
+   must retain the explicit local origin and filters. Compact headings and
+   opening summaries must preserve long labels, warnings and expandable
+   details rather than forcing equal panel heights.
 2. Type and delete in consultation searches; change short choices, months and
    ordering. Results update without losing the caret, focused control or page
    position. Clear remains near active criteria. Read-only filters must not
@@ -68,13 +77,19 @@ filters, help and departure behavior. In both themes on computer and phone:
    persistent account/card miniatures, their search, exact category splits and
    server-error recovery. Creation choices begin empty; edited/bound values and
    explicit shortcut context remain selected.
-4. Open and minimize a bank workspace, inspect its accounts, cards and reserves,
-   and follow invoice and movement actions. Check compact exposed invoice/FX
-   criteria and the distinction between automatic and confirmed payments.
-5. Complete the guided investment entry and full product/asset configuration;
-   inspect archived entries, observed-price filters and operation context.
-   In Plan, review budgets, backed goals, signal settings, salary/CLT inputs,
-   yield overrides and explicit draft save/duplicate/compare/delete actions.
+4. In Accounts, follow Accounts, Invoices, Loyalty and Exchange rates. Open a
+   bank from its institution link, then minimize through the title bar and its
+   labelled action; account content must not minimize it. Inspect the separate
+   account surfaces, cards and reserves, then follow invoice and movement
+   actions. Check compact invoice/FX criteria, native invoice credits and the
+   distinction between automatic and confirmed payments.
+5. In Investments, follow My investments, History, Prices and Setup. Complete
+   guided entry and full product/asset configuration; inspect archived entries,
+   observed-price filters and operation context. Save a position emoji and
+   verify that another position in the same asset is unaffected. In Plan, use
+   This month, Goals, Simulations and Alerts. Review budgets, backed goals and
+   signal settings; inside Simulations, check Salary, Yield and Saved drafts,
+   including overrides and explicit save/duplicate/compare/delete actions.
 6. Use Tab/Shift+Tab, arrows, Enter and Space throughout. Focused fields,
    searchable results and final actions remain above fixed navigation on short
    phone viewports. Test invalid submissions, conditional transitions and native
@@ -86,8 +101,8 @@ filters, help and departure behavior. In both themes on computer and phone:
    is documentation, not an application page.
 
 The static tour captures the checked-out application, including unreleased
-changes, as described in [preview maintenance](preview.md). This branch's
-interactive preview is the acceptance environment; no integration, bank
+changes, as described in [preview maintenance](preview.md). This disposable
+interactive preview supports owner acceptance; no integration, bank
 connection, Cloudflare deployment or publication is implied by these tests.
 
 ## Acceptance checklist
@@ -126,6 +141,7 @@ created in the disposable preview without affecting the installation.
    parts must add up exactly, including installment cents. The source still
    generates one payment or invoice obligation. Inspect filters, reports, budget
    consumption and the `category_splits` field in transaction CSV exports.
+   Analytical graphs belong to Analytics rather than Home.
 8. **Wealth (paused):** its navigation section is hidden and old direct URLs
    return to Home; underlying calculations remain available to their other consumers.
 9. **Confirmed invoices:** set today as the start date in a card's settings and
@@ -135,11 +151,21 @@ created in the disposable preview without affecting the installation.
    Repeating the same submitted confirmation must not create a second debit.
    Earlier automatic invoices stay automatic; confirmed invoices retain their
    mode even if the card start date changes.
+10. **Invoice credits:** add a credit with its owned card, reference month,
+    native currency and source evidence. Inspect the reduced invoice obligation,
+    category reporting and monthly outlook without creating a bank-cash income
+    or a second expense. Edit/delete it and verify that actual confirmed
+    payments retain their evidence.
 
-The new features are local. Statements, decisions, price observations and signal
-reviews stay in the installation database. No bank connection, external quote
-feed, AI service or presentation CDN is required. Inter's font and license are
-included in `static/fonts/`.
+Core financial workflows remain local. Financial records, price observations,
+private drafts and signal reviews stay in the installation database. No bank
+connection, external quote feed, AI service or presentation CDN is required.
+An explicitly enabled ChatGPT connection is optional and sends bounded necessary
+context externally; it is outside this provider-disabled walkthrough. Inter's
+font and license are included in `static/fonts/`.
+
+- [ ] Owner completes the manual checks for the exact checkout and records any
+      remaining issues before separately approving integration or publication.
 
 ## Assistant review
 
@@ -177,9 +203,13 @@ Those cases exercise model/effort preferences, thinking/writing/cancellation,
 targeted reads, monthly simulation, private exports and reviewed local changes.
 Reads/simulations must not save records; only the separate confirmation can
 create, categorize, edit or delete a transaction, create a goal or create a
-category budget. Repeat confirmation must not duplicate the write. Real model
-validation has a separate approved account/context/usage scope and does not
-follow from this manual acceptance checklist. Open Finance remains paused.
+category budget: exactly six supported local actions. Repeat confirmation must
+not duplicate the write. ChatGPT is the only connected provider; there is no
+paid API-key fallback or Internet/news tool. Real model validation has a separate
+approved account/context/usage scope and does not follow from this manual
+acceptance checklist. The real Open Finance pilot remains paused. Its prepared
+operator-only probe makes no application database queries or ledger writes and
+does not enable a product bank connection.
 
 ## Automated validation
 
