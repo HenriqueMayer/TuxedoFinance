@@ -348,10 +348,19 @@ test('touch selection, held composition, and native bank colors remain usable on
         const p=await native.newPage();await p.goto('/banking/create/');
         await p.locator('#id_name').fill('Native color');await p.locator('#id_color').fill('#abcdef');await p.getByRole('button',{name:'Save',exact:true}).click();
         const bankLink=p.locator('.bank-overview-card').filter({hasText:'Native color'});
-        await expect(bankLink).toHaveCSS('border-inline-start-color','rgb(171, 205, 239)');
+        // The institution miniature replaces the bookmark; its identity group
+        // retains the saved color rather than the outer navigation link.
+        await expect(bankLink.locator('.institution-miniature')).toBeVisible();
+        await expect(bankLink.locator('.bank-overview-identity')).toHaveCSS('border-inline-start-color','rgb(171, 205, 239)');
+        await expect(bankLink.locator('.bank-marker, .bank-bookmark')).toHaveCount(0);
         await bankLink.press('Enter');
         await p.locator('[id^="bank-detail-options-"] > summary').press('Enter');
-        await expect(p.getByRole('link',{name:'Change marker color',exact:true})).toBeVisible();
+        await p.getByRole('link',{name:'Change marker color',exact:true}).press('Enter');
+        await expect(p.locator('#id_color')).toHaveValue('#abcdef');
+        await p.locator('#id_color').fill('#1278ab');await p.getByRole('button',{name:'Save',exact:true}).click();
+        await expect(p.getByRole('heading',{name:'Native color',exact:true})).toBeVisible();
+        await expect(p.locator('#bank-workspace-panel')).toHaveCSS('border-top-color','rgb(18, 120, 171)');
+        await expect(p.locator('.bank-marker, .bank-bookmark')).toHaveCount(0);
         await p.goto('/analytics/');await expect(p.locator('[data-balance-range] svg[data-selection-surface]')).toBeVisible();
         await expect(p.locator('[data-selection-start], #id_range_start')).toHaveCount(0);
     } finally {await native.close();}
