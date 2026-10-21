@@ -218,6 +218,9 @@ This explicit option is native-runner-only and accepts only its owned disposable
 runtime and empty environment file. It does not enable live OAuth or inference;
 never select the fixture settings module manually for an installation. The
 [test index](tests/README.md) owns fixture locations and coverage responsibilities.
+CI also runs the guarded action, consultation, Markdown-copy, progress and
+streaming specifications explicitly, because ordinary runs keep those synthetic
+provider cases disabled.
 
 Without a file filter or grep, this command runs the complete application
 browser suite. Existing skipped cases for paused features remain skipped.

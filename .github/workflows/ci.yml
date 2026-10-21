@@ -117,6 +117,15 @@ jobs:
       - name: Run application browser tests
         run: npm run test:e2e
 
+      - name: Test assistant tools with the isolated synthetic provider
+        run: >-
+          npm run test:e2e -- --assistant-fixtures
+          tests/e2e/assistant/actions.spec.js
+          tests/e2e/assistant/consultation.spec.js
+          tests/e2e/assistant/copy-markdown.spec.js
+          tests/e2e/assistant/rich-text-progress.spec.js
+          tests/e2e/assistant/streaming.spec.js
+
       - name: Test static interface preview
         run: npm run test:preview
 
