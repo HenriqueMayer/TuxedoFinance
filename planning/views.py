@@ -50,7 +50,9 @@ def budgets(request):
 
 @login_required
 def tools(request):
-    return render(request, 'planning/tools.html', {'section': 'tools'})
+    # Old tool bookmarks resolve to the explicit workspace, preserving their query.
+    query = request.GET.urlencode()
+    return redirect(reverse('sandbox:index') + (f'?{query}' if query else ''))
 
 
 @login_required

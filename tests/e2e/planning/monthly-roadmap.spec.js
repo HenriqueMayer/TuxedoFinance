@@ -36,7 +36,9 @@ for (const theme of ['light', 'dark']) for (const language of ['en', 'pt-br']) f
         await page.goto('/planning/');
         await expect(page.locator('html')).toHaveAttribute('lang', language);
         const sections = page.locator('nav[aria-label="' + (language === 'en' ? 'Planning sections' : 'Seções de planejamento') + '"]');
-        await expect(sections.getByRole('link')).toHaveCount(3);
+        await expect(sections.getByRole('link')).toHaveText(language === 'en'
+            ? ['This month', 'Goals', 'Simulations', 'Alerts']
+            : ['Este mês', 'Metas', 'Simulações', 'Alertas']);
         await expect(page.getByRole('heading', { name: language === 'en' ? 'Plan this month' : 'Planejar este mês', exact: true })).toBeVisible();
         await expect(page.locator('#monthly-results')).toContainText('800,00');
         await expect(page.locator('#budgets')).toContainText('250,00');
@@ -91,7 +93,11 @@ for (const theme of ['light', 'dark']) for (const language of ['en', 'pt-br']) f
         await page.locator('#goal-filter-clear a').press('Enter');
         await expect(page.locator('input[name="archived"]')).not.toBeChecked();
         await page.goto('/planning/tools/');
-        for (const href of ['/planning/signals/', '/sandbox/', '/sandbox/simulation/', '/sandbox/drafts/']) await expect(page.locator(`main a[href="${href}"]`)).toBeVisible();
+        await expect(page).toHaveURL(/\/sandbox\/$/);
+        await expect(page.locator('[data-planning-navigation] a[href="/planning/signals/"]')).toBeVisible();
+        const simulations = page.locator('[data-simulation-navigation]');
+        for (const href of ['/sandbox/', '/sandbox/simulation/', '/sandbox/drafts/'])
+            await expect(simulations.locator(`a[href="${href}"]`)).toBeVisible();
         await page.goto('/imports/');
         await expect(page).toHaveURL(/\/transactions\/$/);
         await page.goto('/dashboard/wealth/');

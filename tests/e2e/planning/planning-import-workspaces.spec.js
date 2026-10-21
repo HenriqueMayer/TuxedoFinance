@@ -68,7 +68,8 @@ for (const theme of ['light', 'dark']) {
         await page.goto('/planning/');
         await expect(page.getByRole('heading', { name: 'Category budgets', exact: true })).toBeVisible();
         await page.locator('nav[aria-label="Planning sections"]').getByRole('link', { name: 'Goals', exact: true }).press('Enter');
-        await expect(page.getByRole('link', { name: 'Tools', exact: true })).toBeVisible();
+        await expect(page.getByRole('navigation', { name: 'Planning sections', exact: true })
+            .getByRole('link', { name: 'Simulations', exact: true })).toBeVisible();
         await page.getByRole('link', { name: 'New goal', exact: true }).press('Enter');
         await page.locator('#id_name').fill('Flow goal');
         await page.locator('#id_target_amount').fill('2000');

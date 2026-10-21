@@ -25,7 +25,7 @@
     --lab-control-line: #808080;
 }
 [data-design-lab] main > section { scroll-margin-top: calc(var(--lab-header) + 20px); }
-#lab-login, #lab-home-features { scroll-margin-top: calc(var(--lab-header) + 20px); }
+#lab-login, #lab-home-features, [id^="lab-planning-"] { scroll-margin-top: calc(var(--lab-header) + 20px); }
 .lab-catalogue-toolbar {
     max-width: 1280px; margin: auto; padding: 12px 32px;
     display: flex; align-items: center; gap: 24px;

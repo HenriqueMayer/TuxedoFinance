@@ -38,7 +38,7 @@ for (const theme of ['light', 'dark']) {
         await expect(page.locator('[aria-labelledby="salary-input-title"]')).toHaveClass(/surface-panel/);
         await expect(page.locator('#salary-sandbox-help')).toBeHidden();
         await expect(page.locator('#id_gross_salary-help')).toBeHidden();
-        const headingHelp = page.getByRole('button', { name: 'Explain Salary Sandbox', exact: true });
+        const headingHelp = page.getByRole('button', { name: 'Explain Salary simulation', exact: true });
         await headingHelp.hover();
         const tooltip = await readableHelp(page, '#salary-sandbox-help');
         const textBounds = await tooltip.boundingBox();
@@ -48,9 +48,9 @@ for (const theme of ['light', 'dark']) {
         await page.mouse.move(2, 2);
         await expect(tooltip).toBeHidden();
 
-        // Tab into the help from the preceding section navigation.
-        await page.getByRole('navigation', { name: 'Planning sections', exact: true })
-            .getByRole('link', { name: 'Tools', exact: true }).focus();
+        // Tab into the help from the last link of the simulation navigation.
+        await page.getByRole('navigation', { name: 'Simulation sections', exact: true })
+            .getByRole('link', { name: 'Saved drafts', exact: true }).focus();
         await page.keyboard.press('Tab');
         await expect(headingHelp).toBeFocused();
         await expect(tooltip).toBeVisible();

@@ -34,7 +34,7 @@ escuro. Seus registros ficam na sua instalação.
 | **Transações** | Registrar receitas e despesas, dividir categorias, gerenciar recorrências e parcelas, exportar CSV. |
 | **Contas** | Organizar contas bancárias, PIX, cartões, faturas, transferências e fidelidade. |
 | **Investimentos** | Acompanhar posições, movimentações, cofrinhos e preços datados; escolher um emoji para cada aplicação. |
-| **Planejar** | Definir limites por categoria, reservar saldos existentes para metas e comparar simulações. |
+| **Planejar** | Rever limites do mês, reservar saldos para metas, comparar simulações e conferir alertas locais. |
 | **Análises** | Explorar gráficos financeiros e de investimentos, despesas por categoria e projeções de fluxo. |
 
 **No código ainda não publicado:** estão incluídos Análises, os ícones por

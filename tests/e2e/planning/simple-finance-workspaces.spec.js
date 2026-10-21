@@ -165,10 +165,13 @@ test(`simple finance workspaces keep data, keyboard, filters and context (${widt
         await page.getByRole('textbox', { name: portuguese ? 'Valor da meta *' : 'Goal amount *', exact: true }).focus();
         await expect(page.locator('#id_target_amount')).toBeFocused();
         await page.goto('/planning/tools/');
-        await expect(page.locator('.planning-tool')).toHaveCount(4);
-        await page.locator('.planning-tool').first().focus();
+        await expect(page).toHaveURL(/\/sandbox\/$/);
+        await expect(page.locator('[data-planning-navigation] > a')).toHaveCount(4);
+        const simulationLinks = page.locator('[data-simulation-navigation] > a');
+        await expect(simulationLinks).toHaveCount(3);
+        await simulationLinks.first().focus();
         await page.keyboard.press('Tab');
-        await expect(page.locator('.planning-tool').nth(1)).toBeFocused();
+        await expect(simulationLinks.nth(1)).toBeFocused();
         await noOverflow(page);
         await page.screenshot({ path: info.outputPath(`planning-tools-${width}-${theme}.png`), fullPage: true });
         expect(dialogs).toEqual([]);

@@ -26,7 +26,7 @@
 
     <!-- Application and catalogue share compiled tokens and components. -->
     <link rel="stylesheet" href="../static/css/app.css">
-    <link rel="stylesheet" href="design-system.css?v=caefac44e24b">
+    <link rel="stylesheet" href="design-system.css?v=08b56f82ee9f">
 </head>
 <body data-design-lab class="min-h-screen bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
 
@@ -1244,7 +1244,35 @@
     <p class="subtle-copy">Illustrative values. One divided list keeps reading and updating distinct; phones stack the same information. Optional explanations never hide missing-data warnings.</p>
     <p class="subtle-copy">Secondary screens follow the same hierarchy: complete registrations group identity, valuation and existing holdings under native legends; goal details separate progress from its reserved sources. Keep Edit and Archive/Restore directly available, and place less frequent catalogue actions in deliberate compact menus. Simulation entry stays compact while comparisons and keyboard-scrollable tables keep the workspace width.</p>
     <div class="lab-specimen surface-panel investment-position-list"><div class="investment-list-heading"><span>Investment</span><span>Registered value</span><span></span></div><article class="investment-position-row"><div class="investment-row-main"><div><h4 class="font-semibold text-sm"><a href="#forms" class="investment-name">Long-term fund</a></h4><p class="subtle-copy">Everyday bank</p></div><div class="investment-row-value"><p class="font-semibold">BRL 1,200.00</p><p class="investment-evidence">At remaining acquisition cost · 12 units</p></div><a href="#forms" class="action-link investment-update">Update</a></div></article></div>
-    <section class="lab-specimen surface-panel monthly-outlook"><div class="monthly-outlook-main"><div class="flex flex-wrap items-center gap-3"><h4 class="section-title">After known commitments</h4><span class="status-badge">Projection</span></div><p class="money-highlight tabular-nums mt-2">BRL 800.00</p><p class="subtle-copy mt-2">Known income, expenses and unpaid invoices. Reserved money stays separate.</p></div><dl class="monthly-outlook-metrics"><div><dt>Recorded available cash</dt><dd>BRL 1,000.00</dd></div><div><dt>Reserved at month end</dt><dd>BRL 300.00</dd></div></dl><details class="explanation-disclosure monthly-calculation"><summary>How is this calculated?</summary><p class="subtle-copy mt-2">Use dated registered cash and known obligations. Category budgets are spending limits, not additional reservations.</p></details></section>
+    <section id="lab-planning-navigation" class="lab-specimen space-y-4" aria-labelledby="lab-planning-navigation-title">
+      <h4 id="lab-planning-navigation-title" class="section-title">Explicit planning sections</h4>
+      <p class="subtle-copy">This month keeps its availability and category limits together. Goals, Simulations and Alerts have direct destinations; hypothetical scenarios never become financial records.</p>
+      <nav class="section-nav planning-sections" aria-label="Example planning sections"><a href="#lab-planning-month" aria-current="page">This month</a><a href="#lab-planning-goals">Goals</a><a href="#lab-planning-simulations">Simulations</a><a href="#lab-planning-alerts">Alerts</a></nav>
+    </section>
+    <section id="lab-planning-month" class="lab-specimen surface-panel monthly-outlook"><div class="monthly-outlook-main"><div class="flex flex-wrap items-center gap-3"><h4 class="section-title">After known commitments</h4><span class="status-badge">Projection</span></div><p class="money-highlight tabular-nums mt-2">BRL 800.00</p><p class="subtle-copy mt-2">Known income, expenses and unpaid invoices. Reserved money stays separate.</p></div><dl class="monthly-outlook-metrics"><div><dt>Recorded available cash</dt><dd>BRL 1,000.00</dd></div><div><dt>Reserved at month end</dt><dd>BRL 300.00</dd></div></dl><details class="explanation-disclosure monthly-calculation"><summary>How is this calculated?</summary><p class="subtle-copy mt-2">Use dated registered cash and known obligations. Category budgets are spending limits, not additional reservations.</p></details></section>
+    <section id="lab-planning-goals" class="space-y-3" aria-labelledby="lab-planning-goals-title">
+      <h4 id="lab-planning-goals-title" class="section-title">Goals with backed progress</h4>
+      <div class="lab-specimen surface-panel goal-list">
+        <div class="goal-list-heading" aria-hidden="true"><span>Goal</span><span>Reserved / goal</span><span>Target date</span></div>
+        <article class="goal-card goal-row" aria-labelledby="lab-goal-reserve">
+          <div class="goal-row-main">
+            <div class="goal-row-identity"><h5 id="lab-goal-reserve" class="font-semibold text-sm"><a href="#forms" class="investment-name">Emergency reserve</a></h5></div>
+            <div class="goal-row-progress"><p class="goal-row-label">Reserved / goal</p><p class="tabular-nums"><strong>BRL 1,200.00</strong> / 6,000.00</p><progress max="100" value="20" aria-label="Example goal progress">20%</progress></div>
+            <div class="goal-row-deadline"><p class="goal-row-label">Target date</p><p>No deadline</p></div>
+          </div>
+        </article>
+      </div>
+      <p class="subtle-copy">Each goal keeps its own currency, deadline and shortfall/FX warnings. Never add unrelated currencies or present an unsupported reservation as funded progress.</p>
+    </section>
+    <section id="lab-planning-simulations" class="lab-specimen space-y-3" aria-labelledby="lab-planning-simulations-title">
+      <h4 id="lab-planning-simulations-title" class="section-title">Simulation subnavigation</h4>
+      <nav class="section-nav simulation-sections" aria-label="Example simulation sections"><a href="#forms" aria-current="page">Salary</a><a href="#planning-sheet-example">Yield</a><a href="apps/sandbox.md#drafts-and-privacy">Saved drafts</a></nav>
+      <p class="subtle-copy">The primary section rail keeps the workspace width. Salary and Yield forms remain compact; saved-scenario comparison and scrollable tables retain their full reading area. Reopened drafts keep Saved drafts active.</p>
+    </section>
+    <section id="lab-planning-alerts" class="lab-specimen space-y-3" aria-labelledby="lab-planning-alerts-title">
+      <h4 id="lab-planning-alerts-title" class="section-title">Local alerts</h4>
+      <p class="subtle-copy">Explained evidence and source links remain visible beside deliberate review actions. Acknowledge and Dismiss change the review state only; they never edit transactions or move funds.</p>
+    </section>
   </section>
     </div>
 </section>

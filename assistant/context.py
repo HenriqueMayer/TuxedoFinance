@@ -46,7 +46,7 @@ _ROUTES = {
 _LABELS = {'analytics': gettext_noop('Analytics'), 'dashboard': gettext_noop('Home'), 'transactions': gettext_noop('Transactions'),
            'categories': gettext_noop('Categories'), 'banking': gettext_noop('Accounts'),
            'investments': gettext_noop('Investments'), 'planning': gettext_noop('Plan'),
-           'sandbox': gettext_noop('Planning tools'), 'ingestion': gettext_noop('Reviewed statements'),
+           'sandbox': gettext_noop('Simulations'), 'ingestion': gettext_noop('Reviewed statements'),
            'accounts': gettext_noop('Settings')}
 _MONTHS = {'month', 'instrument_month', 'installment_month'}
 _DATES = {'date', 'date_from', 'date_to', 'start', 'end'}

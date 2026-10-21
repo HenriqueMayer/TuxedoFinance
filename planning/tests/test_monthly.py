@@ -114,7 +114,7 @@ class MonthlyOutlookTests(PlanningFixture):
         self.assertContains(response, 'After known commitments')
         self.assertNotContains(response, reverse('sandbox:simulation'))
         self.assertRedirects(self.client.get(reverse('planning:budgets'), {'month': '2024-02'}), reverse('planning:index') + '?month=2024-02#budgets')
-        self.assertContains(self.client.get(reverse('planning:tools')), reverse('sandbox:simulation'))
+        self.assertContains(self.client.get(reverse('planning:tools'), follow=True), reverse('sandbox:simulation'))
         response = self.client.get(reverse('planning:goals'), {'q': 'emerg'})
         self.assertContains(response, 'Emergency')
         self.assertNotContains(response, 'Travel')

@@ -2,7 +2,7 @@
 {% load i18n navigation investment_identity %}
 {% block title %}{{ goal.name }} — Tuxedo Finance{% endblock %}
 {% block content %}
-<div class="space-y-6">
+<div class="planning-workspace space-y-6">
     <header class="workspace-header"><h1 class="page-title min-w-0 break-words">{{ goal.name }}</h1>{% url 'planning:goal_update' goal.pk as edit_url %}<a class="action-link shrink-0" href="{% contextual_url edit_url %}">{% translate 'Edit goal' %}</a></header>
     <section class="surface-panel monthly-outlook" aria-labelledby="goal-progress">{% include 'planning/_goal_summary.html' %}</section>
     <section class="space-y-4" aria-labelledby="goal-reservations">

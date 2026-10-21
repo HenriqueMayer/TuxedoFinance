@@ -5,6 +5,6 @@
     <a href="{{ section.url }}"{% if section.active %} aria-current="page"{% endif %}>{{ section.label }}</a>
     {% endfor %}
 </nav>
-{% elif request.resolver_match.namespace == 'planning' %}
+{% elif request.resolver_match.namespace == 'planning' or request.resolver_match.namespace == 'sandbox' %}
 {% include 'planning/_navigation.html' %}
 {% endif %}

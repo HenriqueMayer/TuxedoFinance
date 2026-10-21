@@ -43,8 +43,10 @@ The synthetic profiles also demonstrate a BRL 2,000 account reserve, an excluded
 USD account, a monthly cash pot, card appearance and explicit category budgets.
 The Accounts capture deliberately opens one synthetic institution's internal
 workspace. The Plan capture shows the current monthly availability and category
-limits at `/planning/`; simulations remain a secondary tool. The captured budget
-limits do not reserve balances or generate financial operations.
+limits at `/planning/`, with direct This month, Goals, Simulations and Alerts
+section links. Salary, returns and private drafts are grouped within Simulations;
+there is no intermediate Tools directory. The captured budget limits do not
+reserve balances or generate financial operations.
 
 Captures use the complete 1440 × 1000 viewport, starting at its left edge, so the
 shared sidebar remains available in original images and the lightbox. The tour

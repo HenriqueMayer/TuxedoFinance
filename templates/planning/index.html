@@ -10,12 +10,13 @@
         </form>
     </header>
     <div id="monthly-results" class="space-y-5">
-        <section class="surface-panel monthly-outlook" aria-labelledby="monthly-available">
+        <section class="surface-panel monthly-outlook monthly-planning-summary" aria-labelledby="monthly-available">
             <div class="monthly-outlook-main">
+                <p class="monthly-period">{{ month|date:'F Y' }}</p>
                 <div class="flex flex-wrap items-center gap-3"><h2 id="monthly-available" class="section-title">{% if outlook.is_past %}{% translate 'Available at month end' %}{% else %}{% translate 'After known commitments' %}{% endif %}</h2><span class="status-badge">{% if outlook.is_past %}{% translate 'Recorded' %}{% else %}{% translate 'Projection' %}{% endif %}</span></div>
                 {% if outlook.supported %}
                 <p data-monthly-available class="money-highlight tabular-nums mt-2{% if outlook.projected_available < 0 %} text-expense dark:text-expense-light{% endif %}">{{ outlook.base_currency }} {{ outlook.projected_available|floatformat:2 }}{% if not outlook.complete %} · {% translate 'Partial' %}{% endif %}</p>
-                <p class="subtle-copy mt-2">{{ month|date:'F Y' }} · {% if outlook.is_past %}{% translate 'Based on recorded balances at month end and your current reserve settings.' %}{% else %}{% translate 'Includes known income, expenses and unpaid invoices through month end. Reserved money stays separate.' %}{% endif %}</p>
+                <p class="subtle-copy mt-2">{% if outlook.is_past %}{% translate 'Based on recorded balances at month end and your current reserve settings.' %}{% else %}{% translate 'Includes known income, expenses and unpaid invoices through month end. Reserved money stays separate.' %}{% endif %}</p>
                 {% else %}<p role="status" class="subtle-copy mt-3">{% translate 'Cash projections cover the current month and the next eleven months. You can still set limits for this month.' %}</p>{% endif %}
             </div>
             {% if outlook.supported %}
@@ -35,7 +36,7 @@
             </div></details>
         </section>
         <section id="budgets" class="space-y-3" aria-labelledby="monthly-budgets">
-            <header class="workspace-header"><div><h2 id="monthly-budgets" class="section-title">{% translate 'Category budgets' %}</h2><p class="subtle-copy mt-1">{% translate 'Recorded spending against your limits.' %}</p></div>{% url 'planning:budget_create' as create_budget %}{% with selected_month=month|date:'Y-m' %}<a class="action-primary" href="{% contextual_url create_budget|add:'?month='|add:selected_month %}">{% translate 'New category budget' %}</a>{% endwith %}</header>
+            <header class="workspace-header"><div><div class="planning-section-heading"><h2 id="monthly-budgets" class="section-title">{% translate 'Category budgets' %}</h2>{% if budget_count %}<span class="status-badge">{% blocktranslate count count=budget_count %}{{ count }} limit{% plural %}{{ count }} limits{% endblocktranslate %}</span>{% endif %}</div><p class="subtle-copy mt-1">{% translate 'Recorded spending against your limits.' %}</p></div>{% url 'planning:budget_create' as create_budget %}{% with selected_month=month|date:'Y-m' %}<a class="action-primary" href="{% contextual_url create_budget|add:'?month='|add:selected_month %}">{% translate 'New category budget' %}</a>{% endwith %}</header>
             <div class="surface-panel budget-list">
                 {% if rows %}<div class="budget-list-heading" aria-hidden="true"><span>{% translate 'Category' %}</span><span>{% translate 'Recorded spending' %} / {% translate 'Limit' %}</span><span>{% translate 'Remaining' %}</span><span></span></div>{% endif %}
                 {% for row in rows %}{% include 'planning/_budget_row.html' %}{% empty %}<p class="subtle-copy py-4">{% translate 'No category budgets for this month. Add a limit or copy the previous month.' %}</p>{% endfor %}

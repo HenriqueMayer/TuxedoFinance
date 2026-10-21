@@ -4,17 +4,33 @@
 <header class="workspace-header"><div><h1 class="page-title">{% translate 'Goals' %}</h1><p class="subtle-copy mt-2">{% translate 'Name a goal and set aside money you already have.' %}</p></div>{% url 'planning:goal_create' as create_url %}<a href="{% contextual_url create_url %}" class="action-primary">{% translate 'New goal' %}</a></header>
 <form id="goal-filters" action="{% url 'planning:goals' %}" method="get" data-live-filters data-live-results="goal-results" hx-boost="false" class="consultation-bar consultation-stable">
 <div class="consultation-search"><label for="goal-query" class="field-label">{% translate 'Search goals' %}</label><input id="goal-query" type="search" name="q" value="{{ query }}" data-live-search placeholder="{% translate 'Search goals' %}" class="form-input w-full"></div>
-<details id="goal-extra-filters" class="filter-disclosure"><summary>{% translate 'More filters' %}<span id="goal-filter-count" data-live-fragment="goal-filters" class="consultation-filter-count">{% if include_archived %}1{% endif %}</span></summary><div class="filter-disclosure-panel"><label class="inline-flex min-h-11 items-center gap-2"><input type="checkbox" name="archived" value="1" data-live-change{% if include_archived %} checked{% endif %} class="h-5 w-5 accent-caramel">{% translate 'Include archived goals' %}</label></div></details>
+<details id="goal-extra-filters" class="filter-disclosure"><summary>{% translate 'Filters' %}<span id="goal-filter-count" data-live-fragment="goal-filters" class="consultation-filter-count">{% if include_archived %}1{% endif %}</span></summary><div class="filter-disclosure-panel"><label class="inline-flex min-h-11 items-center gap-2"><input type="checkbox" name="archived" value="1" data-live-change{% if include_archived %} checked{% endif %} class="h-5 w-5 accent-caramel">{% translate 'Include archived goals' %}</label></div></details>
 <button type="submit" class="action-link" data-live-submit>{% translate 'Apply filters' %}</button>
 <span id="goal-filter-clear" data-live-fragment="goal-filters" class="consultation-clear-control">{% if query or include_archived %}<a class="quiet-action" data-live-reset data-live-link="goal-filters" href="{% url 'planning:goals' %}">{% translate 'Clear filters' %}</a>{% endif %}</span>
 </form>
-<div id="goal-results" class="goal-grid">{% for row in rows %}<article class="surface-panel goal-card space-y-3" aria-labelledby="goal-{{ row.goal.pk|stringformat:'d' }}"><div class="flex flex-wrap items-center justify-between gap-3"><h2 id="goal-{{ row.goal.pk|stringformat:'d' }}" class="section-title"><a class="investment-name gap-2" href="{% url 'planning:goal_detail' row.goal.pk %}">{{ row.goal.name }} <span aria-hidden="true">→</span></a></h2>{% if row.goal.is_archived %}<span class="status-badge">{% translate 'Archived' %}</span>{% endif %}</div>
-<div class="goal-card-progress"><p class="subtle-copy mb-1">{% translate 'Reserved / goal' %}</p><p class="tabular-nums"><strong>{{ row.goal.currency }} {{ row.progress|floatformat:2 }}</strong> / {{ row.goal.target_amount|floatformat:2 }}</p></div>
-<progress max="100" value="{{ row.percent|unlocalize }}" class="w-full accent-caramel" aria-label="{% translate 'Goal progress' %}">{{ row.percent }}%</progress>
-<p class="subtle-copy">{% if row.goal.target_date %}{% translate 'Target date' %}: {{ row.goal.target_date|date:USER_DATE_FORMAT }}{% else %}{% translate 'No deadline' %}{% endif %}</p>
-{% if row.goal.is_archived %}<p class="subtle-copy">{% translate 'Archived. Reservations are released and do not count as progress.' %}</p>{% endif %}
-{% if row.has_shortfall %}<p role="status" class="text-sm text-expense dark:text-expense-light">{% translate 'The source balance no longer backs all reservations. Review the goal details.' %}</p>{% endif %}
-{% if not row.complete %}<p role="status" class="text-sm text-expense dark:text-expense-light">{% translate 'Partial progress: missing reference exchange rates for' %} {{ row.missing_currencies|join:', ' }}. <a class="underline" href="{% url 'banking:exchange_rates' %}">{% translate 'Review exchange rates' %}</a></p>{% endif %}
-</article>{% empty %}<p class="subtle-copy py-8">{% translate 'No goals found. Create a target, then reserve a real balance.' %}</p>{% endfor %}</div>
+<div id="goal-results" class="surface-panel goal-list">
+    {% if rows %}<div class="goal-list-heading" aria-hidden="true"><span>{% translate 'Goal' %}</span><span>{% translate 'Reserved / goal' %}</span><span>{% translate 'Target date' %}</span></div>{% endif %}
+    {% for row in rows %}
+    <article class="goal-card goal-row" aria-labelledby="goal-{{ row.goal.pk|stringformat:'d' }}">
+        <div class="goal-row-main">
+            <div class="goal-row-identity">
+                <h2 id="goal-{{ row.goal.pk|stringformat:'d' }}" class="section-title"><a class="investment-name gap-2" href="{% url 'planning:goal_detail' row.goal.pk %}">{{ row.goal.name }} <span aria-hidden="true">→</span></a></h2>
+                {% if row.goal.is_archived %}<span class="status-badge">{% translate 'Archived' %}</span>{% endif %}
+            </div>
+            <div class="goal-row-progress">
+                <p class="goal-row-label">{% translate 'Reserved / goal' %}</p>
+                <p class="tabular-nums"><strong>{{ row.goal.currency }} {{ row.progress|floatformat:2 }}</strong> / {{ row.goal.target_amount|floatformat:2 }}</p>
+                <progress max="100" value="{{ row.percent|unlocalize }}" aria-label="{% translate 'Goal progress' %}">{{ row.percent }}%</progress>
+            </div>
+            <div class="goal-row-deadline"><p class="goal-row-label">{% translate 'Target date' %}</p><p>{% if row.goal.target_date %}{{ row.goal.target_date|date:USER_DATE_FORMAT }}{% else %}{% translate 'No deadline' %}{% endif %}</p></div>
+        </div>
+        {% if row.goal.is_archived %}<p class="subtle-copy mt-2">{% translate 'Archived. Reservations are released and do not count as progress.' %}</p>{% endif %}
+        {% if row.has_shortfall %}<p role="status" class="text-sm text-expense dark:text-expense-light mt-2">{% translate 'The source balance no longer backs all reservations. Review the goal details.' %}</p>{% endif %}
+        {% if not row.complete %}<p role="status" class="text-sm text-expense dark:text-expense-light mt-2">{% translate 'Partial progress: missing reference exchange rates for' %} {{ row.missing_currencies|join:', ' }}. <a class="underline" href="{% url 'banking:exchange_rates' %}">{% translate 'Review exchange rates' %}</a></p>{% endif %}
+    </article>
+    {% empty %}
+    <div class="planning-empty"><p class="subtle-copy">{% if query or include_archived %}{% translate 'No goals match these filters.' %}{% else %}{% translate 'No goals found. Create a target, then reserve a real balance.' %}{% endif %}</p></div>
+    {% endfor %}
+</div>
 <details class="explanation-disclosure"><summary>{% translate 'About real reservations' %}</summary><p class="subtle-copy mt-3">{% translate 'Goals name part of an existing reserve. Planning uses the greater of the account reserve and active goal reservations, so the same reserve is not deducted twice. Progress never creates money or assumes investment returns.' %}</p></details>
 </div>{% endblock %}

@@ -15,9 +15,10 @@ class PlanningViewTests(PlanningFixture):
         private = FinancialGoal.objects.create(user=self.other, name='Private goal', currency='BRL', target_amount='100')
         self.assertEqual(self.client.get(reverse('planning:goals')).status_code, 302)
         self.client.force_login(self.user)
-        for route in ['index', 'tools', 'goals', 'signals', 'budget_create', 'goal_create', 'signals_settings']:
+        for route in ['index', 'goals', 'signals', 'budget_create', 'goal_create', 'signals_settings']:
             with self.subTest(route=route):
                 self.assertEqual(self.client.get(reverse(f'planning:{route}')).status_code, 200)
+        self.assertRedirects(self.client.get(reverse('planning:tools')), reverse('sandbox:index'))
         self.assertEqual(self.client.get(reverse('planning:goal_detail', args=[private.pk])).status_code, 404)
         self.assertEqual(self.client.post(reverse('planning:goal_archive', args=[private.pk])).status_code, 404)
         response = self.client.get(reverse('planning:allocation_create', args=[own.pk]))

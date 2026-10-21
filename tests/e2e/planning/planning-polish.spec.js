@@ -133,7 +133,7 @@ test(`planning long-name screens, choices and short-mobile actions (${theme})`, 
                 await record(page, info, `${width}-source-results`, observations);
                 await search.press('ArrowDown'); await search.press('Enter');
                 await expect(page.locator('#id_source')).toHaveValue(data.pot);
-                await expect(search).toHaveValue(new RegExp(`^${data.potName}`));
+                await expect(search).toHaveValue(await page.locator('#id_source option:checked').textContent());
                 await expect(page.locator('#id_amount')).toBeVisible();
             }
             if (name === 'signals') {

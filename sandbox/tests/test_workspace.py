@@ -28,7 +28,7 @@ class SandboxViewTests(TestCase):
     def test_get_shows_the_simple_month_plan_and_optional_save(self):
         self.client.force_login(self.user)
         response = self.client.get(reverse('sandbox:index'))
-        self.assertContains(response, 'Salary Sandbox')
+        self.assertContains(response, 'Salary simulation')
         self.assertContains(response, 'name="gross_salary"')
         self.assertContains(response, 'name="planning_month"')
         self.assertEqual(response.context['variable_rows'], [
@@ -272,7 +272,7 @@ class SandboxViewTests(TestCase):
         self.client.cookies['django_language'] = 'pt-br'
         with override('pt-br'):
             response = self.client.get(reverse('sandbox:index'))
-        self.assertContains(response, 'Sandbox de Salário')
+        self.assertContains(response, 'Simulação de salário')
         self.assertContains(response, 'Previsão de despesas existente')
         self.assertContains(response, 'Despesas fixas adicionais')
         self.assertContains(response, 'value="Reserva de emergência"')

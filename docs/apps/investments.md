@@ -392,7 +392,7 @@ My investments, History, Prices and Setup are direct section tabs. Prices
 retains local dated observations, and Setup retains product/asset configuration.
 The tabs retain the shared 24px separation from page content and scroll
 horizontally on narrow screens without changing native link activation.
-Analytics is a separate primary workspace; simulations stay in Plan → Tools. The Update
+Analytics is a separate primary workspace; simulations stay in Plan → Simulations → Yield. The Update
 screen chooses contribution, withdrawal, yield or local unit-price observation,
 then opens the existing financial form with owned, compatible shortcut context.
 Partial valuations, missing prices and unknown opening dates remain visible;

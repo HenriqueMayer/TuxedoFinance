@@ -185,13 +185,15 @@ test.describe('planning without JavaScript', () => {
         await expect(page.locator('#scenario-result-title')).toBeVisible();
         await page.getByRole('button', { name: 'Save draft', exact: true }).click();
         await page.getByRole('navigation', { name: 'Planning sections', exact: true })
-            .getByRole('link', { name: 'Tools', exact: true }).click();
-        await page.getByRole('link', { name: 'Saved drafts', exact: true }).click();
+            .getByRole('link', { name: 'Simulations', exact: true }).click();
+        await page.getByRole('navigation', { name: 'Simulation sections', exact: true })
+            .getByRole('link', { name: 'Saved drafts', exact: true }).click();
         await page.getByRole('button', { name: 'Duplicate', exact: true }).click();
         await expect(page.locator('#id_draft_name')).toHaveValue('Copy of My incomplete plan');
         await page.getByRole('navigation', { name: 'Planning sections', exact: true })
-            .getByRole('link', { name: 'Tools', exact: true }).click();
-        await page.getByRole('link', { name: 'Saved drafts', exact: true }).click();
+            .getByRole('link', { name: 'Simulations', exact: true }).click();
+        await page.getByRole('navigation', { name: 'Simulation sections', exact: true })
+            .getByRole('link', { name: 'Saved drafts', exact: true }).click();
         for (const checkbox of await page.getByRole('checkbox').all()) await checkbox.check();
         await page.getByRole('button', { name: 'Compare selected drafts' }).click();
         await expect(page.getByRole('heading', { name: 'Compare drafts', exact: true })).toBeVisible();
@@ -337,6 +339,9 @@ for (const theme of ['light', 'dark']) {
         await page.locator('#budget-calculate').press('Enter');
         await expect(page.locator('#id_clt_dependents')).toBeHidden();
         await expect(page.locator('#irrf-brackets')).toBeVisible();
+        // The bracket table already exists from tax consultation. Wait for the
+        // new calculation result before editing its replacement form.
+        await expect(page.locator('#scenario-result-title')).toBeVisible();
         await page.locator('#id_gross_salary').fill('5000');
         await page.locator('#budget-tax-bands').press('Enter');
         await expect(page.locator('#irrf-reduction [aria-current="true"]')).toContainText('reduced to zero');

@@ -71,16 +71,18 @@ are not part of the current product.
 
 ## Planning workspaces and shared presentation
 
-The primary navigation is **Home / Transactions / Accounts / Investments / Plan**.
+The primary navigation is **Home / Transactions / Accounts / Investments / Plan / Analytics**.
 Home contains operational indicators; Analytics contains Finances and Investments
 analysis. Transactions contains the ledger and
 Categories. Planned Net worth and Imports have no tabs, review badges or account
 menu entries; their roadmap lives in documentation. Old operation URLs still
 stop at server gates; owned confirmed import provenance remains read-only.
 Accounts includes Invoices and Exchange rates. Investments opens a simple list
-of holdings with Update beside each row; history, analyses and full configuration
-remain secondary. Plan opens the monthly cash outlook and budgets, with three
-sections: This month, Goals and Tools. Signals and simulations live in Tools.
+of holdings with Update beside each row; History, Prices and Setup have explicit
+section links, while charts belong to Analytics. Plan opens the monthly cash
+outlook and budgets, with four sections: This month, Goals, Simulations and
+Alerts. Simulations exposes Salary, Yield and Saved drafts through a second row
+of native section links. Local review is reachable directly through Alerts.
 The shared section navigation retains its 24px space before the page header;
 workspace density overrides must not compress that separation.
 Existing domain URLs retain ownership and safe contextual return behavior;
@@ -98,7 +100,7 @@ mode. It accepts a zero opening without creating cash or financial evidence;
 nonzero openings require a date. Update opens a contextual choice of contribution,
 withdrawal, yield or local price, retaining server financial validation. My investments, History, Prices and Setup are explicit section tabs; analyses
 live in the primary Analytics workspace. Simulations are reachable through
-Plan → Tools. See the investment guide for the zero-position
+Plan → Simulations → Yield. See the investment guide for the zero-position
 configuration rule and the distinction between acquisition cost and market price.
 Asset configuration separates active assets from a native Archived assets
 disclosure. Archive/Restore use deliberate, CSRF-protected POSTs. Same-page
@@ -129,6 +131,12 @@ a hidden `next` field through invalid POSTs, and validated as local paths;
 they do not relax user ownership.
 
 ## Planning parameter controls
+
+The Plan section rail retains native links, full accessible labels, 44px targets
+and horizontal overflow at narrow widths. Simulation subnavigation identifies
+the active salary, yield or saved-draft screen. Draft details, comparisons and
+deletions retain Saved drafts as their owning section. The primary rail stays
+outside the compact form sheet. Old Tools bookmarks redirect to Simulations; budget bookmarks retain their selected month and anchor.
 
 Planning month fields retain native keyboard entry and open the native picker
 from the entire field when `showPicker` is available. Monthly-plan arrows submit

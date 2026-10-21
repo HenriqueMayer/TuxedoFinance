@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tuxedo Finance\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 22:46+0000\n"
+"POT-Creation-Date: 2026-10-21 02:04+0000\n"
 "PO-Revision-Date: 2026-10-16 00:12+0000\n"
 "Last-Translator: Tuxedo Finance contributors\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -165,10 +165,9 @@ msgstr "Investimentos"
 msgid "Plan"
 msgstr "Planejar"
 
-#: assistant/context.py:49 templates/planning/tools.html:2
-#: templates/planning/tools.html:5
-msgid "Planning tools"
-msgstr "Ferramentas de planejamento"
+#: assistant/context.py:49 templates/planning/_navigation.html:5
+msgid "Simulations"
+msgstr "Simulações"
 
 #: assistant/context.py:49
 msgid "Reviewed statements"
@@ -1650,7 +1649,7 @@ msgid "Actual amount in the other account"
 msgstr "Valor efetivo na outra conta"
 
 #: ingestion/forms.py:120 planning/forms.py:96
-#: templates/categories/_hierarchy.html:4 templates/planning/index.html:40
+#: templates/categories/_hierarchy.html:4 templates/planning/index.html:41
 #: templates/transactions/_category_allocation_row.html:3
 #: templates/transactions/list.html:82 transactions/forms.py:52
 #: transactions/forms.py:230
@@ -2521,7 +2520,7 @@ msgid "Other"
 msgstr "Outro"
 
 #: investments/models.py:117 templates/planning/_goal_summary.html:3
-#: templates/planning/goals.html:11
+#: templates/planning/goals.html:18
 msgid "Archived"
 msgstr "Arquivado"
 
@@ -2621,7 +2620,8 @@ msgstr "Aporte"
 msgid "Withdrawal"
 msgstr "Resgate"
 
-#: investments/models.py:288 templates/sandbox/_simulation_result.html:17
+#: investments/models.py:288 templates/sandbox/_navigation.html:4
+#: templates/sandbox/_simulation_result.html:17
 msgid "Yield"
 msgstr "Rendimento"
 
@@ -3006,7 +3006,7 @@ msgid "Target currency"
 msgstr "Moeda da meta"
 
 #: planning/models.py:70 templates/planning/_goal_summary.html:10
-#: templates/planning/goals.html:14
+#: templates/planning/goals.html:12 templates/planning/goals.html:25
 msgid "Target date"
 msgstr "Data da meta"
 
@@ -3139,80 +3139,80 @@ msgstr "Falta prevista de caixa bancário"
 msgid "%(account)s reaches %(currency)s %(balance)s on %(date)s using its current balance, recorded bank movements and unpaid confirmed-mode invoices through %(end)s. Unrecorded income, future cash-pot withdrawals and reserved goals are not assumed."
 msgstr "%(account)s chega a %(currency)s %(balance)s em %(date)s usando o saldo atual, os movimentos bancários registrados e as faturas não pagas no modo confirmado até %(end)s. Não presume receitas não registradas, resgates futuros de caixas nem reservas de metas."
 
-#: planning/views.py:75
+#: planning/views.py:77
 msgid "Budget saved."
 msgstr "Orçamento salvo."
 
-#: planning/views.py:78
+#: planning/views.py:80
 msgid "Edit category budget"
 msgstr "Editar orçamento por categoria"
 
-#: planning/views.py:78 templates/planning/index.html:38
+#: planning/views.py:80 templates/planning/index.html:39
 msgid "New category budget"
 msgstr "Novo orçamento por categoria"
 
-#: planning/views.py:86 templates/planning/index.html:42
+#: planning/views.py:88 templates/planning/index.html:43
 msgid "Copy previous month"
 msgstr "Copiar mês anterior"
 
-#: planning/views.py:89
+#: planning/views.py:91
 #, python-format
 msgid "Copied %(copied)s limits; skipped %(skipped)s existing or overlapping limits."
 msgstr "%(copied)s limites copiados; %(skipped)s limites existentes ou sobrepostos ignorados."
 
-#: planning/views.py:99
+#: planning/views.py:101
 msgid "Budget removed."
 msgstr "Orçamento removido."
 
-#: planning/views.py:124
+#: planning/views.py:126
 msgid "Goal saved."
 msgstr "Meta salva."
 
-#: planning/views.py:124
+#: planning/views.py:126
 msgid "Goal saved. Reserve an existing balance to record progress."
 msgstr "Meta salva. Reserve um saldo existente para registrar progresso."
 
-#: planning/views.py:126 templates/planning/goal_detail.html:6
+#: planning/views.py:128 templates/planning/goal_detail.html:6
 msgid "Edit goal"
 msgstr "Editar meta"
 
-#: planning/views.py:126 templates/planning/goals.html:4
+#: planning/views.py:128 templates/planning/goals.html:4
 msgid "New goal"
 msgstr "Nova meta"
 
-#: planning/views.py:149
+#: planning/views.py:151
 msgid "Balance reserved for this goal."
 msgstr "Saldo reservado para esta meta."
 
-#: planning/views.py:151
+#: planning/views.py:153
 msgid "Edit goal reservation"
 msgstr "Editar reserva da meta"
 
-#: planning/views.py:151 templates/planning/goal_detail.html:9
+#: planning/views.py:153 templates/planning/goal_detail.html:9
 msgid "Reserve a balance"
 msgstr "Reservar saldo"
 
-#: planning/views.py:160
+#: planning/views.py:162
 msgid "Reservation released."
 msgstr "Reserva liberada."
 
-#: planning/views.py:173
+#: planning/views.py:175
 msgid "Goal archived and reservations released."
 msgstr "Meta arquivada e reservas liberadas."
 
-#: planning/views.py:173
+#: planning/views.py:175
 msgid "Goal restored."
 msgstr "Meta restaurada."
 
-#: planning/views.py:193
+#: planning/views.py:195
 msgid "Signal settings saved."
 msgstr "Configurações de sinais salvas."
 
-#: planning/views.py:195
+#: planning/views.py:197
 msgid "Local signal settings"
 msgstr "Configurações de sinais locais"
 
-#: planning/views.py:203
+#: planning/views.py:205
 msgid "Select a valid review action."
 msgstr "Selecione uma ação de revisão válida."
 
@@ -3441,7 +3441,7 @@ msgstr "Salvar configurações"
 #: templates/investments/price_form.html:13
 #: templates/investments/settings/confirm_delete_entity.html:17
 #: templates/investments/setup_form.html:65 templates/planning/form.html:57
-#: templates/sandbox/confirm_delete.html:8
+#: templates/sandbox/confirm_delete.html:9
 #: templates/transactions/confirm_delete.html:29
 #: templates/transactions/form.html:99 templates/transactions/split.html:28
 msgid "Cancel"
@@ -4313,7 +4313,7 @@ msgstr "Total da fatura"
 
 #: templates/banking/_invoice_results.html:9
 #: templates/banking/invoice_detail.html:15 templates/dashboard/index.html:140
-#: templates/planning/_budget_row.html:6 templates/planning/index.html:40
+#: templates/planning/_budget_row.html:6 templates/planning/index.html:41
 msgid "Remaining"
 msgstr "Restante"
 
@@ -5548,8 +5548,7 @@ msgid "Product, asset, reason or notes"
 msgstr "Produto, ativo, motivo ou observações"
 
 #: templates/investments/_investment_movements.html:18
-#: templates/investments/list.html:25 templates/planning/goals.html:7
-#: templates/transactions/list.html:79
+#: templates/investments/list.html:25 templates/transactions/list.html:79
 msgid "More filters"
 msgstr "Mais filtros"
 
@@ -5662,7 +5661,7 @@ msgid "Unrealized result"
 msgstr "Resultado não realizado"
 
 #: templates/investments/_investments_charts.html:163
-#: templates/planning/index.html:15
+#: templates/planning/index.html:16
 msgid "Recorded"
 msgstr "Registrado"
 
@@ -6668,13 +6667,13 @@ msgstr "Os gastos registrados excedem este limite."
 msgid "Known expenses are forecast to exceed this limit."
 msgstr "A previsão das despesas conhecidas excede este limite."
 
-#: templates/planning/_budget_row.html:10 templates/planning/index.html:26
+#: templates/planning/_budget_row.html:10 templates/planning/index.html:27
 msgid "Partial totals: missing reference exchange rates for"
 msgstr "Totais parciais: faltam taxas de câmbio de referência para"
 
 #: templates/planning/_budget_row.html:10
-#: templates/planning/_goal_summary.html:14 templates/planning/goals.html:17
-#: templates/planning/index.html:26
+#: templates/planning/_goal_summary.html:14 templates/planning/goals.html:29
+#: templates/planning/index.html:27
 msgid "Review exchange rates"
 msgstr "Revisar taxas de câmbio"
 
@@ -6694,7 +6693,7 @@ msgstr "Remover limite"
 msgid "Backed progress"
 msgstr "Progresso respaldado"
 
-#: templates/planning/_goal_summary.html:5 templates/planning/goals.html:13
+#: templates/planning/_goal_summary.html:5 templates/planning/goals.html:23
 msgid "Goal progress"
 msgstr "Progresso da meta"
 
@@ -6702,11 +6701,11 @@ msgstr "Progresso da meta"
 msgid "Remaining target"
 msgstr "Valor restante da meta"
 
-#: templates/planning/_goal_summary.html:10 templates/planning/goals.html:14
+#: templates/planning/_goal_summary.html:10 templates/planning/goals.html:25
 msgid "No deadline"
 msgstr "Sem prazo"
 
-#: templates/planning/_goal_summary.html:12 templates/planning/goals.html:15
+#: templates/planning/_goal_summary.html:12 templates/planning/goals.html:27
 msgid "Archived. Reservations are released and do not count as progress."
 msgstr "Arquivada. As reservas são liberadas e não contam como progresso."
 
@@ -6714,7 +6713,7 @@ msgstr "Arquivada. As reservas são liberadas e não contam como progresso."
 msgid "The source balance no longer backs all reservations. Progress is reduced proportionally; review the shortfall below."
 msgstr "O saldo de origem não respalda mais todas as reservas. O progresso é reduzido proporcionalmente; revise a insuficiência abaixo."
 
-#: templates/planning/_goal_summary.html:14 templates/planning/goals.html:17
+#: templates/planning/_goal_summary.html:14 templates/planning/goals.html:29
 msgid "Partial progress: missing reference exchange rates for"
 msgstr "Progresso parcial: faltam taxas de câmbio de referência para"
 
@@ -6731,9 +6730,9 @@ msgstr "Este mês"
 msgid "Goals"
 msgstr "Metas"
 
-#: templates/planning/_navigation.html:5
-msgid "Tools"
-msgstr "Ferramentas"
+#: templates/planning/_navigation.html:6
+msgid "Alerts"
+msgstr "Alertas"
 
 #: templates/planning/form.html:21
 msgid "Initial reservation (optional)"
@@ -6771,7 +6770,7 @@ msgstr "Liberar reserva"
 msgid "No balance reserved for this goal yet."
 msgstr "Nenhum saldo reservado para esta meta ainda."
 
-#: templates/planning/goal_detail.html:27 templates/planning/goals.html:19
+#: templates/planning/goal_detail.html:27 templates/planning/goals.html:35
 msgid "About real reservations"
 msgstr "Sobre reservas reais"
 
@@ -6800,22 +6799,34 @@ msgid "Search goals"
 msgstr "Pesquisar metas"
 
 #: templates/planning/goals.html:7
+msgid "Filters"
+msgstr "Filtros"
+
+#: templates/planning/goals.html:7
 msgid "Include archived goals"
 msgstr "Incluir metas arquivadas"
 
 #: templates/planning/goals.html:12
+msgid "Goal"
+msgstr "Meta"
+
+#: templates/planning/goals.html:12 templates/planning/goals.html:21
 msgid "Reserved / goal"
 msgstr "Reservado / meta"
 
-#: templates/planning/goals.html:16
+#: templates/planning/goals.html:28
 msgid "The source balance no longer backs all reservations. Review the goal details."
 msgstr "O saldo de origem não cobre mais todas as reservas. Revise os detalhes da meta."
 
-#: templates/planning/goals.html:18
+#: templates/planning/goals.html:32
+msgid "No goals match these filters."
+msgstr "Nenhuma meta corresponde a estes filtros."
+
+#: templates/planning/goals.html:32
 msgid "No goals found. Create a target, then reserve a real balance."
 msgstr "Nenhuma meta encontrada. Crie um objetivo e depois reserve um saldo real."
 
-#: templates/planning/goals.html:19
+#: templates/planning/goals.html:35
 msgid "Goals name part of an existing reserve. Planning uses the greater of the account reserve and active goal reservations, so the same reserve is not deducted twice. Progress never creates money or assumes investment returns."
 msgstr "As metas identificam parte de uma reserva existente. O planejamento usa o maior valor entre a reserva da conta e as reservas de metas ativas, para não descontar a mesma reserva duas vezes. O progresso nunca cria dinheiro nem presume retornos de investimento."
 
@@ -6827,110 +6838,116 @@ msgstr "Planejar este mês"
 msgid "Show month"
 msgstr "Mostrar mês"
 
-#: templates/planning/index.html:15
+#: templates/planning/index.html:16
 msgid "Available at month end"
 msgstr "Disponível no fim do mês"
 
-#: templates/planning/index.html:15
+#: templates/planning/index.html:16
 msgid "After known commitments"
 msgstr "Após os compromissos conhecidos"
 
-#: templates/planning/index.html:15
+#: templates/planning/index.html:16
 msgid "Projection"
 msgstr "Projeção"
 
-#: templates/planning/index.html:17
+#: templates/planning/index.html:18
 msgid "Partial"
 msgstr "Parcial"
 
-#: templates/planning/index.html:18
+#: templates/planning/index.html:19
 msgid "Based on recorded balances at month end and your current reserve settings."
 msgstr "Com base nos saldos registrados no fim do mês e nas suas configurações atuais de reservas."
 
-#: templates/planning/index.html:18
+#: templates/planning/index.html:19
 msgid "Includes known income, expenses and unpaid invoices through month end. Reserved money stays separate."
 msgstr "Inclui receitas, despesas e faturas não pagas conhecidas até o fim do mês. O dinheiro reservado fica separado."
 
-#: templates/planning/index.html:19
+#: templates/planning/index.html:20
 msgid "Cash projections cover the current month and the next eleven months. You can still set limits for this month."
 msgstr "As projeções de caixa abrangem o mês atual e os próximos onze meses. Você ainda pode definir limites para este mês."
 
-#: templates/planning/index.html:23
+#: templates/planning/index.html:24
 msgid "Available on"
 msgstr "Disponível em"
 
-#: templates/planning/index.html:24
+#: templates/planning/index.html:25
 msgid "Reserved at month end"
 msgstr "Reservado no fim do mês"
 
-#: templates/planning/index.html:28
+#: templates/planning/index.html:29
 msgid "Some opening balances have no date. Historical amounts may include those undated balances."
 msgstr "Alguns saldos iniciais não têm data. Os valores históricos podem incluir esses saldos sem data."
 
-#: templates/planning/index.html:29
+#: templates/planning/index.html:30
 msgid "How is this calculated?"
 msgstr "Como este valor é calculado?"
 
-#: templates/planning/index.html:30
+#: templates/planning/index.html:31
 msgid "Unpaid confirmed-mode invoices"
 msgstr "Faturas com pagamento confirmado pendente"
 
-#: templates/planning/index.html:31
+#: templates/planning/index.html:32
 msgid "Only accounts and cash pots included in planning contribute available money. Reservations are capped by each positive balance; debts remain visible."
 msgstr "Apenas contas e cofrinhos incluídos no planejamento compõem o disponível. As reservas são limitadas ao saldo positivo de cada origem; as dívidas continuam visíveis."
 
-#: templates/planning/index.html:32
+#: templates/planning/index.html:33
 msgid "This is a projection from registered data, not a promise of future income. Missing transactions and future changes are not predicted."
 msgstr "Esta é uma projeção com dados registrados, não uma promessa de renda futura. Transações ausentes e mudanças futuras não são previstas."
 
-#: templates/planning/index.html:33
+#: templates/planning/index.html:34
 msgid "Budgets are category limits, not additional reservations. Spending and invoice payments are not deducted twice."
 msgstr "Orçamentos são limites por categoria, não reservas adicionais. Gastos e pagamentos de faturas não são descontados duas vezes."
 
-#: templates/planning/index.html:34
+#: templates/planning/index.html:35
 msgid "Review included balances"
 msgstr "Revisar saldos incluídos"
 
-#: templates/planning/index.html:38
+#: templates/planning/index.html:39
 msgid "Category budgets"
 msgstr "Orçamentos por categoria"
 
-#: templates/planning/index.html:38
+#: templates/planning/index.html:39
+#, python-format
+msgid "%(count)s limit"
+msgid_plural "%(count)s limits"
+msgstr[0] "%(count)s limite"
+msgstr[1] "%(count)s limites"
+
+#: templates/planning/index.html:39
 msgid "Recorded spending against your limits."
 msgstr "Gastos registrados em relação aos seus limites."
 
-#: templates/planning/index.html:40
+#: templates/planning/index.html:41
 msgid "Recorded spending"
 msgstr "Gastos registrados"
 
-#: templates/planning/index.html:40
+#: templates/planning/index.html:41
 msgid "Limit"
 msgstr "Limite"
 
-#: templates/planning/index.html:41
+#: templates/planning/index.html:42
 msgid "No category budgets for this month. Add a limit or copy the previous month."
 msgstr "Nenhum orçamento por categoria para este mês. Adicione um limite ou copie o mês anterior."
 
-#: templates/planning/index.html:44
+#: templates/planning/index.html:45
 msgid "About spending and forecasts"
 msgstr "Sobre gastos e previsões"
 
-#: templates/planning/index.html:45
+#: templates/planning/index.html:46
 msgid "Recorded spending includes due occurrences up to today; the forecast includes only known transactions for the whole month. Transfers and investments do not consume category limits. Uncategorised loyalty purchases are outside these limits."
 msgstr "Os gastos registrados incluem ocorrências até hoje; a previsão inclui apenas transações conhecidas para o mês inteiro. Transferências e investimentos não consomem limites por categoria. Compras de pontos sem categoria ficam fora desses limites."
 
-#: templates/planning/index.html:46
+#: templates/planning/index.html:47
 msgid "Credit expenses follow the invoice reference month used by the dashboard. The cash outlook follows payment dates, so the two views answer different questions."
 msgstr "As despesas no crédito seguem o mês de referência da fatura usado no dashboard. A previsão de caixa segue as datas de pagamento; as duas visões respondem a perguntas diferentes."
 
-#: templates/planning/index.html:47
+#: templates/planning/index.html:48
 msgid "Currency conversions use your registered reference rates at month end, or today for the current and future months. These are comparison values, not the effective exchange rate of an operation."
 msgstr "As conversões de moeda usam suas taxas de referência registradas no fim do mês, ou hoje para o mês atual e os futuros. São valores de comparação, não o câmbio efetivo de uma operação."
 
 #: templates/planning/signals.html:3 templates/planning/signals.html:6
-#: templates/planning/tools.html:12
-msgid "Local signals"
-msgstr "Sinais locais"
+msgid "Local alerts"
+msgstr "Alertas locais"
 
 #: templates/planning/signals.html:6
 msgid "Explained suggestions from recorded local data. Reviewing a signal changes only its review status."
@@ -6976,6 +6993,10 @@ msgstr "Sobre os sinais locais"
 msgid "Duplicate and increase checks use up to 1,000 expenses in the last 90 days. These patterns require review and never prove a duplicate or a subscription. Cash forecasts use recorded bank movements and unpaid confirmed-mode invoices within the configured horizon."
 msgstr "As verificações de duplicatas e aumentos usam até 1.000 despesas dos últimos 90 dias. Esses padrões exigem revisão e nunca comprovam uma duplicata ou assinatura. As previsões de caixa usam movimentos bancários registrados e faturas não pagas no modo confirmado dentro do horizonte configurado."
 
+#: templates/planning/tools.html:2 templates/planning/tools.html:5
+msgid "Planning tools"
+msgstr "Ferramentas de planejamento"
+
 #: templates/planning/tools.html:5
 msgid "Explore scenarios and review signals when you need them."
 msgstr "Explore cenários e revise sinais quando precisar."
@@ -6997,11 +7018,16 @@ msgid "Review and resume"
 msgstr "Revisar e retomar"
 
 #: templates/planning/tools.html:12
+msgid "Local signals"
+msgstr "Sinais locais"
+
+#: templates/planning/tools.html:12
 msgid "Review explained suggestions without changing their financial sources."
 msgstr "Revise sugestões explicadas sem alterar seus registros financeiros de origem."
 
-#: templates/planning/tools.html:13 templates/sandbox/drafts.html:2
-#: templates/sandbox/drafts.html:6 templates/sandbox/drafts.html:8
+#: templates/planning/tools.html:13 templates/sandbox/_navigation.html:7
+#: templates/sandbox/drafts.html:2 templates/sandbox/drafts.html:6
+#: templates/sandbox/drafts.html:8
 msgid "Saved drafts"
 msgstr "Rascunhos salvos"
 
@@ -7018,8 +7044,8 @@ msgid "Save draft"
 msgstr "Salvar rascunho"
 
 #: templates/sandbox/_draft_save.html:8 templates/sandbox/confirm_delete.html:2
-#: templates/sandbox/confirm_delete.html:5
-#: templates/sandbox/confirm_delete.html:8
+#: templates/sandbox/confirm_delete.html:6
+#: templates/sandbox/confirm_delete.html:9
 msgid "Delete draft"
 msgstr "Excluir rascunho"
 
@@ -7041,6 +7067,14 @@ msgstr[1] "Com base em %(counter)s despesas já registradas para este mês."
 #: templates/sandbox/_expense_forecast.html:19
 msgid "No expenses are currently forecast for this month."
 msgstr "Não há despesas previstas para este mês."
+
+#: templates/sandbox/_navigation.html:2
+msgid "Simulation sections"
+msgstr "Seções de simulações"
+
+#: templates/sandbox/_navigation.html:3
+msgid "Salary"
+msgstr "Salário"
 
 #: templates/sandbox/_override_row.html:2
 #, python-format
@@ -7374,7 +7408,7 @@ msgstr "Incompleto — abra este rascunho para revisar os dados."
 msgid "Select up to three saved drafts to compare."
 msgstr "Selecione até três rascunhos salvos para comparar."
 
-#: templates/sandbox/confirm_delete.html:7
+#: templates/sandbox/confirm_delete.html:8
 #, python-format
 msgid "Delete “%(name)s”? Its saved scenario inputs and commitment snapshot will be removed. Financial records are unaffected."
 msgstr "Excluir “%(name)s”? Os dados salvos do cenário e os compromissos capturados serão removidos. Os registros financeiros não serão afetados."
@@ -7412,13 +7446,10 @@ msgstr "Nenhum rascunho salvo. Comece um plano mensal ou uma simulação de rend
 msgid "Compare selected drafts"
 msgstr "Comparar rascunhos selecionados"
 
-#: templates/sandbox/index.html:4
-msgid "Sandbox"
-msgstr "Sandbox"
-
-#: templates/sandbox/index.html:11 templates/sandbox/index.html:12
-msgid "Salary Sandbox"
-msgstr "Sandbox de Salário"
+#: templates/sandbox/index.html:4 templates/sandbox/index.html:11
+#: templates/sandbox/index.html:12
+msgid "Salary simulation"
+msgstr "Simulação de salário"
 
 #: templates/sandbox/index.html:14
 msgid "Compare one gross salary with the expenses expected for a selected month."
@@ -7966,6 +7997,15 @@ msgstr "Transação \"%(title)s\" atualizada."
 msgid "Transaction \"%(title)s\" deleted."
 msgstr "Transação \"%(title)s\" excluída."
 
+#~ msgid "Tools"
+#~ msgstr "Ferramentas"
+
+#~ msgid "Sandbox"
+#~ msgstr "Sandbox"
+
+#~ msgid "Salary Sandbox"
+#~ msgstr "Sandbox de Salário"
+
 #~ msgid "More"
 #~ msgstr "Mais"
 
@@ -8041,9 +8081,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "All categories"
 #~ msgstr "Todas as categorias"
-
-#~ msgid "Filters"
-#~ msgstr "Filtros"
 
 #~ msgid "Welcome back"
 #~ msgstr "Bem-vindo de volta"
@@ -8856,9 +8893,6 @@ msgstr "Transação \"%(title)s\" excluída."
 #~ msgid "Try a different search term, billed month, transaction date or type, or clear the filters to see everything."
 #~ msgstr "Tente outro termo de pesquisa, mês da fatura, data ou tipo de transação, ou limpe os filtros para ver tudo."
 
-#~ msgid "CLT salary"
-#~ msgstr "Salário CLT"
-
 #~ msgid "Salary before INSS, IRRF and other payroll deductions."
 #~ msgstr "Salário antes do INSS, IRRF e demais descontos em folha."
 
@@ -9318,3 +9352,6 @@ msgstr "Transação \"%(title)s\" excluída."
 
 #~ msgid "Nothing is saved."
 #~ msgstr "Nada é salvo."
+
+#~ msgid "CLT salary"
+#~ msgstr "Salário CLT"

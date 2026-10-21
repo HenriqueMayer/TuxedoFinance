@@ -292,7 +292,7 @@ test('salary sandbox keeps the simplified calculation responsive and accessible'
     await createAccount(page, testInfo);
     await page.goto('/sandbox/');
 
-    await expect(page.getByRole('heading', { name: 'Salary Sandbox' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Salary simulation' })).toBeVisible();
     await expect(page.getByLabel('Gross monthly salary', { exact: true })).toBeVisible();
     await page.getByLabel('Gross monthly salary', { exact: true }).fill('6000');
     const expense = page.locator('[data-variable-row]').first();

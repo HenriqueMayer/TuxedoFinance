@@ -122,8 +122,10 @@ See [banking availability](banking.md#monthly-planning-availability),
 
 ## Daily planning workspace
 
-`/planning/` opens the monthly cash outlook and budgets. Goals remain a primary
-section; signals, monthly/yield simulations and saved drafts live in Tools.
+`/planning/` opens the monthly cash outlook and budgets. Four explicit section
+links separate This month, Goals, Simulations and Alerts. Simulations opens
+`/sandbox/`, with Salary, Yield and Saved drafts as its own secondary navigation.
+`/planning/tools/` remains a compatible redirect to that simulation entry.
 Budget links preserve the selected month.
 
 The month selector sits beside the page title, using the shared localized-name
@@ -140,15 +142,17 @@ forecast horizons remain visible. Budgets occupy one divided list with aligned
 recorded spending, limit, remaining value and Edit action; forecasts and removal
 stay with the relevant row. Opening these details does not create a reservation.
 
-Goals use compact progress cards with explicitly backed amounts and targets,
-their deadlines and visible shortfall/FX warnings. Their search and archived
-criterion use the same stable consultation rail as Investments. Tools separates
-simulations from local review and saved drafts; all four existing destinations
-remain ordinary links. Form fields, reservations and scenario calculations retain
-their existing semantics.
+Goals use one divided list with aligned identity, backed progress/target and
+deadline columns. Phones stack the same values with visible labels; long names
+wrap, and archived/shortfall/FX notices remain with their goal. Each progress
+value retains its own currency rather than creating a cross-goal total. Search
+and the archived criterion use the same stable consultation rail as Investments.
+Local signals have their own Alerts section, headed Local alerts; salary, yield and saved drafts
+remain ordinary links within Simulations. Form fields, reservations and scenario
+calculations retain their existing semantics.
 Goal forms and summaries explicitly label the goal amount, avoiding the generic
 target/destination terminology used by unrelated financial forms. Reserved/goal
-cards still display backed progress, not an unbacked allocation claim.
+rows still display backed progress, not an unbacked allocation claim.
 
 Goal, budget and reservation editors use the shared compact finance-entry sheet,
 with related short values in responsive columns. A separate reservation reveals
@@ -216,8 +220,12 @@ and goal definitions are current settings, not an immutable history of past edit
 Budget spending follows invoice reference months while cash follows payments;
 these are separate comparisons and budgets are not deducted as reservations.
 
-This month, Goals and Tools are the only primary sections. Old budget URLs redirect
-to the selected month and budget anchor. Monthly controls and goal searches use
+This month, Goals, Simulations and Alerts are the four workspace sections.
+Section links remain available at phone widths through native horizontal
+scrolling, with 44px targets, visible focus and the shared 24px header spacing.
+Simulation subpages retain their own active Salary, Yield or Saved drafts link,
+with reopened, compared and deleted drafts owned by Saved drafts. Old budget
+URLs redirect to the selected month and budget anchor. Monthly controls and goal searches use
 the shared live-filter contract; native GET fallback and invalid-month recovery
-remain available. Tools retains local signals, salary planning, yield scenarios
-and saved drafts without turning any scenario into a posting.
+remain available. Simulation calculations and saved drafts do not become
+financial postings.

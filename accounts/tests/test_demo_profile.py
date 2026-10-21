@@ -242,7 +242,11 @@ class DemoProfileContentTests(TestCase):
             pages.extend(reverse('sandbox:draft_detail', args=[draft.pk]) for draft in user.scenario_drafts.all())
             for url in pages:
                 with self.subTest(language=locale, url=url):
-                    response = self.client.get(url, {'month': AS_OF.strftime('%Y-%m')})
+                    legacy_tools = url == reverse('planning:tools')
+                    response = self.client.get(url, {'month': AS_OF.strftime('%Y-%m')}, follow=legacy_tools)
+                    if legacy_tools:
+                        self.assertEqual(response.redirect_chain, [(
+                            reverse('sandbox:index') + f'?month={AS_OF:%Y-%m}', 302)])
                     self.assertEqual(response.status_code, 200)
                     self.assertContains(response, f'<html lang="{locale}"', html=False)
             response = self.client.get(reverse('sandbox:compare'), {

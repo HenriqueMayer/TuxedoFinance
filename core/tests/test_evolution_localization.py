@@ -17,7 +17,7 @@ class EvolutionLocalizationTests(TestCase):
             ('/imports/', 'Transações'),
             ('/planning/', 'Planejar este mês'),
             ('/planning/goals/', 'Metas'),
-            ('/planning/signals/', 'Sinais locais'),
+            ('/planning/signals/', 'Alertas locais'),
             ('/dashboard/wealth/', 'Dashboard'),
             ('/banking/invoices/', 'Faturas'),
             ('/categories/?view=tree', 'Categorias'),

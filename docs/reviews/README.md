@@ -11,6 +11,7 @@ and [interface map](../interface-map.md) for present behavior.
 
 | Record | Scope and status |
 |---|---|
+| [Planning workspace reimagining — 2026-10-20](planning-workspace-2026-10-20.md) | Four explicit sections, direct simulation subnavigation, divided goals and synthetic Planning preview; preserved calculations/data and focused bilingual desktop/320px validation. |
 | [Analytics and investment identity — 2026-10-20](analytics-and-investment-identity-2026-10-20.md) | Six-destination analytical workspace, operational Home, independent position emojis and synthetic preview; additive local migration preserved existing data. Working-tree and separately scoped commit validation recorded, with explicit browser/provider and paused-import limits. |
 | [Public-source review and documentation alignment — 2026-10-20](public-source-readiness-2026-10-20.md) | Current-source secret/security review with explicit partial manual coverage, dependency audits, corrected assistant disclosures and synthetic preview refresh; isolated validation and publication hold. |
 | [Assistant reference presentation — 2026-10-20](assistant-reference-presentation-2026-10-20.md) | One verified source footer, historical-message rendering, preserved raw Markdown and versioned attribution instructions; isolated desktop/phone validation. |

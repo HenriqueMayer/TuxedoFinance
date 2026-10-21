@@ -34,7 +34,7 @@ themes. Your records stay on your installation.
 | **Transactions** | Record income and expenses, split categories, manage recurrences and installments, export CSV. |
 | **Accounts** | Organize bank accounts, PIX, cards, invoices, transfers and loyalty. |
 | **Investments** | Track holdings, movements, cash pots and dated prices; choose an emoji for each holding. |
-| **Plan** | Set category limits, reserve existing balances for goals and compare simulations. |
+| **Plan** | Review monthly limits, reserve balances for goals, compare simulations and review local signals. |
 | **Analytics** | Explore financial and investment charts, category expenses and cash-flow projections. |
 
 **In the unreleased source:** Analytics, position icons and the optional

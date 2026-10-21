@@ -87,8 +87,8 @@ for (const theme of ['light', 'dark']) {
         await expect(page).toHaveURL(/\/investments\/settings\/$/);
         await expect(tabs.getByRole('link', { name: 'Setup', exact: true })).toHaveAttribute('aria-current', 'page');
         await page.getByRole('navigation', { name: 'Main navigation', exact: true }).getByRole('link', { name: 'Plan', exact: true }).click();
-        await page.getByRole('navigation', { name: 'Planning sections', exact: true }).getByRole('link', { name: 'Tools', exact: true }).click();
-        await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Yield simulation', exact: true }) }).click();
+        await page.getByRole('navigation', { name: 'Planning sections', exact: true }).getByRole('link', { name: 'Simulations', exact: true }).click();
+        await page.getByRole('navigation', { name: 'Simulation sections', exact: true }).getByRole('link', { name: 'Yield', exact: true }).click();
         await expect(page).toHaveURL(/\/sandbox\/simulation\/$/);
     });
 }

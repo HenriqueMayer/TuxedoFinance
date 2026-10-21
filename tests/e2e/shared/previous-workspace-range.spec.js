@@ -78,14 +78,14 @@ test('browser history restores repeated simulation rows and warns on leaving a r
     await page.locator('#id_rate').fill('1');
     await expect(page.locator('#simulation-result .panel-heading')).toBeVisible();
     await page.getByRole('navigation', {name: 'Planning sections', exact: true})
-        .getByRole('link', {name: 'Tools', exact: true}).click();
+        .getByRole('link', {name: 'Simulations', exact: true}).click();
     await page.getByRole('button', {name: 'Leave page', exact: true}).press('Enter');
-    await expect(page).toHaveURL(/\/planning\/tools\/$/);
+    await expect(page).toHaveURL(/\/sandbox\/$/);
     const snapshot = await page.evaluate(() => JSON.parse(sessionStorage.getItem('tuxedo.history-workspace.v2')));
     expect(snapshot.entries['/sandbox/simulation/'].forms.some(form => form.fields.some(field =>
         field.name === 'contribution_23' && field.value === '456.78'))).toBe(true);
     // Workspace snapshots retain only the current and immediately previous
-    // screen. Check Back before taking another discovery hop from Tools.
+    // screen. Check Back before opening another simulation section.
     await page.goBack();
     await expect(page).toHaveURL(/\/sandbox\/simulation\/$/);
     await expect(page.locator('[data-workspace-restored]')).toBeVisible();

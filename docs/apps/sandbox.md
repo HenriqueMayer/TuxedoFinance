@@ -1,7 +1,11 @@
 # Planning and saved scenarios
 
-The authenticated `/sandbox/` workspace contains a simple monthly salary plan
-and the hypothetical investment simulator. Existing
+The authenticated `/sandbox/` workspace is the Simulations section of Plan.
+The Salary simulation page exposes Salary, Yield and Saved drafts directly below the shared This month,
+Goals, Simulations and Alerts navigation. Salary opens `/sandbox/`, Yield
+opens `/sandbox/simulation/` and Saved drafts opens `/sandbox/drafts/`. Reopened
+drafts and comparisons retain Saved drafts as their secondary section.
+`/planning/tools/` redirects to this entry, while existing simulation and draft
 URLs remain valid. Calculations read financial sources without synchronizing or
 posting ledger entries. Only an explicit save, duplicate or delete changes the
 user's `ScenarioDraft` records.
@@ -134,6 +138,12 @@ actual position valuation belong to [Investments](investments.md#valuation), not
 this hypothetical scenario. External feeds remain outside the approved scope.
 
 ## Interaction contracts
+
+Both navigation levels use native links with an active-page indication and
+horizontal scrolling on narrow screens. The primary links retain the full
+workspace width rather than inheriting the compact form width. Departing an
+edited simulation still uses the shared unsaved-work confirmation; changing
+sections never silently saves a scenario.
 
 Forms reuse shared fields, native short choices and help popovers. Dates follow
 the user's DMY/MDY preference; month controls display the browser's locale and

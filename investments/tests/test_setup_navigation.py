@@ -65,9 +65,10 @@ class InvestmentSetupNavigationTests(TestCase):
             self.assertNotContains(response, 'data-workspace-shortcut')
             self.assertContains(response, reverse('planning:index'))
         planning = self.client.get(reverse('planning:index'))
-        self.assertContains(planning, reverse('planning:tools'))
-        tools = self.client.get(reverse('planning:tools'))
-        self.assertContains(tools, reverse('sandbox:simulation'))
+        self.assertContains(planning, reverse('sandbox:index'))
+        self.assertRedirects(self.client.get(reverse('planning:tools')), reverse('sandbox:index'))
+        simulations = self.client.get(reverse('sandbox:index'))
+        self.assertContains(simulations, reverse('sandbox:simulation'))
 
     def test_portuguese_setup_tabs_are_translated(self):
         self.client.cookies['django_language'] = 'pt-br'
