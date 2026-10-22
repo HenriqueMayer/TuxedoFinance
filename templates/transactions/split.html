@@ -1,0 +1,32 @@
+{% extends 'base.html' %}{% load i18n l10n %}
+{% block title %}{% translate 'Split between categories' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="workspace-form-page mx-auto max-w-2xl space-y-6">
+    <div class="label-with-help"><h1 class="page-title">{% translate 'Split between categories' %}</h1>{% translate 'The remainder is divided automatically. Edit an amount to keep it fixed, or clear it to distribute it again.' as allocation_help %}{% include 'partials/help_popover.html' with help_id='category-allocation-help' help_label=_('Split between categories') help_text=allocation_help %}</div>
+    <p class="break-words">{{ transaction.display_title }} · {{ transaction.native_currency }} {{ transaction.amount }}</p>
+    <noscript><p class="subtle-copy">{% translate 'Category amounts must equal the total. Installments distribute exact cents across their original categories; recurring entries repeat the same split. The payment remains a single event.' %}</p></noscript>
+    <form id="category-allocation-form" autocomplete="off" method="post" hx-boost="false" novalidate class="workspace-form surface-panel space-y-5"
+          data-category-allocation data-allocation-prefix="{{ formset.prefix }}" data-allocation-amount="{{ transaction.amount|unlocalize }}"
+          data-allocation-bound="{{ formset.is_bound|yesno:'true,false' }}" data-allocation-add-request="{{ request.POST.add_split|yesno:'true,false' }}" data-allocation-limit="{{ formset.max_num }}"
+          data-allocation-error-amount="{% translate 'Enter a positive amount with at most two decimal places.' %}"
+          data-allocation-error-limit="{% translate 'This category can use up to {amount}.' %}"
+          data-allocation-error-count="{% translate 'Use at least two categories, or clear the split.' %}"
+          data-allocation-error-small="{% translate 'The total must allow at least one cent per category.' %}"
+          data-allocation-error-sum="{% translate 'Category amounts must add up to the transaction total.' %}"
+          data-allocation-error-maximum="{% translate 'You can divide between up to 20 categories.' %}">
+        {% csrf_token %}{{ formset.management_form }}
+        <input type="hidden" name="allocation_state" value="{{ request.POST.allocation_state }}" data-allocation-state>
+        <input type="hidden" name="next" value="{{ return_url }}">
+        {% for error in formset.non_form_errors %}<p class="text-expense dark:text-expense-light" role="alert">{{ error }}</p>{% endfor %}
+        <div data-allocation-rows>{% for row in formset %}{% include 'transactions/_category_allocation_row.html' with number=forloop.counter %}{% endfor %}</div>
+        <p data-allocation-message hidden></p>
+        <template data-allocation-template>{% include 'transactions/_category_allocation_row.html' with row=formset.empty_form number='__prefix__' %}</template>
+        <div class="form-actions">
+            <button type="submit" class="action-primary">{% translate 'Save split' %}</button>
+            <button name="add_split" value="1" class="quiet-action" data-allocation-add>{% translate 'Add category' %}</button>
+            <button name="clear_split" value="1" class="quiet-action">{% translate 'Clear split' %}</button>
+            <a href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

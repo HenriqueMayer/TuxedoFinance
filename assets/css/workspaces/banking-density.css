@@ -1,0 +1,54 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Banking density is local; ordinary fields retain their shared contracts.
+   These scoped rules intentionally follow utilities. */
+.banking-workspace .surface-panel { padding: 1rem; }
+.banking-workspace details > summary { font-size: .875rem; }
+.banking-workspace .action-primary,
+.banking-workspace .action-link,
+.banking-workspace .quiet-action,
+.banking-workspace .planning-visibility,
+.banking-workspace .secondary-actions > summary {
+  min-height: 2.75rem;
+  font-size: .875rem;
+  line-height: 1.25rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.banking-workspace .action-primary,
+.banking-workspace .action-link { border-radius: .5rem; padding: .375rem .75rem; }
+.banking-workspace .quiet-action { min-width: 2.75rem; padding: .25rem .5rem; }
+.banking-workspace .planning-visibility { padding: .25rem .375rem; }
+.banking-workspace .secondary-actions.compact-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0;
+  border-radius: .5rem;
+}
+.banking-workspace .secondary-actions-panel {
+  width: max-content;
+  min-width: 12rem;
+  max-width: min(17rem, calc(100vw - 2rem));
+  padding: .375rem;
+}
+.banking-workspace .secondary-actions-panel > a,
+.banking-workspace .secondary-actions-panel > form > button {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-size: .875rem;
+  line-height: 1.25rem;
+  padding: .375rem .625rem;
+}
+.banking-workspace .banking-row-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .25rem; }
+.banking-workspace .data-table th { padding-block: .5rem; }
+.banking-workspace .data-table td { padding-block: .625rem; }
+.banking-workspace .cash-position-row,
+.banking-workspace #invoice-results li,
+.banking-workspace #rate-results li { padding-block: .625rem; gap: .75rem; }
+.banking-workspace .status-badge { padding: .125rem .5rem; }
+@media (max-width: 767px) {
+  .banking-workspace .banking-row-actions { justify-content: flex-start; }
+}

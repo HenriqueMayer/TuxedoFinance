@@ -30,6 +30,41 @@ the expected result and the observed impact.
 - Dependencies are audited in CI. A clean audit only means no known advisory
   was found in that run; it does not certify an installation or its host.
 
+## Browser history
+
+Authenticated HTML is private and marked `no-store`. HTMX does not save DOM
+history snapshots, and the runtime clears legacy entries left by older versions.
+History restoration requests fresh authorized content; persisted native browser
+documents are hidden and replaced through GET before restoring same-user draft
+and location state. POSTs are never replayed by this recovery.
+Editable private POST forms disable native autocomplete/history restoration;
+only identity-checked workspace snapshots restore drafts with JavaScript.
+
+This protects history navigation after logout or an account change. It does not
+remotely revoke a page already displayed, a screenshot or an old offline tab.
+Protect the host/browser profile as part of the installation's local data.
+
+## Optional assistant connection
+
+ChatGPT authorization and inference are independent settings, both disabled by
+default. Enabling an eligible linked account sends the question, bounded recent
+history and relevant owned financial evidence to OpenAI for a requested answer.
+Local storage does not mean that connected responses run offline. There is no
+paid API-key fallback, browsing/news tool or inherited developer plugin access.
+
+Conversation history, model preferences and action reviews remain private local
+database records. Reusable OAuth credentials belong in the separate encrypted
+vault, never Git, browser storage or diagnostics. Back up its key, encrypted
+records and host identity together with the matching database recovery point;
+a backup containing the key needs its own access protection and encryption.
+See [assistant recovery](docs/operations.md#assistant-data-and-integrations).
+
+The assistant can read bounded owned records and run local calculations. Saving
+a supported financial change requires a separate authenticated, CSRF-protected
+confirmation of the reviewed proposal, with ownership and current-state checks.
+Chat text and tool output cannot confirm a write. No real payment, bank transfer,
+unattended financial write or bank synchronization is enabled by this connection.
+
 ## CSV exports
 
 Default CSV is a faithful interchange format: text is unchanged, including

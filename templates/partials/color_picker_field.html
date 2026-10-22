@@ -1,0 +1,19 @@
+{% load i18n form_ui %}
+<div class="space-y-2 color-picker" data-form-field data-color-picker>
+    {% include 'partials/field_label.html' with field=field %}
+    <div class="color-picker-controls">
+        {% if field.field.widget.color_presets %}
+        <div class="color-picker-presets" data-color-presets role="group" aria-label="{% translate 'Suggested colors' %}" hidden></div>
+        {% endif %}
+        <div class="color-picker-custom">
+            {% form_control field %}
+            {% if field.field.widget.color_presets %}<span class="color-picker-custom-label">{% translate 'Custom color' %}</span>{% endif %}
+        </div>
+    </div>
+    {% if field.field.widget.color_presets %}
+    <datalist id="{{ field.auto_id }}-palette" data-color-palette>
+        {% for value, name in field.field.widget.color_presets %}<option value="{{ value }}" label="{{ name }}"></option>{% endfor %}
+    </datalist>
+    {% endif %}
+    {% for error in field.errors %}<p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" data-field-error class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+</div>

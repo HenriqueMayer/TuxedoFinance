@@ -1,0 +1,16 @@
+{% load i18n %}
+<section id="investment-performance" class="surface-panel workspace-summary space-y-4" aria-label="{% translate 'Position value and results' %}">
+    <h2 class="section-title">{% translate 'Position value and results' %}</h2>
+    <dl class="workspace-summary-metrics grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div><dt class="subtle-copy">{% translate 'Remaining cost and monetary balances' %}</dt><dd class="number text-lg font-semibold">{{ portfolio_snapshot.base_currency }} {{ portfolio_snapshot.cost_total|floatformat:2 }}</dd></div>
+        <div><dt class="subtle-copy">{% translate 'Realized result' %}</dt><dd class="number text-lg font-semibold">{{ portfolio_snapshot.base_currency }} {{ portfolio_snapshot.realized_total|floatformat:2 }}</dd></div>
+        <div><dt class="subtle-copy">{% translate 'Unrealized result with observed prices' %}</dt><dd class="number text-lg font-semibold">{{ portfolio_snapshot.base_currency }} {{ portfolio_snapshot.unrealized_total|floatformat:2 }}</dd></div>
+        <div><dt class="subtle-copy">{% translate 'Recorded yields' %}</dt><dd class="number text-lg font-semibold">{{ portfolio_snapshot.base_currency }} {{ portfolio_snapshot.yield_total|floatformat:2 }}</dd></div>
+    </dl>
+    <p class="subtle-copy">{% translate 'Weighted average cost is calculated independently for each product and asset. Received units retain their declared entry value. Fees affect cost and results only when explicitly declared in the asset currency; bank amounts are never recalculated.' %}</p>
+    {% if not portfolio_snapshot.performance_complete %}<p role="status" class="subtle-copy">{% translate 'Results are limited to the recorded evidence. Missing prices, conversions or opening dates prevent a complete performance history; no annualized or cash-flow-adjusted return is inferred.' %}</p>{% endif %}
+    {% if portfolio_snapshot.unknown_baselines %}<p id="investment-baseline-warning" role="status" class="text-expense dark:text-expense-light">{% translate 'Some opening positions have an unknown date. Current holdings are retained, but earlier ownership and period returns cannot be established.' %}</p>{% endif %}
+    {% if portfolio_snapshot.performance_missing_currencies %}<p role="status" class="text-expense dark:text-expense-light">{% translate 'Historical result conversion is incomplete:' %} {{ portfolio_snapshot.performance_missing_currencies|join:', ' }}.</p>{% endif %}
+    {% if portfolio_snapshot.unapplied_fee_positions %}<p role="status" class="subtle-copy">{% translate 'Some recorded fees have an undeclared currency. Results exclude those fees until you explicitly identify their currency in the operation.' %}</p>{% endif %}
+    {% if portfolio_snapshot.history_errors %}<div role="alert" class="text-expense dark:text-expense-light">{% translate 'Existing operation history needs review before its results can be relied on.' %}<ul>{% for error in portfolio_snapshot.history_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+</section>

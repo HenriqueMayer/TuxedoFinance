@@ -20,11 +20,16 @@ file. Process environment variables always take priority.
 | `TUXEDO_DATA_DIR` | Directory containing `db.sqlite3`; create the directory before use | Project root |
 | `TUXEDO_ENV_FILE` | Environment file path, selected through the process environment | Project-root `.env` |
 | `LOG_LEVEL` | Application log level | `INFO` |
+| `ASSISTANT_OPENAI_AUTH_ENABLED` | Explicit owner-approved real-authorization opt-in; never enables model responses | `False` |
+| `ASSISTANT_OPENAI_INFERENCE_ENABLED` | Separate owner-approved catalogue/inference gate; also requires authorization, an eligible selected account and explicit model selection | `False` |
+| `ASSISTANT_OPENAI_CALLBACK_URL` | Exact local OAuth callback; literal HTTP `127.0.0.1`, service port and `/assistant/connections/callback/` | `http://127.0.0.1:8000/assistant/connections/callback/` |
+| `ASSISTANT_PRIVATE_DIR` | Private credential vault path; changing it does not move existing material | `assistant-private` beside the configured database |
 
 `DEBUG` and `HTTPS` are enabled only by the exact value `True`.
-`ALLOW_SIGNUPS` accepts `1`, `true`, `yes`, or `on`, ignoring case and surrounding
-whitespace. Use an absolute path for an external data directory or environment
-file. Changing the data directory does not move an existing database.
+`ALLOW_SIGNUPS` and both assistant enable flags accept `1`, `true`, `yes`, or
+`on`, ignoring case and surrounding whitespace. Use an absolute path for an
+external data directory or environment file. Changing the data directory does
+not move an existing database.
 
 Generate a signing key during initial setup as shown in the README; retain it
 for subsequent starts. `scripts/init_local.py` creates `.env` exclusively with
@@ -40,6 +45,144 @@ reverse-proxy provisioning remain outside the supported local configuration.
 For Docker installations, use the [Docker operations guide](docker.md) for
 volume-aware backup, restore and updates. Keep the Compose project identity and
 signing key across container recreation.
+
+## Assistant data and integrations
+
+The [assistant](apps/assistant.md) includes OpenAI account-authorization
+preparation, disabled by default, with isolated synthetic coverage and an
+[owner-approved native sign-in observation](reviews/assistant-native-sign-in-2026-10-19.md).
+That server enabled authorization only through its process environment; the
+installation `.env` and repository default stayed unchanged. Keep the flag off
+unless the owner approves live authorization for the intended installation.
+The observed original-session confirmation linked an account while preserving
+financial records. It did not list models, send inference or export financial
+data. Docker real OAuth, program eligibility, model access/limits, streaming and
+real refresh/revocation were not established by that authorization observation.
+The separate `ASSISTANT_OPENAI_INFERENCE_ENABLED=False` default keeps the
+provider/composer unavailable after account linking. With either gate off, no
+model catalogue, inference or inference-triggered credential refresh is sent.
+With both enabled, opening a ready composer may fetch the account catalogue and
+refresh expiring credentials before Send; each message then requires explicit
+model selection or a previously selected model still valid for that account.
+The initial request contains minimized page metadata and bounded recent history.
+Owned read/calculation tools retrieve the relevant saved evidence on demand;
+the visible page does not restrict which owned workspace can be consulted.
+The optional initial-page snapshot parameter is separate from this tool access.
+The owner-approved native validation used process-only opt-in; `.env` and both
+repository defaults remained unchanged. The public model
+and response endpoints use ChatGPT-plan OAuth exclusively. The adapter never
+reads `OPENAI_API_KEY`, exposes no separate API organization/key/billing
+configuration and never selects paid fallback. Bounded, mapped diagnostics are documented in the
+[provider contract](apps/assistant.md#provider-and-action-boundary); keep raw
+provider bodies and credentials out of operational logs.
+The [assistant guide](apps/assistant.md#provider-and-action-boundary) owns streaming,
+local run/partial-history retention, native fallback, cancellation and usage/error
+limits. Implemented transport is not evidence of live account/model availability.
+There is no paid API-key fallback, bank connection or background worker.
+Opening settings does not initialize the vault or contact OpenAI.
+
+Conversation/message data belongs to the authenticated user and remains in the
+installation database until deletion. Protect it with the same access, backup
+and retention policy as financial records. Deleting a conversation from the
+active database does not erase older owner-managed backup copies. The
+structured-context endpoint is read-only and does not synchronize projections.
+Apply the additive assistant migrations through the ordinary backed-up update
+workflow before running this source checkout. They add conversation,
+user-owned authorization, generation-run and action-review metadata, without
+changing financial records. Migration `0006_actionproposal` adds local review
+records. A separate [action confirmation](assistant/actions.md) can create,
+categorize, edit or delete a transaction, create a goal or create a category
+budget. Each proposal revalidates ownership, the session and current financial
+state. Reads and simulations do not save financial records; deleting chat
+history does not delete previously confirmed domain records.
+
+The SQLite database retains account identity, scopes, expiry, connection state
+and digests for short-lived authorization attempts. Reusable tokens and pending
+OAuth secrets belong only in the encrypted private vault. Its independent key,
+encrypted records and stable host identity must be backed up together with the
+database recovery point. The SQLite-only recipe below does not include them.
+Stop all writers for that paired backup and protect/encrypt the complete vault
+copy; credential encryption does not protect a backup containing its key.
+
+On restoration, retain the application OS ownership, directory mode `0700` and
+file mode `0600`, and restore the matching key, ciphertext and host identity
+before using connection actions. Missing/wrong keys fail closed; never replace
+a key over existing ciphertext or derive one from `SECRET_KEY`. Restore the
+complete matching backup instead. Linux/macOS or a Linux container are required
+for this POSIX vault; native Windows vault use fails closed. Ordinary
+unconnected pages remain available. The owning
+[authorization guide](apps/assistant.md#openai-authorization-preparation) defines
+the callback/session handoff, private storage, recovery and eligibility limits.
+Keep credentials out of Git, browser storage and diagnostics; external access
+logging must redact callback queries before any later real validation.
+
+Live model validation needs its own approved context/usage scope; an earlier
+bounded test does not authorize additional calls. Bank synchronization
+additionally needs an approved delivery strategy:
+provider webhooks cannot reach an ordinary loopback-only service by themselves.
+Do not expose the installation, configure a tunnel, reuse another application's
+tokens or copy financial data to a provider as a workaround. Follow the
+[planned-integration gates](roadmap.md) and
+[dated Open Finance study](reviews/open-finance-personal-study-2026-10-18.md).
+
+## Read-only Open Finance pilot
+
+The [Meu Pluggy Inter bill pilot](open-finance-pilot.md) is an explicitly invoked
+operator command with no settings, migration, scheduler or web route. Its demo
+uses synthetic data; live mode requires the owner's official bank/provider setup
+and hidden one-shot credentials. It reads only the selected personal proxy/card
+and saves a minimized private observation under ignored `.local/open-finance-pilot/`.
+It never queries or changes the application database or stores credentials.
+
+Real pilot setup and bank authorization remain paused in the
+[roadmap](roadmap.md#personal-open-finance-study); the command's presence does
+not enable synchronization in an installation.
+
+The private files contain financial evidence and require owner-only POSIX access.
+Decide explicitly whether to retain/encrypt/back up those observations; this is
+separate from database or assistant-vault recovery. Reports are not served to
+application users or attached to assistant context. No API key, bank password,
+MFA code or provider response belongs in logs, chat or versioned documentation.
+Consult the owning guide for daily cache, expiry, incomplete coverage and
+preservation on failure. There is no automatic collection while the process is off.
+
+## Financial calendar
+
+Financial rules obtain today's date through Django's `timezone.localdate()`.
+The current application sets `TIME_ZONE = 'UTC'` and does not activate a
+per-user timezone. Invoice due-state checks, confirmed-payment validation,
+current payment totals, ledger synchronization and default cash/report cutoffs
+therefore share that calendar, independently of the operating system's date
+or the browser's timezone.
+
+Explicit `as_of` and `through_date` arguments remain authoritative for
+historical or projected reads. Stored operation/payment dates are calendar
+dates; this rule does not convert or rewrite them. Aware timestamps retain
+their existing behavior. Demo confirmation guards use the same current day,
+so a future demo reference cannot fabricate an already confirmed payment.
+Changing the application's financial timezone is a separate product decision;
+changing the host timezone alone must not change these financial rules.
+
+## Review opening-date conflicts
+
+Validation rejects new or edited operations before a known account opening.
+It leaves existing financial history intact. For an explicit read-only owner
+review, use the normal installation's Django shell and select the intended user:
+
+```python
+from django.contrib.auth import get_user_model
+from banking.services import movements_before_opening
+
+owner = get_user_model().objects.get(username="YOUR_USERNAME")
+for movement in movements_before_opening(owner):
+    print(movement.pk, movement.account_id, movement.effective_date,
+          movement.account.opening_date, movement.source_key)
+```
+
+This prints identifiers and dates without posting, synchronizing or changing
+records. Keep the output private. Review the source and its actual baseline
+before deliberately editing either; do not mass-redate sources or invent a date
+for unknown legacy openings.
 
 ## Updating dependencies
 

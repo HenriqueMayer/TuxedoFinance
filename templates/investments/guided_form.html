@@ -1,0 +1,91 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% translate 'Add investment' %} — Tuxedo Finance{% endblock %}
+{% block content %}<div class="workspace-form-page finance-entry-page space-y-6">
+    <h1 class="page-title">{% translate 'Add investment' %}</h1>
+    <form autocomplete="off" method="post" hx-boost="false" id="guided-investment-form" novalidate class="workspace-form surface-panel finance-entry-form space-y-5">
+        {% csrf_token %}<input type="hidden" name="next" value="{{ return_url }}">
+        {% for error in form.non_field_errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+        <fieldset class="finance-entry-group">
+            <legend class="section-title">{% translate 'Investment details' %}</legend>
+        <div class="finance-entry-grid">
+            <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.new_institution %}</div>
+            <div id="guided-existing-institution" class="finance-entry-wide" data-has-errors="{{ form.institution.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.institution %}</div>
+            <div id="guided-new-institution" class="finance-entry-wide" data-has-errors="{{ form.institution_name.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.institution_name %}</div>
+            {% include 'partials/form_field.html' with field=form.name %}
+            {% include 'partials/form_field.html' with field=form.valuation_mode %}
+        </div>
+        </fieldset>
+        <details class="explanation-disclosure finance-entry-section investment-appearance"{% if form.icon.errors %} open{% endif %}>
+            <summary>{% translate 'Personalization' %}</summary>
+            <div class="mt-4">{% include 'partials/form_field.html' with field=form.icon %}</div>
+            <p class="subtle-copy mt-3">{% translate 'The icon identifies this application only. It does not change its purpose or availability for planning.' %}</p>
+        </details>
+        <fieldset id="guided-values" data-has-errors="{% if form.currency.errors or form.purpose.errors or form.opening_balance.errors or form.opening_quantity.errors or form.opening_unit_price.errors or form.opening_date.errors %}true{% else %}false{% endif %}" class="finance-entry-group finance-entry-section">
+            <legend class="section-title">{% translate 'Existing holdings' %}</legend>
+            <div class="finance-entry-grid">
+            {% include 'partials/form_field.html' with field=form.currency %}
+            <div id="guided-purpose" data-has-errors="{{ form.purpose.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.purpose %}</div>
+            <div id="guided-planning" class="finance-entry-wide" data-has-errors="{{ form.planning_enabled.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.planning_enabled %}</div>
+            <div id="guided-balance" data-has-errors="{{ form.opening_balance.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_balance %}</div>
+            <div id="guided-units" data-has-errors="{% if form.opening_quantity.errors or form.opening_unit_price.errors %}true{% else %}false{% endif %}" class="finance-entry-wide finance-entry-grid">{% include 'partials/form_field.html' with field=form.opening_quantity %}{% include 'partials/form_field.html' with field=form.opening_unit_price %}</div>
+            <div id="guided-date" data-has-errors="{{ form.opening_date.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.opening_date %}</div>
+        </div>
+        </fieldset>
+        <details class="explanation-disclosure finance-entry-section"{% if form.code.errors or form.asset_class.errors or form.code.value or form.asset_class.value and form.asset_class.value != 'OTHER' %} open{% endif %}><summary>{% translate 'Advanced options' %}</summary><div class="mt-4 finance-entry-grid">{% include 'partials/form_field.html' with field=form.code %}{% include 'partials/form_field.html' with field=form.asset_class %}</div></details>
+        <p class="subtle-copy">{% translate 'Existing holdings are recorded without a bank debit. Leave the opening at zero to record the first operation later.' %}</p>
+        <div class="form-actions flex flex-wrap gap-3"><button type="submit" class="action-primary">{% translate 'Save' %}</button><a hx-boost="false" href="{{ return_url }}" class="quiet-action">{% translate 'Cancel' %}</a></div>
+    </form>
+</div>{% endblock %}
+{% block extra_js %}<script>
+(() => {
+    const form = document.getElementById('guided-investment-form');
+    const mode = form.elements.valuation_mode;
+    const purpose = form.elements.purpose;
+    const newInstitution = form.elements.new_institution;
+    const hide = window.TuxedoForms.setHidden;
+    const parts = new Intl.NumberFormat(document.documentElement.lang).formatToParts(1000.1);
+    const decimal = parts.find(part => part.type === 'decimal').value;
+    const group = parts.find(part => part.type === 'group')?.value;
+    function positiveValue(control) {
+        let value = control.value.trim();
+        if (!value) return false;
+        if (group) value = value.split(group).join('');
+        if (decimal !== '.') value = value.replace(decimal, '.');
+        // Visibility only: all numeric/accounting validation stays in Django.
+        // An incomplete decimal keeps its date branch available for recovery.
+        if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return null;
+        return Number(value) > 0;
+    }
+    function update(clear) {
+        const monetary = mode.value === 'MONETARY';
+        const units = mode.value === 'UNITS';
+        hide(document.getElementById('guided-existing-institution'), newInstitution.checked, !clear);
+        hide(document.getElementById('guided-new-institution'), !newInstitution.checked, !clear);
+        hide(document.getElementById('guided-values'), !mode.value, !clear);
+        hide(document.getElementById('guided-purpose'), !monetary, !clear);
+        hide(document.getElementById('guided-balance'), !monetary, !clear);
+        hide(document.getElementById('guided-units'), !units, !clear);
+        hide(document.getElementById('guided-planning'), !monetary || purpose.value !== 'MONTHLY_CASH', !clear);
+        const opening = monetary ? positiveValue(form.elements.opening_balance) : units ? positiveValue(form.elements.opening_quantity) : false;
+        hide(document.getElementById('guided-date'), !mode.value || (opening === false && !form.elements.opening_date.value), !clear);
+    }
+    // A deliberate branch change clears only its abandoned values; initial
+    // errors and bound fields survive, including nested opening/date groups.
+    newInstitution.addEventListener('change', () => {
+        if (newInstitution.checked) form.elements.institution.value = '';
+        else form.elements.institution_name.value = '';
+        update(true); window.TuxedoForms.refresh(form);
+    });
+    mode.addEventListener('change', () => {
+        if (mode.value !== 'MONETARY') { form.elements.opening_balance.value = ''; purpose.value = ''; }
+        if (mode.value !== 'UNITS') { form.elements.opening_quantity.value = ''; form.elements.opening_unit_price.value = ''; }
+        form.elements.planning_enabled.checked = false;
+        form.elements.opening_date.value = '';
+        update(true); window.TuxedoForms.refresh(form);
+    });
+    purpose.addEventListener('change', () => { if (purpose.value !== 'MONTHLY_CASH') form.elements.planning_enabled.checked = false; update(true); });
+    ['opening_balance', 'opening_quantity'].forEach(name => form.elements[name].addEventListener('input', () => update(false)));
+    form.addEventListener('tuxedo:restore', () => update(false));
+    update(false);
+})();
+</script>{% endblock %}

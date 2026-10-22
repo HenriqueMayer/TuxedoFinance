@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load i18n assets %}
 
-{% block title %}{% translate "Sandbox" %} — Tuxedo Finance{% endblock %}
+{% block title %}{% translate "Salary simulation" %} — Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="planning-workspace space-y-7">
+<div class="planning-workspace finance-entry-page space-y-7">
     {% include 'sandbox/_navigation.html' %}
     <header>
         <div class="flex items-center gap-3">
-            <h1 class="page-title">{% translate "Salary Sandbox" %}</h1>
-            {% include 'partials/help_popover.html' with help_id='salary-sandbox-help' help_label=_('Salary Sandbox') help_template='sandbox/_salary_help.html' %}
+            <h1 class="page-title">{% translate "Salary simulation" %}</h1>
+            {% include 'partials/help_popover.html' with help_id='salary-sandbox-help' help_label=_('Salary simulation') help_template='sandbox/_salary_help.html' %}
         </div>
         <p class="subtle-copy mt-2">{% translate "Compare one gross salary with the expenses expected for a selected month." %}</p>
     </header>

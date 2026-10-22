@@ -4,6 +4,29 @@ This app owns banks, currency-specific accounts, the account ledger, PIX, debit
 and credit cards, card invoices, and loyalty programs. Per-user base reporting
 currency preferences are configured per user in Settings.
 
+## Python module ownership
+
+`banking.forms` and `banking.views` remain the public import paths. Their
+`__init__.py` files explicitly export the existing forms and route handlers;
+implementations live in the following responsibility-specific modules:
+
+| Responsibility | Forms | Views |
+|---|---|---|
+| Shared ownership, instrument fields and form lifecycle | `forms/base.py` | `views/base.py` |
+| Bank workspace, balances presentation and planning participation | — | `views/workspace.py` |
+| Banks and currency-specific accounts | `forms/accounts.py` | `views/accounts.py` |
+| Debit/credit settings and card appearance | `forms/cards.py` | `views/cards.py` |
+| Invoice consultation and confirmed payments | `forms/invoices.py` | `views/invoices.py` |
+| Loyalty programs, points entries and redemptions | `forms/loyalty.py` | `views/loyalty.py` |
+| Own-account transfers | `forms/transfers.py` | `views/transfers.py` |
+| Exchange-rate evidence and consultation | `forms/exchange_rates.py` | `views/exchange_rates.py` |
+
+Modules inside each package import their sibling implementations directly,
+avoiding dependencies on a partially initialized public export module. The URL
+names and `banking.urls` remain unchanged. Domain calculations and mutations
+continue to live in `banking.services` and `banking.settlements`; this division
+does not introduce a second ledger or change transaction boundaries.
+
 ## Domain
 
 ```text
@@ -21,8 +44,30 @@ Bank
 
 A `Bank` may have any number of `BankAccount` rows, including multiple accounts
 in the same currency. Each account has exactly one currency. Its available
-balance is `opening_balance + sum(BankMovement.signed_amount)`; transaction rows
+balance is its applicable opening balance plus
+`sum(BankMovement.signed_amount)`; transaction rows
 are never added to that formula independently.
+
+New nonzero openings require `BankAccount.opening_date`. Cutoff reads include a
+dated opening only on or after that date, and the date cannot follow an existing
+movement. Older openings keep a null date through migration rather than an
+invented historical baseline. Current balances retain them, while dated wealth
+discloses that their baseline is unknown. Statement confirmation requires the
+owner to resolve a nonzero unknown account baseline first.
+
+`BankAccount.predates_opening()` supplies the common date guard for transactions,
+confirmed payments, both transfer endpoints, investment cash endpoints, points
+funding and redemption/IOF endpoints. New or edited operations cannot precede a
+known account opening. Unknown legacy dates stay unknown. Existing conflicts
+can be inspected with the owner-scoped, read-only
+`banking.services.movements_before_opening(user)` queryset; no migration or
+automatic rewrite repairs them. See [local review](../operations.md#review-opening-date-conflicts).
+
+The account editor presents these fields together as **Balance when tracking
+starts** and **Start tracking on**, with a visible explanation that the amount
+belongs to the start of that date, before its movements. This wording does not
+reinterpret an opening as current cash or an income transaction. A new nonzero
+baseline still requires a date; existing unknown dates are not inferred.
 
 Bank list and account detail views synchronize derived transactions and invoices
 before reading balances. These requests may write to the ledger; the balance
@@ -38,12 +83,19 @@ helpers themselves only query it. The synchronization service lives in
 - A **credit-card purchase** becomes an invoice item. It affects spending
   reports in the statement month, including the appropriate installment or
   recurrence amount, and does not create a purchase-date account debit.
-- A `CardInvoice` is paid on its `due_date` by one debit movement against the
-  linked account. Invoice items are not debited again, preventing double count.
+- By default a `CardInvoice` is projected as paid on its `due_date` by one debit
+  movement against the linked account. Optional manual settlement replaces
+  that projection with explicitly confirmed payments. Invoice items are not
+  debited again, preventing double count.
 - An external PIX is an ordinary categorized `INCOME` or `EXPENSE` transaction,
   with its immediate ledger movement. PIX is not synonymous with transfer.
 
 ## Transfers
+
+Source and destination amounts must be equal when the accounts use the same
+currency. A transfer cannot create an unexplained gain or loss; record fees or
+other financial activity separately. Cross-currency amounts and captured FX
+evidence retain their existing contract.
 
 A transfer between the user's own accounts produces two linked movements: an
 outflow in the source account and an inflow in the destination account. The pair
@@ -59,9 +111,79 @@ cash-flow KPIs.
 Both `DebitCard` and `CreditCard` belong to one `BankAccount`. A credit card also
 stores its statement-closing rule and due day. Each invoice stores a reference month, due date, status, and amount; its
 native currency comes from the linked card account. Synchronization derives the
-total from source records and creates one due-date movement, including for
-future invoices. Available cash includes that movement only once effective. Partial payments, if introduced, must be represented as
-explicit invoice payments; they must not mutate purchase amounts.
+total from source records. Automatic mode creates one due-date movement,
+including for future invoices; cash includes it only once effective. Automatic
+paid status describes the local projection, not bank confirmation.
+
+### Optional manual settlement
+
+`CreditCard.manual_settlement_from` is an owner-selected due-date boundary.
+Its default is null, preserving automatic behavior for existing and new cards.
+Invoices due before the boundary retain their prior behavior. An invoice that
+has entered manual mode keeps `CardInvoice.manual_settlement=True`, preserving
+confirmed evidence even if the card setting subsequently changes.
+
+Manual invoices have no synthetic due-date debit. `InvoicePayment` records a
+positive native amount, actual date, owned funding account, notes and unique
+confirmation UUID. The account must have the invoice currency; the payment
+cannot be in the future or before its known account opening. Each confirmation
+posts exactly one linked debit `BankMovement` on the actual payment date.
+Repeating the same UUID with the same payload returns the existing payment;
+reuse with different values is rejected. Payments, movements and invoice status
+are saved atomically by `banking.settlements.save_invoice_payment`.
+
+Partial payments are supported, and new or edited confirmations cannot exceed
+the current invoice total after other payments. Status is scheduled, partial,
+overdue or paid according to confirmed payments through the cutoff. Editing or
+deleting a confirmation updates or removes its own cash movement without
+altering purchases. A source purchase correction/deletion does not erase real
+payments: excess confirmed payment becomes visible card credit in wealth.
+Payment-bearing invoices survive source/horizon reconciliation.
+
+`manual_invoice_obligations(user, as_of)` exposes outstanding manual amounts
+for due-date forecasts. These planned obligations do not post cash or count as
+another expense. Historical readers filter confirmations by their actual date
+and must not use today's paid flag as evidence of an earlier payment.
+
+Invoice properties and payment validation use the same Django current day as
+settlement and default balance reads. The operating system's local date must
+not independently include a payment, reject its date or mark an invoice overdue.
+See the shared [financial calendar](../operations.md#financial-calendar).
+
+### Invoice credits
+
+`CardInvoiceCredit` records a positive credit magnitude, owned card and expense
+category, title, actual posting date, explicit reference month, notes and unique
+confirmation UUID. It is a separate source, not income, a purchase with a
+negative stored amount, or a payment. The original purchase need not be known;
+matching a merchant alone never selects one of several purchases.
+
+From an invoice, **Add invoice credit** opens the shared native entry form.
+The invoice context fixes card/month on the server. Edit and confirmed delete
+preserve validated local origins, bound errors and the no-JavaScript path.
+The invoice shows gross charges, credits, net payable and separate credit rows.
+
+`banking.credits.save_invoice_credit` and `delete_invoice_credit` validate
+ownership, category compatibility, opening-date limits and immutable UUIDs,
+then reconcile atomically. Identical repeated confirmations return the original
+source; conflicting payloads fail. Synchronization never posts an immediate
+bank movement for a credit. Net invoice amount is `max(0, gross - credits)`;
+excess remains visible as an asset on that card/month, without automatic
+carry-forward or manufactured bank income.
+
+Automatic due-date cash uses only credits posted by that due date. A later
+credit therefore leaves historical cash intact and becomes card credit rather
+than rewriting an earlier settlement. Manual payments also retain their actual
+cash evidence. Dated obligations, wealth and realized reports apply posting-date
+cutoffs. Expense reports and budgets subtract the credit in its explicit
+reference month/category; scenario snapshots carry a distinct credit kind and
+subtract a positive override magnitude exactly once. Signed chart values retain
+their source links; positive-area composition drawings do not invent negative
+areas.
+
+This operator-reviewed source capability does not reopen the paused statement
+import interface or connect to a bank. Apply the additive banking/transactions
+migrations before starting the updated application.
 
 ## Loyalty
 
@@ -84,12 +206,22 @@ redemption entries reveal neither conditional branch. Changing the entry kind
 clears values from the branch that became inactive, while server validation
 remains authoritative and the no-JavaScript form remains complete.
 
+Instrument choices reuse the illustrated board from Transactions. Linked cards
+are a searchable group of native checkboxes with saved card colors/gradients,
+nickname, account, institution marker and currency. Filtering does not remove
+selected cards from the submission. Points-purchase funding, invoice awards and
+redemption/IOF fields use the same account/card identity; an invoice option also
+identifies its reference month. This is presentation of the existing owned
+choices, not a new eligibility, settlement or points-valuation rule. See the
+[shared choice contract](../frontend/forms.md#keyboard-and-choice-contract).
+
 `RewardRedemption` coordinates a redemption rather than replacing the points
 ledger. It records the points used, target account and monetary amount, IOF, and
 an optional IOF funding instrument. The service links it to a debit
 `LoyaltyEntry`, a credit `BankMovement` for the reward, and an IOF movement when
 IOF is paid from an account. Credit-card IOF is included in the card's aggregate
-invoice by ledger synchronization and debits cash only on its due date. Positive
+invoice by ledger synchronization and settles through the card's automatic or
+manual invoice mode. Positive
 IOF requires exactly one owned bank account or credit card; zero IOF permits
 neither.
 
@@ -121,17 +253,25 @@ Setting IOF to zero removes the derived expense and previous IOF funding.
 An explicitly selected older redemption remains visible for editing beyond the
 usual twenty-row history limit.
 
+An explicit local origin also survives the redemption editor's redirect into
+bank history, bound errors and its inline Save/Cancel. A chart source can
+therefore return to its original filtered report and anchor. Only the explicit
+origin is posted; without one, saving retains the original receiving-bank
+fallback, using the updated bank if the receiving account changes. External
+origins are rejected and the source record remains owner-scoped.
+
 ## Multicurrency
 
 Bank accounts, invoices and investment assets retain their configured native
 currency. Consolidated reporting uses the authenticated user's
 `UserPreference.base_currency`, which defaults to BRL and is editable in
 Settings. Historical transfer reports use each transfer's persisted FX
-snapshot and effective evidence date; current rates are reserved for explicitly
-labeled current valuations.
+snapshot and effective evidence date; read-time rates serve explicitly labeled
+current or cutoff-date valuations.
 Missing rates preserve native amounts and mark the conversion incomplete.
 Changing the preference never mutates native amounts. Other banking entities
-remain on live/current conversion until a future roadmap item extends coverage.
+use read-time conversion rather than captured operation snapshots. Dated wealth
+requests cutoff-date rates; current screens request their stated valuation date.
 
 The exchange-rate list provides create, edit and confirmed delete actions for
 the signed-in user's rates. Forms and cancellation return to that list. Editing
@@ -146,6 +286,8 @@ must be unique per user.
 - Every queryset and relationship is scoped to the authenticated user.
 - Referenced banks, accounts, cards, invoices, movements, rates, and loyalty
   ledgers are protected from destructive cascade.
+- Account currency cannot change while any goal reservation references it,
+  including an archived goal, even if no cash movement has yet been recorded.
 - Personal ledger and loyalty entries remain editable; audit-grade reversal
   workflows are out of scope.
 - Exactly one settlement path applies to an event: immediate account movement or
@@ -162,24 +304,227 @@ for backups, version selection and restoration.
 
 Banks, accounts, cards, programs and invoices use shared searchable choices. Multiple eligible cards use searchable checkboxes with Tab/Space and retain selection when filtered. Purchased-points amounts wait for a funding source; IOF sources wait for a positive amount. A deliberate source change clears the incompatible alternative.
 
-Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+Follow the [mandatory shared form contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 ## Monthly planning availability
 
 `BankAccount.planning_enabled` defaults to true and `reserved_amount` defaults
 to zero. Reservations use the account's native currency and persist until the
 owner changes them; they do not create movements or reset each month. An included
-account reserves `min(reserved_amount, max(balance, 0))`. An excluded account
+account sets aside the greater of its manual reserve and active goal allocations,
+capped at its positive balance. An excluded account
 sets aside its positive balance. Negative balances remain visible in planning,
 and excluded funding never removes an invoice or other obligation.
+
+The account editor groups the inclusion checkbox and manual reserve under the
+native **Planning adjustments (optional)** disclosure. The reserve is labelled
+**Keep outside monthly planning**, with visible copy distinguishing it from
+account cash and explaining that goal reservations are not counted twice.
+The disclosure opens for a positive saved/bound reserve, an excluded account or
+field errors. Closing it never disables, clears or omits its controls; the same
+complete POST works without JavaScript. This is presentation only: the defaults,
+native-currency amount, date guards and availability formula remain unchanged.
 
 `banking.services.get_planning_availability(user, as_of=None)` returns bank
 balances, monetary cash pots, set-aside amounts, availability, reserve shortfall
 and missing currencies. Positions are calculated by product and asset, with
 opening positions counted once. The date cutoff excludes future movements and
-operations. This is a funding snapshot before upcoming bills, not a second
+operations and openings dated after the cutoff. Active goal allocations also
+reserve monetary cash pots; archived goals release availability while retaining
+their source references. Shrinking balances show a shortfall instead of
+manufacturing backing. This is a funding snapshot before upcoming bills, not a second
 ledger or an amount that can be spent without redeeming a cash pot.
 
-Bank lists and detail tables consume grouped balances instead of calling an
+The helper accepts an optional request-owned `ConversionContext` for shared FX
+lookups. Reservations are earmarks of existing cash, not withdrawals, expenses
+or new assets. They do not reduce net worth. See [planning](planning.md).
+
+Bank overviews and account cards consume grouped balances instead of calling an
 aggregate for each account. The planning toggle uses an owned, CSRF-protected
 POST; the same change works with a normal form submission without JavaScript.
+
+## Workspace sections
+
+Accounts uses four direct section destinations: **Accounts**, **Invoices**,
+**Loyalty** and **Exchange rates**. The shared section rail scrolls horizontally
+on small screens without wrapping or widening the document. Editors retain the
+active owning section; section navigation never replaces a form's Save/Cancel.
+
+Accounts keeps the consolidated planning-availability snapshot above its
+institution index or open bank. The snapshot, the bank's real balances and card
+invoice debt retain separate labels and meanings. The existing bank grid and
+single internal workspace are preserved; Minimize returns to the institution
+index rather than inserting a second bank selector into the title bar.
+
+Invoices starts with the existing card overview, including cards with no
+matching invoices, and opens the selected card's history. Card appearance,
+closing/due rules and settlement behavior remain local to the existing card.
+The selected card and invoice detail reuse its decorative miniature beside a
+readable card, bank, account and currency identity. History rows align month/due
+date, status, total/remaining and actions on desktop; phones stack the same
+labelled amounts. No cross-card or cross-currency aggregate is introduced.
+
+Loyalty has a dedicated consultation at `/banking/loyalty/`. It lists the user's
+programs together, including independent programs and programs linked to banks
+or cards. Balances retain each program's own points/miles unit; they are not
+summed or converted into cash. One live text search and paginated results keep
+the consultation usable as the collection grows. Each program exposes linked
+cards, existing entry/redemption actions and a deliberate native disclosure of
+its ten most recent entries, with a link to the program's paginated full history
+at `/banking/loyalty/<id>/entries/`. Entry editing and deletion remain unavailable
+for entries owned by a reward redemption; those continue to be managed through
+their source.
+Explicit local origins keep program and entry editors' Save/Cancel in context.
+
+This reorganization adds read-only presentation and navigation. It does not
+change models, migrations, ledger services, funding eligibility, financial
+calculation, posting or deletion protection.
+
+## Contextual daily actions
+
+The Accounts overview lists owned institutions as links;
+opening one gives each account a card with a visible New transaction shortcut.
+The deliberate account menu retains Edit / reserve, own transfer, card creation
+and deletion. Validated account shortcuts and explicit local `next` origins
+preserve the return destination through Save/Cancel, errors and planning POST
+fragments. Credit cards expose a purchase shortcut and scoped invoice list beside
+their dated settlement mode. Invoice filters validate ownership and keep the
+selection during pagination. Paused imports have no account shortcut.
+
+Home and bank details link directly to an invoice. Its due date, status, native
+total, confirmed amount and remaining amount precede payment entry and sources.
+Payment entry explicitly records an already completed bank payment. Successful
+entry stays beside the invoice result; Cancel returns to the supplied local
+origin. Source editors and payment editors return to the same invoice section.
+
+
+## Bank overview, details and dynamic consultation
+
+The overview shows all owned banks, using one link per institution with its
+name, decorative neutral 54 × 36 institution miniature, color marker and
+account/card counts. The glyph reuses the shared account-selector artwork; it
+is part of the existing link and adds no control or keyboard stop. It has no text filter. Retired overview
+`q` parameters are ignored. Bank totals, monetary cash pots and set-aside amounts
+stay visible beside the all-bank available-money summary, without a disclosure.
+Missing-rate and reserve shortfall warnings remain visible.
+
+Opening an institution replaces the bank grid with one broad internal work
+surface while retaining the consolidated summary. Its compact tab bar names
+the institution beside the shared miniature instead of a bookmark marker, and
+keeps a labelled Minimize action available. The existing native Minimize link
+also covers the title bar, so clicking its title or empty space returns to the
+overview without adding another keyboard stop. Its hit area ends at the bar;
+account content and controls never minimize the workspace. The bar stays within
+the workspace's document scroll. The overview remains the complete
+colored institution index; minimize the current bank to choose another one.
+Forty banks therefore add no rows above the selected bank's accounts.
+
+HTMX replaces only `#banking-workspace` and pushes the existing canonical bank
+URL. Opening a bank focuses the surface heading; Minimize restores
+the corresponding overview link and, for the same bank, its prior position.
+This small location state stays in memory and is scoped to the authenticated
+user. Browser Back/Forward keeps the shared authorized-GET history contract.
+The existing departure guard still protects edited inline POSTs before
+Minimize or other navigation. Overview and Minimize links retain complete
+native GET navigation without JavaScript. Legacy owned `?open=` destinations
+still redirect to the canonical bank URL. A completed workspace GET updates
+the navigation baseline. Inner planning and reward updates retain their
+existing fragments and validation contracts.
+
+Each bank page contains the institution's accounts, monetary cash pots, reserves
+and loyalty programs. The dedicated Loyalty section also exposes those programs
+across institutions. An account card has three distinct layers: its name and
+daily actions, a labelled Balance / Set aside / Available grid, then its cards.
+Each account has its own bordered surface and a subtly contrasting name/actions
+header, with space between accounts. The details and planning controls share
+the account footer, apart from its amounts and linked card actions.
+The planning participation POST stays outside the amount grid. Account details
+contains opening-balance evidence and debit-card administration. Its ellipsis
+menu retains editing/reserving, own transfer, both card creation actions and
+account deletion. Each credit card appears once, with invoice/purchase links,
+closing/due days, settlement mode and deliberate Edit/Delete options.
+
+Participation-excluded accounts and cash positions appear inside Reserves with
+explicit include/exclude POST actions. Same-record updates preserve disclosure
+state, focus and position. Available money differs from real balances; exclusion
+never hides debts or removes financial history. Both full pages and planning
+fragments prefetch only the user's cards, including legacy cross-owner links.
+Fragment shortcuts retain the submitted validated page origin, never the POST
+endpoint. Complete native POSTs remain supported.
+
+Recent activity is a native secondary disclosure containing redemptions,
+invoices and ledger movements. Redemption edit/error responses open it; stable
+record anchors reveal the appropriate native disclosure after full and boosted
+page navigation. Unrelated background updates do not reopen it. The bank header keeps Add account and Invoices
+visible, with bank editing, color, loyalty creation and deletion in its menu.
+
+Cash pots use a responsive grid of compact record cards. Asset name, product
+and native currency precede Balance and Available; the participation POST stays
+below those amounts. A single redemption hint belongs to the group, rather than
+every row. Set balance aside explicitly names the action, while Use in planning
+restores participation. Reserves, actual balances and existing goals keep the
+same calculation and ownership rules.
+
+Invoices opens a paginated card overview. Every owned card remains discoverable
+without invoices; the block shows its institution, account, currency and matching
+invoice count. Month/status filters require matching invoice evidence, while
+search/bank filters can find empty cards. The count excludes foreign-user legacy
+invoice references. A deliberate card link opens its own paginated invoice
+history at `/banking/credit-cards/<id>/invoices/`, preserving criteria. Months,
+due dates, settlement status, total, remaining amount and payment links stay
+available there. Clear retains the owning card and any validated return origin.
+Legacy `?card=<id>` links redirect after ownership/canonical-ID validation; invalid
+or foreign IDs remain 404s. Card and invoice pagination are independent.
+
+Invoices and local exchange rates retain one primary live search with compact,
+always-visible criteria and a reserved Clear area. Invoices shows month, bank
+and status; exchange rates shows currencies and date bounds. Active counts
+exclude text search. Controls remain mounted while results/status update;
+initial errors and bound values stay visible. Card selection is page navigation through the overview, rather than another
+record picker in the filter panel. Invoice month uses the shared named-month/year
+enhancement over the native ISO field; malformed month text stays recoverable.
+Every filter retains native GET submission without JavaScript. On phones the
+invoice month occupies a full row, with Bank and Status paired below it; a long
+localized month must not make the control taller than its 44px peers.
+FX criteria align their labelled controls at the top, so a field error does not
+push the neighbouring date/currency control down to the error's baseline.
+
+Banking density is scoped to `.banking-workspace`, including invoice
+consultation/payment, exchange rates and form containers/actions. Headings,
+separators and record surfaces clarify hierarchy without changing financial
+values, native fields or shared searchable-choice behavior. Row menus use
+record-specific accessible names and deliberate activation. Touch targets stay
+at least 44px for all pointer types. Rate forms retain
+Save/Cancel and explicit origins. Local reference rates never rewrite evidence
+already stored in financial operations.
+
+Complete account, card, transfer, loyalty, redemption and payment editors reuse
+the shared `finance-entry-page` sheet, named native fieldsets and responsive
+field grid. Bank/account selectors and descriptions keep the full reading
+width; short related fields share rows on desktop and stack on phones. The
+appearance editor, gradient handle and conditional funding owners retain their
+IDs, input types, precision and server error recovery. Ordinary result labels
+wrap their full text in the shared choice list, including names without spaces.
+The selected bank's sticky title is limited to two visual lines so it cannot
+cover the phone's controls; its full name remains in the accessible heading,
+native title and overview.
+
+An invoice retains its explicit consultation origin when opening a purchase or
+confirmed-payment editor. The nested editor returns to the invoice section with
+that outer origin intact. Payment edit/delete Save/Cancel and invalid responses
+validate and retain the explicit local `next`; they never infer it from Referer.
+Ownership, overpayment limits and atomic movement reconciliation remain in the
+existing server services.
+
+Record deletion also preserves the explicit local origin for Cancel, protected
+references and successful removal when that destination survives. Removing an
+empty bank returns to the overview rather than its deleted workspace; Cancel
+and a protected bank deletion keep the still-existing bank open. FX deletion
+keeps its exchange-rate-list fallback. These navigation rules do not bypass
+ownership or reference protection.
+
+Exchange-rate labels state the direction explicitly: one unit of the source
+currency is worth the entered value in the target currency. A visible example
+(`1 USD = 5.12 BRL`) explains the list and editor without requiring a help
+popover. Rates retain eight decimal places; transaction cents formatting never
+applies to reference prices.

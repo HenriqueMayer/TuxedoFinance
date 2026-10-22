@@ -1,0 +1,739 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Catalogue experiment only. No selector changes the application stylesheet. */
+[data-design-lab] {
+    --ui-muted: var(--lab-muted);
+    --lab-paper: #FAF8F3;
+    --lab-ground: #EBE7DE;
+    --lab-ink: #1A2E26;
+    --lab-muted: #52605A;
+    --lab-accent: #B88A59;
+    --lab-accent-ink: #8A5A2F;
+    --lab-line: rgb(26 46 38 / .18);
+    --lab-control-line: #7C8982;
+    --lab-error: #B42318;
+    --lab-surface: #fff;
+    --lab-header: 78px;
+}
+.dark [data-design-lab] {
+    --lab-paper: #101010;
+    --lab-ground: #262626;
+    --lab-ink: #FAF8F3;
+    --lab-muted: #B8B8B8;
+    --lab-accent-ink: #D4AD86;
+    --lab-line: rgb(250 248 243 / .2);
+    --lab-surface: #1B1B1B;
+    --lab-error: #FF8A80;
+    --lab-control-line: #808080;
+}
+[data-design-lab] main > section { scroll-margin-top: calc(var(--lab-header) + 20px); }
+#lab-login, #lab-home-features, #bank-card-title, [id^="lab-planning-"], [id^="lab-banking-"] { scroll-margin-top: calc(var(--lab-header) + 20px); }
+.lab-catalogue-toolbar {
+    max-width: 1280px; margin: auto; padding: 12px 32px;
+    display: flex; align-items: center; gap: 24px;
+}
+.lab-catalogue-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.lab-catalogue-brand img { width: 34px; height: 34px; border-radius: 50%; }
+.lab-catalogue-brand span { font-size: 12px; font-weight: 600; letter-spacing: .08em; }
+.lab-catalogue-brand small { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--lab-muted); }
+.lab-catalogue-links { display: flex; align-items: center; gap: 19px; min-width: 0; overflow-x: auto; flex: 1; scrollbar-width: thin; }
+.lab-catalogue-links a { flex-shrink: 0; padding: 12px 0; font-size: 12px; color: var(--lab-muted); transition: color 160ms; }
+.lab-catalogue-links a:hover, .lab-catalogue-links a:focus-visible { color: var(--lab-ink); }
+.lab-icon-button { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--lab-line); border-radius: 50%; flex-shrink: 0; }
+.lab-icon-button svg { width: 20px; height: 20px; }
+.lab-section { padding: 64px 0; border-top: 1px solid var(--lab-line); margin-top: 64px; }
+.lab-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+.lab-section-heading h2 { font-size: clamp(30px, 4vw, 40px); line-height: 1.15; letter-spacing: -.04em; font-weight: 600; }
+.lab-section-heading > p { max-width: 420px; font-size: 14px; line-height: 1.6; color: var(--lab-muted); }
+.lab-eyebrow { display: block; font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--lab-accent-ink); margin-bottom: 12px; }
+.lab-tag { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--lab-line); border-radius: 50px; padding: 8px 12px; font-size: 12px; }
+.lab-prototype-note { margin-top: 20px; max-width: 760px; color: var(--lab-muted); font-size: 14px; line-height: 1.6; }
+.lab-prototype-note a { text-decoration: underline; text-underline-offset: 4px; }
+/* The catalogue frame shares the homepage's quiet hierarchy. Component
+   samples keep their own financial colors and application contracts. */
+.lab-catalogue-section { min-width: 0; color: var(--lab-ink); }
+.lab-catalogue-section .lab-specimen {
+    min-width: 0; padding: clamp(20px, 3vw, 32px);
+    border: 1px solid var(--lab-line); border-radius: 14px;
+    background: var(--lab-surface); color: var(--lab-ink); box-shadow: none;
+}
+.lab-catalogue-section .lab-specimen-title {
+    font-size: 14px; line-height: 1.5; font-weight: 500;
+    letter-spacing: 0; text-transform: none; color: var(--lab-muted);
+}
+.lab-catalogue-section :is(h3, h4).lab-specimen-title {
+    font-size: 18px; font-weight: 600; letter-spacing: -.02em; color: var(--lab-ink);
+}
+.lab-catalogue-section .lab-sample-action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+    padding: 10px 16px; border-radius: 12px; font-size: 14px; line-height: 20px; font-weight: 500;
+    letter-spacing: 0; text-transform: none;
+    transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+.lab-catalogue-section .lab-sample-action:not(.lab-button) { min-height: 44px; }
+.lab-catalogue-section .transition-opacity { transition-duration: 180ms; }
+.lab-catalogue-section .lab-danger-solid:is(:hover, :focus-visible) { background: color-mix(in srgb, #B42318 88%, #101010); }
+.lab-catalogue-section .lab-record-list { padding: 0; overflow: hidden; }
+.lab-catalogue-section .lab-record-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lab-catalogue-section th { letter-spacing: 0; text-transform: none; }
+.lab-catalogue-section .lab-motion-grid > .lab-specimen,
+.lab-catalogue-section .lab-icon-grid > .lab-specimen {
+    border: 0; border-top: 1px solid var(--lab-line); border-radius: 0;
+    background: transparent; padding: 24px 0;
+}
+.lab-icon-grid p { text-transform: none; letter-spacing: 0; color: var(--lab-muted); }
+.lab-catalogue-section [role="region"][tabindex="0"] { scroll-margin-top: calc(var(--lab-header) + 24px); }
+.lab-catalogue-section [role="region"][tabindex="0"]:focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: 5px; }
+.lab-arrow { display: inline-grid; place-items: center; width: 16px; height: 20px; line-height: 1; flex-shrink: 0; }
+.lab-button :is(.lab-arrow, svg) { transition: transform 180ms ease; }
+.lab-button:is(:hover, :focus-visible) .lab-arrow { transform: translate(1.5px, -1.5px); }
+.lab-button:is(:hover, :focus-visible) > svg { transform: translateX(1.5px); }
+/* Center the whole label/icon group; only the arrow receives a small response. */
+.lab-button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 18px; border: 1px solid transparent; border-radius: 12px; font-size: 14px; line-height: 20px; font-weight: 500; background: var(--lab-accent); color: #101E18; transition: background-color 180ms ease, border-color 180ms ease; }
+.lab-button:is(:hover, :focus-visible) { background: color-mix(in srgb, var(--lab-accent) 88%, #FAF8F3); border-color: var(--lab-accent-ink); }
+.lab-button:not(.lab-button--quiet):active { background: var(--lab-accent); border-color: #101E18; }
+.lab-button--quiet { background: transparent; color: inherit; border-color: var(--lab-line); border-radius: 12px; }
+.lab-button--quiet:is(:hover, :focus-visible) { background: var(--lab-ground); border-color: var(--lab-accent-ink); }
+.lab-text-link { min-height: 44px; display: inline-flex; align-items: center; gap: 12px; text-decoration: underline; text-underline-offset: 5px; font-size: 14px; }
+[data-design-lab] .lab-section :is(a, button, input, select, textarea, summary):focus-visible,
+.lab-catalogue-toolbar :is(a, button):focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: 5px; }
+
+/* A poster made from a bow tie and an open ledger, rather than a dashboard mockup. */
+#public-homepage { margin-top: 0; border-top: 0; padding-top: 32px; }
+.lab-home { isolation: isolate; background: var(--lab-ground); border: 1px solid var(--lab-line); border-radius: 10px; overflow: hidden; }
+.lab-home-top { padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid var(--lab-line); }
+.lab-wordmark { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; letter-spacing: -.02em; }
+.lab-wordmark svg { width: 30px; height: 22px; }
+.lab-home-top > p { font-size: 12px; color: var(--lab-muted); }
+.lab-home-hero { display: grid; grid-template-columns: 1.06fr 1fr; min-height: 570px; position: relative; }
+.lab-home-copy { position: relative; z-index: 1; padding: 56px 12px 54px 48px; }
+.lab-home-copy h3 { font-size: clamp(40px, 5.5vw, 72px); line-height: 1.02; letter-spacing: -.06em; font-weight: 600; max-width: 600px; }
+.lab-home-copy h3 > span { display: inline-block; position: relative; }
+.lab-home-copy h3 > span::after { content: ''; position: absolute; left: 0; right: -10px; bottom: -7px; height: 9px; border-top: 2px solid var(--lab-accent); border-radius: 50%; transform: rotate(-3deg); }
+.lab-home-copy > p { max-width: 340px; margin-top: 28px; font-size: 16px; line-height: 1.6; color: var(--lab-muted); }
+.lab-home-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin-top: 30px; }
+.lab-home-art { position: relative; min-width: 0; min-height: 490px; display: grid; align-items: center; padding: 20px 18px 36px 0; overflow: clip; }
+.lab-bowtie { width: 100%; height: auto; overflow: visible; transform: rotate(-9deg); color: var(--lab-ink); }
+/* The index determines height; the SVG frame and every control stay fixed
+   while JavaScript rotates only the decorative group within that frame. */
+[data-lab-bowtie] { --lab-layer-shadow: rgb(26 46 38 / .10); padding: 40px 0; }
+.dark [data-lab-bowtie] { --lab-layer-shadow: rgb(0 0 0 / .22); }
+[data-lab-bowtie] .lab-bowtie { position: absolute; inset: 0; width: 100%; height: 100%; transform: none; }
+/* Keep the fine printed lines out of the filled-paper shadow pass. */
+[data-lab-bowtie] .lab-paper-plane { filter: drop-shadow(0 3px 2px var(--lab-layer-shadow)); }
+[data-lab-bowtie] [data-bowtie-layer] { transition: opacity 160ms ease; }
+.lab-bowtie-map[hidden] { display: none !important; }
+[data-lab-bowtie] .lab-bowtie-map { display: block; position: relative; z-index: 1; min-width: 0; margin-left: 48%; margin-right: 20px; visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+/* Let the larger folded object move aside before the stationary index fades in. */
+[data-lab-bowtie][data-bowtie-map-open="true"] .lab-bowtie-map { visibility: visible; opacity: 1; pointer-events: auto; transition-delay: 140ms; }
+[data-lab-bowtie][data-bowtie-map-open="false"] [data-bowtie-map-connectors] { visibility: hidden; }
+.lab-bowtie-map ol { list-style: none; margin: 0; padding: 0; }
+.lab-bowtie-map li { border-bottom: 1px solid var(--lab-line); }
+.lab-bowtie-map li:first-child { border-top: 1px solid var(--lab-line); }
+.lab-bowtie-map [data-bowtie-map-link] { display: grid; grid-template-columns: 18px minmax(0, 1fr) 12px; align-items: start; gap: 8px; min-height: 72px; padding: 10px 0; border-radius: 4px; color: var(--lab-ink); transition: color 160ms ease, background-color 160ms ease; }
+.lab-map-number { font-size: 12px; line-height: 20px; color: var(--lab-accent-ink); }
+.lab-map-copy { min-width: 0; }
+.lab-map-copy strong { display: block; font-size: 14px; line-height: 1.4; font-weight: 500; }
+.lab-map-description { display: block; margin-top: 3px; font-size: 12px; line-height: 1.4; color: var(--lab-muted); }
+.lab-map-arrow { font-size: 14px; line-height: 20px; color: var(--lab-accent-ink); }
+.lab-bowtie-map [data-bowtie-map-link]:is(:hover, :focus-visible) { color: var(--lab-accent-ink); background: color-mix(in srgb, var(--lab-accent) 8%, transparent); }
+[data-lab-bowtie] :is(.lab-map-connector, [data-bowtie-connector]) { fill: none; stroke: var(--lab-line); stroke-width: .9; vector-effect: non-scaling-stroke; pointer-events: none; transition: stroke 160ms ease; }
+/* Highlight the same workspace across its stationary link, line and paper. */
+[data-lab-bowtie][data-bowtie-highlight] [data-bowtie-layer] { opacity: .55; }
+[data-lab-bowtie][data-bowtie-highlight="left"] [data-bowtie-layer="left"],
+[data-lab-bowtie][data-bowtie-highlight="ledger"] [data-bowtie-layer="ledger"],
+[data-lab-bowtie][data-bowtie-highlight="right"] [data-bowtie-layer="right"],
+[data-lab-bowtie][data-bowtie-highlight="rings"] [data-bowtie-layer="rings"],
+[data-lab-bowtie][data-bowtie-highlight="knot"] [data-bowtie-layer="knot"] { opacity: 1; }
+[data-lab-bowtie][data-bowtie-highlight="left"] [data-bowtie-map-link="left"],
+[data-lab-bowtie][data-bowtie-highlight="ledger"] [data-bowtie-map-link="ledger"],
+[data-lab-bowtie][data-bowtie-highlight="right"] [data-bowtie-map-link="right"],
+[data-lab-bowtie][data-bowtie-highlight="rings"] [data-bowtie-map-link="rings"],
+[data-lab-bowtie][data-bowtie-highlight="knot"] [data-bowtie-map-link="knot"] { color: var(--lab-accent-ink); background: color-mix(in srgb, var(--lab-accent) 8%, transparent); }
+[data-lab-bowtie][data-bowtie-highlight="left"] [data-bowtie-connector="left"],
+[data-lab-bowtie][data-bowtie-highlight="ledger"] [data-bowtie-connector="ledger"],
+[data-lab-bowtie][data-bowtie-highlight="right"] [data-bowtie-connector="right"],
+[data-lab-bowtie][data-bowtie-highlight="rings"] [data-bowtie-connector="rings"],
+[data-lab-bowtie][data-bowtie-highlight="knot"] [data-bowtie-connector="knot"] { stroke: var(--lab-accent-ink); }
+.lab-native-workspace-index { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 20px; }
+.lab-native-workspace-index a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 0; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+.lab-home-baseline { display: flex; justify-content: space-between; gap: 24px; border-top: 1px solid var(--lab-line); margin: 0 32px; padding: 18px 0; font-size: 12px; color: var(--lab-muted); }
+.lab-feature-index { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--lab-line); background: var(--lab-paper); }
+.lab-feature-index details { min-width: 0; padding: 24px 28px; border-right: 1px solid var(--lab-line); }
+.lab-feature-index details:last-child { border-right: 0; }
+.lab-feature-index summary { display: grid; grid-template-columns: 28px 1fr 20px; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; list-style: none; }
+.lab-feature-index summary::-webkit-details-marker { display: none; }
+.lab-feature-index summary > span:first-child { font-size: 12px; color: var(--lab-accent-ink); }
+.lab-feature-index summary strong { font-size: 16px; font-weight: 500; letter-spacing: -.025em; }
+.lab-feature-index summary > span:last-child { font-size: 20px; transition: transform 180ms; }
+.lab-feature-index details[open] summary > span:last-child { transform: rotate(45deg); }
+.lab-feature-index p { color: var(--lab-muted); font-size: 14px; line-height: 1.6; padding: 16px 0 0 38px; }
+
+/* The navigation stays familiar; its relationship to the workspace is explicit. */
+.lab-workspace { display: grid; grid-template-columns: 220px minmax(0, 1fr); isolation: isolate; border: 1px solid var(--lab-line); border-radius: 16px; background: var(--lab-surface); overflow: clip; }
+.lab-workspace-rail { display: flex; flex-direction: column; background: var(--lab-ground); padding: 28px 14px 18px; border-right: 1px solid var(--lab-line); }
+.lab-rail-brand { padding: 0 12px 28px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+.lab-rail-brand img { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; }
+.lab-workspace-links { display: flex; flex-direction: column; gap: 6px; }
+.lab-workspace-links a { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 12px; min-height: 50px; padding: 12px; border-radius: 8px; font-size: 14px; position: relative; transition: background 180ms, color 180ms; }
+.lab-workspace-links a::before { content: ''; position: absolute; top: 10px; bottom: 10px; left: 0; width: 3px; border-radius: 2px; background: var(--lab-accent-ink); opacity: 0; pointer-events: none; transition: opacity 160ms ease; }
+.lab-workspace-links a svg { width: 20px; height: 20px; opacity: .8; transition: color 160ms ease, opacity 160ms ease; }
+.lab-workspace-links a:is(:hover, :focus-visible) { background: var(--lab-paper); }
+.lab-workspace-links a[aria-current] { background: var(--lab-surface); color: var(--lab-ink); border-radius: 8px 0 0 8px; margin-right: -15px; padding-right: 27px; z-index: 1; }
+.lab-workspace-links a[aria-current]::before { opacity: 1; }
+.lab-workspace-links a:is(:hover, :focus-visible, [aria-current]) svg { color: var(--lab-accent-ink); opacity: 1; }
+.lab-rail-footer { margin-top: auto; padding: 28px 12px 0; color: var(--lab-muted); font-size: 12px; }
+.lab-workspace-body { min-width: 0; }
+.lab-workspace-toolbar { padding: 18px 28px; border-bottom: 1px solid var(--lab-line); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.lab-workspace-toolbar > span { font-size: 12px; color: var(--lab-muted); }
+.lab-account-menu { position: relative; font-size: 14px; }
+.lab-account-menu summary { display: flex; align-items: center; gap: 10px; list-style: none; cursor: pointer; min-height: 44px; }
+.lab-account-menu summary::-webkit-details-marker { display: none; }
+.lab-avatar { width: 32px; height: 32px; background: var(--lab-ground); border: 1px solid var(--lab-line); border-radius: 50%; display: grid; place-items: center; font-size: 12px; }
+.lab-account-menu > div { position: absolute; z-index: 5; min-width: 200px; right: 0; top: calc(100% + 6px); border: 1px solid var(--lab-line); border-radius: 12px; background: var(--lab-surface); box-shadow: 0 10px 24px rgb(0 0 0 / .08); padding: 8px; }
+.lab-account-menu a { display: flex; align-items: center; min-height: 44px; padding: 10px 14px; border-radius: 8px; }
+.lab-account-menu a:hover { background: var(--lab-ground); }
+.lab-workspace-view { padding: 30px 36px; scroll-margin-top: calc(var(--lab-header) + 24px); }
+.lab-workspace-view + .lab-workspace-view { border-top: 1px solid var(--lab-line); }
+.lab-workspace-view[hidden] { display: none; }
+/* The enhancement flag keeps the native collection static without JavaScript. */
+.lab-workspace:has([data-lab-navigation][data-lab-enhanced="true"]) .lab-workspace-view:not([hidden]) { animation: lab-workspace-reveal 160ms ease-out; }
+@keyframes lab-workspace-reveal { from { opacity: .65; } to { opacity: 1; } }
+.lab-view-top { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+.lab-view-top h3 { font-size: 30px; line-height: 1.2; letter-spacing: -.045em; font-weight: 600; }
+.lab-view-top p { max-width: 430px; font-size: 14px; line-height: 1.6; color: var(--lab-muted); margin-top: 8px; }
+.lab-local-tabs { display: flex; overflow-x: auto; gap: 24px; margin-top: 26px; border-bottom: 1px solid var(--lab-line); }
+.lab-local-tabs a { flex-shrink: 0; min-height: 44px; padding: 12px 0; font-size: 14px; border-bottom: 2px solid transparent; }
+.lab-local-tabs a[aria-current] { border-color: var(--lab-accent); }
+.lab-balance { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 30px 0 24px; }
+.lab-balance p { color: var(--lab-muted); font-size: 14px; }
+.lab-balance strong { display: block; margin-top: 6px; font-size: clamp(30px, 4vw, 40px); font-weight: 600; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.lab-balance strong small { font-size: 14px; font-weight: 400; color: var(--lab-muted); letter-spacing: 0; }
+.lab-sparkline { width: 148px; height: 56px; color: var(--lab-accent-ink); flex-shrink: 0; }
+.lab-ledger-rows { display: grid; gap: 0; border-top: 1px solid var(--lab-line); }
+.lab-ledger-rows > div { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--lab-line); }
+.lab-ledger-rows p { font-size: 14px; }
+.lab-ledger-rows small { display: block; color: var(--lab-muted); font-size: 12px; margin-top: 3px; }
+.lab-ledger-rows strong { font-weight: 500; font-size: 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lab-income { color: #176B52; }
+.lab-expense { color: #B42318; }
+.dark .lab-income { color: #64D8B1; }
+.dark .lab-expense { color: #FF8A80; }
+.lab-view-footer { padding-top: 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--lab-muted); font-size: 12px; }
+
+/* Reuse the bank's real identity tokens; these colors never encode profit,
+   debt or availability. Native disclosures keep the example operable offline. */
+.lab-bank-grid { display: grid; gap: 12px; margin-top: 24px; }
+.lab-workspace .lab-bank-overview { display: block; padding: 0; border-color: var(--lab-line); border-inline-start: 4px solid var(--bank-color); background: var(--lab-surface); border-radius: 12px; }
+.lab-bank-overview > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto 20px; align-items: center; gap: 16px; min-height: 94px; padding: 18px 20px; cursor: pointer; list-style: none; border-radius: 9px; }
+.lab-bank-overview > summary::-webkit-details-marker { display: none; }
+.lab-bank-identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.lab-bank-identity .bank-marker { flex-shrink: 0; }
+.lab-bank-identity strong, .lab-bank-invoice strong { font-size: 14px; font-weight: 500; }
+.lab-bank-identity small, .lab-bank-balance small, .lab-bank-accounts small, .lab-bank-invoice small { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; color: var(--lab-muted); }
+.lab-bank-balance { text-align: right; font-variant-numeric: tabular-nums; }
+.lab-bank-balance small { margin: 0 0 4px; }
+.lab-bank-balance strong { font-size: 20px; font-weight: 500; letter-spacing: -.025em; }
+.lab-bank-toggle { color: var(--lab-muted); font-size: 20px; text-align: center; transition: transform 160ms ease; }
+.lab-bank-overview[open] .lab-bank-toggle { transform: rotate(45deg); }
+.lab-bank-accounts { margin: 0 20px; border-top: 1px solid var(--lab-line); padding: 2px 0; }
+.lab-bank-accounts p { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; font-size: 14px; }
+.lab-bank-accounts p + p { border-top: 1px solid var(--lab-line); }
+.lab-bank-accounts strong { white-space: nowrap; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.lab-invoice-heading { margin-top: 24px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 14px; }
+.lab-invoice-heading span { color: var(--lab-muted); font-size: 12px; }
+.lab-bank-invoice { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 20px 20px 28px; border: 1px solid var(--lab-line); border-radius: 12px; }
+.lab-bank-invoice .bank-bookmark { border-top-left-radius: 11px; }
+.lab-bank-invoice > strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* A quiet entry sheet with a strong amount and ordinary, fully labelled fields. */
+/* One compact entry sheet; short choices remain native radios styled as buttons. */
+.lab-entry-layout { max-width: 960px; margin-inline: auto; border: 1px solid var(--lab-line); background: var(--lab-surface); border-radius: 14px; }
+.lab-entry { min-width: 0; padding: 28px 32px; }
+.lab-entry-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.lab-entry-top h3 { font-size: 24px; letter-spacing: -.035em; font-weight: 600; }
+.lab-entry-caption { font-size: 12px; line-height: 1.5; color: var(--lab-muted); }
+.lab-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lab-entry :is(input, select, textarea, button, summary) { scroll-margin-top: calc(var(--lab-header) + 24px); scroll-margin-bottom: 24px; }
+.lab-field[hidden], .lab-entry [hidden] { display: none !important; }
+.lab-field > label { font-size: 14px; font-weight: 500; }
+.lab-field > label > span { font-weight: 400; color: var(--lab-muted); }
+.lab-input { width: 100%; min-width: 0; min-height: 40px; border: 0; border-bottom: 1px solid var(--lab-control-line); border-radius: 4px 4px 0 0; background: transparent; color: var(--lab-ink); padding: 8px 2px; font-size: 14px; line-height: 22px; transition: border-color 160ms, background-color 160ms; }
+.lab-input::placeholder { color: var(--lab-muted); opacity: 1; }
+.lab-input:hover { border-color: var(--lab-muted); }
+.lab-input:focus { border-color: var(--lab-accent-ink); background: var(--lab-surface); }
+.lab-input:disabled { opacity: .65; cursor: not-allowed; }
+.lab-entry .lab-input { min-height: 44px; border: 1px solid var(--lab-line); border-bottom-color: var(--lab-control-line); border-radius: 8px; background: var(--lab-paper); padding: 10px 12px; line-height: 22px; }
+.lab-entry .lab-input:focus { border-color: var(--lab-accent-ink); background: var(--lab-surface); }
+.lab-entry-details { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px 20px; margin-top: 24px; }
+.lab-money-field { position: relative; }
+.lab-money-field > span { position: absolute; inset: 0 auto 0 12px; display: flex; align-items: center; font-size: 12px; color: var(--lab-muted); pointer-events: none; }
+.lab-entry .lab-money-field input { padding-left: 48px; font-variant-numeric: tabular-nums; }
+.lab-date-field { position: relative; min-width: 0; }
+.lab-date-field > svg { display: none; position: absolute; right: 13px; top: calc(50% - 9px); width: 18px; height: 18px; color: var(--lab-muted); pointer-events: none; }
+.lab-date-field:has([data-calendar-enhanced]) > svg { display: block; }
+.lab-entry .lab-date-field > [data-calendar-enhanced] { padding-right: 44px; cursor: pointer; }
+.lab-date-field > [data-calendar-enhanced]::-webkit-calendar-picker-indicator { display: none; }
+/* The native dialog owns focus and the top layer. Only an explicit action
+   opens it; a normal Tab stop leaves date typing available. */
+.lab-calendar { position: fixed; margin: 0; padding: 14px; width: 344px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; border: 1px solid var(--lab-line); border-radius: 16px; background: var(--lab-surface); color: var(--lab-ink); box-shadow: 0 14px 50px rgb(16 30 24 / .16); }
+.lab-calendar::backdrop { background: rgb(16 30 24 / .1); }
+.lab-calendar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 8px; }
+.lab-calendar-title { font-size: 16px; font-weight: 600; letter-spacing: -.025em; }
+.lab-calendar-month-label { font-size: 12px; color: var(--lab-muted); }
+.lab-calendar button { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: inherit; font-size: 14px; line-height: 20px; cursor: pointer; transition: background-color 140ms ease, border-color 140ms ease; }
+.lab-calendar button:is(:hover, :focus-visible) { background: var(--lab-ground); }
+.lab-calendar :is(button, select, input):focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: -2px; }
+.lab-calendar button:disabled { opacity: .38; cursor: not-allowed; }
+.lab-calendar .lab-calendar-close { color: var(--lab-muted); }
+.lab-calendar-controls { display: grid; grid-template-columns: 44px minmax(0, 1fr) 76px 44px; align-items: center; gap: 4px; margin-bottom: 8px; }
+.lab-calendar-controls :is(select, input) { width: 100%; min-width: 0; min-height: 44px; border: 1px solid var(--lab-line); border-radius: 8px; background: var(--lab-paper); color: inherit; padding: 8px; font-size: 14px; }
+.lab-calendar-weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; color: var(--lab-muted); font-size: 11px; line-height: 24px; }
+.lab-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px 0; }
+.lab-calendar-grid > [role="row"] { display: contents; }
+.lab-calendar-grid [role="gridcell"] { min-width: 0; }
+.lab-calendar .lab-calendar-day { width: 100%; min-width: 0; min-height: 44px; font-variant-numeric: tabular-nums; }
+.lab-calendar-day.is-outside { color: var(--lab-muted); }
+.lab-calendar .lab-calendar-day[aria-current="date"] { border-color: var(--lab-line); }
+.lab-calendar .lab-calendar-day:is(.is-selected, [aria-selected="true"]) { background: var(--lab-ink); color: var(--lab-surface); font-weight: 600; }
+.lab-calendar-footer { display: flex; align-items: center; gap: 4px; border-top: 1px solid var(--lab-line); margin-top: 12px; padding-top: 8px; }
+.lab-calendar-footer button { padding: 8px 12px; }
+.lab-calendar-footer [data-calendar-action="today"] { color: var(--lab-accent-ink); }
+.lab-calendar-footer [data-calendar-action="clear"] { margin-left: auto; color: var(--lab-muted); }
+.lab-choice-field { min-width: 0; border: 0; padding: 0; margin: 0; }
+.lab-choice-field > legend { float: none; padding: 0; margin-bottom: 8px; font-size: 14px; font-weight: 500; }
+.lab-choice-field > legend > span[aria-hidden] { color: var(--lab-muted); }
+.lab-choice-row { display: inline-grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 100%; gap: 3px; padding: 3px; border: 1px solid var(--lab-line); border-radius: 12px; background: var(--lab-paper); }
+.lab-choice-button { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 104px; min-height: 44px; padding: 10px 18px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; cursor: pointer; color: var(--lab-muted); background: transparent; transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
+/* Only the presentation of these short native choices changes. The radios
+   remain in the keyboard sequence and retain native arrow-key selection. */
+.lab-choice-button > input { position: absolute; left: 50%; top: 50%; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.lab-color-preset input { width: 16px; height: 16px; margin: 0; accent-color: var(--lab-accent-ink); flex-shrink: 0; }
+.lab-choice-button::after { content: ''; position: absolute; bottom: 4px; left: calc(50% - 8px); width: 16px; height: 2px; border-radius: 2px; background: var(--lab-accent-ink); opacity: 0; transition: opacity 160ms ease; }
+.lab-choice-button:hover { color: var(--lab-ink); background: var(--lab-ground); }
+.lab-choice-button:has(input:checked) { background: var(--lab-surface); color: var(--lab-ink); border-color: var(--lab-line); font-weight: 600; }
+.lab-choice-button:has(input:checked)::after { opacity: 1; }
+.lab-choice-button:has(input:focus-visible), .lab-color-preset:has(input:focus-visible) { outline: 2px solid var(--lab-accent-ink); outline-offset: 3px; }
+.lab-choice-button:has(input[aria-invalid="true"]) { border-color: var(--lab-error); }
+.lab-entry-payment { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--lab-line); }
+.lab-choice-row--payment { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lab-entry:has(#lab-entry-type-income:checked) .lab-choice-row--payment { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lab-choice-row--payment .lab-choice-button { min-width: 0; }
+.lab-source-field { margin-top: 20px; }
+.lab-card-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.lab-card-choice { min-width: 0; display: flex; flex-direction: column; align-items: end; }
+.lab-card-option { position: relative; display: flex; align-items: center; width: 100%; min-height: 118px; padding: 18px 54px 18px 18px; border: 1px solid rgb(255 255 255 / .16); border-radius: 12px; color: var(--card-ink, #FFFFFF); background: linear-gradient(var(--card-angle, 135deg), var(--card-start, #253330), var(--card-end, #253330)); cursor: pointer; }
+.lab-card-option > input { position: absolute; top: 14px; right: 14px; width: 17px; height: 17px; margin: 0; accent-color: var(--lab-accent); }
+.lab-card-option:has(input:checked) { outline: 2px solid var(--lab-accent-ink); outline-offset: 3px; }
+.lab-card-option:has(input:focus-visible) { outline: 3px solid var(--lab-accent-ink); outline-offset: 4px; }
+/* The complete choice owns focus feedback, avoiding a second ring on the dot. */
+#lab-transaction-form :is(.lab-choice-button, .lab-card-option, .lab-color-preset) > input:focus-visible { outline: none; }
+.lab-card-option:has(input[aria-invalid="true"]) { outline: 2px solid var(--lab-error); outline-offset: 3px; }
+.lab-card-copy { display: flex; flex-direction: column; align-items: start; min-width: 0; gap: 4px; overflow-wrap: anywhere; }
+.lab-card-copy strong { font-size: 16px; line-height: 1.35; font-weight: 600; }
+.lab-card-copy [data-card-context] { font-size: 12px; line-height: 1.5; }
+.lab-card-kind { font-size: 11px; line-height: 1.5; letter-spacing: .04em; }
+.lab-card-chip { position: absolute; right: 18px; bottom: 18px; width: 27px; height: 22px; opacity: .8; }
+/* Arbitrary gradient stops need a stable text surface when neither ink passes. */
+.lab-card-option[data-card-protected="true"] .lab-card-copy { padding: 6px 9px; margin: -6px -9px; border-radius: 6px; color: #FFFFFF; background: #101E18; }
+.lab-card-edit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 8px; font-size: 12px; color: var(--lab-muted); border-radius: 6px; }
+.lab-card-edit svg { width: 15px; height: 15px; }
+.lab-card-edit:hover { color: var(--lab-ink); }
+.lab-source-note { font-size: 12px; line-height: 1.6; color: var(--lab-muted); margin-top: 12px; }
+.lab-field-error { color: var(--lab-error); font-size: 14px; line-height: 1.5; margin-top: 4px; }
+.lab-entry [aria-invalid="true"] { border-color: var(--lab-error); }
+.lab-entry .search-choice-help { font-size: 12px; line-height: 1.5; color: var(--lab-muted); }
+.lab-entry .search-choice-results { background: var(--lab-surface); border-radius: 8px; }
+/* Keep the shared clear action inside the field without replacing its picker. */
+.lab-entry .search-choice { position: relative; }
+.lab-entry .search-choice > input { padding-right: 48px; }
+.lab-entry .search-choice > button { position: absolute; top: 0; right: 0; width: 44px; height: 44px; min-height: 44px; margin: 0; padding: 0; font-size: 0; text-decoration: none; border-radius: 8px; }
+.lab-entry .search-choice > button::after { content: '×'; font-size: 20px; line-height: 1; }
+.lab-entry details { margin-top: 20px; border-top: 1px solid var(--lab-line); border-bottom: 1px solid var(--lab-line); }
+.lab-entry details > summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; font-size: 14px; cursor: pointer; list-style: none; }
+.lab-entry details summary::-webkit-details-marker { display: none; }
+.lab-entry details > summary > span:last-child { font-size: 18px; }
+.lab-entry details[open] > summary > span:last-child { transform: rotate(45deg); }
+.lab-entry-notes > .lab-field { padding-bottom: 16px; }
+.lab-entry-actions { display: flex; align-items: center; gap: 16px; margin-top: 24px; }
+.lab-entry-actions :is(button[type="reset"], .lab-editor-cancel) { min-height: 44px; padding: 10px; font-size: 14px; color: var(--lab-muted); }
+.lab-entry-result { display: block; font-size: 14px; line-height: 1.7; }
+.lab-entry-result:not(:empty) { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--lab-line); }
+.lab-entry-result[data-lab-state="created"] { color: var(--lab-accent-ink); }
+.lab-optional { color: var(--lab-muted); font-size: 12px; }
+.lab-card-editor { background: var(--lab-paper); border-radius: 8px; padding: 0 14px; }
+.lab-card-editor-body { padding: 18px 0; border-top: 1px solid var(--lab-line); }
+.lab-card-editor-heading { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 20px; }
+.lab-card-editor-heading h4 { font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
+.lab-card-editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) 220px; align-items: start; gap: 24px; }
+.lab-card-editor-fields { display: grid; gap: 18px; min-width: 0; }
+.lab-editor-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.lab-preset-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.lab-color-preset { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 5px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; }
+.lab-color-preset input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.lab-color-preset:has(input:checked) { border-color: var(--lab-accent-ink); }
+.lab-preset-swatch { width: 28px; height: 28px; border-radius: 50%; background: var(--preset-color); border: 1px solid rgb(127 127 127 / .35); }
+.lab-custom-color { display: inline-flex; align-items: center; flex-direction: row-reverse; gap: 8px; }
+.lab-custom-color label { font-size: 12px; color: var(--lab-muted); }
+.lab-card-custom { display: grid; gap: 14px; }
+.lab-color-input { width: 48px; min-width: 48px; max-width: 48px; height: 44px; padding: 4px; border: 1px solid var(--lab-control-line); border-radius: 8px; background: var(--lab-surface); }
+.lab-gradient-toggle { display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 14px; }
+.lab-gradient-toggle input { width: 18px; height: 18px; accent-color: var(--lab-accent-ink); }
+.lab-card-editor-preview { min-width: 0; }
+.lab-card-editor-preview p { margin-top: 12px; font-size: 12px; line-height: 1.6; color: var(--lab-muted); }
+.lab-card-option--preview { min-height: 138px; cursor: default; }
+.lab-entry .lab-card-cycle { margin: 0; }
+.lab-card-cycle .lab-editor-row { padding-block: 12px; }
+.lab-login { display: grid; grid-template-columns: 1fr minmax(0, 420px); gap: 32px; padding: 28px 32px; margin-top: 32px; border: 1px solid var(--lab-line); border-radius: 14px; background: var(--lab-ground); }
+.lab-login h3 { font-size: 28px; letter-spacing: -.045em; line-height: 1.1; font-weight: 600; }
+.lab-login > div > p { font-size: 14px; color: var(--lab-muted); margin-top: 18px; }
+.lab-login form { display: grid; gap: 20px; }
+.lab-login form .lab-prototype-note { margin-top: 0; }
+.lab-reference { margin-top: 32px; border-top: 1px solid var(--lab-line); border-bottom: 1px solid var(--lab-line); }
+.lab-reference > summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; cursor: pointer; min-height: 60px; list-style: none; font-size: 14px; color: var(--lab-muted); }
+.lab-reference > summary::-webkit-details-marker { display: none; }
+.lab-reference > summary span { font-size: 22px; }
+.lab-reference[open] > summary span { transform: rotate(45deg); }
+.lab-reference-content { padding: 24px 0; }
+.lab-form-states { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 28px; }
+.lab-form-states > div { padding: 24px 0; border-top: 1px solid var(--lab-line); }
+.lab-form-states h3 { font-size: 16px; font-weight: 500; margin-bottom: 16px; }
+.lab-form-states p { font-size: 14px; line-height: 1.6; color: var(--lab-muted); margin-top: 12px; }
+.lab-form-states .lab-field-error { color: var(--lab-error); }
+.lab-reference-sources { max-width: 800px; font-size: 14px; line-height: 1.7; }
+.lab-reference-sources ul { list-style: none; }
+.lab-reference-sources li { padding: 20px 0; border-bottom: 1px solid var(--lab-line); }
+.lab-reference-sources a { font-weight: 500; text-decoration: underline; text-underline-offset: 4px; }
+.lab-reference-sources p { color: var(--lab-muted); margin-top: 8px; }
+.lab-principles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 28px; margin-top: 32px; }
+.lab-principles h3 { font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+.lab-principles p { font-size: 14px; color: var(--lab-muted); line-height: 1.7; }
+
+@media (max-width: 1099px) {
+    [data-design-lab] { --lab-header: 116px; }
+    .lab-catalogue-toolbar { flex-wrap: wrap; gap: 0 20px; padding: 10px 24px 0; }
+    .lab-catalogue-links { order: 3; flex-basis: 100%; gap: 24px; }
+    .lab-catalogue-toolbar > button { margin-left: auto; }
+    .lab-home-copy { padding: 44px 0 40px 32px; }
+    .lab-home-hero { min-height: 500px; }
+    .lab-home-art { min-height: 420px; }
+    .lab-entry { padding: 30px; }
+    /* Stack the index before two narrow hero columns would squeeze copy. */
+    .lab-home-hero:has([data-lab-bowtie]) { grid-template-columns: minmax(0, 1fr); }
+    [data-lab-bowtie] { display: flex; flex-direction: column; align-items: stretch; min-height: 0; gap: 20px; padding: 20px; }
+    [data-lab-bowtie] .lab-bowtie { position: static; width: 100%; height: auto; max-height: 260px; flex-shrink: 0; }
+    [data-lab-bowtie] .lab-bowtie-map { position: static; width: 100%; margin: 0; }
+    [data-lab-bowtie] [data-bowtie-map-connectors] { display: none; }
+}
+@media (max-width: 767px) {
+    .lab-section { padding: 40px 0; margin-top: 40px; }
+    .lab-section-heading { align-items: start; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+    .lab-home-top { padding: 18px 22px; }
+    .lab-home-top > p { display: none; }
+    .lab-home-hero { display: flex; flex-direction: column; }
+    .lab-home-copy { padding: 34px 24px 0; }
+    .lab-home-copy h3 { font-size: clamp(40px, 8vw, 60px); }
+    .lab-home-copy > p { margin-top: 22px; }
+    .lab-home-actions { gap: 8px 20px; margin-top: 24px; }
+    .lab-home-art { min-height: 340px; max-width: 480px; width: 100%; padding: 0 20px; margin: auto; }
+    .lab-bowtie { max-height: 300px; }
+    /* Keep the small scene and its keyboard outline clear on phones. */
+    .lab-home-baseline { margin: 0 22px; gap: 12px; flex-wrap: wrap; padding: 16px 0; }
+    .lab-feature-index { grid-template-columns: 1fr; }
+    .lab-feature-index details { padding: 16px 22px; border-right: 0; border-bottom: 1px solid var(--lab-line); }
+    .lab-feature-index details:last-child { border-bottom: 0; }
+    .lab-workspace { display: flex; flex-direction: column; }
+    .lab-workspace-rail { order: 2; border-right: 0; border-top: 1px solid var(--lab-line); padding: 8px 0; }
+    .lab-rail-brand, .lab-rail-footer { display: none; }
+    /* Long labels earn space before the remaining destinations share it.
+       Keep complete names and 44px targets even inside a narrow preview. */
+    .lab-workspace-links { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; }
+    .lab-workspace-links a { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 6px; padding: 10px 2px; min-width: 0; min-height: 64px; font-size: 10px; }
+    .lab-workspace-links a::before { top: 0; bottom: auto; left: 10px; right: 10px; width: auto; height: 3px; border-radius: 0 0 2px 2px; }
+    .lab-workspace-links a[aria-current] { border-radius: 8px; margin-right: 0; padding-right: 2px; }
+    .lab-workspace-toolbar { padding: 12px 20px; }
+    .lab-workspace-view { padding: 24px 20px; }
+    .lab-view-top { flex-direction: column; gap: 14px; }
+    .lab-view-top h3 { font-size: 28px; }
+    .lab-view-top .lab-button { min-height: 44px; }
+    .lab-local-tabs { margin-top: 20px; }
+    .lab-balance { gap: 12px; }
+    .lab-sparkline { width: 80px; height: 40px; }
+    .lab-balance strong { font-size: 32px; }
+    .lab-entry { padding: 24px 20px; }
+    .lab-entry-top { gap: 12px; margin-bottom: 20px; }
+    .lab-entry-result { padding-top: 16px; }
+    .lab-form-states, .lab-principles { grid-template-columns: 1fr; gap: 8px; }
+    .lab-login { grid-template-columns: 1fr; gap: 28px; padding: 28px 24px; }
+    .lab-principles > div { border-top: 1px solid var(--lab-line); padding: 20px 0; }
+}
+@media (forced-colors: active) {
+    .lab-workspace-links a[aria-current]::before { background: Highlight; forced-color-adjust: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    [data-design-lab] .lab-section *, .lab-catalogue-toolbar *, .lab-calendar, .lab-calendar * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+    [data-design-lab] .lab-workspace-links a::before { transition: none !important; }
+    [data-lab-bowtie] .lab-paper-plane { filter: none; }
+}
+
+/* Native form controls remain shared; only their catalogue presentation changes. */
+.lab-anchor-alias { display: block; height: 0; scroll-margin-top: calc(var(--lab-header) + 20px); }
+[data-bowtie-svg][role="button"]:focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: -6px; border-radius: 12px; }
+[data-bowtie-layer], [data-bowtie-trigger] { cursor: pointer; }
+.lab-workspace-links a svg { transition: transform 180ms ease, color 180ms ease; }
+.lab-workspace-links a:hover svg { transform: translateX(1px); color: var(--lab-accent-ink); }
+.lab-catalogue-section :is(.action-primary, .action-link, .quiet-action) { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; gap: 8px; border-radius: 12px; text-transform: none; letter-spacing: 0; }
+.lab-catalogue-section :is(.field-input, .form-input) { min-height: 40px; min-width: 0; border: 0; border-bottom: 1px solid var(--lab-control-line); border-radius: 4px 4px 0 0; box-shadow: none; background: transparent; padding: 8px 2px; font-size: 14px; line-height: 22px; color: var(--lab-ink); }
+.lab-catalogue-section .planning-sheet :is(.lab-input, .field-input, .form-input) { width: 100%; max-width: 10rem; }
+.lab-table-scroll { min-width: 0; width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
+.lab-table-scroll:focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: 4px; }
+@media (max-width: 767px) {
+    .lab-login form { gap: 16px; }
+}
+@media (pointer: coarse) {
+    .lab-input, .lab-catalogue-section :is(.field-input, .form-input) { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .lab-button :is(.lab-arrow, svg), .lab-workspace-links a svg { transform: none !important; }
+}
+@media print {
+    .lab-calendar { display: none !important; }
+    [data-catalogue-header] { position: static; }
+    .lab-catalogue-links { display: none; }
+    .lab-table-scroll { overflow: visible; padding: 0 !important; }
+    .lab-table-scroll table { min-width: 0 !important; width: 100%; table-layout: fixed; font-size: 10px; }
+    .lab-table-scroll :is(th, td) { white-space: normal !important; overflow-wrap: anywhere; padding: 6px 4px; }
+    .lab-section { padding: 28px 0; margin-top: 28px; }
+    .lab-specimen { break-inside: avoid; box-shadow: none; }
+}
+
+@media (max-width: 360px) {
+    .lab-calendar { padding: 8px; }
+    .lab-calendar-controls { grid-template-columns: 36px minmax(0, 1fr) 68px 36px; gap: 2px; }
+    .lab-calendar-controls :is(select, input) { padding: 4px; }
+    .lab-calendar-controls button { min-width: 36px; }
+    .lab-calendar .lab-calendar-day { min-height: 36px; }
+}
+
+@media (max-width: 767px) {
+    .lab-entry { padding: 24px 20px; }
+    .lab-entry-details { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .lab-choice-row--payment { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lab-choice-row--payment .lab-choice-button { min-width: 0; padding: 10px 8px; }
+    .lab-card-editor-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .lab-card-editor-preview { max-width: 280px; width: 100%; }
+    .lab-card-editor-heading { flex-direction: column; gap: 4px; }
+}
+@media (max-width: 479px) {
+    .lab-card-choices, .lab-editor-row { grid-template-columns: minmax(0, 1fr); }
+    .lab-entry-caption { max-width: 90px; text-align: right; }
+    .lab-bank-overview > summary { grid-template-columns: minmax(0, 1fr) 20px; padding: 16px; gap: 12px; }
+    .lab-bank-balance { grid-row: 2; text-align: left; padding-left: 27px; }
+    .lab-bank-toggle { grid-column: 2; grid-row: 1; }
+    .lab-bank-accounts { margin-inline: 16px; }
+    .lab-bank-accounts p, .lab-bank-invoice { align-items: start; flex-direction: column; gap: 10px; }
+}
+
+/* Synthetic assistant specimen. Its fixed overlay preserves workspace geometry;
+   only the transcript scrolls while compact conversation controls stay visible. */
+[data-design-lab] { padding-bottom: 80px; }
+[data-lab-assistant-shell] [hidden], [data-lab-assistant-open][hidden] { display: none !important; }
+.lab-assistant-introduction { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-block: 1px solid var(--lab-line); padding-block: 24px; }
+.lab-assistant-introduction p { max-width: 62ch; color: var(--lab-muted); font-size: 14px; line-height: 1.7; margin-top: 12px; }
+.lab-assistant-introduction > button { flex: none; }
+.lab-assistant-reference-ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 20px; padding-block: 20px; border-bottom: 1px solid var(--lab-line); }
+.lab-assistant-reference-ledger > div { scroll-margin-top: calc(var(--lab-header) + 20px); }
+.lab-assistant-reference-ledger dt { color: var(--lab-muted); font-size: 12px; margin-bottom: 6px; }
+.lab-assistant-reference-ledger dd { font-size: 14px; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.lab-assistant-launcher { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 43; display: grid; place-items: center; width: 60px; height: 60px; border: 1px solid var(--lab-line); border-radius: 18px; background: var(--lab-paper); color: var(--lab-accent-ink); box-shadow: 0 4px 18px rgb(26 46 38 / .12); transition: background-color 180ms ease, box-shadow 180ms ease; }
+.lab-assistant-launcher:hover { background: var(--lab-ground); box-shadow: 0 6px 24px rgb(26 46 38 / .16); }
+.lab-assistant-minimized-tab { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 43; display: flex; align-items: center; max-width: calc(100vw - 36px); border: 1px solid var(--lab-line); border-top: 2px solid var(--lab-accent); border-radius: 12px 12px 4px 4px; background: var(--lab-paper); color: var(--lab-ink); box-shadow: 0 4px 18px rgb(26 46 38 / .12); }
+.lab-assistant-restore { display: flex; flex: 1; min-width: 0; align-items: center; gap: 6px; min-height: 48px; padding: 0 8px 0 0; border-radius: 10px 0 0 4px; text-align: left; }
+.lab-assistant-restore:hover { background: var(--lab-ground); }
+.lab-assistant-restore > img { flex: none; width: 28px; height: 28px; border-radius: 50%; }
+.lab-assistant-restore > span { display: grid; min-width: 0; gap: 2px; }
+.lab-assistant-restore strong { font-size: 12px; font-weight: 600; }
+.lab-assistant-restore span > span { font-size: 11px; color: var(--lab-muted); }
+.lab-assistant-restore > svg { flex: none; width: 14px; height: 14px; margin-left: 6px; }
+.lab-assistant-minimized-close { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border-left: 1px solid var(--lab-line); color: var(--lab-muted); }
+.lab-assistant-minimized-close:hover { background: var(--lab-ground); color: var(--lab-ink); }
+.lab-assistant-minimized-close svg { width: 14px; height: 14px; }
+.lab-assistant-mark { position: relative; display: grid; place-items: center; width: 48px; height: 48px; flex: none; color: var(--lab-accent-ink); }
+/* Only artwork transforms: the launcher's hit target and focus ring stay still. */
+.lab-assistant-mark img { width: 28px; height: 28px; border-radius: 50%; animation: lab-assistant-cat-float 4s ease-in-out infinite; }
+.lab-assistant-mark svg { position: absolute; inset: 0; width: 48px; height: 48px; transform-origin: 50% 50%; animation: lab-assistant-orbit-sway 12s ease-in-out infinite; }
+.lab-assistant-panel { position: fixed; inset: var(--lab-assistant-top, 0px) 0 auto; z-index: 45; height: var(--lab-assistant-height, 100dvh); display: flex; flex-direction: column; min-width: 0; background: var(--lab-surface); color: var(--lab-ink); border: 1px solid var(--lab-line); overflow: hidden; animation: lab-assistant-enter 180ms ease-out; }
+.lab-assistant-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: none; min-height: 56px; padding: 4px 10px; background: var(--lab-surface); }
+.lab-assistant-heading { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.lab-assistant-heading > div { min-width: 0; }
+.lab-assistant-heading h2 { font-size: 14px; line-height: 1.35; font-weight: 600; letter-spacing: -.025em; }
+.lab-assistant-heading p { margin-top: 3px; color: var(--lab-muted); font-size: 12px; }
+.lab-assistant-window-controls { display: flex; flex: none; align-items: center; }
+.lab-assistant-window-controls button { position: relative; isolation: isolate; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; color: var(--lab-muted); transition: color 160ms ease; }
+.lab-assistant-window-controls button::before { content: ''; position: absolute; z-index: -1; inset: 7px; border-radius: 6px; transition: background-color 160ms ease; }
+.lab-assistant-window-controls button + button::after { content: ''; position: absolute; left: 0; top: 16px; height: 12px; border-left: 1px solid var(--lab-line); }
+.lab-assistant-window-controls button:is(:hover, :focus-visible) { color: var(--lab-ink); }
+.lab-assistant-window-controls button:is(:hover, :focus-visible)::before { background: var(--lab-ground); }
+.lab-assistant-window-controls button:focus-visible { outline-offset: -3px !important; }
+.lab-assistant-window-controls svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.lab-assistant-body { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; overflow-wrap: anywhere; }
+.lab-assistant-toolbar { position: relative; display: flex; align-items: center; gap: 0; flex: none; height: 44px; min-height: 44px; padding-inline: 10px; border-bottom: 1px solid color-mix(in srgb, var(--lab-line) 65%, transparent); }
+.lab-assistant-action, .lab-assistant-toolbar summary { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; min-width: 44px; padding: 6px; border-radius: 8px; font-size: 11px; line-height: 1.4; color: var(--lab-muted); cursor: pointer; list-style: none; }
+.lab-assistant-toolbar summary::-webkit-details-marker { display: none; }
+.lab-assistant-toolbar svg, .lab-assistant-send svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.lab-assistant-action:hover, .lab-assistant-toolbar summary:hover { color: var(--lab-ink); background: var(--lab-ground); }
+.lab-assistant-toolbar details { position: static; }
+.lab-assistant-history { min-width: 0; }
+.lab-assistant-demo-controls { margin-left: auto; }
+.lab-assistant-toolbar details > div { position: absolute; top: 100%; left: 12px; right: 12px; z-index: 2; max-height: 240px; overflow-y: auto; border: 1px solid var(--lab-line); border-radius: 12px; padding: 10px; background: var(--lab-surface); box-shadow: 0 8px 24px rgb(26 46 38 / .12); }
+.lab-assistant-history > div { display: flex; flex-direction: column; }
+.lab-assistant-history button { flex: none; min-height: 48px; text-align: left; font-size: 13px; padding: 10px; border-radius: 8px; overflow-wrap: anywhere; }
+.lab-assistant-history button[aria-current], .lab-assistant-history button:hover { background: var(--lab-ground); }
+.lab-assistant-context { display: flex; align-items: center; justify-content: flex-end; flex: 1; min-width: 44px; min-height: 44px; margin-inline: 6px; font-size: 11px; }
+.lab-assistant-context > span { color: var(--lab-muted); }
+.lab-assistant-context a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; max-width: 100%; color: var(--lab-muted); text-decoration: none; }
+/* The badge is visually compact; its enclosing link keeps the 44px target. */
+.lab-assistant-context a > span { min-height: 24px; padding: 3px 5px; border-radius: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; transition: background-color 160ms ease, color 160ms ease; }
+.lab-assistant-context a > svg { flex: none; width: 12px; height: 12px; }
+.lab-assistant-context a:is(:hover, :focus-visible) > span { color: var(--lab-ink); background: var(--lab-ground); }
+.lab-assistant-messages { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 20px; padding: 16px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.lab-assistant-messages:has(> .lab-assistant-empty) { padding-block: 8px; }
+.lab-assistant-empty { display: flex; flex-direction: column; align-items: center; margin: auto; padding: 12px 8px; text-align: center; }
+.lab-assistant-empty > svg { width: 72px; height: 36px; color: var(--lab-accent-ink); margin-bottom: 16px; opacity: .9; }
+.lab-assistant-empty h3 { font-size: 18px; line-height: 1.35; font-weight: 600; letter-spacing: -.03em; margin-bottom: 8px; }
+.lab-assistant-empty p { max-width: 31ch; color: var(--lab-muted); font-size: 13px; line-height: 1.7; }
+.lab-assistant-empty button { margin-top: 14px; color: var(--lab-accent-ink); }
+.lab-assistant-message { max-width: 100%; flex: none; font-size: 13px; line-height: 1.65; white-space: pre-wrap; }
+.lab-assistant-message[data-lab-assistant-message="user"] { align-self: flex-end; max-width: 88%; padding: 8px 12px; border-radius: 12px 12px 4px 12px; background: var(--lab-ground); }
+.lab-assistant-message > strong { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; clip-path: inset(50%); overflow: hidden; }
+.lab-assistant-message .assistant-message-markdown { white-space: normal; }
+.lab-assistant-message .assistant-message-markdown > * + * { margin-top: 10px; }
+.lab-assistant-message .assistant-message-markdown :is(ul, ol) { padding-left: 20px; list-style: revert; }
+.lab-assistant-message .assistant-message-markdown strong { font-weight: 600; }
+.lab-assistant-message .assistant-message-markdown :is(pre, .assistant-markdown-table) { max-width: 100%; overflow-x: auto; }
+.lab-assistant-review { margin-top: 12px; padding: 12px; border: 1px solid var(--lab-line); border-radius: 12px; white-space: normal; }
+.lab-assistant-review h3 { font-size: 13px; font-weight: 600; }
+.lab-assistant-review > p { margin-top: 5px; color: var(--lab-muted); font-size: 11px; }
+.lab-assistant-review dl { display: grid; gap: 6px; margin-block: 12px; font-size: 12px; }
+.lab-assistant-review dl > div { display: grid; grid-template-columns: minmax(66px, 1fr) minmax(0, 2fr); gap: 10px; }
+.lab-assistant-review dt { color: var(--lab-muted); }
+.lab-assistant-review dd { margin: 0; overflow-wrap: anywhere; }
+.lab-assistant-review-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.lab-assistant-review-actions button { padding-inline: 12px; }
+.lab-assistant-review-actions [data-lab-assistant-review-action="confirm"] { color: #101E18; background: var(--lab-accent); }
+.lab-assistant-review:focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: 2px; }
+.lab-assistant-sources { margin-top: 5px; }
+.lab-assistant-sources summary { min-height: 44px; align-content: center; cursor: pointer; font-size: 12px; color: var(--lab-muted); }
+.lab-assistant-sources a { display: flex; align-items: center; min-height: 44px; color: var(--lab-accent-ink); text-decoration: underline; text-underline-offset: 4px; font-size: 12px; }
+.lab-assistant-notice { padding-block: 4px; color: var(--lab-muted); font-size: 12px; line-height: 1.5; }
+.lab-assistant-notice[data-state="error"] { color: var(--lab-error); }
+.lab-assistant-composer { position: relative; flex: none; padding: 4px 10px calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--lab-surface); }
+.lab-assistant-composer-input { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 0 4px; align-items: center; padding: 4px; border: 1px solid color-mix(in srgb, var(--lab-line) 75%, transparent); border-radius: 12px; background: var(--lab-surface); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.lab-assistant-composer-input:focus-within { border-color: var(--lab-accent-ink); box-shadow: 0 0 0 2px color-mix(in srgb, var(--lab-accent-ink) 10%, transparent); }
+.lab-assistant-composer textarea { grid-column: 1 / -1; display: block; min-width: 0; width: 100%; min-height: 44px; max-height: var(--lab-assistant-editor-max, 120px); padding: 11px 8px; border: 0; resize: none; color: var(--lab-ink); background: transparent; font: inherit; font-size: 13px; line-height: 22px; overflow-y: auto; }
+/* The enclosing composer supplies the visible focus ring, as in the application. */
+.lab-assistant-composer textarea:focus-visible { outline: none !important; border-radius: 8px; }
+.lab-assistant-send { grid-column: 2; grid-row: 2; display: grid; place-items: center; width: 44px; height: 44px; padding: 7px; border: 0; border-radius: 13px; background: var(--lab-accent); background-clip: content-box; color: #101E18; transition: background-color 160ms ease; }
+/* A 30px face stays inside a stationary 44px Send/Stop control. */
+.lab-assistant-send:is(:hover, :focus-visible) { background-color: color-mix(in srgb, var(--lab-accent) 88%, var(--lab-surface)); }
+.lab-assistant-composer-options { grid-column: 1; grid-row: 2; display: flex; align-items: center; min-width: 0; gap: 0 4px; }
+.lab-assistant-settings { flex: none; }
+.lab-assistant-settings > summary { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 8px; color: var(--lab-muted); list-style: none; cursor: pointer; }
+.lab-assistant-settings > summary::-webkit-details-marker { display: none; }
+.lab-assistant-settings > summary:is(:hover, :focus-visible), .lab-assistant-settings[open] > summary { color: var(--lab-ink); background: var(--lab-ground); }
+.lab-assistant-settings > summary svg { display: block; flex: none; width: 16px; height: 16px; aspect-ratio: 1; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+/* Settings expand over the transcript, never by shrinking the writing area. */
+.lab-assistant-settings-body { position: absolute; z-index: 3; inset-inline: 0; bottom: calc(100% + 8px); max-height: var(--lab-assistant-settings-max, min(280px, 35dvh)); overflow-y: auto; overscroll-behavior: contain; padding: 14px; border: 1px solid var(--lab-line); border-radius: 12px; background: var(--lab-surface); box-shadow: 0 8px 24px rgb(26 46 38 / .12); }
+.lab-assistant-settings-body label { display: block; margin-block: 10px 6px; color: var(--lab-ink); font-size: 12px; }
+.lab-assistant-settings-body label:first-child { margin-top: 0; }
+.lab-assistant-settings-body select { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--lab-line); border-radius: 8px; color: var(--lab-ink); background: var(--lab-paper); font: inherit; font-size: 13px; }
+.lab-assistant-settings-body p { margin-top: 10px; color: var(--lab-muted); font-size: 11px; line-height: 1.6; }
+.lab-assistant-config-summary { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lab-muted); font-size: 11px; }
+/* A reserved hint slot keeps Send still when the editor gains or loses focus. */
+.lab-assistant-privacy { position: absolute; inset-inline: 10px; bottom: 0; height: 12px; margin: 0; color: var(--lab-muted); font-size: 10px; line-height: 12px; text-align: center; opacity: 0; transition: opacity 160ms ease; }
+.lab-assistant-composer:focus-within .lab-assistant-privacy { opacity: 1; }
+.lab-assistant-composer :disabled { opacity: .6; cursor: not-allowed; }
+.lab-assistant-history p, .lab-assistant-demo-controls label, .lab-assistant-demo-controls p, .lab-assistant-delete p { display: block; font-size: 12px; line-height: 1.6; margin-block: 8px; color: var(--lab-muted); }
+.lab-assistant-demo-controls select { width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--lab-line); border-radius: 8px; color: var(--lab-ink); background: var(--lab-surface); font: inherit; font-size: 13px; }
+.lab-assistant-delete button { color: var(--lab-error); }
+.lab-assistant-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-lab-assistant-shell] :is(button, textarea, select, summary, a):focus-visible { outline: 2px solid var(--lab-accent-ink); outline-offset: 3px; }
+@media (min-width: 1280px) {
+    .lab-assistant-panel { inset: calc(var(--lab-header) + 12px) 16px 16px auto; width: 420px; height: auto; border-radius: 16px; box-shadow: 0 8px 36px rgb(26 46 38 / .08); }
+}
+/* Software keyboards can shorten visualViewport without changing CSS viewport height. */
+[data-lab-assistant-short] .lab-assistant-panel { --lab-assistant-editor-max: 44px; }
+[data-lab-assistant-short] .lab-assistant-header { min-height: 48px; padding: 0 10px; }
+[data-lab-assistant-short] .lab-assistant-heading p, [data-lab-assistant-short] .lab-assistant-privacy { display: none; }
+[data-lab-assistant-short] .lab-assistant-composer { padding: 6px 10px; }
+[data-lab-assistant-short] .lab-assistant-composer textarea { min-height: 44px; padding-block: 11px; }
+[data-lab-assistant-short] .lab-assistant-composer-options { gap: 4px; }
+[data-lab-assistant-short] .lab-assistant-messages { padding-block: 12px; }
+@media (max-width: 639px) { .lab-assistant-introduction { align-items: start; flex-direction: column; } }
+@media (max-width: 359px) { .lab-assistant-heading { gap: 6px; } }
+@keyframes lab-assistant-enter { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+@keyframes lab-assistant-cat-float { 0%, 100% { transform: translateY(1.5px) rotate(-2deg); } 50% { transform: translateY(-1.5px) rotate(2deg); } }
+@keyframes lab-assistant-orbit-sway { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+@media (prefers-reduced-motion: reduce) {
+    /* This utility is outside .lab-section, so its shared buttons need the
+       same motion override as the inline specimens. */
+    [data-lab-assistant-shell], [data-lab-assistant-shell] * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+@media print {
+    [data-lab-assistant-shell] { display: none !important; }
+}
+
+/* Position identity remains a native short choice; it has no financial meaning. */
+.lab-nav-label-short { display: none; }
+.lab-position-personalization { margin-top: 24px; }
+.lab-position-personalization > summary { min-height: 44px; padding-block: 12px; cursor: pointer; }
+.lab-position-personalization form { display: grid; gap: 16px; margin-top: 12px; }
+.lab-position-icons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.lab-position-icons label { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px; border: 1px solid var(--lab-line); border-radius: 10px; font-size: 12px; cursor: pointer; }
+.lab-position-icons label:has(:checked) { border-color: var(--lab-accent-ink); background: var(--lab-ground); }
+.lab-position-icons input { flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--lab-accent-ink); }
+.lab-position-icons label > span:first-of-type { font-size: 20px; flex-shrink: 0; }
+.lab-position-icons label > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.lab-position-personalization [data-lab-position-status] { min-height: 40px; }
+@media (max-width: 760px) {
+    .lab-workspace-links .lab-nav-label-full { display: none; }
+    .lab-workspace-links .lab-nav-label-short { display: inline; }
+    .lab-position-icons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* The loyalty specimen retains a unit-specific balance beside its program. */
+.lab-banking-loyalty-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-block: 10px; }
+.lab-banking-loyalty-row > * { min-width: 0; overflow-wrap: anywhere; }
+
+/* The application scopes statement styles to its shell. Reuse the same
+   geometry here with catalogue tokens, without changing that shell gate. */
+#lab-banking-invoices .card-miniature-heading { display: flex; align-items: center; gap: 16px; min-width: 0; }
+#lab-banking-invoices .card-miniature-heading > div { min-width: 0; overflow-wrap: anywhere; }
+#lab-banking-invoices .card-miniature { display: flex; align-items: flex-end; justify-content: flex-end; flex: 0 0 64px; width: 64px; height: 40px; padding: 6px; border-radius: 8px; color: white; background: linear-gradient(var(--card-angle), var(--card-start), var(--card-end)); }
+#lab-banking-invoices .card-miniature svg { width: 18px; height: 14px; }
+#lab-banking-invoices .invoice-history-head, #lab-banking-invoices .invoice-history-row { display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(6rem, .6fr) minmax(10rem, 1fr) 8rem; align-items: center; gap: 16px; }
+#lab-banking-invoices .invoice-history-head { padding-block: 12px; color: var(--lab-muted); font-size: 12px; border-bottom: 1px solid var(--lab-line); }
+#lab-banking-invoices .invoice-history-head > :nth-child(3), #lab-banking-invoices .invoice-history-amount { text-align: right; }
+#lab-banking-invoices .invoice-history-row { padding-block: 12px; font-size: 14px; }
+#lab-banking-invoices .invoice-history-row > * { min-width: 0; overflow-wrap: anywhere; }
+#lab-banking-invoices .invoice-history-amount > strong { display: block; font-size: 15px; }
+#lab-banking-invoices .invoice-history-amount > p { margin-top: 4px; }
+#lab-banking-invoices .invoice-history-period > a { padding-inline: 0; font-weight: 600; }
+#lab-banking-invoices .invoice-mobile-label { display: none; }
+@media (max-width: 1023px) {
+    #lab-banking-invoices .invoice-history-head { display: none; }
+    #lab-banking-invoices .invoice-history-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding-block: 16px; }
+    #lab-banking-invoices .invoice-history-period, #lab-banking-invoices .invoice-history-action { grid-column: 1 / -1; }
+    #lab-banking-invoices .invoice-history-action { justify-self: end; }
+    #lab-banking-invoices .invoice-mobile-label { display: block; margin-bottom: 6px; color: var(--lab-muted); font-size: 12px; }
+}
+
+/* Institution identity reuses selector artwork in the bank overview. */
+[data-design-lab] .institution-miniature { display:flex; align-items:center; justify-content:center; flex:0 0 54px; width:54px; height:36px; border:1px solid var(--lab-line); border-radius:7px; background:var(--lab-paper); color:var(--lab-ink); }
+
+[data-design-lab] .bank-directory { --ui-line:var(--lab-line); --ui-paper:var(--lab-paper); }
+
+[data-design-lab] .banking-workspace { --ui-line:var(--lab-line); --ui-paper:var(--lab-paper); --ui-surface:var(--lab-surface); --ui-ground:var(--lab-ground); }
+@media (max-width:480px) {
+    /* The catalogue specimen has a narrower inset than the real workspace. */
+    [data-design-lab] .bank-account-list .account-balance-grid dd { font-size:.75rem; }
+}

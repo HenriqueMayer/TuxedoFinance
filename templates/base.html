@@ -23,7 +23,7 @@ tokens for dark theme and financial semantics, driven by a `.dark` class on
 page `bg-night` (#101010), text `dark:text-cream`. Workspaces use grouped surface cards, metric cards and tables. Disclosures and
 controls use neutral surfaces in both themes. Semantic
 mapping is defined through explicit financial tokens. Primary actions are
-caramel pills. Headings, body text, labels and tabular monetary figures all
+caramel controls with balanced 12px corners. Headings, body text, labels and tabular monetary figures all
 use Inter at readable weights and sizes.
 
 Theme: a synchronous inline `<head>` script reads `localStorage`/OS
@@ -42,6 +42,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="tuxedo-assets" content="{% asset_revision %}">
+    <meta name="htmx-config" content='{"historyRestoreAsHxRequest":false}'>
     <title>{% block title %}Tuxedo Finance{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{% static 'brand/favicon.ico' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'brand/favicon-32.png' %}">
@@ -57,6 +58,7 @@ class. The generated asset avoids browser-side recompilation during navigation.
     comment is required here.) {% endcomment %}
     <script>
         (function () {
+            document.documentElement.classList.add('js-ready');
             var stored = localStorage.getItem('theme');
             var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             var isDark = stored ? stored === 'dark' : prefersDark;
@@ -64,9 +66,6 @@ class. The generated asset avoids browser-side recompilation during navigation.
         })();
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
     <link rel="stylesheet" href="{% asset 'css/app.css' %}">
 
     {% comment %}The locally vendored HTMX progressively enhances same-origin links so the current
@@ -76,7 +75,10 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <script src="{% asset 'js/vendor/htmx.min.js' %}" defer></script>
     <script src="{% asset 'js/runtime-assets.js' %}" defer></script>
     <script src="{% asset 'js/forms.js' %}"></script>
+    <script src="{% asset 'js/money-input.js' %}" defer></script>
+    <script src="{% asset 'js/category-allocation.js' %}" defer></script>
     <script src="{% asset 'js/preferred-dates.js' %}" defer></script>
+    <script src="{% asset 'js/date-picker.js' %}" defer></script>
     <script src="{% asset 'js/help-popovers.js' %}" defer></script>
     <script src="{% asset 'js/theme.js' %}" defer></script>
     <script src="{% asset 'js/project-menu.js' %}" defer></script>
@@ -84,17 +86,29 @@ class. The generated asset avoids browser-side recompilation during navigation.
     <script src="{% asset 'js/nav-disclosures.js' %}" defer></script>
     <script src="{% asset 'js/navigation.js' %}" defer></script>
     <script src="{% asset 'js/previous-workspace.js' %}" defer></script>
+    <script src="{% asset 'js/live-filters.js' %}" defer></script>
+    <script src="{% asset 'js/month-filter.js' %}" defer></script>
     <script src="{% asset 'js/chart-selection.js' %}" defer></script>
+    <script src="{% asset 'js/analytics-navigation.js' %}" defer></script>
     <script src="{% asset 'js/bank-colors.js' %}" defer></script>
+    <script src="{% asset 'js/assistant.js' %}" defer></script>
+    <script src="{% asset 'js/assistant-markdown.js' %}" defer></script>
+    <script src="{% asset 'js/assistant-chat.js' %}" defer></script>
 </head>
-<body hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="flex min-h-screen flex-col bg-cream font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:bg-night dark:text-cream">
+{% comment %}History keeps URLs, but never financial HTML or account forms.
+Back/Forward must reauthorize against the current session before restoring the
+small user-scoped workspace snapshot. Editable private POST forms also use
+autocomplete="off": native field restoration is not scoped to the signed-in user,
+including when JavaScript is disabled.{% endcomment %}
+<body hx-history="false" hx-boost="true" hx-request='{"noHeaders":true}' hx-target="body" hx-swap="innerHTML show:window:top" class="tuxedo-ui {% if request.user.is_authenticated %}app-layout {% else %}bg-cream dark:bg-night {% endif %}flex min-h-screen flex-col font-sans text-forest antialiased selection:bg-caramel selection:text-forest-deep dark:text-cream">
     {% if request.user.is_authenticated %}
+        {% include 'partials/app_sidebar.html' %}
         {% include 'partials/navbar_app.html' %}
     {% else %}
         {% include 'partials/navbar_public.html' %}
     {% endif %}
 
-    <main {% if request.user.is_authenticated %}data-workspace-user="{{ request.user.pk }}" data-workspace-format="{{ USER_DATE_FORMAT }}" data-leave-confirm="{% translate 'You have unsaved changes or a simulation result. Leave this page?' %}"{% endif %} class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+    <main {% if request.user.is_authenticated %}data-workspace-user="{{ request.user.pk }}" data-workspace-format="{{ USER_DATE_FORMAT }}" data-leave-confirm="{% translate 'You have unsaved changes or a simulation result. Leave this page?' %}"{% endif %} class="{% if request.user.is_authenticated %}workspace-density {% endif %}{% if request.resolver_match.namespace == 'investments' or request.resolver_match.namespace == 'planning' or request.resolver_match.namespace == 'sandbox' %}finance-workspace {% endif %}mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
         {% if request.user.is_authenticated %}
         <p data-workspace-restored hidden class="subtle-copy mb-4" role="status">{% translate 'Previous screen restored. Unsaved fields have not been submitted; recalculate simulations to update their results.' %}</p>
         {% endif %}
@@ -104,7 +118,10 @@ class. The generated asset avoids browser-side recompilation during navigation.
     </main>
 
     {% include 'partials/footer.html' %}
+    {% if request.user.is_authenticated %}{% include 'partials/app_bottom_navigation.html' %}{% endif %}
     {% include 'partials/form_ui_strings.html' %}
+    {% if request.user.is_authenticated %}{% include 'partials/departure_confirm.html' %}{% endif %}
+    {% if assistant_available %}{% include 'assistant/_dock.html' %}{% endif %}
 
     {% block extra_js %}{% endblock %}
 </body>

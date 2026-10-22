@@ -1,0 +1,45 @@
+{% extends 'base.html' %}{% load i18n l10n navigation %}
+{% block title %}{% translate 'Review statement entries' %} - Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6">
+<header><h1 class="page-title">{% translate 'Review statement entries' %}</h1><p class="subtle-copy mt-2 break-words">{{ batch.file_name }} · {{ batch.account }} · {{ batch.account.currency }}</p></header>
+<div class="grid grid-cols-2 gap-4">
+    <div class="metric-panel"><p class="subtle-copy">{% translate 'Entries' %}</p><p class="section-title">{{ entry_count }}</p></div>
+    <div class="metric-panel"><p class="subtle-copy">{% translate 'Pending decisions' %}</p><p class="section-title">{{ pending_count }}</p></div>
+</div>
+<section class="surface-panel space-y-3">
+    <p>{% translate 'Choose an action for every entry. An existing movement must match the account, date, direction and amount exactly.' %}</p>
+    {% if duplicate_count %}<p role="status" class="font-medium">{% blocktranslate count count=duplicate_count %}{{ count }} entry has a confirmed or repeated bank identifier to review.{% plural %}{{ count }} entries have confirmed or repeated bank identifiers to review.{% endblocktranslate %}</p>{% endif %}
+    {% if unknown_baseline %}<p role="alert" class="text-expense dark:text-expense-light">{% translate 'This account has a nonzero opening balance with an unknown date. Review and date it before confirming. No opening date or balance is inferred.' %} {% url 'banking:account_update' batch.account_id as account_url %}<a class="quiet-action" href="{% contextual_url account_url %}">{% translate 'Account settings' %}</a></p>{% elif batch.account.opening_date %}<p class="subtle-copy">{% translate 'Opening balance effective date' %}: {{ batch.account.opening_date|date:USER_DATE_FORMAT }}</p>{% endif %}
+    <details><summary class="quiet-action cursor-pointer">{% translate 'Review guidance' %}</summary><p class="subtle-copy mt-3">{% translate 'For investments, rewards or IOF, register the financial source in its own workspace and then match its cash movement. Do not create an ordinary expense or income for that cash.' %}</p></details>
+    {% if batch.file_format == 'CSV' %}{% url 'ingestion:mapping' batch.pk as mapping_url %}<a class="quiet-action" href="{% contextual_url mapping_url return_url %}">{% translate 'Change column mapping' %}</a>{% endif %}
+</section>
+<form autocomplete="off" method="post" hx-boost="false" novalidate class="workspace-form space-y-4" data-import-review>
+{% csrf_token %}<input type="hidden" name="next" value="{{ return_url }}"><input type="hidden" name="page" value="{{ page.number|unlocalize }}">
+{% if skippable_count %}<div class="surface-panel space-y-3"><p class="subtle-copy">{% translate 'Only entries on this page with an already confirmed bank identifier and no chosen action will be skipped. Other valid choices on this page are saved; similar descriptions are never skipped automatically.' %}</p><button class="action-link" type="submit" name="bulk_action" value="skip_confirmed">{% translate 'Skip confirmed identifiers on this page' %}</button></div>{% endif %}
+{% for entry in entries %}
+<details id="entry-{{ entry.row.pk|unlocalize }}" class="surface-panel" data-import-entry{% if entry.expanded %} open{% endif %}>
+    <summary class="cursor-pointer break-words">
+        <span class="font-semibold">{% translate 'Entry' %} {{ entry.row.number }} · {{ entry.row.date|date:USER_DATE_FORMAT }} · {{ entry.row.currency }} {{ entry.row.amount }}</span>
+        <span class="block mt-2">{{ entry.row.description }}</span>
+        <span class="subtle-copy block mt-2">{% if entry.row.action %}{{ entry.row.get_action_display }}{% else %}{% translate 'Decision needed' %}{% endif %}{% if entry.strong_duplicate %} · {% translate 'Confirmed identifier' %}{% elif entry.repeated_identifier %} · {% translate 'Repeated identifier' %}{% elif entry.weak_duplicate %} · {% translate 'Possible match' %}{% endif %}</span>
+    </summary>
+    <div class="space-y-5 mt-5">
+    {% if entry.row.external_id %}<p class="subtle-copy break-words">{% translate 'Bank identifier' %}: {{ entry.row.external_id }}</p>{% endif %}
+    {% if entry.strong_duplicate %}<p role="status" class="subtle-copy">{% translate 'This bank identifier is already confirmed. Inspect its previous import and choose Skip here.' %} {% url 'ingestion:detail' entry.strong_duplicate.row.batch_id as previous_url %}<a class="quiet-action" href="{% contextual_url previous_url %}">{% translate 'Previous import' %}</a></p>{% elif entry.repeated_identifier %}<p role="status" class="subtle-copy">{% translate 'This bank identifier appears more than once in this file. Review the evidence and keep at most one entry with this identifier.' %}</p>{% elif entry.weak_duplicate %}<p role="status" class="subtle-copy">{% translate 'A similar description, date and amount already exist. This is a suggestion only; explicitly choose Match, Skip or a new operation.' %}</p>{% endif %}
+    {% for error in entry.form.non_field_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+    {% include 'partials/form_field.html' with field=entry.form.action %}
+    <div data-import-action="CREATE" data-has-errors="{{ entry.form.category.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=entry.form.category %}</div>
+    <div data-import-action="MATCH" data-has-errors="{{ entry.form.matched_movement.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=entry.form.matched_movement %}</div>
+    <div data-import-action="PAY_INVOICE" data-has-errors="{{ entry.form.invoice.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=entry.form.invoice %}</div>
+    <div data-import-action="TRANSFER" data-has-errors="{% if entry.form.counterparty_account.errors or entry.form.counterparty_amount.errors %}true{% else %}false{% endif %}" class="space-y-5">{% include 'partials/form_field.html' with field=entry.form.counterparty_account %}<div data-import-counter-amount data-has-errors="{{ entry.form.counterparty_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=entry.form.counterparty_amount %}</div></div>
+    <details><summary class="quiet-action cursor-pointer">{% translate 'Original row evidence' %}</summary><pre class="mt-3 overflow-x-auto whitespace-pre-wrap break-words text-sm">{{ entry.row.raw }}</pre></details>
+    </div>
+</details>
+{% endfor %}
+<div class="form-actions"><button class="action-primary" type="submit">{% if page.paginator.num_pages > 1 %}{% translate 'Save page decisions' %}{% else %}{% translate 'Save review and inspect confirmation' %}{% endif %}</button><a class="action-link" href="{{ cancel_url }}">{% translate 'Cancel' %}</a></div>
+</form>
+{% if page.paginator.num_pages > 1 %}<nav class="flex flex-wrap items-center gap-3" aria-label="{% translate 'Statement review pages' %}">{% if page.has_previous %}{% url 'ingestion:review' batch.pk as review_url %}{% with number=page.previous_page_number|stringformat:'s' %}<a class="action-link" href="{% contextual_url review_url|add:'?page='|add:number return_url %}">{% translate 'Previous' %}</a>{% endwith %}{% endif %}<span class="subtle-copy">{% blocktranslate with number=page.number total=page.paginator.num_pages %}Page {{ number }} of {{ total }}{% endblocktranslate %}</span>{% if page.has_next %}{% url 'ingestion:review' batch.pk as review_url %}{% with number=page.next_page_number|stringformat:'s' %}<a class="action-link" href="{% contextual_url review_url|add:'?page='|add:number return_url %}">{% translate 'Next' %}</a>{% endwith %}{% endif %}</nav>{% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}{% include 'ingestion/_conditional_script.html' %}{% endblock %}

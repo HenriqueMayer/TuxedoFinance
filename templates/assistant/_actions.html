@@ -1,0 +1,15 @@
+{% load i18n %}
+{% for proposal in message.review_actions %}
+<section class="assistant-action-card" data-assistant-proposal="{{ proposal.pk }}" tabindex="-1" aria-label="{% translate 'Proposed action' %}">
+    <div class="assistant-action-heading"><h4>{% translate 'Proposed action' %}</h4><span>{% if proposal.status == 'executed' %}{% translate 'Completed' %}{% elif proposal.status == 'cancelled' %}{% translate 'Discarded' %}{% else %}{% translate 'Review before confirming' %}{% endif %}</span></div>
+    <dl>{% for row in proposal.summary %}<div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>{% endfor %}</dl>
+    {% if proposal.status == 'pending' %}
+    <p class="assistant-action-notice">{% translate 'Confirm to save this change in Tuxedo Finance.' %}</p>
+    <div class="assistant-action-controls">
+        <form method="post" action="{% url 'assistant:action-confirm' proposal.pk %}" hx-boost="false" autocomplete="off" data-assistant-form data-assistant-action novalidate>{% csrf_token %}<input type="hidden" name="scope" value="{{ scope }}"><button type="submit" class="action-primary">{% translate 'Confirm action' %}</button></form>
+        <form method="post" action="{% url 'assistant:action-cancel' proposal.pk %}" hx-boost="false" autocomplete="off" data-assistant-form data-assistant-action novalidate>{% csrf_token %}<input type="hidden" name="scope" value="{{ scope }}"><button type="submit" class="action-link">{% translate 'Discard' %}</button></form>
+    </div>
+    {% elif proposal.status == 'executed' and proposal.safe_result_url %}<a class="quiet-action" href="{{ proposal.safe_result_url }}" data-assistant-source>{% if proposal.result.operation == 'deleted' %}{% translate 'View transactions' %}{% else %}{% translate 'View saved record' %}{% endif %} <span aria-hidden="true">↗</span></a>{% endif %}
+    {% if proposal.status == 'executed' and 'projection_pending' in proposal.result.warnings %}<p class="assistant-action-notice" role="status">{% translate 'The record changed, but financial projections need review.' %}</p>{% endif %}
+</section>
+{% endfor %}

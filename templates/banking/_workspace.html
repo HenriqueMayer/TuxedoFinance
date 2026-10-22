@@ -1,0 +1,18 @@
+{% load i18n navigation %}
+<div id="banking-workspace" class="banking-workspace space-y-4" data-bank-workspace>
+    <header class="workspace-header">
+        <h1 class="page-title">{% translate 'Accounts' %}</h1>
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'banking:transfer_create' %}" class="quiet-action">{% translate 'Transfer' %}</a>
+            <a href="{% url 'banking:create' %}" class="action-primary">{% translate 'New bank' %}</a>
+        </div>
+    </header>
+    {% include 'banking/_availability.html' %}
+    {% comment %}An open institution owns the surface; dozens of overview cards
+    must not sit above its accounts. The canonical bank URL is unchanged.{% endcomment %}
+    {% if selected_bank %}
+        {% include 'banking/_detail_panel.html' with bank=selected_bank %}
+    {% else %}
+        {% include 'banking/_bank_list_results.html' %}
+    {% endif %}
+</div>

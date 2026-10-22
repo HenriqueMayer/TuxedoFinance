@@ -1,736 +1,151 @@
-# Frontend: Design System & Templates
+<a id="frontend-design-system--templates"></a>
 
-The current design-system release preserves the server-rendered Django
-Template Language and precompiled Tailwind CSS visual system. There is no SPA, JavaScript
-framework or client-side chart library. Theme persistence, boosted link
-navigation and HTMX chart-island swaps remain the deliberately narrow JavaScript
-layer. User-submitted mutations use CSRF-protected POSTs, and filters have
-plain GET fallbacks. Some page reads synchronize derived ledger records before
-rendering; see [request-time synchronization](architecture.md#request-time-synchronization).
+# Frontend contracts
 
-Tailwind CSS is generated ahead of time into `static/css/app.css`, so full-page
-navigation never waits for browser-side class discovery or CSS compilation. The
-generated file is versioned with the application and does not require Node/npm
-at runtime. Frontend tooling is pinned in `package.json`/`package-lock.json` for
-development and CI. Follow the [frontend build workflow](../CONTRIBUTING.md#frontend-and-translations)
-after changing Tailwind classes or tokens.
+The application uses server-rendered Django templates, precompiled Tailwind CSS
+and progressive JavaScript enhancement. Native controls, owned server responses
+and financial validation remain authoritative. This index directs changes to
+the guide that owns each responsibility; the [interface map](interface-map.md)
+records routes and shared components, and the [Design Lab](design-system.html)
+provides the visual reference.
 
-The one-off build uses pinned Tailwind 4 and PostCSS through
-`scripts/build_css.mjs`, avoiding the CLI file-watcher dependency chain and its
-unpatched braces advisory (GHSA-vfj7-8cjw-p6xm). `npm audit --audit-level=high`
-remains mandatory. The existing JavaScript theme configuration remains explicit;
-compatibility tokens preserve Inter, the neutral palette, small shadows/radii,
-placeholder contrast and forced-colors keyboard outlines. The responsive section
-title keeps its previous line height. CSS is built for current browsers supporting
-cascade layers and modern color functions (Chrome 111+, Safari 16.4+, Firefox 128+).
-Run `npm run build:css -- /absolute/output.css` to check a temporary build without
-changing the committed asset. The build does not watch files or run in production.
-
-Load CSS and JavaScript with `{% asset 'css/app.css' %}` (from the `assets`
-template library). Its content digest versions the bytes served by source
-finders in development and by WhiteNoise's collected tree in production.
-`base.html` carries the document's asset revision. The runtime sends that revision
-on HTMX requests, including requests that suppress HTMX's own headers. When a
-GET would combine old assets with new markup, middleware requests one full
-navigation to the intended URL. Legacy tabs also recover on their next GET.
-POSTs and invalid form responses are never replayed or discarded by this guard.
-
-Same-origin links inherit `hx-boost` from the page shell. HTMX keeps the current
-document visible while it requests the next server-rendered page, then replaces
-the body and updates browser history. Native links remain the fallback whenever
-JavaScript is unavailable. Mutating forms, uploads, locale changes, logout and
-download links explicitly opt out of boosting, so POST, CSRF, validation and
-file responses keep their ordinary Django behavior. GET filter forms may use
-HTMX when they target a documented page or island update. Body swaps for the
-same pathname preserve viewport and focus; navigation to another pathname moves
-focus to the new `h1`. Report and investment chart islands keep their existing
-focus and scroll restoration. The
-investment movement island updates filters independently while preserving scroll
-and focus. Explicit pagination links return to the beginning of the movement
-section instead of the top of the page; plain GET links and the section anchor
-provide the no-JavaScript fallback.
-
-## Preserve the user's location
-
-Every new or changed interaction that updates the current page must preserve the
-user's viewport and interaction context. This includes type/category cards,
-filters, sorting, pagination, refreshes, and inline edits or validation feedback.
-Do not send the user to the page heading or scroll to the top after an update.
-Treat navigation to another page and explicit links to a named section as
-navigation, rather than as an in-place update.
-
-- Reuse `static/js/navigation.js`: a successful HTMX body swap whose final URL
-  has the same origin and pathname restores the scroll coordinates captured
-  immediately before the swap. Query-string changes do not start a new page.
-  The handler overrides inherited `show:window:top` with `show:none` and restores
-  the surviving focused control with `focus({preventScroll: true})`.
-- Give controls stable, unique IDs so keyboard focus can survive replacement.
-  Do not add an unconditional `h1.focus()`, `scrollTo(0, 0)`, full-page reload or
-  `show:top` to an update flow. Reuse the existing island restoration for partial
-  updates; explicit section-navigation links may retain their named destination.
-- Preserve URL/history and server-rendered GET/POST fallbacks. Native navigation
-  without JavaScript remains usable; use meaningful section anchors where
-  appropriate rather than relying on scripts for access to results.
-- If filtering shortens the document, the browser may clamp the saved offset to
-  the new maximum scroll position. This is the only automatic position adjustment
-  expected for an ordinary update; do not jump to the heading as a fallback.
-- Browser acceptance must begin at a nonzero scroll position, trigger the real
-  interaction, wait for the swap to settle, and check scroll position and keyboard
-  focus. Cover desktop/mobile and both populated and empty results. Also confirm
-  that deliberate navigation to another page still opens that destination normally.
-
-## Visual language
-
-The canonical catalogue and application load the same compiled stylesheet.
-Tailwind scans templates, app form classes and the catalogue; rebuild CSS after
-changes instead of copying tokens or relying on a JavaScript CSS CDN.
-
-The interface follows the Tuxedo Finance design language documented in
-`design-system.html`: cream and forest light foundations, neutral black and
-graphite dark foundations, caramel actions, distinct semantic colors, rounded surfaces and Inter 400–700
-throughout. Workspaces group related information in restrained surface cards,
-metric cards, semantic tables and ruled sections. Avoid nested cards and use
-spacing to distinguish the contents of one group. Page titles use 28px on mobile
-and 32px on desktop; section titles use 18px and 20px. Body copy starts at
-16/24px, labels and supporting copy at 14/20px, and compact table labels never
-fall below 12px. Bound chart heights preserve readable proportions on wide screens.
-
-| Role | Semantic treatment |
+| Working on | Canonical guide |
 |---|---|
-| Income / account credit | `income` #176B52; dark `income-light` #64D8B1 |
-| Expense / account debit / negative | `expense` #B42318; dark `expense-light` #FF8A80 |
-| Investment | `investment` #7C5C13; dark `investment-light` #F4C95D |
-| Installment plan | `installment` #6B4E8A; dark `installment-light` #C4A7E7 |
-| Fixed recurrence | `fixed` #A65300; dark `fixed-light` #FFB45C |
-| One-off purchase | `oneoff` #52605A; dark `oneoff-light` #B8C0BC |
-| Own transfer | Neutral forest/cream; never income/expense colored |
-| Credit-card payable | Caramel |
-| Warning / overdue invoice | Caramel plus explicit text/icon |
+| Build, delivered assets, HTMX, private history and translations | [Runtime](frontend/runtime.md) |
+| Editorial language, tokens, layout, responsive surfaces and shared components | [Presentation](frontend/presentation.md) |
+| Fields, choices, conditional recovery, dates, amounts and card appearance | [Forms](frontend/forms.md) |
+| Synthetic visual specimens and their local interactions | [Catalogue](frontend/catalogue.md) |
+| Navigation, viewport, menus, help, return context and departure | [Navigation](frontend/navigation.md) |
+| Assistant utility panel, focus and workspace continuity | [Navigation — assistant panel](frontend/navigation.md#assistant-panel); [assistant data/provider boundary](apps/assistant.md) |
+| Dashboard/report chart scopes, SVG layers, selections and source composition | [Charts](frontend/charts.md) |
+| Dynamic GET filters, consultation bars and named months | [Consultation](frontend/consultation.md) |
+| Banking, investment and planning screen compositions | [Workspaces](frontend/workspaces.md) |
 
-Color is never the only carrier of status. Monetary labels always include a
-currency symbol or ISO code, especially when native and base values are shown
-together.
+Setup and executable checks remain in [Contributing](../CONTRIBUTING.md).
+App guides own financial meaning and deliberate domain exceptions; historical
+measurements and acceptance evidence belong in [dated reviews](reviews/README.md).
+Keep detailed interaction rules in their owning guide instead of copying them
+into app documentation or agent instructions.
 
-The navigation brand combines `tuxedo-mark-256.png` with a two-line uppercase
-wordmark: `Tuxedo` in the foreground color and `Finance` in caramel. It always
-links to the public landing page, including for authenticated users. Primary
-actions are solid caramel pills with forest-deep text; `caramel-ink` carries
-brand links over light surfaces. Shared outline and quiet actions use subtle
-neutral hover surfaces. Titles, labels, controls and tabular monetary figures all use Inter.
-Secondary text uses forest/70 in light mode and neutral night-muted in dark mode.
+## Existing section links
 
-## Dark foundation tokens
+The section links below retain earlier URLs. Follow their canonical guide for
+the complete current contract.
 
-The light palette remains unchanged. Dark foundations use `night` (#101010),
-`night-surface` (#1B1B1B), and `night-raised` (#262626) for page, panel, and
-hover/elevated surfaces. Use `night-muted` (#B8B8B8) for secondary text and
-`night-line` (#808080) for form-control boundaries; decorative dividers may use
-cream/15. Main text stays cream and financial semantic colors retain their
-existing meaning. Do not redefine forest tokens to change the dark theme.
+### Private history
 
-Apply dark variants to structural backgrounds, including otherwise always-dark
-footers, mobile menus, and salary results. Native controls inherit dark
-`color-scheme`; keyboard focus uses a visible caramel-light outline. Field
-errors retain their semantic styling. Theme initialization and persistence are
-shared across full navigation and HTMX swaps.
+See [Private history](frontend/runtime.md#private-history).
 
-The public homepage uses factual copy, six separated feature rows, and the full
-horizontal cat photograph in a translucent double rounded frame with a subtle
-caramel glow. Its 4:3 mobile / 16:10 larger frame preserves the image's native
-ratio; padded hover zoom respects reduced motion. It has no promotional feature
-cards or example balances.
-Authenticated workspaces follow the shared composition below. See
-[pages](apps/pages.md) for the composition and authentication behavior.
+### Editorial application adoption
 
-## Root layout and navigation
+See [Editorial application adoption](frontend/presentation.md#editorial-application-adoption).
 
-`templates/base.html` continues to own the page shell, theme setup, public or
-authenticated navbar, messages, content block and footer. The authenticated
-navigation becomes:
+### Transaction amount entry
 
-```text
-Overview | Activity | Banks | Investments | Planning
-```
+See [Transaction amount entry](frontend/forms.md#transaction-amount-entry).
 
-`Banks` remains active for nested bank, account, card, invoice, movement and
-loyalty routes. The authenticated desktop navigation starts at the `xl`
-breakpoint so tablet and narrow-laptop widths do not compress or overflow the
-full link set. Below that breakpoint, the mobile navigation is a full-screen
-cream modal in light mode and near-black modal in dark mode, with the same
-links and ordering as desktop. It slides in,
-locks page scrolling, makes background content inert, contains keyboard focus,
-closes on Escape and restores focus to its trigger.
+### Shared complete-date dialog
 
-`partials/language_selector.html` appears in account options on desktop and the
-mobile menu, with an explicit native fallback when JavaScript is disabled. It
-posts the current path and `en` or `pt-br` to Django's
-`/i18n/set_language/`; JavaScript submits on change and the `noscript` Apply
-button preserves the server-rendered fallback. The choice is stored for one
-year in Django's language cookie, not local storage or the user model, and URLs
-have no locale prefix. The light/dark choice remains in local storage so both
-preferences survive later visits in the same browser.
+See [Shared complete-date dialog](frontend/forms.md#shared-complete-date-dialog).
 
-HTMX 2.0.10 is vendored at `static/js/vendor/htmx.min.js`; the application does
-not contact a JavaScript CDN at runtime. CI verifies the vendored file against
-the upstream release checksum before running browser smoke tests.
+<a id="catalogue-visual-experiment"></a>
 
-Django's content-security-policy middleware restricts script sources, forms,
-images and connections to this installation. Inline scripts and styles remain
-allowed because translated progressive-enhancement copy and server-calculated
-chart geometry are rendered directly by Django templates; Google Fonts is the
-only external presentation origin. Language selection uses a delegated local
-listener instead of an inline event handler and retains its `noscript` submit.
+### Canonical design catalogue
 
-## Template tree
+See [Canonical design catalogue](frontend/catalogue.md#canonical-design-catalogue).
 
-```text
-templates/
-├── base.html
-├── partials/
-│   ├── navbar_public.html   navbar_app.html
-│   ├── footer.html          messages.html
-│   ├── form_field.html      stat_card.html
-│   ├── language_selector.html theme_toggle.html
-│   └── empty_state.html
-├── pages/                   accounts/        categories/
-├── banking/
-│   ├── list.html            detail.html
-│   ├── form.html            confirm_delete.html
-│   └── exchange_rates.html
-├── transactions/
-├── dashboard/              sandbox/
-└── investments/
-```
+### Preserve the user's location
 
-Money rendering follows the authenticated user's base reporting currency.
-Historical transfer and investment totals identify their persisted FX snapshot;
-other current valuations show their valuation date and rate source.
+See [Preserve the user's location](frontend/navigation.md#preserve-the-users-location).
 
-## Banking information architecture
+### Visual language
 
-`/banking/` starts with the shared availability summary, explicitly covering all
-banks. Accounts appear in tables grouped by institution, with native balance,
-set-aside funds, availability and a reversible planning toggle. Linked cash pots
-appear under their bank and link to the separate investment workspace.
+See [Visual language](frontend/presentation.md#visual-language).
 
-Bank details reuse these account rows, then disclose account capabilities and
-cards. Invoices and dated movements remain visible below. Transfer and account
-actions stay contextual; loyalty and exchange-rate setup use secondary options.
+### Dark foundation tokens
 
-Opening balance is clearly labeled as the ledger starting point, not an income
-transaction. Personal records remain editable; audit-grade reversal controls
-are not part of the current product.
+See [Dark foundation tokens](frontend/presentation.md#dark-foundation-tokens).
 
-## Forms and settlement disclosure
+### Root layout and navigation
+
+See [Root layout and navigation](frontend/navigation.md#root-layout-and-navigation).
+
+### Template tree
+
+See [Template tree](frontend/presentation.md#template-tree).
+
+### Banking information architecture
+
+See [Banking information architecture](frontend/workspaces.md#banking-information-architecture).
+
+### Forms and settlement disclosure
+
+See [Forms and settlement disclosure](frontend/forms.md#forms-and-settlement-disclosure).
 
 ### Keyboard and choice contract
 
-This is mandatory for **all existing, new and changed forms**, including filters,
-settings and imports. Use the shared field renderer and test the interaction;
-custom pickers must not be copied into individual templates. The implementation
-follows the [WAI-ARIA combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/).
-
-| Control | Keyboard behavior |
-|---|---|
-| All controls | Tab/Shift+Tab move forward/back in document order with visible focus. No positive tabindex or focus jumps when branches appear. |
-| Searchable record choice | Type to filter; Down/Up open results and highlight the next/previous option; Enter confirms the highlighted option. |
-| Search cancellation | Escape closes; Tab continues. Both restore the committed choice and discard unconfirmed search text. Enter never submits from the search input, including zero matches. |
-| Short native select | Use the browser's native keys (Space or Alt+Down to open where supported, arrows to navigate and Enter to confirm). |
-| Checkbox / multiple record choice | Space toggles a focused checkbox; Tab reaches each visible checkbox. Filtering preserves selected records. |
-| Advanced options | Focus the native summary and press Enter or Space; Tab then visits its fields. |
-| Save / other buttons | Enter or Space activates the focused button. |
-
-Single-choice search uses manual confirmation, including when there is only one
-match. Focus remains on the search input; `aria-activedescendant`,
-`aria-selected` and the visible active highlight move together. Arrow navigation
-stops at the ends. Home/End and text-editing shortcuts retain native editing
-behavior. Mouse/touch selection and the explicitly labeled clear button perform
-the same committed change.
-
-Search instructions and single-choice selection announcements remain available
-through `aria-describedby` and live text without repeating paragraphs beneath
-every picker. Do not introduce focus-dependent in-flow instructions: removing
-their height on blur can move a Save button or radio between pointerdown and
-pointerup, cancelling the user's action. Verify direct clicks after committing a
-choice as well as keyboard submission.
-
-When a user focuses, filters or opens a searchable choice, scroll only as far as
-needed to show the input and results below the sticky header. Keep focus on the
-input. Size the results to the available visual viewport, including after a
-mobile keyboard or window resize, and keep long lists internally scrollable.
-Arrow navigation keeps the active option visible inside that list; once the
-picker fits, it must not keep moving the page. Use immediate scrolling so keyboard
-input does not race an animation, including with reduced motion enabled.
-Initialization, background refreshes and merely revealing a conditional branch
-must not scroll the page. This targeted visibility adjustment applies when the
-user reaches the picker and does not change the HTMX location-preservation rule.
-
-All Django `ModelChoiceField` and `ModelMultipleChoiceField` controls rendered by
-`partials/form_field.html` receive `data-search-select` through the `form_control`
-template tag. This covers categories, parent categories, banks, accounts, cards,
-assets, investment products, programs and invoices. Handwritten record filters
-must also carry that attribute and a stable unique ID. Serialize record keys in
-option values without localization (for example, `pk|stringformat:'s'`); thousands
-separators belong in displayed amounts, never in submitted identifiers. Short
-enumeration choices remain native selects. Disabled fields remain native and disabled.
-
-`static/js/forms.js` progressively enhances these controls, using the original
-scoped options and preserving their names, values, metadata and `change` events.
-It reads translated text from `partials/form_ui_strings.html`. Initialization is
-idempotent on DOMContentLoaded and HTMX load. Domain handlers may update native
-values/options; the shared refresh runs after their change handlers. Call
-`TuxedoForms.refresh(form)` after changes outside a change event. User text is
-inserted with textContent, never interpreted as HTML. No remote search or new
-frontend dependency is involved. Entry forms use `novalidate` so hidden native
-selects cannot intercept error recovery; Django renders the validation errors.
+See [Keyboard and choice contract](frontend/forms.md#keyboard-and-choice-contract).
 
 ### Conditional fields and recovery
 
-- New choices that control branches begin empty; conditional checkboxes begin
-  unchecked. Preserve submitted values, existing records and validated shortcut
-  context. Model/storage defaults need not change to enforce the creation UI.
-- Transaction categories wait for income/expense; a credit channel reveals the
-  card selector, and a confirmed card reveals installment/bill details. Recurrence
-  reveals its end date only after the checkbox is selected.
-- Investment values and funding wait for an asset and operation type. Monetary
-  yield requires an explicit input-mode choice. Opening balances wait for the
-  valuation mode; their product appears when an opening position is supplied.
-- Points purchases reveal payment amounts after a funding source is selected.
-  Redemption IOF sources appear only for a positive IOF amount. Sandbox CLT and
-  transport-voucher details require their respective checkboxes.
-- Use `TuxedoForms.setHidden(group, inactive, preserveErrors)` for domain-specific
-  branches. Simple dependencies may use `data-form-when="controller-id"` plus
-  `data-form-value="checked|unchecked|positive|literal-value"`; these clear their
-  inactive controls after a deliberate controller change. `data-inactive-value`
-  can specify a domain-required reset value instead of an empty string.
-- Every directly toggled group, including parents, must expose its own
-  `data-has-errors`. Initial rendering keeps errored branches visible and opens
-  advanced sections containing errors. A deliberate switch clears incompatible
-  values and dismisses the abandoned branch's old errors; it must not erase
-  unrelated errors or unmodified values during initialization.
-- Keep dependent fields in normal DOM order and use hidden for inactive groups.
-  Revealing a group never steals focus; the next Tab reaches its first control.
-- Native controls remain rendered and usable without JavaScript. Do not render
-  inactive branches hidden on the server. The server remains authoritative for
-  ownership, compatibility and accounting validation.
+See [Conditional fields and recovery](frontend/forms.md#conditional-fields-and-recovery).
 
-Form changes require keyboard browser tests for confirmation/cancellation,
-conditional transitions, invalid POST recovery, editing and the no-JavaScript
-path. Start viewport tests with the picker near the bottom; check the input,
-results and active option in desktop and short mobile viewports. Use the isolated
-E2E executor; inspect light/dark focus and active-state contrast. The contributor
-and agent instructions make this a review requirement,
-with regression tests included in the existing CI browser suite.
+### Multicurrency display
 
-Forms use the established `form_field.html`, validation summary, forest/cream
-inputs with caramel focus, and the Save/Cancel pill action pattern. Checkboxes
-use `accent-caramel`. Server-side validation remains authoritative.
+See [Multicurrency display](frontend/presentation.md#multicurrency-display).
 
-- PIX/account/debit choices state `Affects account balance immediately`.
-- Credit card choices state `Added to the card invoice; account debited on due date`.
-- Own transfer forms identify source and destination, show both currencies, and
-  explain that the transfer is not income or expense.
-- Credit transaction forms show the target invoice/due date when known.
-- Loyalty invoice awards show only the related invoice; points purchases show
-  only their payment source and amount. Switching kind clears the inactive
-  branch.
-- Investment deposit forms require `Source account`; withdrawals require
-  `Destination account`; yield forms state `Internal yield, no bank movement`.
-- Loyalty redemption forms show points, target monetary amount/currency, IOF and
-  IOF funding instrument as one reviewable cost block.
+### Translation convention
 
-Conditional inputs may be rendered in full with server-side validation when a
-zero-JS interaction would otherwise hide required accounting context. HTMX may
-enhance dependent choices, but the submitted form must work without it.
+See [Translation convention](frontend/runtime.md#translation-convention).
 
-## Multicurrency display
+### Dashboard
 
-The UI uses the authenticated user's `UserPreference.base_currency`, selected
-from Settings. Changing it updates consolidated presentation only; native
-amounts remain unchanged. Transfer/investment historical snapshots and current
-valuations are visibly distinct, and missing rates are shown explicitly as
-incomplete.
+See [Dashboard](frontend/charts.md#dashboard).
 
-Inputs remain dot-decimal HTML number fields. Display localization follows each
-currency's formatting metadata; SVG coordinates and CSS percentages remain
-unlocalized.
+### Reports and charts
 
-UI language does not choose currency formatting. `core/formats/en/` and
-`core/formats/pt_BR/` both delegate separators to the selected currency, so a
-language switch cannot turn a correctly formatted amount into a mixed
-symbol/separator representation.
-
-## Translation convention
-
-All new fixed interface copy must be marked at its source: `gettext_lazy` for
-deferred Python declarations, `gettext` for runtime Python messages,
-`{% translate %}` (the modern spelling of `{% trans %}`) for short template
-strings and `{% blocktranslate %}` for longer copy or interpolated values.
-Update and compile the `pt_BR` gettext catalog after changing marked strings.
-The nine system-provided category names are translated once during account
-creation and then stored as user-owned data. Other category/subcategory names
-and all user-entered titles, notes, institutions and financial data are not
-translation keys and render verbatim.
-
-HTMX report and investment chart islands need no separate locale mechanism.
-Their requests retain the language cookie, pass through `LocaleMiddleware` and
-render translated fragments in the active request language.
-
-## Dashboard
-
-Metric cards separate concepts instead of collapsing them into one balance:
-
-- available cash, selected-month balance change, and projected closing balance;
-- income, expenses, investments, and withdrawals as separate performance metrics;
-- current-month values through today with the remaining plan shown underneath;
-- complete values for past months and explicitly planned values for future months.
-
-Current Balance remains distinct from the projected month-end close. Credit-card
-purchases belong to the statement month but affect cash only when the invoice is
-settled. Own transfers may appear in activity but are visually neutral and
-absent from income/expense charts. Projected figures are labeled and never
-presented as posted cash. A compact top-six category breakdown follows the same
-month-to-date, completed-month, or planned-month context as the metrics. Live bank
-accounts and upcoming invoices are limited to five rows each and link to Banking
-for the complete lists.
-
-## Reports and charts
-
-The Reports summary uses three metrics: live bank cash, the identified anchor
-month's inflows minus outflows, and bank-balance change across the full chart
-window. Monthly result excludes the opening balance and includes recorded
-investment deposits/withdrawals separately from consumer income/expense. The
-window-wide change keeps its existing calculation and missing-rate warning.
-`stat_card.html` accepts a period `caption` and shared question-mark help through
-`help_id` plus `help_text` or a trusted `help_template`. The full-window explanation follows HTMX changes
-to the displayed dates. Reports no longer show a best-month summary card.
-
-Balance evolution and Monthly cash flow reuse `_report_window_navigation.html`.
-Both expose Back to today when `charts_offset != 0`; keep that action below the
-arrows and period label so the arrow row does not move when it appears. Reset to
-`charts_offset=0`, retain unrelated query filters, and preserve scroll and a
-visible keyboard focus target through HTMX replacement. Native links must also
-work without JavaScript.
-
-Income and expenses by account or card and How much is on installments each
-have an independent monthly cursor. Both start at the current month and use
-previous/next month arrows to navigate past and future months. Do not replace
-these controls with month dropdowns or a shared multi-month window. Keep native
-links, stable control IDs, scroll and keyboard focus across HTMX updates. Each
-Current month or All time action changes only its own chart; All time retains
-the existing trailing-twelve-month aggregation. In All time mode the arrows
-resume monthly navigation from the current month. Totals and composition details
-must always resolve to the same scope. Invalid or obsolete account/card months
-recover to the current month, while invalid installment months recover to All
-time. Test month boundaries, past/future navigation, All time and current-month
-return, invalid query recovery, focus and scroll preservation, no-JavaScript
-links, and both themes.
+See [Reports and charts](frontend/charts.md#reports-and-charts).
 
 ### Question-mark help
 
-This contract is mandatory for every new or changed **?** help icon. Reuse
-`partials/help_popover.html`, `static/js/help-popovers.js` and the `.help-*`
-components in `assets/css/tailwind.css`. Reports and Sandbox share this behavior;
-do not add independent click-to-pin tooltips or use a native title as the only help.
+See [Question-mark help](frontend/navigation.md#question-mark-help).
 
-| Interaction | Required behavior |
-|---|---|
-| Mouse hover | Open without clicking. Keep the help visible when moving from the icon into its text. Close after leaving both, with a 120 ms crossing allowance. |
-| Mouse click | Never pin help. Clicking outside dismisses it immediately. Only one help box may be open. |
-| Keyboard | Tab focus opens help; Enter/Space can reopen it. Escape dismisses without moving focus; Tab away closes it. Pointer clicks must not leave a focus-driven tooltip stuck open. |
-| Touch | Tap toggles help. Another tap, an outside tap or another help icon dismisses the previous box. |
-| Navigation | HTMX swaps close help only when replacing its owning region; unrelated background previews retain it. History saves close floating help. Replacement controls initialize once. No duplicate fallback controls or event handlers. |
-| No JavaScript | A native details/summary fallback exposes the same explanation by keyboard or touch. |
+### Responsiveness and accessibility
 
-Help is rendered above cards/charts in a floating container attached to the body,
-with a preferred width of **352 px**, a **12 px** viewport gutter and an **8 px**
-gap from the icon. Its width must never inherit the icon or label width. Reposition
-above the icon when needed, constrain height in short viewports, and allow internal
-scrolling. Reposition on resize/scroll without moving the page or stealing focus.
-Without JavaScript, the native disclosure opens a bounded panel at the bottom
-of the viewport so labels near either edge cannot push its explanation offscreen.
+See [Responsiveness and accessibility](frontend/presentation.md#responsiveness-and-accessibility).
 
-Use 14 px text, 24 px line height, normal capitalization, left alignment and 16 px
-padding. Give the explanation a short title and separated paragraphs; put formulas
-in their own lightly shaded block. Keep paragraphs short and fully translated.
-Use the shared light/dark surfaces, borders and visible focus. Do not put links,
-form fields or other interactive controls inside a tooltip.
+### Automated browser checks
 
-Pass a stable, unique `help_id`, a translated `help_label`, and either plain
-`help_text` or a repository-owned `help_template`. The latter may use
-`.help-paragraph` and `.help-formula` spans for structured copy. Template paths
-must be authored literals, never user input. Both the tooltip and no-JavaScript
-fallback render the same content; ordinary text remains escaped. The trigger's
-accessible name explains its subject, and `aria-describedby` references the
-`role="tooltip"` content.
+See [Automated browser checks](frontend/runtime.md#automated-browser-checks).
 
-```django
-{% include 'partials/help_popover.html' with help_id='budget-help' help_label=budget_label help_text=budget_help %}
-```
+### Planning workspaces and shared presentation
 
-Review changes with actual pointer, keyboard and touch tests: enter/leave the
-icon and content, outside click, click then leave, Escape/Tab, a second icon,
-HTMX/history and the no-JavaScript fallback. Inspect English/Portuguese copy in
-both themes at desktop and mobile widths; assert box width/viewport bounds so
-an extremely narrow column cannot pass as readable help.
-
-Charts remain inline server-rendered SVG/CSS with native `<title>` fallbacks,
-theme-aware tooltip pills on mouse hover and keyboard focus, responsive
-overflow containers and accessible text summaries. Reports and Investments use
-the same interaction contract. Income uses the green pair, expense uses the red pair, and
-investment has its own ochre pair. The recurrence donut uses purple
-installments, orange fixed recurrences and neutral one-off purchases; its zero
-line is neutral. HTMX swaps only the report island while preserving focus and
-viewport; plain links/forms remain equivalent.
-
-SVG paint order is part of that contract. Every interactive chart renders all
-data marks and axis labels in a base `data-chart-layer="*-marks"` layer, then
-renders transparent hit targets, hover/focus highlights and tooltip pills in a
-final `data-chart-layer="*-interactions"` layer. Tooltips must never be nested
-only beside their original mark in series order: later SVG elements would paint
-over them. Tooltip content remains `pointer-events-none`, while its transparent
-hit target retains the native `<title>` and keyboard focus. Chart marks select
-values without navigating; period controls retain their native links or forms.
-
-Every chart states its reporting currency and actual versus projected period.
-The selected per-user base currency, snapshot status where supported, and
-explicit missing-FX totals are shown. Current valuation charts display their
-valuation date/source.
-
-Credit purchase and invoice payment series must use distinct labels. No chart
-may aggregate both as expenses. Investment yield is shown in investment
-performance, not bank income.
-
-## Responsiveness and accessibility
-
-All pages remain mobile-first. Wide ledgers, invoice item tables and charts use
-internal horizontal scrolling rather than forcing body overflow. Bank/account
-hierarchies retain grouped rows on small screens, with internal table scrolling
-when columns cannot fit legibly. Labels, status text,
-focus rings, keyboard navigation and confirmation screens remain available
-without relying on hover, color or JavaScript.
-
-## Automated browser checks
-
-`tests/e2e/design-system.spec.js` checks translated landing copy, local HTMX,
-CSV downloads, responsive navigation, dashboard month states, conditional loyalty
-fields, monetary-yield forms, salary-sandbox calculations and help, and report
-navigation. These checks cover
-browser behavior that template assertions cannot prove.
-
-Run `npm run test:e2e` for an isolated application and temporary database. CI
-uses the same executor and retains configured browser failure artifacts. See
-[CONTRIBUTING.md](../CONTRIBUTING.md#browser-tests) for setup, argument forwarding,
-logs, and the advanced manually managed path.
-
-`tests/preview/preview.spec.js` validates the static GitHub Pages tour in both
-languages, including the committed image dimensions, theme persistence,
-accessible screenshot dialog and mobile layout. Run `npm run test:preview` for
-that isolated site. `npm run preview:capture` regenerates its screenshots using
-only disposable synthetic records in a guarded temporary database. The capture
-and test configuration is documented in
-[`../.github/preview/README.md`](../.github/preview/README.md).
-
-## Planning workspaces and shared presentation
-
-The primary navigation is **Overview / Activity / Banks / Investments / Planning**.
-Overview contains Dashboard and Reports; Activity contains Transactions and
-Categories. Existing domain URLs remain stable. Account settings and language
-live in the account-options disclosure; the mobile menu has the same destinations.
-A native navigation fallback remains available without JavaScript.
-Desktop primary links retain their direct destinations and reveal section
-options on hover. A separate native disclosure arrow supports keyboard and
-touch; Escape and outside interaction dismiss the menu. Option buttons, including
-Export CSV, account options, project links and row actions, open only by click,
-touch or keyboard activation. Hovering them never reveals their options.
+See [Planning workspaces and shared presentation](frontend/workspaces.md#planning-workspaces-and-shared-presentation).
 
 ### Compact row-action menus
 
-Ellipsis controls use `details.secondary-actions.compact-menu`. Opening requires
-click, touch or keyboard activation; hovering or focusing a closed trigger alone
-must not open it. Once opened, crossing neighboring rows or moving through a gap
-toward an action must not open another row menu or close the chosen one. Use the
-same native `details` name within a row-menu group so only one can be open,
-including without JavaScript. The shared navigation runtime preserves summary
-toggle, outside-click, Tab-away and Escape dismissal, with focus returning to the
-trigger on Escape.
-
-Regression checks must move the real pointer across adjacent row triggers after
-opening one menu, then verify that its action still targets the original record.
-Cover click toggling, switching rows, keyboard, touch, HTMX and the native
-fallback. Changes to primary navigation or question-mark help must not silently
-change this activation-only contract.
-
-Record new UI/UX and domain-presentation decisions in their owning guide and use
-focused code comments for interaction rules whose purpose is not obvious. Add
-cross-cutting rules to `AGENTS.md` so future changes preserve them.
+See [Compact row-action menus](frontend/navigation.md#compact-row-action-menus).
 
 ### Shared workspace components
 
-Use `surface-panel`, `metric-panel`, `label-with-help`, `workspace-header`, `section-nav`, `action-link`, `action-primary`,
-`secondary-actions`, `data-table`, and `subtle-copy` from the compiled stylesheet.
-Group banks, charts, input stages and results in distinct surface cards. Use
-compact metric cards for comparable summaries and divided rows inside each
-group. Avoid nested bank/product/asset cards. Explanatory copy belongs in the
-shared question-mark help beside its heading or label; errors, missing FX,
-incomplete values and decisions requiring user action remain visible.
-`form_field.html` renders ordinary field help beside the label automatically;
-`field_help_text` and `field_help_template` supply contextual overrides without
-duplicating the help below the field. Keep the existing palette, Inter typography, shared help, fields,
-searchable choices, and accessible focus tokens. Record a reusable composition
-in `design-system.html` before introducing a competing per-page pattern.
+See [Shared workspace components](frontend/presentation.md#shared-workspace-components).
 
-Complete calendar dates use `core.dates.configure_date_fields` and
-`partials/preferred_date_field.html`, dispatched by the normal form-field
-partial. The shared script initializes after full loads and HTMX swaps without
-moving focus or rewriting every keystroke. The user's DMY/MDY setting controls
-visible date fields and complete dates throughout the application. Native
-calendar helpers, storage, existing CSV formats, and URL parameters use ISO;
-month-only labels remain localized month/year labels. An invalid bound value is
-retained for recovery. Calendar dates are not converted through JavaScript
-`Date` objects or time zones.
+### Previous-screen continuity and balance ranges
 
-HTMX regions with `data-preserve-view` use the common navigation handler to
-restore focus and scroll. Account participation updates also replace the
-availability summary out of band, so the row and aggregate remain consistent.
+See [Previous-screen continuity and balance ranges](frontend/navigation.md#previous-screen-continuity-and-balance-ranges).
 
-## Previous-screen continuity and balance ranges
+### Card appearance
 
-Investment navigation keeps a gray Simulate returns notice last. It cannot
-navigate and explains that the simulator is available from Planning → Yield
-simulation. This text-triggered notice is visually distinct from question-mark
-help, but reuses the floating popover lifecycle for hover, keyboard, touch,
-viewport bounds and HTMX. Its `aria-disabled` button remains focusable so the
-reason is accessible; the native disclosure fallback also supports keyboard and touch.
-Configuration guides bank/product/asset registration and remains available for
-later edits. Missing prerequisites make Configure investments the primary
-action on portfolio and Operations pages; completed setup enables New operation.
-Asset configuration separates active assets from a native Archived assets
-disclosure. Archive/Restore use deliberate, CSRF-protected POSTs. Same-page
-boosted responses reuse the common viewport/focus restoration, with one stable
-availability-button ID per asset; the archived disclosure opens after archiving.
-Native submissions land on the changed asset through a section anchor. Delete
-uses the existing confirmation and remains unavailable for protected holdings
-or history; a blocked deletion page offers Archive as an alternative. New
-operation choices exclude archived assets, while historical editors keep their
-own archived selection and explain how to restore it for new operations.
-Portfolio and Remunerated cash hide archived position rows and empty product/bank
-groups after calculating totals over all holdings. A short notice explains why
-archived balances remain in totals; an all-archived section has an active-position
-empty state rather than first-operation guidance. Existing Operations navigation
-keeps history accessible, and restoring an asset makes its positions visible.
-The Operations
-page owns operation search, purpose/type/record filters and pagination. Portfolio
-and remunerated-cash pages show positions and a contextual link to Operations.
-The Charts tab filters historical positions and flows by Overall, Portfolio or
-Remunerated cash; scope and independent month windows survive GET/HTMX updates. The same destination appears in section tabs and desktop/mobile
-navigation menus. Old movement-filter URLs redirect to the new page. Chart navigation
-and operation pagination keep separate HTMX regions. Operation forms return to the
-history after a successful save or deletion.
-
-Browser Back/Forward restores workspace context from tab-local sessionStorage,
-scoped to the authenticated user and interface identity. Capture each visited
-workspace before navigation, including query parameters, unsent named fields,
-repeated simulation rows, disclosures, focus and scroll. History traversal
-restores into freshly rendered forms without replaying submissions or emitting
-input/change events. Do not render a separate Resume previous screen control.
-Do not add redundant page-level Back to links: shared navigation and section
-tabs identify destinations, and browser Back/Forward handles history. Keep form
-Cancel actions and date-reset controls such as Back to today; these serve their
-own explicit actions rather than duplicating page navigation.
-When HTMX replaces the page body, update the active workspace at `afterSwap`:
-the next link can be activated before `afterSettle`. Apply the saved fields on
-`historyRestore` even when the browser's URL already matches the tracked URL;
-the HTMX history cache can contain older form values.
-Do not recapture the form baseline at `afterSettle`: users can edit the new
-page during the settle delay, and those edits still require a departure warning.
-Passwords, uploaded files, hidden fields/CSRF tokens and account settings are
-excluded. Keep only the current and immediately previous URL snapshots, and discard
-them when the user or interface identity changes. Native browser Back and HTMX history must
-both work; navigation without JavaScript retains the browser's own history.
-
-Confirm departure when a POST form has been edited or a simulation result is
-visible. GET filters and chart selections are read-only view state: preserve them
-for Back/Forward without treating them as unsaved operations. This applies to
-clicked navigation, history traversal and native refresh/tab-close warnings.
-For HTMX navigation and clicked links use the translated confirmation; for
-browser-owned navigation, refresh and tab close use `beforeunload` so the browser
-can display its native warning. Canceling a history traversal leaves the current
-page and its unsaved state intact. An explicit form submission does not prompt.
-Successful and invalid POSTs are handled by the server; do not preserve a
-submitted form as an unsent history snapshot. The restored inputs remain unsaved
-and simulations must be recalculated after restoring edited inputs. This is navigation recovery, not financial undo or a
-saved draft.
-
-Charts use direct manipulation without manual range selectors. Drag either way
-on time series, or select endpoints with Enter/Space. Shift-click and Shift with
-Enter/Space toggle individual bars or slices. Instrument bars have no click
-navigation. The donut puts its selected sum in the center and restores the full
-total on outside click or Escape. Other charts retain the selection summary.
-Selection never writes financial records. Without JavaScript the original chart
-values and period navigation remain available.
-
-Press Ctrl while hovering or focusing a mark to open its composition in a
-viewport-bounded, scrollable panel, then release Ctrl before scrolling. Releasing
-the key or moving the pointer between the chart and panel leaves it open. The
-panel contains wheel/keyboard scrolling, including at its scroll boundaries.
-The prominent Close composition button, another Ctrl press, Escape, any click
-outside the panel (including chart controls), wheel/scroll outside the panel,
-another chart selection or a replacement of its owning chart dismisses it.
-The closing Ctrl press stays suppressed until key release, preventing a
-hovered mark from reopening the panel immediately. Opening a different composition
-closes the previous panel. Keyboard opening focuses the panel without scrolling
-the page. A queued native-focus scroll does not dismiss a panel opened after
-the position changed; subsequent outside scrolling still dismisses it. A new
-hover takes precedence over focus retained by a previous chart;
-moving keyboard focus resets that pointer context. Tab reaches the close button,
-row disclosures and operation links; leaving the panel dismisses it. Close,
-Escape and a second Ctrl return panel focus to its mark. An unrelated HTMX update leaves it open.
-On touch, tap selects and holding a mark opens its composition until dismissed.
-This interaction belongs to chart composition, independently of question-mark
-help and ordinary SVG value tooltips. A shared read-only authenticated endpoint accepts
-signed, user-bound chart scopes; all queries are scoped to the current user.
-Category paths preserve parent and subcategory names. Transaction charts use the
-same competence window and series as the chart, while bank balances show their
-account composition and investments show products/assets. Details for all-period
-charts use their full twelve-month scope. Decimal amounts become integer cents;
-SVG coordinates never supply financial values.
-
-Composition rows use a quiet arrow and a real same-tab hyperlink when exactly
-one source contributes. When several sources contribute, the native row
-`details` discloses their dated operation links and scoped amounts through
-click/touch or Enter/Space, without opening on hover. A recurring transaction
-appears once with its summed contribution across the selected months. Bank
-balances link to the account in bank details; opening investment positions link
-to the asset configuration; investment operations and ordinary transactions
-link to their existing editors. Generated IOF links to the source redemption,
-preserving its transaction edit lock. Links retain native modified-click behavior
-and shared browser Back/Forward. Opening an editor does not submit a financial
-change. Close the panel before navigation, remove cached panel copies on HTMX
-history restoration, and retain the report's period and scroll context.
-All links come from owned records in the same signed scope as the displayed
-amount; missing FX values never become an operation link. Fractional FX cents
-are allocated by remainder across displayed source amounts so they reconcile
-with the existing aggregate total.
-
-Bank colors use a validated six-digit hex value, a native color field and optional
-preset swatches. Existing banks receive the neutral caramel marker. The list uses
-a slim corner marker; the marker next to the detail title links to a color-only
-edit form. Native submissions work without JavaScript and updates enforce bank
-ownership. Color does not carry financial meaning.
-
+See [Card appearance](frontend/forms.md#card-appearance).
 
 ### Planning parameter controls
 
-Planning month fields retain native keyboard entry and open the native picker
-from the entire field when `showPicker` is available. Monthly-plan arrows submit
-unsent form values along with the new month; localized month text identifies the
-selection. The forecast submit button remains as the no-JavaScript fallback and
-is hidden after enhancement, since changing the month already refreshes it.
-Additional expenses explicitly choose BRL or a percentage of gross salary.
+See [Planning parameter controls](frontend/workspaces.md#planning-parameter-controls).
 
-Yield simulation puts the rate period before the rate value and updates its label
-and help name together. Currency labels follow the currency selector. Duration
-shortcuts activate only on click, touch or keyboard, preserve focus, and use the
-same month field/override retention as manual entry. Live results never replace
-parameter fields. See the [planning guide](apps/sandbox.md) for calculation rules.
+### Live consultation filters
+
+See [Live consultation filters](frontend/consultation.md#live-consultation-filters).
+
+### Compact consultation bars and month names
+
+See [Compact consultation bars and month names](frontend/consultation.md#compact-consultation-bars-and-month-names).

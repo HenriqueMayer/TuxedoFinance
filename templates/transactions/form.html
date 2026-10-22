@@ -11,13 +11,23 @@ through the shared partials/form_field.html renderer (PRD §9.4).
 {% block title %}{% if form.instance.pk %}{% translate "Edit Transaction" %}{% else %}{% translate "New Transaction" %}{% endif %} — Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">
+<div class="transaction-entry-page">
+    <h1 class="page-title">
         {% if form.instance.pk %}{% translate "Edit Transaction" %}{% else %}{% translate "New Transaction" %}{% endif %}
     </h1>
-
-    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
+    <form id="transaction-entry-form" data-transaction-entry autocomplete="off" method="post" hx-boost="false" class="transaction-entry" novalidate
+          data-category-allocation data-allocation-prefix="{{ split_formset.prefix }}" data-allocation-total="#id_amount" data-allocation-toggle="#id_split_categories"
+          data-allocation-bound="{{ split_formset.is_bound|yesno:'true,false' }}" data-allocation-add-request="{{ request.POST.add_split|yesno:'true,false' }}" data-allocation-limit="{{ split_formset.max_num }}"
+          data-allocation-error-amount="{% translate 'Enter a positive amount with at most two decimal places.' %}"
+          data-allocation-error-limit="{% translate 'This category can use up to {amount}.' %}"
+          data-allocation-error-count="{% translate 'Use at least two categories, or clear the split.' %}"
+          data-allocation-error-small="{% translate 'The total must allow at least one cent per category.' %}"
+          data-allocation-error-sum="{% translate 'Category amounts must add up to the transaction total.' %}"
+          data-allocation-error-maximum="{% translate 'You can divide between up to 20 categories.' %}">
         {% csrf_token %}
+        <input type="hidden" name="next" value="{{ return_url }}">
+        {{ split_formset.management_form }}
+        <input type="hidden" name="allocation_state" value="{{ request.POST.allocation_state }}" data-allocation-state>
 
         {% if form.non_field_errors %}
             <div class="space-y-1.5">
@@ -27,34 +37,51 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             </div>
         {% endif %}
 
-        {% include 'partials/form_field.html' with field=form.title %}
-        {% include 'partials/form_field.html' with field=form.amount %}
         {% include 'partials/form_field.html' with field=form.transaction_type %}
-        <div id="category-fields" data-has-errors="{{ form.category.errors|yesno:'true,false' }}">
-            {% include 'partials/form_field.html' with field=form.category %}
+        <div class="entry-details-grid">
+            {% include 'partials/form_field.html' with field=form.title %}
+            {% include 'partials/form_field.html' with field=form.amount %}
+            {% include 'partials/form_field.html' with field=form.date %}
+            <div id="category-fields" data-has-errors="{{ form.category.errors|yesno:'true,false' }}">
+                {% include 'partials/form_field.html' with field=form.category %}
+            </div>
         </div>
-        {% include 'partials/form_field.html' with field=form.payment_channel %}
+        <div id="category-split-choice" class="entry-split-choice" data-has-errors="{{ form.split_categories.errors|yesno:'true,false' }}">
+            {% translate 'The remainder is divided automatically. Edit an amount to keep it fixed, or clear it to distribute it again.' as allocation_help %}
+            {% include 'partials/form_field.html' with field=form.split_categories inline_checkbox=True field_help_text=allocation_help %}
+        </div>
+        <section id="category-split-fields" class="entry-split-fields" data-allocation-section data-has-errors="{% if split_formset.errors or split_formset.non_form_errors %}true{% else %}false{% endif %}">
+            <noscript><p class="subtle-copy">{% translate 'Category amounts must equal the total. Installments distribute exact cents across their original categories; recurring entries repeat the same split. The payment remains a single event.' %}</p></noscript>
+            {% for error in split_formset.non_form_errors %}<p role="alert" class="text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+            <div data-allocation-rows>{% for row in split_formset %}{% include 'transactions/_category_allocation_row.html' with number=forloop.counter %}{% endfor %}</div>
+            <p data-allocation-message hidden></p>
+            <template data-allocation-template>{% include 'transactions/_category_allocation_row.html' with row=split_formset.empty_form number='__prefix__' %}</template>
+        </section>
+        <div class="entry-payment-section">{% include 'partials/form_field.html' with field=form.payment_channel %}</div>
         <p id="payment-channel-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
         <div id="bank-account-fields" class="space-y-5" data-has-errors="{{ form.bank_account.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.bank_account %}</div>
         <div id="debit-card-fields" class="space-y-5" data-has-errors="{{ form.debit_card.errors|yesno:'true,false' }}">
             {% include 'partials/form_field.html' with field=form.debit_card %}
-            <p id="debit-card-account" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
         </div>
-        <div id="credit-card-fields" class="space-y-5" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
+        <div id="credit-card-fields" class="space-y-5" data-has-errors="{% if form.credit_card.errors or form.installments.errors or form.installment_start.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
             {% include 'partials/form_field.html' with field=form.credit_card %}
-            <div id="credit-card-details" class="space-y-5" data-has-errors="{% if form.installments.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
+            <div id="credit-card-details" class="space-y-5" data-has-errors="{% if form.installments.errors or form.installment_start.errors or form.billing_override.errors %}true{% else %}false{% endif %}">
                 {% include 'partials/form_field.html' with field=form.installments %}
+                <div id="installment-start-fields" data-has-errors="{{ form.installment_start.errors|yesno:'true,false' }}">
+                    <details class="explanation-disclosure"{% if form.installment_start.errors or form.instance.installment_start > 1 %} open{% endif %}>
+                        <summary>{% translate 'Already paying this purchase?' %}</summary>
+                        {% include 'partials/form_field.html' with field=form.installment_start %}
+                    </details>
+                </div>
                 {% include 'partials/form_field.html' with field=form.billing_override %}
                 <p id="credit-card-best-purchase" class="text-sm font-medium text-caramel-ink dark:text-caramel-light" aria-live="polite"></p>
             </div>
-            <p id="credit-card-account" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
         </div>
-        {% include 'partials/form_field.html' with field=form.date %}
 
-        <details class="rounded-xl ring-1 ring-forest/10 dark:ring-cream/10"{% if form.is_fixed.value or form.fixed_until.errors or form.notes.errors or form.is_fixed.errors %} open{% endif %}>
-            <summary class="cursor-pointer px-4 py-3 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/80">{% translate "Advanced options" %}</summary>
-            <div class="space-y-5 p-4 pt-1">
-                <div class="flex items-center gap-3 rounded-xl bg-cream-dark p-4 dark:bg-night">
+        <details class="entry-advanced"{% if form.is_fixed.value or form.fixed_until.errors or form.notes.errors or form.is_fixed.errors %} open{% endif %}>
+            <summary class="entry-advanced-trigger">{% translate "Advanced options" %}</summary>
+            <div class="entry-advanced-body">
+                <div class="entry-recurring-choice">
                     {{ form.is_fixed }}
                     <div>
                         {% include 'partials/field_label.html' with field=form.is_fixed %}
@@ -66,137 +93,24 @@ through the shared partials/form_field.html renderer (PRD §9.4).
             </div>
         </details>
 
-        <div class="flex items-center gap-3">
+        <div class="entry-actions">
+            {% comment %}The first native submit is Save: Enter in an ordinary field must not add a split row, including when split controls are hidden.{% endcomment %}
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
+                    class="entry-button">
                 {% translate "Save" %}
             </button>
-            <a href="{% url 'transactions:list' %}"
-               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
+            <a href="{{ return_url }}"
+               class="entry-button entry-button--quiet">
                 {% translate "Cancel" %}
             </a>
+            <div id="category-split-actions" data-has-errors="{% if split_formset.errors or split_formset.non_form_errors %}true{% else %}false{% endif %}">
+                <button type="submit" name="add_split" value="1" class="quiet-action" data-allocation-add>{% translate 'Add category' %}</button>
+            </div>
         </div>
     </form>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    (function () {
-        const category = document.getElementById('{{ form.category.id_for_label }}');
-        const channel = document.getElementById('{{ form.payment_channel.id_for_label }}');
-        const transactionType = document.getElementById('{{ form.transaction_type.id_for_label }}');
-        const bankAccount = document.getElementById('{{ form.bank_account.id_for_label }}');
-        const debitCard = document.getElementById('{{ form.debit_card.id_for_label }}');
-        const creditCard = document.getElementById('{{ form.credit_card.id_for_label }}');
-        const installments = document.getElementById('{{ form.installments.id_for_label }}');
-        const billingOverride = document.getElementById('{{ form.billing_override.id_for_label }}');
-        const fixed = document.getElementById('{{ form.is_fixed.id_for_label }}');
-        const fixedUntil = document.getElementById('{{ form.fixed_until.id_for_label }}');
-        const status = document.getElementById('payment-channel-status');
-        const debitAccountContext = document.getElementById('debit-card-account');
-        const creditAccountContext = document.getElementById('credit-card-account');
-        const creditBestPurchase = document.getElementById('credit-card-best-purchase');
-        const groups = {
-            bank: document.getElementById('bank-account-fields'),
-            debit: document.getElementById('debit-card-fields'),
-            credit: document.getElementById('credit-card-fields'),
-            cardDetails: document.getElementById('credit-card-details'),
-            category: document.getElementById('category-fields'),
-            fixedUntil: document.getElementById('fixed-until-fields'),
-        };
-        if (!category || !channel) return;
-        const setHidden = window.TuxedoForms.setHidden;
-        function updateCardDetails(clearStale) {
-            const inactive = channel.value !== 'CREDIT_CARD' || !creditCard.value;
-            if (inactive && clearStale) { installments.value = '1'; billingOverride.value = ''; }
-            setHidden(groups.cardDetails, inactive, !clearStale);
-        }
-        function updateCardAccountContext(card, output) {
-            const option = card.selectedOptions[0];
-            output.textContent = option && option.value ? '{% translate "Bank account:" %} ' + option.dataset.accountLabel : '';
-        }
-        function updateBestPurchaseDay() {
-            const option = creditCard.selectedOptions[0];
-            creditBestPurchase.textContent = option && option.value && option.dataset.bestPurchaseDay
-                ? '{% translate "Best purchase day:" %} ' + option.dataset.bestPurchaseDay
-                : '';
-        }
-        function updatePaymentFields(clearStale) {
-            const value = channel.value;
-            const isCard = value === 'DEBIT_CARD' || value === 'CREDIT_CARD';
-            const cardsUnavailable = transactionType.value === 'INCOME' && !(isCard && !clearStale);
-            setHidden(groups.bank, !value || isCard, !clearStale);
-            setHidden(groups.debit, value !== 'DEBIT_CARD' || cardsUnavailable, !clearStale);
-            setHidden(groups.credit, value !== 'CREDIT_CARD' || cardsUnavailable, !clearStale);
-            Array.from(bankAccount.options).forEach(option => { option.hidden = value === 'PIX' && option.value && option.dataset.pixEnabled !== 'true'; });
-            if (clearStale) {
-                if (value !== 'ACCOUNT' && value !== 'PIX') bankAccount.value = '';
-                if (value === 'PIX' && bankAccount.selectedOptions[0] && bankAccount.selectedOptions[0].dataset.pixEnabled !== 'true') bankAccount.value = '';
-                if (value !== 'DEBIT_CARD') debitCard.value = '';
-                if (value !== 'CREDIT_CARD') { creditCard.value = ''; installments.value = '1'; billingOverride.value = ''; }
-            }
-            updateCardAccountContext(debitCard, debitAccountContext);
-            updateCardAccountContext(creditCard, creditAccountContext);
-            updateBestPurchaseDay();
-            updateCardDetails(clearStale);
-            if (transactionType.value === 'INCOME' && isCard) {
-                status.textContent = '{% translate "Debit and credit cards are available only for expenses." %}';
-            } else if (value === 'ACCOUNT') {
-                status.textContent = '{% translate "This transaction updates the selected bank account immediately." %}';
-            } else if (value === 'PIX') {
-                status.textContent = '{% translate "Choose a bank account with PIX enabled. This transaction updates that account immediately." %}';
-            } else if (value === 'DEBIT_CARD') {
-                status.textContent = '{% translate "This transaction updates the debit card account immediately." %}';
-            } else if (value === 'CREDIT_CARD') {
-                status.textContent = '{% translate "This purchase is added to the selected credit card invoice and debited when that invoice is due." %}';
-            } else {
-                status.textContent = '';
-            }
-        }
-        function updateAvailableChannels(clearStale) {
-            if (transactionType.value === 'INCOME' && (
-                channel.value === 'DEBIT_CARD' || channel.value === 'CREDIT_CARD'
-            ) && clearStale) channel.value = '';
-            Array.from(channel.options).forEach(option => {
-                const unavailable = transactionType.value === 'INCOME' && !option.selected && (
-                    option.value === 'DEBIT_CARD' || option.value === 'CREDIT_CARD'
-                );
-                option.hidden = unavailable;
-                option.disabled = unavailable;
-            });
-            updatePaymentFields(clearStale);
-            const selectedCategory = category.selectedOptions[0];
-            if (
-                clearStale && selectedCategory && selectedCategory.dataset.transactionType
-                && selectedCategory.dataset.transactionType !== transactionType.value
-            ) category.value = '';
-            if (!transactionType.value && clearStale) category.value = '';
-            Array.from(category.options).forEach(option => {
-                option.hidden = Boolean(option.dataset.transactionType && option.dataset.transactionType !== transactionType.value);
-            });
-            setHidden(groups.category, !transactionType.value, !clearStale);
-        }
-        function updateFixedFields(clearStale) {
-            setHidden(groups.fixedUntil, !fixed.checked, !clearStale);
-            if (!fixed.checked && clearStale) fixedUntil.value = '';
-        }
-
-        transactionType.form.addEventListener('tuxedo:restore', () => {
-            updateAvailableChannels(false);
-            updateFixedFields(false);
-        });
-        updateAvailableChannels(false);
-        updateFixedFields(false);
-        channel.addEventListener('change', () => updatePaymentFields(true));
-        transactionType.addEventListener('change', () => updateAvailableChannels(true));
-        debitCard.addEventListener('change', () => updateCardAccountContext(debitCard, debitAccountContext));
-        creditCard.addEventListener('change', () => {
-            updateCardDetails(true);
-            updateCardAccountContext(creditCard, creditAccountContext);
-            updateBestPurchaseDay();
-        });
-        fixed.addEventListener('change', () => updateFixedFields(true));
-    })();
-</script>
+{% include 'transactions/_form_script.html' %}
 {% endblock %}

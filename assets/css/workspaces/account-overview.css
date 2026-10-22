@@ -1,0 +1,32 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Bank overview chooses an institution; details own every account action. */
+.bank-overview-grid { display:grid; gap:.75rem; }
+.bank-overview-card { display:flex; align-items:center; justify-content:space-between; gap:1rem; border:1px solid rgb(26 46 38 / .14); border-inline-start:4px solid var(--bank-color); border-radius:.75rem; padding:1rem; background:white; }
+.bank-overview-card:hover { border-color:var(--bank-color); }
+.bank-account-card,.banking-section,.bank-availability { border:1px solid rgb(26 46 38 / .12); border-radius:.75rem; padding:1rem; background:white; }
+.bank-account-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; }
+.account-balance-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; margin-block:1rem .5rem; padding-block:1rem; border-block:1px solid rgb(26 46 38 / .08); }
+.account-balance-grid dt { font-size:.75rem; line-height:1.25rem; color:rgb(26 46 38 / .65); }
+.account-balance-grid dd { font-size:1rem; line-height:1.5rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.account-planning-action { display:flex; justify-content:flex-end; }
+.account-credit-cards { margin-block-start:.75rem; padding-block-start:.75rem; border-top:1px solid rgb(26 46 38 / .12); }
+.credit-card-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; padding-block:.75rem; }
+.credit-card-row + .credit-card-row { border-top:1px solid rgb(26 46 38 / .08); }
+.account-configuration { margin-block-start:.5rem; }
+.account-configuration > summary,.bank-activity > summary { display:flex; align-items:center; min-height:2.75rem; width:fit-content; cursor:pointer; font-size:.875rem; gap:.5rem; list-style:none; }
+.account-configuration > summary::before,.bank-activity > summary::before { content:"›"; transition:transform .12s ease; }
+.account-configuration[open] > summary::before,.bank-activity[open] > summary::before { transform:rotate(90deg); }
+.account-configuration > summary::-webkit-details-marker,.bank-activity > summary::-webkit-details-marker { display:none; }
+.bank-activity { border-top:1px solid rgb(26 46 38 / .15); padding-top:.5rem; }
+.bank-availability-primary { display:flex; flex-wrap:wrap; align-items:start; justify-content:space-between; gap:.75rem; }
+.bank-availability-breakdown { flex:1 1 24rem; min-width:0; }
+.bank-availability-breakdown > summary { margin-inline-start:auto; }
+.bank-balance-breakdown { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); gap:.75rem; padding-top:.75rem; border-top:1px solid rgb(26 46 38 / .1); }
+.bank-balance-breakdown dt { font-size:.75rem; color:rgb(26 46 38 / .65); }
+.bank-balance-breakdown dd { font-size:.875rem; font-variant-numeric:tabular-nums; margin-top:.25rem; }
+.dark .bank-overview-card,.dark .bank-account-card,.dark .banking-section,.dark .bank-availability { background:#1b1b1b; border-color:rgb(250 248 243 / .15); }
+.dark .bank-overview-card { border-inline-start-color:var(--bank-color); }
+.dark .bank-overview-card:hover { border-color:var(--bank-color); }
+.dark .account-balance-grid,.dark .account-credit-cards,.dark .credit-card-row + .credit-card-row,.dark .bank-activity,.dark .bank-balance-breakdown { border-color:rgb(250 248 243 / .12); }
+.dark .account-balance-grid dt,.dark .bank-balance-breakdown dt { color:rgb(250 248 243 / .65); }
+@media (min-width:768px) { .bank-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }

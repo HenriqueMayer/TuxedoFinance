@@ -69,8 +69,8 @@ dated version section, update the comparison links at the bottom of
 
 CI validates every pull request and pushes to `main`. It also runs
 for `v*` tags; tagged builds fail when the tag differs from `pyproject.toml` or
-when the matching dated changelog section is missing. This prevents publishing
-two different versions under the same release identity.
+when the matching dated changelog section is missing. These checks establish
+consistency between the tag, application version and dated changelog section.
 
 ## Container releases
 
@@ -86,13 +86,17 @@ then assembles the version manifest and attaches `compose.yaml` and
 revision. Pull requests validate images without publishing. Prereleases are
 validated but not published by this workflow.
 
-For v0.10.0, upgrade rehearsals start from v0.3.0, v0.4.0, v0.9.0 and v0.9.1. They verify
+For v0.11.0, upgrade rehearsals start from v0.3.0, v0.4.0, v0.9.0, v0.9.1 and
+v0.10.0. They verify
 financial records, additive migration defaults, volume persistence, backups and
 restoration before publication. Fixtures include account- and card-funded reward
 redemption IOF. Existing records, balances and points must remain unchanged; only
 source-linked IOF expenses and their categories may be added by the migration.
 Existing assets gain `is_archived=False`; archiving is always an explicit user
-action after upgrading.
+action after upgrading. Existing cards gain the default Graphite appearance and
+installment purchases start at installment 1. Invoice credits, custom position
+emojis and assistant records remain empty until deliberately created. Assistant
+authorization/inference stay disabled and a disabled provider creates no vault.
 
 Supported image references are `ghcr.io/henriquemayer/tuxedofinance:vX.Y.Z` or a
 recorded digest. No moving `latest` tag is maintained, so publishing an older

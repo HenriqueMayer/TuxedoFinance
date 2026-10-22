@@ -1,6 +1,8 @@
 from accounts.models import UserPreference
 from core.currencies import get_currency, DEFAULT_CURRENCY
 from django.conf import settings
+from core.workspace_navigation import workspace_navigation
+from core.features import feature_available
 
 
 def currency(request):
@@ -16,4 +18,6 @@ def currency(request):
         'CURRENCY_SYMBOL': get_currency(code).symbol,
         'ALLOW_SIGNUPS': settings.ALLOW_SIGNUPS,
         'USER_DATE_FORMAT': date_format,
+        'IMPORTS_AVAILABLE': feature_available('imports'),
+        **workspace_navigation(request),
     }

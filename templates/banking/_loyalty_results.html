@@ -1,0 +1,27 @@
+{% load i18n navigation %}
+<div id="loyalty-results" class="space-y-4" data-preserve-view>
+    {% if selected_program %}
+        <section class="surface-panel" aria-label="{% translate 'Points history' %}">{% include 'banking/_loyalty_entries.html' with program=selected_program %}</section>
+    {% else %}
+        {% if programs %}<div class="banking-record-list surface-panel">
+        {% for program in programs %}
+        <article id="loyalty-program-{{ program.pk|stringformat:'d' }}" class="loyalty-program" aria-labelledby="loyalty-program-title-{{ program.pk|stringformat:'d' }}">
+            <header class="loyalty-program-header">
+                <div class="loyalty-program-identity"><h2 id="loyalty-program-title-{{ program.pk|stringformat:'d' }}" class="section-title break-words">{{ program.name }}</h2>{% if program.display_bank %}<p class="subtle-copy mt-1 break-words">{{ program.display_bank.name }}</p>{% endif %}</div>
+                <div class="loyalty-program-admin"><p class="loyalty-program-balance">{{ program.displayed_balance|floatformat:2 }} <span class="subtle-copy">{{ program.unit_name }}</span></p><details class="secondary-actions compact-menu" name="loyalty-program-actions"><summary aria-label="{% blocktranslate with program=program.name %}Options for {{ program }}{% endblocktranslate %}"><span aria-hidden="true">⋯</span></summary><div class="secondary-actions-panel">{% url 'banking:program_update' program.pk as program_edit %}<a href="{% contextual_url program_edit %}">{% translate 'Edit' %}</a>{% url 'banking:program_delete' program.pk as program_delete %}<a href="{% contextual_url program_delete %}" class="text-expense dark:text-expense-light">{% translate 'Delete' %}</a></div></details></div>
+            </header>
+            {% if program.display_cards %}<ul class="loyalty-program-cards" aria-label="{% translate 'Linked cards' %}">{% for card in program.display_cards %}<li class="card-miniature-heading">{% include 'banking/_card_miniature.html' with card=card only %}<div class="min-w-0"><p class="text-sm font-medium break-words">{{ card.name }}</p><p class="subtle-copy break-words">{{ card.account.bank.name }} · {{ card.account.name }}</p></div></li>{% endfor %}</ul>{% endif %}
+            <div class="banking-row-actions">
+                {% url 'banking:entry_create' as entry_create %}{% with program_id=program.pk|stringformat:'d' %}{% with target=entry_create|add:'?program='|add:program_id %}<a class="action-link" href="{% contextual_url target %}">{% translate 'Add entry' %}</a>{% endwith %}{% endwith %}
+                {% url 'banking:redemption_create' as redemption_create %}{% with program_id=program.pk|stringformat:'d' %}{% with target=redemption_create|add:'?program='|add:program_id %}<a class="quiet-action" href="{% contextual_url target %}">{% translate 'Redeem points' %}</a>{% endwith %}{% endwith %}
+
+            </div>
+            <details id="loyalty-recent-{{ program.pk|stringformat:'d' }}" class="loyalty-history" data-preserve-view>
+                <summary>{% translate 'Recent entries' %} <span class="subtle-copy">{{ program.recent_entries|length }}</span></summary>
+                <div class="space-y-3 pt-2">{% include 'banking/_loyalty_entries.html' with entries=program.recent_entries has_filters=False %}{% url 'banking:program_entries' program.pk as history_url %}<a class="quiet-action" href="{{ history_url }}">{% translate 'All entries' %} ({{ program.entry_count }})</a></div>
+            </details>
+        </article>
+        {% endfor %}</div>{% else %}<p class="surface-panel subtle-copy">{% if has_filters %}{% translate 'No matching loyalty programs.' %}{% else %}{% translate 'No loyalty programs yet.' %}{% endif %}</p>{% endif %}
+    {% endif %}
+    {% if is_paginated %}<nav aria-label="{% translate 'Pagination' %}" class="flex justify-between">{% if page_obj.has_previous %}<a class="quiet-action" data-live-link="loyalty-filter-form" href="{% querystring page=page_obj.previous_page_number %}">{% translate 'Previous' %}</a>{% endif %}{% if page_obj.has_next %}<a class="quiet-action" data-live-link="loyalty-filter-form" href="{% querystring page=page_obj.next_page_number %}">{% translate 'Next' %}</a>{% endif %}</nav>{% endif %}
+</div>

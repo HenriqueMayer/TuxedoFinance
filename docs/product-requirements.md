@@ -1,8 +1,10 @@
 # PRD — Tuxedo Finance
 
-**Status:** Approved current baseline
+**Status:** Approved baseline, local-finance evolution and gated assistant with reviewed local actions
 
-**Current release:** 0.3.0, plus documented Unreleased changes
+**Release version:** 0.11.0
+**Release decision:** The owner explicitly authorized committing the completed work, merging into `main` and publishing the Docker release on 2026-10-21. Exact-revision checks and distribution status are recorded in [release PR #36](https://github.com/HenriqueMayer/TuxedoFinance/pull/36); this authorization does not mark unperformed manual acceptance complete or reopen gated interfaces and deferred integrations.
+**Previous upgrade baseline:** 0.10.0
 **Migration policy:** Preserve released installations through incremental migrations
 **Product:** Django personal finance tracker
 
@@ -18,32 +20,109 @@ combines a gross-salary monthly plan, existing expense forecasts, optional
 private drafts and contribution/yield simulations. Monthly cash
 pots and optional account reserves make money available for planning explicit.
 
+Version 0.11.0 adds exact category splits, operational budgets,
+goals backed by existing cash, deterministic local review signals, optional
+manual card payment confirmation, native invoice credits, dated openings,
+weighted investment cost and local price observations. CSV/OFX statement
+operations and dated-wealth calculations are retained, but their interfaces
+remain paused. The implementation preserves the local installation and default
+automatic settlement.
+No external bank/broker integration is enabled by this release scope.
+
+The assistant foundation adds private local conversations,
+a persistent utility panel/native page, bounded owned consultations, canonical
+monthly simulations, safe Markdown and conversation/message exports.
+The implemented [OpenAI authorization preparation](apps/assistant.md#openai-authorization-preparation)
+adds default-disabled account settings, an OAuth lifecycle and an encrypted
+credential vault linked to the Django user. It preserves local login and has
+independent default-off authorization/inference gates and no paid fallback.
+Six supported local changes require separate owner/session-bound review
+confirmation; there is no real payment, bank transfer or unattended execution.
+The gated catalogue and streaming path is implemented for the linked ChatGPT
+account; model availability depends on that account and explicit model choice.
+The [native sign-in](reviews/assistant-native-sign-in-2026-10-19.md),
+[streaming](reviews/assistant-streaming-2026-10-19.md) and
+[tool-response](reviews/assistant-tool-response-2026-10-20.md) reviews retain
+their dated, bounded evidence. They do not establish general model access,
+financial-answer quality, Docker live integration, refresh/revocation or
+deployment eligibility, and do not authorize further provider calls.
+The broader personal Open Finance study remains research. The
+[Inter bill pilot](open-finance-pilot.md) provides an explicit operator-only read
+command with daily private observations; it does not synchronize the ledger or
+enable a product connection screen. Real pilot setup remains paused in the
+[roadmap](roadmap.md#personal-open-finance-study).
+
+The assistant's identity is **Tuxedo, your financial assistant** (**Tuxedo, o seu
+assistente financeiro** in Brazilian Portuguese). Versioned
+[financial premises](assistant/financial-premises.md) guide personal-finance
+explanations, evidence and planning. The current runtime has no Internet
+browsing/news tool and does not inherit development-environment plugins.
+Future external research needs its own source, privacy, subscription and
+validation boundary; instructions alone do not enable it.
+
 The product remains a lean Django full-stack application: native authentication,
 SQLite, Django Template Language, TailwindCSS, server-rendered charts and narrow
 HTMX progressive enhancement.
+
+### Current delivery status
+
+Requirements below describe approved domain capabilities as well as retained
+implementation; they are not all navigation destinations or published features.
+
+| Surface | Current source-checkout status |
+|---|---|
+| Home | Operational planning availability, month indicators, accounts, outstanding invoices and financial entry actions. Analytical charts have their own Analytics destination. |
+| Transactions | Income/expense consultation and entry, exact category splits, recurrence/installments and the Categories section; confirmed-import provenance remains readable. |
+| Accounts | Accounts, Invoices, Loyalty and Exchange rates. Institution artwork, title-bar Minimize and distinct account surfaces retain their own actions; card invoices include native credits and preserved automatic/confirmed payment rules. |
+| Investments | My investments, History, Prices and Setup. Each owned product/asset position can have an independent curated emoji; this appearance does not assign a purpose, change holdings or reserve cash. |
+| Plan | This month, Goals, Simulations and Alerts. Salary, Yield and Saved drafts remain inside Simulations; budgets, backed reservations and private scenarios keep separate meanings. |
+| Analytics | Finances and Investments gather the existing charts and six-month financial outlook, preserving independent filters and calculations. |
+| Local statement operations (FR34) | Paused: upload, mapping, review, confirmation and undo are gated on GET/POST. Owned confirmed/undone provenance remains read-only. |
+| Dated net-worth interface (FR38) | Paused: old screen requests return to Home; calculations and source data remain available to their existing consumers. |
+| Assistant foundation (FR39) | Owned local conversations, targeted default financial reads and canonical simulations; persistent changes require reviewed user confirmation. |
+| OpenAI authorization preparation (FR40) | ChatGPT-only account settings, OAuth lifecycle and encrypted vault; authorization defaults off independently of inference. No paid API-key or automatic provider fallback. |
+| Gated streaming chat (FR41) | Implemented selected-account model catalogue, explicit model choice, SSE/native submission, cancellation and local run history; inference independently defaults off. Live model access/allowance and output quality are not established by code or synthetic tests. |
+| Personal Open Finance | Broader PF 6–8-hour aggregation remains research. The daily Inter bill probe is an operator-only command whose real setup is paused; live personal-proxy bill coverage remains unverified. It makes no application database queries or ledger writes. No payment initiation, automatic import or unattended synchronization. |
+
+The [roadmap](roadmap.md) records paused/future work, the
+[interface map](interface-map.md) records current screens, and the
+[owning app guides](README.md#per-app-reference) define current service behavior.
+Checked acceptance items record implemented capability, not automatic release
+availability or permission to re-enable a paused workflow.
+The six primary destinations share compact headings and opt-in opening monetary
+summaries through the [workspace density contract](frontend/catalogue.md#compact-workspace-density).
+Content, warnings and details remain expandable; uniform spacing does not impose
+equal heights or change financial calculations, fields or 44px actions.
 
 ## 2. Goals
 
 | # | Goal | Expected result |
 |---|---|---|
-| G1 | Make account balances auditable | Every balance derives from opening balance plus posted movements. |
+| G1 | Make account balances auditable | Every balance derives from its applicable opening and effective movements. |
 | G2 | Model settlement correctly | PIX/debit settle immediately; credit settles through invoices. |
 | G3 | Eliminate double counting | Credit spending and invoice payment affect different reporting components. |
 | G4 | Multicurrency reporting | Preserve currency-specific account data with per-user reporting and historical FX evidence. |
 | G5 | Connect cash and investments safely | Required bank source/destination without merging the ledgers. |
 | G6 | Track loyalty value and cost | Editable points entries and complete redemption/IOF details. |
-| G7 | Support isolated planning | Compare gross salary with a selected month's existing expense forecast and optionally save private named scenarios without posting or changing financial records. |
+| G7 | Support isolated planning | Estimate CLT take-home pay from gross salary, compare it with the selected month's expenses and optionally save private scenarios without changing financial records. |
+| G8 | Support daily personal decisions | Review category limits, explicitly reserved goals and local evidence without inventing money or automatically correcting records. |
+| G9 | Import settlement evidence safely | Match or create canonical cash sources only after explicit review, preserving recurring, installment, transfer and invoice semantics. |
+| G10 | Explain dated wealth and investment results | Separate weighted cost, local valuation, incurred debt, card credit and incomplete baseline/FX evidence. |
 
 ## 3. Scope
 
 ### In scope
 
-- Maintain the banking schema without automatic legacy-data conversion.
+- Maintain supported released data through incremental migrations; do not infer
+  unsupported pre-release data or unknown historical evidence.
 - `Bank` with multiple `BankAccount` rows, each in one currency.
-- Account opening balance and derived `BankMovement` ledger.
+- Dated account openings and derived `BankMovement` ledger, retaining unknown
+  legacy baselines explicitly.
 - PIX enabled as a standard account capability by default.
 - Debit and credit cards linked to a bank account.
-- Card invoices, invoice items and due-date account settlement.
+- Card invoices and default automatic due-date settlement, with optional per-card
+  manual confirmation from an explicit due-date boundary, partial payments and
+  native invoice credits that retain source, currency and reference-month scope.
 - Ordinary external PIX income/expense and neutral own-account transfers.
 - Independent or bank/card-linked loyalty programs and points ledger.
 - Currency-specific bank accounts and manual exchange rates.
@@ -51,17 +130,57 @@ HTMX progressive enhancement.
   mandatory bank cash endpoints.
 - Monetary investment yields entered directly or derived from a new total
   balance, with a non-persistent preview before saving.
-- Dashboard/read models updated for cash, invoices, investments and net worth.
+- Operational dashboard and Analytics read models for cash, invoices and
+  investments; retained dated-wealth calculations keep their interface gate.
 - Authenticated salary planning with a selected-month expense forecast,
   additional fixed expenses, optional named drafts and contribution/yield simulations.
 - Distinguish monthly cash pots from investments; exclude positive account funds
   or reserve a fixed native amount for planning while preserving wealth and debts.
+- Split a source transaction across compatible owned categories with exact
+  installment cent reconciliation, without additional cash or invoice rows.
+- Operational monthly category budgets, explicit cash-backed goals and local
+  review signals with owner-controlled decisions.
+- Retained local CSV/OFX cash-statement staging, mapping, per-row review,
+  matching, confirmation, discrepancy display and guarded undo services; their
+  operation screens and writes remain paused behind the review gate.
+- Per-product/asset weighted cost, remaining holdings, realized results, local
+  dated prices and disclosed cost fallbacks/unknown baselines.
+- Dated-wealth read models including full incurred installment debt and retained
+  card credits, without treating forecasts or goal earmarks as new assets; the
+  dedicated net-worth interface remains paused.
+- Local owner-scoped assistant conversations, signed expiring route context and
+  targeted financial consultations, safe Markdown and private history exports,
+  with explicit unavailable-provider behavior.
+- Explicitly gated account-model selection and streaming/native responses, with
+  optional model-compatible effort, saved preferences, cancellation and
+  idempotent local run history. With either gate off, no external model request
+  occurs. Connected requests send only bounded history and relevant owned evidence.
+- Canonical monthly simulations without saving and six separately confirmed local
+  changes: transaction creation/categorization/editing/deletion, goal creation and
+  category-budget creation. No model-side confirmation or unattended execution.
+- Default-disabled, owner-scoped ChatGPT account settings, OAuth lifecycle and
+  encrypted private vault preparation, with isolated synthetic coverage and
+  owner-approved native authorization validation within its dated evidence limits.
+- A public-source personal Open Finance feasibility study for Nubank, Banco Inter
+  and Mercado Pago, covering 6–8-hour collection and source-preserving reconciliation.
+- An operator-only free personal Meu Pluggy Inter bill pilot: explicit offline/live
+  modes, hidden one-shot credentials, bounded collection and private daily reuse,
+  without database queries, financial writes or enabling paused import routes.
 
 ### Out of scope
 
-- Automatic migration of legacy financial rows.
-- Open Finance/bank synchronization, statement imports and issuer APIs.
-- Market-price, FX or loyalty-provider feeds; rates and valuations remain manual.
+- Automatic conversion of unsupported pre-release financial rows or invention
+  of opening dates, prices, historical fee currencies or returns.
+- Automatic Open Finance/bank ledger synchronization, payment initiation, broker/
+  issuer APIs and broader cloud financial processing. The explicit read-only
+  Inter bill pilot is the scoped exception; research does not enable other integrations.
+- Broader deployment/program eligibility guarantees, Docker real OAuth, model
+  access/limits or live response-quality guarantees, real refresh/revocation validation,
+  real payments/transfers, unattended automation and automatic paid-provider fallback
+  in this delivery. Live authorization still requires the owner's approval.
+- Market-price, FX or loyalty-provider feeds; local prices and rates are manual.
+- Tax-lot/tax reporting, automatic investment accrual and annualized,
+  time-weighted or money-weighted return inference from incomplete evidence.
 - Collaborative accounts, accounting-grade general ledger and tax reporting.
 - A SPA, JavaScript charting library or Node/npm runtime dependency. Pinned
   Node-based tooling may compile and verify static assets during development
@@ -74,11 +193,11 @@ HTMX progressive enhancement.
 | FR01 | Authentication and isolation | Native Django auth; every financial object and relationship is user-scoped. |
 | FR02 | Banks | CRUD for `Bank`, shared by banking, loyalty and investments. |
 | FR02A | Base currency | Each user has a base reporting currency, initialized from the project default and independently editable. |
-| FR03 | Bank accounts | A bank owns many accounts. Each account has name, currency, opening balance and PIX capability enabled by default. |
-| FR04 | Account ledger | Available balance equals opening balance plus signed effective `BankMovement` rows. Derived rows are synchronized when their source record changes. |
+| FR03 | Bank accounts | A bank owns many accounts. Each has name, currency, an opening baseline and PIX capability enabled by default; new nonzero openings require a date. |
+| FR04 | Account ledger | Available balance equals the applicable opening plus signed effective `BankMovement` rows. Derived rows are reconciled when their source changes, without rewriting unchanged projections. |
 | FR05 | PIX and debit | External PIX and debit-card events create categorized transactions and immediate account movements. |
-| FR06 | Cards | Debit and credit cards are linked to one bank account; only credit cards have statement/invoice rules. |
-| FR07 | Credit invoices | Credit purchases enter a `CardInvoice` and do not reduce account cash on purchase date. The account is debited once on invoice due date. |
+| FR06 | Cards | Debit and credit cards are linked to one bank account; only credit cards have statement/invoice rules. Saved local appearance remains consistent across accounts and invoices. |
+| FR07 | Credit invoices | Credit purchases enter a `CardInvoice` without purchase-date cash debit. Native invoice credits reduce the reviewed obligation without an invented cash income. Default automatic mode debits once on due date; optional manual mode debits only confirmed actual-date payments. |
 | FR08 | No double counting | Spending is recognized from invoice items; invoice settlement changes cash/liability and is not a second expense. |
 | FR09 | Own transfers | Transfers between owned accounts create linked debit/credit movements and are never income or expense. |
 | FR10 | External PIX | PIX involving an external party is an ordinary `INCOME` or `EXPENSE`, not an own transfer. |
@@ -89,18 +208,30 @@ HTMX progressive enhancement.
 | FR15 | Redemption details | `RewardRedemption` coordinates the points debit, target-account credit and optional IOF. Positive IOF requires an owned bank account or credit card. |
 | FR16 | Multicurrency | Each user selects a supported reporting currency in Settings; native amounts and currencies remain unchanged. |
 | FR17 | Historical FX | Retain source/target currencies, applied rate, effective date, and conversion status so later rate edits cannot rewrite history. |
-| FR18 | Investments structure | Investments remain separate, use `Bank` instead of `Institution`, and group products and assets by bank/product/asset. |
+| FR18 | Investments structure | Investments remain separate, use `Bank` instead of `Institution`, and group products and assets by bank/product/asset. My investments, History, Prices and Setup expose existing flows; optional emoji preferences belong to the owned product/asset position and are cosmetic. |
 | FR19 | Assets | Every asset has name, code, asset class and currency; class/currency are immutable after use. |
 | FR20 | Investment operations | Every `Investment` records a kind and has no title. Unit-valued assets use quantity/unit price; monetary assets use amount. |
 | FR21 | Investment cash endpoints | Deposit requires exactly one source bank account or loyalty program; withdrawal requires a destination bank account. Related ledger entries post atomically. |
 | FR22 | Internal yield | Yield changes the investment position only and creates no bank income/movement until withdrawn. |
-| FR23 | Dashboard | Show account cash, income, expenses, card payable, investment value and net worth using the user's base currency, with historical snapshots and clearly labeled current valuations. |
+| FR23 | Dashboard | Show operational planning availability, monthly income/expense and investment-flow indicators, accounts and pending invoices. Analytics owns financial/investment charts and their independent periods; the dedicated net-worth screen remains paused. |
 | FR24 | Forecasts | Recurrences and future invoices may create future-effective derived rows, but these do not alter realized cash before their effective date. |
 | FR25 | Release compatibility | Preserve existing released data through incremental migrations; the historical pre-release reset is not a normal update procedure. |
 | FR26 | Interface language | English and Brazilian Portuguese are selectable without localized URL prefixes; the selection persists in Django's language cookie and is independent of currency. |
 | FR27 | Clean account bootstrap | A newly created account receives only the approved top-level categories. Optional synthetic financial data requires the explicit `insert_demo` command and a new, separate account; no demo database, shared account or fixed credential is shipped. |
 | FR28 | Local database ownership | The repository does not track `db.sqlite3`; migrations create each installation's database, whose owner is responsible for protection and backup. |
-| FR29 | Planning sandbox | Users compare gross salary with the selected month's existing expense forecast, add missing fixed expenses and optionally save a named draft. Simulations never post financial movements. |
+| FR29 | Planning sandbox | Estimate CLT net salary from gross input, compare the selected month's expense forecast, add missing BRL/percentage expenses and optionally save a named draft. Simulations never post financial movements. |
+| FR30 | Exact category splits | Allocate a source across distinct compatible owned categories whose positive amounts sum exactly; installments reconcile cents per month and across the full plan without new sources or cash rows. |
+| FR31 | Operational budgets | Persist positive monthly category/currency limits, including descendants without overlapping branches; compare recorded and known forecast spending and retain missing-FX status. |
+| FR32 | Backed goals | Reserve existing account or monetary monthly-cash balances explicitly, prevent active over-allocation, show later backing shortfalls and release availability on archive without adding an asset or movement. |
+| FR33 | Local review signals | Explain bounded duplicate/subscription, budget and projected-cash evidence, with configurable thresholds and acknowledge/dismiss decisions; never automatically alter records. |
+| FR34 | Local statement import | Retain bounded CSV/OFX staging, mapping, review, canonical match/create/pay/transfer services, confirmation checks, discrepancy display and guarded undo. The review gate pauses operation GETs/POSTs; confirmed/undone owned provenance remains read-only. |
+| FR35 | Manual invoice payments | Preserve automatic mode by default; opt in from a due-date boundary, retain sticky manual invoices and post positive same-currency actual-date confirmations idempotently. Source corrections preserve real payments and credits. |
+| FR36 | Dated openings | Require dates for new nonzero account/asset openings, include known openings only from their date and disclose migrated unknown baselines without inventing history. |
+| FR37 | Investment results | Replay weighted cost per product/asset after valid edits/deletion, preserve yield entry values and actual cash, and apply only explicitly declared asset-currency fees. Local quotes expose valuation and missing-price cost fallbacks. |
+| FR38 | Dated wealth | Retain read models composing dated cash/positions, incurred card debt including future installments, and card credits; exclude future recurring occurrences, duplicated settlements and goal earmarks. The dedicated interface is paused and old routes return to Home. |
+| FR39 | Local assistant foundation | Persist owned conversations; minimize signed route metadata and enable bounded owner-scoped application consultations by default, preserving cutoff/native currency/warnings. Simulations calculate without saving; persistent writes require a separate review confirmation. |
+| FR40 | Gated account authorization preparation | Prepare owner/session-bound ChatGPT linking, account selection and encrypted credentials; authorization defaults off and requires owner approval, independently of inference. |
+| FR41 | Gated selected-model chat | Require both gates, an eligible owned selected connection and validated catalogue model choice; support streaming, cancellation, bounded native fallback, idempotent local history and bounded read/simulation/proposal tools. No model-side confirmation or paid fallback. |
 
 ## 5. Domain Rules
 
@@ -110,8 +241,8 @@ Tuxedo Finance currently supports editable personal records. Each user has a
 `accounts.UserPreference` row with a base reporting currency. New and existing
 users default to BRL; changing the preference affects consolidated display only
 and does not mutate native financial records. Cross-currency transfers and
-investment operations persist an FX snapshot, while current/manual rates are
-reserved for explicitly labeled current-value simulations elsewhere.
+investment operations persist an FX snapshot, while read-time manual rates
+serve explicitly labeled current or selected-date valuations elsewhere.
 
 ### 5.1 Balance and settlement
 
@@ -119,8 +250,14 @@ reserved for explicitly labeled current-value simulations elsewhere.
 - Account balance is never calculated from transaction totals.
 - PIX, debit card and direct account events settle immediately.
 - Credit purchases affect expense reporting and card payable, not available cash.
-- Invoice payment creates one account debit on `due_date` and clears/reduces the
-  payable. It does not create expense again.
+- Automatic invoice settlement creates one due-date account debit. Manual
+  confirmation creates one actual-date debit per explicit payment and can be
+  partial. Neither creates expense again; paid status is not proof of external
+  confirmation in automatic mode.
+- Manual confirmation UUIDs prevent duplicate cash posting. Purchase corrections
+  retain confirmed payment evidence, including excess card credit.
+- Dated debt includes the whole incurred installment purchase; future fixed
+  recurrence occurrences remain forecasts rather than debt.
 - Personal financial rows remain editable and deletable by their owner.
 
 ### 5.2 Transfer classification
@@ -155,7 +292,8 @@ reserved for explicitly labeled current-value simulations elsewhere.
   reconstructed only when an authoritative rate provides evidence; otherwise
   native values remain intact and conversion is marked incomplete. Editing an
   event's amount, currency, or date refreshes its snapshot; descriptive edits do
-  not. Other entities remain on live/current conversion for now.
+  not. Other entities use labeled read-time conversion at their selected cutoff,
+  rather than captured operation snapshots.
 
 ### 5.5 Investments
 
@@ -168,6 +306,16 @@ reserved for explicitly labeled current-value simulations elsewhere.
 - A deposit has exactly one account or loyalty-program source; a withdrawal has
   one destination account.
 - Yield is internal and creates no account movement.
+- Replay is ordered by date, registration time and primary key. Weighted cost is
+  independent per product/asset; edits/deletion cannot leave any later position
+  negative. A full disposal clears quantity and remaining cost.
+- Unit yields preserve their declared entry value. Fees affect cost/results only
+  with an explicit asset-currency declaration, default unchecked; legacy fees
+  remain metadata and no cost calculation reinterprets recorded cash.
+- Local dated quotes choose the latest price by the cutoff. Missing quotes use
+  a disclosed remaining-cost fallback, not an invented market value or return.
+- New nonzero openings require dates; older unknown dates remain incomplete
+  evidence. Recorded results do not establish tax-lot or annualized returns.
 
 ### 5.6 Public registration
 
@@ -181,17 +329,90 @@ reserved for explicitly labeled current-value simulations elsewhere.
 
 ### 5.7 Planning sandbox
 
-- Salary planning uses the entered gross salary, the selected month's existing
-  expense forecast and optional additional fixed BRL expenses. Missing inputs are
+- Salary planning derives ordinary monthly CLT net pay from the entered gross
+  salary and payroll parameters, then deducts the selected month's existing
+  expense forecast and additional BRL or gross-salary-percentage expenses. The
+  explicit rule-year limitation is documented in the [sandbox guide](apps/sandbox.md).
+  Missing inputs are
   not interpreted as zero or a valid completed plan.
 - Scenarios are saved only through an explicit action, never by autosave or a
   background request. They do not create or modify financial ledger entries.
-- The month card reads one-off, recurring and installment expenses by payment
-  date. Card purchases and invoice settlement are counted once. A saved draft
-  retains the forecast used when it was saved.
+- New month forecasts use the economic reference month, including card
+  installments and recurrences; invoice settlement is not another expense.
+  Saved legacy drafts retain their captured payment-month basis until explicit
+  recalculation. Opening or comparing a draft does not silently rewrite it.
 - Monthly contribution/yield simulations accept editable amounts and rates and
-  display their assumptions. Market quotes, history feeds and agent integration
-  remain roadmap work.
+  display their assumptions. External price/history feeds and execution of
+  financial operations remain outside this calculation flow. A connected
+  assistant can request the canonical monthly simulation through its bounded
+  tools; the result is calculated without saving a scenario or financial record.
+
+### 5.8 Operational limits, goals and signals
+
+- Budgets use categorized economic reference months, including exact splits;
+  they do not create cash reservations or payments.
+- Goal progress uses explicitly reserved positive existing account or monetary
+  cash-pot backing. Active claims cannot exceed backing at save; later shortages
+  remain visible. Manual and named account reserves overlap by their maximum,
+  not their sum. Reservations do not reduce net worth.
+- Archived goals release planning availability and retain protected denomination
+  references. Restoring checks backing again.
+- Signals use bounded local evidence and explicit decisions. Planned unpaid
+  manual invoices affect cash-shortage forecasts once, without synthetic debits.
+- Historical goal progress uses current saved definitions, not an immutable
+  snapshot of previous target/reservation edits.
+
+### 5.9 Local statement confirmation
+
+These retained service rules do not reopen the paused operation interface.
+
+- Upload/mapping/review post nothing. Every entry requires an explicit action.
+- Exact existing-movement matching posts no second transaction. A bank payment
+  of a card invoice is settlement, not a new consumer expense; existing
+  recurrence, installment, transfer and investment sources are retained.
+- Confirmation revalidates ownership, account currency, dates, categories,
+  reviewed digest and unique bank identifiers atomically. No nonzero unknown
+  account baseline is inferred from a file.
+- Closing discrepancies remain evidence; they do not create a balancing entry.
+- Undo removes only unchanged sources created by that batch and refuses changed
+  or subsequently matched evidence. Matched originals and review history remain.
+
+### 5.10 Assistant and external-integration boundaries
+
+- Django authentication and current record ownership remain authoritative.
+  Conversation UUIDs, client route values and model text do not grant access.
+- Current-page context is server-built from a signed, expiring owner-bound
+  allowlist scope. Bounded financial tools may consult other supported owned
+  workspaces when needed for the question; they do not send the full database
+  indiscriminately. Neither route context nor tools scrape unsent forms.
+- With either provider gate off, message submission fails without a fake saved
+  exchange or external model call. Eligible explicit submissions retain their
+  local user input, terminal run state and bounded completed/partial output.
+  Local history remains until explicit deletion and is covered
+  by the installation's ordinary database/backup responsibilities.
+- Simulations perform calculations without saving. Proposed persistent actions
+  save nothing until the separate owner/session-bound review POST. The
+  [confirmed action workflow](assistant/actions.md) exposes exactly six local
+  changes: `transaction.create`, `transaction.categorize`, `transaction.update`,
+  `transaction.delete`, `goal.create` and `budget.create`, using canonical
+  services and fresh state checks. Model text cannot confirm; payments,
+  transfers, imports, bank connections, alert activation and unattended
+  financial writes are not assistant actions.
+- The [prepared ChatGPT authorization lifecycle](apps/assistant.md#openai-authorization-preparation)
+  links accounts to the Django user, keeps credentials in the private encrypted
+  vault and requires the original session's final confirmation. Default-disabled
+  real authorization and model use remain separate gates. ChatGPT is the only
+  connected provider; no paid API-key or automatic provider fallback is exposed.
+  The [native observation](reviews/assistant-native-sign-in-2026-10-19.md)
+  covered an owner-approved account link using process-only opt-in, with `.env`
+  unchanged and no model request or financial export. It does not establish
+  other deployments, model access/limits, streaming or real refresh/revocation.
+- The [Open Finance study](reviews/open-finance-personal-study-2026-10-18.md)
+  excludes payment initiation and does not reopen paused statement operations.
+- The [bill pilot](open-finance-pilot.md) keeps credentials in one command's memory
+  and observations in private operator files. Proxy provenance remains human-
+  attested, missing values stay unknown, and reported payments do not establish
+  local paid status. Bank consent and live coverage are not established by mocks.
 
 ## 6. Data Structure
 
@@ -209,9 +430,12 @@ accounts/      # authentication
 categories/    # category hierarchy
 banking/       # banks, accounts, ledger, PIX, cards, invoices, loyalty, FX
 transactions/  # economic events and recurrence
-dashboard/     # read models and reports
+dashboard/     # operational read models and Analytics orchestration/charts
 investments/   # products, assets, position operations and valuation
+planning/      # operational budgets, cash-backed goals and local review signals
+ingestion/     # retained local statement services; operation interface paused
 sandbox/       # private planning drafts and isolated simulations
+assistant/     # local conversations, minimized context, gated authorization and streaming
 ```
 
 Navigation and financial relationships use the current banking concepts.
@@ -220,27 +444,44 @@ Navigation and financial relationships use the current banking concepts.
 
 ```mermaid
 flowchart TD
-    Login --> Overview
-    Overview --> Reports
-    Overview --> Banking[Banks]
-    Overview --> Transactions[Activity]
-    Overview --> Investments
-    Overview --> Planning
+    Login --> Workspace[Six-workspace navigation]
+    Workspace --> Overview[Home: operational dashboard]
+    Workspace --> Transactions
+    Workspace --> Banking[Accounts]
+    Workspace --> Investments
+    Workspace --> Planning[Plan]
+    Workspace --> Analytics
+    Analytics --> Reports[Finances]
+    Analytics --> InvestmentAnalysis[Investment analysis]
     Transactions --> Categories
-    Planning --> SalarySandbox[Salary and monthly budget]
-    Planning --> Simulation[Yield simulation]
-    Planning --> Drafts[Named drafts]
+    Transactions --> Splits[Exact category allocations]
+    Planning --> Monthly[This month: outlook and category limits]
+    Planning --> Goals[Existing-cash goals]
+    Planning --> Simulations
+    Planning --> Signals[Alerts: local review evidence]
+    Simulations --> SalarySandbox[Salary]
+    Simulations --> Simulation[Yield]
+    Simulations --> Drafts[Saved drafts]
     Banking --> Bank
+    Banking --> Invoices
+    Banking --> Loyalty
+    Banking --> ExchangeRates[Exchange rates]
     Bank --> Account
     Account --> PIX
     Account --> DebitCard
     Account --> CreditCard
     CreditCard --> Invoice
+    Invoice --> ManualPayment[Optional payment confirmation]
+    Invoice --> InvoiceCredit[Native invoice credit]
     Transactions --> Immediate[PIX / debit / account movement]
     Transactions --> Deferred[Credit invoice item]
     Investments --> Deposit[Deposit from account]
     Investments --> Withdrawal[Withdrawal to account]
     Investments --> Yield[Internal yield]
+    Investments --> Holdings[My investments and position appearance]
+    Investments --> History
+    Investments --> Prices[Local dated prices]
+    Investments --> Setup[Products and assets]
 ```
 
 Banking setup leads with bank and account creation. PIX requires no separate
@@ -248,99 +489,117 @@ payment-method record because it is an account capability. Transaction forms
 show only instruments compatible with the selected account/currency and owned by
 the logged-in user.
 
+This navigation diagram intentionally omits paused statement and net-worth
+interfaces; their retained domain requirements do not restore application links.
+
 ## 9. Dashboard and Reports
 
-The dashboard separates cash, economic activity, liabilities and positions:
+Home is operational: planning availability, selected-month indicators, accounts,
+pending invoices and daily entry actions. Analytical graphs live in the separate
+Analytics workspace, under Finances and Investments. The former
+`/dashboard/reports/` and `/investments/charts/` URLs redirect to their analytical
+destinations while retaining the existing filter/anchor context.
+
+The shared read models distinguish cash, economic activity, liabilities and
+positions:
 
 | Component | Source |
 |---|---|
-| Bank cash | Opening balances + posted bank movements. |
-| Planning availability | Bank cash + remunerated cash - account reserves/exclusions; deficits stay included. |
+| Bank cash | Applicable dated openings + effective bank movements. |
+| Planning availability | Bank cash + remunerated cash - overlapping manual/named reserves and exclusions; deficits stay included. |
 | Income/expense | Categorized transactions; no transfers/investment cash legs. |
-| Card payable | Open invoice item totals less payments. |
-| Investment value | Opening positions and recorded operations; historical FX evidence, not live market quotes. |
-| Net worth | Converted cash + investments - card payable. |
+| Card payable | Billed invoice remainder; dated wealth uses full incurred purchases/installments and realized recurrences less effective settlements. |
+| Investment value | Replayed holdings × latest local dated unit quote, or disclosed remaining-cost fallback; monetary positions use balance and historical cost retains operation FX. |
+| Net worth (retained read model; interface paused) | Converted bank cash + all product/cash-pot values + card credit - positive incurred card debt; no new asset from reserves. |
 
-Reports remain responsive, server-rendered SVG/CSS. HTMX may swap chart islands
+Analytics remains responsive, server-rendered SVG/CSS. HTMX may swap chart islands
 and progressively enhance same-origin links, but all filters and navigation
 retain plain GET fallbacks. Every total states its
 currency/valuation date and whether it is actual or projected.
 
-The Reports summary keeps live bank cash, the identified anchor month's inflows
+The financial-analysis summary keeps live bank cash, the identified anchor month's inflows
 minus outflows, and net bank-balance change over the complete displayed window.
 Monthly result includes recorded investment deposits and withdrawals without
 adding the opening balance. A keyboard-accessible question-mark disclosure
 explains the full-window dates and incomplete totals when exchange rates are
 missing. Do not show the former best-month summary card.
 
+The retained, currently gated dated wealth view uses month-end cutoffs, capped at today, with a
+start-month GET filter limited to the last ten years. Unknown baselines and
+missing FX/prices are explicit limitations. It is reconstructed editable
+financial history, not an immutable bank statement or return percentage.
+
 ## 10. Frontend Requirements
 
-- Question-mark icons follow the [shared help contract](frontend.md#question-mark-help):
-  one readable tooltip opens on hover or keyboard focus and closes on pointer
-  exit, outside click or Escape. Mouse clicks never pin it. Preserve touch and
-  no-JavaScript access, structured translated copy and viewport-safe placement.
-- Preserve the cream/forest light palette and use neutral black/graphite dark
-  foundations with accessible semantic colors,
-  Inter-only typography, reusable partials and mobile-first behavior. Normal
-  text maintains WCAG AA contrast and user-facing labels never render below
-  12px.
-- Keep banking as the navigation and settlement domain.
-- Banking screens expose hierarchy without hiding accounting consequences:
-  bank, accounts/currencies/balances, capabilities/cards, ledger and invoices.
-- Credit transaction forms explain that cash moves at invoice payment; debit and
-  PIX forms explain immediate settlement.
-- Own transfers use a neutral visual treatment.
-- Native and base amounts are never shown without currency codes/symbols.
-- Missing FX, overdue invoices and incomplete totals receive explicit
-  accessible status text, not color-only signaling.
-- The public navbar and authenticated desktop/mobile navbars expose the same
-  English/Brazilian Portuguese selector. The initial visit may use the browser
-  language; subsequent requests use the native Django language cookie.
-- Interface labels and system messages are translated. The nine system-provided
-  categories are materialized in the interface language active when the account
-  is created. From that point onward, categories and all other user-entered or
-  persisted domain data are displayed verbatim and are not translated
-  automatically.
-- Every form and record filter must follow the
-  [mandatory keyboard and choice contract](frontend.md#keyboard-and-choice-contract).
-  Record choices use shared searchable controls with arrows/Enter and explicit
-  confirmation. Short choices remain native; Tab, Space and advanced-section
-  activation must work throughout. Reaching or opening a search keeps the input
-  and results visible below the sticky header without moving focus; long results
-  scroll internally and adapt to the available viewport. Creation choices begin empty and conditional
-  checkboxes unchecked; preserve edits, invalid submissions and shortcut context.
-- Progressive disclosure applies to every conditional form, filter, picker,
-  menu and categorized flow: show only the branch relevant to the current
-  selection, clear stale inactive values after deliberate changes, preserve
-  errored branches for recovery, and keep server validation plus a complete
-  no-JavaScript path.
+- Use the approved [visual catalogue](design-system.html) and
+  [route/component map](interface-map.md). Shared editorial components retain
+  Inter typography, the cream/forest light palette, neutral black/graphite dark
+  foundations, accessible semantic colors and mobile-first behavior. Ordinary
+  text maintains WCAG AA contrast; user-facing labels do not render below 12px,
+  except for the approved [mobile navigation labels](frontend/navigation.md#root-layout-and-navigation)
+  at 10–11px, never below 10px, with touch targets of at least 44 × 44px.
+- The same six workspace destinations appear in desktop and mobile navigation.
+  Secondary work stays in its owning section; paused resources are not links or
+  disabled promotional entries. Native navigation remains available.
+- Authenticated headings, overview spacing and opt-in opening monetary summaries
+  follow the [shared compact density](frontend/catalogue.md#compact-workspace-density).
+  Long labels, missing-data notices and native details retain their full content;
+  summary panels have no fixed or equal-height requirement. Forms, charts and
+  minimum 44px action targets retain their own geometry.
+- Forms, help, filters, menus, dates, period controls and departure/history
+  handling follow the [canonical frontend contracts](frontend.md). Reuse shared
+  partials and enhancements, preserve keyboard/focus/error recovery and complete
+  native fallbacks, and keep ownership/accounting validation on the server.
+- Explain cash versus economic activity where the user makes the choice:
+  credit purchases belong to invoices, while account/PIX/debit settle directly.
+  Own transfers retain a neutral treatment. Totals identify their currency,
+  valuation cutoff, actual/projected scope and missing evidence with text.
+- Interface labels and system messages have English and Brazilian Portuguese
+  translations. Django's language cookie is independent of the reporting
+  currency and preferred date order. Stored user data remains verbatim; default
+  categories are translated once when the account is created.
+- The [contribution guide](../CONTRIBUTING.md) owns build, translation and isolated
+  validation commands. Changed financial interactions need focused regression
+  evidence, including native forms, keyboard use, both themes and phone layouts;
+  historical test counts are not current acceptance evidence.
 
 ## 11. Non-Functional Requirements
 
 | # | Requirement | Description |
 |---|---|---|
 | NFR01 | Atomicity | Multi-row posting workflows run in one database transaction. |
-| NFR02 | Idempotency | Invoice settlement and scheduled posting cannot duplicate movements. |
+| NFR02 | Idempotency | Source-key projection, confirmation UUIDs and reviewed import identities cannot duplicate settlement movements. |
 | NFR03 | Editability | Personal records may be corrected by their owner; audit-grade reversals are out of scope. |
 | NFR04 | Isolation | Querysets, forms and services validate user ownership. |
 | NFR05 | Precision | Decimal arithmetic only; explicit currency and rounding policy. |
-| NFR06 | Performance | Use scoped querysets, `select_related`/`prefetch_related`, and bounded read-model folds. |
+| NFR06 | Performance | Use scoped related-object loading, bounded folds and owned request-scoped FX reuse; compare projections before writing and retain unchanged IDs/timestamps. SQLite atomic writes remain serialized. |
 | NFR07 | Accessibility | Responsive keyboard-usable server-rendered UI and text status labels. |
-| NFR08 | Simplicity | Native Django patterns; no API/SPA introduced by this release. |
+| NFR08 | Simplicity | Native Django patterns; no SPA or external general-purpose API. The narrow authenticated assistant context endpoint remains internal and read-only. |
+| NFR09 | Assistant boundary | Local history and signed context remain owner-scoped; no provider, external inference, execution or paid fallback is silently enabled. |
 
 ## 12. Acceptance Criteria
 
+Checked items record retained implementation, not a fresh test run, owner
+acceptance or a claim that every feature shipped in `0.10.0`. Paused or gated
+items below stay unavailable through their ordinary product workflows unless
+their distinct review/authorization conditions are met. Merge and Docker release
+were explicitly authorized on 2026-10-21. Exact-checkout validation and the manual
+walkthrough below retain their own evidence and completion status.
+
 - [x] One bank can hold multiple accounts with independent currencies/opening balances.
-- [x] Account balance exactly reconciles to opening balance plus movements.
+- [x] Account balance exactly reconciles to its applicable opening and effective movements.
 - [x] PIX capability defaults on; an external PIX posts normal income/expense immediately.
 - [x] Debit posts immediately; credit purchase enters an invoice without cash debit.
-- [x] Invoice due-date settlement debits the account once and does not duplicate expense.
+- [x] Default invoice due-date settlement debits the account once and does not duplicate expense.
 - [x] Own transfers create paired movements and never affect income/expense.
-- [x] Historical base totals remain unchanged after a newer FX rate is added.
+- [x] Captured historical operation-flow totals remain unchanged after a newer
+      FX rate is added; local-price and read-time valuations state their cutoff.
 - [x] Loyalty supports all five entry kinds and complete redemption/IOF funding data.
 - [x] Investments use `Bank`, classified/currency assets and quantity/unit price, with no title.
 - [x] Investment deposit source and withdrawal destination are required; yield is internal.
-- [x] Dashboard reconciles cash, card payable, investments and net worth without double count.
+- [x] Financial read models distinguish cash, card payable and investments
+      without double count; dated net-worth calculations are retained behind a
+      paused dedicated interface.
 - [x] Mobile and desktop banking/investment flows preserve no-JS fallbacks.
 - [x] English and Brazilian Portuguese work on full pages and HTMX fragments,
       retain stable URLs, and do not alter currency separators or user data.
@@ -349,6 +608,43 @@ missing. Do not show the former best-month summary card.
 - [x] Unsupported pre-release legacy schemas are distinguished from supported release upgrades.
 - [x] Monetary yields can derive the stored yield from a new total balance without creating a bank movement.
 - [x] The authenticated planning workspace supports salary estimates, explicit private drafts and isolated simulations.
+
+<a id="unreleased-implementation"></a>
+
+### Version 0.11.0 implementation
+
+- [x] Optional manual invoices preserve automatic behavior before the selected
+      boundary, confirm partial actual-date payments once and retain card credit
+      after source corrections.
+- [x] Exact category splits reconcile every installment and the original totals,
+      retain reporting/export allocations and leave cash settlement unchanged.
+- [x] Category limits and named goal reservations are persisted separately from
+      sandbox scenarios, with backing/ownership/denomination validation.
+- [x] Local signals provide evidence, configurable thresholds and explicit
+      decisions without automatic financial corrections.
+- [x] Retained local statement services preserve canonical source semantics and
+      reject stale, duplicated or incompatible evidence. Their operation
+      interface remains paused on GET/POST; only owned confirmed/undone
+      provenance remains readable.
+- [x] New nonzero openings require dates; unknown migrated baselines remain
+      visible without invented acquisition or cash history.
+- [x] Weighted investment cost, local prices, realized/remaining results and
+      incomplete-performance warnings preserve declared yields and legacy fees.
+- [x] Retained dated-wealth read models include incurred installment debt and
+      card credits once, while reservations and future recurring templates
+      create no new asset/debt. The dedicated screen remains paused.
+- [x] Unchanged ledger synchronization avoids repeated unchanged writes;
+      request-scoped FX reuse preserves missing/captured evidence boundaries.
+- [x] Owner-scoped assistant account settings, OAuth lifecycle and encrypted
+      vault preparation keep real authorization disabled by default; isolated
+      synthetic validation does not silently enable inference.
+- [x] The current interface separates Analytics from the operational Home and
+      exposes the four Accounts, Investments and Plan sections. Position emoji
+      and shared compact summaries are presentation features, not new
+      financial metrics or financial writes.
+- [ ] Owner completes the exact-checkout manual acceptance walkthrough on
+      disposable data. The separate merge and Docker release decision was
+      authorized on 2026-10-21; this item records only the walkthrough.
 
 ## 13. Release validation
 

@@ -35,6 +35,10 @@ ALLOW_SIGNUPS = os.environ.get('ALLOW_SIGNUPS', 'True').strip().lower() in {
     '1', 'true', 'yes', 'on'
 }
 
+# These interfaces are paused during the usability review. Domain calculations
+# and recorded provenance remain available to their other consumers.
+REVIEWED_FEATURES = frozenset()
+
 SECRET_KEY = os.environ.get('SECRET_KEY', '').strip()
 if not SECRET_KEY:
     raise ImproperlyConfigured('SECRET_KEY must be set in the environment.')
@@ -44,6 +48,21 @@ ALLOWED_HOSTS = [
     for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
     if host.strip()
 ]
+
+# Authorization and model inference require separate local opt-ins. Neither
+# switch enables the other; checked-in defaults remain disabled.
+ASSISTANT_OPENAI_AUTH_ENABLED = os.environ.get('ASSISTANT_OPENAI_AUTH_ENABLED', 'False').strip().lower() in {
+    '1', 'true', 'yes', 'on'
+}
+ASSISTANT_OPENAI_INFERENCE_ENABLED = os.environ.get('ASSISTANT_OPENAI_INFERENCE_ENABLED', 'False').strip().lower() in {
+    '1', 'true', 'yes', 'on'
+}
+ASSISTANT_OPENAI_CALLBACK_URL = os.environ.get(
+    'ASSISTANT_OPENAI_CALLBACK_URL', 'http://127.0.0.1:8000/assistant/connections/callback/'
+)
+ASSISTANT_PRIVATE_DIR = Path(os.environ.get(
+    'ASSISTANT_PRIVATE_DIR', str(Path(os.environ.get('TUXEDO_DATA_DIR', BASE_DIR)) / 'assistant-private')
+))
 
 
 # Application definition
@@ -63,6 +82,9 @@ INSTALLED_APPS = [
     'banking',
     'investments',
     'sandbox',
+    'planning',
+    'ingestion',
+    'assistant',
 ]
 
 MIDDLEWARE = [
@@ -77,6 +99,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'transactions.middleware.LedgerProjectionMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -88,12 +111,13 @@ TEMPLATES = [
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
-            'libraries': {'assets': 'core.templatetags.assets'},
+            'libraries': {'assets': 'core.templatetags.assets', 'navigation': 'core.templatetags.navigation'},
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.currency',
+                'assistant.context_processors.assistant_shell',
             ],
         },
     },
@@ -186,12 +210,12 @@ STATICFILES_DIRS = [
 # Restrict executable content to this installation. Inline scripts and styles
 # remain allowed because the server-rendered templates contain the synchronous
 # theme bootstrap, translated progressive-enhancement copy and calculated chart
-# geometry. Google Fonts is the only external presentation origin.
+# geometry. Presentation assets are served by the local installation.
 SECURE_CSP = {
     'default-src': [CSP.SELF],
     'script-src': [CSP.SELF, CSP.UNSAFE_INLINE],
-    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, 'https://fonts.googleapis.com'],
-    'font-src': [CSP.SELF, 'https://fonts.gstatic.com'],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE],
+    'font-src': [CSP.SELF],
     'img-src': [CSP.SELF, 'data:'],
     'connect-src': [CSP.SELF],
     'object-src': [CSP.NONE],
@@ -241,6 +265,9 @@ LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'assistant_oauth': {'()': 'assistant.connections.logging.OAuthRedactionFilter'},
+    },
     'formatters': {
         'app': {
             'format': '[{asctime}] {levelname} {name}: {message}',
@@ -251,6 +278,7 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'app',
+            'filters': ['assistant_oauth'],
         },
     },
     'root': {
@@ -258,6 +286,11 @@ LOGGING = {
         'level': LOG_LEVEL,
     },
     'loggers': {
+        'django.server': {
+            'handlers': ['console'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
         'django.request': {
             'handlers': ['console'],
             'level': 'ERROR',

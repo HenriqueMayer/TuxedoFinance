@@ -1,4 +1,4 @@
-{% load i18n l10n %}
+{% load i18n l10n navigation %}
 
 {% comment %}
 Partial rendered in two ways (see `dashboard.views.DashboardReportsView`):
@@ -48,7 +48,7 @@ conventions this partial inherits.
     </div>
 
     {% if missing_currencies %}
-        <div class="rounded-3xl border border-caramel/40 bg-caramel/10 p-4 text-sm text-caramel-ink dark:border-caramel/40 dark:bg-caramel/10 dark:text-caramel-light">
+        <div class="rounded-xl border border-caramel/40 bg-caramel/10 p-4 text-sm text-caramel-ink dark:border-caramel/40 dark:bg-caramel/10 dark:text-caramel-light">
             {% translate "Totals exclude currencies without a rate to the configured currency:" %} <strong>{{ missing_currencies|join:', ' }}</strong>.
         </div>
     {% endif %}
@@ -56,19 +56,20 @@ conventions this partial inherits.
     {# -------------------------------------------------------------- #}
     {# Chart 1 — balance evolution (slideable 12-month window)        #}
     {# -------------------------------------------------------------- #}
-    <section class="space-y-4 surface-panel" data-chart-selection data-balance-range>
+    <section id="balance-evolution" class="space-y-4 surface-panel" data-chart-selection data-balance-range>
         <div class="panel-heading items-start">
             <div>
-                <div class="label-with-help">
+                <div class="label-with-help report-chart-heading">
                     {% translate "Balance evolution" as chart_label %}
-                    <h2 class="section-title">{{ chart_label }}</h2>
+                    <h2 id="report-balance-title" class="section-title">{{ chart_label }}</h2>
                     {% include 'partials/help_popover.html' with help_id='report-balance-help' help_label=chart_label help_template='dashboard/_balance_evolution_help.html' %}
                 </div>
             </div>
             {% include 'dashboard/_report_window_navigation.html' with navigation_id='report-balance' %}
         </div>
 
-        <div class="overflow-x-auto">
+        {# Retain all month marks; keyboard and touch pan inside this named region. #}
+        <div class="report-chart-scroll overflow-x-auto" tabindex="0" role="region" aria-labelledby="report-balance-title" aria-describedby="report-balance-scroll-hint">
             {% localize off %}
             <svg viewBox="0 0 {{ balance_chart.width }} {{ balance_chart.height }}"
                  class="chart-canvas min-w-[44rem]" data-selection-surface role="img"
@@ -144,6 +145,7 @@ conventions this partial inherits.
             {% endlocalize %}
         </div>
 
+        <p id="report-balance-scroll-hint" class="report-chart-scroll-hint">{% translate "Scroll horizontally to see the full chart." %}</p>
         {% include 'partials/chart_selection.html' with selection=balance_selection %}
         <p class="text-sm text-forest/70 dark:text-night-muted">
             {% translate "Opening balance" %} {{ CURRENCY_SYMBOL }} {{ evolution.opening_balance|floatformat:2 }}
@@ -157,12 +159,12 @@ conventions this partial inherits.
     {# -------------------------------------------------------------- #}
     {# Chart 2 — monthly cash flow (same window as chart 1)            #}
     {# -------------------------------------------------------------- #}
-    <section class="space-y-4 surface-panel" data-chart-selection>
+    <section id="monthly-cashflow" class="space-y-4 surface-panel" data-chart-selection>
         <div class="panel-heading">
             <div>
-                <div class="label-with-help">
+                <div class="label-with-help report-chart-heading">
                     {% translate "Monthly cash flow" as chart_label %}
-                    <h2 class="section-title">{{ chart_label }}</h2>
+                    <h2 id="report-cashflow-title" class="section-title">{{ chart_label }}</h2>
                     {% translate "What comes in and what goes out each month, side by side." as chart_help %}
                     {% include 'partials/help_popover.html' with help_id='report-cashflow-help' help_label=chart_label help_text=chart_help %}
                 </div>
@@ -182,7 +184,7 @@ conventions this partial inherits.
             {% endfor %}
         </ul>
 
-        <div class="overflow-x-auto">
+        <div class="report-chart-scroll overflow-x-auto" tabindex="0" role="region" aria-labelledby="report-cashflow-title" aria-describedby="report-cashflow-scroll-hint">
             {% localize off %}
             <svg data-selection-surface viewBox="0 0 {{ cashflow_chart.width }} {{ cashflow_chart.height }}"
                  class="chart-canvas min-w-[44rem]" role="img"
@@ -254,7 +256,8 @@ conventions this partial inherits.
             </svg>
             {% endlocalize %}
         </div>
-    {% include 'partials/chart_selection.html' with selection=cashflow_selection %}
+        <p id="report-cashflow-scroll-hint" class="report-chart-scroll-hint">{% translate "Scroll horizontally to see the full chart." %}</p>
+        {% include 'partials/chart_selection.html' with selection=cashflow_selection %}
     </section>
 
     {# -------------------------------------------------------------- #}
@@ -263,9 +266,9 @@ conventions this partial inherits.
     <section id="installments" class="scroll-mt-6 space-y-4 surface-panel" data-chart-selection>
         <div class="panel-heading">
             <div>
-                <div class="label-with-help">
+                <div class="label-with-help report-chart-heading">
                     {% translate "How much is on installments" as chart_label %}
-                    <h2 class="section-title">{{ chart_label }}</h2>
+                    <h2 id="report-installments-title" class="section-title">{{ chart_label }}</h2>
                     {% include 'partials/help_popover.html' with help_id='report-installments-help' help_label=chart_label help_template='dashboard/_installments_help.html' %}
                 </div>
             </div>
@@ -338,7 +341,7 @@ conventions this partial inherits.
             </div>
         {% else %}
             {% translate "No expenses in this window" as empty_title %}
-            {% translate "No transactions were recorded in this window, so there are no installments to break down. Try a different month or the All time option." as empty_message %}
+            {% translate "No transactions were recorded in this window, so there are no installments to break down. Try a different month or the Last 12 months option." as empty_message %}
             {% include 'partials/empty_state.html' with title=empty_title message=empty_message %}
         {% endif %}
     {% include 'partials/chart_selection.html' with selection=recurrence_selection %}
@@ -351,9 +354,9 @@ conventions this partial inherits.
     <section id="instrument-activity" class="scroll-mt-6 space-y-5 surface-panel" data-chart-selection>
         <div class="panel-heading">
             <div>
-                <div class="label-with-help">
+                <div class="label-with-help report-chart-heading">
                     {% translate "Income and expenses by account or card" as chart_label %}
-                    <h2 class="section-title">{{ chart_label }}</h2>
+                    <h2 id="report-instruments-title" class="section-title">{{ chart_label }}</h2>
                     {% include 'partials/help_popover.html' with help_id='report-instruments-help' help_label=chart_label help_template='dashboard/_instrument_activity_help.html' %}
                 </div>
 
@@ -363,7 +366,7 @@ conventions this partial inherits.
 
         {% if instrument_chart %}
             <div class="space-y-6">
-                <div class="overflow-x-auto">
+                <div class="report-chart-scroll overflow-x-auto" tabindex="0" role="region" aria-labelledby="report-instruments-title" aria-describedby="report-instruments-scroll-hint">
                     {% localize off %}
                     <svg data-selection-surface viewBox="0 0 {{ instrument_chart.width }} {{ instrument_chart.height }}"
                          class="chart-canvas min-w-[44rem]" role="img"
@@ -394,7 +397,9 @@ conventions this partial inherits.
                             {% for bank in instrument_chart.bank_groups %}
                                 <text x="{{ bank.center }}" y="{{ instrument_chart.label_y|add:'10' }}" text-anchor="middle"
                                       class="fill-forest/70 dark:fill-cream/70 text-xs pointer-events-none">
-                                    {{ bank.label }}
+                                    {# Compact axes do not replace the full identity in the ledger. #}
+                                    <title>{{ bank.label }}</title>
+                                    {{ bank.label|truncatechars:instrument_chart.label_chars }}
                                 </text>
                             {% endfor %}
                         </g>
@@ -414,7 +419,7 @@ conventions this partial inherits.
                                                    class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                                                     <rect width="176" height="38" rx="19"
                                                           class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                                    <text x="10" y="15" class="fill-cream dark:fill-night-surface text-xs">{{ group.label.short_label }} &middot; {% translate "Expenses" %}</text>
+                                                    <text x="10" y="15" class="fill-cream dark:fill-night-surface text-xs">{{ group.label.short_label|truncatechars:7 }} &middot; {% translate "Expenses" %}</text>
                                                     <text x="10" y="30" class="fill-white dark:fill-night-surface text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
                                                 </g>
                                             </g>
@@ -429,7 +434,7 @@ conventions this partial inherits.
                                                    class="pointer-events-none opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                                                     <rect width="176" height="38" rx="19"
                                                           class="fill-forest stroke-forest-light dark:fill-cream dark:stroke-cream-dark" stroke-width="1" />
-                                                    <text x="10" y="15" class="fill-cream dark:fill-night-surface text-xs">{{ group.label.short_label }} &middot; {% translate "Income" %}</text>
+                                                    <text x="10" y="15" class="fill-cream dark:fill-night-surface text-xs">{{ group.label.short_label|truncatechars:7 }} &middot; {% translate "Income" %}</text>
                                                     <text x="10" y="30" class="fill-white dark:fill-night-surface text-[12px] font-semibold tabular-nums">{{ CURRENCY_SYMBOL }} {{ bar.value|floatformat:2 }}</text>
                                                 </g>
                                             </g>
@@ -442,16 +447,17 @@ conventions this partial inherits.
                     {% endlocalize %}
                 </div>
 
+                <p id="report-instruments-scroll-hint" class="report-chart-scroll-hint">{% translate "Scroll horizontally to see the full chart." %}</p>
                 {% include 'partials/chart_selection.html' with selection=instrument_selection %}
                 <div class="space-y-5 border-t border-forest/10 pt-5 dark:border-cream/10">
                     {% regroup instrument_activity.instruments by bank_label as bank_list %}
                     {% for bank in bank_list %}
                         <section>
-                            <h3 class="text-sm font-semibold text-forest/70 dark:text-night-muted">{{ bank.grouper }}</h3>
+                            <h3 class="report-instrument-identity text-sm font-semibold text-forest/70 dark:text-night-muted">{{ bank.grouper }}</h3>
                             <ul class="mt-3 grid gap-x-8 sm:grid-cols-2 xl:grid-cols-3">
                                 {% for instrument in bank.list %}
-                                    <li class="border-b border-forest/10 py-3 dark:border-cream/10">
-                                        <p class="font-medium text-forest/90 dark:text-cream/90">{{ instrument.short_label }}</p>
+                                    <li class="min-w-0 border-b border-forest/10 py-3 dark:border-cream/10">
+                                        <p class="report-instrument-identity font-medium text-forest/90 dark:text-cream/90">{{ instrument.short_label }}</p>
                                         <div class="mt-1 space-y-1 text-sm tabular-nums">
                                             {% if instrument.expense_total %}
                                                 <p class="flex items-center justify-between gap-4 text-forest/70 dark:text-night-muted">
@@ -482,10 +488,13 @@ conventions this partial inherits.
                 {% endif %}
             </div>
         {% else %}
+            {# This island also renders without the page wrapper after a month change. #}
+            {% url 'transactions:create' as transaction_create_url %}
+            {% contextual_url transaction_create_url fragment='instrument-activity' as empty_create_url %}
             {% translate "No income or expenses recorded" as empty_title %}
             {% translate "Record a transaction to compare income and expenses by account or card." as empty_message %}
-            {% translate "New Transaction" as new_transaction_label %}
-            {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=create_url cta_label=new_transaction_label %}
+            {% translate "New transaction" as new_transaction_label %}
+            {% include 'partials/empty_state.html' with title=empty_title message=empty_message cta_url=empty_create_url cta_label=new_transaction_label %}
         {% endif %}
 
     </section>

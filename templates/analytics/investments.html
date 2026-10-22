@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Analytics' %} · {% translate 'Investments' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="finance-workspace investing-workspace space-y-4">
+    {% include 'analytics/_sections.html' %}
+    <header class="workspace-header"><h1 class="page-title">{% translate 'Analytics' %} · {% translate 'Investments' %}</h1></header>
+    <p class="subtle-copy">{% translate 'Month-end positions use dated local prices when available and remaining acquisition cost otherwise. Recorded cash flows stay separate.' %}</p>
+    {% include 'investments/_investments_charts.html' %}
+</div>
+{% endblock %}

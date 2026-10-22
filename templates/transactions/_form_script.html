@@ -1,0 +1,182 @@
+{% load i18n %}<script>
+    (function () {
+        function shortChoice(id) {
+            const group = document.getElementById(id);
+            if (!group || group.tagName === 'SELECT') return group;
+            const inputs = Array.from(group.querySelectorAll('input[type="radio"]'));
+            // The same native POST names now belong to short radio groups.
+            // Keep conditional finance rules in one place for edits and history.
+            return {
+                get value() { return inputs.find(input => input.checked)?.value || ''; },
+                set value(value) { inputs.forEach(input => { input.checked = input.value === value; }); },
+                form: inputs[0]?.form,
+                options: inputs.map(input => ({
+                    value: input.value,
+                    get selected() { return input.checked; },
+                    set hidden(value) { input.closest('label').hidden = value; },
+                    set disabled(value) { input.disabled = value; },
+                })),
+                addEventListener(type, callback) { group.addEventListener(type, callback); },
+            };
+        }
+        const category = document.getElementById('{{ form.category.id_for_label }}');
+        const split = document.getElementById('{{ form.split_categories.id_for_label }}');
+        const splitFields = document.getElementById('category-split-fields');
+        const splitActions = document.getElementById('category-split-actions');
+        const channel = shortChoice('{{ form.payment_channel.auto_id }}');
+        const transactionType = shortChoice('{{ form.transaction_type.auto_id }}');
+        const bankAccount = document.getElementById('{{ form.bank_account.id_for_label }}');
+        const debitCard = document.getElementById('{{ form.debit_card.id_for_label }}');
+        const creditCard = document.getElementById('{{ form.credit_card.id_for_label }}');
+        const installments = document.getElementById('{{ form.installments.id_for_label }}');
+        const installmentStart = document.getElementById('{{ form.installment_start.id_for_label }}');
+        const billingOverride = document.getElementById('{{ form.billing_override.id_for_label }}');
+        const fixed = document.getElementById('{{ form.is_fixed.id_for_label }}');
+        const fixedUntil = document.getElementById('{{ form.fixed_until.id_for_label }}');
+        const status = document.getElementById('payment-channel-status');
+        const creditBestPurchase = document.getElementById('credit-card-best-purchase');
+        const groups = {
+            bank: document.getElementById('bank-account-fields'),
+            debit: document.getElementById('debit-card-fields'),
+            credit: document.getElementById('credit-card-fields'),
+            cardDetails: document.getElementById('credit-card-details'),
+            installmentStart: document.getElementById('installment-start-fields'),
+            category: document.getElementById('category-fields'),
+            fixedUntil: document.getElementById('fixed-until-fields'),
+        };
+        if (!category || !channel) return;
+        const setHidden = window.TuxedoForms.setHidden;
+        function updateCategoryFields(clearStale) {
+            setHidden(document.getElementById('category-split-choice'), !transactionType.value, !clearStale);
+            setHidden(groups.category, !transactionType.value || split.checked, !clearStale);
+            setHidden(splitFields, !transactionType.value || !split.checked, !clearStale);
+            setHidden(splitActions, !transactionType.value || !split.checked, !clearStale);
+            splitFields.querySelectorAll('select[name$="-category"]').forEach(select => {
+                const selected = select.selectedOptions[0];
+                if (clearStale && selected && selected.dataset.transactionType
+                        && selected.dataset.transactionType !== transactionType.value) select.value = '';
+                Array.from(select.options).forEach(option => {
+                    option.hidden = Boolean(option.dataset.transactionType && option.dataset.transactionType !== transactionType.value);
+                });
+            });
+        }
+        function updateCreditSettlement() {
+            if (channel.value !== 'CREDIT_CARD') return;
+            const option = creditCard.selectedOptions[0];
+            status.textContent = option && option.value
+                ? '{% translate "This purchase is added to the selected card invoice." %} ' + option.dataset.settlementDescription
+                : '{% translate "Choose the card to review its invoice settlement settings." %}';
+        }
+        function updateCardDetails(clearStale) {
+            const inactive = channel.value !== 'CREDIT_CARD' || !creditCard.value;
+            if (inactive && clearStale) { installments.value = '1'; installmentStart.value = '1'; billingOverride.value = ''; }
+            setHidden(groups.cardDetails, inactive, !clearStale);
+            updateInstallmentStart(clearStale);
+        }
+        function updateInstallmentStart(clearStale) {
+            const inactive = channel.value !== 'CREDIT_CARD' || !creditCard.value || fixed.checked || Number(installments.value) <= 1;
+            if (inactive && clearStale) installmentStart.value = '1';
+            setHidden(groups.installmentStart, inactive, !clearStale);
+        }
+        function updateBestPurchaseDay() {
+            const option = creditCard.selectedOptions[0];
+            creditBestPurchase.textContent = option && option.value && option.dataset.bestPurchaseDay
+                ? '{% translate "Best purchase day:" %} ' + option.dataset.bestPurchaseDay
+                : '';
+        }
+        function updatePaymentFields(clearStale) {
+            const value = channel.value;
+            // The shared owned-record picker changes its artwork, not its identity
+            // or submission contract, when the same account is used through PIX.
+            bankAccount.dataset.paymentKind = value === 'PIX' ? 'pix' : 'account';
+            const isCard = value === 'DEBIT_CARD' || value === 'CREDIT_CARD';
+            const cardsUnavailable = transactionType.value === 'INCOME' && !(isCard && !clearStale);
+            setHidden(groups.bank, !value || isCard, !clearStale);
+            setHidden(groups.debit, value !== 'DEBIT_CARD' || cardsUnavailable, !clearStale);
+            setHidden(groups.credit, value !== 'CREDIT_CARD' || cardsUnavailable, !clearStale);
+            Array.from(bankAccount.options).forEach(option => { option.hidden = value === 'PIX' && option.value && option.dataset.pixEnabled !== 'true'; });
+            if (clearStale) {
+                if (value !== 'ACCOUNT' && value !== 'PIX') bankAccount.value = '';
+                if (value === 'PIX' && bankAccount.selectedOptions[0] && bankAccount.selectedOptions[0].dataset.pixEnabled !== 'true') bankAccount.value = '';
+                if (value !== 'DEBIT_CARD') debitCard.value = '';
+                if (value !== 'CREDIT_CARD') { creditCard.value = ''; installments.value = '1'; installmentStart.value = '1'; billingOverride.value = ''; }
+            }
+            updateBestPurchaseDay();
+            updateCardDetails(clearStale);
+            if (transactionType.value === 'INCOME' && isCard) {
+                status.textContent = '{% translate "Debit and credit cards are available only for expenses." %}';
+            } else if (value === 'ACCOUNT') {
+                status.textContent = '{% translate "This transaction updates the selected bank account immediately." %}';
+            } else if (value === 'PIX') {
+                status.textContent = '{% translate "Choose a bank account with PIX enabled. This transaction updates that account immediately." %}';
+            } else if (value === 'DEBIT_CARD') {
+                status.textContent = '{% translate "This transaction updates the debit card account immediately." %}';
+            } else if (value === 'CREDIT_CARD') {
+                updateCreditSettlement();
+            } else {
+                status.textContent = '';
+            }
+        }
+        function updateAvailableChannels(clearStale) {
+            if (transactionType.value === 'INCOME' && (
+                channel.value === 'DEBIT_CARD' || channel.value === 'CREDIT_CARD'
+            ) && clearStale) channel.value = '';
+            Array.from(channel.options).forEach(option => {
+                const unavailable = transactionType.value === 'INCOME' && !option.selected && (
+                    option.value === 'DEBIT_CARD' || option.value === 'CREDIT_CARD'
+                );
+                option.hidden = unavailable;
+                option.disabled = unavailable;
+            });
+            updatePaymentFields(clearStale);
+            const selectedCategory = category.selectedOptions[0];
+            if (
+                clearStale && selectedCategory && selectedCategory.dataset.transactionType
+                && selectedCategory.dataset.transactionType !== transactionType.value
+            ) category.value = '';
+            if (!transactionType.value && clearStale) category.value = '';
+            Array.from(category.options).forEach(option => {
+                option.hidden = Boolean(option.dataset.transactionType && option.dataset.transactionType !== transactionType.value);
+            });
+            updateCategoryFields(clearStale);
+        }
+        function updateFixedFields(clearStale) {
+            setHidden(groups.fixedUntil, !fixed.checked, !clearStale);
+            if (!fixed.checked && clearStale) fixedUntil.value = '';
+            updateInstallmentStart(clearStale);
+        }
+
+        transactionType.form.addEventListener('tuxedo:restore', () => {
+            updateAvailableChannels(false);
+            updateFixedFields(false);
+        });
+        transactionType.form.addEventListener('tuxedo:allocation-rows-changed', () => {
+            // Trusted blank formset rows inherit this same eligibility rule;
+            // adding a row must not clear another row's bound recovery value.
+            updateCategoryFields(false);
+            window.TuxedoForms.refresh(transactionType.form);
+        });
+        updateAvailableChannels(false);
+        updateFixedFields(false);
+        channel.addEventListener('change', () => updatePaymentFields(true));
+        transactionType.addEventListener('change', () => updateAvailableChannels(true));
+        creditCard.addEventListener('change', () => {
+            updateCardDetails(true);
+            updateBestPurchaseDay();
+            updateCreditSettlement();
+        });
+        split.addEventListener('change', () => {
+            // Explicitly abandoning a split clears editable allocations, while
+            // management/record IDs remain intact for server-owned validation.
+            if (!split.checked) splitFields.querySelectorAll('select, input:not([type="hidden"])').forEach(control => {
+                if (control.type === 'checkbox') control.checked = false;
+                else control.value = '';
+            });
+            if (split.checked) category.value = '';
+            updateCategoryFields(true);
+            window.TuxedoForms.refresh(split.form);
+        });
+        fixed.addEventListener('change', () => updateFixedFields(true));
+        installments.addEventListener('input', () => updateInstallmentStart(true));
+    })();
+</script>

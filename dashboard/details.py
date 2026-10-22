@@ -3,6 +3,7 @@
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
 from django.core import signing
@@ -15,15 +16,17 @@ from django.views.decorators.cache import never_cache
 
 from accounts.models import UserPreference
 from banking.models import LoyaltyEntry
-from banking.services import convert, MissingExchangeRate
+from banking.credit_reporting import InvoiceCreditOccurrence
+from banking.services import ConversionContext, MissingExchangeRate
 from categories.models import Category
-from dashboard.services import (_transactions, _transaction_value, _transaction_occurrence_date,
+from dashboard.services import (_transactions, _transaction_category_values, _transaction_occurrence_date,
     _month_end, add_months, _instrument, _banking_expenses_for_month, get_ledger_snapshot)
-from investments.models import Investment, Asset, InvestmentProduct
-from investments.services import historical_value_in_base, opening_unit_value
+from investments.models import Investment, InvestmentProduct
+from investments.positions import get_portfolio_valuation
+from investments.services import historical_value_in_base
 
 
-def composition(user, query):
+def composition(user, query, *, conversion=None):
     period = query.get('period', 'ALL')
     if query.get('periods'):
         # Signed explicit months keep composition aligned with a shifted chart,
@@ -36,11 +39,16 @@ def composition(user, query):
         year, month = map(int, period.split('-'))
         targets = [(year, month)]
     last = _month_end(*max(targets))
+    cutoff = date.fromisoformat(query['cutoff']) if query.get('cutoff') else None
     missing = set()
     totals = defaultdict(lambda: Decimal('0'))
     sources = defaultdict(dict)
     preference = UserPreference.for_user(user)
-    base = preference.base_currency
+    conversion = (
+        ConversionContext(user, base_currency=preference.base_currency)
+        if conversion is None else conversion.check_user(user)
+    )
+    base = conversion.base_currency
     date_format = '%m/%d/%Y' if preference.date_format == 'MDY' else '%d/%m/%Y'
 
     def dated(label, event_date):
@@ -60,57 +68,65 @@ def composition(user, query):
     scope, series = query['scope'], query['series']
     title = _('Categories and subcategories')
     if scope == 'ledger':
-        snapshot = get_ledger_snapshot(user, last)
+        snapshot = get_ledger_snapshot(user, last, conversion=conversion,
+            projected=query.get('projected', False),
+            forecast_from=date.fromisoformat(query['forecast_from']) if query.get('forecast_from') else None)
         title = _('Balances by bank and account')
         missing.update(snapshot['missing_currencies'])
         for row in snapshot['accounts']:
             if row['converted_balance'] is not None:
                 account = row['account']
-                add(row['label'], row['converted_balance'], f'account:{account.pk}',
+                add(row['label'], row['recorded_converted_balance'], f'account:{account.pk}',
                     account.name, reverse('banking:detail', args=[account.bank_id]) + f'#account-row-{account.pk}', _('Open account'))
-    elif scope in ('portfolio', 'portfolio-flow') or series in ('investments', 'withdrawals'):
+                for obligation in row['invoice_obligations']:
+                    invoice = obligation['invoice']
+                    add(row['label'], -obligation['converted_amount'], f'invoice:{invoice.pk}',
+                        dated(str(invoice), invoice.due_date),
+                        reverse('banking:invoice_detail', args=[invoice.pk]), _('Open invoice'))
+    elif scope == 'portfolio':
+        title = _('Products and assets')
+        valuation = get_portfolio_valuation(
+            user, last, purpose=query.get('purpose'), base_currency=base,
+            historical=True,
+            opening_fallback_date=date.fromisoformat(query['opening_date']) if query.get('opening_date') else None,
+            conversion=conversion,
+        )
+        missing.update(valuation['missing_currencies'])
+        for position in valuation['positions']:
+            product, asset, value = position['product'], position['asset'], position['base_value']
+            if value is None:
+                continue
+            # A position is wealth remaining at the plotted cutoff, not the
+            # sum of purchase/resale proceeds. Its context includes all owned
+            # operations through the plotted cutoff for this pair rather than
+            # an arbitrary editor or later activity outside the shown value.
+            url = reverse('investments:operations') + '?' + urlencode({
+                'section': 'cash' if product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH else 'portfolio',
+                'product': product.pk, 'asset': asset.pk, 'date_to': last.isoformat(),
+            })
+            add(f'{product.bank.name} > {product.name} > {asset.name}', value,
+                f'position:{product.pk}:{asset.pk}', asset.name, url, _('Open investment operations'))
+    elif scope == 'portfolio-flow' or series in ('investments', 'withdrawals'):
         title = _('Products and assets')
         operations = Investment.objects.filter(user=user).select_related('asset', 'product__bank', 'source_account', 'destination_account')
         if scope == 'cashflow':
             operations = operations.filter(product__purpose=InvestmentProduct.Purpose.INVESTMENT)
         if query.get('purpose'):
             operations = operations.filter(product__purpose=query['purpose'])
-        if scope == 'portfolio':
-            assets = Asset.objects.filter(user=user).select_related('opening_product__bank')
-            if query.get('purpose'):
-                assets = assets.filter(opening_product__purpose=query['purpose'])
-            for asset in assets:
-                value = asset.opening_balance + opening_unit_value(asset)
-                if not value or not asset.opening_product_id:
-                    continue
-                try:
-                    # Same opening FX date used by the plotted timeseries.
-                    value = convert(user, value, asset.currency, base, as_of=date.fromisoformat(query['opening_date']))
-                    add(f'{asset.opening_product.bank.name} > {asset.opening_product.name} > {asset.name}',
-                        value, f'opening:{asset.pk}', _('Opening position'),
-                        reverse('investments:update_asset', args=[asset.pk]), _('Open opening position'))
-                except MissingExchangeRate:
-                    missing.add(asset.currency)
         for operation in operations:
-            if scope == 'portfolio':
-                if operation.date > last:
-                    continue
-            elif (operation.date.year, operation.date.month) not in targets:
+            if (operation.date.year, operation.date.month) not in targets:
                 continue
-            if scope != 'portfolio':
-                expected = {'deposits': 'DEPOSIT', 'investments': 'DEPOSIT', 'withdrawals': 'WITHDRAWAL', 'yields': 'YIELD'}[series]
-                if operation.kind != expected:
-                    continue
-            if scope in ('portfolio', 'portfolio-flow'):
+            expected = {'deposits': 'DEPOSIT', 'investments': 'DEPOSIT', 'withdrawals': 'WITHDRAWAL', 'yields': 'YIELD'}[series]
+            if operation.kind != expected:
+                continue
+            if scope == 'portfolio-flow':
                 value = historical_value_in_base(user, operation, base)
-                if scope == 'portfolio' and operation.kind == 'WITHDRAWAL' and value is not None:
-                    value = -value
             else:
                 account = operation.source_account if series == 'investments' else operation.destination_account
                 if not account or not operation.cash_amount:
                     continue
                 try:
-                    value = convert(user, operation.cash_amount, account.currency, base, as_of=operation.date)
+                    value = conversion.convert(operation.cash_amount, account.currency, as_of=operation.date)
                 except MissingExchangeRate:
                     value = None
             if value is None:
@@ -135,30 +151,36 @@ def composition(user, query):
                 continue
             if query.get('instrument') and _instrument(item, income=income)[0] != query['instrument']:
                 continue
-            if query.get('category') and item.category_id != query['category']:
-                continue
             recurrence = 'installment' if item.is_installment_plan else 'fixed' if item.is_fixed else 'one_off'
             if query.get('recurrence') and recurrence != query['recurrence']:
                 continue
-            if item.reward_redemption_id:
+            if isinstance(item, InvoiceCreditOccurrence):
+                url = item.source_url
+                action = _('Open invoice credit')
+            elif item.reward_redemption_id:
                 url = reverse('banking:redemption_update', args=[item.reward_redemption_id])
                 action = _('Open reward redemption')
             else:
                 url = reverse('transactions:update', args=[item.pk])
                 action = _('Open transaction')
             for year, month in targets:
-                if query.get('cutoff'):
+                if cutoff is not None:
                     occurrence = _transaction_occurrence_date(item, year, month)
-                    if occurrence is None or occurrence > date.fromisoformat(query['cutoff']):
+                    if occurrence is None or occurrence > cutoff:
                         continue
-                value = _transaction_value(user, item, year, month, missing)
-                if value is not None:
-                    add(path(item.category_id), value, f'transaction:{item.pk}',
+                for category, value in _transaction_category_values(
+                    user, item, year, month, missing, cutoff=cutoff, conversion=conversion,
+                ):
+                    if query.get('category') and category.pk != query['category']:
+                        continue
+                    source_key = item.source_key if isinstance(item, InvoiceCreditOccurrence) else f'transaction:{item.pk}'
+                    add(path(category.pk), value, source_key,
                         dated(item.display_title, item.date), url, action)
         if scope == 'cashflow' and series == 'expenses':
             for year, month in targets:
                 bank_sources = []
-                _total, absent = _banking_expenses_for_month(user, year, month, sources=bank_sources)
+                _total, absent = _banking_expenses_for_month(user, year, month,
+                    cutoff=cutoff, sources=bank_sources, conversion=conversion)
                 for item, value in bank_sources:
                     if isinstance(item, LoyaltyEntry):
                         name = _('Points purchase: %(name)s') % {'name': item.program.name}

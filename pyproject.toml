@@ -1,12 +1,14 @@
 [project]
 name = "tuxedo-finance"
-version = "0.10.0"
+version = "0.11.0"
 description = "Tuxedo Finance — a self-hosted, server-rendered personal finance tracker built with Django and progressive enhancement."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "cryptography>=50,<51",
     "django>=6.0.8,<6.1",
     "gunicorn>=25.3,<26 ; sys_platform != 'win32'",
+    "pyjwt[crypto]>=2.10,<3",
     "python-dotenv>=1.1,<2",
     "whitenoise>=6.12,<7",
 ]
@@ -15,3 +17,15 @@ dependencies = [
 dev = [
     "coverage[toml]>=7.6,<8",
 ]
+
+[tool.coverage.run]
+data_file = ".local/coverage/.coverage"
+
+[tool.coverage.xml]
+output = ".local/coverage/coverage.xml"
+
+[tool.coverage.html]
+directory = ".local/coverage/html"
+
+[tool.ruff]
+cache-dir = ".local/cache/ruff"

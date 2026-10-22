@@ -1,7 +1,11 @@
 # Planning and saved scenarios
 
-The authenticated `/sandbox/` workspace contains a simple monthly salary plan
-and the hypothetical investment simulator. Existing
+The authenticated `/sandbox/` workspace is the Simulations section of Plan.
+The Salary simulation page exposes Salary, Yield and Saved drafts directly below the shared This month,
+Goals, Simulations and Alerts navigation. Salary opens `/sandbox/`, Yield
+opens `/sandbox/simulation/` and Saved drafts opens `/sandbox/drafts/`. Reopened
+drafts and comparisons retain Saved drafts as their secondary section.
+`/planning/tools/` redirects to this entry, while existing simulation and draft
 URLs remain valid. Calculations read financial sources without synchronizing or
 posting ledger entries. Only an explicit save, duplicate or delete changes the
 user's `ScenarioDraft` records.
@@ -95,15 +99,18 @@ months), an effective monthly or annual rate and recurring contributions and
 withdrawals. A table allows per-month overrides; an empty cell uses the default,
 and zero explicitly overrides it.
 
-Inputs are grouped in reading and Tab order: starting point, rate and duration,
-then monthly movements. The starting month uses the native month picker. The
-rate period precedes the rate, whose label specifies monthly or annual; changing
+Inputs are grouped in reading and Tab order: starting balance/currency and
+starting month/duration, rate period/rate, then monthly movements. The starting
+month uses the native month picker. The rate period precedes the rate, whose
+label specifies monthly or annual; changing
 it reinterprets the entered effective rate rather than converting it. Monetary
 labels reflect the selected currency. Optional keyboard-accessible duration
 shortcuts select 6, 12, 24 or 60 months, retain focus and reuse the same validated
 1–120 month field and live calculation. Native forms keep all parameters editable.
-Individual-month overrides remain in a native disclosure,
-opened on saved overrides, validation errors or a native Update month rows action.
+Duration shortcuts stay beside the starting month and duration fields.
+Individual-month overrides remain in a native disclosure, with a visible note
+explaining empty cells and explicit zeros. The disclosure opens for saved
+overrides, validation errors or a native Update month rows action.
 With JavaScript, changing duration updates rows immediately. Temporarily excluded
 rows retain edits but are hidden and disabled; extending the duration restores them.
 The server still validates and calculates only the submitted duration.
@@ -125,15 +132,32 @@ Taxes, inflation, CDI and real market returns are not inferred.
 JavaScript recalculates only the result region, preserving the active input and
 viewport. The Calculate button remains a complete no-JavaScript path. Simulations
 never create investment operations, bank movements or categorized transactions.
-Market prices, price histories, agent integration and free-form formulas remain
-[roadmap work](../product-requirements.md).
+The simulator does not fetch market prices, apply a real holding's quote history,
+run an agent or evaluate free-form formulas. Local dated price observations and
+actual position valuation belong to [Investments](investments.md#valuation), not
+this hypothetical scenario. External feeds remain outside the approved scope.
 
 ## Interaction contracts
+
+Both navigation levels use native links with an active-page indication and
+horizontal scrolling on narrow screens. The primary links retain the full
+workspace width rather than inheriting the compact form width. Departing an
+edited simulation still uses the shared unsaved-work confirmation; changing
+sections never silently saves a scenario.
 
 Forms reuse shared fields, native short choices and help popovers. Dates follow
 the user's DMY/MDY preference; month controls display the browser's locale and
 submit `YYYY-MM`, independently of that preference. Invalid month text is
 rendered as a text field after a rejected submission, so it remains recoverable. ISO dates remain the storage and technical contract.
-Follow the [form and keyboard contract](../frontend.md#keyboard-and-choice-contract),
-[question-mark help contract](../frontend.md#question-mark-help), and
-[viewport-preservation contract](../frontend.md#preserve-the-users-location).
+Salary and yield entry sheets share the compact finance-entry layout, with
+related fields in two columns on larger screens and one on phones. Extra expense
+rows retain their amount-versus-percentage controls and explicit removal.
+Override, result and saved-draft tables use labelled keyboard-scrollable regions;
+draft comparison keeps the full workspace width instead of inheriting the form
+width. Draft checkbox and form identifiers stay unlocalized above 999.
+Draft saving gives the name its own row on phones and keeps Save/Delete
+together below it. Reopening a saved draft must not compress the name field to
+make room for both actions; desktop keeps a compact adjacent action group.
+Follow the [form and keyboard contract](../frontend/forms.md#keyboard-and-choice-contract),
+[question-mark help contract](../frontend/navigation.md#question-mark-help), and
+[viewport-preservation contract](../frontend/navigation.md#preserve-the-users-location).

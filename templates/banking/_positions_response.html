@@ -1,0 +1,3 @@
+{% include 'banking/_bank_positions.html' %}
+{# The shared workspace always owns the all-bank summary, including an open bank. #}
+{% include 'banking/_availability.html' with availability_oob=True %}

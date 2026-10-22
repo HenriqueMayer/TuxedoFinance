@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from categories.importing import CATEGORY_CSV_MAX_BYTES
 from categories.models import Category
 
 # PRD §9.4 — the exact input classes shared by every form in the project.
@@ -18,8 +19,8 @@ class CategoryForm(forms.ModelForm):
     """Category create/update form, scoped to the requesting user (PRD FR12).
 
     `parent_category` choices are restricted to the user's own categories
-    and, when editing, exclude the instance itself so a category can never
-    become its own parent.
+    and, when editing, exclude the instance and its descendants. Model
+    validation remains authoritative for direct submissions and CSV imports.
 
     `user` also lets the form enforce the model's `unique_category_per_user`
     constraint. Django will not do it: `user` is not one of `Meta.fields`, and
@@ -40,9 +41,12 @@ class CategoryForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        if user is not None:
+            # ModelForm runs model.clean before the create view saves its owner.
+            self.instance.user = user
         queryset = Category.objects.filter(user=user)
         if self.instance.pk:
-            queryset = queryset.exclude(pk=self.instance.pk)
+            queryset = queryset.exclude(pk__in={self.instance.pk, *self.instance.descendant_ids()})
         self.fields['parent_category'].queryset = queryset
         self.fields['parent_category'].required = False
         self.fields['parent_category'].empty_label = _('No parent category')
@@ -81,4 +85,6 @@ class CategoryImportForm(forms.Form):
         uploaded_file = self.cleaned_data['file']
         if not uploaded_file.name.lower().endswith('.csv'):
             raise forms.ValidationError(_('Select a CSV file.'))
+        if uploaded_file.size > CATEGORY_CSV_MAX_BYTES:
+            raise forms.ValidationError(_('The category CSV must be no larger than 2 MiB.'))
         return uploaded_file

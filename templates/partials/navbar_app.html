@@ -1,12 +1,12 @@
 {% load i18n static %}
-<header class="sticky top-0 z-40 border-b border-forest/10 bg-white/95 backdrop-blur dark:border-cream/10 dark:bg-night-surface/95">
-    <nav class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8" aria-label="{% translate 'Main navigation' %}">
-        <a href="{% url 'pages:landing' %}" class="flex shrink-0 items-center gap-3 group rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-caramel">
-            <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="Tuxedo Finance" class="h-10 w-10 rounded-xl object-cover">
-            <span class="hidden text-left leading-tight sm:block"><span class="block text-sm font-medium tracking-[0.2em]">TUXEDO</span><span class="mt-0.5 block text-xs font-medium tracking-[0.15em] text-caramel-ink dark:text-caramel-light">FINANCE</span></span>
+<header class="app-toolbar">
+    <div class="app-toolbar-inner">
+        <a href="{% url 'dashboard:index' %}" class="app-mobile-brand lg:hidden" aria-label="Tuxedo Finance">
+            <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="" class="app-brand-mark">
+            <span class="hidden sm:block">Tuxedo Finance</span>
         </a>
-        <div class="hidden min-w-0 items-center gap-1 xl:flex">{% include 'partials/navigation_links.html' with nav_variant='desktop' %}</div>
-        <div class="hidden items-center gap-2 xl:flex">
+        <span class="app-current-workspace hidden lg:block">{{ APP_AREA_LABEL }}</span>
+        <div class="app-toolbar-options hidden items-center gap-2 lg:flex">
             {% include 'partials/theme_toggle.html' with legacy_theme_id=True %}
             <details class="secondary-actions">
                 <summary aria-label="{% translate 'Account options' %}"><span class="max-w-28 truncate">{{ request.user.username }}</span>{% include 'partials/chevron_down.html' %}</summary>
@@ -19,28 +19,29 @@
             </details>
             {% include 'partials/project_menu.html' %}
         </div>
-        <div class="flex items-center gap-2 xl:hidden">
+        <div class="app-toolbar-options flex items-center gap-2 lg:hidden">
             {% include 'partials/project_menu.html' %}
             <button type="button" id="menu-btn" aria-controls="mobile-menu" aria-expanded="false" class="action-link">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" /></svg><span class="sr-only">{% translate 'Toggle menu' %}</span>
             </button>
         </div>
-    </nav>
-    <noscript><nav class="mobile-navigation-links flex flex-wrap items-center justify-center gap-4 border-t border-forest/10 p-3 xl:hidden" aria-label="{% translate 'Main navigation' %}">
-        {% include 'partials/navigation_links.html' with nav_variant='native' %}<a href="{% url 'accounts:settings' %}" class="primary-link">{% translate 'Settings' %}</a>
+    </div>
+    <noscript><nav class="flex flex-wrap items-center justify-center gap-4 border-t border-forest/10 p-3 lg:hidden" aria-label="{% translate 'Account options' %}">
+        <a href="{% url 'accounts:settings' %}" class="primary-link">{% translate 'Settings' %}</a>
         {% include 'partials/language_selector.html' with selector_id='mobile-native' native_submit=True %}
         <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit" class="primary-link">{% translate 'Log out' %}</button></form>
     </nav></noscript>
 </header>
-<div id="mobile-menu" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title" class="fixed inset-0 z-50 flex translate-x-full flex-col overflow-y-auto bg-cream p-6 text-forest transition-transform duration-300 dark:bg-night dark:text-cream" aria-hidden="true" inert>
+<div id="mobile-menu" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title" class="app-account-dialog fixed inset-0 z-50 flex translate-x-full flex-col overflow-y-auto bg-cream p-6 text-forest transition-transform duration-300 dark:bg-night dark:text-cream" aria-hidden="true" inert>
     <div class="flex items-center justify-between">
         <h2 id="mobile-menu-title" class="text-sm font-medium uppercase tracking-widest">{% translate 'Navigation menu' %}</h2>
         <button type="button" id="close-menu-btn" aria-controls="mobile-menu" aria-expanded="false" class="action-link"><span aria-hidden="true">×</span><span class="sr-only">{% translate 'Close menu' %}</span></button>
     </div>
-    <nav class="mobile-navigation-links my-6 flex flex-col items-start gap-2 text-lg" aria-label="{% translate 'Main navigation' %}">{% include 'partials/navigation_links.html' with extra_class='mobile-link' nav_variant='mobile' %}</nav>
-    <div class="mt-auto space-y-5 border-t border-forest/15 pt-6 dark:border-cream/15">
+    <p class="my-6 truncate text-lg font-medium">{{ request.user.username }}</p>
+    <div class="space-y-5 border-t border-forest/15 pt-6 dark:border-cream/15">
         <a href="{% url 'accounts:settings' %}" class="action-link mobile-link">{% translate 'Settings' %}</a>
         <div class="flex items-center gap-4">{% include 'partials/language_selector.html' with selector_id='mobile' %}{% include 'partials/theme_toggle.html' %}</div>
+        <a href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer" class="action-link">{% translate 'Project documentation' %}</a>
         <form method="post" action="{% url 'accounts:logout' %}" hx-boost="false">{% csrf_token %}<button type="submit" class="action-link">{% translate 'Log out' %}</button></form>
     </div>
 </div>

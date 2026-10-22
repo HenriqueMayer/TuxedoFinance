@@ -1,6 +1,3 @@
-{% load i18n %}
-{% if setup_complete %}
-    <a href="{% url 'investments:create' %}" class="action-primary">{% translate 'New operation' %}</a>
-{% else %}
-    <a href="{% url 'investments:settings' %}" class="action-primary">{% translate 'Configure investments' %}</a>
-{% endif %}
+{% load i18n navigation %}
+{% url 'investments:guided_create' as add_url %}
+<a href="{% contextual_url add_url %}" class="action-primary">{% translate 'Add investment' %}</a>

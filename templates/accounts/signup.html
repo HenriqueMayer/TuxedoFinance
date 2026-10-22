@@ -11,26 +11,23 @@ auto-logged-in and redirected straight to the dashboard (PRD 3.1.4).
 {% block title %}{% if signup_disabled %}{% translate "Registration closed" %}{% else %}{% translate "Sign up" %}{% endif %} — Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-md">
+<div class="auth-workspace mx-auto max-w-md">
 {% if signup_disabled %}
-    <div class="rounded-3xl bg-white p-8 text-center shadow-lg dark:bg-night-surface">
-        <p class="mb-2 text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Sign up" %}</p>
-        <h1 class="font-sans text-4xl font-semibold tracking-tight">{% translate "Registration is currently closed" %}</h1>
+    <div class="surface-panel text-center">
+        <h1 class="page-title">{% translate "Registration is currently closed" %}</h1>
         <p class="mt-3 text-sm font-normal text-forest/70 dark:text-night-muted">{% translate "New accounts are not being accepted right now. Please contact the instance owner if you need access." %}</p>
-        <a href="{% url 'accounts:login' %}" class="mt-6 inline-flex rounded-full bg-caramel px-6 py-3 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-hidden focus:ring-2 focus:ring-caramel/40">{% translate "Log in" %}</a>
+        <a href="{% url 'accounts:login' %}" class="action-primary mt-6">{% translate "Log in" %}</a>
     </div>
 {% else %}
     <div class="mb-8 text-center">
-        <p class="mb-2 text-xs font-medium uppercase tracking-widest text-caramel-ink dark:text-caramel-light">{% translate "Sign up" %}</p>
-        <h1 class="font-sans text-4xl font-semibold tracking-tight">{% translate "Create your account" %}.</h1>
-        <p class="mt-2 text-sm font-normal text-forest/70 dark:text-night-muted">{% translate "Start tracking your cash flow in minutes." %}</p>
+        <h1 class="page-title">{% translate "Create your account" %}</h1>
     </div>
 
-    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-8 shadow-lg dark:bg-night-surface" novalidate>
+    <form method="post" hx-boost="false" class="workspace-form surface-panel space-y-5" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-            <div class="space-y-1.5">
+            <div class="space-y-1.5" role="alert">
                 {% for error in form.non_field_errors %}
                     <p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>
                 {% endfor %}
@@ -43,9 +40,8 @@ auto-logged-in and redirected straight to the dashboard (PRD 3.1.4).
         {% include 'partials/form_field.html' with field=form.password2 %}
 
         <button type="submit"
-                class="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-caramel px-6 py-3 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-hidden focus:ring-2 focus:ring-caramel/40">
+                class="action-primary w-full">
             {% translate "Sign up" %}
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
         </button>
     </form>
 

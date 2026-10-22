@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load i18n navigation %}
+{% block title %}{% translate 'Observed prices' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-7">
+    {% include 'investments/_sections.html' %}
+    <header class="workspace-header"><h1 class="page-title">{% translate 'Observed prices' %}</h1><a id="investment-price-create" data-live-fragment="investment-price-filters" href="{{ price_create_url }}" class="action-primary">{% translate 'New observation' %}</a></header>
+    <p class="subtle-copy">{% translate 'The latest observation on or before the valuation date prices the units you hold. Without an observation, the position shows its remaining acquisition cost. Sources are your own records; no external feed is contacted.' %}</p>
+    <form id="investment-price-filters" action="{% url 'investments:prices' %}" method="get" hx-boost="false" novalidate
+          data-live-filters data-live-results="investment-price-results" class="consultation-bar consultation-search-only">
+        <div class="space-y-2 min-w-0">{% include 'partials/form_field.html' with field=price_filter.asset %}</div>
+        <span id="investment-price-clear" data-live-fragment="investment-price-filters" class="consultation-clear-control self-end">
+            {% if request.GET.asset %}<a href="{% url 'investments:prices' %}" aria-label="{% translate 'Clear filters' %}" class="quiet-action" data-live-reset data-live-link="investment-price-filters">{% translate 'Clear' %}</a>{% endif %}
+        </span>
+        <button type="submit" data-live-submit class="quiet-action">{% translate 'Filter' %}</button>
+    </form>
+    <div id="investment-price-context" data-live-fragment="investment-price-filters">
+        {% if selected_price_asset %}<p class="subtle-copy">{% translate 'Asset' %}: <strong>{{ selected_price_asset.name }} · {{ selected_price_asset.code }}</strong></p>{% endif %}
+    </div>
+    <div id="investment-price-results" class="space-y-4">{% include 'investments/_price_results.html' %}</div>
+</div>
+{% endblock %}

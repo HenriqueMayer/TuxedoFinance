@@ -1,0 +1,27 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+body.tuxedo-ui [data-allocation-rows] { display: grid; gap: 12px; }
+body.tuxedo-ui .category-allocation-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(8rem, .55fr) auto;
+    align-items: start; gap: 12px 16px; padding: 16px;
+    border: 1px solid var(--ui-line); border-radius: 12px;
+}
+body.tuxedo-ui .category-allocation-row > * { min-width: 0; }
+body.tuxedo-ui .category-allocation-row > .allocation-wide { grid-column: 1 / -1; }
+body.tuxedo-ui .category-allocation-row > [data-allocation-delete] { grid-column: 1 / -1; }
+body.tuxedo-ui .category-allocation-row > [data-allocation-row-actions] { grid-column: auto; align-self: start; padding-top: 28px; }
+body.tuxedo-ui .category-allocation-amount { position: relative; }
+body.tuxedo-ui [data-allocation-remainder] { position: absolute; right: 0; top: 2px; color: var(--ui-muted); font-size: 11px; line-height: 20px; }
+body.tuxedo-ui .category-allocation-remove { color: var(--ui-muted); white-space: nowrap; }
+body.tuxedo-ui .category-allocation-remove:hover { color: var(--ui-danger); }
+body.tuxedo-ui [data-allocation-message] { font-size: 14px; line-height: 1.5; color: var(--ui-danger); }
+body.tuxedo-ui [data-allocation-message]:focus { outline: 2px solid var(--ui-accent); outline-offset: 4px; }
+body.tuxedo-ui :is([data-split-row], [data-allocation-delete], [data-allocation-remove], [data-allocation-row-actions], [data-allocation-remainder], [data-allocation-row-error], [data-allocation-message])[hidden] { display: none !important; }
+@media (max-width: 639px) {
+    body.tuxedo-ui .category-allocation-row { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 12px; }
+    body.tuxedo-ui .category-allocation-row > :first-of-type:not(legend) { grid-column: 1 / -1; }
+    body.tuxedo-ui .category-allocation-row > [data-allocation-row-actions] { justify-self: end; }
+    /* Reserve the hint line even while hidden: an amount blur must never move
+       the Remove/Save action away from the pointer during activation. */
+    body.tuxedo-ui .category-allocation-amount { padding-bottom: 20px; }
+    body.tuxedo-ui [data-allocation-remainder] { top: auto; bottom: 0; line-height: 16px; }
+}

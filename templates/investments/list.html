@@ -1,114 +1,34 @@
 {% extends 'base.html' %}
-{% load i18n %}
-{% block title %}{% translate 'Investments' %} - Tuxedo Finance{% endblock %}
+{% load i18n navigation %}
+{% block title %}{% translate 'My investments' %} — Tuxedo Finance{% endblock %}
 {% block content %}
-{% url 'investments:list' as list_url %}
-<div class="space-y-7">
-    <header class="workspace-header">
-        <div class="label-with-help">
-            {% translate 'Investments' as investments_label %}
-            {% translate 'Long-term positions and the cash you keep earning until bills are due.' as investments_help %}
-            <h1 class="page-title">{{ investments_label }}</h1>
-            {% include 'partials/help_popover.html' with help_id='investments-overview-help' help_label=investments_label help_text=investments_help %}
-        </div>
-        {% include 'investments/_primary_action.html' %}
-    </header>
+<div class="investing-workspace space-y-4">
     {% include 'investments/_sections.html' %}
-    <section class="panel-heading border-b border-forest/10 pb-6 dark:border-cream/10">
-        <div class="label-with-help">
-            {% if selected_section == 'cash' %}
-                {% translate 'Remunerated cash' as portfolio_label %}
-                {% translate 'Included in planning availability. Record actual yields here; redeem to an account before paying.' as portfolio_help %}
-            {% else %}
-                {% translate 'Portfolio' as portfolio_label %}
-                {% translate 'This is historical operation value, not a live market valuation.' as portfolio_help %}
-            {% endif %}
-            <h2 class="section-title">{{ portfolio_label }}</h2>
-            {% include 'partials/help_popover.html' with help_id='investments-portfolio-help' help_label=portfolio_label help_text=portfolio_help %}
-        </div>
-        <div class="text-right">
-            <p id="investment-total" class="text-3xl font-semibold tracking-tight tabular-nums">{{ base_currency }} {{ simulated_total|floatformat:2 }}</p>
-            <p class="subtle-copy mt-1">{% if missing_rate_currencies %}{% translate 'Partial total' %}{% else %}{% translate 'Recorded value' %}{% endif %}</p>
-            <p class="subtle-copy mt-1">{% blocktranslate with date=today|date:USER_DATE_FORMAT %}Currency conversion as of {{ date }}{% endblocktranslate %}</p>
-        </div>
-        {% if missing_rate_currencies %}<div id="investment-fx-warning" role="status" class="w-full space-y-2 text-sm text-expense dark:text-expense-light"><p>{% blocktranslate with currencies=missing_rate_currencies|join:', ' %}Current total incomplete: exchange rates are missing for {{ currencies }}.{% endblocktranslate %}</p><a class="quiet-action" href="{% url 'banking:exchange_rates' %}">{% translate 'Manage exchange rates' %}</a></div>{% endif %}
-        {% if native_totals %}
-        <dl class="flex w-full flex-wrap gap-x-6 gap-y-2 text-sm" aria-label="{% translate 'Recorded value by currency' %}">
-            {% for currency, amount in native_totals %}<div class="flex gap-2"><dt class="text-forest/70 dark:text-night-muted">{{ currency }}</dt><dd class="font-medium tabular-nums">{{ amount|floatformat:2 }}</dd></div>{% endfor %}
-        </dl>
-        {% endif %}
-        {% if valuation_rates %}
-        <details class="w-full text-sm">
-            <summary class="cursor-pointer text-forest/70 dark:text-night-muted">{% translate 'Exchange rates used' %}</summary>
-            <ul class="mt-3 space-y-2">{% for rate in valuation_rates %}<li><a class="quiet-action" href="{% url 'banking:exchange_rate_update' rate.pk %}">{{ rate.from_currency }}/{{ rate.to_currency }} · {{ rate.rate.normalize }} · {{ rate.effective_date|date:USER_DATE_FORMAT }}</a></li>{% endfor %}</ul>
-        </details>
-        {% endif %}
-    </section>
-    <section class="space-y-8" aria-label="{% translate 'Positions' %}">
-    {% if has_archived_positions %}<p id="investment-archived-positions-note" class="subtle-copy">{% translate 'Archived assets are hidden from this list. Their balances remain in totals and history.' %}</p>{% endif %}
-    {% for bank in portfolio_groups %}
-        <div class="surface-panel"><h2 class="section-title">{{ bank.name }}</h2>
-        {% for product in bank.products %}
-            <div class="panel-heading mt-4 border-b border-forest/10 pb-1 dark:border-cream/10">
-                <h3 class="text-base font-medium text-forest/80 dark:text-cream/80">{{ product.name }}</h3>
-                <div class="flex flex-wrap gap-3"><a href="{% url 'investments:create' %}?product={{ product.id|stringformat:'s' }}" class="quiet-action">{% translate 'New operation' %}</a><a href="{% url 'investments:update_product' product.id %}" class="quiet-action">{% translate 'Edit' %}</a></div>
-            </div>
-            <div class="hidden overflow-x-auto sm:block" tabindex="0" role="region" aria-label="{{ product.name }}"><table class="data-table min-w-[42rem] table-fixed">
-                <colgroup><col class="w-[28%]"><col class="w-[27%]"><col class="w-[15%]"><col class="w-[15%]"><col class="w-[15%]"></colgroup>
-                <thead><tr><th scope="col">{% translate 'Asset' %}</th><th scope="col" class="number">{% translate 'Position' %}</th><th scope="col" class="number">{% translate 'Deposits' %}</th><th scope="col" class="number">{% translate 'Yields' %}</th><th scope="col" class="number">{% translate 'Withdrawals' %}</th></tr></thead>
-                <tbody>{% for asset in product.assets %}<tr><td><a class="font-medium hover:underline" href="{% url 'investments:operations' %}?section={{ selected_section }}&amp;product={{ product.id|stringformat:'s' }}&amp;asset={{ asset.id|stringformat:'s' }}" aria-label="{% blocktranslate with asset=asset.name %}View operations for {{ asset }}{% endblocktranslate %}">{{ asset.name }}</a><p class="subtle-copy mt-1">{{ asset.code }} · {{ asset.currency }}</p></td><td class="number font-semibold">{% if asset.valuation_mode == 'MONETARY' %}{{ asset.currency }} {{ asset.balance|floatformat:2 }}{% if asset.currency != base_currency and asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% else %}{% blocktranslate with quantity=asset.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% if asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}{% endif %}</td><td class="number">{{ asset.currency }} {{ asset.deposits|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</td><td class="number">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</td></tr>{% endfor %}</tbody>
-            </table></div>
-            <ul class="divide-y divide-forest/10 sm:hidden dark:divide-cream/10">
-                {% for asset in product.assets %}
-                    <li class="space-y-4 py-4">
-                        <div class="flex flex-wrap items-start justify-between gap-4">
-                            <div class="min-w-0">
-                                <a class="text-sm font-medium hover:underline" href="{% url 'investments:operations' %}?section={{ selected_section }}&amp;product={{ product.id|stringformat:'s' }}&amp;asset={{ asset.id|stringformat:'s' }}" aria-label="{% blocktranslate with asset=asset.name %}View operations for {{ asset }}{% endblocktranslate %}">{{ asset.name }}</a>
-                                <p class="subtle-copy mt-1">{{ asset.code }} · {{ asset.currency }}</p>
-                            </div>
-                            <div class="shrink-0 text-right text-sm font-semibold tabular-nums">
-                                {% if asset.valuation_mode == 'MONETARY' %}
-                                    {{ asset.currency }} {{ asset.balance|floatformat:2 }}
-                                    {% if asset.currency != base_currency and asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}
-                                {% else %}
-                                    {% blocktranslate with quantity=asset.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}
-                                    {% if asset.base_balance is not None %}<p class="subtle-copy mt-1">{{ base_currency }} {{ asset.base_balance|floatformat:2 }}</p>{% endif %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <dl class="grid grid-cols-3 gap-2 text-xs">
-                            <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Deposits' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.deposits|floatformat:2 }}</dd></div>
-                            <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Yields' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.yields|floatformat:2 }}</dd></div>
-                            <div><dt class="text-forest/70 dark:text-night-muted">{% translate 'Withdrawals' %}</dt><dd class="mt-1 tabular-nums">{{ asset.currency }} {{ asset.withdrawals|floatformat:2 }}</dd></div>
-                        </dl>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endfor %}</div>
-    {% empty %}
-        <div class="surface-panel space-y-3">
-            {% if has_investments %}
-                <p class="subtle-copy">{% translate 'No active positions in this section.' %}</p>
-                <a href="{% url 'investments:settings' %}" class="action-link">{% translate 'Configure investments' %}</a>
-            {% elif not setup_complete %}
-                <h2 class="section-title">{% translate 'Start by configuring your investments' %}</h2>
-                <p class="subtle-copy">{% translate 'Set up a bank, a product and an asset. Configuration shows what is ready and guides you through the next step.' %}</p>
-            {% elif selected_section == 'cash' %}
-                <p class="subtle-copy">{% translate 'Choose Remunerated cash as the purpose of a monetary product to include its balance here.' %}</p>
-                <a href="{% url 'investments:settings' %}" class="action-link">{% translate 'Configure investments' %}</a>
-            {% else %}
-                <h2 class="section-title">{% translate 'Ready for your first operation' %}</h2>
-                <p class="subtle-copy">{% translate 'Your products and assets are configured. Record a deposit, withdrawal or yield to see your positions here.' %}</p>
-            {% endif %}
-        </div>
-    {% endfor %}
-    </section>
-    <a id="investment-operations-link" href="{% url 'investments:operations' %}?section={{ selected_section }}" class="surface-panel panel-heading group">
-        <span class="space-y-1">
-            <span class="section-title block group-hover:underline">{% translate 'Investment operations' %}</span>
-            <span class="subtle-copy block">{% translate 'Review deposits, withdrawals and yields.' %}</span>
-        </span>
-        <span aria-hidden="true" class="text-2xl">&rarr;</span>
-    </a>
+    <header class="workspace-header"><h1 class="page-title">{% translate 'My investments' %}</h1>{% include 'investments/_primary_action.html' %}</header>
+    <div id="position-value-summary" data-live-fragment="investment-position-filters" class="surface-panel workspace-summary space-y-3">
+    <div class="investment-summary-heading">
+        <div><p class="subtle-copy workspace-summary-label">{% if missing_rate_currencies %}{% translate 'Partial total' %}{% elif search_query %}{% translate 'Total before search' %}{% else %}{% translate 'Registered value' %}{% endif %}</p><p id="investment-total" class="workspace-summary-value text-2xl font-semibold tabular-nums mt-1"><span class="workspace-summary-currency">{{ base_currency }}</span> {{ simulated_total|floatformat:2 }}</p><p class="subtle-copy workspace-summary-caption mt-1">{% blocktranslate with date=today|date:USER_DATE_FORMAT %}As of {{ date }}{% endblocktranslate %}</p></div>
+        <details id="position-value-details" class="investment-value-details explanation-disclosure"><summary>{% translate 'Value details' %}</summary><div class="space-y-3 mt-3">
+            {% for currency, amount in native_totals %}<p class="tabular-nums">{{ currency }} {{ amount|floatformat:2 }}</p>{% endfor %}
+            {% for rate in valuation_rates %}{% url 'banking:exchange_rate_update' rate.pk as rate_url %}<p><a class="quiet-action" href="{% contextual_url rate_url fragment='position-value-summary' %}">{{ rate.from_currency }}/{{ rate.to_currency }} · {{ rate.rate.normalize }} · {{ rate.effective_date|date:USER_DATE_FORMAT }}</a></p>{% endfor %}
+            {% if search_query %}<p class="subtle-copy">{% translate 'The total includes all holdings in the selected group, before the text search.' %}</p>{% endif %}
+            <p class="subtle-copy">{% translate 'Local prices or remaining acquisition cost value units. Currency conversion uses registered reference rates. Bank cash and realized results remain separate.' %}</p>
+        </div></details>
+    </div>
+    {% if missing_rate_currencies %}<p id="investment-fx-warning" role="status" class="text-sm text-expense dark:text-expense-light">{% blocktranslate with currencies=missing_rate_currencies|join:', ' %}Current total incomplete: exchange rates are missing for {{ currencies }}.{% endblocktranslate %} <a class="quiet-action" href="{% url 'banking:exchange_rates' %}">{% translate 'Manage exchange rates' %}</a></p>{% endif %}
+    {% if portfolio_snapshot.missing_prices %}<p id="investment-price-warning" role="status" class="subtle-copy">{% translate 'Some unit positions use acquisition cost because no local price is available.' %}</p>{% endif %}
+    {% if portfolio_snapshot.unknown_baselines %}<p id="investment-baseline-warning" role="status" class="text-sm text-expense dark:text-expense-light">{% translate 'Some opening dates are unknown. Current holdings are retained; earlier ownership cannot be established.' %}</p>{% endif %}
+    {% if portfolio_snapshot.history_errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{% translate 'Existing operation history needs review before its results can be relied on.' %} <a class="quiet-action" href="{% url 'investments:operations' %}">{% translate 'History' %}</a></p>{% endif %}
+    </div>
+    <form id="investment-position-filters" method="get" hx-history="false" action="{% url 'investments:list' %}" hx-boost="false" data-live-filters data-live-results="investment-position-list" class="consultation-bar consultation-stable">
+        <div class="consultation-search"><label for="position-search" class="field-label">{% translate 'Search investments' %}</label><input id="position-search" type="search" name="q" value="{{ search_query }}" data-live-search placeholder="{% translate 'Name, institution or identifier' %}" class="form-input w-full"></div>
+        <details id="position-extra-filters" class="filter-disclosure"><summary>{% translate 'More filters' %}<span id="position-filter-count" data-live-fragment="investment-position-filters" class="consultation-filter-count">{% if position_scope != 'all' %}1{% endif %}</span></summary><div class="filter-disclosure-panel">
+            <div class="space-y-1.5"><label for="position-scope" class="field-label">{% translate 'Show' %}</label><select id="position-scope" name="scope" data-live-change data-live-default="all" class="form-input w-full"><option value="all"{% if position_scope == 'all' %} selected{% endif %}>{% translate 'All my investments' %}</option><option value="portfolio"{% if position_scope == 'portfolio' %} selected{% endif %}>{% translate 'Investments' %}</option><option value="cash"{% if position_scope == 'cash' %} selected{% endif %}>{% translate 'Remunerated cash' %}</option></select></div>
+        </div></details>
+        <span id="position-filter-clear" data-live-fragment="investment-position-filters" class="consultation-clear-control">{% if search_query or position_scope != 'all' %}<a href="{% url 'investments:list' %}" data-live-reset data-live-link="investment-position-filters" class="quiet-action">{% translate 'Clear filters' %}</a>{% endif %}</span>
+        <button type="submit" data-live-submit class="action-link">{% translate 'Search' %}</button>
+    </form>
+    <p id="position-results-status" data-live-fragment="investment-position-filters" role="status" class="subtle-copy">{% blocktranslate count count=position_count %}{{ count }} position{% plural %}{{ count }} positions{% endblocktranslate %}</p>
+    {% include 'investments/_position_list.html' %}
 </div>
 {% endblock %}

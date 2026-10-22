@@ -6,7 +6,7 @@
     <header class="workspace-header">
         <div class="label-with-help"><h1 class="page-title">{% translate "Compare drafts" %}</h1>{% translate "Each result uses its saved inputs and commitment snapshot. Different currencies and scenario kinds are shown separately, never added together." as comparison_help %}{% include 'partials/help_popover.html' with help_id='compare-drafts-help' help_label=_('Compare drafts') help_text=comparison_help %}</div>
     </header>
-    <div class="surface-panel overflow-x-auto">
+    <div class="surface-panel finance-entry-form overflow-x-auto" tabindex="0" role="region" aria-label="{% translate 'Compare drafts' %}">
         {% if scenarios %}
         <table class="data-table planning-sheet">
             <thead><tr><th scope="col">{% translate "Scenario" %}</th>{% for scenario in scenarios %}<th scope="col" class="min-w-[12rem]"><a class="block max-w-xs break-words text-sm font-medium text-forest dark:text-cream underline decoration-forest/20 underline-offset-4 dark:decoration-cream/20" href="{% url 'sandbox:draft_detail' scenario.draft.pk %}">{{ scenario.draft.name }}</a></th>{% endfor %}</tr></thead>

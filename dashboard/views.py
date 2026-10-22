@@ -2,6 +2,8 @@ from datetime import date
 from calendar import monthrange
 
 from dashboard.selection import selection_data, attach_details
+from banking.services import ConversionContext
+from core.features import feature_available
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
@@ -20,6 +22,7 @@ from dashboard.services import (
     EVOLUTION_PAST_MONTHS,
     OUTLOOK_MONTHS,
     add_months,
+    _transactions,
     get_account_evolution,
     get_dashboard_summary,
     get_expenses_by_recurrence,
@@ -28,7 +31,8 @@ from dashboard.services import (
 from transactions.services import sync_user_ledger
 
 
-ALL_TIME_MONTHS = 12
+# The legacy ALL query value selects a rolling year, not the full ledger.
+HISTORY_MONTHS = 12
 
 
 def _selected_month(request, in_range):
@@ -94,27 +98,40 @@ def _is_offset_window_safe(year, month):
     )
 
 
+def monthly_context(request, conversion, *, transactions=None, category_selection=False):
+    """Retain the dashboard's dated month semantics in the analytical workspace."""
+    year, month = _selected_month(request, _is_projectable)
+    context = get_dashboard_summary(request.user, year, month, conversion=conversion,
+                                    transactions=transactions)
+    today = timezone.localdate()
+    if category_selection:
+        context['category_selection'] = selection_data(
+            context['expense_categories'], [('total', _('Expenses'))], label='name')
+        cutoff = min(today, date(year, month, monthrange(year, month)[1])) if (year, month) <= (today.year, today.month) else None
+        attach_details(context['category_selection'], request.user, 'categories',
+                       context['expense_categories'], ['expenses'], period=f'{year:04d}-{month:02d}',
+                       cutoff=cutoff.isoformat() if cutoff else None)
+    context['selected_month_param'] = f'{year:04d}-{month:02d}'
+    for direction, step in (('previous', -1), ('next', 1)):
+        adjacent_year, adjacent_month = add_months(year, month, step)
+        context[f'{direction}_month_param'] = f'{adjacent_year:04d}-{adjacent_month:02d}'
+        context[f'has_{direction}_month'] = _is_projectable(adjacent_year, adjacent_month)
+    return context
+
+
 class DashboardIndexView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/index.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         sync_user_ledger(self.request.user)
-        year, month = _selected_month(self.request, _is_projectable)
-        context.update(get_dashboard_summary(self.request.user, year, month))
-        context['category_selection'] = selection_data(context['expense_categories'], [('total', _('Expenses'))], label='name')
-        today = timezone.localdate()
-        cutoff = min(today, date(year, month, monthrange(year, month)[1])) if (year, month) <= (today.year, today.month) else None
-        attach_details(context['category_selection'], self.request.user, 'categories',
-            context['expense_categories'], ['expenses'], period=f'{year:04d}-{month:02d}',
-            cutoff=cutoff.isoformat() if cutoff else None)
-        context['selected_month_param'] = f'{year:04d}-{month:02d}'
-        previous_year, previous_month = add_months(year, month, -1)
-        next_year, next_month = add_months(year, month, 1)
-        context['previous_month_param'] = f'{previous_year:04d}-{previous_month:02d}'
-        context['next_month_param'] = f'{next_year:04d}-{next_month:02d}'
-        context['has_previous_month'] = _is_projectable(previous_year, previous_month)
-        context['has_next_month'] = _is_projectable(next_year, next_month)
+        conversion = ConversionContext(self.request.user)
+        context.update(monthly_context(self.request, conversion))
+        from ingestion.models import ImportBatch
+        # Staged statements are decisions awaiting review, never posted cash.
+        pending = ImportBatch.objects.filter(user=self.request.user, status__in=[ImportBatch.Status.STAGED, ImportBatch.Status.READY]).select_related('account') if feature_available('imports') else ImportBatch.objects.none()
+        context['pending_import_count'] = pending.count()
+        context['pending_imports'] = list(pending[:3])
         return context
 
 
@@ -122,7 +139,9 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/reports.html'
 
     def get_template_names(self):
-        if self.request.headers.get('HX-Request') == 'true':
+        if self.request.headers.get('HX-Request') == 'true' and self.request.headers.get('HX-Boosted') != 'true':
+            if self.request.headers.get('HX-Target') == 'finance-monthly-analysis':
+                return ['analytics/_monthly.html']
             return ['dashboard/_reports_charts.html']
         return [self.template_name]
 
@@ -138,8 +157,12 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         sync_user_ledger(self.request.user)
+        conversion = ConversionContext(self.request.user)
         offset = _parse_charts_offset(self.request, _is_offset_window_safe)
-        evolution = get_account_evolution(self.request.user, offset=offset)
+        # All report islands read the same owned sources. Sharing this list
+        # avoids hydrating the full history and split relations three times.
+        transactions = _transactions(self.request.user)
+        evolution = get_account_evolution(self.request.user, offset=offset, conversion=conversion, transactions=transactions)
         months = evolution['months']
         context.update(
             {
@@ -200,8 +223,8 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
         current_param = f'{today.year:04d}-{today.month:02d}'
         if raw_period == 'ALL':
             instrument_window = [add_months(today.year, today.month, -step)
-                                 for step in range(ALL_TIME_MONTHS)]
-            window_label = _('All time')
+                                 for step in range(HISTORY_MONTHS)]
+            window_label = _('Last 12 months')
         else:
             period_value = f'{period_year:04d}-{period_month:02d}'
             instrument_window = [(period_year, period_month)]
@@ -214,7 +237,7 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             context[f'instrument_{direction}_month'] = (
                 f'{year:04d}-{month:02d}' if _is_representable(year, month) else None
             )
-        activity = get_instrument_activity(self.request.user, window=instrument_window)
+        activity = get_instrument_activity(self.request.user, window=instrument_window, conversion=conversion, transactions=transactions)
         context['instrument_activity'] = activity
         context['instrument_chart'] = self._instrument_chart(activity)
 
@@ -235,11 +258,11 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             )
         if installment_value == 'ALL':
             recurrence = get_expenses_by_recurrence(
-                self.request.user, months=ALL_TIME_MONTHS
+                self.request.user, months=HISTORY_MONTHS, conversion=conversion, transactions=transactions,
             )
-            context['installment_window_label'] = _('All time')
+            context['installment_window_label'] = _('Last 12 months')
         else:
-            recurrence = get_expenses_by_recurrence(self.request.user, year, month)
+            recurrence = get_expenses_by_recurrence(self.request.user, year, month, conversion=conversion, transactions=transactions)
             context['installment_window_label'] = date_format(date(year, month, 1), 'F Y')
         context['recurrence_breakdown'] = recurrence
         context['recurrence_chart'] = (
@@ -257,7 +280,8 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             ('expense_total', _('Expenses')), ('income_total', _('Income')),
         ], label='label', chart=context['instrument_chart'])
         context['balance_selection'] = selection_data(months, [('closing_balance', _('Balance'))], mode='change', opening=evolution['opening_balance'], chart=context['balance_chart'])
-        attach_details(context['balance_selection'], self.request.user, 'ledger', months, ['balance'])
+        attach_details(context['balance_selection'], self.request.user, 'ledger', months, ['balance'],
+            projected=True, forecast_from=today.isoformat())
         attach_details(context['cashflow_selection'], self.request.user, 'cashflow', months, ['income', 'withdrawals', 'expenses', 'investments'])
         attach_details(context['instrument_selection'], self.request.user, 'instruments',
             activity['instruments'], ['expenses', 'income'],
@@ -270,6 +294,13 @@ class DashboardReportsView(LoginRequiredMixin, TemplateView):
             | set(activity['missing_currencies'])
             | set(recurrence['missing_currencies'])
         )
+        report_missing = context['missing_currencies']
+        # One categorized source read serves the month and every independent
+        # chart window; moving screens must not rehydrate the private history.
+        context.update(monthly_context(self.request, conversion, transactions=transactions,
+                                       category_selection=True))
+        context['monthly_missing_currencies'] = context['missing_currencies']
+        context['missing_currencies'] = sorted(set(report_missing) | set(context['missing_currencies']))
         return context
 
     @staticmethod

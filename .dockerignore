@@ -23,6 +23,12 @@
 !investments/**
 !sandbox/
 !sandbox/**
+!planning/
+!planning/**
+!ingestion/
+!ingestion/**
+!assistant/
+!assistant/**
 !templates/
 !templates/**
 !static/
@@ -34,6 +40,7 @@
 !scripts/docker_healthcheck.py
 !scripts/sqlite_backup.py
 **/__pycache__/**
+**/.local/**
 **/*.pyc
 **/.env*
 **/*.sqlite3*

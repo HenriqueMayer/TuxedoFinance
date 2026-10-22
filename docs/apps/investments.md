@@ -4,12 +4,40 @@ The investments app remains a separate position ledger. It reuses `banking.Bank`
 and `BankAccount` for providers and cash legs, but investment operations do not
 become ordinary categorized transactions.
 
+## Python responsibilities
+
+Public form and view imports remain available through `investments.forms` and
+`investments.views`; URL names and callable names are unchanged. Their packages
+separate configuration from operation entry and read-only consultation:
+
+| Module | Responsibility |
+|---|---|
+| `forms/operations.py` | Operation fields, funding selection and monetary-yield input validation. |
+| `forms/setup.py` | Guided holdings, investment products and asset configuration. |
+| `forms/filters.py` | Read-only chart, operation and observed-price criteria. |
+| `forms/prices.py` | Dated local price registration. |
+| `views/portfolio.py` | Current position lists/details and historical chart presentation. |
+| `views/operations.py` | Operation history, create/update/delete and non-persistent yield preview. |
+| `views/setup.py` | Guided registration and the product/asset configuration lifecycle. |
+| `views/prices.py` | Owned local price consultation and editing. |
+| `services.py` | Atomic investment/banking synchronization, yield calculations and aggregation entry points. |
+| `positions.py` | Ordered position replay, weighted cost and dated portfolio valuation. |
+
+Keep financial writes in the existing service boundary and owner validation in
+the forms, models and views. The form package shares field styling internally;
+it does not introduce another record picker. Configuration readiness is shared
+by the portfolio, operation history and settings views. The deferred imports
+between position valuation and services remain deliberate, avoiding eager
+circular initialization. Tests belong to this app's `tests/` package and follow
+the same domain responsibilities.
+
 ## Domain
 
 ```text
 Bank
 └── InvestmentProduct
     └── Investment ── Asset
+                     └── PriceObservation (local, dated)
 
 Asset = name + code + asset class + currency + valuation mode
 ```
@@ -30,9 +58,20 @@ Assets use one immutable valuation mode after their first operation:
 
 A monetary asset may have an `opening_balance` and its holding product: money already held before the first recorded operation. It appears in the position balance but does not create a bank movement, income, expense, deposit or withdrawal. It can only be changed before the asset has investment operations. Unit-based assets always have an opening balance of zero.
 
+Unit assets instead support an opening quantity and declared unit cost in one
+opening product. New nonzero openings require `Asset.opening_date`; the date
+cannot follow an existing operation. A dated opening is included only on and
+after that date. Incremental migration leaves older unknown dates null rather
+than inventing acquisition history. Those openings remain visible with an
+unknown-baseline warning; a chart fallback date is presentation context, not
+evidence of an acquisition date.
+
 ## Operations
 
 Every operation records product, asset, kind, currency, date and optional notes.
+An operation with a bank cash endpoint cannot precede that account's known
+opening date. Validation runs before the atomic source/ledger save; unknown
+legacy opening dates are not inferred and historical conflicts are not rewritten.
 Monetary assets use an operation amount; unit-based assets use quantity and unit
 price. There is no `title`.
 
@@ -76,15 +115,60 @@ Automatic monthly and annual yield calculations are not implemented. Yield
 is entered manually; the total-balance option derives the operation amount
 from the supplied balance without introducing automatic accrual.
 
+For unit assets, a yield adds the quantity and the value declared at its own
+entry price. Replay does not replace that historical value with a later market
+price. `cash_amount` always remains the actual bank debit or credit entered by
+the owner; position cost calculations never silently change it.
+
+## Weighted cost and editable history
+
+`investments.positions.replay_positions` rebuilds each product/asset position
+in `(date, created_at, pk)` order. Unit deposits and unit yields increase
+quantity and remaining cost. A withdrawal removes cost at the weighted average
+immediately before that withdrawal and records realized proceeds minus removed
+cost. A full disposal clears quantity and cost exactly. The same asset in two
+products has two independent cost pools; this is a personal accounting model,
+not a tax-lot or tax-reporting service.
+
+Unit operations may explicitly mark `fees_in_asset_currency`. This unchecked
+choice permits known asset-currency fees to increase acquisition cost or reduce
+disposal proceeds. Existing and unmarked fees remain recorded metadata, outside
+cost and realized-result calculations, because their currency is unknown. The
+interface discloses unapplied fees. Monetary operations cannot apply the
+unit-cost fee declaration. Neither choice reinterprets the bank cash
+leg or creates a separate fee transaction.
+
+Creation, edits and deletion validate the entire affected chronological replay,
+including the old and new product/asset pairs when a record moves. A change that
+would leave any later quantity or monetary position negative is rejected. This
+protects earlier acquisitions used by later withdrawals and permits valid
+out-of-order edits. Invalid legacy sequences produce explicit history errors
+rather than invented holdings or returns.
+
 ## Valuation
 
+`PriceObservation` stores one positive unit price per owned asset/date, with an
+optional local source label. It is available only for unit-priced assets. The
+Observed prices screen provides create, edit and confirmed delete actions; existing
+quotes for archived assets remain editable, while new choices exclude them.
+Quotes do not post bank movements, investment operations or FX evidence, and no
+external price feed is contacted.
+
+Valuation uses the latest recorded price on or before its cutoff and multiplies
+it by the remaining quantity. Without a usable quote, remaining cost is shown
+as an explicit fallback and unrealized gain is unknown. Monetary positions use
+their native balance. Cost, local valuation, realized results, recorded yields
+and unrealized results are separate amounts. Recorded yields remain part of the
+position; they must not be added to valuation a second time.
+
 Portfolio totals are grouped by bank, product, asset class, asset and currency.
-Historical charts use captured and reconstructed FX snapshots. Descriptive
+Historical operation flows and cost components use captured and reconstructed
+FX snapshots; local price valuations use cutoff-date rates. Descriptive
 edits retain the snapshot; amount, asset, fee, or date edits refresh it.
 Changing the reporting currency does not chain a mutable rate onto historical
 evidence; snapshots targeting another base are reported as incomplete.
-Current portfolio
-simulations may use a current rate but must label the valuation date and source.
+Current portfolio reads may use a current rate but must label the valuation
+date and source.
 Missing rates remain explicit and never cause unlike currencies to be summed
 directly.
 
@@ -102,12 +186,43 @@ after a dated rate exists; it cannot replace captured evidence. Historical
 target mismatches explain which reporting currency owns the saved conversion.
 Native values need no FX when they already match the selected reporting currency.
 
+`get_portfolio_valuation(user, as_of=None, purpose=None, base_currency=None, *, historical=False, opening_fallback_date=None, conversion=None)` returns
+positions and totals with missing-price, missing-FX, unknown-baseline,
+unapplied-fee and history-error metadata.
+`get_portfolio_series(user, base_currency, periods, purpose=None, *, conversion=None)`
+produces dated snapshots for supplied `(year, month)` periods and accepts the
+same shared conversion context. `get_portfolio_groups(..., snapshot=None)`
+preserves the existing
+bank/product/asset grouping interface: unit `balance` is remaining cost, while
+`valuation` and `base_value` are explicit valuation fields. Consumers must not
+sum signed withdrawal proceeds to infer a remaining position.
+
+Historical cost components consume persisted operation FX evidence. Known
+opening dates and dated price valuations use rates available at their requested
+date. Native realized gains use disposal-date conversion; the result is not an
+attribution of exchange-rate gains across currencies. The shared
+`banking.services.ConversionContext` reuses rate lookups within one request;
+it does not overwrite captured evidence. Unknown baselines, missing quotes or
+conversion evidence prevent a complete performance claim. The application does
+not infer percentage, annualized, time-weighted or money-weighted returns from
+these amounts.
+
 ## Settings and integrity
 
 Investment Settings manages products and assets; bank management links to the
 canonical banking screen instead of duplicating it. Referenced banks, products
 and assets cannot be deleted. Personal operations remain editable; audit-grade
 reversal workflows are out of scope.
+
+The complete catalogue separates products grouped by institution from active and
+archived assets. Saved bank colors remain identity markers. Edit and asset
+Archive/Restore stay direct actions; less frequent price and deletion actions
+use deliberate compact menus. Archiving preserves the stable action identifier
+and focus instead of moving the user into a menu after each update.
+Institution and position names wrap even without spaces. Catalogue actions
+align to the right on phones so their anchored menus stay in view; full record
+labels wrap within the opening-product picker. User-facing setup instructions
+name the actual Accounts destination rather than the former Banking label.
 
 All forms and services enforce per-user ownership for bank, account, product and
 asset choices. Filters cover bank, product, asset, asset class, currency, kind
@@ -119,8 +234,9 @@ silently widening the history. They remain GET forms with native submission and
 HTMX/history support. Currency, class and dates use a native More filters
 disclosure; active criteria and invalid submissions keep it open. Filter swaps
 preserve scroll and focus instead of returning to the top of the form.
-Position names link to history for the exact purpose,
-product and asset; product-level New operation links preselect only an owned,
+Position names open the exact product/asset position, with its contextual
+operation history and update actions. Institution markers use the saved bank
+color without conveying financial meaning. Product-level New operation links preselect only an owned,
 explicitly requested product. Asset and operation type still wait for selection.
 
 For valuation limitations and a dated competitor comparison, see the
@@ -128,19 +244,34 @@ For valuation limitations and a dated competitor comparison, see the
 
 ## Charts
 
-The dedicated Charts tab at `/investments/charts/` uses the existing responsive
+Analyses at `/analytics/investments/`, reached through the primary Analytics
+workspace, uses the existing responsive
 SVG charts and exact selection/composition data. Its Overall, Portfolio and
 Remunerated cash filter scopes both the historical position curve and monthly
 deposits, withdrawals and internal yields. Overall includes both purposes;
 opening positions remain visible even without operations. It does not include
-ordinary bank cash or imply market-price valuation.
+ordinary bank cash. The position curve uses the latest local price available at
+each cutoff, or remaining cost with a missing-price warning. Its recorded
+performance table separates valuation, cost, cumulative realized result and
+unrealized result. Monthly operation-flow bars retain recorded deposits,
+withdrawals and yields with their historical FX evidence. Position value and
+results also appear above the portfolio; Prices is the separate local quote editor.
+The legacy `/investments/charts/` route redirects to the canonical analytical
+destination with its query and fragment context.
 
 Changing the scope immediately applies the filter while preserving each chart's
 month window, focus and scroll. The Filter button is the no-JavaScript fallback.
-HTMX updates only the chart region;
+HTMX updates the chart region, including its scope-dependent current valuation
+summary and warnings;
 ordinary GETs, browser history, keyboard selection and no-JavaScript filtering
 remain available. Missing FX warnings appear inside that same region so filtered
 or refreshed charts cannot silently lose their incomplete-conversion warning.
+
+Composition links from a position point to the owned product/asset history
+through that plotted month's inclusive last day, rather than including later
+operations. Opening balances still explain part of the position without
+inventing an acquisition operation. Operation editors opened from analyses
+retain the scope, both chart windows and the owning-chart anchor for Save/Cancel.
 
 Portfolio and Remunerated cash retain their position tables and contextual links
 to the separate Operations page. Operation search/filter/pagination updates only
@@ -149,6 +280,24 @@ to the separate Operations page. Operation search/filter/pagination updates only
 ## Form keyboard behavior
 
 Record selectors use the shared keyboard-search component. Values and funding wait for the asset and operation type; monetary yields require an explicit input mode. New asset valuation choices begin empty, and opening-position products wait for an opening balance or quantity. Existing operations and invalid POSTs preserve their values and visible errors.
+
+Guided registration, operations, prices and configuration share the compact
+finance-entry sheet. Related values/dates use responsive columns; record choices,
+funding disclosures and optional notes retain their native/shared controls.
+Contextual price, exchange-rate and configuration actions carry a validated
+local origin, including the position or selected consultation filters.
+Archived-position configuration shortcuts reveal the exact asset row, including
+inside the archived disclosure, rather than returning to the page heading.
+Observed-price consultation explicitly names its selected asset and offers a
+shared searchable asset criterion and native Clear action; the existing owned
+asset filter and exact precision remain.
+
+Complete product and asset registrations group institution/purpose, identity,
+valuation and existing holdings under native legends. Guided registration keeps
+its atomic setup and the operation editor retains separate value and funding
+groups. Opening holdings still describe money or units already held; they never
+imply an account debit. Position detail separates the registered-value summary
+from cost/price evidence and optional configuration explanations.
 
 Deposits first ask whether funding comes from an account or a loyalty program.
 Only that record selector is revealed; points wait for a selected program and
@@ -161,11 +310,12 @@ Monetary yield input modes precede their value fields, so Tab proceeds from the
 chosen mode to the revealed amount or ending balance and its contextual help.
 
 Optional fees live in Advanced options, which opens for existing fees or errors.
+The asset-currency fee checkbox is an explicit declaration and begins unchecked.
 For opening unit positions, the unit price waits for a positive quantity and
 returns to zero when the quantity is deliberately cleared. Initialization and
 browser-history restoration preserve bound values and errors.
 
-Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+Follow the [mandatory shared form contract](../frontend/forms.md#keyboard-and-choice-contract).
 
 ## Purpose and cash planning
 
@@ -176,12 +326,16 @@ A monetary asset may occur in different products: purpose belongs to the product
 and the authoritative position is the product/asset pair. A cash product cannot
 hold unit-priced assets, including opening positions and historical operations.
 Reclassification changes analysis, not the underlying operations or bank ledger.
+Product purpose and asset currency/valuation mode cannot change while goal
+allocations reference them, including allocations retained by archived goals.
+This preserves the denomination and meaning of a saved reservation.
 
 Deposits and withdrawals between an included account and a cash pot are internal
 to combined planning resources. They still change the individual bank balance.
 Record actual yield as an ordinary yield operation, using an amount or ending
 balance. It changes only the pot until redeemed. Historical investment value is
-not a live market valuation; the UI labels this distinction explicitly.
+recorded evidence rather than an external live market feed; local observations
+and missing-price cost fallbacks identify their date and source explicitly.
 
 Asset deletion is blocked by any nonzero opening-position component or any
 operation history, including a fully withdrawn position. The shared deletion
@@ -208,18 +362,87 @@ historical filters include all assets. Restore before recording any new deposit,
 withdrawal or yield. This rule deliberately keeps archiving distinct from
 removing holdings or rewriting history.
 
-The portfolio and Operations pages highlight Configure investments until the
-user has a bank, a product and an active asset. Configuration lists the three setup
-steps, marks completed prerequisites and links to the next missing registration.
-Once ready, New operation becomes the primary action, even before the first
-operation. Products are grouped by bank and assets remain a separate editable
-catalog. Configuration stays in the investment navigation for later maintenance.
+My investments opens a compact holdings list with registered value and Update.
+Positions share one divided surface with aligned name/value/action columns on
+desktop and stacked readable rows on phones. Native/base values, valuation
+evidence and unknown-opening/history warnings remain associated with each
+position. The total is scoped by purpose, before text search; its label and
+value details disclose that boundary. Search and the optional purpose filter
+reuse the stable consultation rail; History uses the same rail for its existing
+criteria. No record fields or financial definitions change with this layout.
+Update presents a compact action list with short names and explanatory accessible
+descriptions. Save/Cancel retain the existing visible desktop/mobile row anchors.
+Cancel links use native navigation so an explicit return fragment is honored
+instead of inheriting the boosted shell's heading/top behavior. Native POST
+redirects preserve the same validated destination; this does not weaken departure
+warnings for edited forms.
+Analyses, observations and configuration share the compact presentation but
+retain their domain-specific data and form contracts.
+The guided Add investment workflow saves an owned institution, product and asset
+atomically. It starts purpose and valuation choices empty, asks the user whether
+remunerated cash participates in planning, and separates money from units/cost.
+The optional classification is chosen before the first operation; the existing
+history lock prevents changing it afterward. Unknown classification is stored
+as Other and does not invent a financial type. Nonzero opening holdings require
+a date and never debit an account. Zero holdings
+may retain `opening_product` as their configured placement without an opening
+movement or invented cost/date; first-operation actions remain available.
 
-Simulate returns is a gray, non-navigating item in investment sections. Its
-floating notice opens on hover, keyboard focus or touch and directs users to
-Planning → Yield simulation. The investment submenu has no simulation link;
-Planning retains the working destination. The notice uses a text trigger rather
-than a question-mark help icon, shares floating positioning/dismissal behavior,
-and has a native disclosure fallback for keyboard and touch. Saved scenarios and their hypothetical
-yield never post investment or bank movements.
-Market quotes, price histories and agent integration remain roadmap work.
+My investments, History, Prices and Setup are direct section tabs. Prices
+retains local dated observations, and Setup retains product/asset configuration.
+The tabs retain the shared 24px separation from page content and scroll
+horizontally on narrow screens without changing native link activation.
+Analytics is a separate primary workspace; simulations stay in Plan → Simulations → Yield. The Update
+screen chooses contribution, withdrawal, yield or local unit-price observation,
+then opens the existing financial form with owned, compatible shortcut context.
+Partial valuations, missing prices and unknown opening dates remain visible;
+remaining acquisition cost is labelled as cost rather than a market quote.
+
+External market feeds, broker synchronization and assistant investment
+operations remain outside the implemented local scope. The assistant can already
+[consult owned investment evidence](../assistant/consultation.md); reading a
+position does not authorize a contribution, withdrawal or price update. Local
+dated quotes and position performance are implemented under Unreleased; they do
+not turn simulations into postings.
+
+## Position actions and return context
+
+Position rows/cards expose one Update action, opening a contextual chooser for
+Contribute, Redeem, Record yield and (for unit positions) Update price. Explicit owned product/asset/type shortcuts use
+existing server validation and conditional choices. Save/Cancel return to the
+originating desktop row or mobile card using its stable anchor, or to the
+filtered operation/price history when opened there. Unchanged destinations
+without explicit context retain their existing default. Local return URLs never
+relax ownership, archived-asset restrictions or generated-operation edit locks.
+
+
+## Per-position planning participation
+
+`PositionPlanningSetting` stores one owner/product/asset participation flag for
+monetary `MONTHLY_CASH` positions. An absent row includes the position, preserving
+existing behavior. An excluded positive balance is entirely set aside; its real
+balance and operations stay recorded and negative amounts still reduce available
+money. The atomic service validates owned compatible sources, and changes require
+a deliberate CSRF-protected POST. Archiving an asset is a separate visibility
+rule and must never be used as an availability exclusion.
+
+
+## Position appearance
+
+A cosmetic preference belongs to one owned `(user, product, asset)` position,
+not to the global asset or to its bank. The same asset can therefore use a
+different emoji at another institution. A missing preference displays General
+(💰); applying the migration does not backfill or reinterpret financial records.
+
+The guided investment form accepts an optional curated icon. Existing positions
+expose Personalization in their detail page, reached by the row icon. The
+separate explicit Save POST validates the position, owner and stable icon key;
+it does not create operations, change holdings, synchronize cash or alter
+planning participation. Native labelled choices remain available without
+JavaScript, with selected values and server errors preserved.
+
+The catalogue contains Piggy bank, Emergency reserve, Home, Goal, General,
+Investment, Long term, Travel, Education, Vehicle, Vacation and Security.
+The label is cosmetic: Emergency reserve does not reserve money, and Home does
+not assign a goal. Position identity is consistent in holdings, details,
+updates, history and goal sources. Bank headings retain their bank markers.

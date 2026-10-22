@@ -33,12 +33,21 @@ docker compose --env-file .env.docker -f compose.yaml -f compose.build.yaml up -
 
 ## Install a released image without cloning
 
-Follow the [Docker quick start](../README.md#docker) for the current release's
-download links, image tag and complete startup commands. Download `compose.yaml`
-and `docker.env.example` into a new installation directory and run the quick-start
-commands there.
-For another supported release, use the exact `TUXEDO_IMAGE` from that release's
-example.
+For the current published **v0.10.0**, download
+[compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/docker.env.example)
+from the [release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.10.0)
+into a new installation directory. Open a terminal there, select and pull the
+image, then follow [one-time configuration and startup](#one-time-configuration-and-startup):
+
+```bash
+image=ghcr.io/henriquemayer/tuxedofinance:v0.10.0
+docker pull "$image"
+```
+
+No repository clone is needed. For another supported release, use its matching
+assets and the exact `TUXEDO_IMAGE` from its example. These commands install a
+published release; unreleased checkout changes require a local source build.
 
 Images use explicit version tags; there is no supported `latest` alias. Keep
 the directory name stable because Compose uses it to identify the data volume.
@@ -79,6 +88,9 @@ from `.env.docker.example` (the release asset is named `docker.env.example`):
 | `ALLOW_SIGNUPS` | Default `True`; set `False` after creating the intended accounts |
 | `HTTPS` | Default `False`; set `True` only with a correctly configured TLS proxy |
 | `LOG_LEVEL` | Default `INFO` |
+| `ASSISTANT_OPENAI_AUTH_ENABLED` | Default `False`; reserved for a later separately approved real-account authorization validation; does not enable responses |
+| `ASSISTANT_OPENAI_INFERENCE_ENABLED` | Default `False`; separate explicit catalogue/streaming opt-in, requiring authorization and an eligible selected account |
+| `ASSISTANT_OPENAI_CALLBACK_URL` | Container value derived by Compose from the published `TUXEDO_PORT` and exact `/assistant/connections/callback/` path |
 
 The Compose service fixes `DEBUG=False`, `TUXEDO_DATA_DIR=/data` and
 `TUXEDO_ENV_FILE=/dev/null`. The native checkout's `.env` and database are not
@@ -89,6 +101,49 @@ must remain together on local storage. Use one web service, without replicas or
 network filesystems. Failed migrations or an unwritable volume stop startup
 instead of resetting data. Django does not reject every schema from a newer
 version; follow the backup and restore procedure before changing image versions.
+
+## Assistant authorization preparation
+
+The Unreleased source checkout prepares OpenAI account authorization; published
+`v0.10.0` does not contain this change. Real sign-in is disabled by default and
+inference has its own default-disabled flag. Leave both off unless intentionally
+connecting the installation. Opening settings
+does not initialize private storage or contact OpenAI, and linking an account
+does not enable the separate inference gate. With either gate off, catalogue
+and inference make no external request. The gated streaming path is implemented;
+bounded native sign-in, streaming and tool-response observations are recorded in
+the [assistant guide](apps/assistant.md#eligibility-and-connected-inference).
+They do not establish real Docker OAuth/inference, model availability or usage
+for another installation. There is no paid API-key fallback. See the
+[provider contract](apps/assistant.md#provider-and-action-boundary).
+
+The browser and container must run on the same computer. The callback uses the
+Docker host's published loopback port: for `TUXEDO_PORT=8001`, its exact URL is
+`http://127.0.0.1:8001/assistant/connections/callback/`, even though the container
+still listens on port 8000. Compose derives the callback from `TUXEDO_PORT`, so
+changing the published port updates both together. `localhost`, LAN
+addresses, HTTPS and alternate callback paths are refused by this prepared
+protocol. After authorization, only the original authenticated settings tab
+can submit the final account-link confirmation. Do not expose the port or add
+a tunnel as a callback workaround. The
+[assistant guide](apps/assistant.md#openai-authorization-preparation) owns the
+protocol, original-session handoff and unverified deployment-eligibility limits.
+
+The default vault is `/data/assistant-private` in the existing named volume.
+It uses the container's UID/GID `10001:10001`, directory mode `0700`, file mode
+`0600`, an independent encryption key and a persistent host ID. The Linux
+container supplies the required POSIX permissions and process locks. Compose
+does not expose a separate private-path setting; any deliberate custom
+configuration must keep the whole vault on persistent private storage. Keep
+the database and complete vault in the same stopped-writer recovery point;
+the SQLite backup commands below copy only the database. Back up the vault
+separately while the service remains stopped, and restore its key, encrypted
+records, host ID, ownership and modes before resuming connection actions.
+Never regenerate a missing key over existing ciphertext. Follow the
+[credential recovery boundary](operations.md#assistant-data-and-integrations)
+and keep backup credentials encrypted and out of logs/Git. A recovery copy
+preserves one installation's host identity; do not run it as a second concurrent
+authorized host.
 
 ## Routine commands
 
@@ -240,15 +295,19 @@ npm run test:e2e -- --docker-image tuxedo-finance:test
 
 Both runners own fresh Compose projects, keys, volumes and loopback ports and
 remove only their own resources. They never consume the developer's `.env`,
-`TUXEDO_DATA_DIR` or `E2E_BASE_URL`. Failure logs remain under `test-results/`.
+`TUXEDO_DATA_DIR` or `E2E_BASE_URL`. Failure logs remain under `.local/test-results/`.
 The lifecycle runner checks non-root operation, configuration failures, assets,
 translations, financial-record persistence, repeated startup, backup/restore,
 shutdown and health checks. The browser runner exercises the real container.
-CI also rehearses an upgrade from v0.3.0 with synthetic owners, accounts in
+CI also rehearses upgrades from v0.3.0, v0.4.0, v0.9.0, v0.9.1 and v0.10.0 with
+synthetic owners, accounts in
 different currencies, preferences, dated transactions, installments, fixed
 commitments, invoices, transfers, FX evidence, loyalty balances and monetary/unit
 opening positions. It compares every existing field before and after the upgrade
-and restore, and verifies conservative defaults for new planning settings.
+and restore, and verifies conservative defaults for planning settings, card
+appearance and installment numbering. New invoice-credit, position-emoji and
+assistant tables remain empty; disabled providers create no private vault and
+make no authorization or inference request.
 
 See [versioning.md](versioning.md#container-releases) for release publication
 and first-publication access verification.

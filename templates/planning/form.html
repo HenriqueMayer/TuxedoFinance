@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ heading }} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="workspace-form-page finance-entry-page mx-auto space-y-6">
+        <header><h1 class="page-title">{{ heading }}</h1>{% if reservation_entry %}<p class="subtle-copy mt-2 break-words">{{ goal.name }} · {{ goal.currency }} {{ goal.target_amount|floatformat:2 }}</p>{% endif %}</header>
+        <form autocomplete="off" method="post" hx-boost="false" novalidate class="workspace-form finance-entry-form surface-panel space-y-5">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ return_url }}">
+            {% for error in form.non_field_errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+            {% if goal_entry %}
+                <div class="finance-entry-grid">
+                    <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.name %}</div>
+                    {% include 'partials/form_field.html' with field=form.target_amount %}
+                    {% include 'partials/form_field.html' with field=form.currency %}
+                    {% include 'partials/form_field.html' with field=form.target_date %}
+                </div>
+                {% if goal_creation %}
+                <fieldset class="finance-entry-group finance-entry-section space-y-4" data-goal-reservation>
+                    <legend class="section-title">{% translate 'Initial reservation (optional)' %}</legend>
+                    {% include 'partials/form_field.html' with field=form.reserve_now field_help_text=_('Create only the target, or name part of an existing balance now. Cash sources show the balance still available for active goals.') %}
+                    <div data-goal-reserve-fields data-has-errors="{% if form.source.errors or form.reserved_amount.errors or form.non_field_errors %}true{% else %}false{% endif %}" class="finance-entry-grid">
+                        <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.source %}</div>
+                        <div data-goal-reserve-amount data-has-errors="{% if form.source.errors or form.reserved_amount.errors or form.non_field_errors %}true{% else %}false{% endif %}">{% include 'partials/form_field.html' with field=form.reserved_amount %}</div>
+                    </div>
+                </fieldset>
+                {% endif %}
+            {% elif reservation_entry %}
+                <div data-goal-reservation>
+                    <div data-goal-reserve-fields data-has-errors="{% if form.source.errors or form.amount.errors or form.non_field_errors %}true{% else %}false{% endif %}" class="finance-entry-grid">
+                        <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.source %}</div>
+                        <div data-goal-reserve-amount data-has-errors="{% if form.source.errors or form.amount.errors or form.non_field_errors %}true{% else %}false{% endif %}">{% include 'partials/form_field.html' with field=form.amount %}</div>
+                    </div>
+                </div>
+            {% elif budget_entry %}
+                <div class="finance-entry-grid">
+                    {% include 'partials/form_field.html' with field=form.month %}
+                    {% include 'partials/form_field.html' with field=form.currency %}
+                    {% include 'partials/form_field.html' with field=form.category %}
+                    {% include 'partials/form_field.html' with field=form.amount %}
+                </div>
+            {% elif signal_settings_entry %}
+                <div class="finance-entry-grid">
+                    {% for group in form.review_groups %}
+                    <fieldset class="finance-entry-group space-y-4" aria-label="{{ group.enabled.label }}">
+                        {% include 'partials/form_field.html' with field=group.enabled %}
+                        {% if group.threshold %}{% include 'partials/form_field.html' with field=group.threshold %}{% endif %}
+                    </fieldset>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {% for field in form %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
+            {% endif %}
+            <div class="form-actions flex flex-wrap items-center gap-3">
+                <button class="action-primary" type="submit">{% translate 'Save' %}</button>
+                <a class="quiet-action" href="{{ cancel_url }}">{% translate 'Cancel' %}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}{% if goal_creation or reservation_entry %}{% include 'planning/_reservation_script.html' %}{% endif %}{% endblock %}

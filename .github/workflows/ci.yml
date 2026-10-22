@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Python application checks
+    name: Application and tooling checks
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -42,11 +42,17 @@ jobs:
       - name: Validate project version
         run: uv run python scripts/check_version.py
 
-      - name: Test repository tooling
-        run: uv run python -m unittest discover -s tests/tooling
+      - name: Validate local documentation links and anchors
+        run: uv run python scripts/check_docs.py
 
       - name: Install pinned frontend tools
         run: npm ci
+
+      - name: Test repository tooling
+        run: uv run python -m unittest discover -s tests/tooling
+
+      - name: Test JavaScript amount and allocation helpers
+        run: npm run test:unit
 
       - name: Audit pinned frontend tools
         run: npm audit --audit-level=high
@@ -91,8 +97,9 @@ jobs:
         with:
           name: coverage-report
           path: |
-            coverage.xml
-            htmlcov/
+            .local/coverage/coverage.xml
+            .local/coverage/html/
+          include-hidden-files: true
 
       - name: Lint Python
         # The repository predates a formatter configuration; keep CI focused
@@ -107,8 +114,17 @@ jobs:
       - name: Install Chromium for browser smoke tests
         run: npx playwright install --with-deps chromium
 
-      - name: Run browser smoke tests
+      - name: Run application browser tests
         run: npm run test:e2e
+
+      - name: Test assistant tools with the isolated synthetic provider
+        run: >-
+          npm run test:e2e -- --assistant-fixtures
+          tests/e2e/assistant/actions.spec.js
+          tests/e2e/assistant/consultation.spec.js
+          tests/e2e/assistant/copy-markdown.spec.js
+          tests/e2e/assistant/rich-text-progress.spec.js
+          tests/e2e/assistant/streaming.spec.js
 
       - name: Test static interface preview
         run: npm run test:preview
@@ -119,6 +135,7 @@ jobs:
         with:
           name: browser-test-artifacts
           path: |
-            playwright-report/
-            test-results/
+            .local/playwright-report/
+            .local/test-results/
+          include-hidden-files: true
           if-no-files-found: ignore

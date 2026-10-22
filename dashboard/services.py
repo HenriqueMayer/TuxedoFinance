@@ -12,10 +12,10 @@ from banking.models import (
     LoyaltyEntry,
     RewardRedemption,
 )
-from banking.services import MissingExchangeRate, account_balances, convert, get_planning_availability
+from banking.services import ConversionContext, MissingExchangeRate, account_balances, get_planning_availability
+from banking.credit_reporting import invoice_credit_occurrences
 from investments.models import Investment, InvestmentProduct
 from transactions.models import Transaction
-from accounts.models import UserPreference
 
 
 ZERO = Decimal('0.00')
@@ -50,33 +50,68 @@ def _transactions(user):
             'debit_card__account__bank',
             'credit_card__account__bank',
         )
-    )
+        .prefetch_related('splits__category')
+    ) + invoice_credit_occurrences(user)
 
 
-def _convert_or_missing(user, amount, currency, as_of, missing):
+def _report_transactions(user, sources=None):
+    if sources is None:
+        return _transactions(user)
+    sources = list(sources)
+    if any(item.user_id != user.pk for item in sources):
+        raise ValueError('Reporting sources belong to exactly one user.')
+    return sources
+
+
+def _conversion_context(user, conversion=None):
+    return ConversionContext(user) if conversion is None else conversion.check_user(user)
+
+
+def _convert_or_missing(user, amount, currency, as_of, missing, *, conversion=None):
+    if not amount:
+        return ZERO
+    conversion = _conversion_context(user, conversion)
     try:
-        return convert(user, amount, currency, UserPreference.for_user(user).base_currency, as_of=as_of)
+        return conversion.convert(amount, currency, as_of=as_of)
     except MissingExchangeRate:
         missing.add(currency)
         return None
 
 
-def get_ledger_snapshot(user, as_of):
+def get_ledger_snapshot(user, as_of, *, conversion=None, projected=False, forecast_from=None):
     """Return native account balances and the safely converted consolidation."""
     rows = []
     total = ZERO
     missing = set()
-    base = UserPreference.for_user(user).base_currency
+    conversion = _conversion_context(user, conversion)
+    forecast_from = conversion.today if forecast_from is None else forecast_from
+    obligations = {}
+    if projected and as_of >= forecast_from:
+        from banking.settlements import manual_invoice_obligations
+
+        for invoice in manual_invoice_obligations(user, forecast_from):
+            # An overdue manual bill remains an obligation in the forecast;
+            # it never becomes a fabricated debit in today's recorded cash.
+            if max(forecast_from, invoice.due_date) <= as_of:
+                obligations.setdefault(invoice.card.account_id, []).append(invoice)
     rates = {}
     for row in account_balances(user, as_of):
         account, native = row['account'], row['balance']
-        if account.currency not in rates:
-            try:
-                rates[account.currency] = convert(user, Decimal('1'), account.currency, base, as_of)
-            except MissingExchangeRate:
-                rates[account.currency] = None
-                missing.add(account.currency)
-        rate = rates[account.currency]
+        recorded_native = native
+        account_obligations = obligations.get(account.pk, [])
+        native -= sum((invoice.remaining_amount_at_cutoff for invoice in account_obligations), ZERO)
+        # A zero net balance can still contain nonzero recorded cash and a
+        # manual obligation. Those composition sources continue to need FX.
+        if not (native or recorded_native or account_obligations):
+            rate = Decimal('1')
+        else:
+            if account.currency not in rates:
+                try:
+                    rates[account.currency] = conversion.convert(Decimal('1'), account.currency, as_of=as_of)
+                except MissingExchangeRate:
+                    rates[account.currency] = None
+                    missing.add(account.currency)
+            rate = rates[account.currency]
         converted = None if rate is None else native * rate
         if converted is not None:
             total += converted
@@ -87,6 +122,14 @@ def get_ledger_snapshot(user, as_of):
                 'currency': account.currency,
                 'native_balance': native,
                 'converted_balance': converted,
+                'recorded_native_balance': recorded_native,
+                'recorded_converted_balance': None if rate is None else recorded_native * rate,
+                'invoice_obligations': [
+                    {'invoice': invoice, 'native_amount': invoice.remaining_amount_at_cutoff,
+                     'converted_amount': None if rate is None else invoice.remaining_amount_at_cutoff * rate}
+                    for invoice in account_obligations
+                ],
+                'opening_date_unknown': account.opening_date is None and bool(account.opening_balance),
             }
         )
     return {
@@ -97,7 +140,8 @@ def get_ledger_snapshot(user, as_of):
     }
 
 
-def _investment_cash_flows(user, window, cutoff=None):
+def _investment_cash_flows(user, window, cutoff=None, *, conversion=None):
+    conversion = _conversion_context(user, conversion)
     wanted = set(window)
     investments = ZERO
     withdrawals = ZERO
@@ -120,7 +164,7 @@ def _investment_cash_flows(user, window, cutoff=None):
                 continue
             value = _convert_or_missing(
                 user, operation.cash_amount, operation.source_account.currency,
-                operation.date, missing,
+                operation.date, missing, conversion=conversion,
             )
             if value is not None:
                 investments += value
@@ -133,23 +177,65 @@ def _investment_cash_flows(user, window, cutoff=None):
             operation.destination_account.currency,
             operation.date,
             missing,
+            conversion=conversion,
         )
         if value is not None:
             withdrawals += value
     return investments, withdrawals, sorted(missing)
 
 
-def _transaction_value(user, transaction, year, month, missing):
+def _activity_rate_date(year, month, occurrence, conversion, cutoff=None):
+    month_end = _month_end(year, month)
+    if cutoff is not None:
+        return min(month_end, cutoff)
+    # A full current-month total mixes realized and future occurrences. Keep
+    # already-realized values on today's evidence so subtraction cannot turn
+    # their FX revaluation into invented "remaining planned" activity.
+    if date(year, month, 1) <= conversion.today and occurrence <= conversion.today:
+        return min(month_end, conversion.today)
+    return month_end
+
+
+def _transaction_value(user, transaction, year, month, missing, *, cutoff=None, conversion=None):
     amount = transaction.amount_for_month(year, month)
     if not amount:
         return ZERO
     account = transaction.payment_account
     if account is None:
         return amount
+    conversion = _conversion_context(user, conversion)
+    rate_date = _activity_rate_date(year, month, _transaction_occurrence_date(transaction, year, month),
+                                    conversion, cutoff)
     converted = _convert_or_missing(
-        user, amount, account.currency, _month_end(year, month), missing
+        user, amount, account.currency, rate_date, missing,
+        conversion=conversion,
     )
     return converted
+
+
+def _transaction_category_values(user, item, year, month, missing, *, cutoff=None, conversion=None):
+    """Classify the existing occurrence; allocations never post extra cash."""
+    if not item.amount_for_month(year, month):
+        return []
+    conversion = _conversion_context(user, conversion)
+    account = item.payment_account
+    rate_date = _activity_rate_date(year, month, _transaction_occurrence_date(item, year, month),
+                                    conversion, cutoff)
+    values = []
+    for category, amount in item.category_allocations_for_month(year, month):
+        value = amount if account is None else _convert_or_missing(
+            user, amount, account.currency, rate_date, missing,
+            conversion=conversion,
+        )
+        if value is not None:
+            values.append((category, value))
+    # Preserve the converted occurrence total even when Decimal division leaves
+    # a last-place residual between individually converted category amounts.
+    if values:
+        total = _transaction_value(user, item, year, month, missing, cutoff=cutoff, conversion=conversion)
+        category, value = values[-1]
+        values[-1] = (category, value + total - sum((part for _, part in values), ZERO))
+    return values
 
 
 def _transaction_occurrence_date(transaction, year, month):
@@ -194,7 +280,8 @@ def _remaining_flow(full_month, through_cutoff):
     return remaining
 
 
-def _monthly_totals(user, transactions, year, month, cutoff=None):
+def _monthly_totals(user, transactions, year, month, cutoff=None, *, conversion=None):
+    conversion = _conversion_context(user, conversion)
     income = ZERO
     expenses = ZERO
     missing = set()
@@ -202,7 +289,7 @@ def _monthly_totals(user, transactions, year, month, cutoff=None):
         occurrence = _transaction_occurrence_date(item, year, month)
         if occurrence is None or (cutoff is not None and occurrence > cutoff):
             continue
-        value = _transaction_value(user, item, year, month, missing)
+        value = _transaction_value(user, item, year, month, missing, cutoff=cutoff, conversion=conversion)
         if value is None:
             continue
         if item.transaction_type == Transaction.TransactionType.INCOME:
@@ -210,12 +297,12 @@ def _monthly_totals(user, transactions, year, month, cutoff=None):
         elif item.transaction_type == Transaction.TransactionType.EXPENSE:
             expenses += value
     banking_expenses, banking_missing = _banking_expenses_for_month(
-        user, year, month, cutoff=cutoff
+        user, year, month, cutoff=cutoff, conversion=conversion,
     )
     expenses += banking_expenses
     missing.update(banking_missing)
     investments, withdrawals, investment_missing = _investment_cash_flows(
-        user, [(year, month)], cutoff=cutoff
+        user, [(year, month)], cutoff=cutoff, conversion=conversion,
     )
     missing.update(investment_missing)
     return {
@@ -228,8 +315,9 @@ def _monthly_totals(user, transactions, year, month, cutoff=None):
     }
 
 
-def _banking_expenses_for_month(user, year, month, cutoff=None, *, sources=None):
+def _banking_expenses_for_month(user, year, month, cutoff=None, *, sources=None, conversion=None):
     """Return points purchases and reward IOF without duplicating transactions."""
+    conversion = _conversion_context(user, conversion)
     total = ZERO
     missing = set()
     purchases = LoyaltyEntry.objects.filter(
@@ -252,7 +340,9 @@ def _banking_expenses_for_month(user, year, month, cutoff=None, *, sources=None)
         if (expense_month.year, expense_month.month) != (year, month):
             continue
         value = _convert_or_missing(
-            user, entry.cash_amount, account.currency, _month_end(year, month), missing
+            user, entry.cash_amount, account.currency,
+            _activity_rate_date(year, month, entry.date, conversion, cutoff), missing,
+            conversion=conversion,
         )
         if value is not None:
             total += value
@@ -276,7 +366,9 @@ def _banking_expenses_for_month(user, year, month, cutoff=None, *, sources=None)
         if (expense_month.year, expense_month.month) != (year, month):
             continue
         value = _convert_or_missing(
-            user, redemption.iof_amount, account.currency, _month_end(year, month), missing
+            user, redemption.iof_amount, account.currency,
+            _activity_rate_date(year, month, redemption.date, conversion, cutoff), missing,
+            conversion=conversion,
         )
         if value is not None:
             total += value
@@ -285,18 +377,19 @@ def _banking_expenses_for_month(user, year, month, cutoff=None, *, sources=None)
     return total, sorted(missing)
 
 
-def get_dashboard_summary(user, year=None, month=None):
+def get_dashboard_summary(user, year=None, month=None, *, conversion=None, transactions=None):
+    conversion = _conversion_context(user, conversion)
     today = timezone.localdate()
     year = year or today.year
     month = month or today.month
-    transactions = _transactions(user)
-    selected = _monthly_totals(user, transactions, year, month)
-    current = get_ledger_snapshot(user, today)
+    transactions = _report_transactions(user, transactions)
+    selected = _monthly_totals(user, transactions, year, month, conversion=conversion)
+    current = get_ledger_snapshot(user, today, conversion=conversion)
     current_previous_year, current_previous_month = add_months(
         today.year, today.month, -1
     )
     current_period_start = get_ledger_snapshot(
-        user, _month_end(current_previous_year, current_previous_month)
+        user, _month_end(current_previous_year, current_previous_month), conversion=conversion,
     )
     is_current_month = (year, month) == (today.year, today.month)
     is_future_month = (year, month) > (today.year, today.month)
@@ -309,12 +402,16 @@ def get_dashboard_summary(user, year=None, month=None):
         period_kind = 'current'
         cutoff = today
         through_cutoff = _monthly_totals(
-            user, transactions, year, month, cutoff=cutoff
+            user, transactions, year, month, cutoff=cutoff, conversion=conversion,
         )
     else:
         period_kind = 'past'
         cutoff = _month_end(year, month)
-        through_cutoff = selected
+        # An explicitly back-referenced credit can be posted after month end.
+        # It adjusts the statement, but was not realized at this dated cutoff.
+        through_cutoff = _monthly_totals(
+            user, transactions, year, month, cutoff=cutoff, conversion=conversion,
+        )
     remaining = _remaining_flow(selected, through_cutoff)
 
     category_cutoff = cutoff if period_kind != 'future' else None
@@ -325,11 +422,14 @@ def get_dashboard_summary(user, year=None, month=None):
         month,
         1,
         cutoff=category_cutoff,
+        conversion=conversion,
     )
 
     previous_year, previous_month = add_months(year, month, -1)
-    period_start = get_ledger_snapshot(user, _month_end(previous_year, previous_month))
-    period_close = get_ledger_snapshot(user, _month_end(year, month))
+    period_start = get_ledger_snapshot(user, _month_end(previous_year, previous_month),
+        conversion=conversion, projected=True, forecast_from=today)
+    period_close = get_ledger_snapshot(user, _month_end(year, month),
+        conversion=conversion, projected=True, forecast_from=today)
     period_start_total = period_start['total']
     projected_total = period_close['total']
 
@@ -341,9 +441,10 @@ def get_dashboard_summary(user, year=None, month=None):
     missing.update(category_missing)
     for offset in range(OUTLOOK_MONTHS):
         row_year, row_month = add_months(year, month, offset)
-        totals = _monthly_totals(user, transactions, row_year, row_month)
+        totals = _monthly_totals(user, transactions, row_year, row_month, conversion=conversion)
         missing.update(totals['missing_currencies'])
-        snapshot = get_ledger_snapshot(user, _month_end(row_year, row_month))
+        snapshot = get_ledger_snapshot(user, _month_end(row_year, row_month),
+            conversion=conversion, projected=True, forecast_from=today)
         missing.update(snapshot['missing_currencies'])
         row_projected = snapshot['total']
         outlook.append(
@@ -359,7 +460,7 @@ def get_dashboard_summary(user, year=None, month=None):
         )
 
     invoices = list(
-        CardInvoice.objects.filter(user=user, status=CardInvoice.Status.SCHEDULED)
+        CardInvoice.objects.filter(user=user).exclude(status=CardInvoice.Status.PAID)
         .select_related('card__account__bank')
         .order_by('due_date', 'card__name')
     )
@@ -383,7 +484,7 @@ def get_dashboard_summary(user, year=None, month=None):
         'is_current_month': is_current_month,
         'is_future_month': is_future_month,
         'current_balance': current['total'],
-        'planning_availability': get_planning_availability(user, today),
+        'planning_availability': get_planning_availability(user, today, conversion=conversion),
         'period_opening_balance': period_start_total,
         'period_closing_balance': projected_total,
         'cash_change_through_cutoff': cash_change_through_cutoff,
@@ -422,22 +523,22 @@ def _category_rows(totals):
     if not totals:
         return []
     ranked = sorted(totals.values(), key=lambda row: row['total'], reverse=True)
-    largest = ranked[0]['total']
-    overall = sum((row['total'] for row in ranked), ZERO)
+    largest = max(ZERO, ranked[0]['total'])
+    positive_total = sum((max(ZERO, row['total']) for row in ranked), ZERO)
     for row in ranked[:TOP_CATEGORIES]:
-        row['bar_width'] = round(float(row['total'] / largest) * 100, 2)
-        row['share'] = round(float(row['total'] / overall) * 100, 1)
+        row['bar_width'] = round(float(max(ZERO, row['total']) / largest) * 100, 2) if largest else 0
+        row['share'] = round(float(max(ZERO, row['total']) / positive_total) * 100, 1) if positive_total else 0
     return ranked[:TOP_CATEGORIES]
 
 
-def _expenses_by_category(user, transactions, year, month, months, cutoff=None):
+def _expenses_by_category(user, transactions, year, month, months, cutoff=None, *, conversion=None):
+    conversion = _conversion_context(user, conversion)
     targets = _window(year, month, months)
     totals = {}
     missing = set()
     for item in transactions:
         if item.transaction_type != Transaction.TransactionType.EXPENSE:
             continue
-        value = ZERO
         for target_year, target_month in targets:
             occurrence = _transaction_occurrence_date(
                 item, target_year, target_month
@@ -446,18 +547,15 @@ def _expenses_by_category(user, transactions, year, month, months, cutoff=None):
                 cutoff is not None and occurrence > cutoff
             ):
                 continue
-            value += (
-                _transaction_value(
-                    user, item, target_year, target_month, missing
-                )
-                or ZERO
-            )
-        if value:
-            row = totals.setdefault(
-                item.category_id,
-                {'id': item.category_id, 'name': item.category.name, 'total': ZERO},
-            )
-            row['total'] += value
+            for category, value in _transaction_category_values(
+                user, item, target_year, target_month, missing, cutoff=cutoff, conversion=conversion,
+            ):
+                if value:
+                    row = totals.setdefault(
+                        category.pk,
+                        {'id': category.pk, 'name': category.name, 'total': ZERO},
+                    )
+                    row['total'] += value
     return _category_rows(totals), sorted(missing)
 
 
@@ -500,7 +598,8 @@ def _instrument_display(item, income=False):
     return account.name, account.bank.name
 
 
-def _instrument_breakdown(user, transaction_type, year=None, month=None, months=1):
+def _instrument_breakdown(user, transaction_type, year=None, month=None, months=1, *, conversion=None):
+    conversion = _conversion_context(user, conversion)
     transactions = _transactions(user)
     if year is None or month is None:
         today = timezone.localdate()
@@ -513,7 +612,7 @@ def _instrument_breakdown(user, transaction_type, year=None, month=None, months=
         if item.transaction_type != transaction_type:
             continue
         value = sum(
-            (_transaction_value(user, item, y, m, missing) or ZERO for y, m in targets),
+            (_transaction_value(user, item, y, m, missing, conversion=conversion) or ZERO for y, m in targets),
             ZERO,
         )
         if not value:
@@ -524,10 +623,11 @@ def _instrument_breakdown(user, transaction_type, year=None, month=None, months=
         row = rows.setdefault(key, {'key': key, 'label': label, 'total': ZERO})
         row['total'] += value
     overall = sum((row['total'] for row in rows.values()), ZERO)
+    positive_total = sum((max(ZERO, row['total']) for row in rows.values()), ZERO)
     ranked = sorted(rows.values(), key=lambda row: row['total'], reverse=True)
     shown = ranked[:TOP_INSTRUMENTS]
     for row in shown:
-        row['share'] = round(float(row['total'] / overall) * 100, 1) if overall else 0
+        row['share'] = round(float(max(ZERO, row['total']) / positive_total) * 100, 1) if positive_total else 0
     return {
         'total': overall,
         'instruments': shown,
@@ -537,21 +637,22 @@ def _instrument_breakdown(user, transaction_type, year=None, month=None, months=
     }
 
 
-def get_expenses_by_instrument(user, year=None, month=None, months=1):
+def get_expenses_by_instrument(user, year=None, month=None, months=1, *, conversion=None):
     return _instrument_breakdown(
-        user, Transaction.TransactionType.EXPENSE, year, month, months
+        user, Transaction.TransactionType.EXPENSE, year, month, months, conversion=conversion,
     )
 
 
-def get_income_by_account(user, year=None, month=None, months=1):
+def get_income_by_account(user, year=None, month=None, months=1, *, conversion=None):
     return _instrument_breakdown(
-        user, Transaction.TransactionType.INCOME, year, month, months
+        user, Transaction.TransactionType.INCOME, year, month, months, conversion=conversion,
     )
 
 
-def get_instrument_activity(user, year=None, month=None, months=1, *, window=None):
+def get_instrument_activity(user, year=None, month=None, months=1, *, window=None, conversion=None, transactions=None):
     """Return the largest accounts/cards ranked by all money moved."""
-    transactions = _transactions(user)
+    conversion = _conversion_context(user, conversion)
+    transactions = _report_transactions(user, transactions)
     if window is not None:
         targets = list(window)
     elif year is None or month is None:
@@ -571,7 +672,7 @@ def get_instrument_activity(user, year=None, month=None, months=1, *, window=Non
         ):
             continue
         value = sum(
-            (_transaction_value(user, item, y, m, missing) or ZERO for y, m in targets),
+            (_transaction_value(user, item, y, m, missing, conversion=conversion) or ZERO for y, m in targets),
             ZERO,
         )
         if not value:
@@ -629,8 +730,9 @@ def get_instrument_activity(user, year=None, month=None, months=1, *, window=Non
 
 
 def _categories_for_instrument(
-    user, instrument_key, transaction_type, year, month
+    user, instrument_key, transaction_type, year, month, *, conversion=None,
 ):
+    conversion = _conversion_context(user, conversion)
     totals = {}
     missing = set()
     for item in _transactions(user):
@@ -641,42 +743,45 @@ def _categories_for_instrument(
         )
         if key != instrument_key:
             continue
-        value = _transaction_value(user, item, year, month, missing)
-        if not value:
-            continue
-        row = totals.setdefault(
-            item.category_id,
-            {'id': item.category_id, 'name': item.category.name, 'total': ZERO},
-        )
-        row['total'] += value
+        for category, value in _transaction_category_values(
+            user, item, year, month, missing, conversion=conversion,
+        ):
+            if value:
+                row = totals.setdefault(
+                    category.pk,
+                    {'id': category.pk, 'name': category.name, 'total': ZERO},
+                )
+                row['total'] += value
     return _category_rows(totals)
 
 
-def get_expenses_by_category_for_instrument(user, key, year, month):
+def get_expenses_by_category_for_instrument(user, key, year, month, *, conversion=None):
     return _categories_for_instrument(
-        user, key, Transaction.TransactionType.EXPENSE, year, month
+        user, key, Transaction.TransactionType.EXPENSE, year, month, conversion=conversion,
     )
 
 
-def get_income_by_category_for_account(user, key, year, month):
+def get_income_by_category_for_account(user, key, year, month, *, conversion=None):
     return _categories_for_instrument(
-        user, key, Transaction.TransactionType.INCOME, year, month
+        user, key, Transaction.TransactionType.INCOME, year, month, conversion=conversion,
     )
 
 
-def get_account_evolution(user, offset=0):
+def get_account_evolution(user, offset=0, *, conversion=None, transactions=None):
+    conversion = _conversion_context(user, conversion)
     today = timezone.localdate()
     anchor_year, anchor_month = add_months(today.year, today.month, offset)
     start_year, start_month = add_months(
         anchor_year, anchor_month, -EVOLUTION_PAST_MONTHS
     )
-    transactions = _transactions(user)
+    transactions = _report_transactions(user, transactions)
     months = []
     missing = set()
     for step in range(EVOLUTION_MONTHS):
         year, month = add_months(start_year, start_month, step)
-        totals = _monthly_totals(user, transactions, year, month)
-        snapshot = get_ledger_snapshot(user, _month_end(year, month))
+        totals = _monthly_totals(user, transactions, year, month, conversion=conversion)
+        snapshot = get_ledger_snapshot(user, _month_end(year, month),
+            conversion=conversion, projected=True, forecast_from=today)
         missing.update(totals['missing_currencies'])
         missing.update(snapshot['missing_currencies'])
         months.append(
@@ -691,14 +796,15 @@ def get_account_evolution(user, offset=0):
             }
         )
     opening_date = _month_end(*add_months(start_year, start_month, -1))
-    opening = get_ledger_snapshot(user, opening_date)
+    opening = get_ledger_snapshot(user, opening_date,
+        conversion=conversion, projected=True, forecast_from=today)
     missing.update(opening['missing_currencies'])
     current = next(row for row in months if row['is_current_month'])
     category_rows, category_missing = _expenses_by_category(
-        user, transactions, start_year, start_month, EVOLUTION_MONTHS
+        user, transactions, start_year, start_month, EVOLUTION_MONTHS, conversion=conversion,
     )
     missing.update(category_missing)
-    balance_today = get_ledger_snapshot(user, today)
+    balance_today = get_ledger_snapshot(user, today, conversion=conversion)
     missing.update(balance_today['missing_currencies'])
     return {
         'months': months,
@@ -718,8 +824,9 @@ def get_account_evolution(user, offset=0):
     }
 
 
-def get_expenses_by_recurrence(user, year=None, month=None, months=1):
-    transactions = _transactions(user)
+def get_expenses_by_recurrence(user, year=None, month=None, months=1, *, conversion=None, transactions=None):
+    conversion = _conversion_context(user, conversion)
+    transactions = _report_transactions(user, transactions)
     if year is None or month is None:
         today = timezone.localdate()
         targets = [add_months(today.year, today.month, -step) for step in range(months)]
@@ -731,7 +838,7 @@ def get_expenses_by_recurrence(user, year=None, month=None, months=1):
         if item.transaction_type != Transaction.TransactionType.EXPENSE:
             continue
         value = sum(
-            (_transaction_value(user, item, y, m, missing) or ZERO for y, m in targets),
+            (_transaction_value(user, item, y, m, missing, conversion=conversion) or ZERO for y, m in targets),
             ZERO,
         )
         if item.is_installment_plan:
@@ -747,15 +854,18 @@ def get_expenses_by_recurrence(user, year=None, month=None, months=1):
         ('one_off', _('One-off')),
     )
     slices = []
+    # A credit-only bucket is still part of the signed total. Pie geometry can
+    # only represent positive slices; composition retains its signed sources.
+    positive_total = sum((max(ZERO, value) for value in buckets.values()), ZERO)
     for key, name in order:
-        share = round(float(buckets[key] / overall) * 100, 1) if overall else 0
+        share = round(float(max(ZERO, buckets[key]) / positive_total) * 100, 1) if positive_total else 0
         slices.append(
             {
                 'name': name,
                 'tone': key,
                 'value': buckets[key],
                 'share': share,
-                'draw': bool(buckets[key]),
+                'draw': buckets[key] > ZERO,
             }
         )
     drawn = [row for row in slices if row['draw']]

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Delete invoice credit' %}{% endblock %}
+{% block content %}
+<div class="banking-workspace workspace-form-page mx-auto max-w-md space-y-4">
+    <h1 class="page-title">{% translate 'Delete invoice credit' %}</h1>
+    <form autocomplete="off" method="post" hx-boost="false" novalidate class="workspace-form surface-panel space-y-5">
+        {% csrf_token %}<input type="hidden" name="next" value="{{ return_url }}">
+        <p>{% translate 'Removing this credit recalculates the invoice. Its purchases and confirmed payments stay recorded.' %}</p>
+        <p class="break-words font-medium">{{ credit.title }}</p>
+        <p class="subtle-copy">{{ credit.date|date:USER_DATE_FORMAT }} · {{ credit.card.account.currency }} {{ credit.amount|floatformat:2 }}</p>
+        <div class="form-actions"><button class="action-danger" type="submit">{% translate 'Delete' %}</button><a class="quiet-action" href="{{ return_url }}">{% translate 'Cancel' %}</a></div>
+    </form>
+</div>
+{% endblock %}

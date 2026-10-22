@@ -1,17 +1,17 @@
 {% load i18n %}
 {# Shared window controls: reset stays below the arrows so their position is stable. #}
-<div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-    <div class="flex items-center gap-3">
-        {% if has_previous_window %}<a id="{{ navigation_id }}-previous" href="{% querystring charts_offset=previous_offset_param %}"
+<div class="period-navigation" data-period-navigation>
+    <div class="period-navigation-rail">
+        {% if has_previous_window %}<a data-analytics-param="charts_offset" id="{{ navigation_id }}-previous" href="{% querystring charts_offset=previous_offset_param %}"
        hx-get="{% querystring charts_offset=previous_offset_param %}"
-       hx-target="#reports-charts"
+       hx-target="#reports-charts" hx-sync="#finance-analytics:queue all"
        hx-swap="outerHTML"
        hx-push-url="true"
         aria-label="{% translate 'Previous window' %}"
-       class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+       class="icon-action shrink-0">
             &larr;
-        </a>{% endif %}
-        <div>
+        </a>{% else %}<span id="{{ navigation_id }}-previous" aria-disabled="true" aria-label="{% translate 'Previous window' %}" class="period-navigation-unavailable">&larr;</span>{% endif %}
+        <div class="period-navigation-caption">
             <p class="text-sm font-semibold text-forest dark:text-cream">
                  {% with last_month=evolution.months|last %}
                      {{ evolution.months.0.date|date:'M Y' }} &ndash; {{ last_month.date|date:'M Y' }}
@@ -24,24 +24,27 @@
                 {% else %}{% translate "Future window" %}{% endif %}
             </p>
         </div>
-        {% if has_next_window %}<a id="{{ navigation_id }}-next" href="{% querystring charts_offset=next_offset_param %}"
+        {% if has_next_window %}<a data-analytics-param="charts_offset" id="{{ navigation_id }}-next" href="{% querystring charts_offset=next_offset_param %}"
            hx-get="{% querystring charts_offset=next_offset_param %}"
-           hx-target="#reports-charts"
+           hx-target="#reports-charts" hx-sync="#finance-analytics:queue all"
            hx-swap="outerHTML"
            hx-push-url="true"
             aria-label="{% translate 'Next window' %}"
-           class="flex h-11 w-11 items-center justify-center rounded-full border border-forest/20 transition-colors hover:bg-forest hover:text-cream focus:outline-hidden focus:ring-2 focus:ring-caramel/40 dark:border-cream/30 dark:hover:bg-cream dark:hover:text-night">
+           class="icon-action shrink-0">
             &rarr;
-        </a>{% else %}<span id="{{ navigation_id }}-next" tabindex="-1" class="subtle-copy inline-flex h-11 items-center">{% translate 'Forecast limit' %}</span>{% endif %}
+        </a>{% else %}<span id="{{ navigation_id }}-next" tabindex="-1" aria-disabled="true" aria-label="{% translate 'Forecast limit' %}" class="period-navigation-unavailable">&rarr;</span>{% endif %}
     </div>
+    <div class="period-navigation-reset">
+    {% if not has_next_window %}<span class="subtle-copy mr-auto">{% translate 'Forecast limit' %}</span>{% endif %}
     {% if not evolution.is_anchored_today %}
-        <a id="{{ navigation_id }}-today" href="{% querystring charts_offset=0 %}"
+        <a data-analytics-param="charts_offset" id="{{ navigation_id }}-today" href="{% querystring charts_offset=0 %}"
            hx-get="{% querystring charts_offset=0 %}"
-           hx-target="#reports-charts"
+           hx-target="#reports-charts" hx-sync="#finance-analytics:queue all"
            hx-swap="outerHTML"
            hx-push-url="true"
            class="quiet-action">
              {% translate "Back to today" %}
         </a>
     {% endif %}
+    </div>
 </div>

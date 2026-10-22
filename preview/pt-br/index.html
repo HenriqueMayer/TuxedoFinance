@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tuxedo Finance — Prévia da interface</title>
-    <meta name="description" content="Conheça a interface do Tuxedo Finance em um tour estático feito com dados financeiros sintéticos.">
+    <meta name="description" content="Conheça Início, Transações, Contas, Investimentos, Planejar e Análises no Tuxedo Finance.">
     <meta name="theme-color" content="#FAF8F3">
     <meta property="og:title" content="Tuxedo Finance — Prévia da interface">
-    <meta property="og:description" content="Um tour estático e bilíngue pela aplicação local de finanças pessoais.">
+    <meta property="og:description" content="Receitas, despesas, contas, investimentos, planejamento e análises em uma aplicação local.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://henriquemayer.github.io/TuxedoFinance/pt-br/">
     <meta property="og:image" content="https://henriquemayer.github.io/TuxedoFinance/images/pt-br/dashboard-light.png">
@@ -23,152 +23,192 @@
             document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         })();
     </script>
-    <link rel="stylesheet" href="../assets/preview.css?v=3">
+    <link rel="preload" href="../assets/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/preview.css?v=8">
     <script src="../assets/preview.js" defer></script>
 </head>
 <body>
-    <a class="skip-link" href="#main">Ir para o tour</a>
+    <a class="skip-link" href="#main">Pular para a área principal</a>
     <header class="site-header">
         <div class="header-inner">
-            <a class="wordmark" href="#top" aria-label="Prévia do Tuxedo Finance">Tuxedo<span>Finance</span></a>
-            <nav class="tour-nav" aria-label="Seções da prévia">
-                <a href="#dashboard">Dashboard</a>
-                <a href="#reports">Relatórios</a>
-                <a href="#transactions">Transações</a>
-                <a href="#banking">Bancos</a>
-                <a href="#investments">Investimentos</a>
-                <a href="#planning">Planejamento</a>
+            <a class="wordmark" href="#dashboard" aria-label="Tuxedo Finance">
+                <svg class="brand-bowtie" viewBox="0 0 40 24" width="32" height="24" aria-hidden="true" focusable="false"><path d="M2 3 17 10V14L2 21ZM38 3 23 10V14L38 21Z" fill="currentColor"/><rect x="17" y="8" width="6" height="8" rx="2" fill="currentColor"/></svg>
+                <span>Tuxedo Finance</span>
+            </a>
+            <span class="header-caption">Prévia da interface</span>
+            <nav class="header-external" aria-label="Links do projeto">
+                <a class="header-link" href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">Repositório <span aria-hidden="true">↗</span></a>
+                <a class="header-link header-run" href="https://github.com/HenriqueMayer/TuxedoFinance/blob/main/README.pt-BR.md#instala%C3%A7%C3%A3o" target="_blank" rel="noopener noreferrer">Executar localmente <span aria-hidden="true">↗</span></a>
             </nav>
             <div class="header-actions">
-                <div class="language-switch" aria-label="Idioma">
-                    <a href="../index.html" lang="en" hreflang="en">EN</a>
-                    <a href="index.html" lang="pt-BR" aria-current="page">PT</a>
-                </div>
-                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Alternar entre os temas claro e escuro" aria-pressed="false">
-                    <span class="sun" aria-hidden="true">☀</span>
-                    <span class="moon" aria-hidden="true">◐</span>
-                </button>
+                <div class="language-switch" aria-label="Idioma"><a href="../index.html" lang="en" hreflang="en">EN</a><a href="index.html" lang="pt-BR" aria-current="page">PT</a></div>
+                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Alternar entre os temas claro e escuro" aria-pressed="false"><span class="sun" aria-hidden="true">☀</span><span class="moon" aria-hidden="true">◐</span></button>
             </div>
         </div>
     </header>
-
-    <main class="main" id="main">
-        <section class="hero" id="top">
-            <div>
-                <p class="eyebrow">Prévia da interface</p>
-                <h1>Conheça suas finanças além da planilha.</h1>
-                <p class="hero-copy">Explore a interface real do Tuxedo Finance antes de instalar. Este tour apresenta fluxo de caixa, relatórios, transações cotidianas, bancos, investimentos e planejamento.</p>
-                <div class="hero-actions">
-                    <a class="button button-primary" href="#dashboard">Iniciar o tour</a>
-                    <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">Ver repositório</a>
-                    <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance#-quick-start" target="_blank" rel="noopener noreferrer">Executar localmente</a>
+    <div class="workspace-shell">
+        <aside class="workspace-sidebar">
+            <nav class="tour-nav" aria-label="Áreas da aplicação" data-primary-navigation>
+                <a href="#dashboard" data-workspace-link="dashboard" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg><span>Início</span></a>
+                <a href="#transactions" data-workspace-link="transactions" aria-label="Transações"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></svg><span class="nav-label-full">Transações</span><span class="nav-label-short" aria-hidden="true">Transações</span></a>
+                <a href="#banking" data-workspace-link="banking"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 9-5 9 5H3Zm2 4v7m7-7v7m7-7v7M2 22h20"/></svg><span>Contas</span></a>
+                <a href="#investments" data-workspace-link="investments" aria-label="Investimentos"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17v-5m7 5V7m7 10V3M2 22h20"/></svg><span class="nav-label-full">Investimentos</span><span class="nav-label-short" aria-hidden="true">Investir</span></a>
+                <a href="#planning" data-workspace-link="planning"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6m10-6v6M3 11h18m-13 6 3 3 6-6"/></svg><span>Planejar</span></a>
+                <a href="#analytics" data-workspace-link="analytics"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 15l4-5 4 3 5-7"/></svg><span>Análises</span></a>
+            </nav>
+        </aside>
+        <main class="main" id="main" tabindex="-1">
+            <section class="tour-section" id="dashboard" data-workspace-view aria-labelledby="dashboard-title">
+                <span id="top"></span>
+                <div class="section-heading" id="dashboard-preview">
+                    <div><h1 id="dashboard-title">Início</h1></div>
+                    <a class="button button-primary" href="#new-entry" data-workspace-link="new-entry">Nova transação <span aria-hidden="true">＋</span></a>
                 </div>
-            </div>
-            <aside class="notice" aria-label="Sobre esta prévia">
-                <span class="notice-title">Tour estático e seguro</span>
-                <p>Todos os valores, instituições e contas exibidos são sintéticos. Não há login, backend ou banco de dados, e nada que você fizer nesta página será salvo.</p>
-            </aside>
-        </section>
-
-        <section class="tour-section" id="dashboard">
-            <div class="section-heading">
-                <div><span class="section-number">01 / Dashboard</span><h2>Atividade mensal e contas atuais.</h2></div>
-                <p class="section-copy">O mês selecionado separa a atividade registrada do que está planejado, mantendo receitas, despesas, aportes e resgates distintos. Os saldos atuais das contas e as próximas faturas permanecem independentes do mês selecionado.</p>
-            </div>
-            <div class="screenshot-grid">
-                <figure>
-                    <a class="screenshot-link" href="../images/pt-br/dashboard-light.png" data-lightbox>
-                        <img src="../images/pt-br/dashboard-light.png" width="1440" height="1000" alt="Dashboard do Tuxedo Finance no tema claro com recursos disponíveis para planejamento, receitas, despesas e movimentações de investimentos do mês" fetchpriority="high" decoding="async">
-                    </a>
-                    <figcaption>Tema claro — atividade mensal, valores planejados e contas atuais.</figcaption>
-                </figure>
-                <figure>
-                    <a class="screenshot-link" href="../images/pt-br/dashboard-dark.png" data-lightbox>
-                        <img src="../images/pt-br/dashboard-dark.png" width="1440" height="1000" alt="Dashboard do Tuxedo Finance mostrando o mesmo resumo financeiro sintético no tema escuro" loading="lazy" decoding="async">
-                    </a>
-                    <figcaption>Tema escuro — superfícies em preto e grafite com cores financeiras distintas.</figcaption>
-                </figure>
-            </div>
-        </section>
-
-        <section class="tour-section" id="reports">
-            <div class="section-heading">
-                <div><span class="section-number">02 / Relatórios</span><h2>Padrões sempre ligados aos números.</h2></div>
-                <p class="section-copy">Gráficos renderizados no servidor comparam evolução do saldo, fluxo de caixa, instrumentos, categorias, parcelas e despesas recorrentes sem esconder os valores de origem.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="../images/pt-br/reports-light.png" data-lightbox>
-                    <img src="../images/pt-br/reports-light.png" width="1440" height="1000" alt="Página de relatórios do Tuxedo Finance com valores resumidos e gráfico de evolução do saldo baseados em dados sintéticos" loading="lazy" decoding="async">
-                </a>
-                <figcaption>Os relatórios permanecem responsivos, acessíveis por teclado e organizados por perguntas financeiras relevantes.</figcaption>
-            </figure>
-        </section>
-
-        <section class="tour-section" id="transactions">
-            <div class="section-heading">
-                <div><span class="section-number">03 / Transações</span><h2>Cada evento classificado e pesquisável.</h2></div>
-                <p class="section-copy">Receitas e despesas preservam categoria, instrumento de pagamento, recorrência, parcelamento, data da transação e mês de cobrança.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="../images/pt-br/transactions-light.png" data-lightbox>
-                    <img src="../images/pt-br/transactions-light.png" width="1440" height="1000" alt="Lista de transações com filtros e receitas, despesas fixas, parcelas no cartão e pagamentos PIX sintéticos" loading="lazy" decoding="async">
-                </a>
-                <figcaption>Tipos de transação com contagens, atalhos de recorrência, categorias contextuais e filtros de datas complementam a pesquisa, a ordenação e a exportação CSV.</figcaption>
-            </figure>
-        </section>
-
-        <section class="tour-section" id="banking">
-            <div class="section-heading">
-                <div><span class="section-number">04 / Bancos</span><h2>Contas, cartões e moedas em contexto.</h2></div>
-                <p class="section-copy">Veja o valor disponível para o mês entre contas e caixa remunerado. Reserve parte de uma conta ou exclua seu saldo positivo do planejamento, mantendo o saldo real visível.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="../images/pt-br/banking-light.png" data-lightbox>
-                    <img src="../images/pt-br/banking-light.png" width="1440" height="1000" alt="Visão de bancos com caixa disponível sintético, conta BRL com reserva parcial, conta USD excluída e cofrinho do mês" loading="lazy" decoding="async">
-                </a>
-                <figcaption>Este exemplo reserva BRL 2.000 e exclui a conta USD. As contas a pagar continuam no plano, e o cofrinho do mês inclui apenas rendimentos registrados.</figcaption>
-            </figure>
-        </section>
-
-        <section class="tour-section" id="investments">
-            <div class="section-heading">
-                <div><span class="section-number">05 / Investimentos</span><h2>Investimentos e caixa do mês têm papéis diferentes.</h2></div>
-                <p class="section-copy">Separe as posições da carteira do caixa remunerado reservado para pagar o mês. Aportes, retiradas e rendimentos reais preservam histórico, quantidades, taxas e contas de origem e destino.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="../images/pt-br/investments-light.png" data-lightbox>
-                    <img src="../images/pt-br/investments-light.png" width="1440" height="1000" alt="Área de investimentos com posição em ações sintética, totais da carteira e acesso separado ao caixa remunerado" loading="lazy" decoding="async">
-                </a>
-                <figcaption>Os totais descrevem aquisições e fluxos de valor registrados, não cotações de mercado em tempo real.</figcaption>
-            </figure>
-        </section>
-
-        <section class="tour-section" id="planning">
-            <div class="section-heading">
-                <div><span class="section-number">06 / Planejamento</span><h2>Experimente um cenário antes de realizá-lo.</h2></div>
-                <p class="section-copy">Estime o orçamento mensal com parcelas futuras e despesas recorrentes ou simule a evolução do saldo com aportes, retiradas e uma taxa efetiva. Salve rascunhos com nome, reabra e compare cenários sem alterar os registros financeiros.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="../images/pt-br/planning-light.png" data-lightbox>
-                    <img src="../images/pt-br/planning-light.png" width="1440" height="1000" alt="Simulador de rendimento do Planejamento com saldo inicial de BRL 10.000, aportes mensais de BRL 500 e taxa mensal hipotética de 0,8 por cento" loading="lazy" decoding="async">
-                </a>
-                <figcaption>O simulador recalcula conforme você edita. Aportes e retiradas ocorrem no fim do mês, com ajustes por mês para testar diferentes cenários.</figcaption>
-            </figure>
-        </section>
-    </main>
-
+                <p class="section-copy"><a href="#analytics" data-workspace-link="analytics">Ver análises <span aria-hidden="true">↗</span></a></p>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Início · Tema claro</span><a href="../images/pt-br/dashboard-light.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/dashboard-light.png" data-lightbox><img src="../images/pt-br/dashboard-light.png" width="1440" height="1000" alt="Início do Tuxedo Finance no tema claro com receitas, despesas, movimentações de investimentos e recursos disponíveis" fetchpriority="high" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Início · Tema escuro</span><a href="../images/pt-br/dashboard-dark.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/dashboard-dark.png" data-lightbox><img src="../images/pt-br/dashboard-dark.png" width="1440" height="1000" alt="Início do Tuxedo Finance mostrando o mesmo resumo financeiro sintético no tema escuro" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="analytics" data-workspace-view aria-labelledby="analytics-title">
+                <span id="reports"></span>
+                <nav class="workspace-tabs" aria-label="Análises">
+                    <a href="#analytics" data-workspace-link="analytics" aria-current="page">Finanças</a>
+                    <a href="#analytics-investments" data-workspace-link="analytics-investments">Investimentos</a>
+                </nav>
+                <div class="section-heading">
+                    <div><h2 id="analytics-title">Análises</h2></div>
+                    <p class="section-copy">Consulte o histórico de saldo, o fluxo de caixa e as despesas por período, categoria e forma de pagamento.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Análises · Análise mensal e despesas por categoria · Tema claro</span><a href="../images/pt-br/reports-light.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/reports-light.png" data-lightbox><img src="../images/pt-br/reports-light.png" width="1440" height="1000" alt="Página de análises financeiras do Tuxedo Finance com despesas por categoria e perspectiva de seis meses baseadas em dados sintéticos — tema claro" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Análises · Análise mensal e despesas por categoria · Tema escuro</span><a href="../images/pt-br/reports-dark.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/reports-dark.png" data-lightbox><img src="../images/pt-br/reports-dark.png" width="1440" height="1000" alt="Página de análises financeiras do Tuxedo Finance com despesas por categoria e perspectiva de seis meses baseadas em dados sintéticos — tema escuro" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="analytics-investments" data-workspace-view aria-labelledby="analytics-investments-title">
+                <nav class="workspace-tabs" aria-label="Análises">
+                    <a href="#analytics" data-workspace-link="analytics">Finanças</a>
+                    <a href="#analytics-investments" data-workspace-link="analytics-investments" aria-current="page">Investimentos</a>
+                </nav>
+                <div class="section-heading">
+                    <div><h2 id="analytics-investments-title">Análises · Investimentos</h2></div>
+                    <p class="section-copy">Evolução das aplicações, aportes, resgates e rendimentos com os preços e câmbios registrados.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Análises · Investimentos · Tema claro</span><a href="../images/pt-br/analytics-investments-light.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/analytics-investments-light.png" data-lightbox><img src="../images/pt-br/analytics-investments-light.png" width="1440" height="1000" alt="Evolução das aplicações, aportes, resgates e rendimentos com os preços e câmbios registrados." loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Análises · Investimentos · Tema escuro</span><a href="../images/pt-br/analytics-investments-dark.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/analytics-investments-dark.png" data-lightbox><img src="../images/pt-br/analytics-investments-dark.png" width="1440" height="1000" alt="Evolução das aplicações, aportes, resgates e rendimentos com os preços e câmbios registrados." loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="transactions" data-workspace-view aria-labelledby="transactions-title">
+                <div class="section-heading">
+                    <div><h2 id="transactions-title">Transações</h2></div>
+                    <a class="button button-primary" href="#new-entry" data-workspace-link="new-entry">Nova transação <span aria-hidden="true">＋</span></a>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Transações · Busca, filtros e divisão entre categorias · Tema claro</span><a href="../images/pt-br/transactions-light.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/transactions-light.png" data-lightbox><img src="../images/pt-br/transactions-light.png" width="1440" height="1000" alt="Lista de transações com filtros e receitas, despesas fixas, parcelas no cartão e pagamentos PIX sintéticos — tema claro" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Transações · Busca, filtros e divisão entre categorias · Tema escuro</span><a href="../images/pt-br/transactions-dark.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/transactions-dark.png" data-lightbox><img src="../images/pt-br/transactions-dark.png" width="1440" height="1000" alt="Lista de transações com filtros e receitas, despesas fixas, parcelas no cartão e pagamentos PIX sintéticos — tema escuro" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="new-entry" data-workspace-view aria-labelledby="new-entry-title">
+                <nav class="workspace-tabs" aria-label="Transações">
+                    <a href="#transactions" data-workspace-link="transactions">Transações</a>
+                    <a href="#new-entry" data-workspace-link="new-entry">Nova transação</a>
+                </nav>
+                <div class="section-heading">
+                    <div><h2 id="new-entry-title">Nova transação</h2></div>
+                    <p class="section-copy">Descrição, valor, data, categoria e cartão.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Pagamento com cartão de crédito · Tema claro</span><a href="../images/pt-br/new-entry-light.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/new-entry-light.png" data-lightbox><img src="../images/pt-br/new-entry-light.png" width="1440" height="1000" alt="Formulário real de nova transação com tipo despesa, valor, data, categoria e seleção visual do cartão de crédito — tema claro" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Pagamento com cartão de crédito · Tema escuro</span><a href="../images/pt-br/new-entry-dark.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/new-entry-dark.png" data-lightbox><img src="../images/pt-br/new-entry-dark.png" width="1440" height="1000" alt="Formulário real de nova transação com tipo despesa, valor, data, categoria e seleção visual do cartão de crédito — tema escuro" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="banking" data-workspace-view aria-labelledby="banking-title">
+                <div class="section-heading">
+                    <div><h2 id="banking-title">Contas</h2></div>
+                    <p class="section-copy">Abra um banco para gerenciar contas e cartões. Faturas, fidelidade e câmbio local têm abas diretas; as transferências ficam junto da conta.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Contas · Área do banco, contas e cartões · Tema claro</span><a href="../images/pt-br/banking-light.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/banking-light.png" data-lightbox><img src="../images/pt-br/banking-light.png" width="1440" height="1000" alt="Área de Contas com um banco sintético aberto, suas contas e cartões e os saldos disponíveis para planejamento — tema claro" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Contas · Área do banco, contas e cartões · Tema escuro</span><a href="../images/pt-br/banking-dark.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/banking-dark.png" data-lightbox><img src="../images/pt-br/banking-dark.png" width="1440" height="1000" alt="Área de Contas com um banco sintético aberto, suas contas e cartões e os saldos disponíveis para planejamento — tema escuro" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="investments" data-workspace-view aria-labelledby="investments-title">
+                <div class="section-heading">
+                    <div><h2 id="investments-title">Investimentos</h2></div>
+                    <p class="section-copy">Acompanhe aplicações e cofrinhos e registre aportes, resgates e rendimentos.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Investimentos · Posições e operações · Tema claro</span><a href="../images/pt-br/investments-light.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/investments-light.png" data-lightbox><img src="../images/pt-br/investments-light.png" width="1440" height="1000" alt="Área de investimentos com aplicações e cofrinhos sintéticos, totais datados, emojis e abas de Histórico, Preços e Cadastros — tema claro" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Investimentos · Posições e operações · Tema escuro</span><a href="../images/pt-br/investments-dark.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/investments-dark.png" data-lightbox><img src="../images/pt-br/investments-dark.png" width="1440" height="1000" alt="Área de investimentos com aplicações e cofrinhos sintéticos, totais datados, emojis e abas de Histórico, Preços e Cadastros — tema escuro" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="planning" data-workspace-view aria-labelledby="planning-title">
+                <div class="section-heading">
+                    <div><h2 id="planning-title">Planejar</h2></div>
+                    <p class="section-copy">Confira o mês e os limites por categoria, defina metas, simule cenários e veja alertas locais.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Planejar · Visão do mês e limites por categoria · Tema claro</span><a href="../images/pt-br/planning-light.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/planning-light.png" data-lightbox><img src="../images/pt-br/planning-light.png" width="1440" height="1000" alt="Área Planejar com acesso direto ao mês, metas, simulações e alertas, disponibilidade prevista e limites por categoria com registros sintéticos — tema claro" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Planejar · Visão do mês e limites por categoria · Tema escuro</span><a href="../images/pt-br/planning-dark.png" class="capture-original" target="_blank" rel="noopener">Ver em tamanho completo <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="../images/pt-br/planning-dark.png" data-lightbox><img src="../images/pt-br/planning-dark.png" width="1440" height="1000" alt="Área Planejar com acesso direto ao mês, metas, simulações e alertas, disponibilidade prevista e limites por categoria com registros sintéticos — tema escuro" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+        </main>
+    </div>
     <dialog class="image-dialog" id="image-dialog" aria-label="Captura ampliada da interface">
         <div class="dialog-inner">
             <button class="dialog-close" type="button" data-dialog-close aria-label="Fechar captura ampliada">×</button>
             <img id="dialog-image" alt="">
         </div>
     </dialog>
-
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <p>Tuxedo Finance — finanças pessoais simplificadas.</p>
-            <p>Prévia estática · Dados sintéticos · Nada é salvo</p>
-        </div>
-    </footer>
+    <footer class="site-footer"><div class="footer-inner"><p>Tuxedo Finance</p><p>Dados de demonstração</p></div></footer>
 </body>
 </html>

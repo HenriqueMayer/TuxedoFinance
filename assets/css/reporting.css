@@ -1,0 +1,41 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* A selected category may have no word boundaries. Its label belongs inside
+   the shared summary rather than widening Home, Reports or investment charts. */
+body.tuxedo-ui [data-selection-controls],
+body.tuxedo-ui [data-selection-summary],
+body.tuxedo-ui [data-selection-period],
+body.tuxedo-ui [data-selection-values] > div { min-width: 0; overflow-wrap: anywhere; }
+body.tuxedo-ui [data-selection-summary] { border-radius: 12px; }
+
+body.tuxedo-ui .home-workspace,
+body.tuxedo-ui .home-workspace :is(.grid, .grid > *, .home-invoice-row),
+body.tuxedo-ui .report-instrument-identity { min-width: 0; }
+body.tuxedo-ui .report-instrument-identity { overflow-wrap: anywhere; }
+body.tuxedo-ui .report-chart-heading { flex-wrap: nowrap; align-items: flex-start; }
+body.tuxedo-ui .report-chart-heading .section-title { flex: 1 1 auto; min-width: 0; }
+body.tuxedo-ui .report-chart-heading .help-popover { flex-shrink: 0; margin-top: 2px; }
+/* These marks also accept keyboard selection and touch inspection. The value
+   stays together while a full category label can use the available width. */
+body.tuxedo-ui .home-category-mark { min-height: 44px; padding-block: 6px; }
+body.tuxedo-ui .home-category-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+body.tuxedo-ui .home-category-label { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+body.tuxedo-ui .home-category-value { margin-left: auto; white-space: nowrap; }
+body.tuxedo-ui .home-record-link { display: flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+body.tuxedo-ui .home-invoice-row { align-items: start; }
+
+/* Preserve readable chart labels rather than shrinking a twelve-month canvas
+   into a phone. The named region exposes its local pan to keyboard users. */
+body.tuxedo-ui .report-chart-scroll,
+body.tuxedo-ui .reporting-table-scroll { min-width: 0; max-width: 100%; overflow-x: auto; border-radius: 8px; }
+body.tuxedo-ui :is(.report-chart-scroll, .reporting-table-scroll):focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 3px; }
+body.tuxedo-ui .report-chart-scroll-hint { display: none; color: var(--ui-muted); font-size: 12px; line-height: 18px; }
+
+body.tuxedo-ui .period-navigation-choice {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 10px 12px; border: 1px solid transparent;
+    border-radius: 8px; font-size: 14px; line-height: 22px; text-align: center;
+}
+body.tuxedo-ui .period-navigation-choice[aria-current] { border-color: var(--ui-line); background: var(--ui-paper); color: var(--ui-ink); }
+@media (max-width: 767px) {
+    body.tuxedo-ui .report-chart-scroll-hint { display: block; }
+}

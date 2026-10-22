@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tuxedo Finance — Interface preview</title>
-    <meta name="description" content="Explore the Tuxedo Finance interface through a static tour made with synthetic financial data.">
+    <meta name="description" content="Explore Home, Transactions, Accounts, Investments, Plan and Analytics in Tuxedo Finance.">
     <meta name="theme-color" content="#FAF8F3">
     <meta property="og:title" content="Tuxedo Finance — Interface preview">
-    <meta property="og:description" content="A static, bilingual tour of the local-first personal finance application.">
+    <meta property="og:description" content="Income, expenses, accounts, investments, planning and analysis in a local application.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://henriquemayer.github.io/TuxedoFinance/">
     <meta property="og:image" content="https://henriquemayer.github.io/TuxedoFinance/images/en/dashboard-light.png">
@@ -23,152 +23,192 @@
             document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         })();
     </script>
-    <link rel="stylesheet" href="assets/preview.css?v=3">
+    <link rel="preload" href="assets/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="assets/preview.css?v=8">
     <script src="assets/preview.js" defer></script>
 </head>
 <body>
-    <a class="skip-link" href="#main">Skip to the tour</a>
+    <a class="skip-link" href="#main">Skip to the workspace</a>
     <header class="site-header">
         <div class="header-inner">
-            <a class="wordmark" href="#top" aria-label="Tuxedo Finance preview">Tuxedo<span>Finance</span></a>
-            <nav class="tour-nav" aria-label="Preview sections">
-                <a href="#dashboard">Dashboard</a>
-                <a href="#reports">Reports</a>
-                <a href="#transactions">Transactions</a>
-                <a href="#banking">Banking</a>
-                <a href="#investments">Investments</a>
-                <a href="#planning">Planning</a>
+            <a class="wordmark" href="#dashboard" aria-label="Tuxedo Finance">
+                <svg class="brand-bowtie" viewBox="0 0 40 24" width="32" height="24" aria-hidden="true" focusable="false"><path d="M2 3 17 10V14L2 21ZM38 3 23 10V14L38 21Z" fill="currentColor"/><rect x="17" y="8" width="6" height="8" rx="2" fill="currentColor"/></svg>
+                <span>Tuxedo Finance</span>
+            </a>
+            <span class="header-caption">Interface preview</span>
+            <nav class="header-external" aria-label="Project links">
+                <a class="header-link" href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">Repository <span aria-hidden="true">↗</span></a>
+                <a class="header-link header-run" href="https://github.com/HenriqueMayer/TuxedoFinance#quick-start" target="_blank" rel="noopener noreferrer">Run locally <span aria-hidden="true">↗</span></a>
             </nav>
             <div class="header-actions">
-                <div class="language-switch" aria-label="Language">
-                    <a href="index.html" lang="en" aria-current="page">EN</a>
-                    <a href="pt-br/index.html" lang="pt-BR" hreflang="pt-BR">PT</a>
-                </div>
-                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme" aria-pressed="false">
-                    <span class="sun" aria-hidden="true">☀</span>
-                    <span class="moon" aria-hidden="true">◐</span>
-                </button>
+                <div class="language-switch" aria-label="Language"><a href="index.html" lang="en" aria-current="page">EN</a><a href="pt-br/index.html" lang="pt-BR" hreflang="pt-BR">PT</a></div>
+                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme" aria-pressed="false"><span class="sun" aria-hidden="true">☀</span><span class="moon" aria-hidden="true">◐</span></button>
             </div>
         </div>
     </header>
-
-    <main class="main" id="main">
-        <section class="hero" id="top">
-            <div>
-                <p class="eyebrow">Interface preview</p>
-                <h1>Meet your finances beyond the spreadsheet.</h1>
-                <p class="hero-copy">Explore the real Tuxedo Finance interface before installing it. This guided tour covers cash flow, reports, daily transactions, banking, investments and planning.</p>
-                <div class="hero-actions">
-                    <a class="button button-primary" href="#dashboard">Start the tour</a>
-                    <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">View repository</a>
-                    <a class="button" href="https://github.com/HenriqueMayer/TuxedoFinance#-quick-start" target="_blank" rel="noopener noreferrer">Run locally</a>
+    <div class="workspace-shell">
+        <aside class="workspace-sidebar">
+            <nav class="tour-nav" aria-label="Workspaces" data-primary-navigation>
+                <a href="#dashboard" data-workspace-link="dashboard" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg><span>Home</span></a>
+                <a href="#transactions" data-workspace-link="transactions" aria-label="Transactions"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></svg><span class="nav-label-full">Transactions</span><span class="nav-label-short" aria-hidden="true">Entries</span></a>
+                <a href="#banking" data-workspace-link="banking"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 9-5 9 5H3Zm2 4v7m7-7v7m7-7v7M2 22h20"/></svg><span>Accounts</span></a>
+                <a href="#investments" data-workspace-link="investments" aria-label="Investments"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17v-5m7 5V7m7 10V3M2 22h20"/></svg><span class="nav-label-full">Investments</span><span class="nav-label-short" aria-hidden="true">Invest</span></a>
+                <a href="#planning" data-workspace-link="planning"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6m10-6v6M3 11h18m-13 6 3 3 6-6"/></svg><span>Plan</span></a>
+                <a href="#analytics" data-workspace-link="analytics"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 15l4-5 4 3 5-7"/></svg><span>Analytics</span></a>
+            </nav>
+        </aside>
+        <main class="main" id="main" tabindex="-1">
+            <section class="tour-section" id="dashboard" data-workspace-view aria-labelledby="dashboard-title">
+                <span id="top"></span>
+                <div class="section-heading" id="dashboard-preview">
+                    <div><h1 id="dashboard-title">Home</h1></div>
+                    <a class="button button-primary" href="#new-entry" data-workspace-link="new-entry">New entry <span aria-hidden="true">＋</span></a>
                 </div>
-            </div>
-            <aside class="notice" aria-label="About this preview">
-                <span class="notice-title">Safe, static tour</span>
-                <p>Every amount, institution and account shown here is synthetic. There is no login, backend or database, and nothing you do on this page is saved.</p>
-            </aside>
-        </section>
-
-        <section class="tour-section" id="dashboard">
-            <div class="section-heading">
-                <div><span class="section-number">01 / Dashboard</span><h2>Monthly activity and current accounts.</h2></div>
-                <p class="section-copy">The selected month separates recorded activity from what is planned, keeping income, expenses, investment deposits and withdrawals distinct. Current account balances and upcoming invoices remain independent of the selected month.</p>
-            </div>
-            <div class="screenshot-grid">
-                <figure>
-                    <a class="screenshot-link" href="images/en/dashboard-light.png" data-lightbox>
-                        <img src="images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance dashboard in the light theme with funds available for planning and monthly income, expenses and investment activity" fetchpriority="high" decoding="async">
-                    </a>
-                    <figcaption>Light theme — monthly activity, planned amounts and current accounts.</figcaption>
-                </figure>
-                <figure>
-                    <a class="screenshot-link" href="images/en/dashboard-dark.png" data-lightbox>
-                        <img src="images/en/dashboard-dark.png" width="1440" height="1000" alt="Tuxedo Finance dashboard showing the same synthetic financial summary in the dark theme" loading="lazy" decoding="async">
-                    </a>
-                    <figcaption>Dark theme — black and graphite surfaces with distinct financial colors.</figcaption>
-                </figure>
-            </div>
-        </section>
-
-        <section class="tour-section" id="reports">
-            <div class="section-heading">
-                <div><span class="section-number">02 / Reports</span><h2>Patterns that stay connected to the numbers.</h2></div>
-                <p class="section-copy">Server-rendered charts compare balance evolution, cash flow, payment instruments, categories, installments and recurring expenses without hiding the underlying values.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="images/en/reports-light.png" data-lightbox>
-                    <img src="images/en/reports-light.png" width="1440" height="1000" alt="Tuxedo Finance reports page with summary values and a balance evolution chart based on synthetic data" loading="lazy" decoding="async">
-                </a>
-                <figcaption>Reports remain responsive, keyboard-readable and grouped around meaningful financial questions.</figcaption>
-            </figure>
-        </section>
-
-        <section class="tour-section" id="transactions">
-            <div class="section-heading">
-                <div><span class="section-number">03 / Transactions</span><h2>Every event, classified and searchable.</h2></div>
-                <p class="section-copy">Income and expenses retain their category, payment instrument, recurrence, installment plan, transaction date and billed month.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="images/en/transactions-light.png" data-lightbox>
-                    <img src="images/en/transactions-light.png" width="1440" height="1000" alt="Transaction list with search filters and synthetic income, fixed expenses, card installments and PIX payments" loading="lazy" decoding="async">
-                </a>
-                <figcaption>Counted transaction types, recurrence shortcuts, contextual categories and date filters complement search, ordering and CSV export.</figcaption>
-            </figure>
-        </section>
-
-        <section class="tour-section" id="banking">
-            <div class="section-heading">
-                <div><span class="section-number">04 / Banking</span><h2>Accounts, cards and currencies in context.</h2></div>
-                <p class="section-copy">See what is available for the month across accounts and remunerated cash. Reserve part of an account or exclude its positive balance from planning while keeping its actual balance visible.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="images/en/banking-light.png" data-lightbox>
-                    <img src="images/en/banking-light.png" width="1440" height="1000" alt="Banking overview with synthetic available cash, a BRL account with a partial reservation, an excluded USD account and a monthly cash pot" loading="lazy" decoding="async">
-                </a>
-                <figcaption>This example reserves BRL 2,000 and excludes the USD account. Bills remain in the plan, and the monthly cash pot includes only recorded yields.</figcaption>
-            </figure>
-        </section>
-
-        <section class="tour-section" id="investments">
-            <div class="section-heading">
-                <div><span class="section-number">05 / Investments</span><h2>Investments and monthly cash have different roles.</h2></div>
-                <p class="section-copy">Keep portfolio positions separate from remunerated cash set aside to pay the month. Deposits, withdrawals and actual yields retain their history, quantities, fees and cash accounts.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="images/en/investments-light.png" data-lightbox>
-                    <img src="images/en/investments-light.png" width="1440" height="1000" alt="Investments workspace with a synthetic equity position, portfolio totals and separate access to remunerated cash" loading="lazy" decoding="async">
-                </a>
-                <figcaption>The totals describe recorded acquisition and value flows, not live market quotations.</figcaption>
-            </figure>
-        </section>
-
-        <section class="tour-section" id="planning">
-            <div class="section-heading">
-                <div><span class="section-number">06 / Planning</span><h2>Try a scenario before making it real.</h2></div>
-                <p class="section-copy">Estimate a monthly budget from future installments and recurring expenses, or simulate balance growth with contributions, withdrawals and an effective rate. Save named drafts explicitly, reopen and compare them without changing financial records.</p>
-            </div>
-            <figure>
-                <a class="screenshot-link" href="images/en/planning-light.png" data-lightbox>
-                    <img src="images/en/planning-light.png" width="1440" height="1000" alt="Planning yield simulator with an initial BRL 10,000, monthly contributions of BRL 500 and a hypothetical monthly rate of 0.8 percent" loading="lazy" decoding="async">
-                </a>
-                <figcaption>The simulator recalculates as you edit. Contributions and withdrawals occur at month-end, and per-month overrides support different scenarios.</figcaption>
-            </figure>
-        </section>
-    </main>
-
+                <p class="section-copy"><a href="#analytics" data-workspace-link="analytics">View analyses <span aria-hidden="true">↗</span></a></p>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Home · Light theme</span><a href="images/en/dashboard-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/dashboard-light.png" data-lightbox><img src="images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance Home in the light theme with monthly income, expenses, investment activity and available funds" fetchpriority="high" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Home · Dark theme</span><a href="images/en/dashboard-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/dashboard-dark.png" data-lightbox><img src="images/en/dashboard-dark.png" width="1440" height="1000" alt="Tuxedo Finance Home showing the same synthetic financial summary in the dark theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="analytics" data-workspace-view aria-labelledby="analytics-title">
+                <span id="reports"></span>
+                <nav class="workspace-tabs" aria-label="Analytics">
+                    <a href="#analytics" data-workspace-link="analytics" aria-current="page">Finances</a>
+                    <a href="#analytics-investments" data-workspace-link="analytics-investments">Investments</a>
+                </nav>
+                <div class="section-heading">
+                    <div><h2 id="analytics-title">Analytics</h2></div>
+                    <p class="section-copy">Explore balance history, cash flow and expenses by period, category and payment method.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Analytics · Monthly analysis and category expenses · Light theme</span><a href="images/en/reports-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/reports-light.png" data-lightbox><img src="images/en/reports-light.png" width="1440" height="1000" alt="Tuxedo Finance financial analysis page with monthly category expenses and a six-month outlook based on synthetic data — light theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Analytics · Monthly analysis and category expenses · Dark theme</span><a href="images/en/reports-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/reports-dark.png" data-lightbox><img src="images/en/reports-dark.png" width="1440" height="1000" alt="Tuxedo Finance financial analysis page with monthly category expenses and a six-month outlook based on synthetic data — dark theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="analytics-investments" data-workspace-view aria-labelledby="analytics-investments-title">
+                <nav class="workspace-tabs" aria-label="Analytics">
+                    <a href="#analytics" data-workspace-link="analytics">Finances</a>
+                    <a href="#analytics-investments" data-workspace-link="analytics-investments" aria-current="page">Investments</a>
+                </nav>
+                <div class="section-heading">
+                    <div><h2 id="analytics-investments-title">Analytics · Investments</h2></div>
+                    <p class="section-copy">Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Analytics · Investments · Light theme</span><a href="images/en/analytics-investments-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/analytics-investments-light.png" data-lightbox><img src="images/en/analytics-investments-light.png" width="1440" height="1000" alt="Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates." loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Analytics · Investments · Dark theme</span><a href="images/en/analytics-investments-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/analytics-investments-dark.png" data-lightbox><img src="images/en/analytics-investments-dark.png" width="1440" height="1000" alt="Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates." loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="transactions" data-workspace-view aria-labelledby="transactions-title">
+                <div class="section-heading">
+                    <div><h2 id="transactions-title">Transactions</h2></div>
+                    <a class="button button-primary" href="#new-entry" data-workspace-link="new-entry">New entry <span aria-hidden="true">＋</span></a>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Transactions · Search, filters and category splits · Light theme</span><a href="images/en/transactions-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/transactions-light.png" data-lightbox><img src="images/en/transactions-light.png" width="1440" height="1000" alt="Transaction list with search filters and synthetic income, fixed expenses, card installments and PIX payments — light theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Transactions · Search, filters and category splits · Dark theme</span><a href="images/en/transactions-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/transactions-dark.png" data-lightbox><img src="images/en/transactions-dark.png" width="1440" height="1000" alt="Transaction list with search filters and synthetic income, fixed expenses, card installments and PIX payments — dark theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="new-entry" data-workspace-view aria-labelledby="new-entry-title">
+                <nav class="workspace-tabs" aria-label="Transactions">
+                    <a href="#transactions" data-workspace-link="transactions">Transactions</a>
+                    <a href="#new-entry" data-workspace-link="new-entry">New entry</a>
+                </nav>
+                <div class="section-heading">
+                    <div><h2 id="new-entry-title">New entry</h2></div>
+                    <p class="section-copy">Description, amount, date, category and card.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Credit card payment · Light theme</span><a href="images/en/new-entry-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/new-entry-light.png" data-lightbox><img src="images/en/new-entry-light.png" width="1440" height="1000" alt="The actual new transaction form with expense type, amount, date, category and visual credit card selection — light theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Credit card payment · Dark theme</span><a href="images/en/new-entry-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/new-entry-dark.png" data-lightbox><img src="images/en/new-entry-dark.png" width="1440" height="1000" alt="The actual new transaction form with expense type, amount, date, category and visual credit card selection — dark theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="banking" data-workspace-view aria-labelledby="banking-title">
+                <div class="section-heading">
+                    <div><h2 id="banking-title">Accounts</h2></div>
+                    <p class="section-copy">Open a bank to manage accounts and cards. Invoices, loyalty and local exchange rates have direct tabs; transfers stay beside the account.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Accounts · Bank workspace, accounts and cards · Light theme</span><a href="images/en/banking-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/banking-light.png" data-lightbox><img src="images/en/banking-light.png" width="1440" height="1000" alt="Accounts workspace with a synthetic bank open, its accounts and cards, and available planning balances — light theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Accounts · Bank workspace, accounts and cards · Dark theme</span><a href="images/en/banking-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/banking-dark.png" data-lightbox><img src="images/en/banking-dark.png" width="1440" height="1000" alt="Accounts workspace with a synthetic bank open, its accounts and cards, and available planning balances — dark theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="investments" data-workspace-view aria-labelledby="investments-title">
+                <div class="section-heading">
+                    <div><h2 id="investments-title">Investments</h2></div>
+                    <p class="section-copy">Track holdings and cash pots, then record deposits, withdrawals and yields.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Investments · Positions and operations · Light theme</span><a href="images/en/investments-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/investments-light.png" data-lightbox><img src="images/en/investments-light.png" width="1440" height="1000" alt="Investment workspace with synthetic holdings and cash pots, dated totals, position emojis and History, Prices and Setup tabs — light theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Investments · Positions and operations · Dark theme</span><a href="images/en/investments-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/investments-dark.png" data-lightbox><img src="images/en/investments-dark.png" width="1440" height="1000" alt="Investment workspace with synthetic holdings and cash pots, dated totals, position emojis and History, Prices and Setup tabs — dark theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+            <section class="tour-section" id="planning" data-workspace-view aria-labelledby="planning-title">
+                <div class="section-heading">
+                    <div><h2 id="planning-title">Plan</h2></div>
+                    <p class="section-copy">Review the month and category limits, set goals, try simulations and check local signals.</p>
+                </div>
+                <div class="screenshot-grid">
+                    <figure class="screen-light">
+                        <figcaption class="capture-heading"><span>Plan · Monthly outlook and category limits · Light theme</span><a href="images/en/planning-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/planning-light.png" data-lightbox><img src="images/en/planning-light.png" width="1440" height="1000" alt="Plan workspace with direct month, goals, simulations and signals sections, projected availability and category limits using synthetic records — light theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                    <figure class="screen-dark">
+                        <figcaption class="capture-heading"><span>Plan · Monthly outlook and category limits · Dark theme</span><a href="images/en/planning-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
+                        <a class="screenshot-link" href="images/en/planning-dark.png" data-lightbox><img src="images/en/planning-dark.png" width="1440" height="1000" alt="Plan workspace with direct month, goals, simulations and signals sections, projected availability and category limits using synthetic records — dark theme" loading="lazy" decoding="async"></a>
+                    </figure>
+                </div>
+            </section>
+        </main>
+    </div>
     <dialog class="image-dialog" id="image-dialog" aria-label="Expanded interface screenshot">
         <div class="dialog-inner">
             <button class="dialog-close" type="button" data-dialog-close aria-label="Close expanded screenshot">×</button>
             <img id="dialog-image" alt="">
         </div>
     </dialog>
-
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <p>Tuxedo Finance — personal finance, simplified.</p>
-            <p>Static preview · Synthetic data · Nothing is saved</p>
-        </div>
-    </footer>
+    <footer class="site-footer"><div class="footer-inner"><p>Tuxedo Finance</p><p>Demo data</p></div></footer>
 </body>
 </html>

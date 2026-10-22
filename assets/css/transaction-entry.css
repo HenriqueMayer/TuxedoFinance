@@ -1,0 +1,103 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Native form controls and their server errors share the editorial entry sheet. */
+.transaction-entry-page { max-width: 960px; margin-inline: auto; }
+.transaction-entry-page > h1 { margin-bottom: 28px; }
+.transaction-entry {
+    --entry-surface: #FFFFFF;
+    --entry-paper: #FAF8F3;
+    --entry-ground: #EBE7DE;
+    --entry-ink: #1A2E26;
+    --entry-muted: #52605A;
+    --entry-line: rgb(26 46 38 / .18);
+    --entry-control: #7C8982;
+    --entry-accent: #8A5A2F;
+    padding: 28px 32px; border: 1px solid var(--entry-line);
+    border-radius: 14px; background: var(--entry-surface); color: var(--entry-ink);
+}
+.dark .transaction-entry { --entry-surface: #1B1B1B; --entry-paper: #101010; --entry-ground: #262626; --entry-ink: #FAF8F3; --entry-muted: #B8B8B8; --entry-line: rgb(250 248 243 / .2); --entry-control: #808080; --entry-accent: #D4AD86; }
+.transaction-entry > :not([type="hidden"]) + :not([type="hidden"]) { margin-top: 20px; }
+.transaction-entry [hidden] { display: none !important; }
+.entry-input { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid rgb(26 46 38 / .18); border-bottom-color: #7C8982; border-radius: 8px; background: #FAF8F3; color: #1A2E26; font-size: 14px; line-height: 22px; transition: border-color 160ms ease, background-color 160ms ease; }
+.dark .entry-input { background: #101010; color: #FAF8F3; border-color: rgb(250 248 243 / .2); border-bottom-color: #808080; }
+.entry-input::placeholder { color: #52605A; opacity: 1; }
+.dark .entry-input::placeholder { color: #B8B8B8; }
+.entry-input:focus { border-color: #8A5A2F; outline: 2px solid #8A5A2F; outline-offset: 2px; background: #FFFFFF; }
+.dark .entry-input:focus { border-color: #D4AD86; outline-color: #D4AD86; background: #1B1B1B; }
+.entry-input[aria-invalid="true"] { border-color: #B42318; }
+.dark .entry-input[aria-invalid="true"] { border-color: #FF8A80; }
+.entry-input:disabled { opacity: .65; cursor: not-allowed; }
+.entry-details-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px 20px; }
+.entry-details-grid > * { min-width: 0; }
+.transaction-entry :is(input, select, textarea, button, summary) { scroll-margin-top: 100px; scroll-margin-bottom: 104px; }
+.transaction-entry .field-label { color: var(--entry-ink); }
+.transaction-entry .search-choice { position: relative; }
+.transaction-entry .search-choice > input { padding-right: 48px; }
+.transaction-entry .search-choice > button { position: absolute; right: 0; top: 0; width: 44px; height: 44px; min-height: 44px; margin: 0; padding: 0; font-size: 0; border-radius: 8px; color: var(--entry-muted); }
+.transaction-entry .search-choice > button::after { content: '×'; font-size: 20px; line-height: 1; }
+.transaction-entry .search-choice-results { background: var(--entry-surface); border-radius: 8px; }
+.transaction-entry #id_amount { font-variant-numeric: tabular-nums; }
+.transaction-entry [data-entry-date] > .flex { position: relative; }
+.transaction-entry [data-entry-date] .entry-input { padding-right: 48px; }
+.transaction-entry [data-entry-date] [data-open-date-picker] { position: absolute; right: 0; top: 0; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 8px; color: var(--entry-muted); background: transparent; }
+.transaction-entry [data-entry-date] [data-open-date-picker] > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.transaction-entry [data-entry-date] [data-open-date-picker] svg { width: 18px; height: 18px; }
+.entry-choice-field { min-width: 0; padding: 0; border: 0; }
+.entry-choice-field > legend { margin-bottom: 8px; padding: 0; }
+.entry-segment-options { display: inline-grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 100%; gap: 3px; padding: 3px; border: 1px solid rgb(26 46 38 / .18); border-radius: 12px; background: #FAF8F3; }
+.dark .entry-segment-options { border-color: rgb(250 248 243 / .2); background: #101010; }
+.entry-segment-options > div { display: contents; }
+.entry-segment-options label { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 104px; min-height: 44px; padding: 10px 18px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; line-height: 20px; color: #52605A; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
+.dark .entry-segment-options label { color: #B8B8B8; }
+/* The native radio owns the full visible target. Transparent coverage keeps
+   direct pointer/touch activation and keyboard semantics on the same control. */
+.entry-segment-options label > input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; padding: 0; margin: 0; opacity: 0; cursor: pointer; }
+.entry-segment-options label::after { content: ''; position: absolute; bottom: 4px; left: calc(50% - 8px); width: 16px; height: 2px; border-radius: 2px; background: #8A5A2F; opacity: 0; transition: opacity 160ms ease; }
+.dark .entry-segment-options label::after { background: #D4AD86; }
+.entry-segment-options label:hover { background: #EBE7DE; color: #1A2E26; }
+.dark .entry-segment-options label:hover { background: #262626; color: #FAF8F3; }
+.entry-segment-options label:has(input:checked) { border-color: rgb(26 46 38 / .18); background: #FFFFFF; color: #1A2E26; font-weight: 600; }
+.dark .entry-segment-options label:has(input:checked) { border-color: rgb(250 248 243 / .2); background: #1B1B1B; color: #FAF8F3; }
+.entry-segment-options label:has(input:checked)::after { opacity: 1; }
+.entry-segment-options label:has(input:focus-visible) { outline: 2px solid #8A5A2F; outline-offset: 3px; }
+.dark .entry-segment-options label:has(input:focus-visible) { outline-color: #D4AD86; }
+.entry-segment-options label:has(input[aria-invalid="true"]) { border-color: #B42318; }
+.dark .entry-segment-options label:has(input[aria-invalid="true"]) { border-color: #FF8A80; }
+.transaction-entry .entry-segment-options input:focus-visible { outline: none; }
+.entry-payment-section { border-top: 1px solid var(--entry-line); padding-top: 24px; }
+[data-entry-choice="payment_channel"] .entry-segment-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+[data-entry-choice="payment_channel"] .entry-segment-options label { min-width: 0; }
+.transaction-entry:has([name="transaction_type"][value="INCOME"]:checked) [data-entry-choice="payment_channel"] .entry-segment-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.entry-split-choice { font-size: 14px; }
+.entry-checkbox-choice { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.entry-checkbox-choice > input { flex-shrink: 0; }
+.transaction-entry #credit-card-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; }
+.transaction-entry #credit-card-details > * { min-width: 0; margin-block: 0; }
+.transaction-entry #credit-card-best-purchase { grid-column: 1 / -1; }
+.entry-split-fields { display: grid; gap: 16px; }
+.entry-split-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .7fr); gap: 14px 20px; border: 1px solid var(--entry-line); border-radius: 10px; padding: 18px; }
+.entry-split-row > legend { padding-inline: 4px; font-size: 14px; }
+.entry-split-row > :last-child { grid-column: 1 / -1; }
+.entry-advanced { border-block: 1px solid var(--entry-line); }
+.entry-advanced-trigger { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; padding-block: 8px; cursor: pointer; font-size: 14px; list-style: none; }
+.entry-advanced-trigger::-webkit-details-marker { display: none; }
+.entry-advanced-trigger::after { content: '+'; font-size: 20px; transition: transform 160ms ease; }
+.entry-advanced[open] > summary::after { transform: rotate(45deg); }
+.entry-advanced-body { display: grid; gap: 18px; padding-block: 12px 20px; }
+.entry-recurring-choice { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.entry-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 4px; }
+.entry-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 10px 18px; border: 1px solid transparent; border-radius: 12px; font-size: 14px; line-height: 20px; font-weight: 500; background: #B88A59; color: #101E18; transition: background-color 160ms ease, border-color 160ms ease; }
+.entry-button:hover { background: #D4AD86; border-color: #8A5A2F; }
+.entry-button--quiet { border-color: var(--entry-line); background: transparent; color: inherit; }
+.entry-button--quiet:hover { background: var(--entry-ground); border-color: var(--entry-accent); }
+.transaction-entry :is(button, a, summary):focus-visible { outline: 2px solid var(--entry-accent); outline-offset: 4px; }
+@media (min-width: 1024px) { .transaction-entry :is(input, select, textarea, button, summary) { scroll-margin-bottom: 24px; } }
+@media (max-width: 767px) {
+    .transaction-entry { padding: 24px 20px; }
+    .entry-details-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    [data-entry-choice="payment_channel"] .entry-segment-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .entry-segment-options label { padding-inline: 12px; }
+    .entry-split-row { grid-template-columns: minmax(0, 1fr); }
+    .transaction-entry #credit-card-details { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 359px) { .entry-segment-options label { min-width: 92px; padding-inline: 10px; } }
+@media (prefers-reduced-motion: reduce) { .transaction-entry *, .entry-segment-options *, .entry-advanced-trigger::after { transition: none !important; } }

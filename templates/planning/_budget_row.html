@@ -1,0 +1,12 @@
+{% load i18n l10n navigation %}
+<article class="budget-row" aria-labelledby="budget-{{ row.budget.pk|stringformat:'d' }}">
+    <div class="budget-row-main">
+        <h3 id="budget-{{ row.budget.pk|stringformat:'d' }}" class="font-semibold text-sm">{{ row.budget.category }}</h3>
+        <div class="budget-spending"><p class="tabular-nums"><strong>{{ row.budget.currency }} {{ row.actual|floatformat:2 }}</strong> / {{ row.budget.amount|floatformat:2 }}</p><progress max="100" value="{{ row.actual_percent|unlocalize }}" aria-label="{% translate 'Budget used' %}">{{ row.actual_percent }}%</progress></div>
+        <p class="budget-remaining tabular-nums{% if row.remaining < 0 %} text-expense dark:text-expense-light{% endif %}"><span class="budget-mobile-label">{% translate 'Remaining' %}: </span>{{ row.budget.currency }} {{ row.remaining|floatformat:2 }}</p>
+        {% url 'planning:budget_update' row.budget.pk as edit_url %}<a class="quiet-action budget-edit" href="{% contextual_url edit_url %}">{% translate 'Edit limit' %}</a>
+    </div>
+    {% if row.over_budget %}<p role="status" class="text-sm text-expense dark:text-expense-light mt-2">{% translate 'Recorded spending exceeds this limit.' %}</p>{% elif row.forecast_over_budget %}<p role="status" class="text-sm text-expense dark:text-expense-light mt-2">{% translate 'Known expenses are forecast to exceed this limit.' %}</p>{% endif %}
+    {% if not row.complete %}<p role="status" class="text-sm text-expense dark:text-expense-light mt-2">{% translate 'Partial totals: missing reference exchange rates for' %} {{ row.missing_currencies|join:', ' }}. <a class="underline" href="{% url 'banking:exchange_rates' %}">{% translate 'Review exchange rates' %}</a></p>{% endif %}
+    <details id="budget-options-{{ row.budget.pk|stringformat:'d' }}" class="explanation-disclosure budget-options"><summary>{% translate 'Forecast and options' %}</summary><div class="flex flex-wrap items-center justify-between gap-3 mt-2"><p class="subtle-copy">{% translate 'Month forecast' %}: {{ row.budget.currency }} {{ row.forecast|floatformat:2 }}</p><form method="post" action="{% url 'planning:budget_delete' row.budget.pk %}" hx-boost="false">{% csrf_token %}<button type="submit" class="quiet-action">{% translate 'Remove limit' %}</button></form></div></details>
+</article>

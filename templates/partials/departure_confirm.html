@@ -1,0 +1,11 @@
+{% load i18n %}
+{# Only internal navigation can use application styling; native tab/reload warnings remain browser-owned. #}
+<dialog id="departure-confirm" class="departure-confirm" aria-labelledby="departure-confirm-title" aria-describedby="departure-confirm-copy">
+    <div class="departure-confirm-mark" aria-hidden="true">↗</div>
+    <h2 id="departure-confirm-title">{% translate 'Leave this page?' %}</h2>
+    <p id="departure-confirm-copy">{% translate 'You have unsaved changes or a simulation result.' %}</p>
+    <div class="departure-confirm-actions">
+        <button type="button" class="action-link" data-departure-stay autofocus>{% translate 'Keep editing' %}</button>
+        <button type="button" class="action-primary" data-departure-leave>{% translate 'Leave page' %}</button>
+    </div>
+</dialog>

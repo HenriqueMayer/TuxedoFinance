@@ -1,0 +1,9 @@
+{% load i18n investment_identity %}
+<div class="investment-row-main">
+    <div class="min-w-0"><div class="investment-position-identity"><a href="{{ appearance_url }}" class="investment-icon-action" aria-label="{% blocktranslate with name=row.name %}Customize icon for {{ name }}{% endblocktranslate %}"><span aria-hidden="true">{% position_icon row.product row.id %}</span></a><h2 class="font-semibold text-sm"><a href="{{ row.detail_url }}" class="investment-name"><span>{{ row.name }}</span></a></h2></div><p class="subtle-copy">{{ row.bank_name }}{% if row.product_name != row.name %} · {{ row.product_name }}{% endif %}{% if row.purpose == 'MONTHLY_CASH' %} · {% translate 'Remunerated cash' %}{% endif %}</p></div>
+    <div class="investment-row-value"><p class="font-semibold tabular-nums">{{ row.currency }} {{ row.valuation|floatformat:2 }}</p>{% if row.currency != base_currency and row.base_balance is not None %}<p class="subtle-copy">{{ base_currency }} {{ row.base_balance|floatformat:2 }}</p>{% endif %}<p class="investment-evidence">{{ row.evidence_label }}{% if row.evidence_date %} · {{ row.evidence_date|date:USER_DATE_FORMAT }}{% endif %}{% if row.valuation_mode == 'UNITS' %} · {% blocktranslate with quantity=row.quantity.normalize %}{{ quantity }} units{% endblocktranslate %}{% endif %}</p></div>
+    <a href="{{ update_url }}" class="action-link investment-update">{% translate 'Update' %}</a>
+</div>
+{% if row.baseline_unknown %}<p role="status" class="subtle-copy mt-2">{% translate 'Unknown opening date' %}</p>{% endif %}
+{% if row.purpose == 'MONTHLY_CASH' and not row.planning_enabled %}<p class="subtle-copy mt-2">{% translate 'Outside monthly planning' %}</p>{% endif %}
+{% if row.history_errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light mt-2">{% translate 'Review operation history.' %}</p>{% endif %}

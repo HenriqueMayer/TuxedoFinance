@@ -1,15 +1,23 @@
 # Planning evolution — implementation review
 
+**Historical delivery record:** behavior and measurements below describe the
+dated increments, including navigation and help interactions later replaced.
+Use the [documentation index](README.md), [frontend contract](frontend.md) and
+owning app guide for present behavior. The
+[review archive](reviews/README.md) distinguishes later dated evidence.
+Test counts, coverage and local image identifiers below
+are historical evidence, not the current checkout's validation status.
+
 This review records the work on `feat/finance-planning-evolution` on 2026-09-20.
 It records pre-release validation of the changes included in **v0.4.0**.
 Release publication and image availability are tracked by the
 [release workflow](versioning.md#container-releases).
 No personal database was migrated, reset or populated during validation.
-[FIN-11](https://hmayer.atlassian.net/browse/FIN-11) and
-[FIN-12](https://hmayer.atlassian.net/browse/FIN-12) were updated with scope,
-acceptance criteria and validation evidence, then moved to **Done**. Their
-completion comments explicitly distinguish local implementation from release
-publication.
+Repository evidence for the dated FIN-11 and FIN-12 increments is preserved in
+the [asset-deletion regressions](../investments/tests/test_planning.py) and
+[preferred-date regressions](../core/tests/test_dates.py), respectively. These
+references document local implementation; release publication follows the
+workflow above.
 
 ## Delivered behavior
 
@@ -17,7 +25,7 @@ publication.
 |---|---|---|
 | Financial availability | Monetary cash pots, persistent partial reserves and account exclusions share one calculation; negative balances and obligations remain visible. | [Banking](apps/banking.md#monthly-planning-availability) |
 | Investment semantics | Purpose belongs to the product; positions are product/asset pairs. Actual yields and opening holdings remain separate from simulations. | [Investments](apps/investments.md#purpose-and-cash-planning) |
-| FIN-11 | Opening positions and operation history protect asset deletion, including mixed bulk and Admin operations. Empty assets remain removable. | `investments/test_planning.py` |
+| FIN-11 | Opening positions and operation history protect asset deletion, including mixed bulk and Admin operations. Empty assets remain removable. | [Position planning regressions](../investments/tests/test_planning.py) |
 | FIN-12 | Shared date parsing and controls respect DMY/MDY across domains; machine dates and filters remain ISO. | [Frontend contract](frontend.md#planning-workspaces-and-shared-presentation) |
 | Planning | Explicit named private drafts, incomplete-input recovery, duplication, comparison and reviewed 12-month commitment snapshots. | [Planning](apps/sandbox.md) |
 | Simulations | Decimal monthly/annual effective rates; monthly opening-balance yield followed by contributions/withdrawals; editable monthly overrides. | [Investment simulation](apps/sandbox.md#investment-simulation) |

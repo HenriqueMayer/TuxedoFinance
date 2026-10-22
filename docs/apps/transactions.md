@@ -7,7 +7,7 @@ is expressed through owned banking accounts, cards, invoices, and movements.
 ## Responsibilities
 
 - CRUD, search and filtering for `INCOME` and `EXPENSE` events.
-- Category assignment for income/expense.
+- Category assignment and optional exact category allocations for income/expense.
 - Amount, event date, recurrence and notes; consolidated reporting uses the
   authenticated user's base currency while native amounts remain unchanged.
 - Selection of PIX, debit card, credit card, or direct account as the settlement
@@ -19,7 +19,39 @@ is expressed through owned banking accounts, cards, invoices, and movements.
 withdrawals belong to the investments workflow and create banking movements
 without becoming income or expense.
 
+## Module ownership
+
+`models.py` owns transaction validation, calendar attribution and exact category
+allocations; `forms.py` owns user-scoped input and split formsets. The `views/`
+package separates read-only consultation and CSV export in `consultation.py`
+from create/update/delete and split submissions in `editing.py`. Its explicit
+public exports keep the existing `transactions.views` imports and URL names.
+The month-filter helpers belong to `views.consultation`; tests should import
+them there rather than depending on incidental exports. `projection.py` owns
+arithmetic occurrence windows and their validation limit; `services.py` retains
+the financial ledger synchronization boundary. `middleware.py` recovers refused
+projections through the authorized transaction list.
+
 ## Settlement behavior
+
+### Opening installment purchases
+
+`installment_start` defaults to 1 and identifies the first installment tracked
+locally. An existing purchase can therefore retain its original date, full
+purchase total and installment count while omitting installments settled before
+the local opening import. For example, starting at 9 of 12 projects installments
+9–12 only; it never creates the eight earlier invoices or cash debits.
+The source amount remains the original total, including original cent rounding.
+The remaining opening balance is not presented as a known card debt before its
+first tracked reference month.
+
+The optional **Already paying this purchase?** disclosure uses the shared
+integer field and appears only for an eligible installment purchase. Server
+validation requires `1 <= installment_start <= installments` and rejects a
+later start for recurring or non-credit sources. Bound errors stay recoverable
+and older POST clients that omit the field preserve an edited record's start.
+Monthly filtering, budgets, projections and debt use only tracked installments;
+category allocation still replays original capacities for correct cents.
 
 | Path | Transaction classification | Cash effect |
 |---|---|---|
@@ -83,27 +115,115 @@ beyond today. Future-effective rows may exist in the database, but balance
 queries exclude them until their effective date. See
 [request-time synchronization](../architecture.md#request-time-synchronization).
 
+Reconciliation compares projected values to existing rows and saves only actual
+changes. Unchanged rows retain their identifiers and timestamps; source keys
+prevent duplicate movements. Manual invoice payments are confirmed evidence,
+not disposable projections, and remain protected when a source or forecast
+horizon changes. Atomic synchronization still uses SQLite's serialized writer
+behavior; skipping unchanged writes does not provide concurrent row locks.
+
+## Recurrence projection and recovery
+
+The projector calculates each source's first applicable month and occurrence
+count arithmetically, then visits only that source's actual schedule. It does
+not scan empty calendar gaps between an old transaction and the projection
+horizon. One-off purchases and installments retain their bounded source
+windows. Ended fixed schedules remain valid even when their dates are ancient;
+their actual occurrence count controls validation. Credit-card billing offsets
+also shift the final billed month of an ended schedule. Projection preserves
+installment cents, effective dates and confirmed invoice payments.
+
+A fixed transaction may project at most **1,200 monthly occurrences** through
+the synchronization horizon, normally twelve months beyond today. Exactly
+1,200 is accepted; 1,201 is rejected. This is a per-source bound on applicable
+effective or billed occurrences, not a minimum start date, an aggregate limit
+for the user, or permission to truncate a longer schedule. Model validation
+attaches the error to the event date, and synchronization also guards legacy
+or direct-ORM sources. See the
+[synchronization boundary](../architecture.md#request-time-synchronization)
+for preflight, locked revalidation and rollback behavior.
+
+When an excessive existing source blocks a financial GET, recovery returns to
+Transactions with an explanatory message, including a full navigation for HTMX.
+The ordinary transaction list does not synchronize and remains available for
+review and editing. Ordinary source writes that fail the guard roll back;
+transaction forms retain their bound values and errors.
+
+An owner may explicitly correct an excessive source to a valid schedule or
+delete it while other excessive sources still remain. Each such repair is
+saved individually with a warning; derived movements and invoices remain
+unchanged while synchronization is stopped. Financial consultation that
+requires synchronization remains blocked rather than displaying the stale
+projection. After the final blocker is repaired, full reconciliation resumes.
+The guard never automatically changes existing dates, truncates occurrences
+or alters financial history; only the owner's explicit source correction or
+deletion changes that source.
+
+## Category splits
+
+`TransactionSplit` optionally allocates a source transaction to two or more
+owned compatible categories. The positive, distinct category amounts must sum
+exactly to the source amount; the form supports at most twenty rows. The parent
+category stays required as a legacy/fallback field. When splits exist, reports
+use the allocations instead of adding that parent category again.
+
+Splits do not create transactions, installments, movements or invoices. They
+therefore cannot change the transaction's cash or statement total. Editing an
+amount or type must keep its allocations valid. Generated redemption IOF remains
+managed from its source and cannot be split through the ordinary transaction
+editor.
+
+`category_allocations_for_month` distributes installment cents proportionally
+over remaining category capacities. It floors shares, assigns remainders in
+stable order and carries the unallocated capacity to the next installment.
+Each monthly split equals that installment exactly, no allocation becomes
+negative, and the full plan reproduces the original category totals. Fixed
+recurrences reuse their source allocations for each occurrence without copying
+source records.
+
 ## Listing and reporting semantics
 
-The list opens on the full history. Search covers title, notes, category, bank,
-account and card labels. Free-text search and the exact category selector sit
-next to each other on wider screens and consecutively on mobile, in the same
-reading and keyboard order. Billed month follows them; exact event
-date is under **More filters**, automatically expanded when a date is applied.
-Ordering lives beside the results. All controls work through ordinary GET
-requests, including without JavaScript. Enhanced filtering, card/recurrence
+The list opens on the full history. Search covers title, notes, category and split
+category, bank, account and card labels. The compact consultation bar keeps search,
+billed month and the **All**, **Income** and **Expenses** choices visible. A single
+native **More filters** disclosure contains event date, recurrence and ordering
+on one compact row where space permits, wrapping at narrower widths. Category
+lookup uses the general search instead of a second category picker. Its badge
+counts additional criteria; Clear stays
+next to the controls whenever any filter or nondefault ordering is active.
+Applied additional criteria and invalid dates open the disclosure on a fresh GET.
+Live updates preserve its mounted controls and the user's disclosure choice.
+At each responsive breakpoint the bar uses fixed grid tracks for its primary
+controls and action slots: one rail on wide desktop viewports, two rows on
+smaller desktops, and explicit stacked tracks on mobile. An empty Clear slot
+remains reserved when its link is
+absent; there is no inactive control or extra keyboard stop. Month captions and
+count badges cannot resize the search or move the type choices. The disclosure
+summary stays in its action slot while its native content expands below the
+toolbar; the native Apply fallback has its own row. Only the transaction
+workspace reserves the viewport's scrollbar gutter, so shorter filtered lists
+do not change the available horizontal space. Other workspaces retain their
+existing layout.
+All controls work through ordinary GET requests, including without JavaScript.
+Enhanced filtering, card/recurrence
 selection, sorting and pagination preserve viewport position and keyboard focus
-through the [shared navigation contract](../frontend.md#preserve-the-users-location).
+through the [shared navigation contract](../frontend/navigation.md#preserve-the-users-location).
 
-**All**, **Income** and **Expenses** use compact cards in a single horizontal
-row, with each label and count side by side. They count records matching search, billed
+**All**, **Income** and **Expenses** use equal compact cells in a single horizontal
+row. On smaller screens, labels and counts stack inside the same 44px target
+instead of changing the row's geometry as values change. They count records
+matching search, billed
 month and exact date, before category and recurrence refinements. A fixed
 transaction or installment plan counts once, not once per occurrence. Cards do
 not total monetary amounts.
 
-Category choices contain only owned categories with records matching the search,
-dates, type and recurrence. Parent names appear as `Parent › Child`; selecting a
-category matches that exact category, not its descendants. Recurrence shortcuts
+Existing `category=<id>` URLs retain their exact owned parent/fallback or
+allocated-category meaning, without including descendants. The GET form carries
+that criterion as an unlocalized hidden identifier and names the active category
+inside the disclosure, with an individual Clear action. This preserves old links,
+pagination and editor return context without an invisible restriction or a second
+search widget. Other institution/product selectors in the application remain
+available because exact record identity differs from matching text. Recurrence shortcuts
 are All, Fixed (`is_fixed=True`), Installments (`is_fixed=False`, `installments>1`)
 and One-off (`is_fixed=False`, `installments=1`). Income hides Installments and
 clears an incompatible installment selection.
@@ -112,8 +232,10 @@ The list accepts `category=<id>` and `recurrence=fixed|installment|oneoff` along
 `q`, `month=YYYY-MM`, `date=YYYY-MM-DD`, `type=INCOME|EXPENSE` and the existing
 `sort` values. Invalid, unavailable or incompatible selections are ignored and
 are not carried into navigation. Changing type or recurrence clears category;
-filter changes reset pagination. Search, dates and category use **Apply filters**.
-Sorting and pagination preserve applied filters. Empty installations invite the
+filter changes reset pagination. With JavaScript, typing/deleting search text,
+confirmed choices and dates apply dynamically through the shared live-filter
+helper. **Apply filters** remains outside the disclosure as the complete native
+GET fallback. Sorting and pagination preserve applied filters. Empty installations invite the
 first transaction; empty filtered results offer filter recovery.
 
 Billed month uses `Transaction.amount_for_month`: credit purchases follow their
@@ -122,12 +244,33 @@ month. Fixed includes ended recurrences when no month is selected. Month-based
 filtering calculates eligibility once and reuses it for counts, categories and
 results; without a month, filtering and aggregation stay in SQL.
 
+The shared month filter retains its canonical `YYYY-MM` input without JavaScript.
+Its enhanced panel offers a year and a searchable localized month name; confirming
+a unique month match with Enter changes the billed month. Ambiguous names still
+require an explicit selection. This month-only shortcut does not change financial
+record pickers, and a category-name query does not automatically include that
+category's descendants.
+
 Authenticated users may export all their transactions or the active billed
 month as UTF-8 CSV. Full exports download as `transactions.csv`; a monthly
 export uses `transactions-YYYY-MM.csv`. The header is
-`transaction_date,billed_month,title,transaction_type,category,payment_channel,bank,account,credit_card,currency,amount,total_amount,installments,is_fixed,fixed_until,notes`.
+`transaction_date,billed_month,title,transaction_type,category,payment_channel,bank,account,credit_card,currency,amount,total_amount,installments,is_fixed,fixed_until,notes,category_splits,installment_start`.
 For monthly exports, `amount` is the amount charged in that month while
 `total_amount` retains the original transaction amount.
+
+`installment_start` is additive source metadata; it prevents an opening import
+from silently restarting a partially settled plan. Separately recorded
+[invoice credits](banking.md#invoice-credits) are not transaction CSV rows.
+
+`category_splits` is empty for unsplit records or contains JSON objects with
+`category_id`, `category` and native `amount`. A monthly export includes that
+month's allocated cents, not the full source allocations. The ordinary export
+preserves text verbatim. The deliberate `format=spreadsheet` variant adds
+`-spreadsheet` to the filename and prefixes formula-like text with an apostrophe
+while retaining numeric cells. It is a spreadsheet presentation format, not a
+lossless interchange format; importers must not automatically strip that prefix.
+These transaction reports are not cash statements and are rejected by the
+[statement importer](ingestion.md) to avoid occurrence/settlement duplication.
 
 Own transfers are visibly neutral and never receive income/expense colors or
 category totals.
@@ -140,4 +283,46 @@ of scope.
 
 Categories now wait for the transaction type and use the shared searchable choice. Down/Up visibly navigate; Enter confirms; Escape/Tab cancel unconfirmed search text. Credit-card details wait for a specific card; recurrence dates wait for the checkbox. Advanced options are operable with Enter/Space.
 
-Follow the [mandatory shared form contract](../frontend.md#keyboard-and-choice-contract).
+Category splitting begins unchecked and reveals allocation rows only when
+selected. Split choices share the same type compatibility, owned selectors,
+bound-error recovery and complete native submission as the parent form.
+
+With JavaScript, the allocation editor distributes exact integer cents across
+automatic rows. Editing an amount fixes that row; clearing it makes it automatic
+again. The remaining total is shared among automatic rows, with indivisible
+cents assigned in row order. Adding/removing a category or changing the total
+recalculates only automatic amounts. Existing allocations and bound POST values
+are preserved until the user deliberately changes them. Limits/errors prevent
+over-allocation without silently truncating entered values; each active category
+still requires at least one cent. Remove category changes the formset DELETE
+control rather than deleting a transaction. Without JavaScript, the labelled
+DELETE checkbox and Add category submission retain the complete server path.
+Classification still conserves one transaction, one payment and installment
+category cents. The automatic/fixed UI state is not a financial source of truth.
+
+Follow the [mandatory shared form contract](../frontend/forms.md#keyboard-and-choice-contract).
+
+## Contextual transaction entry
+
+An explicit owned account/card shortcut selects its compatible funding context.
+The originating URL, including its filters, is carried through an encoded local
+`next` field and server validation. Save/Cancel return to that origin; the normal
+ledger remains the fallback. Generated operations retain their edit locks.
+
+The ordinary create/edit form includes an optional category-split checkbox and
+the existing allocation formset. New splits start unchecked. A submitted total,
+type and allocations are validated and saved together atomically; errors retain
+the bound rows. With allocations selected, the first compatible category is the
+structural parent category, while reports continue using the actual allocations.
+The standalone split editor and legacy submissions remain available. No extra
+bank movement is created by classification.
+
+Save is the first native submit button in the server HTML. Enter from an ordinary
+text/amount field therefore validates and saves, even when category splitting
+is active or its controls are hidden. The native Add category fallback follows
+the primary actions and requires explicit activation; it adds a bound row without saving the parent.
+Its wrapper follows the same type/split visibility and error-recovery rules as
+the allocation rows. Both actions remain native submissions without JavaScript;
+searchable-choice Enter still only confirms the highlighted choice.
+With JavaScript, Add category becomes a non-submit action immediately after the
+allocation rows, before payment controls, in both visual and keyboard order.

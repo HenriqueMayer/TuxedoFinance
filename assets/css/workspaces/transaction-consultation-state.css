@@ -1,0 +1,21 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Consultation choices keep identical geometry in every selected state. */
+#transaction-filters .transaction-type-options { background:rgb(26 46 38 / .035); border-radius:.75rem; }
+#transaction-filters .consultation-segment { display:inline-flex; min-height:2.75rem; align-items:center; gap:.375rem; border:1px solid transparent; border-radius:.625rem; padding:.5rem .75rem; font-size:.875rem; font-weight:500; white-space:nowrap; transition:background-color .15s,border-color .15s; }
+#transaction-filters .consultation-segment:hover { background:rgb(26 46 38 / .045); }
+#transaction-filters .consultation-segment[aria-current="true"] { background:rgb(184 138 89 / .12); border-color:rgb(184 138 89 / .35); }
+#transaction-filters .consultation-segment:focus-visible { outline:2px solid var(--color-caramel); outline-offset:2px; }
+#transaction-filters .transaction-type-count { background:transparent; font-weight:500; }
+#transaction-filters .transaction-type-options > a { padding:.25rem; }
+#transaction-filters #transaction-recurrence-options { gap:.375rem; }
+#transaction-filters #transaction-recurrence-options > a { color:rgb(26 46 38 / .72); background:rgb(26 46 38 / .035); }
+#transaction-filters #transaction-recurrence-options > a[aria-current="true"] { color:#1a2e26; background:rgb(184 138 89 / .12); }
+#transaction-filters input:not([type="hidden"]),#transaction-filters select,#transaction-filters .month-filter-trigger,#transaction-filters .filter-disclosure > summary { border-color:rgb(26 46 38 / .18); border-radius:.625rem; }
+#transaction-filters .filter-disclosure[open] > summary { border-color:rgb(184 138 89 / .5); }
+.dark #transaction-filters .transaction-type-options,.dark #transaction-filters #transaction-recurrence-options > a { background:rgb(250 248 243 / .035); }
+.dark #transaction-filters .consultation-segment:hover { background:rgb(250 248 243 / .07); }
+.dark #transaction-filters .consultation-segment[aria-current="true"],.dark #transaction-filters #transaction-recurrence-options > a[aria-current="true"] { background:rgb(184 138 89 / .14); border-color:rgb(212 173 134 / .45); }
+.dark #transaction-filters #transaction-recurrence-options > a { color:#b8b8b8; }
+.dark #transaction-filters #transaction-recurrence-options > a[aria-current="true"] { color:#faf8f3; }
+.dark #transaction-filters input:not([type="hidden"]),.dark #transaction-filters select,.dark #transaction-filters .month-filter-trigger,.dark #transaction-filters .filter-disclosure > summary { border-color:rgb(250 248 243 / .22); }
+.dark #transaction-filters .filter-disclosure[open] > summary { border-color:rgb(212 173 134 / .5); }

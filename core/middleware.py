@@ -18,6 +18,11 @@ class FrontendAssetsMiddleware:
         response['X-Tuxedo-Assets'] = revision
         patch_vary_headers(response, ['X-Tuxedo-Assets'])
         patch_cache_control(response, no_cache=True)
+        if getattr(getattr(request, 'user', None), 'is_authenticated', False):
+            # HTTP/shared caches must not retain financial HTML. Browsers can
+            # still keep a frozen document; the workspace reauthorizes BFCache
+            # restoration separately instead of treating no-store as a lock.
+            patch_cache_control(response, private=True, no_store=True)
         if (request.method == 'GET' and response.status_code == 200
                 and request.headers.get('X-Tuxedo-Assets') != revision
                 and 'HX-Redirect' not in response):

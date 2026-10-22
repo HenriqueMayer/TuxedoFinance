@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Tuxedo assistant' %} · Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="assistant-page">
+    <header class="workspace-header mb-6">
+        <div class="assistant-heading">{% include 'assistant/_mark.html' %}<div><h1 class="page-title">{% translate 'Tuxedo assistant' %}</h1><p class="subtle-copy">{% translate 'Conversations stored on this installation.' %}</p></div></div>
+    </header>
+    {% include 'assistant/_content.html' %}
+</div>
+{% endblock %}

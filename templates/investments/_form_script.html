@@ -1,0 +1,200 @@
+{% load i18n %}<script>
+    (function () {
+        const asset = document.getElementById('{{ form.asset.id_for_label }}');
+        const product = document.getElementById('{{ form.product.id_for_label }}');
+        const kind = document.getElementById('{{ form.kind.id_for_label }}');
+        const amount = document.getElementById('{{ form.amount.id_for_label }}');
+        const quantity = document.getElementById('{{ form.quantity.id_for_label }}');
+        const unitPrice = document.getElementById('{{ form.unit_price.id_for_label }}');
+        const endingBalance = document.getElementById('{{ form.ending_balance.id_for_label }}');
+        const cashAmount = document.getElementById('{{ form.cash_amount.id_for_label }}');
+        const fundingSource = document.getElementById('{{ form.funding_source.id_for_label }}');
+        const sourceAccount = document.getElementById('{{ form.source_account.id_for_label }}');
+        const sourceProgram = document.getElementById('{{ form.source_program.id_for_label }}');
+        const sourcePoints = document.getElementById('{{ form.source_points.id_for_label }}');
+        const destinationAccount = document.getElementById('{{ form.destination_account.id_for_label }}');
+        const assetStatus = document.getElementById('asset-mode-status');
+        const kindStatus = document.getElementById('operation-kind-status');
+        const fundingSection = document.getElementById('funding-section');
+        const yieldPreview = document.getElementById('yield-preview');
+        const yieldInputModes = document.querySelectorAll('input[name="yield_input_mode"]');
+        const groups = {
+            money: document.getElementById('money-fields'),
+            amount: document.getElementById('regular-amount-field'),
+            yield: document.getElementById('monetary-yield-fields'),
+            endingBalance: document.getElementById('ending-balance-field'),
+            units: document.getElementById('unit-fields'),
+            fees: document.getElementById('operation-fees'),
+            deposit: document.getElementById('deposit-fields'),
+            account: document.getElementById('source-account-fields'),
+            program: document.getElementById('source-program-fields'),
+            points: document.getElementById('source-points-fields'),
+            cash: document.getElementById('cash-fields'),
+            withdrawal: document.getElementById('withdrawal-fields'),
+        };
+        if (!asset || !kind) return;
+
+        const operationCopy = JSON.parse(document.getElementById('operation-copy').textContent);
+        function updateOperationCopy() {
+            Object.entries(operationCopy[kind.value] || {}).forEach(([name, label]) => {
+                const field = document.getElementById('id_' + name);
+                const wrapper = field.closest('.space-y-2');
+                wrapper.querySelector('label').firstChild.textContent = label + ' ';
+                // Keep tooltip headings and accessible names aligned with the field.
+                wrapper.querySelectorAll('.help-title').forEach(title => { title.textContent = label; });
+                wrapper.querySelectorAll('.help-trigger').forEach(trigger => {
+                    trigger.setAttribute('aria-label', '{% translate "Explain" %} ' + label);
+                });
+            });
+        }
+
+        const previewPlaceholder = yieldPreview ? yieldPreview.innerHTML : '';
+
+        const setHidden = window.TuxedoForms.setHidden;
+
+        function isMonetaryYield() {
+            const option = asset.selectedOptions[0];
+            return option
+                && option.dataset.valuationMode === 'MONETARY'
+                && kind.value === 'YIELD';
+        }
+
+        function scheduleYieldPreview() {
+            if (!isMonetaryYield() || !yieldPreview) return;
+            const selectedMode = document.querySelector('input[name="yield_input_mode"]:checked');
+            const valueInput = selectedMode && selectedMode.value === 'ENDING_BALANCE'
+                ? endingBalance
+                : amount;
+            if (!selectedMode || !product.value || !asset.value || !document.getElementById('{{ form.date.id_for_label }}').value || !valueInput.value) {
+                yieldPreview.innerHTML = previewPlaceholder;
+                return;
+            }
+        }
+
+        function updateYieldFields(clearStale) {
+            const isYield = isMonetaryYield();
+            const selectedMode = document.querySelector('input[name="yield_input_mode"]:checked');
+            const usesEndingBalance = selectedMode && selectedMode.value === 'ENDING_BALANCE';
+            if (clearStale) {
+                if (!isYield || !usesEndingBalance) endingBalance.value = '';
+                if (isYield && (!selectedMode || usesEndingBalance)) amount.value = '';
+                if (!isYield) yieldInputModes.forEach(input => { input.checked = false; });
+            }
+            setHidden(groups.yield, !isYield, !clearStale);
+            setHidden(groups.endingBalance, !isYield || !usesEndingBalance, !clearStale);
+            if (!isYield) {
+                setHidden(groups.amount, false, !clearStale);
+                if (yieldPreview) yieldPreview.hidden = true;
+                return;
+            }
+            setHidden(groups.amount, !selectedMode || usesEndingBalance, !clearStale);
+            if (yieldPreview) yieldPreview.hidden = !selectedMode;
+            scheduleYieldPreview();
+        }
+
+        function updateAssetFields(clearStale) {
+            updateOperationCopy();
+            const option = asset.selectedOptions[0];
+            const mode = option && asset.value && kind.value ? option.dataset.valuationMode : '';
+            const currency = option ? option.dataset.currency : '';
+            setHidden(groups.money, mode !== 'MONETARY', !clearStale);
+            setHidden(groups.units, mode !== 'UNITS', !clearStale);
+            setHidden(groups.fees, !mode, !clearStale);
+            setHidden(document.getElementById('fee-currency-fields'), mode !== 'UNITS', !clearStale);
+            if (clearStale && mode !== 'UNITS') document.getElementById('{{ form.fees_in_asset_currency.id_for_label }}').checked = false;
+            if (clearStale) {
+                if (mode !== 'UNITS') {
+                    quantity.value = '';
+                    unitPrice.value = '';
+                }
+                if (mode !== 'MONETARY') amount.value = '';
+                if (!mode) document.getElementById('{{ form.fees.id_for_label }}').value = '0';
+            }
+            if (mode === 'MONETARY') {
+                assetStatus.textContent = kind.value === 'YIELD'
+                    ? '{% translate "Money asset: enter its new balance or the yield amount in" %} ' + currency + '.'
+                    : kind.value === 'WITHDRAWAL'
+                        ? '{% translate "Money asset: enter the withdrawal amount in" %} ' + currency + '.'
+                        : '{% translate "Money asset: enter the deposit amount in" %} ' + currency + '.';
+            } else if (mode === 'UNITS') {
+                assetStatus.textContent = '{% translate "Unit-based asset: enter quantity and unit price in" %} ' + currency + '.';
+            } else {
+                assetStatus.textContent = '{% translate "Choose an asset to continue." %}';
+            }
+            updateYieldFields(clearStale);
+        }
+
+        function updateFundingFields(clearStale) {
+            const value = asset.value ? kind.value : '';
+            const isDeposit = value === 'DEPOSIT';
+            const isWithdrawal = value === 'WITHDRAWAL';
+            const isYield = value === 'YIELD';
+            if (clearStale) {
+                if (!isDeposit) fundingSource.value = '';
+                if (!isDeposit) {
+                    sourceAccount.value = '';
+                    sourceProgram.value = '';
+                    sourcePoints.value = '';
+                }
+                if (!isWithdrawal) destinationAccount.value = '';
+                if (isYield || !value) cashAmount.value = '';
+                if (isDeposit && fundingSource.value !== 'POINTS') {
+                    sourceProgram.value = '';
+                    sourcePoints.value = '';
+                }
+                if (isDeposit && fundingSource.value !== 'ACCOUNT') {
+                    sourceAccount.value = '';
+                }
+            }
+            const option = asset.selectedOptions[0];
+            const usesUnits = option && option.dataset.valuationMode === 'UNITS';
+            const needsCash = usesUnits && ((isWithdrawal && destinationAccount.value) || (isDeposit && sourceAccount.value));
+            const hasPreservedProgramCash = usesUnits && isDeposit && sourceProgram.value && cashAmount.value;
+            if (clearStale && !needsCash && !hasPreservedProgramCash) cashAmount.value = '';
+            if (clearStale && !(isDeposit && sourceProgram.value)) sourcePoints.value = '';
+            setHidden(groups.deposit, !isDeposit, !clearStale);
+            setHidden(groups.account, !(isDeposit && fundingSource.value === 'ACCOUNT'), !clearStale);
+            setHidden(groups.program, !(isDeposit && fundingSource.value === 'POINTS'), !clearStale);
+            setHidden(groups.withdrawal, !isWithdrawal, !clearStale);
+            setHidden(groups.cash, !(needsCash || hasPreservedProgramCash), !clearStale);
+            setHidden(groups.points, !(isDeposit && sourceProgram.value), !clearStale);
+            setHidden(fundingSection, !value || isYield, !clearStale);
+            if (isDeposit) {
+                kindStatus.textContent = '{% translate "Choose one source: a bank account or a loyalty program." %}';
+            } else if (isWithdrawal) {
+                kindStatus.textContent = '{% translate "Choose the account that will receive the withdrawal." %}';
+            } else {
+                kindStatus.textContent = '';
+            }
+        }
+
+        document.getElementById('investment-operation-form').addEventListener('tuxedo:restore', () => {
+            updateAssetFields(false);
+            updateFundingFields(false);
+        });
+        updateAssetFields(false);
+        updateFundingFields(false);
+        asset.addEventListener('change', () => {
+            updateAssetFields(true);
+            updateFundingFields(true);
+        });
+        kind.addEventListener('change', () => updateFundingFields(true));
+        kind.addEventListener('change', () => updateAssetFields(true));
+        fundingSource.addEventListener('change', () => {
+            // A deliberate source switch abandons its amounts, including legacy
+            // program cash. Initialization and error recovery never clear them.
+            cashAmount.value = '';
+            updateFundingFields(true);
+        });
+        sourceAccount.addEventListener('change', () => updateFundingFields(true));
+        sourceProgram.addEventListener('change', () => updateFundingFields(true));
+        destinationAccount.addEventListener('change', () => updateFundingFields(true));
+        yieldInputModes.forEach(input => input.addEventListener('change', () => updateYieldFields(true)));
+        [product, asset, kind, document.getElementById('{{ form.date.id_for_label }}'), endingBalance, amount]
+            .filter(Boolean)
+            .forEach(input => input.addEventListener('input', scheduleYieldPreview));
+        [product, asset, kind, document.getElementById('{{ form.date.id_for_label }}')]
+            .filter(Boolean)
+            .forEach(input => input.addEventListener('change', scheduleYieldPreview));
+    })();
+</script>

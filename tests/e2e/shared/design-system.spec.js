@@ -1,0 +1,566 @@
+const { selectChoice } = require('../helpers/forms');
+const { test, expect } = require('@playwright/test');
+
+const browserErrors = new WeakMap();
+
+test.beforeEach(async ({ page }) => {
+    const errors = [];
+    browserErrors.set(page, errors);
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('console', message => {
+        if (message.type() === 'error') errors.push(message.text());
+    });
+});
+
+test.afterEach(async ({ page }) => {
+    expect(browserErrors.get(page)).toEqual([]);
+});
+
+async function createAccount(page, testInfo) {
+    const username = `e2e-${testInfo.workerIndex}-${Date.now()}`;
+    await page.goto('/accounts/signup/');
+    await page.getByLabel(/^\s*Username/).fill(username);
+    await page.getByLabel(/^\s*Email/).fill(`${username}@example.test`);
+    await page.locator('#id_password1').fill('Tuxedo-E2E-2026!');
+    await page.locator('#id_password2').fill('Tuxedo-E2E-2026!');
+    await page.getByRole('button', { name: 'Sign up' }).click();
+    await expect(page).toHaveURL(/\/dashboard\/$/);
+}
+
+async function createMonetaryInvestment(page, testInfo) {
+    await createAccount(page, testInfo);
+
+    await page.goto('/banking/create/');
+    await page.getByLabel(/^\s*Name/).fill('Investment bank');
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await page.goto('/investments/products/create/');
+    await selectChoice(page.locator('#id_bank-search'), { label: 'Investment bank' });
+    await page.getByLabel(/^\s*Name/).fill('Savings');
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await page.goto('/investments/assets/create/');
+    await page.getByLabel(/^\s*Name/).fill('Savings pot');
+    await page.getByLabel(/^\s*Code/).fill('POT');
+    await page.getByLabel(/^\s*Asset class/).selectOption('LIQUIDITY');
+    await page.getByLabel(/^\s*Currency/).selectOption('BRL');
+    await page.getByLabel(/^\s*How this asset is valued/).selectOption('MONETARY');
+    await page.getByRole('spinbutton', { name: /^Opening balance/ }).fill('1000');
+    await page.locator('#id_opening_date').fill('01/01/2025');
+    await selectChoice(page.locator('#id_opening_product-search'), { label: 'Investment bank - Savings' });
+    await page.getByRole('button', { name: 'Save' }).click();
+    // Confirm the fixture was persisted before leaving the asset form.
+    await expect(page).toHaveURL(/\/investments\/settings\/$/);
+}
+
+test('landing keeps concise translated copy and local frontend dependencies', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your finances, made clear.');
+    await expect(page.getByText('Tuxedo Finance replaces the single column')).toHaveCount(0);
+    await expect(page.locator('script[src*="unpkg.com"]')).toHaveCount(0);
+    await expect(page.locator('script[src*="/static/js/vendor/htmx.min.js"]')).toHaveCount(1);
+
+    await page.locator('#language-select-public').selectOption('pt-br');
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Suas finanças de forma clara.');
+    await expect(page.getByText('Aplicação local para registrar receitas e despesas', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Funcionalidades' })).toBeVisible();
+    await expect(page.getByText('A local application', { exact: false })).toHaveCount(0);
+    const languageCookie = (await page.context().cookies()).find(cookie => cookie.name === 'django_language');
+    expect(languageCookie.expires).toBeGreaterThan(Date.now() / 1000 + 300 * 24 * 60 * 60);
+    await page.locator('main').getByRole('link', { name: 'Entrar', exact: true }).click();
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'pt-br');
+    await page.goto('/');
+    const englishNavigation = page.waitForNavigation();
+    await page.locator('#language-select-public').selectOption('en');
+    await englishNavigation;
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.getByRole('link', { name: 'Log in', exact: true }).first()).toBeVisible();
+    const englishCookie = (await page.context().cookies()).find(cookie => cookie.name === 'django_language');
+    expect(englishCookie.value).toBe('en');
+    expect(englishCookie.expires).toBeGreaterThan(Date.now() / 1000 + 300 * 24 * 60 * 60);
+});
+
+test('category CSV is downloaded without replacing the page', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.goto('/categories/');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('main').getByText('More options', { exact: true }).click();
+    await page.getByRole('link', { name: 'Export CSV for reimport', exact: true }).click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toBe('categories.csv');
+    await expect(page).toHaveURL(/\/categories\/$/);
+    await expect(page.getByRole('heading', { name: 'Categories' })).toBeVisible();
+});
+
+test('authenticated navigation remains usable at tablet widths', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.reload();
+
+    await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeHidden();
+    const navigation = page.getByRole('navigation', { name: 'Main navigation', exact: true });
+    await expect(navigation).toHaveAttribute('data-app-navigation', 'desktop');
+    await expect(navigation.getByRole('link', { name: 'Home', exact: true })).toBeVisible();
+    await page.setViewportSize({ width: 1023, height: 900 });
+    await expect(navigation).toHaveAttribute('data-app-navigation', 'mobile');
+    await expect(navigation.getByRole('link')).toHaveCount(6);
+    await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeVisible();
+    await expect(navigation.getByRole('link', { name: 'Analytics', exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('dashboard keeps current, past, and future month states clear and responsive', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+
+    await expect(page.getByText('Available cash today')).toHaveCount(0);
+    await expect(page.getByText('Income through today')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Expenses by category' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Six-month outlook' })).toHaveCount(0);
+    await expect(page.locator('main header a[href^="/analytics/?month="]')).toBeVisible();
+
+    await page.getByRole('link', { name: 'Previous month' }).click();
+    await expect(page.getByText('Completed month', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Back to this month' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Next month' }).click();
+    await expect(page.getByText('Progress through', { exact: false })).toBeVisible();
+    await page.getByRole('link', { name: 'Next month' }).click();
+    await expect(page.getByText('Planned month', { exact: true })).toBeVisible();
+    await expect(page.getByText('Planned income')).toBeVisible();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole('heading', { name: 'Month performance' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
+    await page.getByRole('dialog', { name: 'Navigation menu' })
+        .getByRole('button', { name: 'Toggle color theme' }).click();
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('loyalty entry reveals only the fields for the selected entry type', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.goto('/banking/loyalty-entries/create/');
+
+    const kind = page.getByLabel(/^\s*Kind/);
+    const invoice = page.locator('#id_invoice-search');
+    const fundingAccount = page.locator('#id_funding_account-search');
+    const fundingCreditCard = page.locator('#id_funding_credit_card-search');
+    const cashAmount = page.getByLabel(/^\s*Amount paid/);
+
+    await expect(invoice).toBeHidden();
+    await expect(fundingAccount).toBeHidden();
+    await expect(fundingCreditCard).toBeHidden();
+    await expect(cashAmount).toBeHidden();
+
+    await kind.selectOption('PURCHASE');
+    await expect(invoice).toBeHidden();
+    await expect(fundingAccount).toBeVisible();
+    await expect(fundingCreditCard).toBeVisible();
+    await expect(cashAmount).toBeHidden();
+
+    await kind.selectOption('INVOICE_AWARD');
+    await expect(invoice).toBeVisible();
+    await expect(fundingAccount).toBeHidden();
+    await expect(fundingCreditCard).toBeHidden();
+    await expect(cashAmount).toBeHidden();
+    await expect(cashAmount).toHaveValue('');
+
+    await kind.selectOption('ADJUSTMENT');
+    await expect(invoice).toBeHidden();
+    await expect(fundingAccount).toBeHidden();
+    await expect(fundingCreditCard).toBeHidden();
+    await expect(cashAmount).toBeHidden();
+});
+
+test('mobile navigation traps focus and restores it on Escape', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+
+    const openButton = page.getByRole('button', { name: 'Toggle menu' });
+    await openButton.click();
+    const menu = page.locator('#mobile-menu');
+    const dialog = page.getByRole('dialog', { name: 'Navigation menu' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute('aria-modal', 'true');
+    await expect(page.locator('body > header')).toHaveAttribute('inert', '');
+    await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+
+    for (let index = 0; index < 14; index += 1) {
+        await page.keyboard.press('Tab');
+        expect(await page.evaluate(() => document.querySelector('#mobile-menu').contains(document.activeElement))).toBe(true);
+    }
+
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveAttribute('aria-hidden', 'true');
+    await expect(openButton).toBeFocused();
+    await expect(page.locator('body > header')).not.toHaveAttribute('inert', '');
+});
+
+test('monetary yield previews a final balance and stores only the calculated yield', async ({ page }, testInfo) => {
+    await createMonetaryInvestment(page, testInfo);
+    await page.goto('/investments/create/');
+
+    await selectChoice(page.locator('#id_product-search'), { label: 'Investment bank - Savings' });
+    await selectChoice(page.getByRole('combobox', { name: /^Asset/ }), { label: 'Savings pot (POT)' });
+    await page.getByLabel(/^\s*Type/).selectOption('YIELD');
+    await page.getByLabel(/^\s*Date/).fill('2026-09-02');
+    await page.getByRole('radio', { name: 'Use the final balance' }).check();
+    await page.getByRole('spinbutton', { name: 'New investment balance' }).fill('1200');
+
+    const preview = page.locator('#yield-preview');
+    await expect(preview.getByText('Previous balance')).toBeVisible();
+    await expect(preview.getByText('Calculated yield')).toBeVisible();
+    await expect(preview).toContainText('200,00');
+    await expect(page.locator('#id_amount')).toBeHidden();
+
+    await page.getByRole('radio', { name: 'Enter the yield amount' }).check();
+    await expect(page.locator('#id_amount')).toBeVisible();
+    await expect(page.getByLabel(/^\s*New investment balance/)).toBeHidden();
+
+    await page.getByRole('radio', { name: 'Use the final balance' }).check();
+    await page.getByRole('spinbutton', { name: 'New investment balance' }).fill('1200');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page).toHaveURL(/\/investments\/operations\/$/);
+    await expect(page.locator('#investment-movements')).toContainText('200,00');
+    await page.getByRole('navigation', { name: 'Investment sections' }).getByRole('link', { name: 'My investments', exact: true }).click();
+    await page.locator('#position-extra-filters > summary').press('Enter');
+    await page.locator('#position-scope').selectOption('portfolio');
+    await expect(page).toHaveURL(url => url.searchParams.get('scope') === 'portfolio');
+    const position = page.getByRole('region', { name: 'Positions', exact: true }).locator('article:visible')
+        .filter({ has: page.getByRole('link', { name: 'Savings pot', exact: true }) });
+    await expect(position.getByText('BRL 1.200,00', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('monetary yield keeps server errors visible and clears stale inactive values', async ({ page }, testInfo) => {
+    await createMonetaryInvestment(page, testInfo);
+    await page.goto('/investments/create/');
+
+    const product = page.locator('#id_product-search');
+    const asset = page.getByRole('combobox', { name: /^Asset/ });
+    const kind = page.getByLabel(/^\s*Type/);
+    const amountMode = page.getByRole('radio', { name: 'Enter the yield amount' });
+    const endingMode = page.getByRole('radio', { name: 'Use the final balance' });
+    const amount = page.locator('#id_amount');
+    const endingBalance = page.getByLabel(/^\s*New investment balance/);
+
+    await selectChoice(product, { label: 'Investment bank - Savings' });
+    await selectChoice(asset, { label: 'Savings pot (POT)' });
+    await kind.selectOption('YIELD');
+    await page.getByLabel(/^\s*Date/).fill('2026-09-02');
+    await amountMode.check();
+    await amount.fill('200');
+
+    // Simulate a stale inactive value posted by an older page or direct client.
+    await page.evaluate(() => { document.querySelector('#id_ending_balance').value = '0'; });
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    const endingError = page.locator('#id_ending_balance-error-1');
+    await expect(page).toHaveURL(/\/investments\/create\/$/);
+    await expect(endingError).toBeVisible();
+    await expect(page.locator('#ending-balance-field')).toHaveAttribute('data-has-errors', 'true');
+
+    await endingMode.check();
+    await amountMode.check();
+    await expect(endingBalance).toHaveValue('');
+    await expect(endingBalance).toBeHidden();
+    await amount.fill('200');
+
+    await endingMode.check();
+    await endingBalance.fill('0');
+    await kind.selectOption('DEPOSIT');
+    await expect(endingBalance).toHaveValue('');
+    await expect(endingBalance).toBeHidden();
+
+    await kind.selectOption('YIELD');
+    await endingMode.check();
+    await endingBalance.fill('0');
+    await selectChoice(asset, '');
+    await expect(endingBalance).toHaveValue('');
+    await expect(endingBalance).toBeHidden();
+});
+
+test('salary sandbox keeps the simplified calculation responsive and accessible', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.goto('/sandbox/');
+
+    await expect(page.getByRole('heading', { name: 'Salary simulation' })).toBeVisible();
+    await expect(page.getByLabel('Gross monthly salary', { exact: true })).toBeVisible();
+    await page.getByLabel('Gross monthly salary', { exact: true }).fill('6000');
+    const expense = page.locator('[data-variable-row]').first();
+    await expense.getByLabel('Fixed expense description').fill('Rent');
+    await expense.getByLabel('Fixed expense monthly amount').fill('1500');
+
+    const grossHelp = page.getByRole('button', { name: 'Explain Gross monthly salary' });
+    await grossHelp.hover();
+    const grossTooltip = page.getByRole('tooltip').filter({ hasText: 'INSS and IRRF are calculated automatically' });
+    await expect(grossTooltip).toBeVisible();
+    await grossHelp.click();
+    await page.keyboard.press('Escape');
+    await expect(grossTooltip).toBeHidden();
+    await expect(grossHelp).toBeFocused();
+
+    await page.getByRole('button', { name: 'Calculate month', exact: true }).click();
+    await expect(page.locator('#sandbox-workspace')).toHaveCount(1);
+    await expect(page.locator('#scenario-result-title')).toBeVisible();
+    await expect(page.getByText('R$ 3.473,39', { exact: true })).toBeVisible();
+    await expect(page.locator('#id_draft_name')).toBeHidden();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
+    await page.getByRole('dialog', { name: 'Navigation menu' })
+        .getByRole('button', { name: 'Toggle color theme' }).click();
+    await expect(page.locator('html')).toHaveClass(/dark/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('reports keep the next-window control stable when returning to today becomes available', async ({ page }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.goto('/analytics/');
+
+    const evolution = page.locator('#balance-evolution');
+    const nextWindow = evolution.getByRole('link', { name: 'Next window' });
+    // Finance now has monthly analyses above this chart. Measure after the
+    // same initial reveal that a real click would otherwise perform for us.
+    await nextWindow.scrollIntoViewIfNeeded();
+    await expect(nextWindow).toBeInViewport();
+    const initialBox = await nextWindow.boundingBox();
+
+    async function settledControlBox(control) {
+        await expect(page.locator('#reports-charts')).not.toHaveClass(/htmx-settling/);
+        // Shared island navigation restores position on the next animation
+        // frame after settling; compare geometry after that restoration.
+        await control.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        return control.boundingBox();
+    }
+
+    await nextWindow.click();
+    await expect(page).toHaveURL(/charts_offset=1/);
+    await expect(evolution.getByRole('link', { name: 'Back to today' })).toBeVisible();
+
+    const nextAfterFirstSwap = evolution.getByRole('link', { name: 'Next window' });
+    const movedBox = await settledControlBox(nextAfterFirstSwap);
+    expect(movedBox.x).toBeCloseTo(initialBox.x, 0);
+    expect(movedBox.y).toBeCloseTo(initialBox.y, 0);
+
+    await nextAfterFirstSwap.click();
+    await expect(page).toHaveURL(/charts_offset=2/);
+    const secondBox = await settledControlBox(nextAfterFirstSwap);
+    expect(secondBox.x).toBeCloseTo(initialBox.x, 0);
+    expect(secondBox.y).toBeCloseTo(initialBox.y, 0);
+    await evolution.getByRole('link', { name: 'Back to today' }).click();
+    await expect(page).toHaveURL(/charts_offset=0/);
+    await expect(evolution.getByRole('link', { name: 'Back to today' })).toHaveCount(0);
+    const resetBox = await settledControlBox(nextAfterFirstSwap);
+    expect(resetBox.x).toBeCloseTo(initialBox.x, 0);
+    expect(resetBox.y).toBeCloseTo(initialBox.y, 0);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('report cards explain the month and chart window by keyboard and without JavaScript', async ({ page, browser }, testInfo) => {
+    await createAccount(page, testInfo);
+    await page.goto('/analytics/');
+    const summary = page.locator('#report-summary');
+    await expect(summary.locator(':scope > div')).toHaveCount(3);
+    await expect(summary).toContainText('Balance now');
+    await expect(summary).toContainText('Projected (month)');
+    await expect(summary).not.toContainText('Best month');
+    const netHelp = summary.getByRole('button', { name: 'Explain Net change (12 months)', exact: true });
+    const panel = page.locator('#report-window-help');
+    await netHelp.hover();
+    await expect(panel).toBeVisible();
+    const desktopBox = await panel.boundingBox();
+    expect(desktopBox.width).toBeGreaterThanOrEqual(320);
+    expect(desktopBox.height).toBeLessThan(340);
+    await page.mouse.move(desktopBox.x + 20, desktopBox.y + 20);
+    await expect(panel).toBeHidden();
+    await page.getByRole('heading', { name: 'Analytics', exact: true }).hover();
+    await expect(panel).toBeHidden();
+    await netHelp.hover();
+    await page.getByRole('heading', { name: 'Analytics', exact: true }).click();
+    await expect(panel).toBeHidden();
+    const monthHelp = summary.getByRole('button', { name: 'Explain Projected (month)', exact: true });
+    await monthHelp.hover();
+    await expect(page.locator('#report-month-help')).toBeVisible();
+    await netHelp.hover();
+    await expect(page.getByRole('tooltip')).toHaveCount(1);
+    await expect(page.locator('#report-month-help')).toBeHidden();
+    await netHelp.click();
+    await page.getByRole('heading', { name: 'Analytics', exact: true }).hover();
+    await expect(panel).toBeHidden();
+    await monthHelp.focus();
+    await page.keyboard.press('Tab');
+    await expect(netHelp).toBeFocused();
+    await expect(panel).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('Entire chart window');
+    await expect(netHelp).toBeFocused();
+    await page.screenshot({ path: testInfo.outputPath('report-cards-light.png') });
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+
+    const previousHelp = await panel.textContent();
+    const evolution = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Balance evolution' }) });
+    await evolution.getByRole('link', { name: 'Next window' }).click();
+    await expect(page).toHaveURL(/charts_offset=1/);
+    await netHelp.press('Enter');
+    await expect(panel).toBeVisible();
+    expect(await panel.textContent()).not.toBe(previousHelp);
+    await expect(summary).toContainText('Balance now');
+    await page.evaluate(() => document.documentElement.classList.add('dark'));
+    await page.screenshot({ path: testInfo.outputPath('report-cards-dark.png') });
+
+    await page.getByLabel('Account options', { exact: true }).click();
+    await page.locator('#language-select-desktop').selectOption('pt-br');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(summary).toContainText('Projetado (mês)');
+    await summary.getByRole('button', { name: 'Explicar Variação líquida (12 meses)', exact: true }).press('Enter');
+    const translatedPanel = page.locator('#report-window-help');
+    await expect(translatedPanel).toContainText('Período completo do gráfico');
+    const box = await translatedPanel.boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(390);
+    await page.screenshot({ path: testInfo.outputPath('report-cards-mobile-pt-br.png'), fullPage: true });
+
+    const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false });
+    try {
+        const native = await context.newPage();
+        await native.goto(page.url());
+        const help = native.locator('#report-summary .help-fallback summary').filter({ hasText: '?' }).last();
+        await help.press('Enter');
+        await expect(help.locator('..')).toHaveAttribute('open', '');
+    } finally {
+        await context.close();
+    }
+    const touchContext = await browser.newContext({
+        storageState: await page.context().storageState(),
+        viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true,
+    });
+    try {
+        const touchPage = await touchContext.newPage();
+        await touchPage.goto(page.url());
+        const help = touchPage.getByRole('button', { name: 'Explicar Variação líquida (12 meses)' });
+        const tooltip = touchPage.locator('#report-window-help');
+        await help.tap();
+        await expect(tooltip).toBeVisible();
+        const touchBox = await tooltip.boundingBox();
+        expect(touchBox.width).toBeGreaterThanOrEqual(320);
+        expect(touchBox.x).toBeGreaterThanOrEqual(12);
+        expect(touchBox.x + touchBox.width).toBeLessThanOrEqual(378);
+        await touchPage.screenshot({ path: testInfo.outputPath('report-help-touch.png') });
+        await touchPage.getByRole('heading', { level: 1 }).tap();
+        await expect(tooltip).toBeHidden();
+        await help.tap();
+        await expect(tooltip).toBeVisible();
+        await help.tap();
+        await expect(tooltip).toBeHidden();
+    } finally {
+        await touchContext.close();
+    }
+});
+
+for (const width of [390, 768, 1024, 1440]) {
+    for (const theme of ['light', 'dark']) {
+        test(`homepage stays readable at ${width}px in ${theme} mode`, async ({ page }) => {
+            await page.setViewportSize({ width, height: 1000 });
+            await page.addInitScript(value => localStorage.setItem('theme', value), theme);
+            await page.goto('/');
+            await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your finances, made clear.');
+            await expect(page.locator('main dl > div')).toHaveCount(7);
+            await expect(page.getByText('Sample dashboard preview')).toHaveCount(0);
+            await expect(page.getByText('Your money, in black and white.')).toHaveCount(0);
+            const illustration = page.getByRole('button', { name: 'Explore workspaces', exact: true });
+            await expect(illustration).toBeVisible();
+            await expect(page.locator('[data-bowtie-layer]')).toHaveCount(5);
+            await expect(illustration).toHaveAttribute('aria-controls', 'public-bowtie-map');
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+            const background = await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor);
+            expect(background).toBe(theme === 'dark' ? 'rgb(16, 16, 16)' : 'rgb(250, 248, 243)');
+            await page.locator('main').getByRole('link', { name: 'Log in', exact: true }).click();
+            await expect(page).toHaveURL(/\/accounts\/login\/$/);
+            expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(theme === 'dark');
+            await page.reload();
+            expect(await page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(theme === 'dark');
+        });
+    }
+}
+
+test('dark forms, menus and charts retain contrast and keyboard interaction', async ({ page }, testInfo) => {
+    await page.addInitScript(() => localStorage.setItem('theme', 'dark'));
+    await createAccount(page, testInfo);
+    await page.goto('/transactions/create/');
+    const title = page.getByRole('textbox', { name: /Title/ });
+    await expect(title).toBeVisible();
+    const style = await title.evaluate(el => {
+        const css = getComputedStyle(el);
+        return { background: css.backgroundColor, color: css.color,
+            boundary: {color: css.borderTopColor, width: css.borderTopWidth, style: css.borderTopStyle},
+            underline: {color: css.borderBottomColor, width: css.borderBottomWidth, style: css.borderBottomStyle},
+            scheme: css.colorScheme };
+    });
+    expect(style.background).toBe('rgb(16, 16, 16)');
+    expect(style.color).toBe('rgb(250, 248, 243)');
+    expect(style.boundary).toEqual({color: 'rgba(250, 248, 243, 0.2)', width: '1px', style: 'solid'});
+    expect(style.underline.width).toBe('1px');
+    expect(style.underline.style).toBe('solid');
+    expect(style.underline.color).not.toBe(style.boundary.color);
+    expect(style.underline.color).not.toBe('rgba(0, 0, 0, 0)');
+    expect(style.scheme).toBe('dark');
+    await title.focus();
+    await expect(title).toBeFocused();
+    await expect(title).toHaveCSS('outline-style', 'solid');
+    await expect(title).toHaveCSS('outline-width', '2px');
+    await expect(title).toHaveCSS('outline-color', 'rgb(212, 173, 134)');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('button', { name: 'Toggle menu' }).click();
+    const menu = page.getByRole('dialog', { name: 'Navigation menu' });
+    await expect(menu).toBeVisible();
+    expect(await menu.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(16, 16, 16)');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Toggle menu' })).toBeFocused();
+    await page.goto('/analytics/');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.goto('/sandbox/');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('public access and language selection work without JavaScript', async ({ browser }, testInfo) => {
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    await page.goto('/');
+    await expect(page.locator('main dl > div')).toHaveCount(7);
+    await page.locator('#language-select-public').selectOption('pt-br');
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(page.getByText('Aplicação local para registrar receitas e despesas', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Funcionalidades' })).toBeVisible();
+    await page.locator('main').getByRole('link', { name: 'Entrar', exact: true }).click();
+    await expect(page).toHaveURL(/\/accounts\/login\/$/);
+    await expect(page.locator('#id_username')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.goto('/accounts/signup/');
+    const username = `nojs-${testInfo.workerIndex}-${Date.now()}`;
+    await page.locator('#id_username').fill(username);
+    await page.locator('#id_email').fill(`${username}@example.test`);
+    await page.locator('#id_password1').fill('Tuxedo-E2E-2026!');
+    await page.locator('#id_password2').fill('Tuxedo-E2E-2026!');
+    await page.locator('main form button[type="submit"]').click();
+    await expect(page).toHaveURL(/\/dashboard\/$/);
+    await page.goto('/banking/create/');
+    await page.locator('#id_name').fill('Banco sem JavaScript');
+    await page.locator('main form button[type="submit"]').click();
+    await expect(page).toHaveURL(/\/banking\/$/);
+    await expect(page.getByText('Banco sem JavaScript', { exact: true })).toBeVisible();
+    await context.close();
+});

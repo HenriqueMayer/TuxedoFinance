@@ -1,0 +1,22 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Criteria expand below a stable rail; the trigger never joins the result row. */
+.consultation-stable { position:relative; display:grid; grid-template-columns:minmax(0,1fr) 7.5rem; gap:.75rem; align-items:center; }
+.consultation-stable .consultation-search { grid-column:1 / -1; width:100%; }
+.consultation-stable .consultation-search input { height:2.75rem; }
+.consultation-stable .consultation-actions { display:contents; }
+.consultation-stable .filter-disclosure { grid-column:1 / -1; grid-row:3; width:100%; min-width:0; }
+.consultation-stable .filter-disclosure > summary { position:absolute; top:4.25rem; left:.75rem; min-height:2.75rem; max-width:calc(100% - 9.75rem); }
+.consultation-stable .consultation-clear-control { grid-column:2; grid-row:2; min-height:2.75rem; width:7.5rem; }
+.consultation-stable .consultation-clear-control > a { width:100%; white-space:nowrap; }
+.consultation-stable [data-live-submit] { grid-column:1 / -1; grid-row:4; justify-self:end; }
+.consultation-stable::before { content:""; grid-column:1; grid-row:2; height:2.75rem; pointer-events:none; }
+.consultation-filter-count { display:inline-flex; align-items:center; justify-content:center; min-width:1.25rem; font-size:.75rem; }
+@media (min-width:640px) {
+  .consultation-stable { grid-template-columns:minmax(0,1fr) 8.5rem 7.5rem; row-gap:0; }
+  .consultation-stable .consultation-search { grid-column:1; grid-row:1; }
+  .consultation-stable::before { content:none; }
+  .consultation-stable .filter-disclosure { grid-row:2; }
+  .consultation-stable .filter-disclosure > summary { top:.75rem; left:auto; right:9rem; width:8.5rem; max-width:none; justify-content:center; }
+  .consultation-stable .consultation-clear-control { grid-column:3; grid-row:1; }
+  .consultation-stable [data-live-submit] { grid-row:3; margin-top:.75rem; }
+}

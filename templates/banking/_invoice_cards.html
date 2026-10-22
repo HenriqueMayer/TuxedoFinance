@@ -1,0 +1,14 @@
+{% load i18n %}
+<div id="invoice-results" class="space-y-4" data-preserve-view>
+    {% comment %}Removing the overview page can leave an empty query marker; omit it on card links.{% endcomment %}
+    {% querystring page=None as card_query %}
+    <div class="bank-overview-grid">
+        {% for card in cards %}
+        <a id="invoice-card-{{ card.pk|stringformat:'d' }}" href="{% url 'banking:card_invoices' card.pk %}{% if card_query != '?' %}{{ card_query }}{% endif %}" class="bank-overview-card invoice-card" style="--bank-color: {{ card.account.bank.color|default:'#B88D57' }}">
+            <div class="card-miniature-heading">{% include 'banking/_card_miniature.html' with card=card only %}<div class="min-w-0"><h2 class="text-base font-semibold">{{ card.name }}</h2><p class="subtle-copy mt-1">{{ card.account.bank.name }} · {{ card.account.name }}</p><p class="invoice-card-meta"><span>{{ card.account.currency }}</span><span>{% blocktranslate count count=card.invoice_count %}{{ count }} invoice{% plural %}{{ count }} invoices{% endblocktranslate %}</span></p></div></div>
+            <svg aria-hidden="true" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 7 7-7 7"/></svg>
+        </a>
+        {% empty %}<p class="subtle-copy py-4">{% if has_filters %}{% translate 'No matching cards.' %}{% else %}{% translate 'No credit cards yet.' %}{% endif %}</p>{% endfor %}
+    </div>
+    {% if is_paginated %}<nav aria-label="{% translate 'Pagination' %}" class="flex justify-between">{% if page_obj.has_previous %}<a class="quiet-action" data-live-link="invoice-filter-form" href="{% querystring page=page_obj.previous_page_number %}">{% translate 'Previous' %}</a>{% endif %}{% if page_obj.has_next %}<a class="quiet-action" data-live-link="invoice-filter-form" href="{% querystring page=page_obj.next_page_number %}">{% translate 'Next' %}</a>{% endif %}</nav>{% endif %}
+</div>

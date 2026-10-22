@@ -1,0 +1,4 @@
+{% load i18n %}
+<div class="bank-account-list" role="region" aria-label="{% blocktranslate with bank=bank.name %}Accounts at {{ bank }}{% endblocktranslate %}">
+    {% for row in rows %}{% include 'banking/_account_row.html' %}{% endfor %}
+</div>

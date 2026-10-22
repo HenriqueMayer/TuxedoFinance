@@ -1,0 +1,6 @@
+{% load i18n %}
+<div class="surface-panel category-list" data-category-tree>
+    {% if has_category_groups %}<div hidden data-category-actions class="category-list-tools"><button type="button" data-category-action="collapse" class="quiet-action">{% translate 'Collapse all' %}</button><button type="button" data-category-action="expand" class="quiet-action">{% translate 'Expand all' %}</button></div>{% endif %}
+    <div class="category-row-main category-list-heading" aria-hidden="true"><span></span><span>{% translate 'Category' %}</span><span class="category-row-information"><span>{% translate 'Type' %}</span><span>{% translate 'Transactions' %}</span><span>{% translate 'Subcategories' %}</span></span></div>
+    <ul class="divide-y divide-forest/10 dark:divide-cream/10">{% for group in category_groups %}{% include 'categories/_category_group.html' with group=group category=group.category request=request only %}{% endfor %}</ul>
+</div>

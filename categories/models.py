@@ -5,6 +5,20 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
 
+def validate_parent_hierarchy(category_key, parent_key, parent_by_key):
+    """Validate the effective owned graph for both model IDs and CSV names."""
+    visited = {category_key} if category_key is not None else set()
+    while parent_key is not None:
+        if parent_key in visited:
+            raise ValidationError({
+                'parent_category': _('Choose a parent category that does not create a circular hierarchy.'),
+            })
+        if parent_key not in parent_by_key:
+            raise ValidationError({'parent_category': _('The parent category must belong to you.')})
+        visited.add(parent_key)
+        parent_key = parent_by_key[parent_key]
+
+
 class Category(models.Model):
     """A user-defined category used to classify transactions (PRD §8.3).
 
@@ -52,6 +66,9 @@ class Category(models.Model):
         return self.name
 
     def clean(self):
+        if self.parent_category_id is not None:
+            parents = dict(Category.objects.filter(user_id=self.user_id).values_list('pk', 'parent_category_id'))
+            validate_parent_hierarchy(self.pk, self.parent_category_id, parents)
         if (
             self.pk
             and self.transaction_type
@@ -62,3 +79,24 @@ class Category(models.Model):
                     'This category has transactions of another type and cannot be classified that way.'
                 )
             })
+        if self.pk and self.transaction_type and self.transaction_splits.exclude(transaction__transaction_type=self.transaction_type).exists():
+            raise ValidationError({'transaction_type': _('This category has splits of another transaction type.')})
+        if self.pk and self.transaction_type == self.TransactionType.INCOME and self.invoice_credits.exists():
+            raise ValidationError({'transaction_type': _('This category has invoice credits and must remain available for expenses.')})
+        if self.pk:
+            from planning.services import validate_budget_category_change
+            validate_budget_category_change(self)
+
+    def descendant_ids(self):
+        """Keep the ordinary parent picker safe, including for legacy cycles."""
+        children = {}
+        for category_id, parent_id in Category.objects.filter(user_id=self.user_id).values_list('pk', 'parent_category_id'):
+            children.setdefault(parent_id, []).append(category_id)
+        visited = {self.pk}
+        pending = list(children.get(self.pk, []))
+        while pending:
+            category_id = pending.pop()
+            if category_id not in visited:
+                visited.add(category_id)
+                pending.extend(children.get(category_id, []))
+        return visited - {self.pk}

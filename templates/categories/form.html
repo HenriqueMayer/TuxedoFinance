@@ -11,13 +11,14 @@ the shared partials/form_field.html renderer (PRD §9.4).
 {% block title %}{% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %} — Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-md space-y-6">
-    <h1 class="font-sans text-4xl font-semibold tracking-tight text-forest dark:text-cream">
+<div class="workspace-form-page mx-auto max-w-md space-y-6">
+    <h1 class="page-title">
         {% if form.instance.pk %}{% translate "Edit Category" %}{% else %}{% translate "New Category" %}{% endif %}
     </h1>
 
-    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
+    <form autocomplete="off" method="post" hx-boost="false" class="workspace-form surface-panel space-y-5" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="next" value="{{ return_url }}">
 
         {% if form.non_field_errors %}
             <div class="space-y-1.5">
@@ -31,13 +32,13 @@ the shared partials/form_field.html renderer (PRD §9.4).
         {% include 'partials/form_field.html' with field=form.transaction_type %}
         {% include 'partials/form_field.html' with field=form.parent_category %}
 
-        <div class="flex items-center gap-3">
+        <div class="form-actions">
             <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep transition-colors hover:bg-caramel-light focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
+                    class="action-primary">
                 {% translate "Save" %}
             </button>
-            <a href="{% url 'categories:list' %}"
-               class="inline-flex items-center gap-2 rounded-full border border-forest/30 dark:border-cream/30 bg-white dark:bg-night-surface px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest/80 dark:text-cream/90 transition hover:bg-forest hover:text-cream dark:hover:bg-cream dark:hover:text-night focus:outline-hidden focus:ring-2 focus:ring-caramel focus:ring-offset-2 focus:ring-offset-cream dark:focus:ring-offset-night">
+            <a href="{{ return_url }}"
+               class="quiet-action">
                  {% translate "Cancel" %}
             </a>
         </div>

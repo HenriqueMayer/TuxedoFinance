@@ -1,0 +1,15 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Reset occupies its own permanent row: revealing it must never move either arrow. */
+.panel-heading:has(> .period-navigation) { align-items: flex-start; }
+.period-navigation { display: flex; flex: 0 1 auto; flex-direction: column; align-items: flex-end; gap: .25rem; width: 21rem; min-width: 0; max-width: 100%; }
+.period-navigation-rail { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: .75rem; width: 100%; }
+.period-navigation-caption { min-width: 0; text-align: center; overflow-wrap: anywhere; }
+.period-navigation-rail > :first-child, .period-navigation-rail > :last-child { width: 44px; min-width: 44px; height: 44px; justify-self: center; }
+.period-navigation-reset { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .5rem; min-height: 44px; width: 100%; }
+.period-navigation-unavailable { display: inline-flex; align-items: center; justify-content: center; opacity: .4; }
+.period-navigation-unavailable:focus-visible { border-radius: 8px; outline: 2px solid var(--ui-accent); outline-offset: 3px; }
+@media (max-width: 639px) {
+    .period-navigation { align-items: flex-start; }
+    .period-navigation-rail { gap: .5rem; }
+    .period-navigation-reset { justify-content: flex-end; }
+}

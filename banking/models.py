@@ -1,6 +1,7 @@
 from calendar import monthrange
 from datetime import date
 from decimal import Decimal
+import uuid
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -8,6 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator, RegexVa
 from django.db import models
 from django.db.models import Case, DecimalField, F, Sum, Value, When
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django.utils.translation import gettext as gettext
 from django.utils.translation import gettext_lazy as _
 
@@ -26,6 +28,7 @@ CURRENCY_CHOICES = [(code, CURRENCY_NAMES[code]) for code in CURRENCIES]
 ZERO = Decimal('0.00')
 POSITIVE = MinValueValidator(Decimal('0.01'))
 NON_NEGATIVE = MinValueValidator(ZERO)
+CARD_COLOR = RegexValidator(r'^#[0-9a-fA-F]{6}$', _('Enter a color in #RRGGBB format.'))
 
 
 class TimestampedModel(models.Model):
@@ -67,6 +70,7 @@ class BankAccount(TimestampedModel):
     opening_balance = models.DecimalField(
         max_digits=16, decimal_places=2, default=ZERO
     )
+    opening_date = models.DateField(null=True, blank=True)
     pix_enabled = models.BooleanField(default=True)
     planning_enabled = models.BooleanField(default=True)
     reserved_amount = models.DecimalField(
@@ -93,11 +97,24 @@ class BankAccount(TimestampedModel):
     def clean(self):
         if self.bank_id and self.user_id and self.bank.user_id != self.user_id:
             raise ValidationError({'bank': _('The bank must belong to the account owner.')})
+        if self.pk:
+            previous_currency = BankAccount.objects.filter(pk=self.pk).values_list('currency', flat=True).first()
+            # A reserve is denominated in its source currency, including when
+            # its goal is archived. Reinterpreting it would invent funding.
+            if previous_currency != self.currency and self.goal_allocations.exists():
+                raise ValidationError({'currency': _('Currency cannot change while this account has goal reservations.')})
 
     def current_balance(self, as_of=None):
         from banking.services import account_balance
 
         return account_balance(self, as_of=as_of)
+
+    def predates_opening(self, effective_date):
+        """Unknown legacy baselines never acquire an inferred start date."""
+        return bool(
+            self.opening_date and isinstance(effective_date, date)
+            and effective_date < self.opening_date
+        )
 
 
 class DebitCard(TimestampedModel):
@@ -108,13 +125,22 @@ class DebitCard(TimestampedModel):
         BankAccount, on_delete=models.PROTECT, related_name='debit_cards'
     )
     name = models.CharField(max_length=100)
+    color = models.CharField(max_length=7, default='#253330', validators=[CARD_COLOR])
+    gradient_end = models.CharField(max_length=7, blank=True, validators=[CARD_COLOR])
+    gradient_angle = models.PositiveSmallIntegerField(
+        default=135, validators=[MinValueValidator(0), MaxValueValidator(359)]
+    )
 
     class Meta:
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(
                 fields=['account', 'name'], name='banking_unique_debit_card_account_name'
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(gradient_angle__gte=0, gradient_angle__lte=359),
+                name='banking_debit_card_gradient_angle_range',
+            ),
         ]
 
     def __str__(self):
@@ -138,6 +164,11 @@ class CreditCard(TimestampedModel):
         BankAccount, on_delete=models.PROTECT, related_name='credit_cards'
     )
     name = models.CharField(max_length=100)
+    color = models.CharField(max_length=7, default='#253330', validators=[CARD_COLOR])
+    gradient_end = models.CharField(max_length=7, blank=True, validators=[CARD_COLOR])
+    gradient_angle = models.PositiveSmallIntegerField(
+        default=135, validators=[MinValueValidator(0), MaxValueValidator(359)]
+    )
     card_type = models.CharField(
         max_length=10, choices=CardType.choices, default=CardType.PHYSICAL
     )
@@ -147,13 +178,21 @@ class CreditCard(TimestampedModel):
     due_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(31)]
     )
+    manual_settlement_from = models.DateField(
+        null=True, blank=True,
+        help_text=_('Confirm payments for invoices due on or after this date. Earlier invoices retain automatic settlement.'),
+    )
 
     class Meta:
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(
                 fields=['account', 'name'], name='banking_unique_credit_card_account_name'
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(gradient_angle__gte=0, gradient_angle__lte=359),
+                name='banking_credit_card_gradient_angle_range',
+            ),
         ]
 
     def __str__(self):
@@ -199,6 +238,8 @@ class CreditCard(TimestampedModel):
 class CardInvoice(TimestampedModel):
     class Status(models.TextChoices):
         SCHEDULED = 'SCHEDULED', _('Scheduled')
+        PARTIAL = 'PARTIAL', _('Partially paid')
+        OVERDUE = 'OVERDUE', _('Overdue')
         PAID = 'PAID', _('Paid')
 
     user = models.ForeignKey(
@@ -216,6 +257,7 @@ class CardInvoice(TimestampedModel):
         max_length=10, choices=Status.choices, default=Status.SCHEDULED
     )
     paid_at = models.DateTimeField(null=True, blank=True)
+    manual_settlement = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-reference_month', 'card__name']
@@ -238,12 +280,97 @@ class CardInvoice(TimestampedModel):
 
     @property
     def is_overdue(self):
-        return self.status == self.Status.SCHEDULED and self.due_date < date.today()
+        return self.status != self.Status.PAID and self.due_date < timezone.localdate()
+
+    @property
+    def confirmed_amount(self):
+        # Match settlement and cash cutoffs, regardless of the host's timezone.
+        today = timezone.localdate()
+        return sum((payment.amount for payment in self.payments.all() if payment.date <= today), ZERO)
+
+    @property
+    def remaining_amount(self):
+        return max(ZERO, self.amount - self.confirmed_amount) if self.manual_settlement else (ZERO if self.status == self.Status.PAID else self.amount)
+
+    @property
+    def overpaid_amount(self):
+        return max(ZERO, self.confirmed_amount - self.amount) if self.manual_settlement else ZERO
+
+    @property
+    def credits_amount(self):
+        from banking.credits import invoice_credit_totals
+
+        return invoice_credit_totals(
+            self.user, card_id=self.card_id, reference_month=self.reference_month,
+        )
+
+    @property
+    def gross_amount(self):
+        from banking.credits import invoice_gross_amount
+
+        return invoice_gross_amount(self)
+
+    @property
+    def credit_balance(self):
+        # Credit beyond this statement's purchases remains a card asset. It
+        # must not become income, a payment or a fabricated bank movement.
+        return max(ZERO, self.credits_amount - self.gross_amount)
 
     def clean(self):
         errors = {}
         if self.card_id and self.user_id and self.card.user_id != self.user_id:
             errors['card'] = _('The card must belong to the invoice owner.')
+        if self.reference_month and self.reference_month.day != 1:
+            errors['reference_month'] = _('Reference month must be the first day of a month.')
+        if errors:
+            raise ValidationError(errors)
+
+
+class CardInvoiceCredit(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='card_invoice_credits',
+    )
+    card = models.ForeignKey(
+        CreditCard, on_delete=models.PROTECT, related_name='invoice_credits',
+    )
+    category = models.ForeignKey(
+        'categories.Category', on_delete=models.PROTECT, related_name='invoice_credits',
+    )
+    title = models.CharField(max_length=150)
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    date = models.DateField()
+    reference_month = models.DateField()
+    notes = models.TextField(blank=True)
+    idempotency_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    class Meta:
+        ordering = ['-date', '-pk']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0),
+                name='banking_invoice_credit_amount_gt_zero',
+            ),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def clean(self):
+        errors = {}
+        if self.card_id and self.user_id:
+            card = self.card
+            if any(owner != self.user_id for owner in (
+                card.user_id, card.account.user_id, card.account.bank.user_id,
+            )):
+                errors['card'] = _('The card must belong to the invoice owner.')
+            if card.account.predates_opening(self.date):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
+        if self.category_id:
+            if self.user_id and self.category.user_id != self.user_id:
+                errors['category'] = _('This category must belong to the credit owner.')
+            elif self.category.transaction_type not in (None, '', 'EXPENSE'):
+                errors['category'] = _('Choose an expense or unclassified category for an invoice credit.')
         if self.reference_month and self.reference_month.day != 1:
             errors['reference_month'] = _('Reference month must be the first day of a month.')
         if errors:
@@ -318,6 +445,15 @@ class BankTransfer(TimestampedModel):
             account = getattr(self, field, None)
             if account and self.user_id and account.user_id != self.user_id:
                 errors[field] = _('The account must belong to the transfer owner.')
+            if account and account.predates_opening(self.date):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
+        if (self.source_account_id and self.destination_account_id
+                and self.source_account.currency == self.destination_account.currency
+                and self.source_amount is not None and self.destination_amount is not None
+                and self.source_amount != self.destination_amount):
+            # Own-account transfers cannot create an unexplained same-currency
+            # gain or loss. Record any fee as its own categorized expense.
+            errors['destination_amount'] = _('Transfers in the same currency require equal source and destination amounts.')
         if errors:
             raise ValidationError(errors)
 
@@ -399,6 +535,40 @@ class BankMovement(TimestampedModel):
                 errors['transfer'] = _('The transfer must belong to the movement owner.')
             if self.kind != self.Kind.TRANSFER:
                 errors['kind'] = _('A transfer-linked movement must have TRANSFER kind.')
+        if errors:
+            raise ValidationError(errors)
+
+
+class InvoicePayment(TimestampedModel):
+    """A confirmed cash payment, distinct from a projected invoice debit."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invoice_payments')
+    invoice = models.ForeignKey(CardInvoice, on_delete=models.PROTECT, related_name='payments')
+    account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name='invoice_payments')
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    date = models.DateField()
+    notes = models.TextField(blank=True)
+    confirmation_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    movement = models.OneToOneField(BankMovement, on_delete=models.PROTECT, related_name='confirmed_invoice_payment', null=True, editable=False)
+
+    class Meta:
+        ordering = ['date', 'created_at', 'pk']
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name='banking_invoice_payment_gt_zero')]
+
+    def clean(self):
+        errors = {}
+        for name in ('invoice', 'account'):
+            related = getattr(self, name) if getattr(self, name + '_id') else None
+            if related and self.user_id and related.user_id != self.user_id:
+                errors[name] = _('This selection must belong to the payment owner.')
+        if self.invoice_id and self.account_id and self.invoice.account.currency != self.account.currency:
+            errors['account'] = _('Choose an account in the invoice currency.')
+        if self.invoice_id and not self.invoice.manual_settlement:
+            errors['invoice'] = _('This invoice uses automatic settlement.')
+        if self.date and self.date > timezone.localdate():
+            errors['date'] = _('Confirmed payments cannot be dated in the future.')
+        if self.account_id and self.account.predates_opening(self.date):
+            errors['date'] = _('The payment cannot precede the account opening balance date.')
         if errors:
             raise ValidationError(errors)
 
@@ -563,6 +733,9 @@ class LoyaltyEntry(models.Model):
             instrument = getattr(self, field, None)
             if instrument and self.user_id and instrument.user_id != self.user_id:
                 errors[field] = _('The funding instrument must belong to the entry owner.')
+            account = instrument.account if field == 'funding_credit_card' and instrument else instrument
+            if account and account.predates_opening(self.date):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
         if errors:
             raise ValidationError(errors)
 
@@ -665,6 +838,11 @@ class RewardRedemption(TimestampedModel):
         for field, obj in owned.items():
             if obj and self.user_id and obj.user_id != self.user_id:
                 errors[field] = _('This funding instrument must belong to the redemption owner.')
+            if field == 'program':
+                continue
+            account = obj.account if field == 'iof_credit_card' and obj else obj
+            if account and account.predates_opening(self.date):
+                errors['date'] = _('The operation cannot precede the account opening balance date.')
         funding_count = int(self.iof_account_id is not None) + int(
             self.iof_credit_card_id is not None
         )

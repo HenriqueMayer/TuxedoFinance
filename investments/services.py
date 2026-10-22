@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from uuid import uuid4
 
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -21,6 +22,40 @@ CENTS = Decimal('0.01')
 TIMESERIES_MONTHS = 12
 YIELD_INPUT_ENDING_BALANCE = 'ENDING_BALANCE'
 YIELD_INPUT_AMOUNT = 'YIELD_AMOUNT'
+
+
+@transaction.atomic
+def create_guided_investment(user, values):
+    """Create owned configuration/opening evidence together, never a cash debit."""
+    from django.contrib.auth import get_user_model
+    from banking.models import Bank
+    from investments.models import PositionPlanningSetting
+
+    get_user_model().objects.select_for_update().get(pk=user.pk)
+    if values['new_institution']:
+        bank = Bank(user=user, name=values['institution_name'])
+        bank.full_clean()
+        bank.save()
+    else:
+        bank = Bank.objects.get(user=user, pk=values['institution'].pk)
+    product = InvestmentProduct(user=user, bank=bank, name=values['name'], purpose=values['purpose'])
+    product.full_clean()
+    product.save()
+    asset = Asset(user=user, name=values['name'], code=values['code'] or f'APP-{uuid4().hex[:12].upper()}',
+        asset_class=values.get('asset_class') or Asset.AssetClass.OTHER, currency=values['currency'],
+        valuation_mode=values['valuation_mode'], opening_product=product,
+        opening_balance=values['opening_balance'], opening_quantity=values['opening_quantity'],
+        opening_unit_price=values['opening_unit_price'], opening_date=values['opening_date'])
+    asset.full_clean()
+    asset.save()
+    from investments.appearance import DEFAULT_ICON, save_position_appearance
+    save_position_appearance(user, product, asset, values.get('icon') or DEFAULT_ICON)
+    if product.purpose == InvestmentProduct.Purpose.MONTHLY_CASH:
+        setting = PositionPlanningSetting(user=user, product=product, asset=asset,
+                                          planning_enabled=values['planning_enabled'])
+        setting.full_clean()
+        setting.save()
+    return product, asset
 
 
 @dataclass(frozen=True)
@@ -87,6 +122,8 @@ def sync_investment_ledger(operation):
     if not operation.pk:
         raise ValueError(_('The investment operation must be saved before synchronization.'))
     operation.full_clean()
+    from investments.positions import validate_position_history
+    validate_position_history(operation.user, [(operation.product_id, operation.asset_id)])
     available = available_value(operation) if operation.asset.valuation_mode == Asset.ValuationMode.MONETARY else available_quantity(operation)
     requested = operation.gross_value if operation.asset.valuation_mode == Asset.ValuationMode.MONETARY else operation.quantity
     if operation.kind == Investment.Kind.WITHDRAWAL and available < requested:
@@ -222,7 +259,7 @@ def monetary_position_before(*, user, product, asset, operation_date, operation=
     if lock:
         queryset = queryset.select_for_update()
 
-    total = asset.opening_balance if asset.opening_product_id == product.pk else ZERO
+    total = asset.opening_balance if asset.opening_product_id == product.pk and (not asset.opening_date or asset.opening_date <= operation_date) else ZERO
     for item in queryset:
         total += item.signed_value
     return total.quantize(CENTS)
@@ -293,13 +330,15 @@ def available_quantity(operation):
         user=operation.user,
         product=operation.product,
         asset=operation.asset,
-        date__lte=operation.date,
     )
-    if operation.pk:
-        queryset = queryset.exclude(pk=operation.pk)
+    if operation.pk and operation.created_at:
+        queryset = queryset.filter(Q(date__lt=operation.date) | Q(date=operation.date, created_at__lt=operation.created_at)
+                                   | Q(date=operation.date, created_at=operation.created_at, pk__lt=operation.pk))
+    else:
+        queryset = queryset.filter(date__lte=operation.date)
     total = (
         operation.asset.opening_quantity
-        if operation.asset.opening_product_id == operation.product_id
+        if operation.asset.opening_product_id == operation.product_id and (not operation.asset.opening_date or operation.asset.opening_date <= operation.date)
         else ZERO
     )
     for item in queryset.select_for_update():
@@ -321,7 +360,7 @@ def get_monthly_cash_positions(user, as_of=None):
         user=user, valuation_mode=Asset.ValuationMode.MONETARY,
         opening_product__purpose=InvestmentProduct.Purpose.MONTHLY_CASH,
         opening_product__user=user,
-    ).select_related('opening_product__bank'):
+    ).filter(Q(opening_date__isnull=True) | Q(opening_date__lte=as_of)).select_related('opening_product__bank'):
         position(asset.opening_product, asset)['balance'] += asset.opening_balance
     for operation in Investment.objects.filter(
         user=user, product__purpose=InvestmentProduct.Purpose.MONTHLY_CASH,
@@ -334,63 +373,23 @@ def get_monthly_cash_positions(user, as_of=None):
     ))
 
 
-def get_portfolio_groups(user, as_of=None, purpose=None):
-    """Group positions without adding quantities or values across assets."""
-    as_of = as_of or timezone.localdate()
-    operations = Investment.objects.filter(user=user, date__lte=as_of).select_related(
-        'product__bank', 'asset'
-    )
+def get_portfolio_groups(user, as_of=None, purpose=None, *, snapshot=None):
+    """Group remaining cost and observed valuation without mixing positions."""
+    from investments.positions import get_portfolio_valuation
+    snapshot = snapshot if snapshot is not None else get_portfolio_valuation(user, as_of, purpose)
     banks = {}
-    opening_assets = Asset.objects.filter(user=user).filter(
-        models.Q(
-            valuation_mode=Asset.ValuationMode.MONETARY,
-            opening_balance__gt=ZERO,
-        )
-        | models.Q(
-            valuation_mode=Asset.ValuationMode.UNITS,
-            opening_quantity__gt=ZERO,
-        )
-    ).select_related('opening_product__bank')
-    if purpose is not None:
-        operations = operations.filter(product__purpose=purpose)
-        opening_assets = opening_assets.filter(opening_product__purpose=purpose)
-
-    def asset_row(product, asset, opening_balance=ZERO, opening_quantity=ZERO):
-        bank_bucket = banks.setdefault(product.bank_id, {'id': product.bank_id, 'name': product.bank.name, 'products': {}})
-        product_bucket = bank_bucket['products'].setdefault(product.pk, {'id': product.pk, 'name': product.name, 'purpose': product.purpose, 'yield_mode': product.yield_mode, 'assets': {}})
-        return product_bucket['assets'].setdefault(asset.pk, {
-            'id': asset.pk, 'name': asset.name, 'code': asset.code, 'currency': asset.currency,
-            'is_archived': asset.is_archived,
-            'valuation_mode': asset.valuation_mode, 'quantity': opening_quantity, 'balance': opening_balance,
-            'deposits': ZERO, 'withdrawals': ZERO, 'yields': ZERO,
-        })
-
-    for asset in opening_assets:
-        asset_row(
-            asset.opening_product,
-            asset,
-            asset.opening_balance or opening_unit_value(asset),
-            asset.opening_quantity,
-        )
-    for operation in operations:
-        opening_balance = operation.asset.opening_balance if operation.asset.opening_product_id == operation.product_id else ZERO
-        opening_quantity = operation.asset.opening_quantity if operation.asset.opening_product_id == operation.product_id else ZERO
-        asset = asset_row(operation.product, operation.asset, opening_balance, opening_quantity)
-        asset['quantity'] += operation.signed_quantity
-        asset['balance'] += operation.signed_value
-        key = {
-            Investment.Kind.DEPOSIT: 'deposits',
-            Investment.Kind.WITHDRAWAL: 'withdrawals',
-            Investment.Kind.YIELD: 'yields',
-        }[operation.kind]
-        asset[key] += operation.gross_value
-    result = []
+    for row in snapshot['positions']:
+        product, asset = row['product'], row['asset']
+        bank = banks.setdefault(product.bank_id, {'id': product.bank_id, 'name': product.bank.name, 'products': {}})
+        group = bank['products'].setdefault(product.pk, {'id': product.pk, 'name': product.name, 'purpose': product.purpose, 'yield_mode': product.yield_mode, 'assets': []})
+        group['assets'].append({**row, 'id': asset.pk, 'name': asset.name, 'code': asset.code,
+                                'currency': asset.currency, 'is_archived': asset.is_archived,
+                                'valuation_mode': asset.valuation_mode})
     for bank in banks.values():
-        bank['products'] = list(bank['products'].values())
+        bank['products'] = sorted(bank['products'].values(), key=lambda item: (item['name'].casefold(), item['id']))
         for product in bank['products']:
-            product['assets'] = list(product['assets'].values())
-        result.append(bank)
-    return result
+            product['assets'].sort(key=lambda item: (item['name'].casefold(), item['id']))
+    return sorted(banks.values(), key=lambda item: (item['name'].casefold(), item['id']))
 
 
 def get_asset_positions(user, as_of=None):
@@ -428,7 +427,7 @@ def _months_window(months, offset):
     return [_add_months(*anchor, -(months - 1) + step) for step in range(months)]
 
 
-def historical_value_in_base(user, operation, base_currency, on_date=None):
+def historical_value_in_base(user, operation, base_currency, on_date=None, *, conversion=None):
     # Native values need no conversion, even after changing the reporting
     # currency away from the target retained in an older FX snapshot.
     if operation.currency == base_currency:
@@ -447,61 +446,30 @@ def historical_value_in_base(user, operation, base_currency, on_date=None):
             and operation.fx_source_currency and operation.fx_target_currency):
         return None
     try:
-        return convert(
-            user,
-            operation.gross_value,
-            operation.asset.currency,
-            base_currency,
-            as_of=on_date or operation.date,
-        )
+        if conversion is not None:
+            return conversion.check_user(user).convert(operation.gross_value, operation.currency, base_currency, on_date or operation.date)
+        return convert(user, operation.gross_value, operation.currency, base_currency, as_of=on_date or operation.date)
     except MissingExchangeRate:
         return None
 
 
 def get_total_in_base_timeseries(user, base_currency, currencies=None, months=12, offset=0, purpose=None, fx_issues=None):
-    operations_query = Investment.objects.filter(user=user).select_related('asset')
-    opening_assets = Asset.objects.filter(user=user)
-    if purpose is not None:
-        operations_query = operations_query.filter(product__purpose=purpose)
-        opening_assets = opening_assets.filter(opening_product__purpose=purpose)
-    operations = list(operations_query)
-    missing = set()
-    rows = []
-    running = ZERO
+    from investments.positions import get_portfolio_series, get_portfolio_valuation
     window = _months_window(months, offset)
+    snapshots = get_portfolio_series(user, base_currency, window, purpose)
     start = date(*window[0], 1)
-    for asset in opening_assets:
-        opening = asset.opening_balance + opening_unit_value(asset)
-        if not opening:
-            continue
-        try:
-            running += convert(user, opening, asset.currency, base_currency, as_of=start)
-        except MissingExchangeRate:
-            missing.add(asset.currency)
-            if fx_issues is not None:
-                fx_issues.append({'asset': asset, 'date': start})
-    for operation in operations:
-        if operation.date < start:
-            value = historical_value_in_base(user, operation, base_currency)
-            if value is None:
-                missing.add(operation.asset.currency)
-                if fx_issues is not None:
-                    fx_issues.append({'operation': operation, 'date': operation.date})
-            else:
-                running += value if operation.kind != Investment.Kind.WITHDRAWAL else -value
-    for year, month in window:
-        opening_balance = running.quantize(CENTS)
-        for operation in operations:
-            if (operation.date.year, operation.date.month) != (year, month):
-                continue
-            value = historical_value_in_base(user, operation, base_currency)
-            if value is None:
-                missing.add(operation.asset.currency)
-                if fx_issues is not None:
-                    fx_issues.append({'operation': operation, 'date': operation.date})
-            else:
-                running += value if operation.kind != Investment.Kind.WITHDRAWAL else -value
-        rows.append({'date': date(year, month, 1), 'year': year, 'month': month, 'opening_balance': opening_balance, 'total': running.quantize(CENTS)})
+    prior = start.fromordinal(start.toordinal() - 1) if start > date.min else start
+    opening = get_portfolio_valuation(user, prior, purpose, base_currency, historical=True, opening_fallback_date=start)['total']
+    rows, missing = [], set()
+    for (year, month), snapshot in zip(window, snapshots):
+        rows.append({'date': date(year, month, 1), 'year': year, 'month': month,
+                     'opening_balance': opening, 'total': snapshot['total'],
+                     'cost_total': snapshot['cost_total'], 'realized_total': snapshot['realized_total'],
+                     'unrealized_total': snapshot['unrealized_total'], 'snapshot': snapshot})
+        opening = snapshot['total']
+        missing.update(snapshot['missing_currencies'])
+        if fx_issues is not None:
+            fx_issues.extend(snapshot['fx_issues'])
     return rows, sorted(missing)
 
 

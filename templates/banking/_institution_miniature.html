@@ -1,0 +1,5 @@
+{% comment %}Reuse the account selector's institution artwork as decoration;
+the adjacent institution name and account/card counts retain its identity.{% endcomment %}
+<span class="payment-choice-art institution-miniature" data-choice-kind="account" aria-hidden="true">
+    {% include 'partials/navigation_icon.html' with area='accounts' only %}
+</span>

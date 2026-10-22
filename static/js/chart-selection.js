@@ -145,7 +145,20 @@
                         target.append(label,amount);
                     }
                     function sourceLink(source,label=source.label,cents=source.cents){
-                        const link=document.createElement('a');link.href=source.url;link.title=source.label;link.setAttribute('aria-label',source.action+': '+source.label+' · '+money(BigInt(cents),data.currency));
+                        const link=document.createElement('a'),target=new URL(source.url,location.origin);
+                        const origins=(controls.dataset.sourceReturnPaths||'').split(/\s+/);
+                        // Only these server-reversed workspaces supply a return
+                        // origin. Preserve the exact owned target/query/hash,
+                        // replacing any pre-existing next with this local chart.
+                        if(/^https?:$/.test(target.protocol)&&target.origin===location.origin&&origins.includes(location.pathname)){
+                            const section=root.closest('section'),anchor=root.id||section?.querySelector('h2[id]')?.id;
+                            const origin=location.pathname+location.search+(anchor?'#'+encodeURIComponent(anchor):'');
+                            target.searchParams.set('next',origin);
+                        }
+                        // A record fragment owns its scroll destination; the
+                        // inherited boosted-body show:top would hide that row.
+                        if(target.hash)link.setAttribute('hx-swap','innerHTML show:none');
+                        link.href=target.href;link.title=source.label;link.setAttribute('aria-label',source.action+': '+source.label+' · '+money(BigInt(cents),data.currency));
                         rowContent(link,label,cents);return link;
                     }
                     data.rows.forEach(row=>{

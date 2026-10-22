@@ -1,0 +1,18 @@
+{% load i18n %}
+{% comment %}Fragment actions retain the explicit page origin, not the planning POST endpoint.{% endcomment %}
+{% with account_origin=planning_return_url|default:request.get_full_path %}
+<div id="bank-positions-{{ bank.pk|stringformat:'d' }}" class="space-y-4" data-preserve-view>
+    {% if bank.included_rows %}<section class="space-y-3" aria-labelledby="bank-accounts-{{ bank.pk|stringformat:'d' }}"><h2 id="bank-accounts-{{ bank.pk|stringformat:'d' }}" class="section-title">{% translate 'Accounts' %}</h2>{% include 'banking/_account_list.html' with rows=bank.included_rows %}</section>{% endif %}
+    {% include 'banking/_cash_pots.html' with pots=bank.included_pots %}
+    {% if bank.reserved_rows or bank.reserved_pots %}
+    <details id="bank-reserves-{{ bank.pk|stringformat:'d' }}" class="reserve-disclosure" {% if reserve_open or bank.reserve_open %}open{% endif %}>
+        <summary class="reserve-disclosure-summary cursor-pointer py-3 font-medium">{% translate 'Reserves' %} {% include 'partials/chevron_down.html' %}</summary>
+        <div class="space-y-4 pt-3"><p class="subtle-copy">{% translate 'Set aside from spending. Balances and history stay recorded; debts still reduce availability.' %}</p>
+            {% if bank.reserved_rows %}<section class="space-y-3"><h2 class="section-title">{% translate 'Accounts' %}</h2>{% include 'banking/_account_list.html' with rows=bank.reserved_rows %}</section>{% endif %}
+            {% include 'banking/_cash_pots.html' with pots=bank.reserved_pots %}
+        </div>
+    </details>
+    {% endif %}
+    {% if not bank.planning_rows and not bank.cash_pots %}<p class="subtle-copy">{% translate 'No accounts yet.' %}</p>{% endif %}
+</div>
+{% endwith %}

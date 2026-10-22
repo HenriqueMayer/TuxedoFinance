@@ -6,7 +6,7 @@ from datetime import date
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from accounts.models import UserPreference
-from banking.models import Bank, BankAccount, CreditCard, ExchangeRate, LoyaltyProgram, LoyaltyEntry
+from banking.models import Bank, BankAccount, CreditCard, DebitCard, ExchangeRate, LoyaltyProgram, LoyaltyEntry
 from banking.services import create_transfer, create_reward_redemption
 from categories.models import Category
 from investments.models import Asset, InvestmentProduct, Investment
@@ -24,6 +24,7 @@ BankAccount.objects.create(user=other, bank=other_bank, name='Other account', cu
 category = Category.objects.create(user=user, name='Synthetic commitments', transaction_type='EXPENSE')
 income_category = Category.objects.create(user=user, name='Synthetic pay', transaction_type='INCOME')
 card = CreditCard.objects.create(user=user, account=account, name='Cycle card', closing_day=20, due_day=5)
+DebitCard.objects.create(user=user, account=account, name='Retained debit card')
 for values in (
     dict(title='Opening-month salary', amount='4200.00', transaction_type='INCOME', category=income_category, payment_channel='ACCOUNT', bank_account=account, date=date(2026, 8, 3)),
     dict(title='Ambiguous display date', amount='18.75', transaction_type='EXPENSE', category=category, payment_channel='ACCOUNT', bank_account=account, date=date(2026, 4, 3)),
@@ -63,7 +64,7 @@ sync_user_ledger(user, through_date=date(2026, 9, 20))
 
 MODELS = (
     'auth.User', 'accounts.UserPreference', 'categories.Category',
-    'banking.Bank', 'banking.BankAccount', 'banking.CreditCard',
+    'banking.Bank', 'banking.BankAccount', 'banking.CreditCard', 'banking.DebitCard',
     'banking.ExchangeRate', 'banking.BankTransfer', 'banking.BankMovement',
     'banking.CardInvoice', 'banking.LoyaltyProgram', 'banking.LoyaltyEntry', 'banking.RewardRedemption',
     'transactions.Transaction', 'investments.InvestmentProduct',
@@ -94,10 +95,14 @@ print('TUXEDO_SNAPSHOT=' + json.dumps({{'fields': spec, 'records': records, 'bal
 
 
 CHECK_DEFAULTS = r'''
+from pathlib import Path
 from decimal import Decimal
+from django.apps import apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from banking.models import Bank, BankAccount
+from banking.models import Bank, BankAccount, CreditCard, DebitCard
 from investments.models import Asset, InvestmentProduct
+from transactions.models import Transaction
 user = get_user_model().objects.get(username='docker-persistence')
 assert user.check_password('Disposable-upgrade-check-2026!')
 if hasattr(BankAccount, 'planning_enabled'):
@@ -109,4 +114,24 @@ if any(field.name == 'is_archived' for field in Asset._meta.fields):
     assert not Asset.objects.filter(is_archived=True).exists()
 if any(field.name == 'color' for field in Bank._meta.fields):
     assert not Bank.objects.exclude(color='#B88D57').exists()
+for model in (CreditCard, DebitCard):
+    if any(field.name == 'color' for field in model._meta.fields):
+        assert not model.objects.exclude(color='#253330', gradient_end='', gradient_angle=135).exists()
+if any(field.name == 'installment_start' for field in Transaction._meta.fields):
+    assert not Transaction.objects.exclude(installment_start=1).exists()
+# Additive migrations must not invent a credit, assign a purpose or authorize
+# an assistant connection. No image in the supported baseline seeded these rows.
+for label in ('banking.CardInvoiceCredit', 'investments.PositionAppearance',
+              'assistant.Conversation', 'assistant.Message', 'assistant.ProviderConnection',
+              'assistant.AuthorizationAttempt', 'assistant.GenerationRun', 'assistant.ActionProposal'):
+    try:
+        model = apps.get_model(label)
+    except LookupError:
+        continue
+    assert not model.objects.exists(), f'Upgrade created unexpected {label} records'
+assert not getattr(settings, 'ASSISTANT_OPENAI_AUTH_ENABLED', False)
+assert not getattr(settings, 'ASSISTANT_OPENAI_INFERENCE_ENABLED', False)
+private_dir = getattr(settings, 'ASSISTANT_PRIVATE_DIR', None)
+if private_dir is not None:
+    assert not Path(private_dir).exists(), 'Provider-disabled validation initialized a private vault'
 '''

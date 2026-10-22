@@ -15,6 +15,7 @@ env/
 # Each installation owns its local database. Keep the root database and its
 # transient journal/WAL files out of version control.
 /db.sqlite3
+/assistant-private/
 db.sqlite3-journal
 db.sqlite3-shm
 db.sqlite3-wal
@@ -30,6 +31,9 @@ coverage.xml
 htmlcov/
 
 # Frontend development and browser-test artifacts
+# Keep new local tool outputs together; retain legacy ignores without moving
+# any existing artifacts, databases, environments, or backups.
+/.local/
 node_modules/
 playwright-report/
 test-results/

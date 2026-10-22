@@ -1,0 +1,52 @@
+{% extends 'base.html' %}{% load i18n navigation %}
+{% block title %}{% translate 'Plan this month' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="planning-workspace space-y-4">
+    <header class="workspace-header">
+        <h1 class="page-title">{% translate 'Plan this month' %}</h1>
+        <form id="month-filters" action="{% url 'planning:index' %}" method="get" novalidate data-live-filters data-live-results="monthly-results" hx-boost="false" class="monthly-picker">
+            <div data-live-change>{% include 'partials/month_filter.html' with month_field=month_form.month month_label=_('Month') month_clear_label=_('This month') month_reset_value=current_month %}</div>
+            <button type="submit" data-live-submit class="action-link">{% translate 'Show month' %}</button>
+        </form>
+    </header>
+    <div id="monthly-results" class="space-y-5">
+        <section class="surface-panel workspace-summary monthly-outlook monthly-planning-summary" aria-labelledby="monthly-available">
+            <div class="monthly-outlook-main">
+                <div class="monthly-summary-heading"><h2 id="monthly-available" class="section-title workspace-summary-label">{% if outlook.is_past %}{% translate 'Available at month end' %}{% else %}{% translate 'After known commitments' %}{% endif %}</h2><span class="status-badge">{% if outlook.is_past %}{% translate 'Recorded' %}{% else %}{% translate 'Projection' %}{% endif %}</span><p class="monthly-period workspace-summary-caption">{{ month|date:'F Y' }}</p></div>
+                {% if outlook.supported %}
+                <p data-monthly-available class="money-highlight workspace-summary-value tabular-nums mt-2{% if outlook.projected_available < 0 %} text-expense dark:text-expense-light{% endif %}"><span class="workspace-summary-currency">{{ outlook.base_currency }}</span> {{ outlook.projected_available|floatformat:2 }}{% if not outlook.complete %} · {% translate 'Partial' %}{% endif %}</p>
+                <p class="subtle-copy workspace-summary-caption mt-2">{% if outlook.is_past %}{% translate 'Based on recorded balances at month end and your current reserve settings.' %}{% else %}{% translate 'Includes known income, expenses and unpaid invoices through month end. Reserved money stays separate.' %}{% endif %}</p>
+                {% else %}<p role="status" class="subtle-copy mt-3">{% translate 'Cash projections cover the current month and the next eleven months. You can still set limits for this month.' %}</p>{% endif %}
+            </div>
+            {% if outlook.supported %}
+            <dl class="monthly-outlook-metrics workspace-summary-metrics">
+                <div><dt>{% translate 'Available on' %} {{ outlook.cutoff|date:USER_DATE_FORMAT }}</dt><dd>{{ outlook.base_currency }} {{ outlook.recorded.available_total|floatformat:2 }}</dd></div>
+                <div><dt>{% translate 'Reserved at month end' %}</dt><dd>{{ outlook.base_currency }} {{ outlook.projected_reserved|floatformat:2 }}</dd></div>
+            </dl>
+            {% if not outlook.complete %}<p role="status" class="text-sm text-expense dark:text-expense-light mt-3">{% translate 'Partial totals: missing reference exchange rates for' %} {{ outlook.missing_currencies|join:', ' }}. <a class="underline" href="{% url 'banking:exchange_rates' %}">{% translate 'Review exchange rates' %}</a></p>{% endif %}
+            {% endif %}
+            {% if outlook.unknown_openings %}<p role="status" class="subtle-copy mt-3">{% translate 'Some opening balances have no date. Historical amounts may include those undated balances.' %}</p>{% endif %}
+            <details id="monthly-calculation" class="explanation-disclosure monthly-calculation"><summary>{% translate 'How is this calculated?' %}</summary><div class="subtle-copy space-y-3 mt-2">
+                {% if outlook.supported and not outlook.is_past %}<p>{% translate 'Unpaid confirmed-mode invoices' %}: <strong class="tabular-nums">{{ outlook.base_currency }} {{ outlook.unpaid_invoices|floatformat:2 }}</strong></p>{% endif %}
+                <p>{% translate 'Only accounts and cash pots included in planning contribute available money. Reservations are capped by each positive balance; debts remain visible.' %}</p>
+                <p>{% translate 'This is a projection from registered data, not a promise of future income. Missing transactions and future changes are not predicted.' %}</p>
+                <p>{% translate 'Budgets are category limits, not additional reservations. Spending and invoice payments are not deducted twice.' %}</p>
+                <a class="quiet-action" href="{% url 'banking:list' %}">{% translate 'Review included balances' %}</a>
+            </div></details>
+        </section>
+        <section id="budgets" class="space-y-3" aria-labelledby="monthly-budgets">
+            <header class="workspace-header"><div><div class="planning-section-heading"><h2 id="monthly-budgets" class="section-title">{% translate 'Category budgets' %}</h2>{% if budget_count %}<span class="status-badge">{% blocktranslate count count=budget_count %}{{ count }} limit{% plural %}{{ count }} limits{% endblocktranslate %}</span>{% endif %}</div><p class="subtle-copy mt-1">{% translate 'Recorded spending against your limits.' %}</p></div>{% url 'planning:budget_create' as create_budget %}{% with selected_month=month|date:'Y-m' %}<a class="action-primary" href="{% contextual_url create_budget|add:'?month='|add:selected_month %}">{% translate 'New category budget' %}</a>{% endwith %}</header>
+            <div class="surface-panel budget-list">
+                {% if rows %}<div class="budget-list-heading" aria-hidden="true"><span>{% translate 'Category' %}</span><span>{% translate 'Recorded spending' %} / {% translate 'Limit' %}</span><span>{% translate 'Remaining' %}</span><span></span></div>{% endif %}
+                {% for row in rows %}{% include 'planning/_budget_row.html' %}{% empty %}<p class="subtle-copy py-4">{% translate 'No category budgets for this month. Add a limit or copy the previous month.' %}</p>{% endfor %}
+                <form method="post" action="{% url 'planning:budget_copy' %}" hx-boost="false" class="budget-copy">{% csrf_token %}<input type="hidden" name="month" value="{{ month|date:'Y-m' }}"><button type="submit" class="quiet-action">{% translate 'Copy previous month' %}</button></form>
+            </div>
+            <details id="monthly-budget-explanation" class="explanation-disclosure"><summary>{% translate 'About spending and forecasts' %}</summary><div class="subtle-copy space-y-3 mt-2">
+                <p>{% translate 'Recorded spending includes due occurrences up to today; the forecast includes only known transactions for the whole month. Transfers and investments do not consume category limits. Uncategorised loyalty purchases are outside these limits.' %}</p>
+                <p>{% translate 'Credit expenses follow the invoice reference month used by the dashboard. The cash outlook follows payment dates, so the two views answer different questions.' %}</p>
+                <p>{% translate 'Currency conversions use your registered reference rates at month end, or today for the current and future months. These are comparison values, not the effective exchange rate of an operation.' %}</p>
+            </div></details>
+        </section>
+    </div>
+</div>
+{% endblock %}

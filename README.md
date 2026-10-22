@@ -1,66 +1,66 @@
-[English](README.md) | [Português (Brasil)](README.pt-BR.md)
+[English](README.md) · [Português (Brasil)](README.pt-BR.md)
+
+<h1><img src="docs/assets/readme-cover.svg" alt="Tuxedo Finance" width="1240"></h1>
+
+<a id="-data-ownership"></a>
+
+Income, expenses, accounts, cards and investments in a local app.
+Run it on your computer, in English or Brazilian Portuguese, with light and dark
+themes. Your records stay on your installation.
+
+<a id="interface-preview"></a>
 
 <p align="center">
-  <img src="static/brand/tuxedo-mark-256.png" width="144" alt="Tuxedo Finance logo">
+  <a href="https://henriquemayer.github.io/TuxedoFinance/"><img src="docs/assets/preview-link.svg" width="200" height="40" alt="Open the Tuxedo Finance interface preview"></a>
 </p>
 
-<h1 align="center">Tuxedo Finance</h1>
-
-<p align="center">
-  <strong>Personal finance, simplified.</strong><br>
-  A local-first application for cash flow, recurring expenses, card bills,
-  investments, and monthly planning.
+<p>
+  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=flat&amp;label=CI&amp;labelColor=1A2E26&amp;color=176B52" alt="CI status"></a>
+  <img src="https://img.shields.io/badge/version-0.11.0-B88A59?style=flat&amp;labelColor=1A2E26" alt="Version 0.11.0">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-B88A59?style=flat&amp;labelColor=1A2E26" alt="PolyForm Noncommercial license"></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI&amp;labelColor=101E18&amp;color=176B52" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/version-0.10.0-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="Version 0.10.0">
-  <img src="https://img.shields.io/badge/Python-3.12-176B52?style=for-the-badge&amp;labelColor=101E18" alt="Python 3.12">
-  <img src="https://img.shields.io/badge/Django-6.0-1A2E26?style=for-the-badge&amp;labelColor=101E18" alt="Django 6.0">
-  <img src="https://img.shields.io/badge/UI-EN%20%7C%20PT--BR-B88A59?style=for-the-badge&amp;labelColor=101E18" alt="English and Brazilian Portuguese interface">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-7C5C13?style=for-the-badge&amp;labelColor=101E18" alt="PolyForm Noncommercial license"></a>
-</p>
+[Quick start](#quick-start) · [Documentation](docs/README.md) · [Changes](CHANGELOG.md)
 
-Tuxedo Finance organizes personal financial activity into categorized records.
-It is built with Django for simple local operation, with an English and
-Brazilian Portuguese interface. Each installation keeps its financial records
-in an owner-controlled SQLite database.
+<a id="-features"></a>
+<a id="five-workspaces"></a>
+<a id="six-workspaces"></a>
 
-## Interface preview
+## What's in the app
 
-<table>
-  <tr>
-    <td width="96" align="center">
-      <a href="https://henriquemayer.github.io/TuxedoFinance/">
-        <img src="static/brand/tuxedo-mark-256.png" width="72" alt="Open the Tuxedo Finance interface preview">
-      </a>
-    </td>
-    <td>
-      <strong>See Tuxedo Finance before installing it.</strong><br>
-      Explore the bilingual tour across Overview, Reports, Activity,
-      Banks, Investments, and Planning, with light and dark Overview views.<br><br>
-      <a href="https://henriquemayer.github.io/TuxedoFinance/"><strong>Open the interface preview →</strong></a>
-    </td>
-  </tr>
-</table>
+This table describes the current source checkout. The Docker quick start below
+installs the published **v0.11.0** release.
 
-> The preview uses synthetic data and runs as a static tour. There is no login,
-> public backend, or persistence, and nothing is saved.
+| Workspace | What you can do |
+|---|---|
+| **Home** | Review available funds, monthly indicators and upcoming commitments. |
+| **Transactions** | Record income and expenses, split categories, manage recurrences and installments, export CSV. |
+| **Accounts** | Manage accounts, PIX, transfers and cards; review invoices, credits, payments, loyalty and local exchange rates. |
+| **Investments** | Track holdings and cash pots, operations and local dated prices; configure investments and choose a position emoji. |
+| **Plan** | Set monthly category limits, back goals with existing balances, compare salary/yield scenarios and review local alerts. |
+| **Analytics** | Explore financial and investment charts, category expenses, account/card activity and cash-flow projections. |
 
+The optional [Tuxedo assistant](docs/apps/assistant.md) can consult saved
+finances, simulate scenarios and prepare supported changes for your confirmation.
+Its ChatGPT connection is off by default. When enabled, relevant records and
+necessary conversation history are sent to OpenAI. Open Finance remains on the
+[roadmap](docs/roadmap.md#personal-open-finance-study).
 
-## 🚀 Quick start
+<a id="-quick-start"></a>
+
+## Quick start
 
 ### Docker
 
-Requires Docker Engine 28+ (or a current Docker Desktop) and Compose v2+.
-Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/compose.yaml)
-and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/docker.env.example)
-from the [v0.10.0 release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.10.0)
-into a new installation directory. Open a terminal there and run these commands.
-No repository clone, host Python, uv or Node.js is required:
+Requires Docker Engine 28+ (or a current Docker Desktop), Compose v2+ and a
+POSIX shell (WSL on Windows). No clone, host Python or Node.js is needed.
+Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.11.0/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.11.0/docker.env.example)
+from the **v0.11.0** release into a new installation directory. Open a terminal
+there and run:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.10.0
+image=ghcr.io/henriquemayer/tuxedofinance:v0.11.0
 docker pull "$image"
 (
   umask 077
@@ -71,18 +71,18 @@ docker pull "$image"
 docker compose --env-file .env.docker up -d --wait
 ```
 
-Open [Tuxedo Finance](http://127.0.0.1:8000/). Docker keeps SQLite in a named
-volume and uses a persistent signing key. The setup command refuses to replace
-an existing `.env.docker`. Keep the directory name and configuration across
-updates. Follow the [Docker guide](docs/docker.md) for source builds,
-configuration and backup/restore. For an existing Docker installation, follow the
-[update procedure](docs/docker.md#update): back up, select the new image version,
-pull it and recreate the service while retaining the same key and volume.
+Open [127.0.0.1:8000](http://127.0.0.1:8000/). The setup preserves an existing
+`.env.docker`; keep its signing key, installation directory and data volume
+across updates. See the [Docker guide](docs/docker.md) for configuration,
+updates and backups. This installs the published release; checkout changes
+require a [local image build](docs/docker.md#build-from-a-checkout).
 
-### Python and uv
+<a id="unreleased-source-branch"></a>
 
-Requires Python 3.12 and [uv](https://docs.astral.sh/uv/getting-started/installation/).
-Run these commands for a new installation:
+<a id="python-and-uv"></a>
+
+**Python 3.12 + [uv](https://docs.astral.sh/uv/getting-started/installation/):**
+for a new source installation:
 
 ```bash
 git clone https://github.com/HenriqueMayer/TuxedoFinance.git
@@ -93,149 +93,27 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Open [the local application](http://127.0.0.1:8000/), create an account, then
-add a bank and one of its accounts before recording your first transaction.
-Node.js is needed only for development tools; the application serves compiled
-frontend assets included in the repository.
+Open [127.0.0.1:8000](http://127.0.0.1:8000/), create an account, then add a bank
+and bank account. Node.js is only needed for development tools.
+Before updating an existing installation, follow the
+[backup and migration procedure](docs/operations.md#updating-a-native-installation).
+Preserve its database and signing key.
 
-The setup helper creates `.env` with owner-only permissions and preserves any
-existing file and signing key. Native migration and server commands create new database
-files with owner-only permissions. `.env` and `db.sqlite3` are ignored by Git.
-Follow the [operations guide](docs/operations.md) for backup and restore, and the
-[native update procedure](docs/operations.md#updating-a-native-installation)
-after changing the source checkout. Preserve the installation's key and database;
-back up the active database before applying new migrations. Restart with:
+<a id="optional-demo-data"></a><a id="-configuration"></a><a id="-development"></a><a id="-documentation"></a><a id="-contributing"></a>
 
-```bash
-uv run python manage.py migrate
-uv run python manage.py runserver
-```
+## Guides
 
-### Optional demo data
+[Setup and operations](docs/operations.md) · [Demo data](docs/demo-data.md) ·
+[Design system](docs/design-system.html) · [Contributing](CONTRIBUTING.md) ·
+[Roadmap](docs/roadmap.md) · [Security](SECURITY.md)
 
-For presentations, the current source checkout can create separate English and
-Portuguese accounts with fictional financial activity across multiple months:
+<a id="-technology"></a>
 
-```bash
-uv run python manage.py insert_demo pt
-uv run python manage.py insert_demo en
-```
+Built with **Django, SQLite, HTMX and locally served assets**.
+The [documentation index](docs/README.md) owns the technical and financial details.
 
-Each command prints a randomly generated password for `demo_pt` or `demo_en`.
-It runs only when requested, refuses an existing username and does not copy or
-change personal records. See the [demo data guide](docs/demo-data.md) for date
-options, language selection and a presentation walkthrough. The command is
-available starting with `v0.9.0`.
+---
 
-## ✨ Features
+<a id="-license"></a>
 
-These features are included in [v0.10.0](CHANGELOG.md#0100---2026-10-09).
-This release clarifies current and historical investment currency conversions,
-adds reversible asset archiving and extends operation filters and navigation.
-Existing Docker installations must select the new image version and follow the
-[update procedure](docs/docker.md#update) to receive them.
-
-| Area | Capabilities |
-|---|---|
-| 📊 **Dashboard** | Current cash, monthly income and expenses, investments, open card bills, and projected month-end balance. |
-| 🧾 **Transactions** | Income and expenses, categories, payment channels, fixed recurrences, installments, type counts, category/recurrence filters, and raw or spreadsheet CSV export. |
-| 🏦 **Banking** | Currency-specific accounts, cards, invoices, transfers and loyalty, with account exclusions and partial reserves for monthly planning. |
-| 📈 **Reports** | Responsive server-rendered SVG charts, accessible summaries, and progressive HTMX updates. |
-| 💼 **Investments** | Separate investment and monthly-cash purposes, manual deposits/withdrawals/yields, opening positions, unit pricing, asset deletion or reversible archiving, dated FX diagnostics, dedicated charts and operation filters by period, currency and asset class. |
-| 🧮 **Planning** | Monthly planning with CLT net salary, tax bracket consultation, payroll parameters, existing expense forecasts, additional expenses in BRL or a percentage of gross salary and saved drafts, plus editable contribution/yield simulations. |
-| 🌍 **Localization** | English and Brazilian Portuguese, independent reporting currency (BRL, USD, EUR, GBP, JPY, CHF), and date-format preferences. |
-| 🌗 **Interface** | Light and dark themes, keyboard navigation, conditional fields, server validation, and no-JavaScript form fallbacks. |
-
-> **Current Balance** represents realized account cash through today.
-> **Projected (end of month)** represents the expected closing balance.
-> Credit-card purchases belong to their statement month; account cash changes on
-> the invoice due date. Invoice settlement is not a second expense.
-
-<details>
-<summary><strong>🎨 Visual language</strong></summary>
-
-<br>
-
-The interface follows the Tuxedo Finance design system: calm foundations,
-high-contrast typography, caramel actions, and semantic financial colors.
-
-The dark theme uses neutral black and graphite foundations with the lighter
-semantic companions documented in the canonical catalog, preserving contrast
-without changing financial meaning. The public homepage presents factual
-capabilities and access links beside a horizontal cat photograph in a translucent double frame.
-
-The canonical component catalog lives in
-[`docs/design-system.html`](docs/design-system.html),
-with implementation guidance in [`docs/frontend.md`](docs/frontend.md).
-
-</details>
-
-## 🧭 Technology
-
-| Layer | Technology |
-|---|---|
-| Backend | Python 3.12, Django 6.0, native Django authentication |
-| Frontend | Django templates, Tailwind CSS, vanilla JavaScript, HTMX, inline SVG charts |
-| Database | SQLite in WAL mode |
-| Dependencies | uv and a committed Python lockfile; npm lockfile for development tools |
-
-## ⚙️ Configuration
-
-Configuration comes from `.env` or the process environment; process values
-take priority. `SECRET_KEY` is required. `ALLOW_SIGNUPS=False` closes new
-registration while preserving login. `TUXEDO_DATA_DIR` selects an alternative
-directory for the database.
-
-See the [configuration reference](docs/operations.md#configuration) for all
-variables and defaults, and the [architecture guide](docs/architecture.md)
-for domain responsibilities and data flow.
-
-## ✅ Development
-
-The [contribution guide](CONTRIBUTING.md) documents prerequisites, checks,
-translations, frontend builds, and browser tests. After installing development
-dependencies and Chromium, run:
-
-```bash
-npm run test:e2e
-docker build -t tuxedo-finance:local .
-npm run test:e2e -- --docker-image tuxedo-finance:local
-npm run test:preview
-```
-
-The application browser command creates a temporary database and starts its own
-local server. It removes test data and stops its processes when finished. The
-preview suite checks the committed static tour separately.
-
-## 📚 Documentation
-
-Technical documentation is maintained in English.
-
-- [Documentation index](docs/README.md) — repository layout and per-app references
-- [Product requirements](docs/product-requirements.md) — supported behavior and acceptance criteria
-- [Data model](docs/data-model.md) — entities, relationships, and accounting rules
-- [Frontend](docs/frontend.md) and [design system](docs/design-system.html) — interface conventions and component catalog
-- [Operations](docs/operations.md) — configuration, dependencies, backup, and restore
-- [Changelog](CHANGELOG.md) and [release workflow](docs/versioning.md) — changes and versioning
-- [Security](SECURITY.md) — supported access model and private vulnerability reporting
-- [Category collections](docs/category-collections/) — import-ready English and Portuguese examples
-
-## 🔐 Data ownership
-
-Financial records stay in the installation's database and are not included in
-the repository. The installation owner manages access, backups, retention,
-and restore testing. Before an upgrade, check the release's compatibility
-requirements and follow the documented backup procedure.
-
-## 🤝 Contributing
-
-Contributions, bug reports, and suggestions are welcome. Read
-[CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change. Changes to this
-README must also update the [Portuguese version](README.pt-BR.md).
-
-## 📄 License
-
-Copyright (c) 2026 Henrique Mayer.
-
-Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE).
-See the license for the complete terms governing use and distribution.
+Copyright © 2026 Henrique Mayer. [PolyForm Noncommercial 1.0.0](LICENSE).

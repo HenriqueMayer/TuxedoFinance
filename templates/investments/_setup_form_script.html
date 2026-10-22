@@ -1,0 +1,51 @@
+<script>
+    (function () {
+        const valuationMode = document.getElementById('{{ form.valuation_mode.id_for_label }}');
+        const openingBalance = document.getElementById('{{ form.opening_balance.id_for_label }}');
+        const openingQuantity = document.getElementById('{{ form.opening_quantity.id_for_label }}');
+        const openingUnitPrice = document.getElementById('{{ form.opening_unit_price.id_for_label }}');
+        const monetaryFields = document.getElementById('monetary-opening-fields');
+        const unitFields = document.getElementById('unit-opening-fields');
+        if (!valuationMode || !openingBalance || !openingQuantity || !openingUnitPrice) return;
+
+        const setHidden = window.TuxedoForms.setHidden;
+
+        function updateOpeningFields(clearStale) {
+            const isMonetary = valuationMode.value === 'MONETARY';
+            const isUnits = valuationMode.value === 'UNITS';
+            setHidden(monetaryFields, !isMonetary, !clearStale);
+            setHidden(unitFields, !isUnits, !clearStale);
+
+            if (!clearStale) { updateOpeningProduct(false); return; }
+            if (!isUnits) {
+                openingQuantity.value = '0';
+                openingUnitPrice.value = '0';
+            }
+            if (!isMonetary) openingBalance.value = '0';
+            updateOpeningProduct(true);
+        }
+
+        function updateOpeningProduct(clearStale) {
+            const hasUnits = valuationMode.value === 'UNITS' && Number(openingQuantity.value) > 0;
+            // A price is meaningful only for an existing quantity. Retain a
+            // bound error until the user deliberately changes the quantity.
+            setHidden(document.getElementById('opening-unit-price-fields'), !hasUnits, !clearStale);
+            if (!hasUnits && clearStale) openingUnitPrice.value = '0';
+            const hasOpening = valuationMode.value === 'MONETARY' ? Number(openingBalance.value) > 0
+                : hasUnits;
+            if (!hasOpening && clearStale) document.getElementById('{{ form.opening_product.id_for_label }}').value = '';
+            setHidden(document.getElementById('opening-product-fields'), !hasOpening, !clearStale);
+            setHidden(document.getElementById('opening-date-fields'), !hasOpening, !clearStale);
+            if (!hasOpening && clearStale) document.getElementById('{{ form.opening_date.id_for_label }}').value = '';
+        }
+        [openingBalance, openingQuantity].forEach(input => input.addEventListener('input', () => {
+            updateOpeningProduct(true);
+            window.TuxedoForms.refresh(input.form);
+        }));
+        valuationMode.addEventListener('change', function () {
+            updateOpeningFields(true);
+        });
+        valuationMode.form.addEventListener('tuxedo:restore', () => updateOpeningFields(false));
+        updateOpeningFields(false);
+    })();
+</script>

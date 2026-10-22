@@ -1,12 +1,10 @@
 {% load i18n %}
-{% if request.resolver_match.namespace == 'dashboard' %}
-<nav class="section-nav mb-6" aria-label="{% translate 'Overview sections' %}">
-    <a href="{% url 'dashboard:index' %}" {% if request.resolver_match.url_name == 'index' %}aria-current="page"{% endif %}>{% translate 'Dashboard' %}</a>
-    <a href="{% url 'dashboard:reports' %}" {% if request.resolver_match.url_name == 'reports' %}aria-current="page"{% endif %}>{% translate 'Reports' %}</a>
+{% if APP_SECTIONS|length > 1 %}
+<nav class="section-nav mb-6{% if request.resolver_match.namespace == 'banking' %} banking-sections{% endif %}" aria-label="{{ APP_SECTION_LABEL }}">
+    {% for section in APP_SECTIONS %}
+    <a href="{{ section.url }}"{% if section.active %} aria-current="page"{% endif %}>{{ section.label }}</a>
+    {% endfor %}
 </nav>
-{% elif request.resolver_match.namespace == 'transactions' or request.resolver_match.namespace == 'categories' %}
-<nav class="section-nav mb-6" aria-label="{% translate 'Activity sections' %}">
-    <a href="{% url 'transactions:list' %}" {% if request.resolver_match.namespace == 'transactions' %}aria-current="page"{% endif %}>{% translate 'Transactions' %}</a>
-    <a href="{% url 'categories:list' %}" {% if request.resolver_match.namespace == 'categories' %}aria-current="page"{% endif %}>{% translate 'Categories' %}</a>
-</nav>
+{% elif request.resolver_match.namespace == 'planning' or request.resolver_match.namespace == 'sandbox' %}
+{% include 'planning/_navigation.html' %}
 {% endif %}

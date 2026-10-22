@@ -5,7 +5,6 @@
     const initialized = new WeakSet();
     let active = null;
     let dismissed = null;
-    let closeTimer;
     let pointerType = 'mouse';
 
     function inside(target) {
@@ -18,7 +17,6 @@
             || (active && active.content.contains(target) ? active.root : null);
     }
     function close() {
-        clearTimeout(closeTimer);
         if (!active) return;
         active.content.hidden = true;
         active.trigger.setAttribute('aria-expanded', 'false');
@@ -49,7 +47,6 @@
     }
     function open(root, mode) {
         if (!root || dismissed === root) return;
-        clearTimeout(closeTimer);
         if (active?.root === root) {
             if (mode !== 'mouse') active.mode = mode;
             return;
@@ -82,19 +79,23 @@
     }
     document.addEventListener('pointerover', event => {
         if (event.pointerType === 'touch') return;
-        open(rootFor(event.target), 'mouse');
+        const trigger = event.target.closest('[data-help-trigger]');
+        if (trigger) open(rootFor(trigger), 'mouse');
     });
     document.addEventListener('pointerout', event => {
-        const root = rootFor(event.target);
-        if (dismissed === root && !root?.contains(event.relatedTarget)) dismissed = null;
-        if (!active || active.root !== root || inside(event.relatedTarget)) return;
+        const trigger = event.target.closest('[data-help-trigger]');
+        if (!trigger || (event.relatedTarget instanceof Node && trigger.contains(event.relatedTarget))) return;
+        const root = rootFor(trigger);
+        if (dismissed === root) dismissed = null;
+        if (!active || active.trigger !== trigger) return;
         if (active.mode === 'touch' || (active.mode === 'keyboard' && document.activeElement === active.trigger)) return;
-        clearTimeout(closeTimer);
-        // Allow the pointer to cross the small gap and read the tooltip itself.
-        closeTimer = setTimeout(close, 120);
+        // Mouse help belongs only to the icon, including after a mouse click.
+        // Entering the floating text must not extend its hover lifetime.
+        close();
     });
     document.addEventListener('pointerdown', event => {
         pointerType = event.pointerType;
+        if (active?.trigger === event.target.closest('[data-help-trigger]') && pointerType !== 'touch') active.mode = 'mouse';
         if (active && !inside(event.target)) { dismissed = active.root; close(); }
     });
     document.addEventListener('focusin', event => {

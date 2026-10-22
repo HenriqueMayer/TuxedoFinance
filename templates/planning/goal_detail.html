@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load i18n navigation investment_identity %}
+{% block title %}{{ goal.name }} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="planning-workspace space-y-6">
+    <header class="workspace-header"><h1 class="page-title min-w-0 break-words">{{ goal.name }}</h1>{% url 'planning:goal_update' goal.pk as edit_url %}<a class="action-link shrink-0" href="{% contextual_url edit_url %}">{% translate 'Edit goal' %}</a></header>
+    <section class="surface-panel monthly-outlook" aria-labelledby="goal-progress">{% include 'planning/_goal_summary.html' %}</section>
+    <section class="space-y-4" aria-labelledby="goal-reservations">
+        <header class="workspace-header"><h2 id="goal-reservations" class="section-title">{% translate 'Reserved sources' %}</h2>{% if not goal.is_archived %}{% url 'planning:allocation_create' goal.pk as reserve_url %}<a class="action-primary" href="{% contextual_url reserve_url %}">{% translate 'Reserve a balance' %}</a>{% endif %}</header>
+        {% if row.allocations %}<div class="surface-panel divide-y divide-forest/10 dark:divide-cream/10">
+        {% for detail in row.allocations %}<article class="space-y-4 py-4 first:pt-0 last:pb-0" aria-labelledby="reservation-{{ detail.allocation.pk|stringformat:'d' }}">
+            <header class="flex items-start gap-3">
+                {% if detail.source.account %}<span aria-hidden="true" class="bank-marker shrink-0" style="--bank-color: {{ detail.source.account.bank.color|default:'#B88D57' }}"></span>{% elif detail.source.product %}<span aria-hidden="true" class="investment-position-emoji shrink-0">{% position_icon detail.source.product detail.source.asset %}</span>{% endif %}
+                <div class="min-w-0">
+                    <h3 id="reservation-{{ detail.allocation.pk|stringformat:'d' }}" class="font-semibold break-words">{% if detail.source %}{# The account fragment owns scrolling, including sources inside Reserves. #}<a class="investment-name" href="{{ detail.source.url }}"{% if detail.source.account %} hx-swap="innerHTML show:none"{% endif %}>{% if detail.source.account %}{{ detail.source.account.name }}{% else %}{{ detail.source.asset.name }}{% endif %}</a>{% else %}{{ detail.allocation.source_label }}{% endif %}</h3>
+                    {% if detail.source.account %}<p class="subtle-copy mt-1">{{ detail.source.account.bank.name }} · {{ detail.allocation.source_currency }}</p>{% elif detail.source.product %}<p class="subtle-copy mt-1">{{ detail.source.product.bank.name }}{% if detail.source.product.name != detail.source.asset.name %} · {{ detail.source.product.name }}{% endif %} · {{ detail.allocation.source_currency }}</p><p class="subtle-copy mt-1 break-words">{{ detail.source.asset.code }}</p>{% endif %}
+                </div>
+            </header>
+            <dl class="grid grid-cols-2 gap-4 text-sm">
+                <div><dt class="subtle-copy">{% translate 'Named reservation' %}</dt><dd class="tabular-nums">{{ detail.allocation.source_currency }} {{ detail.allocation.amount|floatformat:2 }}</dd></div>
+                <div><dt class="subtle-copy">{% translate 'Backed by source' %}</dt><dd class="tabular-nums">{{ detail.allocation.source_currency }} {{ detail.backed|floatformat:2 }}</dd></div>
+                {% if detail.shortfall and not goal.is_archived %}<div><dt class="subtle-copy">{% translate 'Insufficient backing' %}</dt><dd class="tabular-nums text-expense dark:text-expense-light">{{ detail.allocation.source_currency }} {{ detail.shortfall|floatformat:2 }}</dd></div>{% endif %}
+            </dl>
+            <div class="form-actions">{% if not goal.is_archived %}{% url 'planning:allocation_update' goal.pk detail.allocation.pk as reserve_edit_url %}<a class="quiet-action" href="{% contextual_url reserve_edit_url %}">{% translate 'Edit reservation' %}</a>{% endif %}<form method="post" action="{% url 'planning:allocation_delete' detail.allocation.pk %}" hx-boost="false">{% csrf_token %}<button type="submit" class="quiet-action">{% translate 'Release reservation' %}</button></form></div>
+        </article>{% endfor %}</div>{% else %}<div class="surface-panel"><p class="subtle-copy">{% translate 'No balance reserved for this goal yet.' %}</p></div>{% endif %}
+    </section>
+    <details class="explanation-disclosure"><summary>{% translate 'About real reservations' %}</summary><div class="space-y-3 mt-2 subtle-copy"><p>{% translate 'Reservations stay in their source currency. Target progress uses registered reference exchange rates as of today, not effective operation rates. When a balance falls, its backing is shared proportionally between active goals.' %}</p><p>{% translate 'Historical planning excludes reservations created later. Editing or archiving a reservation changes the current plan; past reserve edits are not a historical ledger.' %}</p></div></details>
+    <form method="post" action="{% url 'planning:goal_archive' goal.pk %}" hx-boost="false">{% csrf_token %}<button type="submit" class="action-link">{% if goal.is_archived %}{% translate 'Restore goal' %}{% else %}{% translate 'Archive goal' %}{% endif %}</button></form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% load i18n static %}
+<aside class="app-sidebar">
+    {% comment %}Inside the workspace, both the brand and Home return to the financial dashboard.{% endcomment %}
+    <a href="{% url 'dashboard:index' %}" class="app-brand">
+        <img src="{% static 'brand/tuxedo-mark-256.png' %}" alt="" class="app-brand-mark">
+        <span>Tuxedo Finance</span>
+    </a>
+    <nav class="app-navigation-list" aria-label="{% translate 'Main navigation' %}" data-app-navigation="desktop">
+        {% include 'partials/navigation_links.html' with nav_variant='desktop' %}
+    </nav>
+</aside>

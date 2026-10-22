@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'ChatGPT authorization' %} - Tuxedo Finance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-2xl surface-panel space-y-4">
+    <div class="assistant-heading">{% include 'assistant/_mark.html' %}<h1 class="page-title">{% translate 'ChatGPT authorization' %}</h1></div>
+    {% if received %}<p>{% translate 'Authorization received. Return to the original Tuxedo Finance settings tab and confirm the account link.' %}</p>{% else %}<p role="alert">{% translate 'Authorization could not be completed. Return to the original settings tab and start again.' %}</p>{% endif %}
+    <p class="subtle-copy">{% translate 'No account is linked until you confirm it in the original authenticated session. No model request was sent.' %}</p>
+</div>
+{% endblock %}

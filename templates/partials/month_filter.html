@@ -1,0 +1,12 @@
+{% load i18n %}
+{# Keep the native ISO field as the GET source; JS only enhances consultation. #}
+<div data-month-filter data-month-label="{{ month_label }}" data-year-label="{% translate 'Year' %}" data-choice-label="{% translate 'Month' %}" data-clear-label="{% if month_clear_label %}{{ month_clear_label }}{% else %}{% translate 'All months' %}{% endif %}" data-month-reset-value="{{ month_reset_value|default:'' }}" data-close-label="{% translate 'Close' %}" data-year-error="{% translate 'Choose a valid year.' %}">
+    <div data-month-fallback>
+        {% if month_field %}
+            {% include 'partials/form_field.html' with field=month_field %}
+        {% else %}
+            <label for="{{ month_id }}" class="field-label">{{ month_label }}</label>
+            <input type="month" id="{{ month_id }}" name="{{ month_name }}" value="{{ month_value|default:'' }}" data-live-change class="form-input w-full">
+        {% endif %}
+    </div>
+</div>

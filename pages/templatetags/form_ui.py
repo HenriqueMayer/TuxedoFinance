@@ -4,6 +4,12 @@ from django import forms, template
 register = template.Library()
 
 
+@register.filter
+def is_checkbox(field):
+    """Keep single boolean controls beside their label, preserving native input."""
+    return isinstance(field.field.widget, forms.CheckboxInput)
+
+
 @register.simple_tag
 def form_control(field):
     """Enhance model choices automatically; retain their native POST control."""
@@ -14,6 +20,15 @@ def form_control(field):
     attrs = {'aria-describedby': ' '.join(dict.fromkeys(described_by))} if described_by else {}
     if field.errors:
         attrs['aria-invalid'] = 'true'
+    # Styling belongs to the shared renderer, while widget types, native POST
+    # values and numeric precision remain the owning form's responsibility.
+    widget = field.field.widget
+    if not isinstance(widget, (
+        forms.HiddenInput, forms.CheckboxInput, forms.RadioSelect,
+        forms.CheckboxSelectMultiple, forms.FileInput,
+    )) and getattr(widget, 'input_type', '') != 'color':
+        classes = widget.attrs.get('class', '')
+        attrs['class'] = classes if 'entry-input' in classes.split() else f'{classes} entry-input'.strip()
     if isinstance(field.field, (forms.ModelChoiceField, forms.ModelMultipleChoiceField)):
         attrs['data-search-select'] = ''
         if field.auto_id == 'id_category':

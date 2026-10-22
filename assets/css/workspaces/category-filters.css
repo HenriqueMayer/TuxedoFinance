@@ -1,0 +1,24 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Categories expose their two short criteria directly, with stable Clear space. */
+#category-filters { display:grid; grid-template-columns:minmax(0,1fr) 4rem; gap:1rem .75rem; align-items:center; }
+#category-filters .consultation-search { grid-column:1; grid-row:1; width:100%; }
+#category-filters .consultation-actions { display:contents; }
+#category-filters .consultation-clear-control { grid-column:2; grid-row:1; width:4rem; min-height:2.75rem; }
+#category-filters .consultation-clear-control > a { width:100%; white-space:nowrap; }
+#category-filters [data-live-submit] { grid-column:1 / -1; grid-row:3; justify-self:end; }
+#category-filters .category-filter-choices { grid-column:1 / -1; grid-row:2; display:grid; gap:1rem 1.5rem; padding-top:1rem; border-top:1px solid var(--workspace-line, rgb(26 46 38 / .18)); }
+#category-filters .category-filter-group { min-width:0; border:0; padding:0; margin:0; }
+#category-filters .category-filter-group > legend { margin-bottom:.5rem; padding:0; }
+#category-filters .entry-segment-options { display:grid; width:100%; }
+#category-filters #filter-level .entry-segment-options { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#category-filters #filter-level .entry-segment-options > div:first-child label { grid-column:1 / -1; }
+#category-filters #filter-type .entry-segment-options { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#category-filters .entry-segment-options label { min-width:0; padding:.625rem .5rem; text-align:center; }
+@media (min-width:640px) {
+  #category-filters #filter-level .entry-segment-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  #category-filters #filter-level .entry-segment-options > div:first-child label { grid-column:auto; }
+  #category-filters #filter-type .entry-segment-options { grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
+@media (min-width:1280px) {
+  #category-filters .category-filter-choices { grid-template-columns:minmax(0,3fr) minmax(0,4fr); }
+}

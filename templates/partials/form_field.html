@@ -6,30 +6,28 @@ Usage:
   {% include 'partials/form_field.html' with field=form.amount %}
 
 Contract: this partial renders the label, the bound field, contextual help, and
-validation errors — it does NOT inject Tailwind classes into {{ field }}.
-The owning form must style its own widgets (e.g. via Meta.widgets or the
-form's __init__) using the exact design-system input classes below so every
-input/select/textarea in the project looks identical:
-
-  "w-full rounded-xl border border-forest/20 bg-white px-4 py-3
-   text-sm text-forest placeholder:text-forest/70 focus:border-caramel
-   focus:outline-hidden focus:ring-2 focus:ring-caramel/30
-   dark:bg-night dark:border-cream/20 dark:text-cream dark:placeholder:text-night-muted"
-
-`select` and `textarea` widgets reuse the exact same class string. Wrap a
-group of fields in a form card:
-
-  <form method="post" novalidate class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface">
-      {% csrf_token %}
-      {% include 'partials/form_field.html' with field=form.title %}
-      ...
-  </form>
+validation errors. form_control adds the shared entry-input presentation while
+the owning form retains widget types, numeric precision and submitted values.
+SegmentedChoice widgets receive a native fieldset/legend, and preferred-date
+widgets retain the user's date order. Model choices always use form_control's
+shared searchable enhancement; visual adoption must not replace that contract.
 {% endcomment %}
 {% if field %}
-    {% if field.field.widget.is_preferred_date %}
+    {% if inline_checkbox or field|is_checkbox %}
+        <div class="entry-checkbox-choice" data-form-field>
+            {% form_control field %}
+            <div>{% include 'partials/field_label.html' with field=field %}
+                {% for error in field.errors %}<p id="{{ field.id_for_label }}-error-{{ forloop.counter }}" role="alert" data-field-error class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+            </div>
+        </div>
+    {% elif field.field.widget.is_segmented_choice %}
+        {% include 'partials/segmented_choice_field.html' with field=field %}
+    {% elif field.field.widget.is_preferred_date %}
         {% include 'partials/preferred_date_field.html' with field=field %}
+    {% elif field.field.widget.is_color_picker %}
+        {% include 'partials/color_picker_field.html' with field=field %}
     {% else %}
-    <div class="space-y-2">
+    <div class="space-y-2" data-form-field>
         {% include 'partials/field_label.html' %}
 
         {% form_control field %}

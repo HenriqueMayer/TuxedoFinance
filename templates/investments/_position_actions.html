@@ -1,0 +1,7 @@
+{% load i18n %}
+<div class="mt-3 flex flex-wrap gap-3" role="group" aria-label="{% blocktranslate with asset=asset.name %}Actions for {{ asset }}{% endblocktranslate %}">
+    <a class="quiet-action" href="{{ actions.deposit }}">{% translate 'Contribute' %}</a>
+    <a class="quiet-action" href="{{ actions.withdrawal }}">{% translate 'Redeem' %}</a>
+    <a class="quiet-action" href="{{ actions.yield }}">{% translate 'Record yield' %}</a>
+    {% if asset.valuation_mode == 'UNITS' %}<a class="quiet-action" href="{{ actions.price }}">{% translate 'Update price' %}</a>{% endif %}
+</div>

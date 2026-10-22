@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Delete confirmed payment' %}{% endblock %}
+{% block content %}
+<div class="banking-workspace workspace-form-page mx-auto max-w-md space-y-4">
+    <h1 class="page-title">{% translate 'Delete confirmed payment' %}</h1>
+    <form autocomplete="off" method="post" hx-boost="false" novalidate class="workspace-form surface-panel space-y-5">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ return_url }}">
+        <p>{% translate 'Removing this confirmation reverses its bank movement and restores the invoice obligation.' %}</p>
+        <p>{{ payment.date|date:USER_DATE_FORMAT }} · {{ payment.account.currency }} {{ payment.amount|floatformat:2 }}</p>
+        <div class="form-actions">
+            <button type="submit" class="action-danger">{% translate 'Delete' %}</button>
+            <a class="quiet-action" href="{{ return_url }}" hx-boost="false">{% translate 'Cancel' %}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

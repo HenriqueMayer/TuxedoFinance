@@ -1,9 +1,9 @@
-{% load i18n %}
+{% load i18n navigation %}
 <section id="investment-setup" class="surface-panel space-y-5" aria-labelledby="investment-setup-title">
     <h2 id="investment-setup-title" class="section-title">{% translate 'Set up your investments' %}</h2>
     <ol class="divide-y divide-forest/10 dark:divide-cream/10">
         <li class="flex flex-wrap items-start justify-between gap-3 py-4">
-            <div class="min-w-0 flex-1"><h3 class="font-medium">{% translate '1. Bank' %}</h3><p class="subtle-copy mt-1">{% translate 'Register the institution that holds your investments in Banks.' %}</p></div>
+            <div class="min-w-0 flex-1"><h3 class="font-medium">{% translate '1. Bank' %}</h3><p class="subtle-copy mt-1">{% translate 'Register the institution that holds your investments in Accounts.' %}</p></div>
             <span class="subtle-copy">{% if has_bank %}{% translate 'Ready' %}{% else %}{% translate 'Pending' %}{% endif %}</span>
         </li>
         <li class="flex flex-wrap items-start justify-between gap-3 py-4">
@@ -16,10 +16,10 @@
         </li>
     </ol>
     {% if not has_bank %}
-        <a href="{% url 'banking:create' %}" class="action-primary">{% translate 'New bank' %}</a>
+        {% url 'banking:create' as bank_url %}<a href="{% contextual_url bank_url %}" class="action-primary">{% translate 'New bank' %}</a>
     {% elif not has_products %}
-        <a href="{% url 'investments:create_product' %}" class="action-primary">{% translate 'New product' %}</a>
+        <a {% url 'investments:create_product' as product_url %}href="{% contextual_url product_url %}" class="action-primary">{% translate 'New product' %}</a>
     {% else %}
-        <a href="{% url 'investments:create_asset' %}" class="action-primary">{% translate 'New asset' %}</a>
+        <a {% url 'investments:create_asset' as asset_url %}href="{% contextual_url asset_url %}" class="action-primary">{% translate 'New asset' %}</a>
     {% endif %}
 </section>

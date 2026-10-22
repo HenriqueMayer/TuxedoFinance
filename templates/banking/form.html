@@ -1,116 +1,120 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n assets %}
 
 {% block title %}{{ form_title }} - Tuxedo Finance{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-lg space-y-6">
+<div class="banking-workspace workspace-form-page {% if form.is_card_form or form.opening_balance or form.source_account or form.from_currency or form.program or form.unit_name or form.confirmation_key %}finance-entry-page{% else %}mx-auto max-w-lg{% endif %} space-y-4">
     <div>
-        <h1 class="font-sans text-4xl font-semibold tracking-tight">{{ form_title }}</h1>
+        <h1 class="page-title">{{ form_title }}</h1>
         {% if form_variant == 'loyalty_entry' %}
             <p class="mt-1 text-sm text-forest/70 dark:text-night-muted">{% translate "Choose an entry type to see only the fields you need." %}</p>
+        {% elif form_variant == 'exchange_rate' %}
+            <p class="subtle-copy mt-2">{% translate 'Enter the value of one unit of the source currency in the target currency.' %}</p>
         {% endif %}
     </div>
-    <form method="post" hx-boost="false" class="space-y-5 rounded-3xl bg-white p-6 shadow-sm dark:bg-night-surface" novalidate>
+    <form autocomplete="off" method="post" hx-boost="false" class="workspace-form surface-panel finance-entry-form space-y-5"{% if form.is_card_form %} data-card-appearance-form{% endif %} novalidate>
         {% csrf_token %}
-        {% if form.color %}<datalist id="bank-color-palette"><option>#B88D57</option><option>#24594A</option><option>#E87524</option><option>#6E42A1</option><option>#3167B1</option><option>#B93B54</option><option>#159A98</option><option>#68727C</option><option>#1F2933</option><option>#E5B633</option></datalist>{% endif %}
-        {% for error in form.non_field_errors %}<p class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+        <input type="hidden" name="next" value="{{ return_url|default_if_none:cancel_url }}">
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% for error in hidden.errors %}<p role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+        {% for error in form.non_field_errors %}<p role="alert" class="text-sm text-expense dark:text-expense-light">{{ error }}</p>{% endfor %}
+        {% if form_variant == 'exchange_rate' %}<p class="bank-rate-example">{% translate 'Example: 1 USD = 5.12 BRL. Select USD as the source, BRL as the target and enter 5.12 as the value.' %}</p>{% endif %}
         {% if form_variant == 'loyalty_entry' %}
-            {% include 'partials/form_field.html' with field=form.program %}
+            <fieldset class="finance-entry-group"><legend class="section-title">{% translate 'Entry details' %}</legend>
+            <div class="finance-entry-grid">
+            <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.program %}</div>
             {% include 'partials/form_field.html' with field=form.kind %}
             {% include 'partials/form_field.html' with field=form.direction %}
             {% include 'partials/form_field.html' with field=form.amount %}
             {% include 'partials/form_field.html' with field=form.date %}
-            <p id="loyalty-kind-status" class="text-sm text-forest/70 dark:text-night-muted" aria-live="polite"></p>
+            </div></fieldset>
+            <p id="loyalty-kind-status" class="subtle-copy" aria-live="polite"></p>
             <div id="loyalty-invoice-fields"
                  data-has-errors="{{ form.invoice.errors|yesno:'true,false' }}">
                 {% include 'partials/form_field.html' with field=form.invoice %}
             </div>
             <div id="loyalty-purchase-fields"
-                 class="space-y-5 rounded-xl bg-cream p-4 dark:bg-night"
+                 class="finance-entry-grid finance-entry-section"
                  data-has-errors="{% if form.funding_account.errors or form.funding_credit_card.errors or form.cash_amount.errors %}true{% else %}false{% endif %}">
-                {% include 'partials/form_field.html' with field=form.funding_account %}
-                {% include 'partials/form_field.html' with field=form.funding_credit_card %}
+                <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.funding_account %}</div>
+                <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.funding_credit_card %}</div>
                 <div id="loyalty-cash-fields" data-has-errors="{{ form.cash_amount.errors|yesno:'true,false' }}">{% include 'partials/form_field.html' with field=form.cash_amount %}</div>
             </div>
             {% include 'partials/form_field.html' with field=form.notes %}
         {% elif form.iof_amount %}
             {% include 'banking/_redemption_fields.html' %}
+        {% elif form.is_card_form %}
+            <fieldset class="finance-entry-group"><legend class="section-title">{% translate 'Card details' %}</legend>
+            <div class="finance-entry-grid">
+            {% for field in form.card_record_fields %}
+                <div{% if field.name == 'account' or field.name == 'name' or field.name == 'card_type' %} class="finance-entry-wide"{% endif %}>
+                {% include 'partials/form_field.html' with field=field %}
+                </div>
+            {% endfor %}
+            </div></fieldset>
+            <section class="card-appearance" aria-labelledby="card-appearance-title">
+                <h2 id="card-appearance-title" class="section-title">{% translate 'Appearance' %}</h2>
+                {% include 'partials/form_field.html' with field=form.color %}
+                {% include 'partials/form_field.html' with field=form.use_gradient %}
+                <div class="card-gradient-fields" data-card-gradient-fields data-has-errors="{% if form.gradient_end.errors or form.gradient_angle.errors %}true{% else %}false{% endif %}">
+                    {% include 'partials/form_field.html' with field=form.gradient_end %}
+                    <div data-card-angle-control>
+                        {% include 'partials/form_field.html' with field=form.gradient_angle %}
+                    </div>
+                </div>
+                <div class="card-appearance-preview" data-card-appearance-preview data-card-empty-name="{{ form.name.label }}" style="--card-start:{{ form.card_preview_color }};--card-end:{{ form.card_preview_end }};--card-angle:{{ form.card_preview_angle }}deg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 14h4"/></svg>
+                    <span class="card-appearance-copy"><strong data-card-preview-name>{% firstof form.name.value form.name.label %}</strong><span>{% translate 'Card preview' %}</span></span>
+                </div>
+            </section>
+        {% elif form.bank and form.opening_balance %}
+            <fieldset class="finance-entry-group"><legend class="section-title">{% translate 'Account details' %}</legend>
+                <div class="finance-entry-grid">
+                    <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.bank %}</div>
+                    <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.name %}</div>
+                    {% include 'partials/form_field.html' with field=form.currency %}
+                    <div class="finance-entry-wide"><p class="subtle-copy">{% translate 'Enter the balance you already had when you started tracking this account, at the start of the chosen date and before its movements.' %}</p></div>
+                    {% include 'partials/form_field.html' with field=form.opening_balance %}
+                    {% include 'partials/form_field.html' with field=form.opening_date %}
+                    <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.pix_enabled %}</div>
+                </div>
+            </fieldset>
+            <details id="account-planning-adjustments" class="explanation-disclosure finance-entry-section"{% if form.planning_adjustments_open %} open{% endif %}>
+                <summary>{% translate 'Planning adjustments (optional)' %}</summary>
+                <div class="finance-entry-grid mt-4">
+                    <div class="finance-entry-wide"><p class="subtle-copy">{% translate 'These settings change only the amount available for monthly planning. Your account balance and history stay the same.' %}</p></div>
+                    <div class="finance-entry-wide">{% include 'partials/form_field.html' with field=form.planning_enabled %}</div>
+                    {% include 'partials/form_field.html' with field=form.reserved_amount %}
+                    <div class="finance-entry-wide"><p class="subtle-copy">{% translate 'Goal reservations are already considered. The larger amount is kept aside, without counting it twice.' %}</p></div>
+                </div>
+            </details>
+        {% elif form.from_currency or form.source_account or form.unit_name or form.confirmation_key %}
+            <fieldset class="finance-entry-group">
+                {% if form.source_account %}<legend class="section-title">{% translate 'Transfer details' %}</legend>{% elif form.unit_name %}<legend class="section-title">{% translate 'Program details' %}</legend>{% elif form.confirmation_key %}<legend class="section-title">{% translate 'Payment details' %}</legend>{% endif %}
+                <div class="finance-entry-grid">
+                    {% for field in form.visible_fields %}
+                        <div{% if field.name == 'source_account' or field.name == 'destination_account' or field.name == 'account' or field.name == 'name' or field.name == 'bank' or field.name == 'cards' or field.name == 'notes' %} class="finance-entry-wide"{% endif %}>
+                            {% include 'partials/form_field.html' with field=field %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </fieldset>
         {% else %}
             {% for field in form.visible_fields %}
                 {% include 'partials/form_field.html' with field=field %}
-                {% if field.name == 'color' %}<div data-bank-colors data-input-id="{{ field.id_for_label }}" data-color-label="{% translate 'Use color' %}" role="group" aria-label="{% translate 'Suggested colors' %}" class="flex flex-wrap gap-2"></div>{% endif %}
             {% endfor %}
         {% endif %}
-        <div class="flex gap-3">
-            <button type="submit" class="rounded-full bg-caramel px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-forest-deep">{% translate "Save" %}</button>
-            <a href="{{ cancel_url }}" class="rounded-full border border-forest/30 px-4 py-2.5 text-xs font-medium uppercase tracking-widest dark:border-cream/30">{% translate "Cancel" %}</a>
+        <div class="form-actions">
+            <button type="submit" class="action-primary">{% translate "Save" %}</button>
+            <a href="{{ cancel_url }}" class="quiet-action">{% translate "Cancel" %}</a>
         </div>
     </form>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+{% if form.is_card_form %}<script src="{% asset 'js/card-appearance.js' %}" defer></script>{% endif %}
 {% if form_variant == 'loyalty_entry' %}
-<script>
-    (function () {
-        const kind = document.getElementById('{{ form.kind.id_for_label }}');
-        const invoice = document.getElementById('{{ form.invoice.id_for_label }}');
-        const fundingAccount = document.getElementById('{{ form.funding_account.id_for_label }}');
-        const fundingCreditCard = document.getElementById('{{ form.funding_credit_card.id_for_label }}');
-        const cashAmount = document.getElementById('{{ form.cash_amount.id_for_label }}');
-        const invoiceFields = document.getElementById('loyalty-invoice-fields');
-        const purchaseFields = document.getElementById('loyalty-purchase-fields');
-        const status = document.getElementById('loyalty-kind-status');
-        if (!kind || !invoice || !fundingAccount || !fundingCreditCard || !cashAmount) return;
-
-        const setHidden = window.TuxedoForms.setHidden;
-
-        function updateKindFields(clearStale) {
-            const isInvoiceAward = kind.value === 'INVOICE_AWARD';
-            const isPurchase = kind.value === 'PURCHASE';
-            setHidden(invoiceFields, !isInvoiceAward, !clearStale);
-            setHidden(purchaseFields, !isPurchase, !clearStale);
-
-            if (clearStale) {
-                if (!isInvoiceAward) invoice.value = '';
-                if (!isPurchase) {
-                    fundingAccount.value = '';
-                    fundingCreditCard.value = '';
-                    cashAmount.value = '';
-                }
-            }
-
-            if (isInvoiceAward) {
-                status.textContent = '{% translate "Choose the invoice that awarded these points." %}';
-            } else if (isPurchase) {
-                status.textContent = '{% translate "Choose one payment source and enter the amount paid." %}';
-            } else {
-                status.textContent = '';
-            }
-        }
-
-        function updatePurchaseSource(clearStale, source) {
-            if (clearStale && source && source.value) {
-                if (source === fundingAccount) fundingCreditCard.value = '';
-                else fundingAccount.value = '';
-            }
-            const inactive = kind.value !== 'PURCHASE' || !(fundingAccount.value || fundingCreditCard.value);
-            if (inactive && clearStale) cashAmount.value = '';
-            setHidden(document.getElementById('loyalty-cash-fields'), inactive, !clearStale);
-        }
-        [fundingAccount, fundingCreditCard].forEach(input => input.addEventListener('change', () => updatePurchaseSource(true, input)));
-        updatePurchaseSource(false);
-        kind.addEventListener('change', function () {
-            updateKindFields(true);
-            updatePurchaseSource(true);
-        });
-        kind.form.addEventListener('tuxedo:restore', () => {
-            updateKindFields(false);
-            updatePurchaseSource(false);
-        });
-        updateKindFields(false);
-    })();
-</script>
+{% include 'banking/_loyalty_form_script.html' %}
 {% endif %}
 {% endblock %}

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from banking.models import LoyaltyEntry, RewardRedemption
+from banking.models import CardInvoiceCredit, LoyaltyEntry, RewardRedemption
 from banking.services import MissingExchangeRate, convert
 from sandbox.services import money
 from transactions.models import Transaction
@@ -90,6 +90,14 @@ def commitment_snapshot(user, start_month, *, month_basis="payment_date"):
                    item.native_currency, due, reference, item.payment_label,
                    'installment' if item.is_installment_plan else 'recurring' if item.is_fixed else 'oneoff', installment)
 
+    for credit in CardInvoiceCredit.objects.filter(user=user).select_related('card__account__bank'):
+        # Scenario overrides remain positive magnitudes. The distinct source
+        # kind applies the reduction once without masquerading as income.
+        reference = credit.reference_month
+        append(f'invoice-credit:{credit.pk}', credit.title, credit.amount,
+               credit.card.account.currency, credit.card.due_date_for(reference),
+               reference, str(credit.card), 'invoice_credit')
+
     purchases = LoyaltyEntry.objects.filter(
         user=user, kind=LoyaltyEntry.Kind.PURCHASE, direction=LoyaltyEntry.Direction.CREDIT,
         cash_amount__gt=0,
@@ -149,7 +157,7 @@ def snapshot_total(snapshot, month):
                 raise ValidationError(_('Enter a valid commitment amount.'))
             if not value.is_finite() or not ZERO <= value <= MAX_MONEY or value.as_tuple().exponent < -2:
                 raise ValidationError(_('Commitment amounts must be nonnegative, finite amounts with at most two decimal places.'))
-            total += value
+            total += -value if row.get('kind') == 'invoice_credit' else value
     return money(total)
 
 

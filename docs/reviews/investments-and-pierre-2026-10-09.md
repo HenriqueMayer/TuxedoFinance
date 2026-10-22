@@ -1,6 +1,15 @@
 # Investments review and Pierre Finance comparison
 
-Reviewed on 2026-10-09 against the current Tuxedo Finance checkout. This is a
+**Historical review:** findings below describe the checkout on 2026-10-09.
+The subsequent Unreleased implementation adds dated openings, weighted cost,
+local quotes, budgets, goals, signals and underlying statement services. Their
+current contracts are in the [documentation index](../README.md). The statement
+and net-worth interfaces remain paused. See the
+[2026-10-16 project health review](project-health-2026-10-16.md) before using
+this historical gap list as a backlog. Competitor observations have not been
+refreshed by the later implementation.
+
+Reviewed on 2026-10-09 against the Tuxedo Finance checkout of that date. This is a
 product and implementation review, not an investment recommendation. Competitor
 capabilities below distinguish published claims from individual user accounts;
 no Pierre account was created and its authenticated application was not tested.

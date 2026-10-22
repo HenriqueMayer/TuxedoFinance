@@ -1,0 +1,20 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* Cash pots share account surfaces, with amounts distinct from participation. */
+.cash-pot-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:.75rem; }
+.cash-pot-card { min-width:0; border:1px solid rgb(26 46 38 / .12); border-radius:.75rem; padding:1rem; background:#fff; }
+.cash-pot-header { display:flex; align-items:start; justify-content:space-between; gap:.75rem; }
+.cash-pot-name { display:inline-flex; align-items:center; min-height:2.75rem; font-size:.875rem; font-weight:600; overflow-wrap:anywhere; border-radius:.25rem; }
+.cash-pot-name:hover { text-decoration:underline; text-underline-offset:3px; }
+.cash-pot-currency { font-size:.75rem; line-height:1.5rem; color:rgb(26 46 38 / .65); background:rgb(26 46 38 / .04); border-radius:.375rem; padding:.125rem .375rem; }
+.cash-pot-amounts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; padding-block:.875rem; margin-top:.75rem; border-block:1px solid rgb(26 46 38 / .08); }
+.cash-pot-amounts dt { font-size:.75rem; color:rgb(26 46 38 / .65); }
+.cash-pot-amounts dd { font-size:1rem; margin-top:.25rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.cash-pot-actions { display:flex; justify-content:flex-end; padding-top:.375rem; }
+.dark .cash-pot-card { background:#1b1b1b; border-color:rgb(250 248 243 / .15); }
+.dark .cash-pot-amounts { border-color:rgb(250 248 243 / .12); }
+.dark .cash-pot-amounts dt,.dark .cash-pot-currency { color:#b8b8b8; }
+.dark .cash-pot-currency { background:rgb(250 248 243 / .06); }
+@media (min-width:768px) { .cash-pot-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (min-width:1280px) { .cash-pot-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+.invoice-card-meta { display:flex; flex-wrap:wrap; gap:.5rem 1rem; font-size:.75rem; color:rgb(26 46 38 / .65); margin-top:.75rem; }
+.dark .invoice-card-meta { color:#b8b8b8; }

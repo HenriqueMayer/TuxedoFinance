@@ -111,13 +111,19 @@ def run(args):
 
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--docker-image')
+    parser.add_argument('--assistant-fixtures', action='store_true')
     options, args = parser.parse_known_args(args)
     if args[:1] == ['--']:
         args = args[1:]
+    command = [node, str(cli), 'test', '--config', str(ROOT / 'tests/playwright.config.js'), *args]
     if options.docker_image:
-        return run_docker(options.docker_image, [node, str(cli), 'test', *args])
+        if options.assistant_fixtures:
+            raise RuntimeError('Synthetic assistant fixtures run only in the disposable local installation.')
+        return run_docker(options.docker_image, command)
 
-    with tempfile.TemporaryDirectory(prefix='tuxedo-e2e-') as directory:
+    runtime = ROOT / '.local/test-results/runtime'
+    runtime.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='tuxedo-e2e-', dir=runtime) as directory:
         data_dir = Path(directory)
         env_file = data_dir / '.env'
         env_file.touch()
@@ -130,6 +136,10 @@ def run(args):
             DJANGO_SETTINGS_MODULE='core.settings',
             TUXEDO_ENV_FILE=str(env_file),
             TUXEDO_DATA_DIR=directory,
+            ASSISTANT_PRIVATE_DIR=str(data_dir / 'assistant-private'),
+            ASSISTANT_OPENAI_CALLBACK_URL=f'{url}/assistant/connections/callback/',
+            ASSISTANT_OPENAI_AUTH_ENABLED='False',
+            ASSISTANT_OPENAI_INFERENCE_ENABLED='False',
             SECRET_KEY=secrets.token_urlsafe(48),
             DEBUG='True',
             HTTPS='False',
@@ -139,6 +149,11 @@ def run(args):
             E2E_BASE_URL=url,
             PYTHONUNBUFFERED='1',
         )
+        if options.assistant_fixtures:
+            # The guarded test module replaces the provider before any model
+            # request. It is never installed into ordinary or Docker settings.
+            env.update(DJANGO_SETTINGS_MODULE='tests.e2e.assistant_mock_settings',
+                       E2E_ASSISTANT_FIXTURES='1')
         processes = []
         log_path = data_dir / 'server.log'
         print(f'Running browser tests on an isolated server at {url}', flush=True)
@@ -163,7 +178,7 @@ def run(args):
                     stdout=log, stderr=subprocess.STDOUT,
                 )
                 wait_for_server(server, url)
-                return start([node, str(cli), 'test', *args]).wait()
+                return start(command).wait()
             finally:
                 # Repeated Ctrl-C must not interrupt disposal of private test data.
                 previous = {
@@ -174,7 +189,7 @@ def run(args):
                     for process in reversed(processes):
                         stop(process)
                     log.flush()
-                    destination = ROOT / 'test-results/e2e-server.log'
+                    destination = ROOT / '.local/test-results/e2e-server.log'
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(log_path, destination)
                     print(f'Isolated server log: {destination}', flush=True)

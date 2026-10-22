@@ -1,0 +1,7 @@
+{% load i18n %}
+<nav class="section-nav planning-sections mb-6" data-planning-navigation aria-label="{% translate 'Planning sections' %}">
+    <a href="{% url 'planning:index' %}"{% if section == 'overview' or section == 'budgets' %} aria-current="page"{% endif %}>{% translate 'This month' %}</a>
+    <a href="{% url 'planning:goals' %}"{% if section == 'goals' %} aria-current="page"{% endif %}>{% translate 'Goals' %}</a>
+    <a href="{% url 'sandbox:index' %}"{% if request.resolver_match.namespace == 'sandbox' %} aria-current="page"{% endif %}>{% translate 'Simulations' %}</a>
+    <a href="{% url 'planning:signals' %}"{% if section == 'signals' %} aria-current="page"{% endif %}>{% translate 'Alerts' %}</a>
+</nav>

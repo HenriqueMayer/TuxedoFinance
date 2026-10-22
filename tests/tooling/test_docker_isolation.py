@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import os
+from pathlib import Path
+import subprocess
+import tempfile
 from unittest import TestCase, mock
 
+from scripts import docker_smoke
 from scripts.docker_smoke import Installation, isolated_environment
 
 
@@ -12,13 +16,65 @@ class DockerIsolationTests(TestCase):
             'TUXEDO_ENV_FILE': '/private-config', 'E2E_BASE_URL': 'http://personal-server',
             'COMPOSE_FILE': '/personal-compose.yaml', 'COMPOSE_PROJECT_NAME': 'personal',
             'DJANGO_SETTINGS_MODULE': 'private.settings', 'DEBUG': 'False', 'HTTPS': 'True', 'ALLOW_SIGNUPS': 'False',
+            'ASSISTANT_OPENAI_AUTH_ENABLED': 'True', 'ASSISTANT_PRIVATE_DIR': '/private-assistant-vault',
+            'ASSISTANT_OPENAI_INFERENCE_ENABLED': 'True',
+            'ASSISTANT_OPENAI_CALLBACK_URL': 'http://127.0.0.1:9000/personal-callback/',
+            'ASSISTANT_FUTURE_SECRET': 'personal-assistant-secret',
         }
         with mock.patch.dict(os.environ, private):
             env = isolated_environment()
         for key in private:
-            self.assertNotIn(key, env)
+            if key not in {'ASSISTANT_OPENAI_AUTH_ENABLED', 'ASSISTANT_OPENAI_INFERENCE_ENABLED'}:
+                self.assertNotIn(key, env)
+        self.assertEqual(env['ASSISTANT_OPENAI_AUTH_ENABLED'], 'False')
+        self.assertEqual(env['ASSISTANT_OPENAI_INFERENCE_ENABLED'], 'False')
+
+    def test_compose_subprocess_and_owned_config_keep_authorization_disabled(self):
+        with tempfile.TemporaryDirectory(prefix='tuxedo-docker-auth-isolation-') as directory:
+            root = Path(directory)
+            (root / 'compose.yaml').write_text('services: {}\n')
+            inherited = {
+                'ASSISTANT_OPENAI_AUTH_ENABLED': 'True',
+                'ASSISTANT_OPENAI_INFERENCE_ENABLED': 'True',
+                'ASSISTANT_PRIVATE_DIR': '/personal-assistant-private',
+                'ASSISTANT_OPENAI_CALLBACK_URL': 'http://127.0.0.1:9000/personal-callback/',
+            }
+            with mock.patch.object(docker_smoke, 'ROOT', root), mock.patch.dict(os.environ, inherited), mock.patch.object(
+                docker_smoke.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, b'log', b''),
+            ) as run:
+                with Installation('local:test') as app:
+                    config = (Path(app.directory.name) / '.env').read_text()
+                    self.assertIn('ASSISTANT_OPENAI_AUTH_ENABLED=False\n', config)
+                    self.assertIn('ASSISTANT_OPENAI_INFERENCE_ENABLED=False\n', config)
+                    self.assertNotIn('personal-assistant-private', config)
+                    self.assertNotIn('personal-callback', config)
+                    app.compose('config')
+                    env = run.call_args.kwargs['env']
+                    self.assertEqual(env['ASSISTANT_OPENAI_AUTH_ENABLED'], 'False')
+                    self.assertEqual(env['ASSISTANT_OPENAI_INFERENCE_ENABLED'], 'False')
+                    self.assertNotIn('ASSISTANT_PRIVATE_DIR', env)
+                    self.assertNotIn('ASSISTANT_OPENAI_CALLBACK_URL', env)
 
     def test_each_run_owns_a_distinct_compose_project(self):
         first, second = Installation('local:test'), Installation('local:test')
         self.assertNotEqual(first.project, second.project)
         self.assertTrue(first.project.startswith('tuxedo-test-'))
+
+    def test_runtime_and_logs_stay_in_local_outputs_without_touching_legacy_files(self):
+        with tempfile.TemporaryDirectory(prefix='tuxedo-docker-isolation-') as directory:
+            root = Path(directory)
+            (root / 'compose.yaml').write_text('services: {}\n')
+            legacy = root / 'test-results/legacy.log'
+            legacy.parent.mkdir()
+            legacy.write_text('preserve existing log')
+            with mock.patch.object(docker_smoke, 'ROOT', root), mock.patch.object(
+                Installation, 'compose', return_value=subprocess.CompletedProcess([], 0, b'log', b''),
+            ) as compose:
+                with Installation('local:test') as app:
+                    runtime = Path(app.directory.name)
+                    self.assertEqual(runtime.parent, root / '.local/test-results/runtime')
+                    self.assertEqual((runtime / '.env').stat().st_mode & 0o777, 0o600)
+                self.assertFalse(runtime.exists())
+                self.assertEqual((root / f'.local/test-results/{app.project}.log').read_bytes(), b'log')
+                compose.assert_any_call('down', '--volumes', '--remove-orphans')
+            self.assertEqual(legacy.read_text(), 'preserve existing log')

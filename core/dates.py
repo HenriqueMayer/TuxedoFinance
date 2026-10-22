@@ -35,6 +35,7 @@ def parse_preferred_date(value, order='DMY'):
 
 class PreferredDateInput(forms.DateInput):
     is_preferred_date = True
+    entry_calendar = True
 
     def format_value(self, value):
         # GET URLs and existing ISO POST clients remain canonical, while their
@@ -62,4 +63,5 @@ def configure_date_fields(form, user=None):
             'placeholder': 'MM/DD/YYYY' if order == 'MDY' else 'DD/MM/YYYY',
             'inputmode': 'numeric',
             'data-date-order': order,
+            'data-date-picker': 'true',
         })

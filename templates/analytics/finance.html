@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% translate 'Analytics' %} — Tuxedo Finance{% endblock %}
+{% block content %}
+<div id="finance-analytics" class="home-workspace space-y-4" data-analytics-navigation>
+    {% include 'analytics/_sections.html' %}
+    <header class="workspace-header"><h1 class="page-title">{% translate 'Analytics' %}</h1></header>
+    {% include 'analytics/_monthly.html' %}
+    {% include 'dashboard/_reports_charts.html' %}
+</div>
+{% endblock %}

@@ -1,25 +1,25 @@
 {% load i18n %}
 <div id="sandbox-workspace" data-preserve-view>
-    <form method="post" action="{{ workspace_url }}" hx-post="{{ workspace_url }}" hx-target="#sandbox-workspace" hx-swap="outerHTML show:none" hx-vals='{"response_mode":"fragment"}' hx-request='{"noHeaders":false}' hx-boost="false" class="space-y-8" novalidate>
+    <form autocomplete="off" method="post" action="{{ workspace_url }}" hx-post="{{ workspace_url }}" hx-target="#sandbox-workspace" hx-swap="outerHTML show:none" hx-vals='{"response_mode":"fragment"}' hx-request='{"noHeaders":false}' hx-boost="false" class="workspace-form space-y-8" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}<div class="rounded-2xl border border-expense/40 bg-expense/10 p-4 text-sm text-expense dark:text-expense-light" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
 
-        <section class="surface-panel" aria-labelledby="salary-input-title">
+        <section class="surface-panel finance-entry-form" aria-labelledby="salary-input-title">
             <div class="flex items-center gap-3">
                 <h2 id="salary-input-title" class="section-title">{% translate "Plan the selected month" %}</h2>
                 {% translate "Enter the gross salary, review the expense forecast already recorded in Tuxedo Finance and add only the fixed amounts missing from that forecast." as income_help %}
                 {% include 'partials/help_popover.html' with help_id='salary-input-help' help_label=_('Plan the selected month') help_text=income_help %}
             </div>
 
-            <div class="mt-5 grid items-end gap-5 md:grid-cols-2">
+            <div class="mt-5 finance-entry-grid">
                 {% include 'sandbox/_form_field.html' with field=form.gross_salary %}
                 <div>
                     {% include 'partials/form_field.html' with field=form.planning_month %}
                     <div class="mt-3 flex items-center justify-between gap-3">
-                        <button type="submit" name="action" value="previous_month" id="budget-previous-month" class="action-link h-11 w-11 p-0" aria-label="{% translate 'Previous month' %}">←</button>
+                        <button type="submit" name="action" value="previous_month" id="budget-previous-month" class="icon-action" aria-label="{% translate 'Previous month' %}">←</button>
                         <span class="text-sm font-medium" data-planning-month>{{ forecast.month|date:'F Y' }}</span>
-                        <button type="submit" name="action" value="next_month" id="budget-next-month" class="action-link h-11 w-11 p-0" aria-label="{% translate 'Next month' %}">→</button>
+                        <button type="submit" name="action" value="next_month" id="budget-next-month" class="icon-action" aria-label="{% translate 'Next month' %}">→</button>
                     </div>
                     <button type="submit" name="action" value="forecast" id="budget-forecast" class="quiet-action mt-3">{% translate "Show month forecast" %}</button>
                 </div>
@@ -27,7 +27,7 @@
 
             {% include 'sandbox/_expense_forecast.html' %}
 
-            <div class="mt-7 border-t border-forest/10 pt-6 dark:border-cream/10">
+            <div class="mt-6 finance-entry-section">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h3 class="font-sans text-lg font-semibold text-forest dark:text-cream">{% translate "Additional fixed expenses" %}</h3>
@@ -35,22 +35,22 @@
                     </div>
                     <button type="submit" name="action" value="add_variable" id="budget-add-variable" data-add-variable class="quiet-action">+ {% translate "Add fixed expense" %}</button>
                 </div>
-                <div class="mt-4 space-y-3" data-variable-rows>{% for row in variable_rows %}{% include 'sandbox/_variable_row.html' with row=row row_index=forloop.counter0 %}{% endfor %}</div>
+                <div class="mt-3" data-variable-rows>{% for row in variable_rows %}{% include 'sandbox/_variable_row.html' with row=row row_index=forloop.counter0 %}{% endfor %}</div>
                 <template id="sandbox-variable-template">{% include 'sandbox/_variable_row.html' with row=None %}</template>
             </div>
         </section>
 
         <input type="hidden" name="clt_settings_open" value="{% if clt_settings_open %}1{% else %}0{% endif %}">
         <input type="hidden" name="tax_bands_open" value="{% if tax_bands_open %}1{% else %}0{% endif %}">
-        <details id="clt-settings" data-state-field="clt_settings_open" class="surface-panel" {% if clt_settings_open %}open{% endif %}>
+        <details id="clt-settings" data-state-field="clt_settings_open" class="surface-panel finance-entry-form explanation-disclosure" {% if clt_settings_open %}open{% endif %}>
             <summary class="cursor-pointer font-medium">{% translate "Adjust CLT parameters" %}</summary>
             <p class="subtle-copy mt-4">{% translate "Optional monthly payroll inputs. Alimony must qualify for the legal IRRF deduction and is also subtracted from net pay. Transport is capped at 6% of gross salary. Food, health and other deductions reduce net pay, not the monthly IRRF base. Do not repeat these amounts as additional expenses." %}</p>
-            <div class="mt-5 grid gap-5 md:grid-cols-2">
+            <div class="mt-5 finance-entry-grid">
                 {% for field in clt_fields %}{% include 'partials/form_field.html' with field=field %}{% endfor %}
             </div>
         </details>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="form-actions flex flex-wrap items-center gap-3">
             <button type="submit" name="action" value="calculate" id="budget-calculate" class="action-primary">{% translate "Calculate month" %}</button>
             <button type="submit" name="action" value="tax_bands" id="budget-tax-bands" class="action-link">{% translate "Consult INSS and IRRF brackets" %}</button>
             <p class="subtle-copy">{% translate "The calculation does not change financial records and is not saved automatically." %}</p>
@@ -58,7 +58,7 @@
 
         {% if result %}{% include 'sandbox/_scenario_result.html' %}{% endif %}
 
-        <details class="surface-panel" {% if draft_save_open %}open{% endif %}>
+        <details class="surface-panel finance-entry-form explanation-disclosure" {% if draft_save_open %}open{% endif %}>
             <summary class="cursor-pointer font-medium text-forest dark:text-cream">{% translate "Save this plan (optional)" %}</summary>
             <div class="mt-5">{% include 'sandbox/_draft_save.html' %}</div>
         </details>

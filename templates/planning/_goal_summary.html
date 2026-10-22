@@ -1,0 +1,14 @@
+{% load i18n l10n %}
+<div class="monthly-outlook-main goal-card space-y-3">
+    <div class="flex flex-wrap items-center gap-3"><h2 id="goal-progress" class="section-title">{% translate 'Backed progress' %}</h2>{% if row.goal.is_archived %}<span class="status-badge">{% translate 'Archived' %}</span>{% endif %}</div>
+    <p class="money-highlight tabular-nums">{{ row.goal.currency }} {{ row.progress|floatformat:2 }}</p>
+    <progress max="100" value="{{ row.percent|unlocalize }}" aria-label="{% translate 'Goal progress' %}">{{ row.percent }}%</progress>
+</div>
+<dl class="monthly-outlook-metrics">
+    <div><dt>{% translate 'Goal amount' %}</dt><dd>{{ row.goal.currency }} {{ row.goal.target_amount|floatformat:2 }}</dd></div>
+    <div><dt>{% translate 'Remaining target' %}</dt><dd>{{ row.goal.currency }} {{ row.remaining|floatformat:2 }}</dd></div>
+    <div><dt>{% translate 'Target date' %}</dt><dd>{% if row.goal.target_date %}{{ row.goal.target_date|date:USER_DATE_FORMAT }}{% else %}{% translate 'No deadline' %}{% endif %}</dd></div>
+</dl>
+{% if row.goal.is_archived %}<p class="finance-entry-wide subtle-copy">{% translate 'Archived. Reservations are released and do not count as progress.' %}</p>{% endif %}
+{% if row.has_shortfall %}<p role="status" class="text-sm text-expense dark:text-expense-light">{% translate 'The source balance no longer backs all reservations. Progress is reduced proportionally; review the shortfall below.' %}</p>{% endif %}
+{% if not row.complete %}<p role="status" class="text-sm text-expense dark:text-expense-light">{% translate 'Partial progress: missing reference exchange rates for' %} {{ row.missing_currencies|join:', ' }}. <a class="underline" href="{% url 'banking:exchange_rates' %}">{% translate 'Review exchange rates' %}</a></p>{% endif %}

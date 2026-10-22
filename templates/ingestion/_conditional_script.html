@@ -1,0 +1,45 @@
+<script>
+(function () {
+    const setHidden = window.TuxedoForms.setHidden;
+    function clear(group) {
+        group.querySelectorAll('select,input').forEach(control => {
+            if (control.closest('.search-choice')) return;
+            control.value = '';
+            control.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    }
+    document.querySelectorAll('[data-import-mapping]').forEach(form => {
+        const mode = form.querySelector('[name="amount_mode"]');
+        function update(deliberate) {
+            form.querySelectorAll('[data-import-amount]').forEach(group => {
+                const inactive = group.dataset.importAmount !== mode.value;
+                if (inactive && deliberate) clear(group);
+                setHidden(group, inactive, !deliberate);
+            });
+        }
+        update(false);
+        mode.addEventListener('change', () => update(true));
+        form.addEventListener('tuxedo:restore', () => update(false));
+    });
+    document.querySelectorAll('[data-import-entry]').forEach(entry => {
+        const action = entry.querySelector('select[name$="-action"]');
+        const other = entry.querySelector('select[name$="-counterparty_account"]');
+        const amount = entry.querySelector('[data-import-counter-amount]');
+        function update(deliberate) {
+            entry.querySelectorAll('[data-import-action]').forEach(group => {
+                const inactive = group.dataset.importAction !== action.value;
+                if (inactive && deliberate) clear(group);
+                setHidden(group, inactive, !deliberate);
+            });
+            setHidden(amount, action.value !== 'TRANSFER' || !other.value, !deliberate);
+        }
+        update(false);
+        action.addEventListener('change', () => update(true));
+        other.addEventListener('change', () => {
+            if (!other.value) clear(amount);
+            setHidden(amount, action.value !== 'TRANSFER' || !other.value, false);
+        });
+        entry.closest('form').addEventListener('tuxedo:restore', () => update(false));
+    });
+})();
+</script>

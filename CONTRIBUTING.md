@@ -6,23 +6,35 @@ copyright and license notices.
 
 ## Development principles
 
+- Reuse the approved [design catalogue](docs/design-system.html) and shared
+  components listed in the [interface map](docs/interface-map.md). Keep that map
+  current when adding a route or interaction; presentation must preserve domain
+  precision, native fallbacks and paused-feature gates.
 - All new or changed forms must follow the mandatory
-  [keyboard and choice contract](docs/frontend.md#keyboard-and-choice-contract):
+  [keyboard and choice contract](docs/frontend/forms.md#keyboard-and-choice-contract):
   shared searchable record choices, native short choices, explicit conditional
   selections, visible focus, error recovery and a complete no-JavaScript path.
   Include real keyboard and conditional-transition tests in form reviews.
 - Preserve the local-first Django architecture, user isolation, Decimal-based
   calculations, accessibility, and no-JavaScript form fallbacks.
-- Use the [shared question-mark help contract](docs/frontend.md#question-mark-help)
+- Use the [shared question-mark help contract](docs/frontend/navigation.md#question-mark-help)
   for every new or changed help icon. Test hover dismissal, keyboard/touch,
   outside clicks, readable viewport bounds and HTMX behavior.
 - Preserve viewport and keyboard focus when updating the current page (filters,
   cards, sorting, pagination, refreshes and inline edits). Follow the
-  [location-preservation contract](docs/frontend.md#preserve-the-users-location)
+  [location-preservation contract](docs/frontend/navigation.md#preserve-the-users-location)
   and test from a nonzero scroll position; ordinary updates must not jump to the top.
-- Keep domain code and Python tests in their owning apps. Shared browser tests
-  belong in `tests/e2e`, preview tests in `tests/preview`, and repository-tool
-  tests in `tests/tooling`. Root manifests serve the shared toolchain.
+- Keep domain code and Python tests in their owning apps. Django tests live in
+  `<app>/tests/test_*.py`, grouped by responsibility, with fixtures in explicit
+  support modules and no test-class reexports from `tests/__init__.py`. Keep
+  stable public imports when splitting view/form packages; import sibling
+  implementations directly and patch dependencies at their actual lookup site.
+  Shared browser tests
+  belong in domain folders under `tests/e2e`, preview tests in `tests/preview`,
+  and repository-tool tests in `tests/tooling`. Shared E2E helpers own catalogue
+  routing and repository paths. Root manifests serve the shared toolchain;
+  Tailwind configuration lives in `assets/` and Playwright configuration in
+  `tests/`.
 - Introduce a module or abstraction when it has a distinct responsibility or
   removes demonstrated duplication. File length alone does not justify a split.
 - Update documentation affected by a change. Maintain equivalent content in
@@ -56,29 +68,48 @@ On Linux, Playwright may also require system libraries; CI installs them with
 
 ## Python checks
 
-The following commands use a temporary data directory and an empty environment
-file, so Django checks cannot open the installation's database. Run this block
-in a subshell; the trap disposes of its temporary directory.
+The following block uses a temporary data directory and an empty environment
+file, so Django checks cannot open the installation's database. Python disposes
+of the directory on success or failure; do not replace it with an installation
+path.
 
 ```bash
-(
-  check_dir=$(mktemp -d)
-  trap 'rm -f "$check_dir"/db.sqlite3 "$check_dir"/db.sqlite3-wal "$check_dir"/db.sqlite3-shm "$check_dir"/db.sqlite3-journal; rmdir "$check_dir"' EXIT
-  export TUXEDO_DATA_DIR="$check_dir" TUXEDO_ENV_FILE=/dev/null
-  export SECRET_KEY=local-validation-only DEBUG=True HTTPS=False ALLOW_SIGNUPS=True
-  uv run python scripts/check_version.py &&
-  uv run python -m unittest discover -s tests/tooling &&
-  uv run python manage.py check &&
-  uv run python manage.py makemigrations --check --dry-run &&
-  uv run coverage run --branch manage.py test &&
-  uv run coverage report --show-missing --fail-under=70
-)
+uv run python - <<'PY'
+import os
+import subprocess
+import tempfile
+
+from scripts.docker_smoke import isolated_environment
+
+with tempfile.TemporaryDirectory(prefix="tuxedo-check.") as check_data:
+    env = isolated_environment()
+    env.update(
+        TUXEDO_DATA_DIR=check_data, TUXEDO_ENV_FILE="/dev/null",
+        ASSISTANT_PRIVATE_DIR=os.path.join(check_data, "assistant-private"),
+        ASSISTANT_OPENAI_CALLBACK_URL="http://127.0.0.1:8000/assistant/connections/callback/",
+        SECRET_KEY="local-validation-only", DEBUG="True", HTTPS="False",
+        ALLOW_SIGNUPS="True", DJANGO_SETTINGS_MODULE="core.settings",
+    )
+    commands = [
+        ["python", "scripts/check_version.py"],
+        ["python", "-m", "unittest", "discover", "-s", "tests/tooling"],
+        ["python", "manage.py", "check"],
+        ["python", "manage.py", "makemigrations", "--check", "--dry-run"],
+        ["coverage", "run", "--branch", "manage.py", "test"],
+        ["coverage", "report", "--show-missing", "--fail-under=70"],
+    ]
+    for command in commands:
+        subprocess.run(["uv", "run", *command], env=env, check=True)
+PY
 ```
 
-The Django suite uses its own test database. The trap also removes any SQLite
+The Django suite uses its own test database. The context also removes any SQLite
 files created by the migration check in that temporary directory. Coverage
-outputs are ignored local artifacts.
+outputs are ignored local artifacts under `.local/coverage/`.
 See [coverage-baseline.md](docs/coverage-baseline.md) for policy and measurements.
+For a focused run, substitute `manage.py test <app>` or
+`manage.py test <app>.tests.test_<responsibility>` inside the same isolated block.
+The [test index](tests/README.md) describes discovery and fixture ownership.
 
 CI also performs executable-correctness lint and dependency audits:
 
@@ -107,6 +138,7 @@ After changing Tailwind classes or tokens:
 
 ```bash
 npm run build:css
+npm run test:unit
 ```
 
 Use the shared `{% asset %}` template tag for CSS and JavaScript URLs; it versions
@@ -116,17 +148,40 @@ change, without replaying POSTs or discarding validation errors.
 CI rebuilds CSS into a temporary file and compares it with the committed asset;
 it also verifies the pinned checksum of vendored HTMX.
 
+The [style-source index](assets/README.md) records ordered CSS responsibilities.
+Keep the emitted stylesheet identical for source-only moves. Form interaction
+partials stay beside their owning templates; retain their translated context
+and script execution point when extracting a block.
+
 After changing translatable UI copy:
 
 ```bash
-uv run python manage.py makemessages -l pt_BR
+uv run python - <<'PY'
+import os
+import subprocess
+import tempfile
+
+from scripts.docker_smoke import isolated_environment
+
+with tempfile.TemporaryDirectory(prefix="tuxedo-messages.") as message_data:
+    env = isolated_environment()
+    env.update(TUXEDO_DATA_DIR=message_data, TUXEDO_ENV_FILE="/dev/null",
+               ASSISTANT_PRIVATE_DIR=os.path.join(message_data, "assistant-private"),
+               ASSISTANT_OPENAI_CALLBACK_URL="http://127.0.0.1:8000/assistant/connections/callback/",
+               SECRET_KEY="local-validation-only", DJANGO_SETTINGS_MODULE="core.settings")
+    subprocess.run(["uv", "run", "python", "manage.py", "makemessages",
+                    "-l", "pt_BR", "--no-wrap"], env=env, check=True)
+PY
 # Translate new entries in locale/pt_BR/LC_MESSAGES/django.po.
-uv run python manage.py compilemessages
+msgfmt --check-format locale/pt_BR/LC_MESSAGES/django.po \
+  -o locale/pt_BR/LC_MESSAGES/django.mo
 ```
 
-Commit the updated `.po` and `.mo` files together. CI checks that recompilation
+Compile the project catalog directly so dependency catalogs are not modified.
+Commit the updated `.po` and
+`.mo` files together. CI checks that recompilation
 leaves the committed `.mo` unchanged. The
-[frontend guide](docs/frontend.md#translation-convention) defines which strings
+[frontend guide](docs/frontend/runtime.md#translation-convention) defines which strings
 to mark and how the interface retains its no-JavaScript behavior.
 
 ## Browser tests
@@ -141,6 +196,10 @@ uses an empty `.env`, generates an ephemeral signing key, and enables signup.
 It migrates that database, starts its own Django server on a free loopback port,
 and passes the URL to Playwright. It never reuses an existing server or the
 installation's `TUXEDO_DATA_DIR`, `.env`, or `E2E_BASE_URL`.
+Both native and Docker runners discard inherited assistant configuration and
+force real authorization/inference off. Native runs bind the private vault and callback
+to their disposable data directory and loopback port; Docker keeps the vault in
+its disposable data volume. These checks never authorize a real account.
 
 The executor forwards Playwright arguments and returns the suite's exit code:
 
@@ -148,19 +207,63 @@ The executor forwards Playwright arguments and returns the suite's exit code:
 npm run test:e2e -- --grep 'dashboard'
 ```
 
+Streaming UI cases use a guarded synthetic catalogue/provider, without account
+credentials or external network access:
+
+```bash
+npm run test:e2e -- --assistant-fixtures tests/e2e/assistant/streaming.spec.js
+```
+
+This explicit option is native-runner-only and accepts only its owned disposable
+runtime and empty environment file. It does not enable live OAuth or inference;
+never select the fixture settings module manually for an installation. The
+[test index](tests/README.md) owns fixture locations and coverage responsibilities.
+CI also runs the guarded action, consultation, Markdown-copy, progress and
+streaming specifications explicitly, because ordinary runs keep those synthetic
+provider cases disabled.
+
+Without a file filter or grep, this command runs the complete application
+browser suite. Existing skipped cases for paused features remain skipped.
+
 Success, failure, and interruption all stop its processes and remove temporary
-data. Migration and server logs remain at `test-results/e2e-server.log`.
+data. Owned temporary installations live under `.local/test-results/runtime/`;
+migration and server logs remain at `.local/test-results/e2e-server.log`.
 Playwright retains configured failure screenshots, videos, and traces; CI
 uploads browser artifacts when a check fails.
 
 For an advanced, manually managed **disposable** installation, the direct
-`npx playwright test` command still honors `E2E_BASE_URL` (default:
-`http://127.0.0.1:8765`). It does not manage a server or database. The suite creates
-users and financial records, so never point that direct command at personal data.
+`npx playwright test --config=tests/playwright.config.js` command still honors
+`E2E_BASE_URL` (default: `http://127.0.0.1:8765`). It does not manage a server or
+database. The suite creates users and financial records, so never point that
+direct command at personal data.
 
 `test:preview` serves only the committed static tour. Screenshot regeneration is
 a separate operation, `npm run preview:capture`, documented in
-[preview maintenance](.github/preview/README.md).
+[preview maintenance](docs/preview.md).
+
+The E2E configuration uses absolute repository paths so moving specs into domain
+folders does not change asset roots or the disposable executor. Catalogue tests
+share `tests/e2e/helpers/catalogue.js`; application tests reuse the existing form
+and navigation helpers. `npm run test:unit` executes the dependency-free
+JavaScript amount/allocation tests and also runs in CI.
+
+New browser reports live in `.local/playwright-report/`, test artifacts and logs
+in `.local/test-results/`, coverage in `.local/coverage/`, and Ruff's cache in
+`.local/cache/ruff/`. Playwright clears only `.local/test-results/browser/`,
+keeping active runtime and server logs beside it. The [test index](tests/README.md)
+maps domain folders and shared helpers. This ignored tree is not installation
+storage. Never move installation `.env`, databases, backups or dependencies into
+it, and do not remove an old artifact directory merely because a new output
+location is configured.
+
+## Reporting performance
+
+`uv run python scripts/benchmark_reporting.py --samples 20 --output .local/test-results/reporting.json`
+measures 0, 1,000 and 10,000 synthetic sources in separate disposable processes.
+It never accepts an installation database or server. See the
+[measurement method and limits](docs/reviews/project-health-2026-10-16.md#reproducible-reporting-measurements)
+before comparing results. Benchmark observations guide focused changes; they
+are not timing assertions in the test suite.
 
 ## Docker validation
 
@@ -176,7 +279,7 @@ npm run test:e2e -- --docker-image tuxedo-finance:test
 
 Both Docker runners own their Compose project, ephemeral key, loopback port and
 named volume. They discard inherited installation/Compose settings and remove
-only their own resources. Logs remain under `test-results/`. Never target the
+only their own resources. Logs remain under `.local/test-results/`. Never target the
 installation owner's database, server or volume. Docker Engine 28+ or a current
 Docker Desktop and Compose v2+ are the supported installation baseline.
 See [Docker operations](docs/docker.md) for configuration and release delivery.
@@ -187,6 +290,25 @@ Run the applicable checks above and `git diff --check`. Review the diff for
 unintended generated files and private data. For documentation changes, verify
 relative links, section anchors, images, and rendered layout; compare both
 READMEs for equivalent commands, features, and version badges.
+
+Run `uv run python scripts/check_docs.py` after documentation moves. It checks
+local paths and Markdown/HTML anchors in tracked and new source documents,
+including the Design Lab, without network access or ignored runtime artifacts.
+CI runs the same check. Keep old section links available when extracting a
+guide; do not silently drop a contract while changing its location.
+
+The [documentation index](docs/README.md) identifies each guide's owner. Keep
+current instructions in that guide and dated findings, test counts and benchmark
+evidence in [reviews](docs/reviews/README.md). Historical reviews must state their
+date and point to the current contract; retain their evidence and limitations.
+Do not copy the same detailed interaction protocol into several app guides:
+link to the shared frontend contract and describe only the app's domain behavior
+and deliberate exceptions. Keep `AGENTS.md` as the implementation checklist,
+with setup and executable commands here.
+
+The [frontend index](docs/frontend.md) directs changes to the responsibility
+guides under `docs/frontend/`. Link new references to the owning guide and
+preserve the index's existing section links when reorganizing a contract.
 
 The single application CI job uses the same lockfiles and isolated browser
 executor as local development. It checks the supported SQLite configuration;

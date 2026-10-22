@@ -2,16 +2,16 @@
 Reusable empty state for list screens (PRD §13, Sprint 8 — 8.1.2).
 
 Usage (with a call-to-action):
-  {% include 'partials/empty_state.html' with title='No categories yet' message='Create your first category to start classifying transactions.' cta_url=create_url cta_label='New Category' %}
+  {% include 'partials/empty_state.html' with title='No categories yet' message='Create your first category to start classifying transactions.' cta_url=create_url cta_label='New category' %}
 
 Usage (icon/copy only, no CTA — e.g. a filtered list with zero matches):
   {% include 'partials/empty_state.html' with title='No matching transactions' message='Try a different filter.' %}
 
 `cta_url`/`cta_label` are optional; omit both to render icon + copy only.
 Reuses the exact Final Design System §5 empty-state composition and §6.1
-primary pill button — no one-off styling is introduced.
+shared primary action — no one-off styling is introduced.
 {% endcomment %}
-<div class="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-forest/20 dark:border-cream/20 p-12 text-center">
+<div class="empty-state flex flex-col items-center gap-3 text-center">
     <span class="flex h-14 w-14 items-center justify-center rounded-full bg-cream-dark text-caramel-ink dark:text-caramel-light dark:bg-night-raised" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-19.5 0v6a2.25 2.25 0 002.25 2.25h15a2.25 2.25 0 002.25-2.25v-6m-19.5 0h4.5a2.25 2.25 0 011.591.659l1.09 1.09a2.25 2.25 0 001.591.659h4.5a2.25 2.25 0 001.591-.659l1.09-1.09a2.25 2.25 0 011.591-.659h4.5" />
@@ -22,10 +22,10 @@ primary pill button — no one-off styling is introduced.
         <p class="mx-auto max-w-sm text-sm font-normal text-forest/70 dark:text-night-muted">{{ message }}</p>
     </div>
     {% if cta_url %}
-        <a href="{{ cta_url }}"
-           class="group mt-2 inline-flex items-center gap-2 rounded-full bg-caramel px-6 py-2.5 text-xs uppercase tracking-widest font-medium text-forest-deep transition-colors hover:bg-caramel-light">
+        <a href="{{ cta_url }}"{% if live_reset_form %} data-live-reset data-live-link="{{ live_reset_form }}"{% endif %}
+           class="action-primary mt-2">
             {{ cta_label }}
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" /></svg>
         </a>
     {% endif %}
 </div>
