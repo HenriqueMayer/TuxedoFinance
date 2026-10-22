@@ -600,11 +600,10 @@ removes reusable local tokens and retains registration metadata for later
 sign-in. Database-only backup/restore cannot recover authorization credentials.
 See the owning [authorization contract](apps/assistant.md#openai-authorization-preparation)
 and [recovery boundary](operations.md#assistant-data-and-integrations).
-The [native authorization observation](reviews/assistant-native-sign-in-2026-10-19.md)
-is bounded account-link evidence; synthetic fixtures remain confined to isolated
-tests. Bank/external-observation schemas remain outside the assistant. Linking
-an account does not confirm any local financial proposal; model transport has
-its own default-off gate.
+Synthetic fixtures remain confined to isolated tests. Bank and external-
+observation schemas remain outside the assistant. Linking an account does not
+confirm any local financial proposal; model transport has its own default-off
+gate.
 
 ### Generation runs
 

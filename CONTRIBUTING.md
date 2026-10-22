@@ -50,7 +50,9 @@ copyright and license notices.
 ## Prerequisites
 
 Use Python 3.12, [uv](https://docs.astral.sh/uv/getting-started/installation/),
-Node.js 20 (the CI baseline), npm, and GNU gettext (`msgfmt` and `xgettext`).
+Node.js 22.23.4 (the baseline pinned in `.nvmrc` for local tooling and CI), npm,
+and GNU gettext (`msgfmt` and `xgettext`). With nvm installed, run `nvm use`
+from the repository root to select the pinned version.
 The isolated browser executor supports Linux, macOS, and WSL. Node.js and
 gettext are development tools; compiled frontend assets and translations are
 included for normal application use.
@@ -261,7 +263,7 @@ location is configured.
 `uv run python scripts/benchmark_reporting.py --samples 20 --output .local/test-results/reporting.json`
 measures 0, 1,000 and 10,000 synthetic sources in separate disposable processes.
 It never accepts an installation database or server. See the
-[measurement method and limits](docs/reviews/project-health-2026-10-16.md#reproducible-reporting-measurements)
+[measurement method and limits](docs/reporting-performance.md#measurement-method)
 before comparing results. Benchmark observations guide focused changes; they
 are not timing assertions in the test suite.
 
@@ -298,9 +300,10 @@ CI runs the same check. Keep old section links available when extracting a
 guide; do not silently drop a contract while changing its location.
 
 The [documentation index](docs/README.md) identifies each guide's owner. Keep
-current instructions in that guide and dated findings, test counts and benchmark
-evidence in [reviews](docs/reviews/README.md). Historical reviews must state their
-date and point to the current contract; retain their evidence and limitations.
+current instructions in that guide. Record validation scope and results in the
+pull request or CI artifacts; keep raw logs and internal analysis in ignored
+local outputs. Do not publish agent session reports, incident narratives, local
+installation observations or private account/configuration details.
 Do not copy the same detailed interaction protocol into several app guides:
 link to the shared frontend contract and describe only the app's domain behavior
 and deliberate exceptions. Keep `AGENTS.md` as the implementation checklist,

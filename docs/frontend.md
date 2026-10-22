@@ -22,8 +22,9 @@ provides the visual reference.
 | Banking, investment and planning screen compositions | [Workspaces](frontend/workspaces.md) |
 
 Setup and executable checks remain in [Contributing](../CONTRIBUTING.md).
-App guides own financial meaning and deliberate domain exceptions; historical
-measurements and acceptance evidence belong in [dated reviews](reviews/README.md).
+App guides own financial meaning and deliberate domain exceptions. Keep
+validation results with the exact revision's pull request or CI run, and local
+diagnostics in ignored output directories.
 Keep detailed interaction rules in their owning guide instead of copying them
 into app documentation or agent instructions.
 

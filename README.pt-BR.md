@@ -16,7 +16,7 @@ escuro. Seus registros ficam na sua instalação.
 
 <p>
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=flat&amp;label=CI&amp;labelColor=1A2E26&amp;color=176B52" alt="Status da integração contínua"></a>
-  <img src="https://img.shields.io/badge/version-1.0.0-B88A59?style=flat&amp;labelColor=1A2E26" alt="Versão 1.0.0">
+  <img src="https://img.shields.io/badge/version-1.0.1-B88A59?style=flat&amp;labelColor=1A2E26" alt="Versão 1.0.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-B88A59?style=flat&amp;labelColor=1A2E26" alt="Licença PolyForm Noncommercial"></a>
 </p>
 
@@ -29,7 +29,7 @@ escuro. Seus registros ficam na sua instalação.
 ## O que tem no app
 
 A tabela descreve o código atual do projeto. Os comandos Docker abaixo usam
-a release **v1.0.0**.
+a release **v1.0.1**.
 
 | Área | O que você pode fazer |
 |---|---|
@@ -57,13 +57,13 @@ shell POSIX (WSL no Windows). Não é necessário clonar o repositório nem inst
 Python ou Node.js no computador.
 Aguarde a conclusão do workflow Docker da release e a disponibilidade dos
 arquivos de instalação antes de instalar.
-Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.0/compose.yaml)
-e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.0/docker.env.example)
-da release **v1.0.0** para uma nova pasta de instalação. Abra um terminal
+Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.1/compose.yaml)
+e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.1/docker.env.example)
+da release **v1.0.1** para uma nova pasta de instalação. Abra um terminal
 nessa pasta e execute:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v1.0.0
+image=ghcr.io/henriquemayer/tuxedofinance:v1.0.1
 docker pull "$image"
 (
   umask 077

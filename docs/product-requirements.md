@@ -2,9 +2,8 @@
 
 **Status:** Approved baseline, local-finance evolution and gated assistant with reviewed local actions
 
-**Release version:** 0.11.0
-**Release decision:** The owner explicitly authorized committing the completed work, merging into `main` and publishing the Docker release on 2026-10-21. Exact-revision checks and distribution status are recorded in [release PR #36](https://github.com/HenriqueMayer/TuxedoFinance/pull/36); this authorization does not mark unperformed manual acceptance complete or reopen gated interfaces and deferred integrations.
-**Previous upgrade baseline:** 0.10.0
+**Release version:** See [published releases](https://github.com/HenriqueMayer/TuxedoFinance/releases).
+**Upgrade baselines:** See the [supported Docker upgrade path](docker.md#update).
 **Migration policy:** Preserve released installations through incremental migrations
 **Product:** Django personal finance tracker
 
@@ -40,13 +39,12 @@ Six supported local changes require separate owner/session-bound review
 confirmation; there is no real payment, bank transfer or unattended execution.
 The gated catalogue and streaming path is implemented for the linked ChatGPT
 account; model availability depends on that account and explicit model choice.
-The [native sign-in](reviews/assistant-native-sign-in-2026-10-19.md),
-[streaming](reviews/assistant-streaming-2026-10-19.md) and
-[tool-response](reviews/assistant-tool-response-2026-10-20.md) reviews retain
-their dated, bounded evidence. They do not establish general model access,
-financial-answer quality, Docker live integration, refresh/revocation or
-deployment eligibility, and do not authorize further provider calls.
-The broader personal Open Finance study remains research. The
+Account linking and an implemented transport do not establish general model
+access, financial-answer quality, deployment eligibility or live refresh and
+revocation. Validate the intended account and installation before relying on
+the integration.
+The [Open Finance provider and reconciliation requirements](open-finance-research.md)
+remain research. The
 [Inter bill pilot](open-finance-pilot.md) provides an explicit operator-only read
 command with daily private observations; it does not synchronize the ledger or
 enable a product connection screen. Real pilot setup remains paused in the
@@ -159,8 +157,8 @@ equal heights or change financial calculations, fields or 44px actions.
   changes: transaction creation/categorization/editing/deletion, goal creation and
   category-budget creation. No model-side confirmation or unattended execution.
 - Default-disabled, owner-scoped ChatGPT account settings, OAuth lifecycle and
-  encrypted private vault preparation, with isolated synthetic coverage and
-  owner-approved native authorization validation within its dated evidence limits.
+  encrypted private vault preparation. Validate authorization separately for
+  the intended account and installation.
 - A public-source personal Open Finance feasibility study for Nubank, Banco Inter
   and Mercado Pago, covering 6–8-hour collection and source-preserving reconciliation.
 - An operator-only free personal Meu Pluggy Inter bill pilot: explicit offline/live
@@ -403,11 +401,9 @@ These retained service rules do not reopen the paused operation interface.
   vault and requires the original session's final confirmation. Default-disabled
   real authorization and model use remain separate gates. ChatGPT is the only
   connected provider; no paid API-key or automatic provider fallback is exposed.
-  The [native observation](reviews/assistant-native-sign-in-2026-10-19.md)
-  covered an owner-approved account link using process-only opt-in, with `.env`
-  unchanged and no model request or financial export. It does not establish
-  other deployments, model access/limits, streaming or real refresh/revocation.
-- The [Open Finance study](reviews/open-finance-personal-study-2026-10-18.md)
+  Account linking does not establish model availability, usage limits or
+  deployment eligibility. Validate live behavior in the intended installation.
+- The [Open Finance research](open-finance-research.md)
   excludes payment initiation and does not reopen paused statement operations.
 - The [bill pilot](open-finance-pilot.md) keeps credentials in one command's memory
   and observations in private operator files. Proxy provenance remains human-
@@ -582,9 +578,9 @@ financial history, not an immutable bank statement or return percentage.
 Checked items record retained implementation, not a fresh test run, owner
 acceptance or a claim that every feature shipped in `0.10.0`. Paused or gated
 items below stay unavailable through their ordinary product workflows unless
-their distinct review/authorization conditions are met. Merge and Docker release
-were explicitly authorized on 2026-10-21. Exact-checkout validation and the manual
-walkthrough below retain their own evidence and completion status.
+their distinct review/authorization conditions are met. Exact-checkout release
+checks and the manual walkthrough below require their own evidence and
+completion status.
 
 - [x] One bank can hold multiple accounts with independent currencies/opening balances.
 - [x] Account balance exactly reconciles to its applicable opening and effective movements.
@@ -642,9 +638,8 @@ walkthrough below retain their own evidence and completion status.
       exposes the four Accounts, Investments and Plan sections. Position emoji
       and shared compact summaries are presentation features, not new
       financial metrics or financial writes.
-- [ ] Owner completes the exact-checkout manual acceptance walkthrough on
-      disposable data. The separate merge and Docker release decision was
-      authorized on 2026-10-21; this item records only the walkthrough.
+- [ ] Complete the exact-checkout manual acceptance walkthrough on disposable
+      data and record remaining issues separately from automated release checks.
 
 ## 13. Release validation
 

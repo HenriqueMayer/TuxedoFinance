@@ -48,16 +48,11 @@ signing key across container recreation.
 
 ## Assistant data and integrations
 
-The [assistant](apps/assistant.md) includes OpenAI account-authorization
-preparation, disabled by default, with isolated synthetic coverage and an
-[owner-approved native sign-in observation](reviews/assistant-native-sign-in-2026-10-19.md).
-That server enabled authorization only through its process environment; the
-installation `.env` and repository default stayed unchanged. Keep the flag off
-unless the owner approves live authorization for the intended installation.
-The observed original-session confirmation linked an account while preserving
-financial records. It did not list models, send inference or export financial
-data. Docker real OAuth, program eligibility, model access/limits, streaming and
-real refresh/revocation were not established by that authorization observation.
+The [assistant](apps/assistant.md) includes OpenAI account authorization,
+disabled by default. Enable it deliberately for the intended installation and
+complete the native account/session confirmation before using a connection.
+Account linking does not establish model availability, deployment eligibility,
+usage limits or financial-answer quality.
 The separate `ASSISTANT_OPENAI_INFERENCE_ENABLED=False` default keeps the
 provider/composer unavailable after account linking. With either gate off, no
 model catalogue, inference or inference-triggered credential refresh is sent.
@@ -68,9 +63,7 @@ The initial request contains minimized page metadata and bounded recent history.
 Owned read/calculation tools retrieve the relevant saved evidence on demand;
 the visible page does not restrict which owned workspace can be consulted.
 The optional initial-page snapshot parameter is separate from this tool access.
-The owner-approved native validation used process-only opt-in; `.env` and both
-repository defaults remained unchanged. The public model
-and response endpoints use ChatGPT-plan OAuth exclusively. The adapter never
+The public model and response endpoints use ChatGPT-plan OAuth exclusively. The adapter never
 reads `OPENAI_API_KEY`, exposes no separate API organization/key/billing
 configuration and never selects paid fallback. Bounded, mapped diagnostics are documented in the
 [provider contract](apps/assistant.md#provider-and-action-boundary); keep raw
@@ -123,7 +116,7 @@ provider webhooks cannot reach an ordinary loopback-only service by themselves.
 Do not expose the installation, configure a tunnel, reuse another application's
 tokens or copy financial data to a provider as a workaround. Follow the
 [planned-integration gates](roadmap.md) and
-[dated Open Finance study](reviews/open-finance-personal-study-2026-10-18.md).
+[Open Finance research](open-finance-research.md).
 
 ## Read-only Open Finance pilot
 

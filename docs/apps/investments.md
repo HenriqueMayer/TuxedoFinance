@@ -239,8 +239,9 @@ operation history and update actions. Institution markers use the saved bank
 color without conveying financial meaning. Product-level New operation links preselect only an owned,
 explicitly requested product. Asset and operation type still wait for selection.
 
-For valuation limitations and a dated competitor comparison, see the
-[2026-10-09 investment review](../reviews/investments-and-pierre-2026-10-09.md).
+Valuation limits and missing-evidence behavior belong to the position, FX and
+performance contracts in this guide; a comparison with another product does not
+change these accounting rules.
 
 ## Charts
 

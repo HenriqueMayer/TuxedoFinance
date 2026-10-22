@@ -1,28 +1,20 @@
 # `assistant`
 
 **Current status:** Local conversations, OpenAI authorization and gated model
-catalogue/streaming implementation under Unreleased after `0.10.0`.
-Authorization and inference are independently disabled by default.
-Owner-approved native sign-in and local account confirmation were
-observed; see the [bounded native validation](../reviews/assistant-native-sign-in-2026-10-19.md).
-That observation did not establish live model availability or streaming. With
-either gate off, the provider/composer remains unavailable and makes no model
-catalogue or inference request. When both are explicitly enabled, an eligible
-selected account can load its models and submit a chosen-model request. No
-bank payment or paid API-key fallback is implemented. Local financial proposals
-have a separate explicit user confirmation path described below.
-
-A later [bounded streaming validation](../reviews/assistant-streaming-2026-10-19.md)
-completed a short owner-authorized synthetic request through the ChatGPT-plan
-connection. It does not establish financial-answer quality, every model's
-availability or live Docker inference.
+catalogue/streaming are implemented. Authorization and inference are
+independently disabled by default. With either gate off, the provider/composer
+remains unavailable and makes no model catalogue or inference request. With
+both enabled, an eligible selected account can load its models and submit a
+chosen-model request. Account linking alone does not establish model access,
+financial-answer quality or availability in another deployment.
 
 The app owns private conversation storage, user-owned connection metadata, an
-encrypted local credential vault, a provider-unavailable state, structured
-financial context, targeted read/calculation tools and confirmed local actions.
-The existing Django account remains the authorization boundary. The
-[Open Finance study](../reviews/open-finance-personal-study-2026-10-18.md)
-is separate research, not a data source for this assistant.
+encrypted local credential vault, structured financial context, targeted
+read/calculation tools and confirmed local actions. The existing Django account
+remains the authorization boundary. No bank payment or paid API-key fallback is
+implemented. Local financial proposals have a separate explicit user
+confirmation path described below. [Open Finance research](../open-finance-research.md)
+is separate from the assistant's available tools.
 
 ## Routes and local storage
 
@@ -448,10 +440,8 @@ not initialize/decrypt the vault or contact the provider while either gate is of
 The separately gated composer catalogue behavior is defined above. Setting the
 authorization flag alone does not start authorization; the owner must submit the native Continue with ChatGPT
 POST, which opens authorization in a new tab while preserving the original
-settings tab for final confirmation. The
-[native validation](../reviews/assistant-native-sign-in-2026-10-19.md) records the
-owner-approved account link and preserved installation boundary. Account linking
-does not turn on the separate inference gate or prove a listed model can respond.
+settings tab for final confirmation. Account linking does not turn on the separate inference gate or prove a listed
+model can respond.
 
 `ASSISTANT_OPENAI_CALLBACK_URL` defaults to
 `http://127.0.0.1:8000/assistant/connections/callback/`. The prepared protocol
@@ -558,13 +548,10 @@ identity scopes from plan permission. The
 documents local/open-source clients and user/workspace-bound registrations;
 paid or remotely hosted deployment has a separate access process. This
 repository's PolyForm Noncommercial license is not proof of eligibility under
-that program. The observed native authorization is bounded evidence for that
-owner and installation, not a license/program eligibility guarantee. Later
-[bounded streaming](../reviews/assistant-streaming-2026-10-19.md) and
-[tool-response validation](../reviews/assistant-tool-response-2026-10-20.md)
-record separate synthetic successes. Real Docker OAuth/inference, other
-accounts/deployments, general model availability, limits/quotas and real token
-refresh/revocation are not established by those observations.
+that program. Account linking is not a license or program eligibility
+guarantee. Validate the intended account, model, deployment, token refresh,
+revocation and usage limits before relying on the integration. Synthetic tests
+do not establish live Docker OAuth/inference or financial-answer quality.
 
 [ChatGPT's user guide](https://learn.chatgpt.com/docs/sign-in-with-chatgpt)
 describes eligible Plus/Pro users, shared existing usage limits and access
@@ -578,9 +565,9 @@ The current [preview contract](https://developers.openai.com/siwc/token-sharing-
 requires HTTP Responses requests with `store: false` and `stream: true`; HTTP
 continuation does not provide persistent server conversation storage. A successful
 synthetic request does not establish future quota, financial-answer quality or
-instruction compliance. Streaming remains behind its own gate; validation
-evidence belongs in dated reviews and cannot guarantee another installation's
-live account access.
+instruction compliance. Streaming remains behind its own gate. Validate live
+access for the intended account and installation; one successful request does
+not establish another installation's access.
 
 ## Later automation
 
@@ -593,5 +580,6 @@ authorize later transaction creation/categorization; otherwise a proposal needs
 the applicable explicit review. No such rule or execution runs in this foundation.
 
 For source-checkout validation, use the isolated checks in
-[Contributing](../../CONTRIBUTING.md). Current results and visual evidence belong
-in the implementation's dated review, not in this feature contract.
+[Contributing](../../CONTRIBUTING.md). Record current results with the exact
+revision's pull request or CI run. Keep local diagnostics outside versioned
+documentation.

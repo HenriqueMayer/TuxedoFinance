@@ -10,9 +10,9 @@ This app retains explicitly reviewed local bank-statement services. It stores
 bounded evidence and decisions before posting through the existing banking and
 transaction services. Its paused statement workflow does not connect to a bank,
 broker, Open Finance provider or external processing service. This workflow is
-implemented under Unreleased after `0.10.0`.
+included in the current source.
 
-The separate [personal Open Finance study](../reviews/open-finance-personal-study-2026-10-18.md)
+The separate [Open Finance research](../open-finance-research.md)
 examines future provider eligibility, resource cadence and reconciliation.
 It does not add a connector or reopen this workflow. Assistant context/proposal
 contracts likewise cannot confirm imports or bypass the gate.

@@ -16,7 +16,7 @@ themes. Your records stay on your installation.
 
 <p>
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=flat&amp;label=CI&amp;labelColor=1A2E26&amp;color=176B52" alt="CI status"></a>
-  <img src="https://img.shields.io/badge/version-1.0.0-B88A59?style=flat&amp;labelColor=1A2E26" alt="Version 1.0.0">
+  <img src="https://img.shields.io/badge/version-1.0.1-B88A59?style=flat&amp;labelColor=1A2E26" alt="Version 1.0.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-B88A59?style=flat&amp;labelColor=1A2E26" alt="PolyForm Noncommercial license"></a>
 </p>
 
@@ -29,7 +29,7 @@ themes. Your records stay on your installation.
 ## What's in the app
 
 This table describes the current source checkout. The Docker quick start below
-targets the **v1.0.0** release.
+targets the **v1.0.1** release.
 
 | Workspace | What you can do |
 |---|---|
@@ -56,13 +56,13 @@ Requires Docker Engine 28+ (or a current Docker Desktop), Compose v2+ and a
 POSIX shell (WSL on Windows). No clone, host Python or Node.js is needed.
 Wait for the release's Docker workflow to finish and its installation files to
 appear before installing.
-Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.0/compose.yaml)
-and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.0/docker.env.example)
-from the **v1.0.0** release into a new installation directory. Open a terminal
+Download [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.1/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.1/docker.env.example)
+from the **v1.0.1** release into a new installation directory. Open a terminal
 there and run:
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v1.0.0
+image=ghcr.io/henriquemayer/tuxedofinance:v1.0.1
 docker pull "$image"
 (
   umask 077

@@ -7,13 +7,21 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-22
+
 ### Changed
 
+- Pin frontend tooling to the patched Node.js 22.23.4 baseline through `.nvmrc` and share it across application and Docker CI validation.
+- Include the v1.0.0 stable image in Docker upgrade, backup and restore validation on both native architectures.
 - Reimagine the bilingual preview as an editorial product presentation with sharp HTML/SVG workspace examples, searchable fictional transactions and three guided assistant conversations, including a separate illustrative confirmation step.
 
 ### Fixed
 
 - Preserve the reader's page position when switching preview workspaces or reopening the selected workspace, while retaining keyboard focus, native fallback and URL history.
+
+### Removed
+
+- Remove internal validation reports and environment/session observations from public documentation; retain current technical guides, benchmark methodology and public Open Finance research.
 
 ## [1.0.0] - 2026-10-22
 
@@ -445,7 +453,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.11.0...v1.0.0
 [0.11.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.1...v0.10.0
