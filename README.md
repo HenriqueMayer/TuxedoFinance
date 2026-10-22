@@ -118,4 +118,4 @@ The [documentation index](docs/README.md) owns the technical and financial detai
 
 <a id="-license"></a>
 
-Copyright © 2026 Henrique Mayer. [PolyForm Noncommercial 1.0.1](LICENSE).
+Copyright © 2026 Henrique Mayer. [PolyForm Noncommercial 1.0.0](LICENSE).

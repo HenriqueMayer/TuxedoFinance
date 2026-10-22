@@ -121,4 +121,4 @@ em inglês.
 
 <a id="-licença"></a>
 
-Copyright © 2026 Henrique Mayer. [PolyForm Noncommercial 1.0.1](LICENSE).
+Copyright © 2026 Henrique Mayer. [PolyForm Noncommercial 1.0.0](LICENSE).
