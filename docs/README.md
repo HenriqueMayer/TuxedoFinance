@@ -16,7 +16,7 @@ releases, persistent volumes and isolated restore rehearsals.
 | [Contributing](../CONTRIBUTING.md) | Canonical developer setup, checks, translations, browser isolation, and documentation conventions. |
 | [Interface preview](https://henriquemayer.github.io/TuxedoFinance/) | Bilingual static tour of the application using synthetic financial data. |
 | [demo-data.md](demo-data.md) | Explicit creation of separate English and Portuguese demo accounts, date options and a presentation walkthrough. |
-| [Preview maintenance](preview.md) | Capture isolation, synthetic data generation, static tests and publication layout. |
+| [Preview maintenance](preview.md) | Interactive product presentation, fictional workspace/chat examples, capture isolation and static verification. |
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and release compatibility. |
 | [branch-testing.md](branch-testing.md) | Owner walkthrough using an isolated disposable copy; computer/phone acceptance and native fallbacks. |
 | [roadmap.md](roadmap.md) | Paused interfaces and future studies; no implied availability or scheduled release. |

@@ -7,6 +7,14 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Reimagine the bilingual preview as an editorial product presentation with sharp HTML/SVG workspace examples, searchable fictional transactions and three guided assistant conversations, including a separate illustrative confirmation step.
+
+### Fixed
+
+- Preserve the reader's page position when switching preview workspaces or reopening the selected workspace, while retaining keyboard focus, native fallback and URL history.
+
 ## [1.0.0] - 2026-10-22
 
 ### Fixed
