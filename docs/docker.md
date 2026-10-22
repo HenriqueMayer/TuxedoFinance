@@ -33,15 +33,15 @@ docker compose --env-file .env.docker -f compose.yaml -f compose.build.yaml up -
 
 ## Install a released image without cloning
 
-For the current published **v0.10.0**, download
-[compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/compose.yaml)
-and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v0.10.0/docker.env.example)
-from the [release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v0.10.0)
+For **v1.0.0**, wait for its Docker release workflow to finish, then download
+[compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.0/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.0/docker.env.example)
+from the [release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v1.0.0)
 into a new installation directory. Open a terminal there, select and pull the
 image, then follow [one-time configuration and startup](#one-time-configuration-and-startup):
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v0.10.0
+image=ghcr.io/henriquemayer/tuxedofinance:v1.0.0
 docker pull "$image"
 ```
 
@@ -104,9 +104,9 @@ version; follow the backup and restore procedure before changing image versions.
 
 ## Assistant authorization preparation
 
-The Unreleased source checkout prepares OpenAI account authorization; published
-`v0.10.0` does not contain this change. Real sign-in is disabled by default and
-inference has its own default-disabled flag. Leave both off unless intentionally
+The v1.0.0 source includes optional OpenAI account authorization and streaming.
+Real sign-in is disabled by default and inference has its own default-disabled
+flag. Leave both off unless intentionally
 connecting the installation. Opening settings
 does not initialize private storage or contact OpenAI, and linking an account
 does not enable the separate inference gate. With either gate off, catalogue
