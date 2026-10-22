@@ -9,6 +9,7 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Pin frontend tooling to the patched Node.js 22.23.4 baseline through `.nvmrc` and share it across application and Docker CI validation.
 - Reimagine the bilingual preview as an editorial product presentation with sharp HTML/SVG workspace examples, searchable fictional transactions and three guided assistant conversations, including a separate illustrative confirmation step.
 
 ### Fixed

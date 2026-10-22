@@ -11,6 +11,7 @@ and [interface map](../interface-map.md) for present behavior.
 
 | Record | Scope and status |
 |---|---|
+| [Node.js tooling baseline — 2026-10-22](node-toolchain-2026-10-22.md) | Shared patched Node.js 22.23.4 pin for application/Docker CI, clean frontend installation and isolated local compatibility checks; no publication. |
 | [Portfolio product presentation — 2026-10-22](preview-portfolio-2026-10-22.md) | Editorial introduction, native HTML/SVG workspace examples, scripted assistant demonstrations and isolated bilingual/theme/keyboard verification; approved for GitHub Pages publication. |
 | [Release interception regression — 2026-10-22](release-interception-2026-10-22.md) | Reproduced redirected-GET stall, persistent test interception, preserved assistant invariants and focused 1.0.0 release evidence with explicit publication limits. |
 | [Release browser races — 2026-10-21](release-browser-races-2026-10-21.md) | Controlled delayed-history and assistant-confirmation regressions, native document-readiness correction and final-release validation boundaries. |
