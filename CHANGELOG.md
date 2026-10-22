@@ -7,6 +7,16 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-22
+
+### Fixed
+
+- Keep Playwright network interception active through redirected assistant deletion responses in controlled read/write regression tests. Preserve stale-read rejection, duplicate-write prevention, confirmed deletion and private financial draft assertions.
+
+### Changed
+
+- Prepare the 1.0.0 release line with matching versioned Docker installation guidance. Require successful application/tag checks, both image architectures, published digests and installation assets before announcing Docker availability.
+
 ## [0.11.0] - 2026-10-21
 
 ### Assistant consultations and exports
@@ -427,7 +437,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.11.0...v1.0.0
 [0.11.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.0...v0.9.1

@@ -24,8 +24,10 @@ Release tags use the same version prefixed with `v`, for example `v0.3.0`.
 
 ## Preparing a release
 
-1. Choose the next version from the changes accumulated in `main` and prepare
-   the release changes on a branch based on the current `main`.
+1. Choose the next version from the changes accumulated in `main`. Confirm that
+   its Git tag, GitHub Release and GHCR version/architecture tags do not already
+   exist. Never replace a published version. Prepare the release changes on a
+   branch based on the current `main`.
 2. Update `[project].version` in `pyproject.toml`.
 3. Run `uv lock` so the editable project entry in `uv.lock` matches.
 4. Move the relevant entries from `Unreleased` to a dated version section in
@@ -35,7 +37,8 @@ Release tags use the same version prefixed with `v`, for example `v0.3.0`.
    and static-preview tests. Verify equivalent content and version badges in
    both READMEs before preparing the release.
 
-6. Open the release pull request to `main` and wait for CI.
+6. Open the release pull request to `main` and wait for the application and both
+   Docker architecture checks. Merge through the repository's branch protections.
 7. After the release commit is on `main`, create and push the annotated tag:
 
    ```bash
@@ -46,7 +49,13 @@ Release tags use the same version prefixed with `v`, for example `v0.3.0`.
    git push origin "v$version"
    ```
 
-8. Create the GitHub release from that tag using the matching changelog section.
+8. Wait for application CI on the integrated commit and tag, and both Docker
+   architecture checks on `main`, to pass. Then publish a stable GitHub Release
+   from that tag using the matching changelog section.
+9. Wait for both Docker architecture checks and `Publish tested stable release`
+   to succeed. Verify the version manifest, amd64/arm64 digests, source revision
+   labels, anonymous pulls and matching installation assets before announcing
+   Docker availability. A GitHub Release alone does not establish image delivery.
 
 Feature branches target `main` directly. They normally add notes under
 `Unreleased` but do not create tags themselves. There is no intermediate
@@ -86,7 +95,7 @@ then assembles the version manifest and attaches `compose.yaml` and
 revision. Pull requests validate images without publishing. Prereleases are
 validated but not published by this workflow.
 
-For v0.11.0, upgrade rehearsals start from v0.3.0, v0.4.0, v0.9.0, v0.9.1 and
+For v1.0.0, upgrade rehearsals start from v0.3.0, v0.4.0, v0.9.0, v0.9.1 and
 v0.10.0. They verify
 financial records, additive migration defaults, volume persistence, backups and
 restoration before publication. Fixtures include account- and card-funded reward

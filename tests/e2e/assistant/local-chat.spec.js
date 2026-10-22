@@ -52,19 +52,27 @@ for (const [width, theme, language] of [[1440, 'light', 'en'], [390, 'dark', 'pt
         page.on('request', request => {
             if (request.method() === 'POST' && new URL(request.url()).pathname === `/assistant/${id}/delete/`) deletePosts++;
         });
+        // Keep interception enabled until the redirect and stale read finish.
+        // Expiring the last times: 1 handler can race Chromium Fetch.disable
+        // with the redirected GET (microsoft/playwright#41802).
+        let readIntercepted = false, writeIntercepted = false;
         await page.route(url => url.pathname === `/assistant/${id}/`, async route => {
+            if (readIntercepted) return route.continue();
+            readIntercepted = true;
             const response = await route.fetch();
             readStarted();
             await holdRead;
             try { await route.fulfill({response}); } catch (_) { /* The superseded GET is aborted. */ }
             finally { readFinished(); }
-        }, {times: 1});
+        });
         await page.route(url => url.pathname === `/assistant/${id}/delete/`, async route => {
+            if (writeIntercepted) return route.continue();
+            writeIntercepted = true;
             const response = await route.fetch({maxRedirects: 0});
             writeStarted();
             await holdWrite;
             await route.fulfill({response});
-        }, {times: 1});
+        });
         try {
             await link.press('Enter');
             await readReady;
@@ -87,7 +95,10 @@ for (const [width, theme, language] of [[1440, 'light', 'en'], [390, 'dark', 'pt
             await panel.getByRole('button', {name: c.close, exact: true}).press('Enter');
             await expect(page.locator('#id_title')).toHaveValue(draft);
             await expect(page.locator('#departure-confirm')).toBeHidden();
-        } finally { releaseRead(); releaseWrite(); }
+        } finally {
+            releaseRead(); releaseWrite();
+            await page.unrouteAll({behavior: 'wait'});
+        }
     });
 }
 
