@@ -1,214 +1,606 @@
 <!doctype html>
+<!-- SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tuxedo Finance — Interface preview</title>
-    <meta name="description" content="Explore Home, Transactions, Accounts, Investments, Plan and Analytics in Tuxedo Finance.">
-    <meta name="theme-color" content="#FAF8F3">
-    <meta property="og:title" content="Tuxedo Finance — Interface preview">
-    <meta property="og:description" content="Income, expenses, accounts, investments, planning and analysis in a local application.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://henriquemayer.github.io/TuxedoFinance/">
-    <meta property="og:image" content="https://henriquemayer.github.io/TuxedoFinance/images/en/dashboard-light.png">
-    <link rel="canonical" href="https://henriquemayer.github.io/TuxedoFinance/">
-    <link rel="alternate" hreflang="en" href="https://henriquemayer.github.io/TuxedoFinance/">
-    <link rel="alternate" hreflang="pt-BR" href="https://henriquemayer.github.io/TuxedoFinance/pt-br/">
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <script>
-        (function () {
-            var stored;
-            try { stored = localStorage.getItem('tuxedo-preview-theme'); } catch (error) {}
-            var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-            document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-        })();
-    </script>
-    <link rel="preload" href="assets/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="assets/preview.css?v=8">
-    <script src="assets/preview.js" defer></script>
-</head>
-<body>
-    <a class="skip-link" href="#main">Skip to the workspace</a>
-    <header class="site-header">
-        <div class="header-inner">
-            <a class="wordmark" href="#dashboard" aria-label="Tuxedo Finance">
-                <svg class="brand-bowtie" viewBox="0 0 40 24" width="32" height="24" aria-hidden="true" focusable="false"><path d="M2 3 17 10V14L2 21ZM38 3 23 10V14L38 21Z" fill="currentColor"/><rect x="17" y="8" width="6" height="8" rx="2" fill="currentColor"/></svg>
-                <span>Tuxedo Finance</span>
-            </a>
-            <span class="header-caption">Interface preview</span>
-            <nav class="header-external" aria-label="Project links">
-                <a class="header-link" href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">Repository <span aria-hidden="true">↗</span></a>
-                <a class="header-link header-run" href="https://github.com/HenriqueMayer/TuxedoFinance#quick-start" target="_blank" rel="noopener noreferrer">Run locally <span aria-hidden="true">↗</span></a>
-            </nav>
-            <div class="header-actions">
-                <div class="language-switch" aria-label="Language"><a href="index.html" lang="en" aria-current="page">EN</a><a href="pt-br/index.html" lang="pt-BR" hreflang="pt-BR">PT</a></div>
-                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme" aria-pressed="false"><span class="sun" aria-hidden="true">☀</span><span class="moon" aria-hidden="true">◐</span></button>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Tuxedo Finance — A clearer perspective</title>
+        <meta name="description" content="Meet Tuxedo Finance: local personal finance, six connected workspaces and a financial assistant. Explore an interactive example.">
+        <meta name="theme-color" content="#FAF8F3">
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Tuxedo Finance">
+        <meta property="og:description" content="Your finances. A clearer perspective.">
+        <meta property="og:image" content="https://henriquemayer.github.io/TuxedoFinance/images/en/dashboard-light.png">
+        <link rel="canonical" href="https://henriquemayer.github.io/TuxedoFinance/">
+        <link rel="alternate" hreflang="en" href="https://henriquemayer.github.io/TuxedoFinance/">
+        <link rel="alternate" hreflang="pt-BR" href="https://henriquemayer.github.io/TuxedoFinance/pt-br/">
+        <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+        <script>(function(){var saved;try{saved=localStorage.getItem('tuxedo-preview-theme');}catch(e){}document.documentElement.dataset.theme=(saved?saved==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';})();</script>
+        <link rel="preload" href="assets/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin>
+        <link rel="stylesheet" href="assets/preview.css?v=9">
+        <script src="assets/preview.js" defer></script>
+    </head>
+    <body>
+        <a class="skip-link" href="#main">Skip to content</a>
+        <header class="site-header">
+            <div class="header-inner">
+                <a class="wordmark" href="#top" aria-label="Tuxedo Finance"><svg class="brand-bowtie" viewBox="0 0 40 24" width="30" height="20" aria-hidden="true"><path d="M2 3 17 10V14L2 21ZM38 3 23 10V14L38 21Z" fill="currentColor"/><rect x="17" y="8" width="6" height="8" rx="2" fill="currentColor"/></svg><span>Tuxedo Finance</span></a>
+                <nav class="page-nav" aria-label="Explore the project">
+                    <a href="#demo">The application</a>
+                    <a href="#assistant">The assistant</a>
+                    <a href="#how-it-works">How it works</a>
+                </nav>
+                <div class="header-actions">
+                    <div class="language-switch" aria-label="Language">
+                        <a href="index.html" lang="en" aria-current="page">EN</a>
+                        <a href="pt-br/index.html" lang="pt-BR" hreflang="pt-BR">PT</a>
+                    </div>
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme" aria-pressed="false"><svg class="sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"/></svg><span class="moon" aria-hidden="true">◐</span></button>
+                    <a class="repository-link" href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+                </div>
             </div>
-        </div>
-    </header>
-    <div class="workspace-shell">
-        <aside class="workspace-sidebar">
-            <nav class="tour-nav" aria-label="Workspaces" data-primary-navigation>
-                <a href="#dashboard" data-workspace-link="dashboard" aria-current="page"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg><span>Home</span></a>
-                <a href="#transactions" data-workspace-link="transactions" aria-label="Transactions"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></svg><span class="nav-label-full">Transactions</span><span class="nav-label-short" aria-hidden="true">Entries</span></a>
-                <a href="#banking" data-workspace-link="banking"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 9-5 9 5H3Zm2 4v7m7-7v7m7-7v7M2 22h20"/></svg><span>Accounts</span></a>
-                <a href="#investments" data-workspace-link="investments" aria-label="Investments"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17v-5m7 5V7m7 10V3M2 22h20"/></svg><span class="nav-label-full">Investments</span><span class="nav-label-short" aria-hidden="true">Invest</span></a>
-                <a href="#planning" data-workspace-link="planning"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6m10-6v6M3 11h18m-13 6 3 3 6-6"/></svg><span>Plan</span></a>
-                <a href="#analytics" data-workspace-link="analytics"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 15l4-5 4 3 5-7"/></svg><span>Analytics</span></a>
-            </nav>
-        </aside>
-        <main class="main" id="main" tabindex="-1">
-            <section class="tour-section" id="dashboard" data-workspace-view aria-labelledby="dashboard-title">
-                <span id="top"></span>
-                <div class="section-heading" id="dashboard-preview">
-                    <div><h1 id="dashboard-title">Home</h1></div>
-                    <a class="button button-primary" href="#new-entry" data-workspace-link="new-entry">New entry <span aria-hidden="true">＋</span></a>
+        </header>
+        <main id="main" tabindex="-1">
+            <section class="hero container" id="top" aria-labelledby="hero-title">
+                <div class="hero-copy">
+                    <p class="eyebrow"><span></span>PERSONAL FINANCE. ON YOUR TERMS.</p>
+                    <h1 id="hero-title">Your finances.<br>A clearer<br><em>perspective.</em></h1>
+                    <p class="hero-description">From everyday entries to your next goal. Bring accounts, investments and planning together in a local application — with Tuxedo by your side.</p>
+                    <div class="hero-actions">
+                        <a class="button button-primary" href="#demo">Explore the application <span aria-hidden="true">↗</span></a>
+                        <a class="text-link" href="#assistant">Meet your assistant <span aria-hidden="true">→</span></a>
+                    </div>
+                    <p class="hero-footnote">Your installation. Your records. Your decisions.</p>
                 </div>
-                <p class="section-copy"><a href="#analytics" data-workspace-link="analytics">View analyses <span aria-hidden="true">↗</span></a></p>
-                <div class="screenshot-grid">
-                    <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Home · Light theme</span><a href="images/en/dashboard-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/dashboard-light.png" data-lightbox><img src="images/en/dashboard-light.png" width="1440" height="1000" alt="Tuxedo Finance Home in the light theme with monthly income, expenses, investment activity and available funds" fetchpriority="high" decoding="async"></a>
-                    </figure>
-                    <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Home · Dark theme</span><a href="images/en/dashboard-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/dashboard-dark.png" data-lightbox><img src="images/en/dashboard-dark.png" width="1440" height="1000" alt="Tuxedo Finance Home showing the same synthetic financial summary in the dark theme" loading="lazy" decoding="async"></a>
-                    </figure>
+                <div class="hero-art">
+                    <svg class="ledger-bowtie" viewBox="0 0 600 440" aria-hidden="true"><defs><clipPath id="left-wing"><path d="M37 60Q22 47 24 76V365Q24 392 47 378L259 277V168Z"/></clipPath><clipPath id="right-wing"><path d="M532 60Q554 48 553 76V365Q553 392 530 378L318 277V168Z"/></clipPath></defs><g transform="rotate(-9 290 220)"><path fill="#1A2E26" d="M37 60Q22 47 24 76V365Q24 392 47 378L259 277V168Z"/><g clip-path="url(#left-wing)" fill="none" stroke="#B88A59" opacity=".65"><path d="M5 132H275M5 160H275M5 188H275M5 216H275M5 244H275M5 272H275M5 300H275M5 328H275M82 0V440M194 0V440"/></g><path fill="#B88A59" d="M532 60Q554 48 553 76V365Q553 392 530 378L318 277V168Z"/><g clip-path="url(#right-wing)" fill="none" stroke="#1A2E26" stroke-width="1.2" opacity=".6"><ellipse cx="530" cy="218" rx="188" ry="202"/><ellipse cx="530" cy="218" rx="155" ry="169"/><ellipse cx="530" cy="218" rx="122" ry="136"/><ellipse cx="530" cy="218" rx="89" ry="103"/><ellipse cx="530" cy="218" rx="56" ry="70"/></g><rect x="264" y="171" width="48" height="104" rx="18" fill="#B88A59"/><path d="M288 192V254" stroke="#1A2E26" stroke-width="1.5"/></g></svg>
+                    <span class="art-coordinate art-coordinate-top">TUXEDO / 01</span>
+                    <span class="art-coordinate art-coordinate-bottom">A LITTLE ORDER. A LOT MORE CLARITY.</span>
+                    <div class="hero-chat">
+                        <div class="hero-chat-heading">
+                            <img src="assets/tuxedo-mark.png" width="44" height="44" alt="">
+                            <div><strong>Tuxedo</strong><span>Your financial assistant</span></div>
+                            <span aria-hidden="true">↗</span>
+                        </div>
+                        <p>Understand your month.<br>Plan your next step.</p>
+                        <div class="mini-chat-question">Where can I spend less?<span aria-hidden="true">↑</span></div>
+                        <span class="example-label">Illustrative conversation</span>
+                    </div>
                 </div>
             </section>
-            <section class="tour-section" id="analytics" data-workspace-view aria-labelledby="analytics-title">
-                <span id="reports"></span>
-                <nav class="workspace-tabs" aria-label="Analytics">
-                    <a href="#analytics" data-workspace-link="analytics" aria-current="page">Finances</a>
-                    <a href="#analytics-investments" data-workspace-link="analytics-investments">Investments</a>
-                </nav>
-                <div class="section-heading">
-                    <div><h2 id="analytics-title">Analytics</h2></div>
-                    <p class="section-copy">Explore balance history, cash flow and expenses by period, category and payment method.</p>
+            <div class="principles container">
+                <p><span aria-hidden="true">⌂</span>Local by design</p>
+                <p><span aria-hidden="true">◈</span>Six connected workspaces</p>
+                <p><span aria-hidden="true">◎</span>An assistant with context</p>
+                <p><span aria-hidden="true">◐</span>Two languages. Two themes.</p>
+            </div>
+            <section class="product-section container" id="demo" aria-labelledby="demo-title">
+                <div class="section-intro">
+                    <div>
+                        <p class="eyebrow">01 / THE APPLICATION</p>
+                        <h2 id="demo-title">From the everyday.<br>To the bigger picture.</h2>
+                    </div>
+                    <p>Explore the workspaces. Follow the numbers. See how each part connects.</p>
                 </div>
-                <div class="screenshot-grid">
-                    <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Analytics · Monthly analysis and category expenses · Light theme</span><a href="images/en/reports-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/reports-light.png" data-lightbox><img src="images/en/reports-light.png" width="1440" height="1000" alt="Tuxedo Finance financial analysis page with monthly category expenses and a six-month outlook based on synthetic data — light theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                    <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Analytics · Monthly analysis and category expenses · Dark theme</span><a href="images/en/reports-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/reports-dark.png" data-lightbox><img src="images/en/reports-dark.png" width="1440" height="1000" alt="Tuxedo Finance financial analysis page with monthly category expenses and a six-month outlook based on synthetic data — dark theme" loading="lazy" decoding="async"></a>
-                    </figure>
+                <div class="demo-window">
+                    <div class="window-titlebar"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>Tuxedo Finance</span><span class="demo-label"><span></span>INTERACTIVE EXAMPLE</span></div>
+                    <div class="workspace-shell">
+                        <aside class="workspace-sidebar">
+                            <div class="workspace-brand">
+                                <svg class="brand-bowtie" viewBox="0 0 40 24" width="30" height="20" aria-hidden="true"><path d="M2 3 17 10V14L2 21ZM38 3 23 10V14L38 21Z" fill="currentColor"/><rect x="17" y="8" width="6" height="8" rx="2" fill="currentColor"/></svg>
+                                <span>Tuxedo</span>
+                            </div>
+                            <nav class="tour-nav" aria-label="Workspaces" data-primary-navigation>
+                                <a href="#dashboard" data-workspace-link="dashboard" aria-current="page"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg><span>Home</span></a>
+                                <a href="#transactions" data-workspace-link="transactions" ><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></svg><span>Transactions</span></a>
+                                <a href="#banking" data-workspace-link="banking" ><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 9-5 9 5H3Zm2 4v7m7-7v7m7-7v7M2 22h20"/></svg><span>Accounts</span></a>
+                                <a href="#investments" data-workspace-link="investments" ><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17v-5m7 5V7m7 10V3M2 22h20"/></svg><span>Investments</span></a>
+                                <a href="#planning" data-workspace-link="planning" ><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6m10-6v6M3 11h18m-13 6 3 3 6-6"/></svg><span>Plan</span></a>
+                                <a href="#analytics" data-workspace-link="analytics" ><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 15l4-5 4 3 5-7"/></svg><span>Analytics</span></a>
+                            </nav>
+                            <div class="sidebar-footnote">An overview of the application.<br>Fictional data, real possibilities.</div>
+                        </aside>
+                        <div class="workspace-content">
+                            <span id="reports"></span>
+                            <span id="dashboard-preview"></span>
+                            <section class="workspace-view" id="dashboard" data-workspace-view aria-labelledby="dashboard-title">
+                                <div class="view-heading">
+                                    <div>
+                                        <p class="overline">YOUR WORKSPACE</p>
+                                        <h3 id="dashboard-title">The month, at a glance.</h3>
+                                        <p>October 2026 · Consolidated in BRL</p>
+                                    </div>
+                                    <a class="button button-small" href="#new-entry" data-workspace-link="new-entry">New entry <span aria-hidden="true">↗</span></a>
+                                </div>
+                                <dl class="metrics">
+                                    <div class="metric ">
+                                        <dt>Recorded income</dt>
+                                        <dd><span class="money">R$ 8,500.00</span></dd>
+                                        <span>In the selected month</span>
+                                    </div>
+                                    <div class="metric ">
+                                        <dt>Recorded expenses</dt>
+                                        <dd><span class="money">R$ 3,240.00</span></dd>
+                                        <span>Housing, food and transport</span>
+                                    </div>
+                                    <div class="metric metric-featured">
+                                        <dt>Current cash</dt>
+                                        <dd><span class="money">R$ 12,400.00</span></dd>
+                                        <span>Across included accounts</span>
+                                    </div>
+                                </dl>
+                                <div class="panel-grid">
+                                    <div class="demo-panel">
+                                        <div class="panel-heading">
+                                            <h4>Expenses by category</h4>
+                                            <span>This month</span>
+                                        </div>
+                                        <div class="category-row">
+                                            <div><span>Housing</span><strong>R$ 1,800.00</strong></div>
+                                            <div class="bar"><span style="width:75%"></span></div>
+                                        </div>
+                                        <div class="category-row">
+                                            <div><span>Food</span><strong>R$ 960.00</strong></div>
+                                            <div class="bar"><span style="width:40%"></span></div>
+                                        </div>
+                                        <div class="category-row">
+                                            <div><span>Transport</span><strong>R$ 480.00</strong></div>
+                                            <div class="bar"><span style="width:20%"></span></div>
+                                        </div>
+                                        <p class="panel-note">See where each amount comes from.</p>
+                                    </div>
+                                    <div class="demo-panel">
+                                        <div class="panel-heading">
+                                            <h4>Coming up</h4>
+                                            <span></span>
+                                        </div>
+                                        <div class="ledger-row">
+                                            <span class="record-icon" aria-hidden="true">↗</span>
+                                            <div class="record-title"><strong>Credit card bill</strong><span>Due Oct 28 · unpaid</span></div>
+                                            <strong class="record-amount ">−R$ 640.00</strong>
+                                        </div>
+                                        <div class="ledger-row">
+                                            <span class="record-icon" aria-hidden="true">⌂</span>
+                                            <div class="record-title"><strong>Rent</strong><span>Nov 05 · scheduled</span></div>
+                                            <strong class="record-amount ">−R$ 1,800.00</strong>
+                                        </div>
+                                        <a class="text-link" href="#analytics" data-workspace-link="analytics">Explore the analysis <span aria-hidden="true">↗</span></a>
+                                    </div>
+                                </div>
+                            </section>
+                            <section class="workspace-view" id="transactions" data-workspace-view aria-labelledby="transactions-title">
+                                <div class="view-heading">
+                                    <div>
+                                        <p class="overline">YOUR WORKSPACE</p>
+                                        <h3 id="transactions-title">Transactions</h3>
+                                        <p>Every entry has its place. And its context.</p>
+                                    </div>
+                                    <a class="button button-small" href="#new-entry" data-workspace-link="new-entry">New entry <span aria-hidden="true">↗</span></a>
+                                </div>
+                                <label class="search-field" for="demo-search"><span aria-hidden="true">⌕</span><input id="demo-search" type="search" placeholder="Search these example entries…" autocomplete="off" aria-label="Search example transactions"></label>
+                                <div class="transaction-list">
+                                    <div data-demo-transaction data-search="Monthly salary Income · Oct 05 · Bank account">
+                                        <div class="ledger-row">
+                                            <span class="record-icon" aria-hidden="true">↓</span>
+                                            <div class="record-title"><strong>Monthly salary</strong><span>Income · Oct 05 · Bank account</span></div>
+                                            <strong class="record-amount positive">+R$ 8,500.00</strong>
+                                        </div>
+                                    </div>
+                                    <div data-demo-transaction data-search="Rent Housing · Oct 06 · PIX">
+                                        <div class="ledger-row">
+                                            <span class="record-icon" aria-hidden="true">⌂</span>
+                                            <div class="record-title"><strong>Rent</strong><span>Housing · Oct 06 · PIX</span></div>
+                                            <strong class="record-amount ">−R$ 1,800.00</strong>
+                                        </div>
+                                    </div>
+                                    <div data-demo-transaction data-search="Groceries Food · Oct 12 · Debit card">
+                                        <div class="ledger-row">
+                                            <span class="record-icon" aria-hidden="true">↗</span>
+                                            <div class="record-title"><strong>Groceries</strong><span>Food · Oct 12 · Debit card</span></div>
+                                            <strong class="record-amount ">−R$ 960.00</strong>
+                                        </div>
+                                    </div>
+                                    <div data-demo-transaction data-search="Transport Transport · Oct 15 · PIX">
+                                        <div class="ledger-row">
+                                            <span class="record-icon" aria-hidden="true">↗</span>
+                                            <div class="record-title"><strong>Transport</strong><span>Transport · Oct 15 · PIX</span></div>
+                                            <strong class="record-amount ">−R$ 480.00</strong>
+                                        </div>
+                                    </div>
+                                    <p id="demo-no-results" role="status" hidden>No matching example entries. Try “rent” or clear the search.</p>
+                                </div>
+                                <p class="panel-note">Fictional income and expense entries. In the app, combine categories, dates and payment filters.</p>
+                            </section>
+                            <section class="workspace-view" id="banking" data-workspace-view aria-labelledby="banking-title">
+                                <div class="view-heading">
+                                    <div>
+                                        <p class="overline">YOUR WORKSPACE</p>
+                                        <h3 id="banking-title">Accounts</h3>
+                                        <p>Accounts, cards and bills. Together.</p>
+                                    </div>
+                                </div>
+                                <dl class="metrics">
+                                    <div class="metric ">
+                                        <dt>Account balance</dt>
+                                        <dd><span class="money">R$ 12,400.00</span></dd>
+                                        <span>Fictional institution</span>
+                                    </div>
+                                    <div class="metric ">
+                                        <dt>Reserved</dt>
+                                        <dd><span class="money">R$ 2,000.00</span></dd>
+                                        <span>Part of the account balance</span>
+                                    </div>
+                                    <div class="metric metric-featured">
+                                        <dt>Available to plan</dt>
+                                        <dd><span class="money">R$ 10,400.00</span></dd>
+                                        <span>Balance less reserve</span>
+                                    </div>
+                                </dl>
+                                <div class="bank-surface">
+                                    <div class="bank-identity">
+                                        <span class="institution-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 9-5 9 5H3Zm2 4v7m7-7v7m7-7v7M2 22h20"/></svg></span>
+                                        <div>
+                                            <h4>Aurora Bank</h4>
+                                            <p>Everyday account · BRL</p>
+                                        </div>
+                                        <span class="synthetic-tag">Fictional</span>
+                                    </div>
+                                    <div class="bank-content">
+                                        <div class="payment-card"><span>AURORA <span aria-hidden="true">◒</span></span><i aria-hidden="true"></i><strong>•••• &nbsp; •••• &nbsp; •••• &nbsp; 2048</strong><small>EVERYDAY CARD</small></div>
+                                        <dl class="account-detail">
+                                            <div>
+                                                <dt>Current bill</dt>
+                                                <dd>R$ 640.00</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Due date</dt>
+                                                <dd>October 28</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Status</dt>
+                                                <dd>Unpaid</dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </section>
+                            <section class="workspace-view" id="investments" data-workspace-view aria-labelledby="investments-title">
+                                <div class="view-heading">
+                                    <div>
+                                        <p class="overline">YOUR WORKSPACE</p>
+                                        <h3 id="investments-title">Investments</h3>
+                                        <p>A place for every position.</p>
+                                    </div>
+                                </div>
+                                <p class="context-note">Recorded positions and dated prices. No live market feed.</p>
+                                <div class="investment-list">
+                                    <div>
+                                        <span class="asset-symbol" aria-hidden="true">◈</span>
+                                        <div>
+                                            <h4>Fixed-income reserve</h4>
+                                            <p>Monetary position · BRL</p>
+                                        </div>
+                                        <strong>R$ 15,000.00</strong>
+                                    </div>
+                                    <div>
+                                        <span class="asset-symbol" aria-hidden="true">▤</span>
+                                        <div>
+                                            <h4>Example index fund</h4>
+                                            <p>40 units × R$ 125.00 · Price on Oct 15</p>
+                                        </div>
+                                        <strong>R$ 5,000.00</strong>
+                                    </div>
+                                </div>
+                                <div class="demo-panel investment-note">
+                                    <div class="panel-heading">
+                                        <h4>Your records tell the story.</h4>
+                                        <span></span>
+                                    </div>
+                                    <p>Contributions, withdrawals and yields stay linked to their source. A dated price updates a valuation; it does not create a bank movement.</p>
+                                    <a class="text-link" href="#analytics-investments" data-workspace-link="analytics-investments">View investment analysis <span aria-hidden="true">↗</span></a>
+                                </div>
+                            </section>
+                            <section class="workspace-view" id="planning" data-workspace-view aria-labelledby="planning-title">
+                                <div class="view-heading">
+                                    <div>
+                                        <p class="overline">YOUR WORKSPACE</p>
+                                        <h3 id="planning-title">A plan for what comes next.</h3>
+                                        <p>Category limits, goals and monthly scenarios.</p>
+                                    </div>
+                                </div>
+                                <div class="planning-grid">
+                                    <div class="demo-panel">
+                                        <div class="panel-heading">
+                                            <h4>Category budget</h4>
+                                            <span>October</span>
+                                        </div>
+                                        <div class="budget-number"><span>Food</span><strong>R$ 960.00 <small>/ R$ 1,200.00</small></strong></div>
+                                        <div class="bar budget-bar"><span style="width:80%"></span></div>
+                                        <p class="panel-note">R$ 240.00 below the limit. A budget tracks spending; it does not reserve cash.</p>
+                                    </div>
+                                    <div class="demo-panel goal-panel">
+                                        <div class="panel-heading">
+                                            <h4>A goal with a purpose</h4>
+                                            <span></span>
+                                        </div>
+                                        <span class="goal-icon" aria-hidden="true">↗</span>
+                                        <h4>Emergency fund</h4>
+                                        <strong class="goal-amount">R$ 2,000.00 <small>/ R$ 10,000.00</small></strong>
+                                        <div class="bar"><span style="width:20%"></span></div>
+                                        <p class="panel-note">R$ 2,000.00 already reserved from the existing balance.</p>
+                                    </div>
+                                </div>
+                                <p class="panel-note">Want to explore a different month? Try the assistant’s simulation example below.</p>
+                            </section>
+                            <section class="workspace-view" id="analytics" data-workspace-view aria-labelledby="analytics-title">
+                                <div class="view-heading">
+                                    <div>
+                                        <p class="overline">YOUR WORKSPACE</p>
+                                        <h3 id="analytics-title">Give your numbers perspective.</h3>
+                                        <p>Recorded cash balances · May–October 2026</p>
+                                    </div>
+                                </div>
+                                <nav class="workspace-tabs" aria-label="Analytics">
+                                    <a class="text-link" href="#analytics" data-workspace-link="analytics">Finances <span aria-hidden="true">↗</span></a>
+                                    <a class="text-link" href="#analytics-investments" data-workspace-link="analytics-investments">Investments <span aria-hidden="true">↗</span></a>
+                                </nav>
+                                <div class="demo-panel chart-panel">
+                                    <div class="panel-heading">
+                                        <h4>Cash balance over time</h4>
+                                        <span>Synthetic history · BRL</span>
+                                    </div>
+                                    <strong class="chart-value">R$ 12,400.00</strong>
+                                    <div class="line-chart">
+                                        <svg viewBox="0 0 600 160" role="img" aria-label="Synthetic recorded cash balance: May 6,200; June 7,400; July 7,000; August 9,100; September 10,000; October 12,400 reais."><path class="chart-grid" d="M8 24H592M8 74H592M8 124H592"/><path class="chart-area" d="M8 135 125 115 242 122 358 86 475 71 592 30V151H8Z"/><path class="chart-line" d="M8 135 125 115 242 122 358 86 475 71 592 30"/><circle class="chart-dot" cx="592" cy="30" r="5"/></svg>
+                                        <div class="axis"><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span></div>
+                                    </div>
+                                </div>
+                                <p class="panel-note">Follow balances, cash flow and category expenses. Investment valuations have their own analysis.</p>
+                            </section>
+                            <section class="workspace-view" id="analytics-investments" data-workspace-view aria-labelledby="analytics-investments-title">
+                                <div class="view-heading">
+                                    <div>
+                                        <p class="overline">YOUR WORKSPACE</p>
+                                        <h3 id="analytics-investments-title">The detail behind a position.</h3>
+                                        <p>Cost, dated value and recorded movements.</p>
+                                    </div>
+                                </div>
+                                <nav class="workspace-tabs" aria-label="Analytics">
+                                    <a class="text-link" href="#analytics" data-workspace-link="analytics">Finances <span aria-hidden="true">↗</span></a>
+                                    <a class="text-link" href="#analytics-investments" data-workspace-link="analytics-investments">Investments <span aria-hidden="true">↗</span></a>
+                                </nav>
+                                <dl class="metrics">
+                                    <div class="metric ">
+                                        <dt>Units held</dt>
+                                        <dd><span class="money">40</span></dd>
+                                        <span>Units, not a cash amount</span>
+                                    </div>
+                                    <div class="metric ">
+                                        <dt>Recorded cost</dt>
+                                        <dd><span class="money">R$ 4,800.00</span></dd>
+                                        <span>40 units × R$ 120</span>
+                                    </div>
+                                    <div class="metric metric-featured">
+                                        <dt>Dated valuation</dt>
+                                        <dd><span class="money">R$ 5,000.00</span></dd>
+                                        <span>40 units × R$ 125 · Oct 15</span>
+                                    </div>
+                                </dl>
+                                <div class="demo-panel">
+                                    <div class="panel-heading">
+                                        <h4>An explicit valuation</h4>
+                                        <span></span>
+                                    </div>
+                                    <p>The fictional unit price moved from R$ 120 to R$ 125. The R$ 200 difference is an unrealized change in value, before fees. It is not income in the bank account.</p>
+                                </div>
+                            </section>
+                            <section class="workspace-view" id="new-entry" data-workspace-view aria-labelledby="new-entry-title">
+                                <div class="view-heading">
+                                    <div>
+                                        <p class="overline">YOUR WORKSPACE</p>
+                                        <h3 id="new-entry-title">A record with the right context.</h3>
+                                        <p>An illustrated entry review. The application validates and saves the actual form.</p>
+                                    </div>
+                                </div>
+                                <nav class="workspace-tabs" aria-label="Transactions">
+                                    <a class="text-link" href="#transactions" data-workspace-link="transactions">Transactions <span aria-hidden="true">↗</span></a>
+                                    <a class="text-link" href="#new-entry" data-workspace-link="new-entry">New entry <span aria-hidden="true">↗</span></a>
+                                </nav>
+                                <div class="demo-panel entry-review">
+                                    <div class="panel-heading">
+                                        <h4>Example expense</h4>
+                                        <span></span>
+                                    </div>
+                                    <dl class="review-fields">
+                                        <div>
+                                            <dt>Description</dt>
+                                            <dd>Groceries</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Amount</dt>
+                                            <dd>R$ 960.00</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Category</dt>
+                                            <dd>Food</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Payment</dt>
+                                            <dd>Debit card · Aurora</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Date</dt>
+                                            <dd>October 12, 2026</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Type</dt>
+                                            <dd>Expense</dd>
+                                        </div>
+                                    </dl>
+                                    <p class="context-note">An expense paid by debit card affects the linked account. Credit-card purchases follow the card’s statement cycle instead.</p>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                    <div class="demo-caption">
+                        <p>Explore the workspaces. Discover how your records connect.</p>
+                        <span>Fictional data · No financial records are saved</span>
+                    </div>
                 </div>
             </section>
-            <section class="tour-section" id="analytics-investments" data-workspace-view aria-labelledby="analytics-investments-title">
-                <nav class="workspace-tabs" aria-label="Analytics">
-                    <a href="#analytics" data-workspace-link="analytics">Finances</a>
-                    <a href="#analytics-investments" data-workspace-link="analytics-investments" aria-current="page">Investments</a>
-                </nav>
-                <div class="section-heading">
-                    <div><h2 id="analytics-investments-title">Analytics · Investments</h2></div>
-                    <p class="section-copy">Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates.</p>
-                </div>
-                <div class="screenshot-grid">
-                    <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Analytics · Investments · Light theme</span><a href="images/en/analytics-investments-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/analytics-investments-light.png" data-lightbox><img src="images/en/analytics-investments-light.png" width="1440" height="1000" alt="Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates." loading="lazy" decoding="async"></a>
-                    </figure>
-                    <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Analytics · Investments · Dark theme</span><a href="images/en/analytics-investments-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/analytics-investments-dark.png" data-lightbox><img src="images/en/analytics-investments-dark.png" width="1440" height="1000" alt="Position evolution, deposits, withdrawals and yields using recorded prices and exchange rates." loading="lazy" decoding="async"></a>
-                    </figure>
+            <section class="assistant-section" id="assistant" aria-labelledby="assistant-title">
+                <div class="assistant-layout container">
+                    <div class="assistant-copy">
+                        <p class="eyebrow">02 / MEET TUXEDO</p>
+                        <h2 id="assistant-title">Good questions.<br><em>Clearer decisions.</em></h2>
+                        <p class="section-description">An assistant that brings your financial records into the conversation. Ask, explore a scenario and review a proposed change before confirming it.</p>
+                        <div class="assistant-examples" role="group" aria-label="Choose a guided conversation">
+                            <button type="button" data-chat-example="overview" aria-controls="chat-overview" aria-pressed="true"><span>01</span><div><strong>Understand the month</strong><span>The detail behind the total.</span></div><span aria-hidden="true">↗</span></button>
+                            <button type="button" data-chat-example="simulate" aria-controls="chat-simulate" aria-pressed="false"><span>02</span><div><strong>Explore a possibility</strong><span>What changes if you spend less?</span></div><span aria-hidden="true">↗</span></button>
+                            <button type="button" data-chat-example="budget" aria-controls="chat-budget" aria-pressed="false"><span>03</span><div><strong>Review, then confirm</strong><span>You decide what gets saved.</span></div><span aria-hidden="true">↗</span></button>
+                        </div>
+                        <p class="assistant-note">Guided examples with prepared responses. In the application, connecting an eligible account and enabling AI are separate, optional steps.</p>
+                    </div>
+                    <div class="chat-window">
+                        <div class="chat-titlebar">
+                            <div>
+                                <img src="assets/tuxedo-mark.png" width="38" height="38" alt="">
+                                <div><strong>Tuxedo</strong><span>Financial assistant</span></div>
+                            </div>
+                            <span class="synthetic-tag">Guided demo</span>
+                        </div>
+                        <div class="chat-context"><span aria-hidden="true">◎</span>Example context<strong>October 2026</strong></div>
+                        <div class="chat-transcript">
+                            <div id="chat-overview" data-chat-view="overview">
+                                <p class="chat-user">Where did my money go this month?</p>
+                                <div class="chat-response">
+                                    <img src="assets/tuxedo-mark.png" width="32" height="32" alt="">
+                                    <div>
+                                        <strong>Tuxedo</strong>
+                                        <p>In this example, your recorded expenses total <strong>R$ 3,240.00</strong> in October.</p>
+                                        <dl class="chat-breakdown">
+                                            <div>
+                                                <dt>Housing</dt>
+                                                <dd>R$ 1,800.00</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Food</dt>
+                                                <dd>R$ 960.00</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Transport</dt>
+                                                <dd>R$ 480.00</dd>
+                                            </div>
+                                        </dl>
+                                        <p>Housing is the largest part. You can inspect the entries before deciding what to adjust.</p>
+                                        <a class="chat-source" href="#transactions" data-workspace-link="transactions">Source: example transactions · October ↗</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="chat-simulate" data-chat-view="simulate">
+                                <p class="chat-user">What if I spent R$ 200 less on food?</p>
+                                <div class="chat-response">
+                                    <img src="assets/tuxedo-mark.png" width="32" height="32" alt="">
+                                    <div>
+                                        <strong>Tuxedo</strong>
+                                        <p>Keeping the other example amounts unchanged:</p>
+                                        <dl class="chat-breakdown">
+                                            <div>
+                                                <dt>Food</dt>
+                                                <dd>R$ 960.00 → R$ 760.00</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Total expenses</dt>
+                                                <dd>R$ 3,040.00</dd>
+                                            </div>
+                                            <div>
+                                                <dt>Income less expenses</dt>
+                                                <dd>R$ 5,460.00</dd>
+                                            </div>
+                                        </dl>
+                                        <p>That is R$ 200 more than the original R$ 5,260 monthly difference. This scenario does not change your records or account balance.</p>
+                                        <span class="chat-source">Illustrative scenario · No saved changes</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="chat-budget" data-chat-view="budget">
+                                <p class="chat-user">Set a R$ 1,200 food budget for November.</p>
+                                <div class="chat-response">
+                                    <img src="assets/tuxedo-mark.png" width="32" height="32" alt="">
+                                    <div>
+                                        <strong>Tuxedo</strong>
+                                        <p>Review the proposed limit before confirming:</p>
+                                        <div class="proposal">
+                                            <span class="overline">REVIEW PROPOSAL</span>
+                                            <strong>Food budget</strong>
+                                            <dl class="chat-breakdown">
+                                                <div>
+                                                    <dt>Month</dt>
+                                                    <dd>November 2026</dd>
+                                                </div>
+                                                <div>
+                                                    <dt>Limit</dt>
+                                                    <dd>R$ 1,200.00</dd>
+                                                </div>
+                                            </dl>
+                                            <button class="button button-primary button-small" type="button" id="demo-confirm">Simulate confirmation <span aria-hidden="true">✓</span></button>
+                                            <p class="confirmation" id="demo-confirmation" role="status" hidden>Example confirmed. In the application, this separate step saves the reviewed budget. Nothing was saved here.</p>
+                                        </div>
+                                        <p>A category limit does not reserve cash or move money.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-footer"><span>Choose an example to explore the conversation.</span><span aria-hidden="true">↑</span></div>
+                    </div>
                 </div>
             </section>
-            <section class="tour-section" id="transactions" data-workspace-view aria-labelledby="transactions-title">
-                <div class="section-heading">
-                    <div><h2 id="transactions-title">Transactions</h2></div>
-                    <a class="button button-primary" href="#new-entry" data-workspace-link="new-entry">New entry <span aria-hidden="true">＋</span></a>
+            <section class="how-section container" id="how-it-works" aria-labelledby="how-title">
+                <div class="section-intro">
+                    <div>
+                        <p class="eyebrow">03 / HOW IT WORKS</p>
+                        <h2 id="how-title">A simple rhythm.<br>A more deliberate routine.</h2>
+                    </div>
+                    <p>Your data has a home. Your decisions have context.</p>
                 </div>
-                <div class="screenshot-grid">
-                    <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Transactions · Search, filters and category splits · Light theme</span><a href="images/en/transactions-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/transactions-light.png" data-lightbox><img src="images/en/transactions-light.png" width="1440" height="1000" alt="Transaction list with search filters and synthetic income, fixed expenses, card installments and PIX payments — light theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                    <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Transactions · Search, filters and category splits · Dark theme</span><a href="images/en/transactions-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/transactions-dark.png" data-lightbox><img src="images/en/transactions-dark.png" width="1440" height="1000" alt="Transaction list with search filters and synthetic income, fixed expenses, card installments and PIX payments — dark theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                </div>
-            </section>
-            <section class="tour-section" id="new-entry" data-workspace-view aria-labelledby="new-entry-title">
-                <nav class="workspace-tabs" aria-label="Transactions">
-                    <a href="#transactions" data-workspace-link="transactions">Transactions</a>
-                    <a href="#new-entry" data-workspace-link="new-entry">New entry</a>
-                </nav>
-                <div class="section-heading">
-                    <div><h2 id="new-entry-title">New entry</h2></div>
-                    <p class="section-copy">Description, amount, date, category and card.</p>
-                </div>
-                <div class="screenshot-grid">
-                    <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Credit card payment · Light theme</span><a href="images/en/new-entry-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/new-entry-light.png" data-lightbox><img src="images/en/new-entry-light.png" width="1440" height="1000" alt="The actual new transaction form with expense type, amount, date, category and visual credit card selection — light theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                    <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Credit card payment · Dark theme</span><a href="images/en/new-entry-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/new-entry-dark.png" data-lightbox><img src="images/en/new-entry-dark.png" width="1440" height="1000" alt="The actual new transaction form with expense type, amount, date, category and visual credit card selection — dark theme" loading="lazy" decoding="async"></a>
-                    </figure>
+                <div class="steps">
+                    <article>
+                        <span class="step-number">01</span>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></svg>
+                        <h3>Record</h3>
+                        <p>Add income and expenses with categories, dates and payment details. Keep accounts and card bills in context.</p>
+                    </article>
+                    <article>
+                        <span class="step-number">02</span>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 15l4-5 4 3 5-7"/></svg>
+                        <h3>Understand</h3>
+                        <p>Explore cash flow, category expenses and dated investment values. Ask Tuxedo to help interpret your records.</p>
+                    </article>
+                    <article>
+                        <span class="step-number">03</span>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6m10-6v6M3 11h18m-13 6 3 3 6-6"/></svg>
+                        <h3>Plan</h3>
+                        <p>Set category limits, organize goals and compare monthly scenarios. Review assistant proposals before saving a change.</p>
+                    </article>
                 </div>
             </section>
-            <section class="tour-section" id="banking" data-workspace-view aria-labelledby="banking-title">
-                <div class="section-heading">
-                    <div><h2 id="banking-title">Accounts</h2></div>
-                    <p class="section-copy">Open a bank to manage accounts and cards. Invoices, loyalty and local exchange rates have direct tabs; transfers stay beside the account.</p>
+            <section class="closing-section container">
+                <div class="closing-mark" aria-hidden="true">
+                    <svg class="brand-bowtie" viewBox="0 0 40 24" width="30" height="20" aria-hidden="true"><path d="M2 3 17 10V14L2 21ZM38 3 23 10V14L38 21Z" fill="currentColor"/><rect x="17" y="8" width="6" height="8" rx="2" fill="currentColor"/></svg>
                 </div>
-                <div class="screenshot-grid">
-                    <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Accounts · Bank workspace, accounts and cards · Light theme</span><a href="images/en/banking-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/banking-light.png" data-lightbox><img src="images/en/banking-light.png" width="1440" height="1000" alt="Accounts workspace with a synthetic bank open, its accounts and cards, and available planning balances — light theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                    <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Accounts · Bank workspace, accounts and cards · Dark theme</span><a href="images/en/banking-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/banking-dark.png" data-lightbox><img src="images/en/banking-dark.png" width="1440" height="1000" alt="Accounts workspace with a synthetic bank open, its accounts and cards, and available planning balances — dark theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                </div>
-            </section>
-            <section class="tour-section" id="investments" data-workspace-view aria-labelledby="investments-title">
-                <div class="section-heading">
-                    <div><h2 id="investments-title">Investments</h2></div>
-                    <p class="section-copy">Track holdings and cash pots, then record deposits, withdrawals and yields.</p>
-                </div>
-                <div class="screenshot-grid">
-                    <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Investments · Positions and operations · Light theme</span><a href="images/en/investments-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/investments-light.png" data-lightbox><img src="images/en/investments-light.png" width="1440" height="1000" alt="Investment workspace with synthetic holdings and cash pots, dated totals, position emojis and History, Prices and Setup tabs — light theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                    <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Investments · Positions and operations · Dark theme</span><a href="images/en/investments-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/investments-dark.png" data-lightbox><img src="images/en/investments-dark.png" width="1440" height="1000" alt="Investment workspace with synthetic holdings and cash pots, dated totals, position emojis and History, Prices and Setup tabs — dark theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                </div>
-            </section>
-            <section class="tour-section" id="planning" data-workspace-view aria-labelledby="planning-title">
-                <div class="section-heading">
-                    <div><h2 id="planning-title">Plan</h2></div>
-                    <p class="section-copy">Review the month and category limits, set goals, try simulations and check local signals.</p>
-                </div>
-                <div class="screenshot-grid">
-                    <figure class="screen-light">
-                        <figcaption class="capture-heading"><span>Plan · Monthly outlook and category limits · Light theme</span><a href="images/en/planning-light.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/planning-light.png" data-lightbox><img src="images/en/planning-light.png" width="1440" height="1000" alt="Plan workspace with direct month, goals, simulations and signals sections, projected availability and category limits using synthetic records — light theme" loading="lazy" decoding="async"></a>
-                    </figure>
-                    <figure class="screen-dark">
-                        <figcaption class="capture-heading"><span>Plan · Monthly outlook and category limits · Dark theme</span><a href="images/en/planning-dark.png" class="capture-original" target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span></a></figcaption>
-                        <a class="screenshot-link" href="images/en/planning-dark.png" data-lightbox><img src="images/en/planning-dark.png" width="1440" height="1000" alt="Plan workspace with direct month, goals, simulations and signals sections, projected availability and category limits using synthetic records — dark theme" loading="lazy" decoding="async"></a>
-                    </figure>
+                <p class="eyebrow">TUXEDO FINANCE</p>
+                <h2>A little more clarity.<br>Starting with your next entry.</h2>
+                <p>Built with Django, HTMX and SQLite.<br>Made to run on your own installation.</p>
+                <div class="closing-actions header-external">
+                    <a class="button button-primary" href="https://github.com/HenriqueMayer/TuxedoFinance#quick-start" target="_blank" rel="noopener noreferrer">Run locally <span aria-hidden="true">↗</span></a>
+                    <a class="text-link" href="https://github.com/HenriqueMayer/TuxedoFinance" target="_blank" rel="noopener noreferrer">Explore the repository <span aria-hidden="true">↗</span></a>
                 </div>
             </section>
         </main>
-    </div>
-    <dialog class="image-dialog" id="image-dialog" aria-label="Expanded interface screenshot">
-        <div class="dialog-inner">
-            <button class="dialog-close" type="button" data-dialog-close aria-label="Close expanded screenshot">×</button>
-            <img id="dialog-image" alt="">
-        </div>
-    </dialog>
-    <footer class="site-footer"><div class="footer-inner"><p>Tuxedo Finance</p><p>Demo data</p></div></footer>
-</body>
+        <footer class="site-footer container">
+            <a class="wordmark" href="#top"><svg class="brand-bowtie" viewBox="0 0 40 24" width="30" height="20" aria-hidden="true"><path d="M2 3 17 10V14L2 21ZM38 3 23 10V14L38 21Z" fill="currentColor"/><rect x="17" y="8" width="6" height="8" rx="2" fill="currentColor"/></svg><span>Tuxedo Finance</span></a>
+            <p>Designed and developed by <a href="https://github.com/HenriqueMayer" target="_blank" rel="noopener noreferrer">Henrique Mayer ↗</a></p>
+            <span>Local personal finance.</span>
+        </footer>
+    </body>
 </html>

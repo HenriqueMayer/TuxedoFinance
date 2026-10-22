@@ -11,6 +11,7 @@ and [interface map](../interface-map.md) for present behavior.
 
 | Record | Scope and status |
 |---|---|
+| [Portfolio product presentation — 2026-10-22](preview-portfolio-2026-10-22.md) | Editorial introduction, native HTML/SVG workspace examples, scripted assistant demonstrations and isolated bilingual/theme/keyboard verification; approved for GitHub Pages publication. |
 | [Release interception regression — 2026-10-22](release-interception-2026-10-22.md) | Reproduced redirected-GET stall, persistent test interception, preserved assistant invariants and focused 1.0.0 release evidence with explicit publication limits. |
 | [Release browser races — 2026-10-21](release-browser-races-2026-10-21.md) | Controlled delayed-history and assistant-confirmation regressions, native document-readiness correction and final-release validation boundaries. |
 | [Documentation and roadmap alignment — 2026-10-21](documentation-readiness-2026-10-21.md) | Bilingual READMEs/preview, current capability inventory and owner walkthrough; delivered work removed from future planning, paused integrations and publication hold retained. |
