@@ -7,6 +7,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-22
+
 ### Changed
 
 - Pin frontend tooling to the patched Node.js 22.23.4 baseline through `.nvmrc` and share it across application and Docker CI validation.
@@ -450,7 +452,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.11.0...v1.0.0
 [0.11.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.9.1...v0.10.0
