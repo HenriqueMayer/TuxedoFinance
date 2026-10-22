@@ -20,7 +20,8 @@ is enabled by this local foundation.
 
 Use the [interface map](../interface-map.md) for routes and component ownership.
 This guide owns interaction protocols; app guides describe their financial
-meaning and exceptions. Dated audit outcomes belong in [reviews](../reviews/README.md).
+meaning and exceptions. Keep validation results with the exact revision's pull
+request or CI run, and local diagnostics outside versioned documentation.
 
 ## Asset build and versioning
 

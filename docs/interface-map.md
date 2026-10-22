@@ -7,9 +7,9 @@ category interactions consistently. Detailed interaction rules remain in the
 [frontend guide](frontend.md); financial rules remain in the
 [data model](data-model.md) and [per-app references](README.md#per-app-reference).
 
-The inventory was checked against the URL configurations, owning forms/views,
-shared partials and application templates on 2026-10-17. Related create, edit and
-delete routes are grouped below; `<id>` denotes an owned record identifier.
+The inventory follows the URL configurations, owning forms/views, shared
+partials and application templates. Related create, edit and delete routes are
+grouped below; `<id>` denotes an owned record identifier.
 Abbreviated paths in a row retain that row's application prefix.
 
 ## Navigation and access
@@ -207,10 +207,9 @@ protects both GET and POST entry into paused features:
 
 ## Adoption and verification
 
-The application uses the shared editorial components. The
-[dated adoption record](reviews/interface-adoption-2026-10-17.md) preserves
-previous rollout decisions, observed test runs and their limits; it is not
-a statement about the current test status.
+The application uses the shared editorial components. Validate the exact
+revision under review; current CI and pull-request results establish its test
+status within their recorded scope.
 
 When changing a route or shared interaction, update the inventory above and
 inspect the affected desktop and phone screens in both themes. Exercise long

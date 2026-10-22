@@ -5,11 +5,10 @@ It is not an application screen, scheduled worker, importer or financial action.
 It does not connect bank accounts automatically or reopen the
 [paused statement workflow](apps/ingestion.md#interface-review-gate).
 
-The owner approved free personal Meu Pluggy access, initially Inter credit-card
-bills with daily updates. The [research and pilot decision](reviews/open-finance-intraday-study-2026-10-19.md#daily-card-bill-pilot--subsequent-owner-decision)
-describe documented coverage and remaining live uncertainty. This implementation
-does not establish that the free proxy supplies complete bills for a particular card.
-The [dated validation](reviews/open-finance-pilot-2026-10-19.md) records actual checks.
+The command targets free personal Meu Pluggy access for Inter credit-card bills
+with daily updates. The [provider research](open-finance-research.md) describes
+coverage, cadence, consent and reconciliation limits. Its presence does not
+establish complete proxy bill coverage or enable a bank connection.
 
 ## Offline preparation
 
@@ -66,12 +65,12 @@ app.
 The provider policy permits service providers and processing outside Brazil.
 Revoking consent stops further authorized bank sharing; it is not the same as
 erasing existing copies. The general policy describes an approximately 15-day
-deletion process with retention exceptions. Exact deletion timing for Meu Pluggy
-backups was not established in this review. Request deletion through the
-provider as needed, and separately remove local observations/backups. The pilot
+deletion process with retention exceptions. Confirm deletion timing for personal
+backups with the provider. Request deletion through the provider as needed, and
+separately remove local observations/backups. The pilot
 does not transmit those observations to an AI model.
 
-## Personal setup: performed by the owner
+## Personal setup
 
 Follow the [official personal guide](https://docs.pluggy.ai/en/docs/guides/meu-pluggy-personal-use).
 Account consent and code authentication are separate steps:

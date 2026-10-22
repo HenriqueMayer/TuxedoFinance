@@ -1,8 +1,9 @@
 # Tuxedo Finance Documentation
 
-Technical and product documentation for the current `0.11.0` release candidate.
-Merge and Docker publication were authorized on 2026-10-21; release validation
-is underway. Technical guides are maintained in English;
+Technical and product documentation for the current source. Published versions
+and distribution status are listed in the
+[releases](https://github.com/HenriqueMayer/TuxedoFinance/releases).
+Technical guides are maintained in English;
 the root README is available in [English](../README.md) and
 [Português (Brasil)](../README.pt-BR.md).
 
@@ -20,10 +21,9 @@ releases, persistent volumes and isolated restore rehearsals.
 | [product-requirements.md](product-requirements.md) | Approved scope, requirements, acceptance criteria and release compatibility. |
 | [branch-testing.md](branch-testing.md) | Owner walkthrough using an isolated disposable copy; computer/phone acceptance and native fallbacks. |
 | [roadmap.md](roadmap.md) | Paused interfaces and future studies; no implied availability or scheduled release. |
-| [Personal Open Finance study](reviews/open-finance-personal-study-2026-10-18.md) | Dated PF coverage, eligibility, cadence/cost limitations and reconciliation design for Nubank, Inter and Mercado Pago; no enabled bank connection. |
-| [Intraday Open Finance alternatives](reviews/open-finance-intraday-study-2026-10-19.md) | Follow-up retaining the 6–8-hour requirement, personal REST/MCP candidates and outstanding provider/resource/local-delivery evidence. |
+| [Open Finance research](open-finance-research.md) | Dated public-source provider options, PF coverage/cadence limits, consent and source-preserving reconciliation; no enabled bank connection. |
 | [Meu Pluggy bill pilot](open-finance-pilot.md) | Operator-only free personal Inter bill probe, offline preparation, hidden credential setup, daily observation reuse and preserved ledger/import gates. |
-| [Tuxedo financial premises](assistant/financial-premises.md) | Assistant identity, original personal-finance reasoning rules, inspected plugin methodology and future news/source boundaries; browsing is not enabled. |
+| [Tuxedo financial premises](assistant/financial-premises.md) | Assistant identity, original personal-finance reasoning rules and future news/source boundaries; browsing is not enabled. |
 | [Confirmed assistant actions](assistant/actions.md) | Local proposal tools, minimal choices, immutable review, explicit confirmation and preserved financial validation. |
 | [Assistant consultations](assistant/consultation.md) | Default owned financial reads, canonical monthly CLT simulation and separation from persistent changes. |
 | [architecture.md](architecture.md) | Domain boundaries, posting workflows and sources of truth. |
@@ -33,8 +33,8 @@ releases, persistent volumes and isolated restore rehearsals.
 | [design-system.html](design-system.html) | Visual catalogue with the approved tokens, Paper Layers homepage, one workspace shell and compact editorial component specimens; application adoption is tracked in the interface map. |
 | [operations.md](operations.md) | Native source/dependency updates, required migrations and owner-managed SQLite backup, restore, retention and rehearsal procedures. |
 | [versioning.md](versioning.md) | Semantic versioning policy, automated consistency checks and release workflow. |
-| [coverage-baseline.md](coverage-baseline.md) | Dated measurements, 70% combined line/branch floor, and report artifacts. |
-| [Review and validation archive](reviews/README.md) | Dated investigations, delivery evidence, measured baselines and superseded interface iterations with current pointers. |
+| [coverage-baseline.md](coverage-baseline.md) | Current 70% combined line/branch floor, measurement scope and ignored report artifacts. |
+| [Reporting performance](reporting-performance.md) | Isolated synthetic benchmark, measurement limits and financial invariants. |
 
 ## Current checkout and feature status
 
@@ -47,7 +47,7 @@ the [interface map](interface-map.md), with shared title/summary geometry in the
 
 | Boundary | Current reference |
 |---|---|
-| Local financial workspaces | Owning app guides below; release 0.11.0 is authorized, with exact-revision checks and remaining manual acceptance recorded separately. |
+| Local financial workspaces | Owning app guides below; published version and distribution status follow the matching release. |
 | Paused statement operations and net-worth interface | [Roadmap](roadmap.md) and [code-level review gates](../core/features.py); retained calculations and owned posted-import provenance do not reopen these screens. |
 | Optional assistant | [Assistant guide](apps/assistant.md) and [six confirmed local actions](assistant/actions.md); ChatGPT authorization/inference independently default off, with no paid API-key fallback or Internet/news tool. |
 | Paused real Open Finance pilot | [Operator guide](open-finance-pilot.md) and [roadmap decision](roadmap.md#personal-open-finance-study); read-only command preparation does not connect the application or write its ledger. |
@@ -85,8 +85,8 @@ the [interface map](interface-map.md), with shared title/summary geometry in the
   owned consultations and canonical monthly simulations are available to the
   connected assistant; six local changes require separate reviewed confirmation.
   Authorization and inference default off, with no paid API-key fallback or
-  bank connection. Live-provider observations and their limits belong in the
-  [dated reviews](reviews/README.md), not a guarantee for another installation.
+  bank connection. Validate live eligibility, model access and usage limits
+  for each intended account and installation.
 
 ## Repository layout
 
@@ -126,22 +126,21 @@ every guide:
 | How should a control look and behave? | [Visual catalogue](design-system.html), [frontend contracts](frontend.md) and [route/component map](interface-map.md). |
 | Which financial rules and service boundaries apply? | [Architecture](architecture.md), [data model](data-model.md) and the owning app guide. |
 | Is an interface available or paused? | [Roadmap](roadmap.md), the owning app guide and its code-level feature gate. |
-| What was measured or approved in an earlier iteration? | The [dated archive](reviews/README.md); its test counts and screenshots do not certify the present checkout. |
+| How do I inspect validation for a revision? | Its pull request and CI runs; local test counts do not certify another revision or installation. |
 
 When changing a workflow, update its owning guide and link the shared contract.
-Keep historical reports dated and clearly labelled, with pointers to the current
-guide. Do not turn local logs, copied credentials, database contents or transient
-preview paths into installation instructions.
+Keep run results with the exact revision's pull request or CI run, and local
+logs, screenshots, analysis reports and host metadata in ignored output
+directories. Do not publish credentials, database contents or private operational
+records as repository documentation.
 
 ## Documentation status
 
-These documents describe version `0.11.0`. The owner authorized
-merge and Docker publication on 2026-10-21; automated release checks and any
-remaining manual acceptance retain their own recorded status. This is not a
-claim of v1 acceptance or general eligibility for optional providers. Supported
-released installations use the committed incremental migrations and preserve
-existing records. The historical clean reset applied only to pre-release legacy
-schemas; it is not an instruction to reset a released installation. See
+These guides describe the current implementation and its capability limits.
+Optional provider eligibility and live account access require validation for the
+intended installation. Supported released installations use committed incremental
+migrations and preserve existing records. The historical clean reset applied
+only to pre-release legacy schemas; do not reset a released installation. See
 [Docker updates](docker.md#update) before upgrading.
 
 The repository does not include a runtime demo database, shared account or fixed

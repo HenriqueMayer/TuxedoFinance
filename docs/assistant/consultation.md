@@ -73,4 +73,5 @@ aligns citations with the verified reference footer and retains earlier
 instruction files for explicit historical loading.
 Offline tests establish deterministic contracts, calculations and no-write/
 ownership boundaries, not a live model's tool selection or instruction compliance.
-Current evidence belongs in dated reviews.
+Record current results with the exact revision's pull request or CI run.
+Keep local diagnostics outside versioned documentation.

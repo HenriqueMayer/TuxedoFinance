@@ -16,6 +16,10 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 - Preserve the reader's page position when switching preview workspaces or reopening the selected workspace, while retaining keyboard focus, native fallback and URL history.
 
+### Removed
+
+- Remove internal validation reports and environment/session observations from public documentation; retain current technical guides, benchmark methodology and public Open Finance research.
+
 ## [1.0.0] - 2026-10-22
 
 ### Fixed

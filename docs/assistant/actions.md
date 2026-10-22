@@ -101,4 +101,5 @@ previously confirmed record.
 Deleting a conversation cascades its proposals, not the financial records they
 created. Proposal metadata follows the local database's private-history and
 backup lifecycle. No financial authorization follows from a recorded result URL.
-Validation evidence and actual live-provider limits belong in dated reviews.
+Record validation and live-provider limits with the exact revision's pull
+request or CI run. Keep local diagnostics outside versioned documentation.

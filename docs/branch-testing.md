@@ -1,11 +1,9 @@
 # Personal finance branch testing
 
-This walkthrough covers the `0.11.0` personal-finance and assistant release.
-The owner authorized merge into `main` and Docker publication on 2026-10-21;
-[release PR #36](https://github.com/HenriqueMayer/TuxedoFinance/pull/36) records
-automated validation and distribution status. This walkthrough records manual owner acceptance
-separately. Running it does not complete unchecked acceptance items, change the
-version or publish a container, tag or release. The
+This walkthrough covers the current personal-finance and assistant implementation.
+Record manual acceptance for the exact checkout separately from automated
+release checks. Running the walkthrough does not complete unchecked acceptance
+items or publish a version. The
 [PRD status table](product-requirements.md#current-delivery-status) distinguishes
 current interfaces from paused and gated capabilities.
 
@@ -166,9 +164,8 @@ An explicitly enabled ChatGPT connection is optional and sends bounded necessary
 context externally; it is outside this provider-disabled walkthrough. Inter's
 font and license are included in `static/fonts/`.
 
-- [ ] Owner completes the manual checks for the exact checkout and records any
-      remaining issues. Merge and Docker publication were separately authorized
-      on 2026-10-21; this item records only the walkthrough.
+- [ ] Complete the manual checks for the exact checkout and record remaining
+      issues separately from automated release checks.
 
 ## Assistant review
 
@@ -220,15 +217,15 @@ Current validation commands and isolation rules live in
 [Contributing](../CONTRIBUTING.md). Run them for the exact checkout under review;
 a historical passing count does not establish this checkout's status.
 
-Earlier test counts, screenshots and iteration notes are preserved in the
-[branch validation history](reviews/branch-validation-history.md). New validation
-reports should identify the revision, date, scope, environment, failures and
-remaining manual checks, without duplicating the current interaction contract.
+Record the revision, date, scope, environment, failures and remaining manual
+checks with the pull request or CI run. Keep screenshots, logs and local
+diagnostics in ignored output directories, without personal data or credentials
+in public discussion.
 
 ## Performance evidence
 
-Use the current reproducible benchmark command and measurement limits in the
-[project health review](reviews/project-health-2026-10-16.md#reproducible-reporting-measurements).
-Earlier synthetic observations remain in the
-[historical performance section](reviews/branch-validation-history.md#performance-evidence);
-they are dated evidence rather than current latency guarantees.
+Use the [reporting performance guide](reporting-performance.md#measurement-method)
+for the isolated benchmark command, financial invariants and measurement limits.
+Keep results local unless a sanitized public summary is necessary for the
+change under review. A synthetic benchmark does not establish installation
+latency or concurrent-write capacity.

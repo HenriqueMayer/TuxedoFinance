@@ -21,13 +21,14 @@ current specification:
 | Interaction and accessibility behavior | [Frontend guide](docs/frontend.md) |
 | Financial rules and ownership | [Data model](docs/data-model.md) and the owning [app guide](docs/README.md#per-app-reference) |
 | Runtime, stored data and recovery | [Operations](docs/operations.md) |
-| Historical evidence and measurements | [Review index](docs/reviews/README.md) |
 
 When changing interface behavior or domain presentation, update its owning
 technical guide, add a focused code comment for non-obvious rules and cover the
 behavior with an appropriate regression test. Update this contract only for
-application-wide obligations. Keep validation results in dated reviews, with
-their scope and limits, rather than copying test counts into current contracts.
+application-wide obligations. Keep validation results in the pull request, CI
+artifacts or ignored local outputs, with their scope and limits. Do not commit
+internal agent reports, incident logs, session details or installation observations
+to this public repository.
 
 Frontend contracts live in responsibility guides under `docs/frontend/`, reached
 through the [frontend index](docs/frontend.md). Link to the owning guide for a

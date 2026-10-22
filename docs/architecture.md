@@ -218,8 +218,8 @@ ingestion command, outside the assistant and all web routes. Its fixed-origin
 provider client and private artifact store perform no database queries or ledger
 writes. One-shot hidden credentials are not assistant-vault data, and the
 personal proxy's original bank remains operator-attested. The
-[personal Open Finance study](reviews/open-finance-personal-study-2026-10-18.md)
-records a separate unresolved PF/cadence feasibility gate. Neither assistant
+[Open Finance research](open-finance-research.md)
+describes the separate unresolved PF/cadence feasibility requirements. Neither assistant
 contracts nor external research enable the paused ingestion interface.
 
 ## Posting workflows
@@ -284,8 +284,8 @@ Report chart islands also reuse a single request-local list of categorized
 sources and prefetched splits. Services reject shared lists containing another
 user's records. Each island still applies its own month/window filters; this is
 read reuse, not an authoritative or persisted financial cache. The
-[project health review](reviews/project-health-2026-10-16.md#reproducible-reporting-measurements)
-records the measured cost and limits.
+[reporting performance guide](reporting-performance.md#measurement-method)
+defines the reproducible workload and measurement limits.
 
 New nonzero account and asset openings require dates. Incremental migrations
 leave older unknown opening dates null, retaining current holdings with an

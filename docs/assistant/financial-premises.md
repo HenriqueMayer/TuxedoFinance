@@ -55,35 +55,6 @@ references support questions and reasoning disciplines, not a fixed product,
 return, reserve size or allocation recommendation. Reviewed on 2026-10-19;
 they do not supply live market, tax or legal facts to the runtime.
 
-## Installed tools and inspected methodology
-
-Inspection date: **2026-10-19**. Installation in the development environment,
-availability of skill material and permission to read a data provider are
-different states. None makes a tool available inside Tuxedo automatically.
-
-| Resource | Observed state | Useful methodological input |
-|---|---|---|
-| Data / Data Analytics `1.0.11` | Plugin manager confirms installed and user-enabled; local manifest/skills inspected. No connected source content was read. | Data grain, freshness, missingness, duplication, source authority, metric definitions and independent validation. |
-| Public Equity Investing `0.1.31` | Skill material is available in this Codex session/local package. Plugin discovery did not resolve a current publicly listed installation; market-data access is unverified. | Evidence provenance, conditional scenarios, measurable review triggers and separating events, interpretations and risks. |
-| Spreadsheets and browser tooling | Enabled in local Codex configuration; no financial workbook or private browser source was consulted. | Development/review aids. They are not runtime financial sources or inherited Tuxedo skills. |
-
-The reviewed Data skill identifiers are `analyze-data-quality`, `validate-data`
-and `design-kpis`. The Public Equity references are its invocation policy and
-`scenario-sensitivity-generator`, `portfolio-risk-management`, `thesis-tracker`
-and `economic-impact-report`. Source package names/versions are recorded for
-provenance; installing them is not required to run this repository.
-
-Public Equity Investing explicitly targets listed-security investor workflows
-and excludes automatic use for personal-finance advice or generic news. Its
-stock-selection, shorting, hedging and position-sizing workflows are not the
-default personal-finance persona. Only general research disciplines inform the
-original Tuxedo requirements above.
-
-Both inspected plugin manifests declare a proprietary license. This repository
-contains original project instructions and short methodology attribution, not
-redistributed plugin instructions, scripts, templates, assets, provider data or
-copied skill packages. No dependency connection or permission was added.
-
 ## Future news consultation: preparation only
 
 The [current OpenAI plan-usage limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
@@ -133,4 +104,5 @@ answer quality, resistance to every prompt injection or the accuracy of a news
 summary. A model-backed evaluation requires an approved account, bounded usage
 and synthetic or explicitly authorized context. The
 [assistant guide](../apps/assistant.md#versioned-instructions-and-evaluation-limits)
-owns that boundary; dated results belong in the [review archive](../reviews/README.md).
+owns that boundary. Validate the exact revision and record results with its
+pull request or CI run. Keep local diagnostics outside versioned documentation.
