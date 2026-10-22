@@ -1,8 +1,9 @@
 # Tuxedo Finance Documentation
 
-Technical and product documentation for the current `0.11.0` release candidate.
-Merge and Docker publication were authorized on 2026-10-21; release validation
-is underway. Technical guides are maintained in English;
+Technical and product documentation for version `0.11.0`. Container availability
+depends on the matching Docker release workflow completing and its installation
+assets appearing; follow the [availability guide](docker.md#availability).
+Technical guides are maintained in English;
 the root README is available in [English](../README.md) and
 [Português (Brasil)](../README.pt-BR.md).
 

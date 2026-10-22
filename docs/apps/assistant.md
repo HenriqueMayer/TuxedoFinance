@@ -1,7 +1,7 @@
 # `assistant`
 
-**Current status:** Local conversations, OpenAI authorization and gated model
-catalogue/streaming implementation under Unreleased after `0.10.0`.
+**Current status:** Version `0.11.0` includes local conversations, optional
+ChatGPT account authorization and gated model catalogue/streaming.
 Authorization and inference are independently disabled by default.
 Owner-approved native sign-in and local account confirmation were
 observed; see the [bounded native validation](../reviews/assistant-native-sign-in-2026-10-19.md).
