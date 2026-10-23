@@ -95,7 +95,7 @@ then assembles the version manifest and attaches `compose.yaml` and
 revision. Pull requests validate images without publishing. Prereleases are
 validated but not published by this workflow.
 
-For v1.0.1, upgrade rehearsals start from v0.3.0, v0.4.0, v0.9.0, v0.9.1,
+For v1.0.2, upgrade rehearsals start from v0.3.0, v0.4.0, v0.9.0, v0.9.1,
 v0.10.0 and v1.0.0. They verify
 financial records, additive migration defaults, volume persistence, backups and
 restoration before publication. Fixtures include account- and card-funded reward

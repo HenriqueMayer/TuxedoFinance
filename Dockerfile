@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-FROM ghcr.io/astral-sh/uv:0.12.9 AS uv
-FROM python:3.12-slim-bookworm AS build
+FROM ghcr.io/astral-sh/uv:0.13.5 AS uv
+FROM python:3.12-slim-bookworm AS python-base
+# pip carries its own CA bundle independently of application dependencies.
+RUN --mount=from=uv,source=/uv,target=/usr/local/bin/uv \
+    uv pip install --system --no-cache 'pip==26.2.2'
+
+FROM python-base AS build
 COPY --from=uv /uv /usr/local/bin/uv
 ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
 WORKDIR /app
@@ -10,7 +15,7 @@ COPY . .
 RUN SECRET_KEY=build-only-not-a-runtime-secret TUXEDO_ENV_FILE=/dev/null \
     DEBUG=False .venv/bin/python manage.py collectstatic --noinput
 
-FROM python:3.12-slim-bookworm AS runtime
+FROM python-base AS runtime
 ARG VERSION=development
 ARG REVISION=unknown
 LABEL org.opencontainers.image.source="https://github.com/HenriqueMayer/TuxedoFinance" \

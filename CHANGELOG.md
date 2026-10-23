@@ -7,6 +7,18 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-23
+
+### Security
+
+- Require Django 6.0.9 within the supported 6.0 series to apply the [October parser, formset and GIS security fixes](https://www.djangoproject.com/weblog/2026/oct/06/security-releases/).
+- Update the Docker build tool to uv 0.13.5 and require that baseline for development, including the [corrected CA bundle](https://github.com/astral-sh/uv/security/advisories/GHSA-hq85-5cpj-mr62).
+- Update Docker's installed pip to 26.2.2, which includes a corrected vendored certifi bundle. This does not replace Python's separate bundled `ensurepip` wheel.
+
+### Fixed
+
+- Wait for assistant history loading to finish before opening deletion controls in the browser regression test, preserving its assertions and the separate pending-read deletion coverage.
+
 ## [1.0.1] - 2026-10-22
 
 ### Changed
@@ -453,7 +465,8 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 - Aligned investment pagination, chart interactions and movement ordering with
   the rest of the application.
 
-[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.11.0...v1.0.0
 [0.11.0]: https://github.com/HenriqueMayer/TuxedoFinance/compare/v0.10.0...v0.11.0

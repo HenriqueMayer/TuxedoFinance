@@ -33,15 +33,15 @@ docker compose --env-file .env.docker -f compose.yaml -f compose.build.yaml up -
 
 ## Install a released image without cloning
 
-For **v1.0.1**, wait for its Docker release workflow to finish, then download
-[compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.1/compose.yaml)
-and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.1/docker.env.example)
-from the [release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v1.0.1)
+For **v1.0.2**, wait for its Docker release workflow to finish, then download
+[compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.2/compose.yaml)
+and [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.2/docker.env.example)
+from the [release](https://github.com/HenriqueMayer/TuxedoFinance/releases/tag/v1.0.2)
 into a new installation directory. Open a terminal there, select and pull the
 image, then follow [one-time configuration and startup](#one-time-configuration-and-startup):
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v1.0.1
+image=ghcr.io/henriquemayer/tuxedofinance:v1.0.2
 docker pull "$image"
 ```
 
@@ -53,6 +53,20 @@ Images use explicit version tags; there is no supported `latest` alias. Keep
 the directory name stable because Compose uses it to identify the data volume.
 Moving or renaming the directory requires preserving the original project name
 with `--project-name`; otherwise Compose creates a different empty installation.
+
+## Dependency security boundary
+
+v1.0.2 uses Django 6.0.9, uv 0.13.5 during the image build and pip 26.2.2
+installed in the base environment. The application uses its existing virtual
+environment, which does not include pip or certifi.
+
+Python's separate `ensurepip` bootstrap wheel still contains an older vendored
+certificate bundle. The documented image build, startup and administration
+commands do not invoke it. Explicitly creating another environment with
+`ensurepip` or the default `python -m venv` can reinstall the older pip; using
+that pip for HTTPS would reintroduce the affected trust bundle. This release
+does not remove that residual wheel. It requires a future official Python-base
+update; the image's trust stores and standard library are not modified manually.
 
 ## One-time configuration and startup
 
@@ -104,7 +118,7 @@ version; follow the backup and restore procedure before changing image versions.
 
 ## Assistant authorization preparation
 
-The v1.0.1 source includes optional OpenAI account authorization and streaming.
+Starting with v1.0.1, the source includes optional OpenAI account authorization and streaming.
 Real sign-in is disabled by default and inference has its own default-disabled
 flag. Leave both off unless intentionally
 connecting the installation. Opening settings
