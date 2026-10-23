@@ -49,7 +49,7 @@ copyright and license notices.
 
 ## Prerequisites
 
-Use Python 3.12, [uv](https://docs.astral.sh/uv/getting-started/installation/),
+Use Python 3.12, [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.13.5 or newer,
 Node.js 22.23.4 (the baseline pinned in `.nvmrc` for local tooling and CI), npm,
 and GNU gettext (`msgfmt` and `xgettext`). With nvm installed, run `nvm use`
 from the repository root to select the pinned version.

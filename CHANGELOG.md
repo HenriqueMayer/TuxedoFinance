@@ -7,6 +7,12 @@ and project versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+
+- Require Django 6.0.9 within the supported 6.0 series to apply the [October parser, formset and GIS security fixes](https://www.djangoproject.com/weblog/2026/oct/06/security-releases/).
+- Update the Docker build tool to uv 0.13.5 and require that baseline for development, including the [corrected CA bundle](https://github.com/astral-sh/uv/security/advisories/GHSA-hq85-5cpj-mr62).
+- Update Docker's installed pip to 26.2.2, which includes a corrected vendored certifi bundle. This does not replace Python's separate bundled `ensurepip` wheel.
+
 ## [1.0.1] - 2026-10-22
 
 ### Changed
