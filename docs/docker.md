@@ -102,7 +102,7 @@ from `.env.docker.example` (the release asset is named `docker.env.example`):
 | `ALLOW_SIGNUPS` | Default `True`; set `False` after creating the intended accounts |
 | `HTTPS` | Default `False`; set `True` only with a correctly configured TLS proxy |
 | `LOG_LEVEL` | Default `INFO` |
-| `ASSISTANT_OPENAI_AUTH_ENABLED` | Default `False`; reserved for a later separately approved real-account authorization validation; does not enable responses |
+| `ASSISTANT_OPENAI_AUTH_ENABLED` | Default `False`; explicit opt-in for ChatGPT account authorization; does not enable responses |
 | `ASSISTANT_OPENAI_INFERENCE_ENABLED` | Default `False`; separate explicit catalogue/streaming opt-in, requiring authorization and an eligible selected account |
 | `ASSISTANT_OPENAI_CALLBACK_URL` | Container value derived by Compose from the published `TUXEDO_PORT` and exact `/assistant/connections/callback/` path |
 
