@@ -186,6 +186,7 @@ for (const theme of ['light', 'dark']) for (const width of [1440, 390]) for (con
         const history = panel.locator('.assistant-history');
         if (!await history.getAttribute('open')) await history.locator('summary').press('Enter');
         await history.getByRole('link', {name: new RegExp(c.new)}).press('Enter');
+        await expect(panel).not.toHaveAttribute('aria-busy', 'true');
         await expect(panel.locator('[data-conversation-id]')).toHaveAttribute('data-conversation-id', conversation);
         await expect(page.locator('#departure-confirm')).toBeHidden();
         await panel.locator('.assistant-delete > summary').press('Enter');
