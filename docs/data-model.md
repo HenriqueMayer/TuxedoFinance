@@ -78,6 +78,14 @@ Rules:
 - A repeating entry that asks for confirmation changes the account only in
   the months that the owner confirmed (`ledger.commitments`).
 - A category with records is not deleted.
+- Statement import has four states: `STAGED` (a CSV file that waits for its
+  columns), `READY` (in review), `CONFIRMED` and `UNDONE`.
+  `ledger.statement_import` validates each decision, creates the records of a
+  confirmation in one database transaction and keeps a snapshot of each
+  created record; the undo is refused when a snapshot no longer equals its
+  record. The confirmation compares a digest of the review, so a review that
+  changed in another window is not confirmed. `ledger.import_review` proposes
+  the columns and the first decisions; it creates no financial record.
 
 ## Investments
 

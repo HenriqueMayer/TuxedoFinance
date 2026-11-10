@@ -6,6 +6,7 @@ import { Window } from "../ui/Window";
 import { CategoriesWindow } from "./categories";
 import { AddEntry, EditEntry } from "./entry";
 import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
+import { ImportStartWindow, ImportWindow } from "./imports";
 import { InvestmentWindow, NewInvestmentWindow } from "./investment";
 import { BudgetWindow, GoalWindow, LimitWindow, NewBudgetWindow, NewGoalWindow } from "./plan";
 import { RatesWindow } from "./rates";
@@ -31,6 +32,8 @@ export type WindowId =
   | "settings"
   | "categories"
   | "rates"
+  | "import"
+  | `import:${number}`
   | "add"
   | "new-account"
   | "new-card"
@@ -132,6 +135,13 @@ export function WindowHost() {
   } else if (w === "rates") {
     title = t.rates.title;
     content = <RatesWindow />;
+  } else if (w === "import") {
+    title = t.imports.title;
+    content = <ImportStartWindow />;
+  } else if (kind === "import" && id !== null) {
+    title = t.imports.title;
+    content = <ImportWindow id={id} onDone={close} />;
+    wide = true;
   } else if (w === "add") {
     title = t.entry.add;
     content = <AddEntry onDone={close} />;

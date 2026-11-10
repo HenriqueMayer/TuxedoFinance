@@ -531,6 +531,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the latest statement imports */
+        get: operations["ledger_import_api_list_imports"];
+        put?: never;
+        /** Stage a statement file for review */
+        post: operations["ledger_import_api_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a statement import */
+        get: operations["ledger_import_api_read_import"];
+        put?: never;
+        post?: never;
+        /** Discard an import that was not confirmed */
+        delete: operations["ledger_import_api_discard"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{batch_id}/mapping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Choose the columns of a CSV file */
+        put: operations["ledger_import_api_set_mapping"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{batch_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save the decisions of rows */
+        put: operations["ledger_import_api_save_decisions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{batch_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create the reviewed records */
+        post: operations["ledger_import_api_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{batch_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove the records of an import */
+        post: operations["ledger_import_api_undo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/investments/positions": {
         parameters: {
             query?: never;
@@ -1537,6 +1641,226 @@ export interface components {
             month: string;
             /** Amount */
             amount: number | string;
+        };
+        /** ImportBrief */
+        ImportBrief: {
+            /** Id */
+            id: number;
+            /** Account Name */
+            account_name: string;
+            /** File Name */
+            file_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "STAGED" | "READY" | "CONFIRMED" | "UNDONE";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Rows */
+            rows: number;
+        };
+        /** ImportOut */
+        ImportOut: {
+            /** Id */
+            id: number;
+            /** Account Id */
+            account_id: number;
+            /** Account Name */
+            account_name: string;
+            /** Currency */
+            currency: string;
+            /** File Name */
+            file_name: string;
+            /**
+             * File Format
+             * @enum {string}
+             */
+            file_format: "CSV" | "OFX";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "STAGED" | "READY" | "CONFIRMED" | "UNDONE";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Headers */
+            headers: string[];
+            mapping: components["schemas"]["Mapping"] | null;
+            /** Sample */
+            sample: {
+                [key: string]: string;
+            }[];
+            /** Rows */
+            rows: components["schemas"]["RowOut"][];
+            /** Undecided */
+            undecided: number;
+            /** Digest */
+            digest: string;
+            /** Needs Opening Date */
+            needs_opening_date: boolean;
+            /** Invoices */
+            invoices: components["schemas"]["PayableInvoice"][];
+            reconciliation: components["schemas"]["Reconciliation"] | null;
+        };
+        /** Mapping */
+        Mapping: {
+            /** Date Column */
+            date_column: string;
+            /** Description Column */
+            description_column: string;
+            /**
+             * Amount Column
+             * @default
+             */
+            amount_column: string;
+            /**
+             * Debit Column
+             * @default
+             */
+            debit_column: string;
+            /**
+             * Credit Column
+             * @default
+             */
+            credit_column: string;
+            /**
+             * Id Column
+             * @default
+             */
+            id_column: string;
+            /**
+             * Currency Column
+             * @default
+             */
+            currency_column: string;
+            /**
+             * Date Format
+             * @default %Y-%m-%d
+             */
+            date_format: string;
+            /**
+             * Decimal Mark
+             * @default .
+             * @enum {string}
+             */
+            decimal_mark: "." | ",";
+        };
+        /** MatchOut */
+        MatchOut: {
+            /** Id */
+            id: number;
+            /** Label */
+            label: string;
+        };
+        /** PayableInvoice */
+        PayableInvoice: {
+            /** Id */
+            id: number;
+            /** Card Name */
+            card_name: string;
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Remaining */
+            remaining: string;
+        };
+        /** Reconciliation */
+        Reconciliation: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Expected */
+            expected: string;
+            /** Actual */
+            actual: string;
+            /** Difference */
+            difference: string;
+        };
+        /** RowOut */
+        RowOut: {
+            /** Id */
+            id: number;
+            /** Number */
+            number: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Amount */
+            amount: string;
+            /** Description */
+            description: string;
+            /** Action */
+            action: ("SKIP" | "CREATE" | "MATCH" | "PAY_INVOICE" | "TRANSFER") | "";
+            /** Category Id */
+            category_id: number | null;
+            /** Matched Movement Id */
+            matched_movement_id: number | null;
+            /** Invoice Id */
+            invoice_id: number | null;
+            /** Counterparty Account Id */
+            counterparty_account_id: number | null;
+            /** Counterparty Amount */
+            counterparty_amount: string | null;
+            /** Duplicate */
+            duplicate: boolean;
+            /** Matches */
+            matches: components["schemas"]["MatchOut"][];
+        };
+        /** UploadIn */
+        UploadIn: {
+            /** Account Id */
+            account_id: number;
+            /** File Name */
+            file_name: string;
+            /** Content */
+            content: string;
+            /** Closing Balance */
+            closing_balance?: number | string | null;
+            /** Closing Date */
+            closing_date?: string | null;
+        };
+        /** Decision */
+        Decision: {
+            /** Row Id */
+            row_id: number;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "SKIP" | "CREATE" | "MATCH" | "PAY_INVOICE" | "TRANSFER";
+            /** Category Id */
+            category_id?: number | null;
+            /** Matched Movement Id */
+            matched_movement_id?: number | null;
+            /** Invoice Id */
+            invoice_id?: number | null;
+            /** Counterparty Account Id */
+            counterparty_account_id?: number | null;
+            /** Counterparty Amount */
+            counterparty_amount?: number | string | null;
+        };
+        /** DecisionsIn */
+        DecisionsIn: {
+            /** Decisions */
+            decisions: components["schemas"]["Decision"][];
+        };
+        /** ConfirmIn */
+        ConfirmIn: {
+            /** Digest */
+            digest: string;
         };
         /** OverviewOut */
         OverviewOut: {
@@ -3344,6 +3668,192 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScheduleOut"];
+                };
+            };
+        };
+    };
+    ledger_import_api_list_imports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBrief"][];
+                };
+            };
+        };
+    };
+    ledger_import_api_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+        };
+    };
+    ledger_import_api_read_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+        };
+    };
+    ledger_import_api_discard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ledger_import_api_set_mapping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Mapping"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+        };
+    };
+    ledger_import_api_save_decisions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionsIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+        };
+    };
+    ledger_import_api_confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+        };
+    };
+    ledger_import_api_undo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
                 };
             };
         };

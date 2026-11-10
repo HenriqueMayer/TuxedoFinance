@@ -39,6 +39,8 @@ and no upgrade from 1.x.
 - Calculators: net CLT salary and compound growth.
 - Accounts in other currencies, exchange rates typed in Settings, and
   transfers between currencies.
+- Statement import (OFX and CSV) in Transactions: review each row, confirm
+  all at once, undo.
 
 ### Not built yet
 

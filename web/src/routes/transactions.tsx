@@ -62,7 +62,12 @@ export function TransactionsPage(props: {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">{t.nav.transactions}</h1>
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{t.nav.transactions}</h1>
+          <OpenWindow w="import" className="link text-sm font-medium">
+            {t.imports.start}
+          </OpenWindow>
+        </div>
         <nav aria-label={t.entry.date} className="flex flex-wrap items-center gap-1">
           {!everyMonth && (
             <>

@@ -38,6 +38,38 @@ A window has an address, so Back closes it and a link reopens it. See
 - The amount of a repeating entry with past months changes in its monthly
   schedule, from a chosen month. Past months stay as they were.
 
+### Statement import
+
+Transactions has **Import statement**, for an OFX or CSV file of one account
+(at most 2 MiB and 500 rows).
+
+1. **Read.** The owner chooses the account and the file. Nothing is recorded.
+   The same file again opens the same import.
+2. **Columns** (CSV only). The application proposes the columns of date,
+   description and amount from the names in the file, with the date format
+   and the decimal mark. The owner confirms or changes them.
+3. **Review.** Each row needs one decision:
+
+   | Decision | Effect at the confirmation |
+   |---|---|
+   | Create an entry | An income or an expense on the account, with the chosen category |
+   | Already recorded | Nothing. The row is tied to a recorded movement with the same date, direction and amount |
+   | Payment of a card invoice | A confirmed payment of an invoice that waits for one |
+   | Transfer between my accounts | A transfer with the other account |
+   | Skip | Nothing |
+
+   A first decision is already chosen where the records give one: a bank
+   identifier that was imported before is skipped, a row that equals one
+   recorded movement is matched, and a description that was recorded before
+   gets the category of that entry. The owner can change it.
+4. **Confirm.** Every reviewed row is recorded at once, or none is. With a
+   balance of the statement, the result says whether the records agree.
+5. **Undo.** A confirmed import can be undone while its records are
+   unchanged.
+
+An account with an opening balance needs the date of that balance before the
+review: without it, an imported row could count an amount twice.
+
 ## Months
 
 A month groups entries by *billed month*: the statement month for a
@@ -211,7 +243,6 @@ this branch yet, except where noted.
 |---|---|
 | Automatic alerts of 1.x (duplicates, subscription increases, cash shortage) | Not planned for 2.0. A budget and a goal show their own state |
 | Loyalty points and miles | Domain moved, no API or screen. A deposit paid with points waits for it |
-| Statement import (CSV, OFX) | Models and parsers moved, no API or screen |
 | Balance checks (reconciliation), invoice credits | Domain moved, no API or screen |
 | Investment fees, and the edit of a recorded operation | Domain moved, no screen. An operation is undone and recorded again |
 | Month closing | Not built |
