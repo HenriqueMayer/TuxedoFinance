@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { type Position, positionsQuery } from "../data/investments";
+import { programsQuery } from "../data/loyalty";
 import { type AccountRow, type CreditCardRow, type InvoiceRow, walletQuery } from "../data/wallet";
 import { useLanguage, useMessages } from "../i18n";
 import type { Messages } from "../i18n/en";
@@ -81,6 +82,7 @@ export function WalletPage() {
         </>
       )}
       {data && <Investments />}
+      {data && <Loyalty />}
     </>
   );
 }
@@ -136,6 +138,51 @@ function Investments() {
           ))}
         </p>
       )}
+    </section>
+  );
+}
+
+/**
+ * Points and miles. Without a program, the section is one link: the Wallet
+ * of an owner who does not use points stays as it was.
+ */
+function Loyalty() {
+  const t = useMessages();
+  const language = useLanguage();
+  const { data } = useQuery(programsQuery);
+  if (!data) return null;
+  if (data.length === 0) {
+    return (
+      <p className="mt-8 text-sm">
+        <OpenWindow w="new-program" className="link">
+          {t.loyalty.add}
+        </OpenWindow>
+      </p>
+    );
+  }
+  return (
+    <section className="mt-10">
+      <h2 className="border-b border-line pb-2 font-medium">{t.loyalty.title}</h2>
+      <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.map((program) => (
+          <li key={program.id}>
+            <OpenWindow w={`program:${program.id}`} className={CARD}>
+              <span className="block truncate font-medium">{program.name}</span>
+              <span className="amount mt-3 block text-xl font-semibold">
+                {t.loyalty.balance(formatQuantity(program.balance, language), program.unit_name)}
+              </span>
+            </OpenWindow>
+          </li>
+        ))}
+        <li>
+          <OpenWindow
+            w="new-program"
+            className="flex h-full min-h-24 items-center justify-center rounded-(--radius-window) border border-dashed border-control p-4 font-medium hover:bg-surface"
+          >
+            {t.loyalty.new}
+          </OpenWindow>
+        </li>
+      </ul>
     </section>
   );
 }

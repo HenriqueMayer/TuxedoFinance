@@ -258,7 +258,7 @@ export function WorthWindow() {
     { label: t.home.worth.debt, amount: today.card_debt, sign: "−", help: t.home.worth.debtHelp },
   ].filter((part) => part.label !== t.home.worth.credits || Number(part.amount) !== 0);
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div>
         <p className="text-sm text-muted">{t.home.blocks.worth}</p>
         <p

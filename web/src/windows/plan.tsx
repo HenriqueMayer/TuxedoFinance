@@ -300,7 +300,7 @@ export function GoalWindow(props: { id: number; onDone: () => void }) {
   const money = (amount: string) => formatAmount(amount, goal.currency);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div>
         <p className="text-sm text-muted">{goal.name}</p>
         <p className="amount text-3xl font-semibold">{money(goal.saved)}</p>

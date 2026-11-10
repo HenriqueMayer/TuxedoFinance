@@ -38,7 +38,7 @@ export function ScheduleWindow(props: { id: number }) {
 
   const actionError = formMessage(act.error, t) ?? fieldMessages(act.error, "month")[0];
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <p className="text-lg font-semibold">{data.title}</p>
 
       <ul className="divide-y divide-line border-y border-line">

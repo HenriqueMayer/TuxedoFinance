@@ -244,7 +244,7 @@ export function InvestmentWindow(props: { id: number; onDone: () => void }) {
   const money = (amount: string) => formatAmount(amount, position.currency);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div>
         <p className="text-sm text-muted">
           {position.institution_name} · {position.name}

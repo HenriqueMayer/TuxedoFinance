@@ -13,7 +13,11 @@ class ExchangeTestCase(ApiTestCase):
         super().setUp()
         bank = Bank.objects.create(user=self.user, name="Wise")
         self.reais = BankAccount.objects.create(
-            user=self.user, bank=bank, name="Reais", opening_balance=Decimal("1000.00")
+            user=self.user,
+            bank=bank,
+            name="Reais",
+            currency="BRL",
+            opening_balance=Decimal("1000.00"),
         )
         self.dollars = BankAccount.objects.create(
             user=self.user,
@@ -130,7 +134,9 @@ class CrossCurrencyTransferTests(ExchangeTestCase):
         self.assertEqual(self.balances(), {"Dollars": "100.00", "Reais": "1000.00"})
 
     def test_a_transfer_in_one_currency_keeps_one_amount(self):
-        other = BankAccount.objects.create(user=self.user, bank=self.reais.bank, name="Reserva")
+        other = BankAccount.objects.create(
+            user=self.user, bank=self.reais.bank, name="Reserva", currency="BRL"
+        )
         response = self.transfer(destination_account_id=other.pk, destination_amount="500.00")
         self.assert_errors(response, 400, "destination_amount")
         response = self.transfer(destination_account_id=other.pk)

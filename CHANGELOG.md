@@ -41,11 +41,12 @@ and no upgrade from 1.x.
   transfers between currencies.
 - Statement import (OFX and CSV) in Transactions: review each row, confirm
   all at once, undo.
+- Points and miles in the Wallet: points earned, used and expired, and a
+  redemption for money in an account.
 
 ### Not built yet
 
-Loyalty points, accounts in other currencies, statement import and the
-public site.
+The month closing and the public site.
 
 ### Removed
 

@@ -58,6 +58,7 @@ def health(request):
 
 api.add_router("/session", "accounts.api.router", tags=["session"])
 api.add_router("/banking", "banking.api.router", tags=["banking"])
+api.add_router("/loyalty", "banking.loyalty_api.router", tags=["loyalty"])
 api.add_router("/ledger", "ledger.api.router", tags=["ledger"])
 api.add_router("/imports", "ledger.import_api.router", tags=["imports"])
 api.add_router("/investments", "investments.api.router", tags=["investments"])

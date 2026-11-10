@@ -79,7 +79,7 @@ export function ImportStartWindow() {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <form onSubmit={submit} className="grid gap-5" noValidate>
         <p className="max-w-prose text-sm text-muted">{t.imports.help}</p>
         <AccountSelect
@@ -168,7 +168,7 @@ export function ImportWindow(props: { id: number; onDone: () => void }) {
   const { data } = useSuspenseQuery(importQuery(props.id));
   const open = data.status === "STAGED" || data.status === "READY";
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="min-w-0 truncate font-medium">{data.file_name}</p>
         <p className="text-sm text-muted">

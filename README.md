@@ -18,7 +18,8 @@ Version 2.0 is in development on this branch. It is a new application on the
 | Home: month result, spending by category, due soon, net worth | Built |
 | Investments: balances and units, deposits, withdrawals, value today | Built |
 | Plan: limit of the month, category budgets, goals, months ahead, sheet, calculators | Built |
-| Loyalty, other currencies, statement import, the public site | Not built yet |
+| Other currencies and exchange rates, statement import, points and miles | Built |
+| The month closing, the public site | Not built yet |
 
 2.0 has a new database. There is no upgrade from 1.x. The last 1.x release is
 the tag [`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.0).

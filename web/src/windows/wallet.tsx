@@ -235,7 +235,7 @@ export function AccountWindow(props: { id: number; onDone: () => void }) {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div>
         <p className="text-sm text-muted">
           {account.bank_name} · {account.name}
@@ -489,7 +489,7 @@ export function CardWindow(props: { id: number; onDone: () => void }) {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <section>
         <h3 className="border-b border-line pb-2 text-sm font-medium text-muted">
           {t.wallet.invoices}
@@ -594,7 +594,7 @@ export function InvoiceWindow(props: { id: number }) {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-muted">

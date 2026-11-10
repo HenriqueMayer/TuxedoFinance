@@ -129,7 +129,7 @@ function SheetEditor(props: { saved?: Saved; onDone: () => void }) {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <p className="max-w-prose text-sm text-muted">{t.plan.sheet.help}</p>
         <Segmented

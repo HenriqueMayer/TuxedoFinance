@@ -49,6 +49,9 @@ Rules:
   the date and is calculated when it is read.
 - A transfer in one currency has equal amounts on both sides. A transfer
   between currencies has one amount for each side.
+- `banking.loyalty` records the points that the owner types and undoes them.
+  A redemption (`banking.services.create_reward_redemption`) writes a points
+  debit and a credit movement of kind `REWARD` in the account.
 - An exchange rate belongs to a pair of currencies and a date. A pair has one
   rate for each date. `banking.services.convert` uses the latest rate on or
   before the date, or the inverse of the opposite pair.

@@ -46,7 +46,7 @@ export function RatesWindow() {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <p className="max-w-prose text-sm text-muted">{t.rates.help(base)}</p>
       {missing.length > 0 && <p className="text-sm">{t.rates.missing(missing.join(", "))}</p>}
       <form

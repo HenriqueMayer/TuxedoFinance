@@ -246,6 +246,7 @@ class ConfirmationTests(ImportTestCase):
             user=self.user,
             bank=self.account.bank,
             name="Reserva",
+            currency="BRL",
             opening_date=date(2026, 1, 1),
         )
         batch = self.staged(

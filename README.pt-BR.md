@@ -19,7 +19,8 @@ as regras financeiras da 1.x: uma API Django e um cliente React.
 | Início: resultado do mês, gastos por categoria, o que vence, patrimônio | Pronto |
 | Investimentos: saldos e unidades, aportes, resgates, valor de hoje | Pronto |
 | Planejar: limite do mês, orçamentos por categoria, metas, próximos meses, planilha, simuladores | Pronto |
-| Pontos, outras moedas, importação de extrato, site público | Ainda não |
+| Outras moedas e taxas de câmbio, importação de extrato, pontos e milhas | Pronto |
+| Fechamento do mês, site público | Ainda não |
 
 A 2.0 tem um banco de dados novo. Não há atualização a partir da 1.x. A
 última versão 1.x é a tag

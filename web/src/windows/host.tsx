@@ -8,6 +8,7 @@ import { AddEntry, EditEntry } from "./entry";
 import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
 import { ImportStartWindow, ImportWindow } from "./imports";
 import { InvestmentWindow, NewInvestmentWindow } from "./investment";
+import { NewProgramWindow, ProgramWindow } from "./loyalty";
 import { BudgetWindow, GoalWindow, LimitWindow, NewBudgetWindow, NewGoalWindow } from "./plan";
 import { RatesWindow } from "./rates";
 import { ScheduleWindow } from "./schedule";
@@ -39,6 +40,8 @@ export type WindowId =
   | "new-card"
   | "transfer"
   | "new-investment"
+  | "new-program"
+  | `program:${number}`
   | "worth"
   | "month"
   | "due"
@@ -208,6 +211,12 @@ export function WindowHost() {
   } else if (kind === "goal" && id !== null) {
     title = t.plan.goals.goal;
     content = <GoalWindow id={id} onDone={close} />;
+  } else if (w === "new-program") {
+    title = t.loyalty.new;
+    content = <NewProgramWindow />;
+  } else if (kind === "program" && id !== null) {
+    title = t.loyalty.program;
+    content = <ProgramWindow id={id} onDone={close} />;
   } else if (kind === "investment" && id !== null) {
     title = t.invest.investment;
     content = <InvestmentWindow id={id} onDone={close} />;

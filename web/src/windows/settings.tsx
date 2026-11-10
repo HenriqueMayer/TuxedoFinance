@@ -35,7 +35,7 @@ export function SettingsWindow() {
   if (!session.user || !preferences) return null;
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <Segmented
         label={t.settings.language}
         value={language}

@@ -82,7 +82,7 @@ export function SalaryWindow() {
     invalid.includes(name) ? [t.plan.tools.numberInvalid] : fieldMessages(calculate.error, name);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <form onSubmit={submit} className="grid gap-5" noValidate>
         <div className="flex flex-wrap gap-4">
           <AmountField
@@ -195,7 +195,7 @@ export function GrowthWindow() {
     invalid.includes(name) ? [t.plan.tools.numberInvalid] : fieldMessages(calculate.error, name);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <form onSubmit={submit} className="grid gap-5" noValidate>
         <div className="flex flex-wrap gap-4">
           <AmountField

@@ -367,6 +367,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/loyalty/programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the loyalty programs */
+        get: operations["banking_loyalty_api_list_programs"];
+        put?: never;
+        /** Create a loyalty program */
+        post: operations["banking_loyalty_api_create_program"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/loyalty/programs/{program_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a loyalty program */
+        get: operations["banking_loyalty_api_read_program"];
+        /** Rename a loyalty program */
+        put: operations["banking_loyalty_api_update_program"];
+        post?: never;
+        /** Delete a program without entries */
+        delete: operations["banking_loyalty_api_delete_program"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/loyalty/programs/{program_id}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record points earned, used or expired */
+        post: operations["banking_loyalty_api_record_entry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/loyalty/programs/{program_id}/redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redeem points for money in an account */
+        post: operations["banking_loyalty_api_redeem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/loyalty/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Undo a loyalty entry */
+        delete: operations["banking_loyalty_api_undo_entry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ledger/categories": {
         parameters: {
             query?: never;
@@ -1408,6 +1496,100 @@ export interface components {
             rate: number | string;
             /** Effective Date */
             effective_date?: string | null;
+        };
+        /** ProgramOut */
+        ProgramOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Balance */
+            balance: string;
+        };
+        /** ProgramIn */
+        ProgramIn: {
+            /** Name */
+            name: string;
+            /**
+             * Unit Name
+             * @default
+             */
+            unit_name: string;
+        };
+        /** EntryOut */
+        EntryOut: {
+            /** Id */
+            id: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "EARNED" | "USED" | "EXPIRED" | "REDEEMED";
+            /** Amount */
+            amount: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Notes */
+            notes: string;
+            /** Cash Amount */
+            cash_amount: string | null;
+            /** Cash Currency */
+            cash_currency: string | null;
+            /** Account Name */
+            account_name: string | null;
+            /** Undoable */
+            undoable: boolean;
+        };
+        /** ProgramDetailOut */
+        ProgramDetailOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Balance */
+            balance: string;
+            /** Entries */
+            entries: components["schemas"]["EntryOut"][];
+        };
+        /** EntryIn */
+        EntryIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "EARNED" | "USED" | "EXPIRED";
+            /** Amount */
+            amount: number | string;
+            /** Date */
+            date?: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+        };
+        /** RedemptionIn */
+        RedemptionIn: {
+            /** Points */
+            points: number | string;
+            /** Account Id */
+            account_id: number;
+            /** Amount */
+            amount: number | string;
+            /** Date */
+            date?: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
         };
         /** CategoryOut */
         CategoryOut: {
@@ -3331,6 +3513,190 @@ export interface operations {
             header?: never;
             path: {
                 rate_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    banking_loyalty_api_list_programs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramOut"][];
+                };
+            };
+        };
+    };
+    banking_loyalty_api_create_program: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    banking_loyalty_api_read_program: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramDetailOut"];
+                };
+            };
+        };
+    };
+    banking_loyalty_api_update_program: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    banking_loyalty_api_delete_program: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    banking_loyalty_api_record_entry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    banking_loyalty_api_redeem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedemptionIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    banking_loyalty_api_undo_entry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: number;
             };
             cookie?: never;
         };

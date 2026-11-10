@@ -100,6 +100,20 @@ and invoices use this one rule, so their totals agree.
   date. Without a rate, the amount is left out and the screen names the
   currency and links to the rates.
 
+### Points and miles
+
+- A program has a name and a unit that the owner names (points, miles). The
+  Wallet shows the programs after the investments. Without a program it shows
+  one link to add the first.
+- The owner records points earned, used and expired. Points cannot go below
+  zero.
+- A redemption takes points from the program and adds an amount to an
+  account, in the currency of the account.
+- An entry can be undone. The undo of a redemption returns the points and
+  removes the amount from the account. Points that later entries use are not
+  removed.
+- Points are not money: they do not count in the net worth.
+
 ### Investments
 
 - An investment has a name, an institution and one of two kinds. A *balance*
@@ -242,7 +256,7 @@ this branch yet, except where noted.
 | Area | State |
 |---|---|
 | Automatic alerts of 1.x (duplicates, subscription increases, cash shortage) | Not planned for 2.0. A budget and a goal show their own state |
-| Loyalty points and miles | Domain moved, no API or screen. A deposit paid with points waits for it |
+| Points bought with an account or a card, IOF on a redemption, a deposit paid with points | Domain moved, no screen. Not planned for 2.0 unless asked |
 | Balance checks (reconciliation), invoice credits | Domain moved, no API or screen |
 | Investment fees, and the edit of a recorded operation | Domain moved, no screen. An operation is undone and recorded again |
 | Month closing | Not built |
