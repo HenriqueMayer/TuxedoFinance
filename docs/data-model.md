@@ -47,7 +47,11 @@ Rules:
   keeps that mode.
 - The state of an invoice (scheduled, partly paid, overdue, paid) depends on
   the date and is calculated when it is read.
-- A transfer in one currency has equal amounts on both sides.
+- A transfer in one currency has equal amounts on both sides. A transfer
+  between currencies has one amount for each side.
+- An exchange rate belongs to a pair of currencies and a date. A pair has one
+  rate for each date. `banking.services.convert` uses the latest rate on or
+  before the date, or the inverse of the opposite pair.
 
 ## Ledger
 

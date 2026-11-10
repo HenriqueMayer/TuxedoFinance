@@ -60,15 +60,10 @@ test("the owner chooses the Home blocks and their order", async ({ page }) => {
       .locator("main")
       .getByText(/^(Left to spend|Where the money went|Due soon|Net worth|Goals)$/)
       .allTextContents();
-  // The blocks arrive after the page frame.
-  await expect(page.locator("main").getByText("Goals", { exact: true })).toBeVisible();
-  expect(await titles()).toEqual([
-    "Left to spend",
-    "Where the money went",
-    "Due soon",
-    "Net worth",
-    "Goals",
-  ]);
+  // The blocks arrive after the page frame, so each reading waits for them.
+  await expect
+    .poll(titles)
+    .toEqual(["Left to spend", "Where the money went", "Due soon", "Net worth", "Goals"]);
 
   await page.getByRole("link", { name: "Edit Home" }).click();
   const window = page.getByRole("dialog", { name: "Edit Home" });
@@ -81,10 +76,10 @@ test("the owner chooses the Home blocks and their order", async ({ page }) => {
   await expect(window).toBeHidden();
 
   // The page behind already shows the new choice, and a reload keeps it.
-  expect(await titles()).toEqual(["Due soon", "Where the money went", "Net worth", "Goals"]);
+  await expect.poll(titles).toEqual(["Due soon", "Where the money went", "Net worth", "Goals"]);
   await page.reload();
   await expect(page.getByRole("link", { name: "Edit Home" })).toBeVisible();
-  expect(await titles()).toEqual(["Due soon", "Where the money went", "Net worth", "Goals"]);
+  await expect.poll(titles).toEqual(["Due soon", "Where the money went", "Net worth", "Goals"]);
 
   // Hiding every block leaves a way back.
   await page.getByRole("link", { name: "Edit Home" }).click();

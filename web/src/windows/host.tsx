@@ -8,6 +8,7 @@ import { AddEntry, EditEntry } from "./entry";
 import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
 import { InvestmentWindow, NewInvestmentWindow } from "./investment";
 import { BudgetWindow, GoalWindow, LimitWindow, NewBudgetWindow, NewGoalWindow } from "./plan";
+import { RatesWindow } from "./rates";
 import { ScheduleWindow } from "./schedule";
 import { SettingsWindow } from "./settings";
 import { SheetWindow } from "./sheet";
@@ -29,6 +30,7 @@ import {
 export type WindowId =
   | "settings"
   | "categories"
+  | "rates"
   | "add"
   | "new-account"
   | "new-card"
@@ -127,6 +129,9 @@ export function WindowHost() {
   } else if (w === "categories") {
     title = t.categories.title;
     content = <CategoriesWindow />;
+  } else if (w === "rates") {
+    title = t.rates.title;
+    content = <RatesWindow />;
   } else if (w === "add") {
     title = t.entry.add;
     content = <AddEntry onDone={close} />;

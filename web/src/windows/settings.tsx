@@ -94,6 +94,9 @@ export function SettingsWindow() {
       <OpenWindow w="categories" className="link w-fit">
         {t.categories.manage}
       </OpenWindow>
+      <OpenWindow w="rates" className="link w-fit">
+        {t.rates.title}
+      </OpenWindow>
       {save.isError && (
         <p role="alert" className="text-sm text-negative">
           {t.settings.saveFailed}

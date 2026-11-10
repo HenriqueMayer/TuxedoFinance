@@ -13,6 +13,7 @@ import { monthLabel, shiftMonth, shortMonthLabel } from "../lib/dates";
 import { formatAmount } from "../lib/money";
 import { CategoryBars, DueRows } from "../routes/home";
 import { sessionQuery, useSavePreferences } from "../session";
+import { OpenWindow } from "./host";
 
 /** The analysis of one month. Its month lives in the address, so Back and a link keep it. */
 export function MonthWindow(props: {
@@ -282,7 +283,10 @@ export function WorthWindow() {
       </dl>
       {!today.complete && (
         <p className="text-sm text-muted">
-          {t.home.worth.incomplete(today.missing_currencies.join(", "))}
+          {t.home.worth.incomplete(today.missing_currencies.join(", "))}{" "}
+          <OpenWindow w="rates" className="link">
+            {t.rates.add}
+          </OpenWindow>
         </p>
       )}
       <section>

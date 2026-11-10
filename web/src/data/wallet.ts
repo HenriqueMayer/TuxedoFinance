@@ -176,3 +176,34 @@ export function useUndoTransfer() {
     onSuccess: changed,
   });
 }
+
+// Exchange rates
+
+export type ExchangeRate = Schemas["ExchangeRateOut"];
+
+// The key starts with "wallet": a Wallet change refreshes the rates too.
+export const ratesQuery = queryOptions({
+  queryKey: ["wallet", "rates"],
+  queryFn: () => unwrap(api.GET("/api/banking/exchange-rates")),
+});
+
+/** Record the rate of a date. A rate changes every total in the currency of totals. */
+export function useRecordRate() {
+  const changed = useWalletChanged();
+  return useMutation({
+    mutationFn: (body: Schemas["ExchangeRateIn"]) =>
+      unwrap(api.POST("/api/banking/exchange-rates", { body })),
+    onSuccess: changed,
+  });
+}
+
+export function useDeleteRate() {
+  const changed = useWalletChanged();
+  return useMutation({
+    mutationFn: (id: number) =>
+      unwrap(
+        api.DELETE("/api/banking/exchange-rates/{rate_id}", { params: { path: { rate_id: id } } }),
+      ),
+    onSuccess: changed,
+  });
+}

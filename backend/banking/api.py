@@ -16,6 +16,7 @@ from django.db.models import ProtectedError
 from django.utils.translation import gettext as _
 from ninja import Router, Schema
 
+from accounts.models import UserPreference
 from banking import wallet
 from banking.instruments import instruments_of
 from banking.models import (
@@ -25,6 +26,7 @@ from banking.models import (
     CardInvoice,
     CreditCard,
     DebitCard,
+    ExchangeRate,
     InvoicePayment,
 )
 from banking.services import create_transfer, delete_transfer
@@ -295,6 +297,8 @@ class TransferIn(Schema):
     source_account_id: int
     destination_account_id: int
     amount: Decimal
+    #: What the destination receives, for accounts in different currencies.
+    destination_amount: Decimal | None = None
     date: dt.date | None = None  # Today when omitted.
     notes: str = ""
 
@@ -489,27 +493,32 @@ def undo_payment(request, payment_id: int):
 @router.post("/transfers", response={204: None}, summary="Transfer between two accounts")
 @transaction.atomic
 def transfer(request, payload: TransferIn):
+    source = owned_choice(BankAccount, request.user, payload.source_account_id, "source_account_id")
+    destination = owned_choice(
+        BankAccount, request.user, payload.destination_account_id, "destination_account_id"
+    )
+    received = payload.destination_amount
+    if source.currency != destination.currency and received is None:
+        raise ValidationError(
+            {"destination_amount": _("Enter the amount that the destination account receives.")}
+        )
     try:
         create_transfer(
             user=request.user,
-            source_account=owned_choice(
-                BankAccount, request.user, payload.source_account_id, "source_account_id"
-            ),
-            destination_account=owned_choice(
-                BankAccount, request.user, payload.destination_account_id, "destination_account_id"
-            ),
+            source_account=source,
+            destination_account=destination,
             source_amount=payload.amount,
-            destination_amount=payload.amount,
+            destination_amount=payload.amount if received is None else received,
             date=payload.date or clock.today(),
             notes=payload.notes.strip(),
         )
     except ValidationError as error:
         if not hasattr(error, "error_dict"):
             raise
-        # The request has one amount and account ids; the model has two amounts.
+        # The request has account ids, and one amount unless the currencies differ.
         names = {
             "source_amount": "amount",
-            "destination_amount": "amount",
+            "destination_amount": "amount" if received is None else "destination_amount",
             "source_account": "source_account_id",
             "destination_account": "destination_account_id",
         }
@@ -525,4 +534,57 @@ def transfer(request, payload: TransferIn):
 @transaction.atomic
 def undo_transfer(request, transfer_id: int):
     delete_transfer(user=request.user, transfer=owned(BankTransfer, request.user, transfer_id))
+    return 204, None
+
+
+# Exchange rates
+
+
+class Created(Schema):
+    id: int
+
+
+class ExchangeRateOut(Schema):
+    id: int
+    #: One unit of this currency is worth ``rate`` units of ``to_currency``.
+    from_currency: str
+    to_currency: str
+    rate: Decimal
+    effective_date: dt.date
+
+
+class ExchangeRateIn(Schema):
+    from_currency: CurrencyCode
+    #: The currency of totals when omitted.
+    to_currency: CurrencyCode | None = None
+    rate: Decimal
+    effective_date: dt.date | None = None  # Today when omitted.
+
+
+@router.get("/exchange-rates", response=list[ExchangeRateOut], summary="List the exchange rates")
+def list_exchange_rates(request):
+    return ExchangeRate.objects.filter(user=request.user)[:200]
+
+
+@router.post("/exchange-rates", response=Created, summary="Record the exchange rate of a date")
+@transaction.atomic
+def record_exchange_rate(request, payload: ExchangeRateIn):
+    user = request.user
+    target = payload.to_currency or UserPreference.for_user(user).base_currency
+    when = payload.effective_date or clock.today()
+    # A pair has one rate for each date: the same date again replaces it.
+    rate = ExchangeRate.objects.filter(
+        user=user, from_currency=payload.from_currency, to_currency=target, effective_date=when
+    ).first() or ExchangeRate(
+        user=user, from_currency=payload.from_currency, to_currency=target, effective_date=when
+    )
+    rate.rate = payload.rate
+    rate.full_clean()
+    rate.save()
+    return {"id": rate.pk}
+
+
+@router.delete("/exchange-rates/{rate_id}", response={204: None}, summary="Delete an exchange rate")
+def delete_exchange_rate(request, rate_id: int):
+    owned(ExchangeRate, request.user, rate_id).delete()
     return 204, None

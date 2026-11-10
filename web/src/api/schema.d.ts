@@ -332,6 +332,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/banking/exchange-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the exchange rates */
+        get: operations["banking_api_list_exchange_rates"];
+        put?: never;
+        /** Record the exchange rate of a date */
+        post: operations["banking_api_record_exchange_rate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/exchange-rates/{rate_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an exchange rate */
+        delete: operations["banking_api_delete_exchange_rate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ledger/categories": {
         parameters: {
             query?: never;
@@ -1225,6 +1260,8 @@ export interface components {
             destination_account_id: number;
             /** Amount */
             amount: number | string;
+            /** Destination Amount */
+            destination_amount?: number | string | null;
             /** Date */
             date?: string | null;
             /**
@@ -1232,6 +1269,41 @@ export interface components {
              * @default
              */
             notes: string;
+        };
+        /** ExchangeRateOut */
+        ExchangeRateOut: {
+            /** Id */
+            id: number;
+            /** From Currency */
+            from_currency: string;
+            /** To Currency */
+            to_currency: string;
+            /** Rate */
+            rate: string;
+            /**
+             * Effective Date
+             * Format: date
+             */
+            effective_date: string;
+        };
+        /** Created */
+        Created: {
+            /** Id */
+            id: number;
+        };
+        /** ExchangeRateIn */
+        ExchangeRateIn: {
+            /**
+             * From Currency
+             * @enum {string}
+             */
+            from_currency: "BRL" | "USD" | "EUR" | "GBP" | "JPY" | "CHF";
+            /** To Currency */
+            to_currency?: ("BRL" | "USD" | "EUR" | "GBP" | "JPY" | "CHF") | null;
+            /** Rate */
+            rate: number | string;
+            /** Effective Date */
+            effective_date?: string | null;
         };
         /** CategoryOut */
         CategoryOut: {
@@ -1521,11 +1593,6 @@ export interface components {
             price_date: string | null;
             /** Has Price */
             has_price: boolean;
-        };
-        /** Created */
-        Created: {
-            /** Id */
-            id: number;
         };
         /** PositionIn */
         PositionIn: {
@@ -2876,6 +2943,70 @@ export interface operations {
             header?: never;
             path: {
                 transfer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    banking_api_list_exchange_rates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExchangeRateOut"][];
+                };
+            };
+        };
+    };
+    banking_api_record_exchange_rate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeRateIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    banking_api_delete_exchange_rate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rate_id: number;
             };
             cookie?: never;
         };

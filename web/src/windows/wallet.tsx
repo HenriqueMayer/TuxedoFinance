@@ -21,11 +21,14 @@ import { formatDate, monthLabel, todayIso } from "../lib/dates";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { editableAmount, formatAmount, parseAmount } from "../lib/money";
 import { StatusLabel } from "../routes/wallet";
-import { useDateOrder } from "../session";
+import { sessionQuery, useDateOrder } from "../session";
 import { Field } from "../ui/Field";
 import { Segmented } from "../ui/Segmented";
 import { autofocus } from "../ui/Window";
 import { OpenWindow } from "./host";
+import { CURRENCIES } from "./settings";
+
+type Currency = (typeof CURRENCIES)[number];
 
 export function values(event: FormEvent<HTMLFormElement>) {
   event.preventDefault();
@@ -77,6 +80,9 @@ function AccountFields(props: {
   openingDate?: string | null;
   balanceInvalid: boolean;
   withDate?: boolean;
+  currency: string;
+  /** Given for a new account only: the currency of an account does not change. */
+  onCurrency?: (currency: Currency) => void;
 }) {
   const t = useMessages();
   return (
@@ -106,8 +112,26 @@ function AccountFields(props: {
         )}
       </Field>
       <div className="flex flex-wrap gap-5">
+        {props.onCurrency && (
+          <Field label={t.wallet.currency}>
+            {(control) => (
+              <select
+                {...control}
+                className="field"
+                value={props.currency}
+                onChange={(event) => props.onCurrency?.(event.target.value as Currency)}
+              >
+                {CURRENCIES.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        )}
         <Field
-          label={`${t.wallet.openingBalance} (BRL)`}
+          label={`${t.wallet.openingBalance} (${props.currency})`}
           errors={
             props.balanceInvalid
               ? [t.entry.amountInvalid]
@@ -151,18 +175,20 @@ function AccountFields(props: {
 export function NewAccountWindow(props: { onDone: () => void }) {
   const t = useMessages();
   const create = useCreateAccount();
+  const { data: session } = useSuspenseQuery(sessionQuery);
+  const [currency, setCurrency] = useState<Currency>(session.preferences?.base_currency ?? "BRL");
   const [balanceInvalid, setBalanceInvalid] = useState(false);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     const typed = values(event);
-    const balance = parseBalance(typed.balance ?? "", "BRL");
+    const balance = parseBalance(typed.balance ?? "", currency);
     setBalanceInvalid(balance === null);
     if (balance === null) return;
     create.mutate(
       {
         bank_name: typed.bank ?? "",
         name: typed.name ?? "",
-        currency: "BRL",
+        currency,
         opening_balance: balance,
         opening_date: null,
       },
@@ -172,7 +198,12 @@ export function NewAccountWindow(props: { onDone: () => void }) {
 
   return (
     <form onSubmit={submit} className="grid gap-5" noValidate>
-      <AccountFields error={create.error} balanceInvalid={balanceInvalid} />
+      <AccountFields
+        error={create.error}
+        balanceInvalid={balanceInvalid}
+        currency={currency}
+        onCurrency={setCurrency}
+      />
       <Alert message={formMessage(create.error, t)} />
       <button type="submit" className="button-primary w-fit" disabled={create.isPending}>
         {t.firstAccount.create}
@@ -262,6 +293,7 @@ export function AccountWindow(props: { id: number; onDone: () => void }) {
             balance={editableAmount(account.opening_balance, account.currency)}
             openingDate={account.opening_date}
             balanceInvalid={balanceInvalid}
+            currency={account.currency}
             withDate
           />
           <Alert message={formMessage(change.error, t) ?? formMessage(remove.error, t)} />
@@ -714,20 +746,30 @@ export function TransferWindow(props: { onDone: () => void }) {
   const accounts = instruments.filter((item) => item.kind === "account");
   const transfer = useTransfer();
   const [amountInvalid, setAmountInvalid] = useState(false);
+  const [receivedInvalid, setReceivedInvalid] = useState(false);
+  // The chosen accounts. Two currencies need the amount that arrives.
+  const [pair, setPair] = useState([accounts[0]?.id, accounts[1]?.id]);
+  const currencyOf = (id: string | undefined) =>
+    accounts.find((item) => item.id === id)?.currency ?? "BRL";
+  const sent = currencyOf(pair[0]);
+  const received = currencyOf(pair[1]);
+  const exchange = sent !== received;
 
   if (accounts.length < 2) return <p className="text-muted">{t.wallet.needTwoAccounts}</p>;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     const typed = values(event);
-    const currency = accounts.find((item) => item.id === typed.source)?.currency ?? "BRL";
-    const amount = parseAmount(typed.amount ?? "", currency);
+    const amount = parseAmount(typed.amount ?? "", sent);
+    const arrives = exchange ? parseAmount(typed.received ?? "", received) : null;
     setAmountInvalid(amount === null);
-    if (amount === null) return;
+    setReceivedInvalid(exchange && arrives === null);
+    if (amount === null || (exchange && arrives === null)) return;
     transfer.mutate(
       {
         source_account_id: Number((typed.source ?? "").split(":")[1]),
         destination_account_id: Number((typed.destination ?? "").split(":")[1]),
         amount,
+        destination_amount: arrives,
         date: typed.date || null,
         notes: "",
       },
@@ -736,9 +778,17 @@ export function TransferWindow(props: { onDone: () => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-5" noValidate>
+    <form
+      onSubmit={submit}
+      onChange={(event) => {
+        const chosen = new FormData(event.currentTarget);
+        setPair([String(chosen.get("source")), String(chosen.get("destination"))]);
+      }}
+      className="grid gap-5"
+      noValidate
+    >
       <Field
-        label={t.entry.amount}
+        label={exchange ? `${t.entry.amount} (${sent})` : t.entry.amount}
         errors={amountInvalid ? [t.entry.amountInvalid] : fieldMessages(transfer.error, "amount")}
       >
         {(control) => (
@@ -768,6 +818,28 @@ export function TransferWindow(props: { onDone: () => void }) {
           defaultValue={accounts[1]?.id}
         />
       </div>
+      {exchange && (
+        <Field
+          label={t.wallet.received(received)}
+          help={t.wallet.receivedHelp}
+          errors={
+            receivedInvalid
+              ? [t.entry.amountInvalid]
+              : fieldMessages(transfer.error, "destination_amount")
+          }
+          className="w-56"
+        >
+          {(control) => (
+            <input
+              {...control}
+              name="received"
+              inputMode="decimal"
+              className="field amount"
+              autoComplete="off"
+            />
+          )}
+        </Field>
+      )}
       <Field label={t.entry.date} errors={fieldMessages(transfer.error, "date")} className="w-fit">
         {(control) => (
           <input {...control} type="date" name="date" className="field" defaultValue={todayIso()} />

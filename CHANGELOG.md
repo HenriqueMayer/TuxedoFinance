@@ -37,6 +37,8 @@ and no upgrade from 1.x.
   the end of each month.
 - A sheet to try changes on those months, with saved sheets.
 - Calculators: net CLT salary and compound growth.
+- Accounts in other currencies, exchange rates typed in Settings, and
+  transfers between currencies.
 
 ### Not built yet
 

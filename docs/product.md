@@ -54,7 +54,19 @@ and invoices use this one rule, so their totals agree.
 - A card has one settlement setting. With "I confirm each invoice payment"
   on, an invoice stays open until a payment is recorded. With it off, the
   invoice is paid from the account on its due date.
-- A transfer moves an amount between two accounts of the same currency.
+- A transfer moves an amount between two accounts. Between two currencies,
+  the owner types the amount that left and the amount that arrived.
+
+### Other currencies
+
+- An account has a currency, chosen when it is created. It does not change
+  after that. Entries and balances stay in the currency of their account.
+- An exchange rate is typed by the owner in Settings: one unit of a currency
+  in the currency of totals, for a date. The application calls no outside
+  service.
+- A total in the currency of totals uses the latest rate on or before its
+  date. Without a rate, the amount is left out and the screen names the
+  currency and links to the rates.
 
 ### Investments
 
@@ -199,7 +211,6 @@ this branch yet, except where noted.
 |---|---|
 | Automatic alerts of 1.x (duplicates, subscription increases, cash shortage) | Not planned for 2.0. A budget and a goal show their own state |
 | Loyalty points and miles | Domain moved, no API or screen. A deposit paid with points waits for it |
-| Accounts in other currencies and exchange rates | Domain moved; the screens create BRL accounts only, and no screen records a rate. An investment can have another currency |
 | Statement import (CSV, OFX) | Models and parsers moved, no API or screen |
 | Balance checks (reconciliation), invoice credits | Domain moved, no API or screen |
 | Investment fees, and the edit of a recorded operation | Domain moved, no screen. An operation is undone and recorded again |

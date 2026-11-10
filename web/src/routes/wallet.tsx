@@ -105,7 +105,10 @@ function Investments() {
       </div>
       {!data.complete && (
         <p className="mt-3 text-sm text-muted">
-          {t.home.worth.incomplete(data.missing_currencies.join(", "))}
+          {t.home.worth.incomplete(data.missing_currencies.join(", "))}{" "}
+          <OpenWindow w="rates" className="link">
+            {t.rates.add}
+          </OpenWindow>
         </p>
       )}
       <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
