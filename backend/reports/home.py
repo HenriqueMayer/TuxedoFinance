@@ -28,7 +28,7 @@ DUE_WINDOW_DAYS = 45
 AWAITING_MONTHS = 12
 
 
-def _occurrences(user, first, last):
+def occurrences(user, first, last):
     """Return the occurrences of ``user`` with a reference month from ``first`` through ``last``."""
     items = attach_schedule_rows(
         Transaction.objects.filter(user=user)
@@ -41,10 +41,10 @@ def _occurrences(user, first, last):
     return schedule.expand(sources, schedule.Window.months(first, last), allocations=True)
 
 
-def _flows(occurrences):
-    """Return ``{(month, currency): {"INCOME": total, "EXPENSE": total}}``."""
+def flow_totals(items):
+    """Return ``{(month, currency): {"INCOME": total, "EXPENSE": total}}`` for occurrences."""
     totals = defaultdict(lambda: {"INCOME": ZERO, "EXPENSE": ZERO})
-    for occurrence in occurrences:
+    for occurrence in items:
         totals[occurrence.reference_month, occurrence.currency][occurrence.flow] += (
             occurrence.amount
         )
@@ -57,7 +57,7 @@ def month_result(user, month):
     ``previous_expenses`` is the expense total of the month before, for comparison.
     """
     previous = schedule.offset_month(month, -1)
-    flows = _flows(_occurrences(user, previous, month))
+    flows = flow_totals(occurrences(user, previous, month))
     currencies = sorted({currency for (when, currency) in flows if when == month})
     return [
         {
@@ -76,7 +76,7 @@ def month_result(user, month):
 def trend(user, month, months=TREND_MONTHS):
     """Return the income and the expenses of the ``months`` months that end with ``month``."""
     first = schedule.offset_month(month, -(months - 1))
-    flows = _flows(_occurrences(user, first, month))
+    flows = flow_totals(occurrences(user, first, month))
     currencies = sorted({currency for (_when, currency) in flows})
     rows = []
     for offset in range(months):
@@ -115,7 +115,7 @@ def spending_by_category(user, month):
         return category_id
 
     totals = defaultdict(lambda: defaultdict(lambda: ZERO))
-    for occurrence in _occurrences(user, month, month):
+    for occurrence in occurrences(user, month, month):
         if occurrence.flow != "EXPENSE":
             continue
         for category_id, amount in occurrence.allocations:

@@ -58,13 +58,16 @@ test("the owner chooses the Home blocks and their order", async ({ page }) => {
   const titles = () =>
     page
       .locator("main")
-      .getByText(/^(Left to spend|Where the money went|Due soon|Net worth)$/)
+      .getByText(/^(Left to spend|Where the money went|Due soon|Net worth|Goals)$/)
       .allTextContents();
+  // The blocks arrive after the page frame.
+  await expect(page.locator("main").getByText("Goals", { exact: true })).toBeVisible();
   expect(await titles()).toEqual([
     "Left to spend",
     "Where the money went",
     "Due soon",
     "Net worth",
+    "Goals",
   ]);
 
   await page.getByRole("link", { name: "Edit Home" }).click();
@@ -78,10 +81,10 @@ test("the owner chooses the Home blocks and their order", async ({ page }) => {
   await expect(window).toBeHidden();
 
   // The page behind already shows the new choice, and a reload keeps it.
-  expect(await titles()).toEqual(["Due soon", "Where the money went", "Net worth"]);
+  expect(await titles()).toEqual(["Due soon", "Where the money went", "Net worth", "Goals"]);
   await page.reload();
   await expect(page.getByRole("link", { name: "Edit Home" })).toBeVisible();
-  expect(await titles()).toEqual(["Due soon", "Where the money went", "Net worth"]);
+  expect(await titles()).toEqual(["Due soon", "Where the money went", "Net worth", "Goals"]);
 
   // Hiding every block leaves a way back.
   await page.getByRole("link", { name: "Edit Home" }).click();
@@ -91,6 +94,8 @@ test("the owner chooses the Home blocks and their order", async ({ page }) => {
   await expect(window.getByRole("checkbox", { name: "Where the money went" })).not.toBeChecked();
   await window.getByRole("checkbox", { name: "Net worth" }).click();
   await expect(window.getByRole("checkbox", { name: "Net worth" })).not.toBeChecked();
+  await window.getByRole("checkbox", { name: "Goals" }).click();
+  await expect(window.getByRole("checkbox", { name: "Goals" })).not.toBeChecked();
   await page.keyboard.press("Escape");
   await expect(page.getByText("Home has no blocks.")).toBeVisible();
 });

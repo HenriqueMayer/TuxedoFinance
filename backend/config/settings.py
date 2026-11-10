@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "banking",
     "ledger",
     "investments",
+    "planning",
     "reports",
 ]
 

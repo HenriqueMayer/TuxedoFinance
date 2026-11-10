@@ -7,11 +7,13 @@ import {
   type HomeBlock,
   homeQuery,
 } from "../data/reports";
-import { useMessages } from "../i18n";
+import { useLanguage, useMessages } from "../i18n";
 import { formatDate } from "../lib/dates";
 import { formatAmount } from "../lib/money";
 import { sessionQuery, useDateOrder } from "../session";
+import { Meter } from "../ui/Meter";
 import { OpenWindow } from "../windows/host";
+import { goalStatus } from "./plan";
 import { StatusLabel } from "./wallet";
 
 const BLOCK = "rounded-(--radius-window) border border-line bg-surface p-5";
@@ -82,6 +84,7 @@ function Block(props: { block: HomeBlock; home: Home }) {
   if (props.block === "left") return <LeftBlock home={props.home} />;
   if (props.block === "spending") return <SpendingBlock rows={props.home.spending} />;
   if (props.block === "worth") return <WorthBlock worth={props.home.worth} />;
+  if (props.block === "goals") return <GoalsBlock goals={props.home.goals} />;
   return <DueBlock rows={props.home.due} />;
 }
 
@@ -89,10 +92,48 @@ function Title(props: { children: ReactNode }) {
   return <span className="block text-sm font-medium text-muted">{props.children}</span>;
 }
 
-/** The answer of the month: what is left after the expenses. The whole block opens the month. */
+/**
+ * The answer of the month. With a limit, it is what is left of the limit;
+ * without one, the income minus the expenses. The whole block opens the month.
+ */
 function LeftBlock(props: { home: Home }) {
   const t = useMessages();
   const results = props.home.result;
+  const { limit } = props.home;
+  if (limit) {
+    const money = (amount: string) => formatAmount(amount, limit.currency);
+    const over = Number(limit.left) < 0;
+    return (
+      <OpenWindow
+        w="month"
+        className={`${BLOCK} block transition-shadow hover:shadow-md lg:col-span-2`}
+      >
+        <Title>{over ? t.home.limit.over : t.home.blocks.left}</Title>
+        <span
+          className={`amount mt-2 block text-4xl font-semibold tracking-tight ${over ? "text-negative" : ""}`}
+        >
+          {money(limit.left.replace("-", ""))}
+        </span>
+        <span className="mt-3 block max-w-xl">
+          <Meter value={limit.expenses} total={limit.amount} />
+        </span>
+        <span className="mt-3 flex flex-wrap gap-x-8 gap-y-1 text-sm">
+          <span className="text-muted">{t.home.limit.of(money(limit.amount))}</span>
+          {limit.per_day !== null && (
+            <span className="text-muted">{t.home.limit.perDay(money(limit.per_day))}</span>
+          )}
+          <span>
+            <span className="text-muted">{t.home.expenses} </span>
+            <span className="amount font-medium">{money(limit.expenses)}</span>
+          </span>
+          <span>
+            <span className="text-muted">{t.home.income} </span>
+            <span className="amount font-medium text-positive">{money(limit.income)}</span>
+          </span>
+        </span>
+      </OpenWindow>
+    );
+  }
   return (
     <OpenWindow
       w="month"
@@ -277,5 +318,53 @@ function WorthBlock(props: { worth: Home["worth"] }) {
         <span className="mt-2 block text-sm text-muted">{t.home.worth.incompleteShort}</span>
       )}
     </OpenWindow>
+  );
+}
+
+/** The active goals and how far each one is. A goal opens its window. */
+function GoalsBlock(props: { goals: Home["goals"] }) {
+  const t = useMessages();
+  const language = useLanguage();
+  const limit = 4;
+  return (
+    <section className={BLOCK}>
+      <h2>
+        <Title>{t.home.blocks.goals}</Title>
+      </h2>
+      {props.goals.length === 0 && (
+        <p className="mt-2">
+          <span className="text-muted">{t.home.goals.none} </span>
+          <OpenWindow w="new-goal" className="link font-medium">
+            {t.home.goals.add}
+          </OpenWindow>
+        </p>
+      )}
+      <ul className="mt-2 divide-y divide-line">
+        {props.goals.slice(0, limit).map((goal) => (
+          <li key={goal.id}>
+            <OpenWindow
+              w={`goal:${goal.id}`}
+              className="-mx-2 block rounded-(--radius-control) px-2 py-2.5 hover:bg-sheet"
+            >
+              <span className="flex items-baseline justify-between gap-3">
+                <span className="truncate font-medium">{goal.name}</span>
+                <span className="amount font-semibold">
+                  {formatAmount(goal.saved, goal.currency)}
+                </span>
+              </span>
+              <span className="mt-1.5 block">
+                <Meter value={goal.saved} total={goal.target_amount} />
+              </span>
+              <span className="mt-1 block text-sm text-muted">
+                {goal.percent}% · {goalStatus(goal, t, language)}
+              </span>
+            </OpenWindow>
+          </li>
+        ))}
+      </ul>
+      {props.goals.length > limit && (
+        <p className="mt-2 text-sm text-muted">{t.home.more(props.goals.length - limit)}</p>
+      )}
+    </section>
   );
 }

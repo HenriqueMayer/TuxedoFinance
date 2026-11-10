@@ -24,6 +24,7 @@ Django 6 with django-ninja. Each application owns its models and rules.
 | `banking` | Banks, accounts, cards, invoices, payments, transfers, movements, loyalty, exchange rates |
 | `ledger` | Transactions, categories, the occurrence engine, repeating entries, the ledger synchronization, statement-import models |
 | `investments` | Investment products, assets, operations, price observations, the position replay and its valuation |
+| `planning` | Spending limits from a month on, goals and their reserved balances |
 | `reports` | Reads for Home: the month, what is due, the net worth |
 
 Rules:

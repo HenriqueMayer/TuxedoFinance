@@ -7,6 +7,7 @@ import { CategoriesWindow } from "./categories";
 import { AddEntry, EditEntry } from "./entry";
 import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
 import { InvestmentWindow, NewInvestmentWindow } from "./investment";
+import { BudgetWindow, GoalWindow, LimitWindow, NewBudgetWindow, NewGoalWindow } from "./plan";
 import { ScheduleWindow } from "./schedule";
 import { SettingsWindow } from "./settings";
 import {
@@ -35,6 +36,11 @@ export type WindowId =
   | "month"
   | "due"
   | "home-blocks"
+  | "limit"
+  | "new-budget"
+  | "new-goal"
+  | `budget:${number}`
+  | `goal:${number}`
   | `transaction:${number}`
   | `account:${number}`
   | `card:${number}`
@@ -155,6 +161,21 @@ export function WindowHost() {
   } else if (w === "worth") {
     title = t.home.blocks.worth;
     content = <WorthWindow />;
+  } else if (w === "limit") {
+    title = t.plan.limit.title;
+    content = <LimitWindow onDone={close} />;
+  } else if (w === "new-budget") {
+    title = t.plan.budgets.new;
+    content = <NewBudgetWindow onDone={close} />;
+  } else if (w === "new-goal") {
+    title = t.plan.goals.new;
+    content = <NewGoalWindow />;
+  } else if (kind === "budget" && id !== null) {
+    title = t.plan.budgets.budget;
+    content = <BudgetWindow id={id} onDone={close} />;
+  } else if (kind === "goal" && id !== null) {
+    title = t.plan.goals.goal;
+    content = <GoalWindow id={id} onDone={close} />;
   } else if (kind === "investment" && id !== null) {
     title = t.invest.investment;
     content = <InvestmentWindow id={id} onDone={close} />;

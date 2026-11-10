@@ -114,12 +114,3 @@ export function Shell() {
 }
 
 /** A destination whose content is not built yet. Removed when the last part lands. */
-export function Placeholder(props: { title: string }) {
-  const t = useMessages();
-  return (
-    <>
-      <h1 className="text-2xl font-semibold tracking-tight">{props.title}</h1>
-      <p className="mt-2 text-muted">{t.common.comingSoon}</p>
-    </>
-  );
-}

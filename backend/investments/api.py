@@ -19,6 +19,7 @@ from banking.models import Bank, BankAccount
 from config import clock
 from config.currencies import CURRENCIES
 from config.ownership import owned, owned_choice
+from config.validation import renamed
 from investments import operations, portfolio
 from investments.models import Asset, Investment, InvestmentProduct
 
@@ -132,19 +133,6 @@ def _position(user, position_id):
     return asset
 
 
-def _renamed(error, names):
-    """Return ``error`` with model field names replaced by request field names."""
-    if not hasattr(error, "error_dict"):
-        return error
-    errors = {}
-    for field, messages in error.message_dict.items():
-        if names.get(field, field) is None:
-            continue
-        target = errors.setdefault(names.get(field, field), [])
-        target.extend(message for message in messages if message not in target)
-    return ValidationError(errors)
-
-
 def _name(value, user, bank, *, except_product=None):
     """Return the stripped name, or raise when it is empty or taken at ``bank``."""
     name = value.strip()
@@ -194,7 +182,7 @@ def create_position(request, payload: PositionIn):
             opening_date=(payload.opening_date or clock.today()) if has_opening else None,
         )
     except ValidationError as error:
-        raise _renamed(error, {"opening_product": None}) from None
+        raise renamed(error, {"opening_product": None}) from None
     return {"id": asset.pk}
 
 
@@ -264,7 +252,7 @@ def record_operation(request, position_id: int, payload: OperationIn):
             account=account,
         )
     except ValidationError as error:
-        raise _renamed(
+        raise renamed(
             error,
             {
                 "source_account": "account_id",

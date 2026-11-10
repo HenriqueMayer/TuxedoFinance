@@ -109,6 +109,34 @@ Rules:
 - An operation keeps the exchange rate of its date for totals in the base
   currency (`refresh_fx_snapshot`).
 
+## Plan
+
+| Model | Purpose |
+|---|---|
+| `planning.SpendingLimit` | An amount for each month from `start_month` on. Without a category it is the limit of the month; with one it is the budget of that category |
+| `planning.FinancialGoal` | A target amount in one currency, with an optional date |
+| `planning.GoalAllocation` | The part of one balance that a goal reserves: of a bank account or of a monetary asset |
+
+Rules:
+
+- A limit row holds until a later row of the same category. A row with an
+  empty amount ends the limit. `limits.set_limit` removes the rows from its
+  month on and adds one row only when the value changes, so the months before
+  keep their value.
+- `limits.month_plan` compares the limits with the expenses of the month. It
+  reads the occurrences of `reports.home`, in the base currency only. A
+  budget adds the allocations of its category and of every descendant.
+- `goals.read` is the only reader of goal progress. The backed amount of a
+  reservation is limited by the positive balance of its source; reservations
+  of one source that ask for more than the balance share it in proportion.
+  Reservations of archived goals claim nothing.
+- `goals.set_reservation` locks the owner row, so two requests cannot reserve
+  the same part of a balance.
+- A reserved account keeps its currency (`BankAccount.clean`). A reserved
+  asset keeps its currency and its valuation mode (`Asset.clean`). Deleting
+  the account or the asset deletes its reservations.
+- These records never create a movement.
+
 ## Net worth
 
 `reports.worth` reads the net worth on a date: account balances plus the

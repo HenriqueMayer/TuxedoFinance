@@ -7,7 +7,7 @@ CURRENCY_CHOICES = [(code, currency.name) for code, currency in CURRENCIES.items
 DATE_FORMAT_CHOICES = [("DMY", "DD/MM/YYYY"), ("MDY", "MM/DD/YYYY")]
 
 # The blocks that Home can show. The owner chooses which ones and their order.
-HOME_BLOCKS = ("left", "spending", "due", "worth")
+HOME_BLOCKS = ("left", "spending", "due", "worth", "goals")
 
 
 def default_home_blocks():

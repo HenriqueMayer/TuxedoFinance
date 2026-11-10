@@ -191,6 +191,17 @@ class Asset(models.Model):
         )
         currency_changed = bool(original) and self.currency != original["currency"]
         mode_changed = bool(original) and self.valuation_mode != original["valuation_mode"]
+        # A goal reserves an amount in the currency of this balance, and an
+        # archived goal keeps its reservation. So both values stay.
+        if (currency_changed or mode_changed) and self.goal_allocations.exists():
+            if currency_changed:
+                errors["currency"] = _(
+                    "Currency cannot be changed while this asset has goal reservations."
+                )
+            if mode_changed:
+                errors["valuation_mode"] = _(
+                    "Valuation mode cannot be changed while this asset has goal reservations."
+                )
         if (currency_changed or mode_changed) and self.price_observations.exists():
             if currency_changed:
                 errors["currency"] = _(

@@ -8,6 +8,7 @@ from ninja import Router, Schema
 
 from config import clock
 from ledger.consultation import requested_billed_month
+from planning import goals, limits
 from reports import home, worth
 
 router = Router()
@@ -57,9 +58,39 @@ class WorthSummary(Schema):
     complete: bool
 
 
+class HomeLimit(Schema):
+    """The limit of the month, in the currency of totals."""
+
+    currency: str
+    amount: Decimal
+    #: The expenses of the month in that currency.
+    expenses: Decimal
+    income: Decimal
+    #: The limit minus the expenses of the month.
+    left: Decimal
+    #: What is left for each day until the end of the month. Null when nothing is left.
+    per_day: Decimal | None
+
+
+class HomeGoal(Schema):
+    id: int
+    name: str
+    currency: str
+    target_amount: Decimal
+    target_date: dt.date | None
+    saved: Decimal
+    remaining: Decimal
+    percent: int
+    status: Literal["reached", "overdue", "dated", "open"]
+    monthly_needed: Decimal | None
+
+
 class HomeOut(Schema):
     month: dt.date
     result: list[MonthResult]
+    #: Null when the owner set no limit for the month.
+    limit: HomeLimit | None
+    goals: list[HomeGoal]
     spending: list[CategorySpending]
     due: list[DueRow]
     worth: WorthSummary
@@ -119,9 +150,17 @@ def _month(value):
 @router.get("/home", response=HomeOut, summary="Read the Home blocks of the current month")
 def read_home(request):
     month = clock.today().replace(day=1)
+    plan = limits.month_plan(request.user, month, clock.today())
     return {
         "month": month,
         "result": home.month_result(request.user, month),
+        "limit": None
+        if plan["limit"] is None
+        else {
+            "amount": plan["limit"],
+            **{name: plan[name] for name in ("currency", "expenses", "income", "left", "per_day")},
+        },
+        "goals": goals.home_goals(request.user, clock.today()),
         "spending": home.spending_by_category(request.user, month),
         "due": home.due_soon(request.user, clock.today()),
         "worth": worth.summary(request.user, clock.today()),

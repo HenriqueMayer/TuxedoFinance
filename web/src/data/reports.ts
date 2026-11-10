@@ -11,7 +11,7 @@ export type WorthMonth = components["schemas"]["WorthMonth"];
 export type HomeBlock = components["schemas"]["PreferencesOut"]["home_blocks"][number];
 
 /** Every block that Home can show, in the default order. */
-export const HOME_BLOCKS: HomeBlock[] = ["left", "spending", "due", "worth"];
+export const HOME_BLOCKS: HomeBlock[] = ["left", "spending", "due", "worth", "goals"];
 
 export const homeQuery = queryOptions({
   queryKey: ["home", "blocks"],

@@ -75,16 +75,62 @@ and invoices use this one rule, so their totals agree.
   archived: it leaves the Wallet grid, accepts no new operation and still
   counts in the net worth.
 
+## Plan
+
+Plan is one page for what the owner intends. It shows the current month.
+
+### Limit of the month
+
+- The limit is what the owner intends to spend in a month. It holds from the
+  month in which it is set until the owner changes it. The months before keep
+  the value that they had.
+- **Left** is the limit minus the expenses of the month. The expenses use the
+  rule of Home: the billed month, with the repeating entries that the month
+  still expects.
+- For the current month, the page also divides what is left by the days from
+  today through the end of the month.
+- The limit is in the currency of totals. Entries in another currency do not
+  count.
+
+### Category budgets
+
+- A budget is a limit for one expense category. It counts the category and
+  its subcategories, and it holds from its month on, like the limit of the
+  month.
+- The page offers the top-level categories that have expenses and no budget,
+  with the average of the three months before.
+- A budget does not change the limit of the month. The two are compared with
+  the expenses separately.
+
+### Goals
+
+- A goal has a name, a target amount, a currency and an optional date.
+- A goal counts money that exists. The owner reserves a part of a balance
+  for it: of an account, or of a balance investment. A reservation moves no
+  money. A goal has one reservation for each balance.
+- The active goals cannot reserve more than the positive balance. When a
+  balance later falls below its reservations, each goal gets a share in
+  proportion to its reservation.
+- **Saved** is the reserved amount that the balances cover, in the currency
+  of the goal. A reservation in another currency needs an exchange rate.
+- With a later date, the goal shows what each month from now through that
+  date must add. A goal whose date passed says so.
+- An archived goal keeps its record and frees its balances. A goal can be
+  deleted.
+- A balance with a reservation keeps its currency. An investment with a
+  reservation also keeps its kind.
+
 ## Home
 
 The owner shows, hides and orders the blocks.
 
 | Block | Shows | Opens |
 |---|---|---|
-| Left to spend | Income minus expenses of the month | The month window |
+| Left to spend | With a limit of the month: what is left of the limit. Without one: income minus expenses of the month | The month window |
 | Where the money went | Expenses by top-level category | The month window |
 | Due soon | Invoices and months of repeating expenses that are overdue, waiting for confirmation or due within 45 days | The invoice or the monthly schedule |
 | Net worth | The net worth of today and its change since the end of the month before | The net worth window |
+| Goals | The active goals with what each one holds and still needs | The goal |
 
 The month window shows a month, the six months that end with it, and the
 categories with their subcategories. Its month changes inside the window.
@@ -115,7 +161,8 @@ this branch yet, except where noted.
 
 | Area | State |
 |---|---|
-| Plan: monthly limit, category budgets, goals, sheet | Not moved |
+| Plan: the months ahead, the sheet, the salary and yield calculators | Not built |
+| Automatic alerts of 1.x (duplicates, subscription increases, cash shortage) | Not planned for 2.0. A budget and a goal show their own state |
 | Loyalty points and miles | Domain moved, no API or screen. A deposit paid with points waits for it |
 | Accounts in other currencies and exchange rates | Domain moved; the screens create BRL accounts only, and no screen records a rate. An investment can have another currency |
 | Statement import (CSV, OFX) | Models and parsers moved, no API or screen |

@@ -7,12 +7,12 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { useCallback } from "react";
-import { useMessages } from "./i18n";
 import { isMonth } from "./lib/dates";
 import { localPath } from "./lib/paths";
 import { LoginPage, SignupPage } from "./routes/auth";
 import { HomePage } from "./routes/home";
-import { Placeholder, Shell } from "./routes/shell";
+import { PlanPage } from "./routes/plan";
+import { Shell } from "./routes/shell";
 import {
   type TransactionSearch,
   TransactionsPage,
@@ -108,7 +108,7 @@ const walletRoute = createRoute({
 const planRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/plan",
-  component: () => <Placeholder title={useMessages().nav.plan} />,
+  component: PlanPage,
 });
 
 const routeTree = rootRoute.addChildren([

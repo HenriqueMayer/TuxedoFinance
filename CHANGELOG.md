@@ -28,6 +28,11 @@ and no upgrade from 1.x.
   withdrawals with an account, and one field for the value of today.
 - Net worth: accounts and investments less the card debt, with the last
   twelve month ends.
+- Plan on one page: a limit of the month and category budgets that hold from
+  their month on, and goals that reserve a part of an account or investment
+  balance.
+- Left to spend counts from the limit of the month when there is one.
+- A Goals block on Home.
 
 ### Not built yet
 

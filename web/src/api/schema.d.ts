@@ -584,6 +584,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plan/month": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the limit and the budgets of a month */
+        get: operations["planning_api_read_month"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/limit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set or end a limit from a month on */
+        put: operations["planning_api_set_limit"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the goals and the balances they can reserve */
+        get: operations["planning_api_list_goals"];
+        put?: never;
+        /** Create a goal */
+        post: operations["planning_api_create_goal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/goals/{goal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change or archive a goal */
+        put: operations["planning_api_update_goal"];
+        post?: never;
+        /** Delete a goal */
+        delete: operations["planning_api_delete_goal"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/goals/{goal_id}/reservations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reserve a part of a balance for a goal */
+        put: operations["planning_api_set_reservation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/home": {
         parameters: {
             query?: never;
@@ -652,7 +739,7 @@ export interface components {
              */
             date_format: "DMY" | "MDY";
             /** Home Blocks */
-            home_blocks: ("left" | "spending" | "due" | "worth")[];
+            home_blocks: ("left" | "spending" | "due" | "worth" | "goals")[];
         };
         /** SessionOut */
         SessionOut: {
@@ -691,7 +778,7 @@ export interface components {
             /** Date Format */
             date_format?: ("DMY" | "MDY") | null;
             /** Home Blocks */
-            home_blocks?: ("left" | "spending" | "due" | "worth")[] | null;
+            home_blocks?: ("left" | "spending" | "due" | "worth" | "goals")[] | null;
         };
         /** InstrumentOut */
         InstrumentOut: {
@@ -1494,6 +1581,164 @@ export interface components {
             /** Cash Amount */
             cash_amount?: number | string | null;
         };
+        /** Budget */
+        Budget: {
+            /** Category Id */
+            category_id: number;
+            /** Name */
+            name: string;
+            /** Limit */
+            limit: string;
+            /** Spent */
+            spent: string;
+            /** Left */
+            left: string;
+        };
+        /** BudgetSuggestion */
+        BudgetSuggestion: {
+            /** Category Id */
+            category_id: number;
+            /** Name */
+            name: string;
+            /** Spent */
+            spent: string;
+            /** Average */
+            average: string;
+        };
+        /** MonthPlanOut */
+        MonthPlanOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Currency */
+            currency: string;
+            /** Is Current */
+            is_current: boolean;
+            /** Income */
+            income: string;
+            /** Expenses */
+            expenses: string;
+            /** Limit */
+            limit: string | null;
+            /** Left */
+            left: string | null;
+            /** Per Day */
+            per_day: string | null;
+            /** Budgets */
+            budgets: components["schemas"]["Budget"][];
+            /** Suggestions */
+            suggestions: components["schemas"]["BudgetSuggestion"][];
+        };
+        /** LimitIn */
+        LimitIn: {
+            /** Month */
+            month?: string | null;
+            /** Amount */
+            amount?: number | string | null;
+            /** Category Id */
+            category_id?: number | null;
+        };
+        /** GoalOut */
+        GoalOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Target Amount */
+            target_amount: string;
+            /** Currency */
+            currency: string;
+            /** Target Date */
+            target_date: string | null;
+            /** Is Archived */
+            is_archived: boolean;
+            /** Saved */
+            saved: string;
+            /** Remaining */
+            remaining: string;
+            /** Percent */
+            percent: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "reached" | "overdue" | "dated" | "open";
+            /** Monthly Needed */
+            monthly_needed: string | null;
+            /** Complete */
+            complete: boolean;
+            /** Missing Currencies */
+            missing_currencies: string[];
+            /** Reservations */
+            reservations: components["schemas"]["Reservation"][];
+        };
+        /** GoalSource */
+        GoalSource: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Currency */
+            currency: string;
+            /** Balance */
+            balance: string;
+            /** Free */
+            free: string;
+        };
+        /** GoalsOut */
+        GoalsOut: {
+            /** Goals */
+            goals: components["schemas"]["GoalOut"][];
+            /** Sources */
+            sources: components["schemas"]["GoalSource"][];
+        };
+        /** Reservation */
+        Reservation: {
+            /** Source */
+            source: string;
+            /** Label */
+            label: string;
+            /** Currency */
+            currency: string;
+            /** Amount */
+            amount: string;
+            /** Backed */
+            backed: string;
+        };
+        /** GoalIn */
+        GoalIn: {
+            /** Name */
+            name: string;
+            /** Target Amount */
+            target_amount: number | string;
+            /** Currency */
+            currency?: ("BRL" | "USD" | "EUR" | "GBP" | "JPY" | "CHF") | null;
+            /** Target Date */
+            target_date?: string | null;
+        };
+        /** GoalEdit */
+        GoalEdit: {
+            /** Name */
+            name: string;
+            /** Target Amount */
+            target_amount: number | string;
+            /** Target Date */
+            target_date?: string | null;
+            /**
+             * Is Archived
+             * @default false
+             */
+            is_archived: boolean;
+        };
+        /** ReservationIn */
+        ReservationIn: {
+            /** Source */
+            source: string;
+            /** Amount */
+            amount: number | string;
+        };
         /** CategoryPart */
         CategoryPart: {
             /** Category Id */
@@ -1549,6 +1794,50 @@ export interface components {
              */
             status: "SCHEDULED" | "PARTIAL" | "OVERDUE" | "PAID" | "AWAITING";
         };
+        /** HomeGoal */
+        HomeGoal: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Currency */
+            currency: string;
+            /** Target Amount */
+            target_amount: string;
+            /** Target Date */
+            target_date: string | null;
+            /** Saved */
+            saved: string;
+            /** Remaining */
+            remaining: string;
+            /** Percent */
+            percent: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "reached" | "overdue" | "dated" | "open";
+            /** Monthly Needed */
+            monthly_needed: string | null;
+        };
+        /**
+         * HomeLimit
+         * @description The limit of the month, in the currency of totals.
+         */
+        HomeLimit: {
+            /** Currency */
+            currency: string;
+            /** Amount */
+            amount: string;
+            /** Expenses */
+            expenses: string;
+            /** Income */
+            income: string;
+            /** Left */
+            left: string;
+            /** Per Day */
+            per_day: string | null;
+        };
         /** HomeOut */
         HomeOut: {
             /**
@@ -1558,6 +1847,9 @@ export interface components {
             month: string;
             /** Result */
             result: components["schemas"]["MonthResult"][];
+            limit: components["schemas"]["HomeLimit"] | null;
+            /** Goals */
+            goals: components["schemas"]["HomeGoal"][];
             /** Spending */
             spending: components["schemas"]["CategorySpending"][];
             /** Due */
@@ -2717,6 +3009,168 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    planning_api_read_month: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthPlanOut"];
+                };
+            };
+        };
+    };
+    planning_api_set_limit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LimitIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthPlanOut"];
+                };
+            };
+        };
+    };
+    planning_api_list_goals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalsOut"];
+                };
+            };
+        };
+    };
+    planning_api_create_goal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    planning_api_update_goal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalEdit"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    planning_api_delete_goal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    planning_api_set_reservation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservationIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
             };
         };
     };
