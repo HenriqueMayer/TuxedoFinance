@@ -51,4 +51,4 @@ jobs:
       - name: Tests with branch coverage
         run: |
           uv run coverage run manage.py test
-          uv run coverage report --fail-under=65
+          uv run coverage report --fail-under=72

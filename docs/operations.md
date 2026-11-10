@@ -1,335 +1,65 @@
-# Local operations
+# Operations
 
-Tuxedo Finance is a local Django application with an owner-managed SQLite
-database. Configuration and financial data are private runtime files, excluded
-from Git. The installation owner chooses backup storage, access permissions,
-encryption, and retention.
+Tuxedo Finance 2.0 has a new database schema. There is no upgrade from 1.x:
+a 2.0 installation starts with an empty database.
 
-## Configuration
+## Settings
 
-Settings read the project-root `.env`, unless `TUXEDO_ENV_FILE` selects another
-file. Process environment variables always take priority.
+Settings come from the environment, or from the file named by
+`TUXEDO_ENV_FILE` (default: `backend/.env`). A process variable wins over the
+file.
 
-| Variable | Purpose | Default |
+| Variable | Default | Meaning |
 |---|---|---|
-| `SECRET_KEY` | Private Django signing key | Required |
-| `DEBUG` | Development debug mode | `True` |
-| `ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
-| `HTTPS` | Secure cookies, redirect, HSTS, and trusted proxy HTTPS header | `False` |
-| `ALLOW_SIGNUPS` | Permit new public accounts; existing login remains available | `True` |
-| `TUXEDO_DATA_DIR` | Directory containing `db.sqlite3`; create the directory before use | Project root |
-| `TUXEDO_ENV_FILE` | Environment file path, selected through the process environment | Project-root `.env` |
-| `LOG_LEVEL` | Application log level | `INFO` |
-| `ASSISTANT_OPENAI_AUTH_ENABLED` | Explicit owner-approved real-authorization opt-in; never enables model responses | `False` |
-| `ASSISTANT_OPENAI_INFERENCE_ENABLED` | Separate owner-approved catalogue/inference gate; also requires authorization, an eligible selected account and explicit model selection | `False` |
-| `ASSISTANT_OPENAI_CALLBACK_URL` | Exact local OAuth callback; literal HTTP `127.0.0.1`, service port and `/assistant/connections/callback/` | `http://127.0.0.1:8000/assistant/connections/callback/` |
-| `ASSISTANT_PRIVATE_DIR` | Private credential vault path; changing it does not move existing material | `assistant-private` beside the configured database |
+| `SECRET_KEY` | none, required | Signs sessions. Generate once and keep it |
+| `DEBUG` | `False` | `True` shows error pages and serves a new client build without a restart |
+| `ALLOWED_HOSTS` | `localhost,127.0.0.1` | Host names that the server answers |
+| `ALLOW_SIGNUPS` | `True` | `False` closes registration |
+| `HTTPS` | `False` | `True` when a TLS proxy serves the installation: secure cookies, redirect, HSTS |
+| `TUXEDO_TIME_ZONE` | `America/Sao_Paulo` | The financial time zone: it decides which day is today |
+| `TUXEDO_DATA_DIR` | `backend/var` | Folder of the database |
+| `TUXEDO_CLIENT_DIR` | `web/dist` | Folder of the built client |
+| `TUXEDO_AUTH_THROTTLE` | `10/m` | Attempts to sign in or sign up for each address |
+| `LOG_LEVEL` | `INFO` | Level of the console log |
 
-`DEBUG` and `HTTPS` are enabled only by the exact value `True`.
-`ALLOW_SIGNUPS` and both assistant enable flags accept `1`, `true`, `yes`, or
-`on`, ignoring case and surrounding whitespace. Use an absolute path for an
-external data directory or environment file. Changing the data directory does
-not move an existing database.
-
-Generate a signing key during initial setup as shown in the README; retain it
-for subsequent starts. `scripts/init_local.py` creates `.env` exclusively with
-mode `0600` and never replaces an existing file or symlink. Native runtime and migration
-commands use an owner-only umask for new databases and sidecars; existing file
-permissions are unchanged. Protect existing configuration/database files and
-their containing directory before sharing access to the host.
-Enable `HTTPS` only behind a correctly configured TLS
-endpoint. Native local installations use `uv run python manage.py runserver`;
-the supported Docker package uses Gunicorn and WhiteNoise. Public hosting and
-reverse-proxy provisioning remain outside the supported local configuration.
-
-For Docker installations, use the [Docker operations guide](docker.md) for
-volume-aware backup, restore and updates. Keep the Compose project identity and
-signing key across container recreation.
-
-## Assistant data and integrations
-
-The [assistant](apps/assistant.md) includes OpenAI account-authorization
-preparation, disabled by default, with isolated synthetic coverage and an
-[owner-approved native sign-in observation](reviews/assistant-native-sign-in-2026-10-19.md).
-That server enabled authorization only through its process environment; the
-installation `.env` and repository default stayed unchanged. Keep the flag off
-unless the owner approves live authorization for the intended installation.
-The observed original-session confirmation linked an account while preserving
-financial records. It did not list models, send inference or export financial
-data. Docker real OAuth, program eligibility, model access/limits, streaming and
-real refresh/revocation were not established by that authorization observation.
-The separate `ASSISTANT_OPENAI_INFERENCE_ENABLED=False` default keeps the
-provider/composer unavailable after account linking. With either gate off, no
-model catalogue, inference or inference-triggered credential refresh is sent.
-With both enabled, opening a ready composer may fetch the account catalogue and
-refresh expiring credentials before Send; each message then requires explicit
-model selection or a previously selected model still valid for that account.
-The initial request contains minimized page metadata and bounded recent history.
-Owned read/calculation tools retrieve the relevant saved evidence on demand;
-the visible page does not restrict which owned workspace can be consulted.
-The optional initial-page snapshot parameter is separate from this tool access.
-The owner-approved native validation used process-only opt-in; `.env` and both
-repository defaults remained unchanged. The public model
-and response endpoints use ChatGPT-plan OAuth exclusively. The adapter never
-reads `OPENAI_API_KEY`, exposes no separate API organization/key/billing
-configuration and never selects paid fallback. Bounded, mapped diagnostics are documented in the
-[provider contract](apps/assistant.md#provider-and-action-boundary); keep raw
-provider bodies and credentials out of operational logs.
-The [assistant guide](apps/assistant.md#provider-and-action-boundary) owns streaming,
-local run/partial-history retention, native fallback, cancellation and usage/error
-limits. Implemented transport is not evidence of live account/model availability.
-There is no paid API-key fallback, bank connection or background worker.
-Opening settings does not initialize the vault or contact OpenAI.
-
-Conversation/message data belongs to the authenticated user and remains in the
-installation database until deletion. Protect it with the same access, backup
-and retention policy as financial records. Deleting a conversation from the
-active database does not erase older owner-managed backup copies. The
-structured-context endpoint is read-only and does not synchronize projections.
-Apply the additive assistant migrations through the ordinary backed-up update
-workflow before running this source checkout. They add conversation,
-user-owned authorization, generation-run and action-review metadata, without
-changing financial records. Migration `0006_actionproposal` adds local review
-records. A separate [action confirmation](assistant/actions.md) can create,
-categorize, edit or delete a transaction, create a goal or create a category
-budget. Each proposal revalidates ownership, the session and current financial
-state. Reads and simulations do not save financial records; deleting chat
-history does not delete previously confirmed domain records.
-
-The SQLite database retains account identity, scopes, expiry, connection state
-and digests for short-lived authorization attempts. Reusable tokens and pending
-OAuth secrets belong only in the encrypted private vault. Its independent key,
-encrypted records and stable host identity must be backed up together with the
-database recovery point. The SQLite-only recipe below does not include them.
-Stop all writers for that paired backup and protect/encrypt the complete vault
-copy; credential encryption does not protect a backup containing its key.
-
-On restoration, retain the application OS ownership, directory mode `0700` and
-file mode `0600`, and restore the matching key, ciphertext and host identity
-before using connection actions. Missing/wrong keys fail closed; never replace
-a key over existing ciphertext or derive one from `SECRET_KEY`. Restore the
-complete matching backup instead. Linux/macOS or a Linux container are required
-for this POSIX vault; native Windows vault use fails closed. Ordinary
-unconnected pages remain available. The owning
-[authorization guide](apps/assistant.md#openai-authorization-preparation) defines
-the callback/session handoff, private storage, recovery and eligibility limits.
-Keep credentials out of Git, browser storage and diagnostics; external access
-logging must redact callback queries before any later real validation.
-
-Live model validation needs its own approved context/usage scope; an earlier
-bounded test does not authorize additional calls. Bank synchronization
-additionally needs an approved delivery strategy:
-provider webhooks cannot reach an ordinary loopback-only service by themselves.
-Do not expose the installation, configure a tunnel, reuse another application's
-tokens or copy financial data to a provider as a workaround. Follow the
-[planned-integration gates](roadmap.md) and
-[dated Open Finance study](reviews/open-finance-personal-study-2026-10-18.md).
-
-## Read-only Open Finance pilot
-
-The [Meu Pluggy Inter bill pilot](open-finance-pilot.md) is an explicitly invoked
-operator command with no settings, migration, scheduler or web route. Its demo
-uses synthetic data; live mode requires the owner's official bank/provider setup
-and hidden one-shot credentials. It reads only the selected personal proxy/card
-and saves a minimized private observation under ignored `.local/open-finance-pilot/`.
-It never queries or changes the application database or stores credentials.
-
-Real pilot setup and bank authorization remain paused in the
-[roadmap](roadmap.md#personal-open-finance-study); the command's presence does
-not enable synchronization in an installation.
-
-The private files contain financial evidence and require owner-only POSIX access.
-Decide explicitly whether to retain/encrypt/back up those observations; this is
-separate from database or assistant-vault recovery. Reports are not served to
-application users or attached to assistant context. No API key, bank password,
-MFA code or provider response belongs in logs, chat or versioned documentation.
-Consult the owning guide for daily cache, expiry, incomplete coverage and
-preservation on failure. There is no automatic collection while the process is off.
-
-## Financial calendar
-
-Financial rules obtain today's date through Django's `timezone.localdate()`.
-The current application sets `TIME_ZONE = 'UTC'` and does not activate a
-per-user timezone. Invoice due-state checks, confirmed-payment validation,
-current payment totals, ledger synchronization and default cash/report cutoffs
-therefore share that calendar, independently of the operating system's date
-or the browser's timezone.
-
-Explicit `as_of` and `through_date` arguments remain authoritative for
-historical or projected reads. Stored operation/payment dates are calendar
-dates; this rule does not convert or rewrite them. Aware timestamps retain
-their existing behavior. Demo confirmation guards use the same current day,
-so a future demo reference cannot fabricate an already confirmed payment.
-Changing the application's financial timezone is a separate product decision;
-changing the host timezone alone must not change these financial rules.
-
-## Review opening-date conflicts
-
-Validation rejects new or edited operations before a known account opening.
-It leaves existing financial history intact. For an explicit read-only owner
-review, use the normal installation's Django shell and select the intended user:
-
-```python
-from django.contrib.auth import get_user_model
-from banking.services import movements_before_opening
-
-owner = get_user_model().objects.get(username="YOUR_USERNAME")
-for movement in movements_before_opening(owner):
-    print(movement.pk, movement.account_id, movement.effective_date,
-          movement.account.opening_date, movement.source_key)
-```
-
-This prints identifiers and dates without posting, synchronizing or changing
-records. Keep the output private. Review the source and its actual baseline
-before deliberately editing either; do not mass-redate sources or invent a date
-for unknown legacy openings.
-
-## Updating dependencies
-
-The application version is `[project].version` in `pyproject.toml`, with the
-resolved Python dependencies in `uv.lock`. The npm lockfile controls development
-tools. Review upstream release notes before changing compatible dependency
-ranges; then regenerate the affected lockfile and install its exact contents.
+Generate a key:
 
 ```bash
-uv lock
-uv sync --locked
+python -c "import secrets; print(secrets.token_urlsafe(50))"
 ```
 
-Follow the complete [development checks](../CONTRIBUTING.md) and
-[release workflow](versioning.md) before adopting an update. Keep the previous
-code and lockfiles available until the new version passes an isolated restore
-rehearsal. Review database compatibility before running migrations on an
-installation with existing records.
+## Data
 
-## Updating a native installation
+All data is in one SQLite file: `db.sqlite3` in the data directory. It uses
+WAL mode, so two more files (`-wal`, `-shm`) can exist beside it.
 
-Stop `runserver` before updating the source checkout. Preserve `.env`, the
-signing key and the active database; follow [database discovery](#locate-the-active-database)
-and the [backup procedure](#sqlite-backup) before applying schema changes. Run
-the update commands from the checkout with the same environment/data directory
-used by the application:
+Back up with the SQLite backup command, which is safe while the server runs:
 
 ```bash
-uv sync --locked
-uv run python manage.py migrate
-uv run python manage.py migrate --check
-uv run python manage.py runserver
+sqlite3 /path/to/db.sqlite3 ".backup '/path/to/backup.sqlite3'"
 ```
 
-`runserver` does not apply migrations. A new model field such as
-`Asset.is_archived` must exist in the active database before the updated code
-serves requests. A pending migration can break several pages that share queries:
-dashboard, banks, planning and charts all read investment positions. With HTMX,
-a failed GET can leave the previous page visible, making navigation appear
-unresponsive. Check the server traceback and active migration state instead of
-resetting the database. Disposable test databases migrate independently and do
-not confirm that the installation in use has been upgraded.
+To restore, stop the server, replace `db.sqlite3` with the backup, remove the
+`-wal` and `-shm` files, and start the server.
 
-After starting, verify navigation and charts in the existing authenticated
-session. Keep browser tests on the [disposable runner](../CONTRIBUTING.md#browser-tests);
-do not use the installation's database or server for test fixtures.
+Keep `SECRET_KEY` with the backup. Without it, open sessions end; the data is
+not affected.
 
-## Locate the active database
-
-Run operational commands from the repository root with the same process
-variables used to start the application. This resolves `TUXEDO_DATA_DIR` and
-`TUXEDO_ENV_FILE`, including values loaded from the selected environment file,
-without opening the database:
+## Docker
 
 ```bash
-database_path=$(uv run python -c 'from pathlib import Path; from core.settings import DATABASES; print(Path(DATABASES["default"]["NAME"]).resolve())')
-backup_dir="$HOME/tuxedo-finance-backups"
-mkdir -p "$backup_dir"
-chmod 700 "$backup_dir"
+docker build -t tuxedo-finance:local .
+cp .env.docker.example .env      # set TUXEDO_IMAGE and SECRET_KEY
+docker compose up -d
 ```
 
-Use these variables in the same shell for the procedures below. Keep the backup
-directory outside the checkout. Before a backup or restore, stop `runserver`
-and every other process writing to this database.
+The container applies migrations when it starts and serves on port 8000,
+published on `127.0.0.1` only. The database is in the `data` volume.
 
-## SQLite backup
+The image was not built on the development computer during the 2.0 work
+(no Docker there). The Docker workflow builds and starts it.
 
-Record the application version and migration state alongside the backup:
+## Repair
 
-```bash
-uv run python scripts/check_version.py
-uv run python manage.py showmigrations
-```
-
-The Python standard library provides SQLite's backup API, including consistent
-handling of WAL state. This command opens the source read-only, refuses to
-overwrite an existing backup, and prints the created backup path:
-
-```bash
-uv run python - "$database_path" "$backup_dir" <<'PY'
-from datetime import datetime, timezone
-from pathlib import Path
-import os
-import sqlite3
-import sys
-
-source = Path(sys.argv[1]).resolve()
-stamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-%f')
-backup = Path(sys.argv[2]) / f'tuxedo-finance-{stamp}.sqlite3'
-with sqlite3.connect(source.as_uri() + '?mode=ro', uri=True) as database:
-    fd = os.open(backup, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    os.close(fd)
-    with sqlite3.connect(backup) as destination:
-        database.backup(destination)
-        if destination.execute('PRAGMA integrity_check').fetchone() != ('ok',):
-            raise SystemExit('Backup integrity check failed; do not use this file.')
-print(backup)
-PY
-```
-
-For sensitive records, encrypt the verified backup with an owner-controlled
-tool such as `age` or `gpg`. Keep at least one copy on a separate device and
-choose a retention policy appropriate to the data. An integrity check verifies
-SQLite structure; rehearse restoration to verify expected application records.
-
-## Restore and validation
-
-With all writers stopped, first run the backup procedure above to preserve the
-current database as a rollback copy. Select an existing, verified backup, and
-restore it to the resolved active database through the SQLite backup API:
-
-```bash
-backup_file="$backup_dir/tuxedo-finance-YYYYMMDD-HHMMSS-MICROSECONDS.sqlite3"
-uv run python - "$backup_file" "$database_path" <<'PY'
-from pathlib import Path
-import os
-import sqlite3
-import sys
-
-source = Path(sys.argv[1]).resolve()
-target = Path(sys.argv[2]).resolve()
-if source == target:
-    raise SystemExit('The backup and active database must be different files.')
-with sqlite3.connect(source.as_uri() + '?mode=ro', uri=True) as backup:
-    if backup.execute('PRAGMA integrity_check').fetchone() != ('ok',):
-        raise SystemExit('Backup integrity check failed; restoration cancelled.')
-    os.umask(0o077)
-    with sqlite3.connect(target) as database:
-        backup.backup(database)
-        if database.execute('PRAGMA integrity_check').fetchone() != ('ok',):
-            raise SystemExit('Restored database integrity check failed.')
-    target.chmod(0o600)
-print('Restored database integrity: ok')
-PY
-```
-
-Use code and lockfiles compatible with the backup's schema. Apply the committed incremental migrations for a supported release upgrade;
-never regenerate initial migrations or reset a released installation. The
-[historical pre-release reset](data-model.md#breaking-release) concerned only
-unsupported legacy schemas.
-Then run `manage.py check`, inspect `showmigrations`, and start the application.
-Verify representative balances, transactions, invoices, and investments before
-resuming normal writes.
-
-## Restore rehearsals
-
-Rehearse on a separate temporary installation with its own `TUXEDO_DATA_DIR`.
-Record the date, exact code revision and lockfile, source migration state,
-backup and restore results, integrity check, and representative record checks.
-Never use the active installation as the rehearsal destination.
+`python manage.py reconcile_ledger` derives account movements and invoices
+again from the recorded entries. Use it after a direct database edit.

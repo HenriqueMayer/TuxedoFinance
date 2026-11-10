@@ -1,4 +1,4 @@
-"""Keep the derived ledger rows current without page loads (2.0.0 plan, R3).
+"""Keep the derived ledger rows current without page loads.
 
 Page loads do not synchronize the ledger: they call
 ``transactions.services.read_ledger_state``, which never writes (step B). These
@@ -21,8 +21,7 @@ only error codes and, for ``migrate``, usernames.
 
 ``WATCHED_MODELS`` lists the models whose rows ``sync_user_ledger``,
 ``build_projection_plan`` and ``banking.services.sync_redemption_iof_transaction``
-read to derive movements and invoices. The guide
-(docs/apps/transactions.md#invalidation) lists the fields that each model
+read to derive movements and invoices. The guide lists the fields that each model
 contributes. Synchronization writes ``BankMovement`` and ``CardInvoice``
 itself, so they are not watched.
 

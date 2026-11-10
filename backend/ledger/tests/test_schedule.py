@@ -880,7 +880,7 @@ def fields_of(occurrence):
 
 
 class CommitmentEngineTests(SimpleTestCase):
-    """R4: amount changes, month overrides and confirmation (docs/apps/transactions.md#recurring-commitments)."""
+    """R4: amount changes, month overrides and confirmation."""
 
     def rent(self, instrument=ACCOUNT, **values):
         return source(

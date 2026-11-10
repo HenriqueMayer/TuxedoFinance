@@ -24,7 +24,7 @@ def validate_parent_hierarchy(category_key, parent_key, parent_by_key):
 
 
 class Category(models.Model):
-    """A user-defined category used to classify transactions (PRD §8.3).
+    """A user-defined category used to classify transactions .
 
     `parent_category` is an optional self-relationship: a category with no
     parent is a top-level category; one with a parent is a subcategory

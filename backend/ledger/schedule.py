@@ -1,4 +1,4 @@
-"""The occurrence engine (docs/apps/transactions.md#occurrence-engine).
+"""The occurrence engine.
 
 A *source* is a recorded event with a schedule: a single event, a fixed
 (recurring) schedule or an installment plan. An *occurrence* is one dated
@@ -31,14 +31,14 @@ from banking.card_calendar import days_in_month
 ZERO = Decimal("0.00")
 CENT = Decimal("0.01")
 # A fixed source may have at most this number of monthly occurrences through
-# the synchronization horizon (docs/apps/transactions.md#recurrence-projection-and-recovery).
+# the synchronization horizon.
 MAX_MONTHLY_OCCURRENCES = 1200
 # The payment channel of a source that settles through a credit-card statement.
 CREDIT_CARD = "CREDIT_CARD"
 # Source types.
 TRANSACTION = "transaction"
 LOYALTY_PURCHASE = "loyalty_purchase"
-# Occurrence statuses (docs/apps/transactions.md#occurrence-engine).
+# Occurrence statuses.
 # SCHEDULED: the scheduled values. ADJUSTED: an ADJUSTED override changes the
 # amount or the date. EXPECTED: the source requires confirmation and the month
 # has no confirmation yet; the status does not depend on the date. CONFIRMED:
@@ -415,8 +415,7 @@ class Occurrence:
     - ``allocations``: ``(category_id, amount)`` pairs that add up to
       ``amount``, or None when ``expand`` was not asked for them. A legacy
       fixed source with more than one installment is the exception: its pairs
-      replay the installment split, as the readers did before the engine
-      (docs/apps/transactions.md#occurrence-engine, Limits).
+      replay the installment split, as the readers did before the engine.
     - ``installment``: ``(number, count)`` for an installment plan (a source
       that is not fixed and has more than one installment), otherwise None.
       The number of the first tracked installment is ``installment_start``.

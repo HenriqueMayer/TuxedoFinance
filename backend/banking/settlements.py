@@ -4,7 +4,7 @@ The state of an invoice (status, ``paid_at`` and the outstanding amounts) is
 calculated as of a date, so it changes when the date changes. Pages calculate
 it when they are read, with ``invoice_state`` or ``attach_invoice_states``.
 The ``status`` and ``paid_at`` columns of ``CardInvoice`` are a cache of the
-state as of the last synchronization (docs/apps/banking.md#invoice-state).
+state as of the last synchronization.
 """
 
 from dataclasses import dataclass

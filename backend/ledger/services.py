@@ -23,7 +23,7 @@ ZERO = Decimal("0.00")
 # Increase this number in a change that makes the synchronization derive other
 # rows from unchanged inputs, for example a new due-date or settlement rule. A
 # state recorded by other rules is not current: migrate synchronizes each such
-# user once (docs/apps/transactions.md#synchronization-state). Version 2 ends
+# user once. Version 2 ends
 # the projection horizon on the last day of its month.
 LEDGER_RULES_VERSION = 2
 

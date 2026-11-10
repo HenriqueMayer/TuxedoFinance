@@ -39,7 +39,7 @@ class TransactionQuerySet(models.QuerySet):
         SELECT, so they add no query. One integer column without a database
         converter costs less for each row than two boolean columns.
         ``attach_schedule_rows`` then loads only the rows of flagged
-        transactions (docs/apps/transactions.md#recurring-commitments).
+        transactions.
         """
         commitment = models.Q(is_fixed=True, installments=1)
 
@@ -364,7 +364,7 @@ class Transaction(models.Model):
     # with installments replays once per month of its offset). The readers in
     # dashboard, planning and sandbox use schedule.expand; the helpers stay for
     # the banking views, invoice credits and tests
-    # (docs/apps/transactions.md#occurrence-engine).
+    # .
 
     @property
     def installment_amount(self):
@@ -632,7 +632,7 @@ def _first_of_month_error(value):
 
 
 class ScheduleAmount(models.Model):
-    """An amount change of a recurring source (R4, docs/apps/transactions.md#recurring-commitments).
+    """An amount change of a recurring source.
 
     ``amount`` applies from ``effective_month`` (the first day of a reference
     month) until the next row of the source. ``Transaction.amount`` applies
@@ -711,7 +711,7 @@ class ScheduleAmount(models.Model):
 
 
 class OccurrenceOverride(models.Model):
-    """The change of one month of a recurring source (R4, docs/apps/transactions.md#recurring-commitments).
+    """The change of one month of a recurring source.
 
     ``month`` is the first day of the reference month: the statement month
     for a credit card. A source has at most one override for each month; a
@@ -941,7 +941,7 @@ def attach_schedule_rows(items, *, user_id=None, error=None):
 
 
 class LedgerSyncState(models.Model):
-    """The last ledger synchronization of one user (docs/apps/transactions.md#synchronization-state).
+    """The last ledger synchronization of one user.
 
     ``transactions.services.sync_user_ledger`` writes this row. ``synced_on``
     is the financial date of a synchronization as of that date. It is null

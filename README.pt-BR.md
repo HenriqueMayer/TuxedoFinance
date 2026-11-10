@@ -1,124 +1,52 @@
-[English](README.md) · [Português (Brasil)](README.pt-BR.md)
+# Tuxedo Finance
 
-<h1><img src="docs/assets/readme-cover.svg" alt="Tuxedo Finance" width="1240"></h1>
+Aplicação de finanças pessoais auto-hospedada, para uma pessoa que lança os
+dados à mão. Sem conexão com banco. Um lançamento leva poucos segundos, e o
+Início responde às perguntas do mês: quanto sobra, para onde foi o dinheiro,
+o que vence em breve.
 
-<a id="-controle-dos-dados"></a>
+[English](README.md)
 
-Receitas, despesas, contas, cartões e investimentos em um app local.
-Você instala no seu computador e usa em português ou inglês, com tema claro ou
-escuro. Seus registros ficam na sua instalação.
+## Estado
 
-<a id="prévia-da-interface"></a>
+A versão 2.0 está em desenvolvimento nesta branch. É uma aplicação nova sobre
+as regras financeiras da 1.x: uma API Django e um cliente React.
 
-<p align="center">
-  <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/"><img src="docs/assets/preview-link.svg" width="200" height="40" alt="Abrir o preview da interface do Tuxedo Finance"></a>
-</p>
-
-<p>
-  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=flat&amp;label=CI&amp;labelColor=1A2E26&amp;color=176B52" alt="Status da integração contínua"></a>
-  <img src="https://img.shields.io/badge/version-1.0.0-B88A59?style=flat&amp;labelColor=1A2E26" alt="Versão 1.0.0">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-B88A59?style=flat&amp;labelColor=1A2E26" alt="Licença PolyForm Noncommercial"></a>
-</p>
-
-[Instalação](#instalação) · [Documentação](docs/README.md) · [Alterações](CHANGELOG.md)
-
-<a id="-funcionalidades"></a>
-<a id="cinco-áreas"></a>
-<a id="seis-áreas"></a>
-
-## O que tem no app
-
-A tabela descreve o código atual do projeto. Os comandos Docker abaixo usam
-a release **v1.0.0**.
-
-| Área | O que você pode fazer |
+| Área | Estado |
 |---|---|
-| **Início** | Conferir recursos disponíveis, indicadores do mês e compromissos próximos. |
-| **Transações** | Registrar receitas e despesas, dividir categorias, gerenciar recorrências e parcelas, exportar CSV. |
-| **Contas** | Gerenciar contas, PIX, transferências e cartões; conferir faturas, créditos, pagamentos, fidelidade e câmbio local. |
-| **Investimentos** | Acompanhar aplicações e cofrinhos, operações e preços locais datados; configurar investimentos e escolher um emoji por aplicação. |
-| **Planejar** | Definir limites mensais por categoria, reservar saldos existentes para metas, comparar cenários de salário/rendimento e conferir alertas locais. |
-| **Análises** | Explorar gráficos financeiros e de investimentos, despesas por categoria, atividade por conta/cartão e projeções de fluxo. |
+| Lançamentos, categorias, parcelas, lançamentos recorrentes | Pronto |
+| Carteira: contas, cartões, faturas, pagamentos, transferências | Pronto |
+| Início: resultado do mês, gastos por categoria, o que vence | Pronto |
+| Investimentos, patrimônio, Planejar, pontos, outras moedas, importação de extrato | Ainda não |
 
-O [assistente Tuxedo](docs/apps/assistant.md) opcional pode consultar suas finanças
-salvas, simular cenários e preparar as alterações disponíveis para sua confirmação.
-A conexão com o ChatGPT vem desativada. Quando habilitada, registros relevantes e
-o histórico necessário da conversa são enviados à OpenAI. O Open Finance permanece
-no [roadmap](docs/roadmap.md#personal-open-finance-study).
+A 2.0 tem um banco de dados novo. Não há atualização a partir da 1.x. A
+última versão 1.x é a tag
+[`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.0).
 
-<a id="-instalação-inicial"></a>
+## Como rodar
 
-## Instalação
-
-### Docker
-
-Requer Docker Engine 28+ (ou Docker Desktop atualizado), Compose v2+ e um
-shell POSIX (WSL no Windows). Não é necessário clonar o repositório nem instalar
-Python ou Node.js no computador.
-Aguarde a conclusão do workflow Docker da release e a disponibilidade dos
-arquivos de instalação antes de instalar.
-Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.0/compose.yaml)
-e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.0/docker.env.example)
-da release **v1.0.0** para uma nova pasta de instalação. Abra um terminal
-nessa pasta e execute:
+Requisitos: Python 3.12 com [uv](https://docs.astral.sh/uv/) e Node.js 22.
 
 ```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v1.0.0
-docker pull "$image"
-(
-  umask 077
-  set -o noclobber
-  docker run --rm --entrypoint python -e TUXEDO_IMAGE="$image" "$image" -c \
-    'import os,secrets; print("TUXEDO_IMAGE="+os.environ["TUXEDO_IMAGE"]); print("SECRET_KEY="+secrets.token_urlsafe(64))' > .env.docker
-)
-docker compose --env-file .env.docker up -d --wait
-```
-
-Abra [127.0.0.1:8000](http://127.0.0.1:8000/). A configuração preserva um
-`.env.docker` existente; mantenha sua chave de assinatura, a pasta de instalação
-e o volume de dados nas atualizações. Consulte o [guia de Docker](docs/docker.md)
-para configuração, atualizações e backups. Esses comandos instalam a release
-publicada; alterações do checkout exigem uma
-[compilação local da imagem](docs/docker.md#build-from-a-checkout).
-
-<a id="código-em-desenvolvimento"></a>
-
-<a id="python-e-uv"></a>
-
-**Python 3.12 + [uv](https://docs.astral.sh/uv/getting-started/installation/):**
-para uma nova instalação a partir do código:
-
-```bash
-git clone https://github.com/HenriqueMayer/TuxedoFinance.git
-cd TuxedoFinance
-uv sync --locked
-uv run python scripts/init_local.py
+cd web && npm ci && npx vite build
+cd ../backend && cp .env.example .env    # defina SECRET_KEY no .env
+uv sync
 uv run python manage.py migrate
+uv run python manage.py createsuperuser
 uv run python manage.py runserver
 ```
 
-Abra [127.0.0.1:8000](http://127.0.0.1:8000/), crie um usuário e adicione um banco
-e uma conta bancária. Node.js é necessário apenas nas ferramentas de desenvolvimento.
-Antes de atualizar uma instalação existente, siga o
-[procedimento de backup e migração](docs/operations.md#updating-a-native-installation).
-Preserve o banco de dados e a chave de assinatura.
+Abra http://127.0.0.1:8000.
 
-<a id="dados-de-demonstração-opcionais"></a><a id="-configuração"></a><a id="-desenvolvimento"></a><a id="-documentação"></a><a id="-contribuição"></a>
+Com Docker: veja [Operations](docs/operations.md#docker).
 
-## Guias
+## Documentação
 
-[Configuração e operação](docs/operations.md) · [Dados de demonstração](docs/demo-data.md) ·
-[Design system](docs/design-system.html) · [Como contribuir](CONTRIBUTING.md) ·
-[Roadmap](docs/roadmap.md) · [Segurança](SECURITY.md)
+A documentação técnica está em inglês:
+[Product](docs/product.md) · [Architecture](docs/architecture.md) ·
+[Data model](docs/data-model.md) · [Development](docs/development.md) ·
+[Operations](docs/operations.md)
 
-<a id="-tecnologia"></a>
+## Licença
 
-Desenvolvido com **Django, SQLite, HTMX e assets servidos localmente**.
-O [índice da documentação](docs/README.md) reúne os detalhes técnicos e financeiros,
-em inglês.
-
----
-
-<a id="-licença"></a>
-
-Copyright © 2026 Henrique Mayer. [PolyForm Noncommercial 1.0.0](LICENSE).
+[PolyForm Noncommercial 1.0.0](LICENSE).

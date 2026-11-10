@@ -1,4 +1,4 @@
-"""Credit-card statement calendar (docs/apps/banking.md#statement-month-and-due-date).
+"""Credit-card statement calendar.
 
 A statement month is the month of the card invoice that receives a purchase.
 The due date is the date when that invoice is due. Both depend only on the

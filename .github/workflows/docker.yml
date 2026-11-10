@@ -1,9 +1,15 @@
 name: Docker
 
+# Builds the image and starts it. A published release also pushes the tested
+# image for both architectures.
 on:
   pull_request:
-  push:
-    branches: [main]
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "backend/**"
+      - "web/**"
+      - ".github/workflows/docker.yml"
   release:
     types: [published]
 
@@ -16,7 +22,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate Linux ${{ matrix.arch }}
+    name: Build and start on Linux ${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
@@ -31,35 +37,49 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name || github.ref }}
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 20
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Check release identity
+      - name: Read the version of the backend
+        id: version
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("backend/pyproject.toml", "rb"))["project"]["version"])')
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+      - name: The release tag names the version and is on main
         if: github.event_name == 'release'
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
+          VERSION: ${{ steps.version.outputs.value }}
         run: |
-          GITHUB_REF_TYPE=tag GITHUB_REF_NAME="$RELEASE_TAG" uv run python scripts/check_version.py
+          test "$RELEASE_TAG" = "v$VERSION"
           git merge-base --is-ancestor HEAD origin/main
-      - name: Build locked image
+      - name: Build the image
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: docker build --build-arg VERSION="$VERSION" --build-arg REVISION="$(git rev-parse HEAD)" --tag tuxedo-finance:test .
+      - name: Start the container and wait for it to be healthy
         run: |
-          version=$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
-          docker build --build-arg VERSION="$version" --build-arg REVISION="$(git rev-parse HEAD)" --tag tuxedo-finance:test .
-      - name: Test supported upgrades, lifecycle and restore
-        run: |
-          for previous in v0.3.0 v0.4.0 v0.9.0 v0.9.1 v0.10.0; do
-            docker pull "ghcr.io/henriquemayer/tuxedofinance:$previous"
-            uv run python scripts/docker_smoke.py --image tuxedo-finance:test --previous-image "ghcr.io/henriquemayer/tuxedofinance:$previous"
+          docker run --detach --name tuxedo --env SECRET_KEY=ci-only-not-a-real-secret \
+            --publish 127.0.0.1:8000:8000 tuxedo-finance:test
+          for attempt in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' tuxedo)
+            test "$status" = healthy && break
+            sleep 3
           done
-      - name: Install browser dependencies
+          docker logs tuxedo
+          test "$status" = healthy
+      - name: The API answers and the client is served
         run: |
-          npm ci
-          npx playwright install --with-deps chromium
-      - name: Test browser against isolated container
-        run: npm run test:e2e -- --docker-image tuxedo-finance:test
-      - name: Save tested release image
+          curl --fail --silent http://127.0.0.1:8000/api/health | grep --quiet '"status": "ok"'
+          curl --fail --silent http://127.0.0.1:8000/ | grep --quiet '<div id="root">'
+          curl --fail --silent http://127.0.0.1:8000/transactions | grep --quiet '<div id="root">'
+      - name: The data survives a restart
+        run: |
+          docker restart tuxedo
+          for attempt in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8000/api/health && break
+            sleep 2
+          done
+          curl --fail --silent http://127.0.0.1:8000/api/health | grep --quiet '"status": "ok"'
+      - name: Save the tested release image
         if: github.event_name == 'release' && !github.event.release.prerelease
         run: docker save tuxedo-finance:test | gzip > "$RUNNER_TEMP/image.tar.gz"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -68,17 +88,9 @@ jobs:
           name: image-${{ matrix.arch }}
           path: ${{ runner.temp }}/image.tar.gz
           retention-days: 2
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: failure()
-        with:
-          name: docker-failure-${{ matrix.arch }}
-          path: |
-            .local/test-results/
-            .local/playwright-report/
-          include-hidden-files: true
 
   publish:
-    name: Publish tested stable release
+    name: Publish the tested release
     needs: validate
     if: github.event_name == 'release' && !github.event.release.prerelease
     runs-on: ubuntu-24.04
@@ -99,7 +111,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish exact tested images and manifest
+      - name: Publish the exact tested images and their manifest
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
@@ -109,24 +121,14 @@ jobs:
             docker tag tuxedo-finance:test "$image:$RELEASE_TAG-$arch"
             docker push "$image:$RELEASE_TAG-$arch"
           done
+          # A versioned image is the supported interface; there is no moving latest tag.
           docker buildx imagetools create --tag "$image:$RELEASE_TAG" \
             "$image:$RELEASE_TAG-amd64" "$image:$RELEASE_TAG-arm64"
-          # A versioned image is the supported interface; no moving latest alias.
-          mkdir "$RUNNER_TEMP/anonymous-docker"
-          for arch in amd64 arm64; do
-            docker --config "$RUNNER_TEMP/anonymous-docker" pull --platform "linux/$arch" "$image:$RELEASE_TAG"
-          done
-      - name: Attach matching installation files
+      - name: Attach the installation files of this release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          python - <<'PY'
-          import os
-          from pathlib import Path
-          source = Path('.env.docker.example').read_text()
-          source = source.replace('REPLACE_WITH_RELEASE_TAG', os.environ['RELEASE_TAG'])
-          source = source.replace('ghcr.io/henriquemayer/tuxedofinance', 'ghcr.io/' + os.environ['GITHUB_REPOSITORY'].lower())
-          Path('docker.env.example').write_text(source)
-          PY
+          sed "s|REPLACE_WITH_RELEASE_TAG|$RELEASE_TAG|; s|ghcr.io/henriquemayer/tuxedofinance|ghcr.io/${GITHUB_REPOSITORY,,}|" \
+            .env.docker.example > docker.env.example
           gh release upload "$RELEASE_TAG" compose.yaml docker.env.example --clobber

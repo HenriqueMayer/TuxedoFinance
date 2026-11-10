@@ -6,7 +6,6 @@ that change state (sign in, sign up) check it themselves with
 ``config.security.require_csrf``.
 """
 
-from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from ninja import NinjaAPI
 from ninja.errors import ValidationError as RequestValidationError
@@ -18,7 +17,7 @@ api = NinjaAPI(
     title="Tuxedo Finance",
     version=__version__,
     auth=django_auth,
-    docs_url="/docs" if settings.DEBUG else None,
+    docs_url=None,
 )
 
 

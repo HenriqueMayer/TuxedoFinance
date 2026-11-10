@@ -1,4 +1,4 @@
-"""Reconciliation of an account with the bank balance (2.0.0 plan, R8).
+"""Reconciliation of an account with the bank balance.
 
 A balance check (``BalanceCheckpoint``) records the balance that the bank
 shows for an account at the end of one day.

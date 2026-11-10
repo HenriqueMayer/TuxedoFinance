@@ -68,15 +68,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Templates exist only for the interactive API reference, shown when DEBUG is on.
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "APP_DIRS": True,
-        "OPTIONS": {"context_processors": ["django.template.context_processors.request"]},
-    },
-]
-
 # Each installation owns its data directory. The default keeps development data
 # inside the ignored ``backend/var/`` folder.
 DATA_DIR = Path(os.environ.get("TUXEDO_DATA_DIR", BASE_DIR / "var"))

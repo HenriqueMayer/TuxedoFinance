@@ -5,7 +5,7 @@ grandchildren and lower levels) and its ancestors. Two budgets in one family
 count the same expenses, so planning rejects them in overlapping months and
 the same currency. ``planning.models`` and ``planning.services`` use these
 reads, and ``categories`` (layer 2) owns them, so the plan records do not
-import a planning service (docs/v2/architecture.md#target-layers).
+import a planning service.
 
 A *change validator* is a function that a higher layer registers here with
 ``register_change_validator``. ``Category.clean`` calls each one with the

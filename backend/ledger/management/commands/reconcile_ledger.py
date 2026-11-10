@@ -4,7 +4,7 @@ Writes, sign-in and ``migrate`` synchronize the ledger
 (``transactions.ledger_state``); page loads only read it. A direct database
 edit, a queryset ``update()`` or a data migration sends no signal. This
 command synchronizes the selected users as of today and records their
-synchronization state (docs/operations.md#repair-derived-ledger-rows).
+synchronization state.
 
 The output contains only counts and, for each failed user, the username and an
 error code. It never shows amounts, titles or other financial data.

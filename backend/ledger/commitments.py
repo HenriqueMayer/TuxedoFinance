@@ -1,6 +1,6 @@
 """Write services and the read model of recurring commitments (R4).
 
-The terms are those of docs/apps/transactions.md#recurring-commitments:
+Terms:
 
 - A *commitment source* is a fixed transaction with one installment that no
   reward redemption manages.
@@ -13,8 +13,8 @@ owner and eligibility, validates the row with ``full_clean`` and then
 synchronizes the ledger of the user, unless ``synchronize=False``. A
 ``ValidationError`` has the keys ``month``, ``amount``, ``date`` or
 ``__all__``. A ``ProjectionLimitExceeded`` of the synchronization rolls the
-write back and propagates. The services never read the request; the views of
-package 3.2 call them.
+write back and propagates. The services never read the request; the API
+operations of ``ledger.api`` call them.
 """
 
 from dataclasses import dataclass
