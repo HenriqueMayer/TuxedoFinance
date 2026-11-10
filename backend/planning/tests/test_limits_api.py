@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 from banking.models import BankAccount
@@ -112,6 +113,15 @@ class MonthLimitTests(PlanTestCase):
         response = self.put(LIMIT, {"month": "2026-11-15", "amount": "10.00"})
         self.assert_errors(response, 400, "month")
         self.assertEqual(SpendingLimit.objects.count(), 0)
+
+    def test_a_refusal_is_answered_in_the_language_of_the_request(self):
+        response = self.client.put(
+            LIMIT,
+            data=json.dumps({"month": "2026-11-15", "amount": "10.00"}),
+            content_type="application/json",
+            headers={"X-CSRFToken": self.csrf(), "Accept-Language": "pt-BR"},
+        )
+        self.assertEqual(response.json()["errors"]["month"], ["Escolha o primeiro dia de um mês."])
 
     def test_home_reads_the_limit_of_the_month(self):
         self.record(amount="900.00")

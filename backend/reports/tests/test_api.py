@@ -325,3 +325,54 @@ class LastEntryTests(ReportsApiTestCase):
         self.record()
         self.client.force_login(self.other)
         self.assertIsNone(self.days())
+
+
+class WindowTests(ReportsApiTestCase):
+    """A read loads the entries that can count in its months, not every entry."""
+
+    def setUp(self):
+        super().setUp()
+        self.set_today(date(2025, 1, 10))
+        self.record(title="Antigo", amount="999.00", date="2025-01-10")
+        self.set_today(TODAY)
+        # After the closing day of October: it is in the statement of November.
+        self.record(
+            title="Jantar", amount="80.00", date="2026-10-28", instrument=f"credit:{self.card.pk}"
+        )
+        # The sixth of eight installments falls in November.
+        self.record(
+            title="Notebook",
+            amount="900.00",
+            date="2026-06-10",
+            instrument=f"credit:{self.card.pk}",
+            installments=8,
+        )
+        self.record(title="Internet", amount="110.00", date="2025-11-20", is_fixed=True)
+
+    def test_a_month_counts_old_sources_that_still_bill_in_it(self):
+        (result,) = self.get("/api/reports/home").json()["result"]
+        self.assertEqual((result["expenses"], result["previous_expenses"]), ("302.50", "222.50"))
+        (month,) = self.get("/api/reports/month", month="2025-01").json()["result"]
+        self.assertEqual(month["expenses"], "999.00")
+
+    def test_the_list_of_a_month_has_the_same_entries(self):
+        page = self.get("/api/ledger/transactions", month="2026-11").json()
+        self.assertEqual(
+            sorted((item["title"], item["month_amount"]) for item in page["items"]),
+            [("Internet", "110.00"), ("Jantar", "80.00"), ("Notebook", "112.50")],
+        )
+        self.assertEqual(page["expense"], "302.50")
+        self.assertEqual(self.get("/api/ledger/transactions").json()["count"], 4)
+
+    def test_a_read_does_not_load_entries_of_other_months(self):
+        from ledger.models import Transaction
+        from reports import home
+
+        with self.assertNumQueries(2):
+            loaded = home.sources(self.user, date(2026, 11, 1), date(2026, 11, 1))
+        titles = sorted(
+            Transaction.objects.filter(pk__in=[s.source_id for s in loaded]).values_list(
+                "title", flat=True
+            )
+        )
+        self.assertEqual(titles, ["Internet", "Jantar", "Notebook"])

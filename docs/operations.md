@@ -63,3 +63,20 @@ The image was not built on the development computer during the 2.0 work
 
 `python manage.py reconcile_ledger` derives account movements and invoices
 again from the recorded entries. Use it after a direct database edit.
+
+## Release
+
+A release is a tag on `main` and a GitHub release of that tag.
+
+1. Set the version in `backend/pyproject.toml` (for example `2.0.0`) and give
+   the entry of the [changelog](../CHANGELOG.md) that version and its date.
+2. Merge to `main`. The workflows of the backend, the client and the public
+   site run. The public site is published from `main`.
+3. Tag the merge commit `v` plus the version (`v2.0.0`) and publish a GitHub
+   release of the tag. The Docker workflow checks that the tag names the
+   version and is on `main`, builds the image for both architectures, starts
+   it, and pushes it.
+
+The repository setting "Pages, Source" must be "GitHub Actions" for the
+public site.
+

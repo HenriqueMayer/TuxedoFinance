@@ -9,7 +9,8 @@ of behavior updates its file in the same change.
 | Repository layout, the API, the client and the test policy | [Architecture](architecture.md) |
 | Records, their owner applications and the financial rules | [Data model](data-model.md) |
 | Setup, commands and checks | [Development](development.md) |
-| Settings, data, backup and Docker | [Operations](operations.md) |
+| Settings, data, backup, Docker and a release | [Operations](operations.md) |
+| The public page and its demonstration | [Site](../site/README.md) |
 
 The interface decisions are in [`web/DESIGN.md`](../web/DESIGN.md). The API
 reference is the OpenAPI schema: `/api/openapi.json` on a running server,

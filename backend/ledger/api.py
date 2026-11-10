@@ -23,7 +23,11 @@ from config import clock
 from config.ownership import owned, owned_choice
 from ledger import commitments, schedule
 from ledger.categories import Category
-from ledger.consultation import billed_month_occurrence, requested_billed_month
+from ledger.consultation import (
+    billed_month_occurrence,
+    may_bill_between,
+    requested_billed_month,
+)
 from ledger.models import Transaction, attach_schedule_rows
 
 router = Router()
@@ -316,7 +320,8 @@ def list_transactions(request, filters: Query[TransactionFilters]):
         # A month selects by the billed month and shows the amount of that month:
         # one installment of a plan, the month's amount of a recurring source.
         items = []
-        for item in attach_schedule_rows(rows):
+        first = dt.date(*month, 1)
+        for item in attach_schedule_rows(rows.filter(may_bill_between(first, first))):
             occurrence = billed_month_occurrence(item, *month)
             if occurrence is not None:
                 item.month_amount = occurrence.amount

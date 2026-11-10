@@ -7,25 +7,35 @@ o que vence em breve.
 
 [English](README.md)
 
+![Início: quanto resta para gastar, para onde foi o dinheiro, o que vence, patrimônio e metas](docs/images/pt-br/home.png)
+
+| Planejar | Uma janela |
+|---|---|
+| ![Planejar: o limite do mês, orçamentos por categoria e metas](docs/images/pt-br/plan.png) | ![A janela do mês, aberta a partir do Início](docs/images/pt-br/window.png) |
+
+As imagens mostram os dados de demonstração da [página pública](site/README.md).
+
+## O que ela faz
+
+- **Lançamentos** em poucos segundos, com parcelas e lançamentos
+  recorrentes. Um extrato do banco (OFX ou CSV) pode ser importado e revisado
+  linha a linha.
+- **Carteira**: contas, cartões e faturas, transferências, investimentos,
+  pontos e milhas, e contas em outras moedas.
+- **Início**: blocos que você escolhe. Quanto resta para gastar, para onde
+  foi o dinheiro, o que vence, patrimônio, metas.
+- **Planejar**: um limite para o mês, orçamentos por categoria, metas que
+  reservam saldos reais, os próximos meses com uma planilha para simular, e
+  um fechamento curto de cada mês.
+- Cada objeto abre em uma janela sobre a página, e a página mantém a posição.
+- Inglês e português do Brasil.
+
 ## Estado
 
-A versão 2.0 está em desenvolvimento nesta branch. É uma aplicação nova sobre
-as regras financeiras da 1.x: uma API Django e um cliente React.
-
-| Área | Estado |
-|---|---|
-| Lançamentos, categorias, parcelas, lançamentos recorrentes | Pronto |
-| Carteira: contas, cartões, faturas, pagamentos, transferências | Pronto |
-| Início: resultado do mês, gastos por categoria, o que vence, patrimônio | Pronto |
-| Investimentos: saldos e unidades, aportes, resgates, valor de hoje | Pronto |
-| Planejar: limite do mês, orçamentos por categoria, metas, próximos meses, planilha, simuladores | Pronto |
-| Outras moedas e taxas de câmbio, importação de extrato, pontos e milhas | Pronto |
-| Fechamento do mês | Pronto |
-| Site público com a demonstração (`site/`) | Pronto, não publicado |
-
-A 2.0 tem um banco de dados novo. Não há atualização a partir da 1.x. A
-última versão 1.x é a tag
-[`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.0).
+A versão 2.0 é uma aplicação nova sobre as regras financeiras da 1.x: uma
+API Django e um cliente React. Ainda não foi lançada. Ela tem um banco de
+dados novo, e não há atualização a partir da 1.x. A última versão 1.x é a
+tag [`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.0).
 
 ## Como rodar
 

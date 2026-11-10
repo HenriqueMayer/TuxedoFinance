@@ -65,12 +65,17 @@ Interface text is in `web/src/i18n/`. `en.ts` defines the keys and
 `pt-BR.ts` must have the same ones; the type check enforces it.
 
 Messages of the backend (validation) are in
-`backend/locale/pt_BR/LC_MESSAGES/django.po`. After a change:
+`backend/locale/pt_BR/LC_MESSAGES/django.po`. After a new or changed
+message, update the file, translate the new entries, and compile:
 
 ```bash
 cd backend
+uv run python manage.py makemessages -l pt_BR --ignore=.venv --ignore=var --no-obsolete --no-location
 uv run python manage.py compilemessages --ignore=.venv
 ```
+
+Commit `django.po` and `django.mo`. An entry marked `fuzzy` is not used:
+translate it and remove the mark.
 
 ## Conventions
 

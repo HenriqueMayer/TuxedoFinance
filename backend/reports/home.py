@@ -19,6 +19,7 @@ from banking.settlements import attach_invoice_states
 from config import clock
 from ledger import commitments, schedule
 from ledger.categories import Category
+from ledger.consultation import may_bill_between
 from ledger.models import Transaction, attach_schedule_rows
 
 ZERO = Decimal("0.00")
@@ -28,17 +29,28 @@ DUE_WINDOW_DAYS = 45
 AWAITING_MONTHS = 12
 
 
-def occurrences(user, first, last):
-    """Return the occurrences of ``user`` with a reference month from ``first`` through ``last``."""
+def sources(user, first, last):
+    """Return the engine sources of ``user`` that can have an amount from ``first`` to ``last``.
+
+    The months before and after are not loaded, so a read costs the same
+    with years of records as with months of them.
+    """
     items = attach_schedule_rows(
         Transaction.objects.filter(user=user)
+        .filter(may_bill_between(first, last))
         .select_related("bank_account", "debit_card__account", "credit_card__account")
         .prefetch_related("splits")
         .with_schedule_flags()
         .order_by("pk")
     )
-    sources = tuple(item.schedule_source(splits=True) for item in items)
-    return schedule.expand(sources, schedule.Window.months(first, last), allocations=True)
+    return tuple(item.schedule_source(splits=True) for item in items)
+
+
+def occurrences(user, first, last):
+    """Return the occurrences of ``user`` with a reference month from ``first`` through ``last``."""
+    return schedule.expand(
+        sources(user, first, last), schedule.Window.months(first, last), allocations=True
+    )
 
 
 def flow_totals(items):

@@ -5,6 +5,7 @@ import json
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import Client, TestCase
+from django.utils import translation
 
 PASSWORD = "a-long-test-passphrase-42"
 
@@ -20,6 +21,9 @@ class ApiTestCase(TestCase):
 
     def setUp(self):
         cache.clear()  # The sign-in throttle counts requests in the cache.
+        # A request with a language leaves it active in this thread. The next
+        # test must not create its user, and the default categories, in it.
+        self.addCleanup(translation.deactivate_all)
         self.client = Client(enforce_csrf_checks=True)
         users = get_user_model().objects
         self.user = users.create_user("ana", "ana@example.test", PASSWORD)

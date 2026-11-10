@@ -1,10 +1,26 @@
 """Reads for consulting transactions: the billed month and the effect of a source."""
 
-from datetime import date
+from datetime import date, timedelta
 from functools import lru_cache
+
+from django.db.models import Q
 
 from ledger import schedule
 from ledger.models import attach_schedule_rows
+
+
+def may_bill_between(first, last):
+    """Return the filter of the transactions that can have an amount from ``first`` to ``last``.
+
+    Both are first days of months. A repeating entry and an installment plan
+    can reach any later month, so they always pass. A single entry counts in
+    the month of its date or, on a credit card, in the month after it
+    (``banking.card_calendar.statement_month``). The filter is wider than the
+    answer; the occurrence engine decides.
+    """
+    earliest = schedule.offset_month(first, -1)
+    latest = schedule.offset_month(last, 1) - timedelta(days=1)
+    return Q(is_fixed=True) | Q(installments__gt=1) | Q(date__range=(earliest, latest))
 
 
 def requested_billed_month(raw_month):

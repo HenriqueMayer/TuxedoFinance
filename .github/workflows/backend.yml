@@ -46,9 +46,10 @@ jobs:
         run: |
           uv run python manage.py check
           uv run python manage.py makemigrations --check --dry-run
-      # The limit is the measured value of the moved domain, whose 1.x tests ran
-      # through views. Raise it as each part adds API tests for its modules.
+      # The limit is two points under the measured value. The uncovered code is
+      # mostly 1.x rules without a screen: points bought with money, IOF on a
+      # redemption, invoice credits.
       - name: Tests with branch coverage
         run: |
           uv run coverage run manage.py test
-          uv run coverage report --fail-under=72
+          uv run coverage report --fail-under=84

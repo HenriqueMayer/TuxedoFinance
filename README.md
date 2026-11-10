@@ -6,24 +6,35 @@ questions of the month: how much is left, where the money went, what is due.
 
 [Português](README.pt-BR.md)
 
+![Home: what is left to spend, where the money went, what is due, net worth and goals](docs/images/en/home.png)
+
+| Plan | A window |
+|---|---|
+| ![Plan: the limit of the month, category budgets and goals](docs/images/en/plan.png) | ![The month window, opened from Home](docs/images/en/window.png) |
+
+The images show the demonstration data of the [public page](site/README.md).
+
+## What it does
+
+- **Entries** in a few seconds, with installments and repeating entries. A
+  bank statement (OFX or CSV) can be imported and reviewed row by row.
+- **Wallet**: accounts, cards and invoices, transfers, investments, points
+  and miles, and accounts in other currencies.
+- **Home**: blocks that you choose. Left to spend, where the money went, what
+  is due, net worth, goals.
+- **Plan**: a limit for the month, budgets by category, goals that reserve
+  real balances, the months ahead with a sheet to try changes, and a short
+  closing of each month.
+- Every object opens in a window above the page, and the page keeps its
+  place.
+- English and Brazilian Portuguese.
+
 ## State
 
-Version 2.0 is in development on this branch. It is a new application on the
-1.x financial rules: a Django API and a React client.
-
-| Area | State |
-|---|---|
-| Entries, categories, installments, repeating entries | Built |
-| Wallet: accounts, cards, invoices, payments, transfers | Built |
-| Home: month result, spending by category, due soon, net worth | Built |
-| Investments: balances and units, deposits, withdrawals, value today | Built |
-| Plan: limit of the month, category budgets, goals, months ahead, sheet, calculators | Built |
-| Other currencies and exchange rates, statement import, points and miles | Built |
-| Month closing | Built |
-| The public site with the demonstration (`site/`) | Built, not published |
-
-2.0 has a new database. There is no upgrade from 1.x. The last 1.x release is
-the tag [`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.0).
+Version 2.0 is a new application on the 1.x financial rules: a Django API
+and a React client. It is not released yet. It has a new database, and there
+is no upgrade from 1.x. The last 1.x release is the tag
+[`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.0).
 
 ## Run it
 

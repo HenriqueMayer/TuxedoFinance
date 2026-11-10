@@ -65,7 +65,7 @@ export function MonthWindow(props: {
       {data.result.map((result) => (
         <dl key={result.currency} className="flex flex-wrap gap-x-10 gap-y-3">
           <div>
-            <dt className="text-sm text-muted">{t.home.blocks.left}</dt>
+            <dt className="text-sm text-muted">{t.closing.leftOver}</dt>
             <dd
               className={`amount text-2xl font-semibold ${Number(result.left) < 0 ? "text-negative" : ""}`}
             >
