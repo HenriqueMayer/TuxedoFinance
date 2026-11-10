@@ -207,6 +207,13 @@ export const ptBR: Messages = {
     more: (count: number) => `e mais ${count}`,
     seeAll: "Ver tudo",
     monthTitle: "Mês",
+    start: "Registre seu primeiro lançamento para ver o seu mês aqui.",
+    upToDate: "Seus registros estão em dia.",
+    lastEntry: (days: number) =>
+      days === 1
+        ? "Seu último lançamento foi ontem."
+        : `Seu último lançamento foi há ${days} dias.`,
+    catchUp: "Registrar o que aconteceu desde então",
     trend: "Últimos seis meses",
     byCategory: "Por categoria",
   },

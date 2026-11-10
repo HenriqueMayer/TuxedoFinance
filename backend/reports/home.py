@@ -16,6 +16,7 @@ from decimal import Decimal
 
 from banking.models import CardInvoice
 from banking.settlements import attach_invoice_states
+from config import clock
 from ledger import commitments, schedule
 from ledger.categories import Category
 from ledger.models import Transaction, attach_schedule_rows
@@ -229,3 +230,20 @@ def due_soon(user, today, days=DUE_WINDOW_DAYS):
     limit = today + timedelta(days=days)
     rows = _due_invoices(user, today, limit) + _due_bills(user, today, limit)
     return sorted(rows, key=lambda row: (row["due_date"], row["title"]))
+
+
+def days_since_last_entry(user, today):
+    """Return how many days ago the owner last recorded an entry, or None without entries.
+
+    The day is the day of recording in the financial time zone, not the date
+    written on the entry: an entry recorded today for last week counts as today.
+    """
+    recorded = (
+        Transaction.objects.filter(user=user, reward_redemption__isnull=True)
+        .order_by("-created_at")
+        .values_list("created_at", flat=True)
+        .first()
+    )
+    if recorded is None:
+        return None
+    return max(0, (today - clock.local_date(recorded)).days)

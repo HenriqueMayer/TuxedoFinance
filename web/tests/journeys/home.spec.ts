@@ -31,12 +31,14 @@ async function seed(page: Page) {
 
 test("Home answers the questions of the month", async ({ page }) => {
   await freshUser(page);
-  // A new owner sees the blocks with a hint each, not an empty page.
+  // A new owner sees where to start, and the blocks with a hint each.
+  await expect(page.getByText("Record your first entry to see your month here.")).toBeVisible();
   await expect(page.getByText("No entries this month yet.")).toBeVisible();
   await expect(page.getByText("Nothing is due in the next 45 days.")).toBeVisible();
 
   await seed(page);
   await page.reload();
+  await expect(page.getByText("Your records are up to date.")).toBeVisible();
 
   const left = page.getByRole("link", { name: /Left to spend/ });
   await expect(left).toContainText("R$ 4.820,00");

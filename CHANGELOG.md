@@ -18,6 +18,7 @@ and no upgrade from 1.x.
   category and the account or card.
 - Home with blocks that the owner shows, hides and orders: Left to spend,
   Where the money went, Due soon.
+- A line on Home that says whether the records are up to date.
 - A monthly schedule for a repeating entry: confirm, skip or restore a month,
   and change the amount from a month.
 - One settlement setting for each credit card: the owner confirms each

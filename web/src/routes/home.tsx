@@ -40,6 +40,7 @@ export function HomePage() {
           </button>
         </div>
       )}
+      {home.data && <CaughtUp days={home.data.days_since_last_entry} />}
       {home.data && blocks.length === 0 && <p className="py-10 text-muted">{t.home.noBlocks}</p>}
       {home.data && (
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
@@ -49,6 +50,31 @@ export function HomePage() {
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * One line about the habit of recording. Up to date on the day of an entry or
+ * the day after; from the second day without one, it asks for the missing days.
+ */
+function CaughtUp(props: { days: number | null }) {
+  const t = useMessages();
+  const behind = props.days === null || props.days >= 2;
+  return (
+    <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+      <span className={behind ? "" : "text-muted"}>
+        {props.days === null
+          ? t.home.start
+          : props.days === 0
+            ? t.home.upToDate
+            : t.home.lastEntry(props.days)}
+      </span>
+      {behind && (
+        <OpenWindow w="add" className="link font-medium">
+          {props.days === null ? t.entry.add : t.home.catchUp}
+        </OpenWindow>
+      )}
+    </p>
   );
 }
 

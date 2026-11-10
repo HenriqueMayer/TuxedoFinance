@@ -1237,6 +1237,8 @@ export interface components {
             spending: components["schemas"]["CategorySpending"][];
             /** Due */
             due: components["schemas"]["DueRow"][];
+            /** Days Since Last Entry */
+            days_since_last_entry: number | null;
         };
         /** MonthResult */
         MonthResult: {

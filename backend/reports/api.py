@@ -51,6 +51,8 @@ class HomeOut(Schema):
     result: list[MonthResult]
     spending: list[CategorySpending]
     due: list[DueRow]
+    #: Days since the owner last recorded an entry. Null without entries.
+    days_since_last_entry: int | None
 
 
 class TrendRow(Schema):
@@ -81,6 +83,7 @@ def read_home(request):
         "result": home.month_result(request.user, month),
         "spending": home.spending_by_category(request.user, month),
         "due": home.due_soon(request.user, clock.today()),
+        "days_since_last_entry": home.days_since_last_entry(request.user, clock.today()),
     }
 
 

@@ -302,3 +302,26 @@ class DueBillTests(ReportsApiTestCase):
         )
         rows = self.get("/api/reports/home").json()["due"]
         self.assertEqual([row["kind"] for row in rows], ["invoice"])
+
+
+class LastEntryTests(ReportsApiTestCase):
+    def days(self):
+        return self.get("/api/reports/home").json()["days_since_last_entry"]
+
+    def test_without_entries_there_is_no_last_day(self):
+        self.assertIsNone(self.days())
+
+    def test_the_day_of_recording_counts_and_not_the_date_on_the_entry(self):
+        # Recorded now, for a date three weeks ago.
+        self.record(date="2026-10-20")
+        self.assertEqual(self.days(), 0)
+
+    def test_days_pass_without_a_new_entry(self):
+        item = self.record()
+        Transaction.objects.filter(pk=item["id"]).update(created_at="2026-11-07T15:00:00Z")
+        self.assertEqual(self.days(), 3)
+
+    def test_another_owners_entries_do_not_count(self):
+        self.record()
+        self.client.force_login(self.other)
+        self.assertIsNone(self.days())

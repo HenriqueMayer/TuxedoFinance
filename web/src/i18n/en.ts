@@ -202,6 +202,11 @@ export const en = {
     more: (count: number) => `and ${count} more`,
     seeAll: "See all",
     monthTitle: "Month",
+    start: "Record your first entry to see your month here.",
+    upToDate: "Your records are up to date.",
+    lastEntry: (days: number) =>
+      days === 1 ? "Your last entry was yesterday." : `Your last entry was ${days} days ago.`,
+    catchUp: "Record what happened since",
     trend: "Last six months",
     byCategory: "By category",
   },

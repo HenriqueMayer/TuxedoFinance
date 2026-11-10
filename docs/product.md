@@ -69,6 +69,12 @@ The owner shows, hides and orders the blocks.
 The month window shows a month, the six months that end with it, and the
 categories with their subcategories. Its month changes inside the window.
 
+Above the blocks, one line tells the owner about the habit of recording: the
+records are up to date on the day of an entry and the day after. From the
+second day without an entry, the line says how many days passed and offers
+Add. The day that counts is the day of recording, not the date written on
+the entry.
+
 ## Languages and formats
 
 The interface is in English and Brazilian Portuguese. An amount is written
