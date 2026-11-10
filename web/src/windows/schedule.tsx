@@ -114,7 +114,7 @@ export function ScheduleWindow(props: { id: number }) {
                 </span>
                 <button
                   type="button"
-                  className="link text-sm"
+                  className="action"
                   disabled={remove.isPending}
                   onClick={() => remove.mutate(row.month.slice(0, 7))}
                 >

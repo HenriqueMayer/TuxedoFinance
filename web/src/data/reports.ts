@@ -8,6 +8,8 @@ export type CategorySpending = components["schemas"]["CategorySpending"];
 export type DueRow = components["schemas"]["DueRow"];
 export type TrendRow = components["schemas"]["TrendRow"];
 export type WorthMonth = components["schemas"]["WorthMonth"];
+export type Analysis = components["schemas"]["AnalysisOut"];
+export type Origin = components["schemas"]["OriginOut"];
 export type HomeBlock = components["schemas"]["PreferencesOut"]["home_blocks"][number];
 
 /** Every block that Home can show, in the default order. */
@@ -31,3 +33,21 @@ export const worthQuery = queryOptions({
   queryKey: ["home", "worth"],
   queryFn: () => unwrap(api.GET("/api/reports/net-worth")),
 });
+
+/** The analysis of the months from `start` to `end` ("YYYY-MM"). Without them, the last six months. */
+export function analysisQuery(start: string | undefined, end: string | undefined) {
+  return queryOptions({
+    queryKey: ["home", "analysis", start ?? "", end ?? ""],
+    queryFn: () => unwrap(api.GET("/api/reports/analysis", { params: { query: { start, end } } })),
+    // Another period keeps the previous one on screen until the new one arrives.
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** What the figures of one month ("YYYY-MM") of the analysis are made of. */
+export function originQuery(month: string) {
+  return queryOptions({
+    queryKey: ["home", "analysis", "month", month],
+    queryFn: () => unwrap(api.GET("/api/reports/analysis/month", { params: { query: { month } } })),
+  });
+}

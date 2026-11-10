@@ -6,14 +6,16 @@ an entry, and saving it makes ``ledger.ledger_state`` synchronize the derived
 account movements and card invoices after the commit.
 """
 
+import csv
 import datetime as dt
+import io
 from decimal import Decimal
 from typing import Literal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import ProtectedError, Q
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.utils.translation import gettext as _
 from ninja import Query, Router, Schema
 
@@ -23,6 +25,7 @@ from config import clock
 from config.ownership import owned, owned_choice
 from ledger import commitments, schedule
 from ledger.categories import Category
+from ledger.category_importing import import_category_rows, read_category_csv
 from ledger.consultation import (
     billed_month_occurrence,
     may_bill_between,
@@ -76,6 +79,48 @@ def _apply_category(category, user, payload: CategoryIn):
 @router.get("/categories", response=list[CategoryOut], summary="List categories")
 def list_categories(request):
     return Category.objects.filter(user=request.user).order_by("name")
+
+
+class CategoryFile(Schema):
+    #: The text of a CSV file with the header ``name,transaction_type,parent_category``.
+    content: str
+
+
+class CategoryImportOut(Schema):
+    created: int
+    #: Rows whose name the owner already has. They are not changed.
+    existing: int
+
+
+# These two paths come before ``/categories/{category_id}``, which would match them.
+@router.get("/categories/export", summary="Export the categories as a CSV file")
+def export_categories(request):
+    output = io.StringIO()
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(["name", "transaction_type", "parent_category"])
+    rows = Category.objects.filter(user=request.user).select_related("parent_category")
+    for category in rows.order_by("name"):
+        parent = category.parent_category.name if category.parent_category_id else ""
+        writer.writerow([category.name, category.transaction_type or "", parent])
+    # The byte order mark makes spreadsheet programs read the accents.
+    response = HttpResponse("\ufeff" + output.getvalue(), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="tuxedo-categories.csv"'
+    return response
+
+
+@router.post(
+    "/categories/import", response=CategoryImportOut, summary="Import categories from a CSV file"
+)
+def import_categories(request, payload: CategoryFile):
+    try:
+        rows = read_category_csv(io.BytesIO(payload.content.encode("utf-8")))
+        if not rows:
+            raise ValueError(_("The file has no category."))
+        created = import_category_rows(request.user, rows)
+    except (ValueError, ValidationError, csv.Error) as error:
+        message = error.messages[0] if isinstance(error, ValidationError) else str(error)
+        raise ValidationError({"content": message}) from None
+    return {"created": created, "existing": len(rows) - created}
 
 
 @router.post("/categories", response=CategoryOut, summary="Create a category")

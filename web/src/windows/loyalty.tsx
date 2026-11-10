@@ -330,7 +330,7 @@ function History(props: { program: ProgramDetail }) {
             {row.undoable && (
               <button
                 type="button"
-                className="link text-sm"
+                className="action"
                 disabled={undo.isPending}
                 onClick={() => undo.mutate(row.id)}
               >
@@ -362,7 +362,7 @@ function EditProgram(props: { program: ProgramDetail; onDone: () => void }) {
 
   return (
     <details>
-      <summary className="link w-fit cursor-pointer text-sm">{t.loyalty.edit}</summary>
+      <summary className="action w-fit">{t.loyalty.edit}</summary>
       <form onSubmit={submit} className="mt-4 grid gap-5" noValidate>
         <ProgramFields error={change.error} name={program.name} unit={program.unit_name} />
         <Alert message={formMessage(change.error, t) ?? formMessage(remove.error, t)} />

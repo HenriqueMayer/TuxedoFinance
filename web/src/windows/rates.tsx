@@ -130,7 +130,7 @@ export function RatesWindow() {
               </span>
               <button
                 type="button"
-                className="link text-sm"
+                className="action"
                 disabled={remove.isPending}
                 onClick={() => remove.mutate(row.id)}
               >

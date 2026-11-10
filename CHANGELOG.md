@@ -11,6 +11,10 @@ and no upgrade from 1.x.
 ### Added
 
 - A React client and a JSON API replace the server-rendered pages.
+- One month control in Transactions and in the month window: a step to each
+  side, and the months of a year behind the name of the month.
+- An analysis window, opened from Home: income and expenses, categories, net
+  worth and investments over a period of months, against the period before.
 - Four destinations: Home, Transactions, Wallet and Plan.
 - Every object opens in a window above the current page. A window has an
   address, and the page behind keeps its position and filters.
@@ -46,6 +50,9 @@ and no upgrade from 1.x.
   month and set the next limit. Home asks for it once a month.
 - A public page that runs the application with fictional data, in the
   browser, without a server. It replaces the 1.x preview page.
+- Categories are exported to a CSV file and imported from one.
+- Actions are buttons with icons, a card lifts under the pointer, and the
+  page of a destination changes with a short transition.
 
 ### Removed
 

@@ -208,7 +208,7 @@ function AccountCheck(props: { month: string; account: ClosingAccount }) {
           <span className="text-muted">{t.closing.adjusted} </span>
           <button
             type="button"
-            className="link"
+            className="action"
             disabled={busy}
             onClick={() => unadjust.mutate({ month, account_id: account.account_id })}
           >
@@ -225,7 +225,7 @@ function AccountCheck(props: { month: string; account: ClosingAccount }) {
           <span className="text-muted">{t.closing.differenceHelp} </span>
           <button
             type="button"
-            className="link"
+            className="action"
             disabled={busy}
             onClick={() =>
               adjust.mutate({

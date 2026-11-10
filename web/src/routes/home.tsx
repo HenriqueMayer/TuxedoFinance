@@ -11,6 +11,7 @@ import { useLanguage, useMessages } from "../i18n";
 import { formatDate, monthLabel, monthOf } from "../lib/dates";
 import { formatAmount } from "../lib/money";
 import { sessionQuery, useDateOrder } from "../session";
+import { ChartIcon, CheckIcon, ChevronRightIcon, PlusIcon } from "../ui/icons";
 import { Meter } from "../ui/Meter";
 import { OpenWindow } from "../windows/host";
 import { goalStatus } from "./plan";
@@ -29,9 +30,15 @@ export function HomePage() {
     <>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">{t.nav.home}</h1>
-        <OpenWindow w="home-blocks" className="button-quiet">
-          {t.home.edit}
-        </OpenWindow>
+        <div className="flex flex-wrap items-center gap-2">
+          <OpenWindow w="analysis" className="button-quiet">
+            <ChartIcon />
+            {t.analysis.open}
+          </OpenWindow>
+          <OpenWindow w="home-blocks" className="button-quiet">
+            {t.home.edit}
+          </OpenWindow>
+        </div>
       </div>
       {home.isPending && <p className="py-10 text-muted">{t.common.loading}</p>}
       {home.isError && (
@@ -73,7 +80,8 @@ function CaughtUp(props: { days: number | null }) {
             : t.home.lastEntry(props.days)}
       </span>
       {behind && (
-        <OpenWindow w="add" className="link font-medium">
+        <OpenWindow w="add" className="action">
+          <PlusIcon />
           {props.days === null ? t.entry.add : t.home.catchUp}
         </OpenWindow>
       )}
@@ -91,7 +99,8 @@ function ClosingPrompt(props: { closing: NonNullable<Home["closing"]> }) {
       <span>
         {props.closing.changed ? t.closing.homeChanged(month) : t.closing.homePrompt(month)}
       </span>
-      <OpenWindow w="closing" className="link font-medium">
+      <OpenWindow w="closing" className="action">
+        <CheckIcon />
         {props.closing.changed ? t.closing.review : t.closing.open}
       </OpenWindow>
     </p>
@@ -122,10 +131,7 @@ function LeftBlock(props: { home: Home }) {
     const money = (amount: string) => formatAmount(amount, limit.currency);
     const over = Number(limit.left) < 0;
     return (
-      <OpenWindow
-        w="month"
-        className={`${BLOCK} block transition-shadow hover:shadow-md lg:col-span-2`}
-      >
+      <OpenWindow w="month" className={`${BLOCK} block card-open lg:col-span-2`}>
         <Title>{over ? t.home.limit.over : t.home.blocks.left}</Title>
         <span
           className={`amount mt-2 block text-4xl font-semibold tracking-tight ${over ? "text-negative" : ""}`}
@@ -153,10 +159,7 @@ function LeftBlock(props: { home: Home }) {
     );
   }
   return (
-    <OpenWindow
-      w="month"
-      className={`${BLOCK} block transition-shadow hover:shadow-md lg:col-span-2`}
-    >
+    <OpenWindow w="month" className={`${BLOCK} block card-open lg:col-span-2`}>
       <Title>{t.home.blocks.left}</Title>
       {results.length === 0 && <span className="mt-3 block text-muted">{t.home.noEntries}</span>}
       {results.map((result) => (
@@ -210,7 +213,7 @@ export function CategoryBars(props: {
           </span>
           <span className="mt-1.5 block h-2 rounded-full bg-line" aria-hidden="true">
             <span
-              className="block h-full rounded-full bg-ink"
+              className="meter-fill block h-full rounded-full bg-ink"
               style={{ width: `${Math.max(2, (Number(row.amount) / largest) * 100)}%` }}
             />
           </span>
@@ -234,7 +237,7 @@ function SpendingBlock(props: { rows: CategorySpending[] }) {
   const t = useMessages();
   const limit = 5;
   return (
-    <OpenWindow w="month" className={`${BLOCK} block transition-shadow hover:shadow-md`}>
+    <OpenWindow w="month" className={`${BLOCK} block card-open`}>
       <Title>{t.home.blocks.spending}</Title>
       <span className="mt-4 block">
         {props.rows.length === 0 ? (
@@ -294,8 +297,9 @@ function DueBlock(props: { rows: DueRow[] }) {
       <h2 className="flex items-center justify-between gap-3">
         <Title>{t.home.blocks.due}</Title>
         {props.rows.length > limit && (
-          <OpenWindow w="due" className="link text-sm">
+          <OpenWindow w="due" className="action">
             {t.home.seeAll}
+            <ChevronRightIcon />
           </OpenWindow>
         )}
       </h2>
@@ -318,7 +322,7 @@ function WorthBlock(props: { worth: Home["worth"] }) {
   const change = Number(worth.change);
   const amount = formatAmount(worth.change.replace("-", ""), worth.currency);
   return (
-    <OpenWindow w="worth" className={`${BLOCK} block transition-shadow hover:shadow-md`}>
+    <OpenWindow w="worth" className={`${BLOCK} block card-open`}>
       <Title>{t.home.blocks.worth}</Title>
       <span
         className={`amount mt-2 block text-3xl font-semibold tracking-tight ${Number(worth.net_worth) < 0 ? "text-negative" : ""}`}
@@ -352,7 +356,8 @@ function GoalsBlock(props: { goals: Home["goals"] }) {
       {props.goals.length === 0 && (
         <p className="mt-2">
           <span className="text-muted">{t.home.goals.none} </span>
-          <OpenWindow w="new-goal" className="link font-medium">
+          <OpenWindow w="new-goal" className="action">
+            <PlusIcon />
             {t.home.goals.add}
           </OpenWindow>
         </p>

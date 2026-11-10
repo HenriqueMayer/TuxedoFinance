@@ -12,7 +12,7 @@ CATEGORY_CSV_MAX_BYTES = 2 * 1024 * 1024
 CATEGORY_CSV_MAX_ROWS = 500
 
 
-def _read_category_csv(uploaded_file):
+def read_category_csv(uploaded_file):
     try:
         content = uploaded_file.read(CATEGORY_CSV_MAX_BYTES + 1)
         if len(content) > CATEGORY_CSV_MAX_BYTES:

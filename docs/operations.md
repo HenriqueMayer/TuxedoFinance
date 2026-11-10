@@ -56,8 +56,7 @@ docker compose up -d
 The container applies migrations when it starts and serves on port 8000,
 published on `127.0.0.1` only. The database is in the `data` volume.
 
-The image was not built on the development computer during the 2.0 work
-(no Docker there). The Docker workflow builds and starts it.
+The Docker workflow builds the image, starts it and asks for its health.
 
 ## Repair
 

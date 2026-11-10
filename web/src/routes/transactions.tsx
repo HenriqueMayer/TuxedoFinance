@@ -2,8 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { type Transaction, transactionsQuery } from "../data/ledger";
 import { useLanguage, useMessages } from "../i18n";
-import { dayLabel, isMonth, monthLabel, shiftMonth, todayIso } from "../lib/dates";
+import { dayLabel, isMonth, todayIso } from "../lib/dates";
 import { formatAmount } from "../lib/money";
+import { TagIcon, UploadIcon } from "../ui/icons";
+import { Menu } from "../ui/Menu";
+import { MonthPicker } from "../ui/MonthPicker";
 import { Segmented } from "../ui/Segmented";
 import { instrumentLabel } from "../windows/entry";
 import { OpenWindow } from "../windows/host";
@@ -32,7 +35,6 @@ export function TransactionsPage(props: {
   onChange: (changes: TransactionSearch) => void;
 }) {
   const t = useMessages();
-  const language = useLanguage();
   const { search, onChange } = props;
   const thisMonth = todayIso().slice(0, 7);
   const month = search.month ?? thisMonth;
@@ -61,46 +63,33 @@ export function TransactionsPage(props: {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{t.nav.transactions}</h1>
-          <OpenWindow w="import" className="link text-sm font-medium">
-            {t.imports.start}
-          </OpenWindow>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <h1 className="text-2xl font-semibold tracking-tight">{t.nav.transactions}</h1>
+        <div className="flex items-center gap-2 max-sm:w-full max-sm:justify-between">
+          <MonthPicker
+            month={month}
+            all
+            // The current month is the address without a month.
+            onChange={(next) =>
+              onChange({ month: next === thisMonth ? undefined : next, page: undefined })
+            }
+          />
+          {/* The rare actions of the page. */}
+          <Menu label={t.common.moreActions}>
+            {(trigger) => (
+              <>
+                <OpenWindow w="import" role="menuitem" className="menu-item" from={trigger}>
+                  <UploadIcon />
+                  {t.imports.start}
+                </OpenWindow>
+                <OpenWindow w="categories" role="menuitem" className="menu-item" from={trigger}>
+                  <TagIcon />
+                  {t.categories.manage}
+                </OpenWindow>
+              </>
+            )}
+          </Menu>
         </div>
-        <nav aria-label={t.entry.date} className="flex flex-wrap items-center gap-1">
-          {!everyMonth && (
-            <>
-              <button
-                type="button"
-                className="button-quiet px-3"
-                aria-label={t.transactions.previousMonth}
-                onClick={() => onChange({ month: shiftMonth(month, -1), page: undefined })}
-              >
-                ‹
-              </button>
-              <p className="min-w-36 text-center font-medium" aria-live="polite">
-                {monthLabel(month, language)}
-              </p>
-              <button
-                type="button"
-                className="button-quiet px-3"
-                aria-label={t.transactions.nextMonth}
-                onClick={() => onChange({ month: shiftMonth(month, 1), page: undefined })}
-              >
-                ›
-              </button>
-            </>
-          )}
-          <button
-            type="button"
-            className="button-quiet sm:ml-2"
-            aria-pressed={everyMonth}
-            onClick={() => onChange({ month: everyMonth ? undefined : "all", page: undefined })}
-          >
-            {everyMonth ? t.transactions.thisMonth : t.transactions.allMonths}
-          </button>
-        </nav>
       </div>
 
       <div className="mt-6 flex flex-wrap items-end gap-4">

@@ -38,10 +38,22 @@ A window has an address, so Back closes it and a link reopens it. See
 - The amount of a repeating entry with past months changes in its monthly
   schedule, from a chosen month. Past months stay as they were.
 
+### Categories
+
+A category has a name, an optional type (expense or income) and an optional
+parent. Settings opens the list. The list is exported to a CSV file and
+imported from one, with the columns `name`, `transaction_type` and
+`parent_category`. An import creates the names that the owner does not have
+and changes nothing else, so the export of one installation is the import of
+another.
+
 ### Statement import
 
-Transactions has **Import statement**, for an OFX or CSV file of one account
-(at most 2 MiB and 500 rows).
+The menu of Transactions ("More actions") has **Import statement**, for an
+OFX or CSV file of one account (at most 2 MiB and 500 rows). It reads OFX
+with an SGML header in Windows-1252 and with a decimal point or comma, and
+CSV with a comma, a semicolon or a tab, also when the file has lines before
+its header.
 
 1. **Read.** The owner chooses the account and the file. Nothing is recorded.
    The same file again opens the same import.
@@ -267,6 +279,54 @@ the entry.
 
 A second line appears while the month before waits for its closing, or
 changed after it.
+
+### Analysis
+
+**Analyze**, beside the title of Home, opens the analysis of a period of
+months. It answers four questions, each with a chart and its figures.
+
+| Section | Shows |
+|---|---|
+| Income and expenses | The totals and the result of the period, the expenses for each month, and one pair of bars for each month |
+| Where the money went | The top-level categories, largest first, with the part of the expenses that each one takes. One category opens month by month |
+| Net worth | The net worth at each month end, with accounts, investments and card debt |
+| Investments | The value against the cost at each month end, and the positions at the end of the period with the part of each one |
+
+The owner chooses the period with a preset (3, 6 or 12 months, this year,
+all) or with the two handles of a slider, and moves it one month at a time.
+A handle follows the pointer and comes to rest on the nearest month. Each
+month is a dot on the track; the dot where a moving handle will rest is lit
+and has the name of its month, and the positions of the presets have their
+names under the track. The track covers the records and twelve months at
+least. A period ends at the current month at the latest and has at most 60
+months. The address keeps the period.
+
+In each chart:
+
+- Under the pointer, a label with the values of one month floats above the
+  plot. It does not cover the marks.
+- A click on a month opens the origin of its values in a window above the
+  analysis: the entries of the month (or of one category), the accounts,
+  investments and card statements of the month end, or the investment
+  operations of the month. Each row opens its record in the place of that
+  window. Back or Escape returns to the origin, then to the analysis, which
+  keeps its period.
+- A drag over months gives the figures of those months: the income, the
+  expenses and the result, the amount of the category, or the change of the
+  net worth or of the investments from the first month end to the last one.
+  "Use as the period" makes those months the period. With the pointer on
+  the selected months, the label shows the same figures. Escape or a press
+  outside the chart ends the selection.
+
+Each total comes with its change against the period before, which has the
+same length. When the period before starts before the oldest record, no
+change is shown, and the window says so. The current month is not over: its
+bars are lighter and have a dashed edge.
+
+Income, expenses and categories are in one currency; with records in two
+currencies the owner chooses one. Net worth and investments are in the
+currency of totals. The month ends use the same rules as the net worth
+window.
 
 ## Languages and formats
 

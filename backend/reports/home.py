@@ -106,11 +106,11 @@ def trend(user, month, months=TREND_MONTHS):
     return rows
 
 
-def spending_by_category(user, month):
-    """Return the expenses of ``month`` by top-level category, largest first.
+def category_tops(user):
+    """Return the category names of ``user`` by id, and the top-level category of an id.
 
-    A subcategory counts in its top-level category and is listed under it.
-    A split transaction counts in each of its categories.
+    The second value is a function: it gives the id of the top-level category
+    that a category belongs to.
     """
     categories = {
         row["id"]: row
@@ -126,6 +126,17 @@ def spending_by_category(user, month):
             category_id = categories[category_id]["parent_category_id"]
         return category_id
 
+    return {key: row["name"] for key, row in categories.items()}, top_of
+
+
+def spending_by_category(user, month):
+    """Return the expenses of ``month`` by top-level category, largest first.
+
+    A subcategory counts in its top-level category and is listed under it.
+    A split transaction counts in each of its categories.
+    """
+    names, top_of = category_tops(user)
+
     totals = defaultdict(lambda: defaultdict(lambda: ZERO))
     for occurrence in occurrences(user, month, month):
         if occurrence.flow != "EXPENSE":
@@ -139,13 +150,13 @@ def spending_by_category(user, month):
             {
                 "currency": currency,
                 "category_id": top_id,
-                "name": categories.get(top_id, {}).get("name", ""),
+                "name": names.get(top_id, ""),
                 "amount": sum(parts.values(), ZERO),
                 "children": sorted(
                     (
                         {
                             "category_id": category_id,
-                            "name": categories.get(category_id, {}).get("name", ""),
+                            "name": names.get(category_id, ""),
                             "amount": amount,
                         }
                         for category_id, amount in parts.items()

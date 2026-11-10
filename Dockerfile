@@ -38,4 +38,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD ["python", "healthcheck.py"]
 # Apply migrations, then serve. SQLite in WAL mode supports the two workers.
-CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2"]
+# The control socket of gunicorn is off: the user of the image has no home
+# folder to hold it, and nothing in the image uses it.
+CMD ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --no-control-socket"]

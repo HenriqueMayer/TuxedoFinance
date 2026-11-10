@@ -431,7 +431,7 @@ function Reservations(props: { goal: Goal }) {
             {!goal.is_archived && (
               <button
                 type="button"
-                className="link text-sm"
+                className="action"
                 disabled={reserve.isPending}
                 onClick={() => reserve.mutate({ source: row.source, amount: "0" })}
               >
@@ -468,7 +468,7 @@ function EditGoal(props: { goal: Goal; onDone: () => void }) {
 
   return (
     <details>
-      <summary className="link w-fit cursor-pointer text-sm">{t.plan.goals.edit}</summary>
+      <summary className="action w-fit">{t.plan.goals.edit}</summary>
       <form onSubmit={submit} className="mt-4 grid gap-5" noValidate>
         <Field label={t.plan.goals.name} errors={fieldMessages(change.error, "name")}>
           {(control) => (

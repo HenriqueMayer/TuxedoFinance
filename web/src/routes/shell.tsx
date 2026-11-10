@@ -18,6 +18,8 @@ function Destination(props: {
         to={props.to}
         className={ITEM} // The open window is in the search; it must not change which destination is current.
         activeOptions={{ exact: props.to === "/", includeSearch: false }}
+        // The page of a destination replaces the page before it with a short transition.
+        viewTransition
       >
         {props.icon}
         <span>{props.label}</span>
@@ -51,7 +53,7 @@ export function Shell() {
   }, []);
 
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[14rem_minmax(0,1fr)]">
+    <div className="min-h-dvh md:grid md:grid-cols-[15.5rem_minmax(0,1fr)]">
       {/* On a phone the brand and Settings sit above the sheet; the dock holds the rest. */}
       <header className="flex items-center justify-between bg-jacket px-4 py-2 text-jacket-ink md:hidden">
         <p className="flex items-center gap-2.5 font-semibold">
@@ -104,7 +106,7 @@ export function Shell() {
         </div>
       </nav>
       <main className="min-h-dvh bg-sheet px-5 py-6 max-md:rounded-t-(--radius-sheet) max-md:pb-24 md:rounded-l-(--radius-sheet) md:px-10 md:py-9">
-        <div className="mx-auto max-w-5xl">
+        <div className="page mx-auto max-w-5xl">
           {import.meta.env.MODE === "demo" && (
             <p className="mb-5 rounded-(--radius-control) border border-line bg-surface px-3 py-2 text-sm text-muted">
               {t.demo.banner}

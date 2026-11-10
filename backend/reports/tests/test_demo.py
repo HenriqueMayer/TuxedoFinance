@@ -60,6 +60,20 @@ class DemoExportTests(TransactionTestCase):
                 self.assertRegex(account["balance"], r"^-?\d+\.\d{2}$")
         worth = answers["GET /api/reports/net-worth"]["today"]
         self.assertTrue(worth["complete"])
+        # The analysis has an answer for every period that its controls can reach.
+        default = answers["GET /api/reports/analysis"]
+        self.assertEqual(default["end"][:7], month)
+        self.assertTrue(default["flows"][0]["categories"])
+        self.assertTrue(default["positions"])
+        self.assertTrue(default["worth"]["complete"])
+        first, year = default["first"][:7], f"{month[:4]}-01"
+        for start, end in ((month, month), (first, month), (year, month), (first, first)):
+            self.assertIn(f"GET /api/reports/analysis?end={end}&start={start}", answers)
+        # A click on a month of a chart has its answer too.
+        origin = answers[f"GET /api/reports/analysis/month?month={month}"]
+        self.assertTrue(origin["entries"])
+        self.assertTrue(origin["worth"]["accounts"])
+        self.assertIn(f"GET /api/reports/analysis/month?month={first}", answers)
 
     def test_the_demonstration_day_is_the_latest_18th(self):
         self.assertEqual(demo.demonstration_day(date(2026, 11, 18)), date(2026, 11, 18))

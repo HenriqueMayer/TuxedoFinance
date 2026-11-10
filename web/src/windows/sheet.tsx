@@ -333,7 +333,7 @@ function Table(props: {
                           {row.manual && (
                             <button
                               type="button"
-                              className="link text-sm"
+                              className="action"
                               aria-label={t.plan.sheet.removeRow(name)}
                               onClick={() => props.onRemove(row.key)}
                             >

@@ -20,6 +20,90 @@ lifts off the sheet into a window.
 | Signature   | The window: a title bar with the three macOS lights. Red closes. Green expands to full size. The middle light is inactive, because a window cannot be minimized.                                 | Objects lift off the sheet                 |
 | Density     | A list is rows with hairlines on the sheet. A card is used only for an object that opens.                                                                                                        | If it is a card, it opens                  |
 
+## Controls
+
+| Control        | Use                                                                                                   | Class            |
+| -------------- | ----------------------------------------------------------------------------------------------------- | ---------------- |
+| Primary button | The one action that completes the form or the screen                                                  | `button-primary` |
+| Accent button  | Add entry, and the save of an entry                                                                   | `button-accent`  |
+| Quiet button   | A second action beside a primary one                                                                  | `button-quiet`   |
+| Action         | A small button beside a title, inside a row or inside a card: open, add, undo, remove, import, export | `action`         |
+| Link           | Text that leads to another place: another page or a document                                          | `link`           |
+| Menu           | The rare actions of a page, behind one "More actions" button: `src/ui/Menu.tsx`                       | `menu-item`      |
+| Month control  | The month that a page or a window shows: `src/ui/MonthPicker.tsx`                                     |                  |
+
+An action on the same screen is never underlined text. It is a button, and a
+frequent one carries a 16px line icon before its label (after it, for a
+chevron that means "more"). A section that opens in place ("Edit goal") is an
+`action` on the `summary`, with a mark that turns.
+
+An action that the owner uses a few times a year (import a statement) is not
+a button beside the title. It is an item of the menu of its page.
+
+The month control is one piece: a step to each side and, between them, the
+month. The month opens the twelve months of a year, "This month" and, where
+the page allows it, "All months". No page has a second way to change a month.
+
+A window of settings is a list of rows: the name on the left and a small
+control on the right (a segmented choice, or a 32 px select). A currency
+select shows the symbol of the chosen currency before its code.
+
+A card that opens a window lifts under the pointer (`card-open`). Cards in one
+row have one height.
+
+## Motion
+
+Motion has three jobs here, and nothing moves without one of them.
+
+| Motion                                          | Job                                            | Time                                   |
+| ----------------------------------------------- | ---------------------------------------------- | -------------------------------------- |
+| A control under the pointer and under the press | Feedback: the control answered                 | 140 ms, and 90 ms for the press        |
+| The window from its origin, and the backdrop    | Orientation: where the object came from        | 260 ms in, 180 ms out, 220 ms backdrop |
+| The page of a destination                       | Orientation: the frame stays, the page changes | 90 ms out, 200 ms in                   |
+| A bar that grows to its value                   | Meaning: the bar is a measure                  | 520 ms                                 |
+| A menu or the months, from their control        | Orientation: which control opened the panel    | 140 ms                                 |
+| The marks of a chart on a change of period      | Orientation: the same months, new values       | 260 ms                                 |
+| A handle of a slider coming to rest on a month  | Feedback: the handle follows, then settles     | 140 ms                                 |
+
+With a reduced-motion preference the page, the bars and the lift of a card do
+not move, and the window fades.
+
+## Charts
+
+`src/ui/charts.tsx` draws every chart, in SVG, with no chart library. The
+analysis window is the only place with drawn charts. A summary on a page
+stays a row with a bar and its value as text.
+
+| Question              | Form                                  | Rule                                                                     |
+| --------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| Amounts of each month | Bars, one for each series             | The bars start at zero                                                   |
+| A value at month ends | Lines                                 | The axis says its range; it starts at zero when the values are near zero |
+| A ranking             | Rows with a bar and the value as text | Largest first                                                            |
+| Parts of one total    | One bar of parts, with a list         | Three parts take a color; the others share one gray                      |
+
+- A series takes its color from the tokens: ink, the bow-tie ink, positive
+  and negative. A chart has four colored series at most. A second mark goes
+  with a color that carries meaning: a dashed line for a debt or a cost, a
+  dashed edge for a month that is not over.
+- Every chart has a table with the same values for a screen reader.
+- One line above the marks names the series. Under the pointer, or with the
+  arrow keys, a label with the values of one month floats above the plot. It
+  follows the month and stays above the plot, so it never covers a mark.
+- A click or Enter picks a month. A drag, or Shift with an arrow key, selects
+  a run of months. Escape, a press outside the chart, a click in the chart or
+  the button of the selection ends it; Escape then does not close the window.
+  The chart reports both and decides nothing: the window opens the origin of
+  a month and asks the server for the figures of a run. The figures of a run
+  show under the marks, so the chart keeps its place. With the pointer on the
+  selected run, the floating label shows those figures in place of one month.
+- A selected run is a soft band behind the marks, in the bow-tie color, with
+  round corners and a short grip at each end. The months outside the run step
+  back. It has no hard edge.
+- A value at month ends is not added over months. A selected run of a line
+  chart shows the change from its first month end to its last.
+- A chart only draws. Every total, change, average and percentage comes
+  calculated from the server.
+
 ## The window
 
 `src/ui/Window.tsx` is the only implementation. It is a native modal
@@ -36,6 +120,22 @@ lifts off the sheet into a window.
 - **Phone.** The window fills the screen. The expand light is hidden.
 - **Wide content.** A window with a wide table (the sheet) opens at full size.
   The green light still restores the size.
+- **A window above a window.** A window can hold one window above it, named
+  in the search parameter `w2`. It is for a detail of the window below that
+  the owner reads and leaves: the origin of a month of the analysis. The
+  window below stays open, dimmed, with its state. Back, Escape and the red
+  light act on the window above. A link inside the window above takes its
+  place, at the same level. There is no third level.
+
+## The slider of a period
+
+`src/ui/RangeSlider.tsx` is two native range inputs on one track. A handle
+follows the pointer and comes to rest on the nearest position. The owner sees
+where a handle stops in three ways: each position has a dot on the track; the
+dot where a moving handle will rest is lit in the bow-tie color, with the
+name of its month under it; and the positions of the presets have their
+names under the track. A preset is dark while the handles are on it. The
+track does not change its length while a handle moves.
 
 ## Themes
 

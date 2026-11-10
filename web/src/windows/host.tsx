@@ -1,8 +1,9 @@
 import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, type RefObject, useCallback, useContext } from "react";
 import { useMessages } from "../i18n";
 import { Boundary } from "../ui/Boundary";
 import { Window } from "../ui/Window";
+import { AnalysisWindow } from "./analysis";
 import { CategoriesWindow } from "./categories";
 import { ClosingWindow } from "./closing";
 import { AddEntry, EditEntry } from "./entry";
@@ -10,6 +11,7 @@ import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
 import { ImportStartWindow, ImportWindow } from "./imports";
 import { InvestmentWindow, NewInvestmentWindow } from "./investment";
 import { NewProgramWindow, ProgramWindow } from "./loyalty";
+import { OriginWindow } from "./origin";
 import { BudgetWindow, GoalWindow, LimitWindow, NewBudgetWindow, NewGoalWindow } from "./plan";
 import { RatesWindow } from "./rates";
 import { ScheduleWindow } from "./schedule";
@@ -45,6 +47,7 @@ export type WindowId =
   | "new-program"
   | `program:${number}`
   | "worth"
+  | "analysis"
   | "month"
   | "due"
   | "home-blocks"
@@ -62,10 +65,21 @@ export type WindowId =
   | `card:${number}`
   | `invoice:${number}`
   | `investment:${number}`
-  | `schedule:${number}`;
+  | `schedule:${number}`
+  | `origin:${string}`;
 
-// The element that opened the current window. The window animates from it.
-let origin: HTMLElement | null = null;
+/**
+ * A window can have one window above it: the address names the first in `w`
+ * and the one above in `w2`. The window below stays open and keeps its
+ * state; Back, Escape and the close light act on the window above.
+ */
+type Level = 1 | 2;
+
+// The level of the window that holds a component: 0 on the page.
+const LevelOfWindow = createContext<0 | Level>(0);
+
+// The element that opened the window of each level. The window animates from it.
+const origins: Record<Level, HTMLElement | null> = { 1: null, 2: null };
 
 declare module "@tanstack/react-router" {
   interface HistoryState {
@@ -74,23 +88,34 @@ declare module "@tanstack/react-router" {
   }
 }
 
-/** A link that opens a window above the current page. */
+/**
+ * A link that opens a window. On the page it opens the first window. Inside
+ * a window it takes the place of that window, at the same level.
+ */
 export function OpenWindow(props: {
   w: WindowId;
   className?: string;
   "aria-label"?: string;
+  /** For a link inside a menu: "menuitem". */
+  role?: string;
+  /** The element that the window opens from, when the link itself goes away (a menu item). */
+  from?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
+  const level: Level = useContext(LevelOfWindow) === 2 ? 2 : 1;
   return (
     <Link
       to="."
-      search={(previous) => ({ ...previous, w: props.w })}
+      search={(previous) =>
+        level === 2 ? { ...previous, w2: props.w } : { ...previous, w: props.w, w2: undefined }
+      }
       state={{ openedHere: true }}
       resetScroll={false}
       className={props.className}
       aria-label={props["aria-label"]}
+      role={props.role}
       onClick={(event) => {
-        origin = event.currentTarget;
+        origins[level] = props.from?.current ?? event.currentTarget;
       }}
     >
       {props.children}
@@ -98,19 +123,65 @@ export function OpenWindow(props: {
   );
 }
 
-/** Renders the window named by the address, if any. Mounted once, in the shell. */
+/**
+ * Open a window above the open window, which stays as it is. `from` is the
+ * element that the new window opens from.
+ */
+export function useOpenAbove() {
+  const navigate = useNavigate();
+  return useCallback(
+    (w: WindowId, from?: HTMLElement | null) => {
+      origins[2] = from ?? null;
+      navigate({
+        to: ".",
+        search: (previous) => ({ ...previous, w2: w }),
+        state: { openedHere: true },
+        resetScroll: false,
+      });
+    },
+    [navigate],
+  );
+}
+
+/** Renders the windows named by the address, if any. Mounted once, in the shell. */
 export function WindowHost() {
-  const t = useMessages();
   // Read from the location, not from a route: this file is part of the route
   // tree's own type (router → shell → host), so a typed route lookup is circular.
   const w = useRouterState({ select: (state) => (state.location.search as { w?: string }).w });
+  const w2 = useRouterState({ select: (state) => (state.location.search as { w2?: string }).w2 });
+  return (
+    <>
+      <Layer level={1} w={w} />
+      {/* The window above opens after the one below, so the browser puts it on top. */}
+      {w && <Layer level={2} w={w2} />}
+    </>
+  );
+}
+
+/** The window of one level. */
+function Layer(props: { level: Level; w: string | undefined }) {
+  const t = useMessages();
+  const { level, w } = props;
   // `wm` is the month of the month window. It changes without closing the window.
   const wm = useRouterState({ select: (state) => (state.location.search as { wm?: string }).wm });
+  // `wp` is the period of the analysis window.
+  const wp = useRouterState({ select: (state) => (state.location.search as { wp?: string }).wp });
   const navigate = useNavigate();
   const router = useRouter();
+  const setPeriod = useCallback(
+    (period: string) =>
+      navigate({
+        to: ".",
+        search: (previous) => ({ ...previous, wp: period }),
+        replace: true,
+        resetScroll: false,
+        state: (state) => state,
+      }),
+    [navigate],
+  );
 
   function close() {
-    origin = null;
+    origins[level] = null;
     if (router.history.location.state.openedHere) {
       // The window was opened from this page: Back returns to it with no extra entry.
       router.history.back();
@@ -118,7 +189,10 @@ export function WindowHost() {
       // The window came from a link or a reload: there is no page entry to go back to.
       navigate({
         to: ".",
-        search: (previous) => ({ ...previous, w: undefined, wm: undefined }),
+        search: (previous) =>
+          level === 2
+            ? { ...previous, w2: undefined }
+            : { ...previous, w: undefined, wm: undefined, wp: undefined, w2: undefined },
         replace: true,
         resetScroll: false,
       });
@@ -191,6 +265,13 @@ export function WindowHost() {
   } else if (w === "worth") {
     title = t.home.blocks.worth;
     content = <WorthWindow />;
+  } else if (kind === "origin") {
+    title = t.analysis.originTitle;
+    content = <OriginWindow id={w ?? ""} />;
+  } else if (w === "analysis") {
+    title = t.analysis.title;
+    content = <AnalysisWindow period={wp} onPeriod={setPeriod} />;
+    wide = true;
   } else if (w === "limit") {
     title = t.plan.limit.title;
     content = <LimitWindow onDone={close} />;
@@ -245,8 +326,10 @@ export function WindowHost() {
   }
   // The key remounts the window when the address names another one.
   return (
-    <Window key={w} title={title} origin={origin} onClose={close} wide={wide}>
-      <Boundary>{content}</Boundary>
+    <Window key={w} title={title} origin={origins[level]} onClose={close} wide={wide}>
+      <LevelOfWindow value={level}>
+        <Boundary>{content}</Boundary>
+      </LevelOfWindow>
     </Window>
   );
 }

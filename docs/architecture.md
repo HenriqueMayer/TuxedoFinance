@@ -25,7 +25,7 @@ Django 6 with django-ninja. Each application owns its models and rules.
 | `ledger` | Transactions, categories, the occurrence engine, repeating entries, the ledger synchronization, statement-import models |
 | `investments` | Investment products, assets, operations, price observations, the position replay and its valuation |
 | `planning` | Spending limits from a month on, goals and their reserved balances, the sheet of the months ahead, the calculators, the month closing |
-| `reports` | Reads for Home: the month, what is due, the net worth |
+| `reports` | Reads for Home: the month, what is due, the net worth, the analysis of a period |
 
 Rules:
 
@@ -53,7 +53,7 @@ Vite, React 19, TypeScript in strict mode, Tailwind 4.
 | Server data | TanStack Query. Hooks are in `src/data/` |
 | Routes | TanStack Router, defined in code in `src/router.tsx` |
 | Filters | Search parameters of the route. A change replaces the address and does not move the page |
-| Windows | The search parameter `w`. See `src/windows/host.tsx` |
+| Windows | The search parameter `w`, and `w2` for one window above it. See `src/windows/host.tsx` |
 | Messages | Typed objects in `src/i18n/`. English defines the keys |
 | Language and theme | Saved in the browser. Currency, date order and Home blocks are saved on the server |
 

@@ -264,7 +264,7 @@ export function AccountWindow(props: { id: number; onDone: () => void }) {
               {row.transfer_id != null && (
                 <button
                   type="button"
-                  className="link text-sm"
+                  className="action"
                   disabled={undo.isPending}
                   onClick={() => undo.mutate(row.transfer_id as number)}
                 >
@@ -284,7 +284,7 @@ export function AccountWindow(props: { id: number; onDone: () => void }) {
       </section>
 
       <details>
-        <summary className="link w-fit cursor-pointer text-sm">{t.wallet.editAccount}</summary>
+        <summary className="action w-fit">{t.wallet.editAccount}</summary>
         <form onSubmit={submit} className="mt-4 grid gap-5" noValidate>
           <AccountFields
             error={change.error}
@@ -525,7 +525,7 @@ export function CardWindow(props: { id: number; onDone: () => void }) {
       </section>
 
       <details>
-        <summary className="link w-fit cursor-pointer text-sm">{t.wallet.editCard}</summary>
+        <summary className="action w-fit">{t.wallet.editCard}</summary>
         <form onSubmit={submit} className="mt-4 grid gap-5" noValidate>
           <CardFields
             error={change.error}
@@ -688,7 +688,7 @@ export function InvoiceWindow(props: { id: number }) {
                 <span className="flex-1">{formatDate(payment.date, order)}</span>
                 <button
                   type="button"
-                  className="link text-sm"
+                  className="action"
                   disabled={undo.isPending}
                   onClick={() => undo.mutate(payment.id)}
                 >

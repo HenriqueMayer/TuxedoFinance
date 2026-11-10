@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import {
+  currencySymbol,
   editableAmount,
   editableDecimal,
   formatAmount,
@@ -84,4 +85,14 @@ test("a typed amount equals a stored one when only the decimals are written diff
   expect(sameAmount("-20.5", "-20.50")).toBe(true);
   expect(sameAmount("2500.00", "2500.01")).toBe(false);
   expect(sameAmount("2500.00", null)).toBe(false);
+});
+
+test("a currency has a short symbol", () => {
+  expect(currencySymbol("BRL")).toBe("R$");
+  expect(currencySymbol("USD")).toBe("$");
+  expect(currencySymbol("EUR")).toBe("€");
+  expect(currencySymbol("GBP")).toBe("£");
+  expect(currencySymbol("JPY")).toBe("¥");
+  // The franc has no symbol of its own; its usual short form is used.
+  expect(currencySymbol("CHF")).toBe("Fr");
 });

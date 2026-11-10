@@ -3,6 +3,7 @@
 import csv
 import io
 import re
+from collections import Counter
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from html import unescape
@@ -27,8 +28,33 @@ def _text(blob, encoding="utf-8-sig"):
     return value
 
 
+def _without_preamble(value):
+    """Drop the lines that some banks write before the header: a title, the account, the period.
+
+    The header is the first line with the number of separators that most
+    lines of the file have. A file that starts with its header is unchanged.
+    """
+    lines = value.splitlines(keepends=True)
+    best = None
+    for delimiter in ";,\t":
+        # A line of a statement has at least three columns, so two separators.
+        counts = Counter(line.count(delimiter) for line in lines if line.count(delimiter) >= 2)
+        if not counts:
+            continue
+        common, frequency = counts.most_common(1)[0]
+        if best is None or frequency > best[1]:
+            best = (delimiter, frequency, common)
+    if best is None:
+        return value
+    delimiter, _frequency, common = best
+    for index, line in enumerate(lines):
+        if line.count(delimiter) == common:
+            return "".join(lines[index:])
+    return value
+
+
 def inspect_csv(blob, encoding="utf-8-sig"):
-    value = _text(blob, encoding)
+    value = _without_preamble(_text(blob, encoding))
     try:
         dialect = csv.Sniffer().sniff(value[:8192], delimiters=",;\t")
     except csv.Error:
@@ -172,6 +198,12 @@ def parse_csv(
     return result
 
 
+def _ofx_amount(raw):
+    """Read an OFX amount. It has no thousands separator; its decimal mark is a point or a comma."""
+    raw = str(raw).strip()
+    return _amount(raw, "," if "," in raw and "." not in raw else ".")
+
+
 def parse_ofx(blob, encoding="utf-8-sig"):
     value = _text(blob, encoding)
     if re.search(r"<!DOCTYPE|<!ENTITY", value, flags=re.I):
@@ -194,7 +226,7 @@ def parse_ofx(blob, encoding="utf-8-sig"):
         try:
             raw_date = tag(block, "DTPOSTED", required=True)
             day = datetime.strptime(raw_date[:8], "%Y%m%d").date()
-            amount = _amount(tag(block, "TRNAMT", required=True), ".")
+            amount = _ofx_amount(tag(block, "TRNAMT", required=True))
             if not amount:
                 raise ValidationError(_("A cash entry must have a nonzero amount."))
             external_id = tag(block, "FITID", required=True)
@@ -230,7 +262,7 @@ def parse_ofx(blob, encoding="utf-8-sig"):
     balance_block = re.search(r"<LEDGERBAL\s*>(.*?)</LEDGERBAL\s*>", value, flags=re.I | re.S)
     balance = balance_date = None
     if balance_block:
-        balance = str(_amount(tag(balance_block.group(1), "BALAMT", required=True), "."))
+        balance = str(_ofx_amount(tag(balance_block.group(1), "BALAMT", required=True)))
         try:
             balance_date = (
                 datetime.strptime(

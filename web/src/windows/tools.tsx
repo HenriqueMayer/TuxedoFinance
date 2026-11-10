@@ -106,7 +106,7 @@ export function SalaryWindow() {
           </Field>
         </div>
         <details>
-          <summary className="link w-fit cursor-pointer text-sm">{t.plan.tools.optional}</summary>
+          <summary className="action w-fit">{t.plan.tools.optional}</summary>
           <div className="mt-4 flex flex-wrap gap-4">
             {(["pension", "transport", "food", "health", "other"] as const).map((name) => (
               <AmountField

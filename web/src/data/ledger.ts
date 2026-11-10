@@ -198,3 +198,30 @@ export function useRemoveAmountChange(id: number) {
     onSuccess: changed,
   });
 }
+
+/** Read the CSV file of the categories and give it to the browser as a download. */
+export function useExportCategories() {
+  return useMutation({
+    mutationFn: async () => {
+      const text = (await unwrap(
+        api.GET("/api/ledger/categories/export", { parseAs: "text" }),
+      )) as unknown as string;
+      const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "tuxedo-categories.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    },
+  });
+}
+
+/** Create the categories of a CSV file. A name that already exists is kept as it is. */
+export function useImportCategories() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) =>
+      unwrap(api.POST("/api/ledger/categories/import", { body: { content: await file.text() } })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
+  });
+}

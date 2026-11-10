@@ -119,3 +119,23 @@ export function sameAmount(typed: string, stored: string | null): boolean {
   const padded = typed.includes(".") ? typed.padEnd(typed.indexOf(".") + 3, "0") : `${typed}.00`;
   return padded === stored;
 }
+
+const SYMBOL_OF: Record<string, string> = { CHF: "Fr" };
+
+/** The short symbol of a currency, for example "R$" or "€". */
+export function currencySymbol(currency: string): string {
+  const known = SYMBOL_OF[currency];
+  if (known) return known;
+  // One locale for every currency: the Japanese locale gives a full-width yen sign.
+  const parts = new Intl.NumberFormat("en", {
+    style: "currency",
+    currency,
+    currencyDisplay: "narrowSymbol",
+  }).formatToParts(0);
+  return parts.find((part) => part.type === "currency")?.value ?? currency;
+}
+
+/** "12,5%": a percentage that the server calculated, with one decimal. */
+export function formatPercent(value: string, language: string): string {
+  return `${Number(value).toLocaleString(language, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+}

@@ -549,7 +549,7 @@ function History(props: { position: PositionDetail }) {
             </span>
             <button
               type="button"
-              className="link text-sm"
+              className="action"
               disabled={undo.isPending}
               onClick={() => undo.mutate(row.id)}
             >
@@ -601,7 +601,7 @@ function EditPosition(props: { position: PositionDetail; onDone: () => void }) {
 
   return (
     <details>
-      <summary className="link w-fit cursor-pointer text-sm">{t.invest.edit}</summary>
+      <summary className="action w-fit">{t.invest.edit}</summary>
       <form onSubmit={submit} className="mt-4 grid gap-5" noValidate>
         <Field label={t.invest.name} errors={fieldMessages(change.error, "name")}>
           {(control) => (

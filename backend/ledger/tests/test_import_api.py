@@ -330,3 +330,118 @@ class SessionTests(ApiTestCase):
         self.assertEqual(self.post(f"{IMPORTS}/1/confirm", {}).status_code, 401)
         self.assertEqual(self.post(f"{IMPORTS}/1/undo").status_code, 401)
         self.assertEqual(self.delete(f"{IMPORTS}/1").status_code, 401)
+
+
+OFX_SGML = """OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+<SIGNONMSGSRSV1><SONRS><STATUS><CODE>0<SEVERITY>INFO</STATUS><DTSERVER>20261110120000[-3:BRT]<LANGUAGE>POR</SONRS></SIGNONMSGSRSV1>
+<BANKMSGSRSV1><STMTTRNRS><TRNUID>1<STATUS><CODE>0<SEVERITY>INFO</STATUS>
+<STMTRS><CURDEF>BRL
+<BANKACCTFROM><BANKID>0341<ACCTID>12345-6<ACCTTYPE>CHECKING</BANKACCTFROM>
+<BANKTRANLIST><DTSTART>20261101100000[-3:BRT]<DTEND>20261110100000[-3:BRT]
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20261103100000[-3:BRT]<TRNAMT>-25.50<FITID>20261103001<CHECKNUM>20261103001<MEMO>PADARIA SÃO JOÃO</STMTTRN>
+<STMTTRN><TRNTYPE>CREDIT<DTPOSTED>20261105100000[-3:BRT]<TRNAMT>5000.00<FITID>20261105001<CHECKNUM>20261105001<MEMO>REMUNERAÇÃO/SALÁRIO</STMTTRN>
+</BANKTRANLIST>
+<LEDGERBAL><BALAMT>5974.50<DTASOF>20261110100000[-3:BRT]</LEDGERBAL>
+</STMTRS></STMTTRNRS></BANKMSGSRSV1>
+</OFX>
+"""
+
+NUBANK_CSV = (
+    "Data,Valor,Identificador,Descrição\n"
+    "03/11/2026,-25.50,6543f0aa-1111-4222-8333-444455556666,Compra no débito - Padaria São João\n"
+    "05/11/2026,5000.00,6543f0aa-1111-4222-8333-444455557777,Transferência recebida - ACME LTDA\n"
+)
+
+INTER_CSV = (
+    " Extrato Conta Corrente \n"
+    "Conta ;12345678\n"
+    "Período ;01/11/2026 a 10/11/2026\n"
+    "Saldo ;5.974,50\n"
+    "\n"
+    "Data Lançamento;Histórico;Descrição;Valor;Saldo\n"
+    "03/11/2026;Compra no débito;Padaria São João;-25,50;974,50\n"
+    "05/11/2026;Pix recebido;ACME LTDA;5.000,00;5.974,50\n"
+)
+
+
+class BankFormatTests(ImportTestCase):
+    """Files in the layout that Brazilian banks export. The data is fictional."""
+
+    def upload_bytes(self, blob, name):
+        payload = {
+            "account_id": self.account.pk,
+            "file_name": name,
+            "content": base64.b64encode(blob).decode(),
+        }
+        response = self.post(IMPORTS, payload)
+        self.assertEqual(response.status_code, 200, response.content)
+        return response.json()
+
+    def rows(self, batch):
+        return [(row["date"], row["amount"], row["description"]) for row in batch["rows"]]
+
+    def test_an_ofx_file_with_an_sgml_header_in_windows_1252(self):
+        batch = self.upload_bytes(OFX_SGML.encode("cp1252"), "extrato.ofx")
+        self.assertEqual((batch["status"], batch["file_format"]), ("READY", "OFX"))
+        self.assertEqual(
+            self.rows(batch),
+            [
+                ("2026-11-03", "-25.50", "PADARIA SÃO JOÃO"),
+                ("2026-11-05", "5000.00", "REMUNERAÇÃO/SALÁRIO"),
+            ],
+        )
+        # The balance of the file is compared after the confirmation.
+        confirmed = self.confirm(self.create_all(batch)).json()
+        self.assertEqual(confirmed["reconciliation"]["difference"], "0.00")
+
+    def test_an_ofx_file_with_decimal_commas(self):
+        text = OFX_SGML.replace("-25.50", "-25,50").replace("5000.00", "5000,00")
+        text = text.replace("5974.50", "5974,50")
+        batch = self.upload_bytes(text.encode("cp1252"), "extrato.ofx")
+        self.assertEqual([row[1] for row in self.rows(batch)], ["-25.50", "5000.00"])
+
+    def test_the_account_csv_of_nubank(self):
+        batch = self.upload_bytes(NUBANK_CSV.encode("utf-8"), "NU_123456_01NOV2026_10NOV2026.csv")
+        mapping = batch["mapping"]
+        self.assertEqual(
+            (
+                mapping["date_column"],
+                mapping["description_column"],
+                mapping["amount_column"],
+                mapping["id_column"],
+                mapping["date_format"],
+                mapping["decimal_mark"],
+            ),
+            ("Data", "Descrição", "Valor", "Identificador", "%d/%m/%Y", "."),
+        )
+        ready = self.put(f"{IMPORTS}/{batch['id']}/mapping", mapping).json()
+        self.assertEqual(
+            self.rows(ready),
+            [
+                ("2026-11-03", "-25.50", "Compra no débito - Padaria São João"),
+                ("2026-11-05", "5000.00", "Transferência recebida - ACME LTDA"),
+            ],
+        )
+
+    def test_a_csv_with_lines_before_its_header(self):
+        batch = self.upload_bytes(INTER_CSV.encode("utf-8"), "Extrato-01-11-2026-a-10-11-2026.csv")
+        self.assertEqual(
+            batch["headers"], ["Data Lançamento", "Histórico", "Descrição", "Valor", "Saldo"]
+        )
+        mapping = batch["mapping"]
+        self.assertEqual(
+            (mapping["date_column"], mapping["amount_column"], mapping["decimal_mark"]),
+            ("Data Lançamento", "Valor", ","),
+        )
+        ready = self.put(f"{IMPORTS}/{batch['id']}/mapping", mapping).json()
+        self.assertEqual([row[1] for row in self.rows(ready)], ["-25.50", "5000.00"])

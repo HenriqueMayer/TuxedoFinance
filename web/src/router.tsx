@@ -10,6 +10,7 @@ import {
 import { useCallback } from "react";
 import { isMonth } from "./lib/dates";
 import { localPath } from "./lib/paths";
+import { isPeriod } from "./lib/period";
 import { LoginPage, SignupPage } from "./routes/auth";
 import { HomePage } from "./routes/home";
 import { PlanPage } from "./routes/plan";
@@ -66,9 +67,12 @@ const appRoute = createRoute({
     }
   },
   // `w` names the open window. It is valid on every signed-in page; see windows/host.tsx.
-  validateSearch: (search): { w?: string; wm?: string } => ({
+  validateSearch: (search): { w?: string; w2?: string; wm?: string; wp?: string } => ({
     w: typeof search.w === "string" ? search.w : undefined,
+    // A window above another one: valid only with the window below.
+    w2: typeof search.w === "string" && typeof search.w2 === "string" ? search.w2 : undefined,
     wm: isMonth(search.wm) ? search.wm : undefined,
+    wp: isPeriod(search.wp) ? search.wp : undefined,
   }),
   component: Shell,
 });

@@ -34,7 +34,9 @@ test("a CSV statement is read, reviewed, confirmed and undone", async ({ page })
   ].join("\n");
 
   await page.goto("/transactions?month=all");
-  await page.getByRole("link", { name: "Import statement" }).click();
+  // The import is a rare action: it is in the menu of the page.
+  await page.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Import statement" }).click();
   const start = page.getByRole("dialog", { name: "Statement import" });
   await start.getByRole("button", { name: "Read the file" }).click();
   await expect(start.getByText("Choose a file.")).toBeVisible();

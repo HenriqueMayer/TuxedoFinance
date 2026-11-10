@@ -18,6 +18,7 @@ already has a user. Run it with a temporary data directory
 
 import calendar
 import json
+from datetime import date
 from decimal import Decimal
 from unittest import mock
 
@@ -202,7 +203,8 @@ def seed(user, language):
             "confirm_payments": True,
         },
     )["id"]
-    for months_back, rate in ((2, "5.31"), (0, "5.42")):
+    # A rate from the first month on, so that every month end has its net worth.
+    for months_back, rate in ((MONTHS_BACK, "5.18"), (2, "5.31"), (0, "5.42")):
         api.post(
             "/api/banking/exchange-rates",
             {
@@ -465,6 +467,24 @@ def record(user, language):
                 titles.update(item["title"] for item in body["items"])
                 identifiers.update(item["id"] for item in body["items"])
     transactions()
+
+    # The analysis: every period that the presets and the slider can reach.
+    # The oldest start is the oldest record, the twelve-month preset or the
+    # first month of the year, whichever comes first.
+    current = today.replace(day=1)
+    oldest = min(
+        date.fromisoformat(get("/api/reports/analysis")["first"]),
+        schedule.offset_month(current, -11),
+        current.replace(month=1),
+    )
+    span = schedule.months_between(oldest, current.year, current.month) + 1
+    reachable = [schedule.offset_month(oldest, offset).strftime("%Y-%m") for offset in range(span)]
+    for index, start in enumerate(reachable):
+        # What each month is made of, for a click on a chart.
+        get("/api/reports/analysis/month", month=start)
+        for end in reachable[index:]:
+            get("/api/reports/analysis", start=start, end=end)
+
     for title in sorted(titles):
         get("/api/ledger/transactions/suggestion", title=title)
 

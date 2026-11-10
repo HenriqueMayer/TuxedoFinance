@@ -473,6 +473,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ledger/categories/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export the categories as a CSV file */
+        get: operations["ledger_api_export_categories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/categories/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import categories from a CSV file */
+        post: operations["ledger_api_import_categories"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ledger/categories/{category_id}": {
         parameters: {
             query?: never;
@@ -1108,6 +1142,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the analysis of a period of months, with the period before it */
+        get: operations["reports_api_read_analysis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/analysis/month": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read what the figures of one month of the analysis are made of */
+        get: operations["reports_api_read_analysis_month"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1664,6 +1732,18 @@ export interface components {
             transaction_type?: ("INCOME" | "EXPENSE") | null;
             /** Parent Id */
             parent_id?: number | null;
+        };
+        /** CategoryImportOut */
+        CategoryImportOut: {
+            /** Created */
+            created: number;
+            /** Existing */
+            existing: number;
+        };
+        /** CategoryFile */
+        CategoryFile: {
+            /** Content */
+            content: string;
         };
         /** TransactionFilters */
         TransactionFilters: {
@@ -3121,6 +3201,275 @@ export interface components {
             /** Missing Currencies */
             missing_currencies: string[];
         };
+        /** AnalysisOut */
+        AnalysisOut: {
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Months */
+            months: string[];
+            /**
+             * Previous Start
+             * Format: date
+             */
+            previous_start: string;
+            /** Comparable */
+            comparable: boolean;
+            /**
+             * First
+             * Format: date
+             */
+            first: string;
+            /**
+             * Last
+             * Format: date
+             */
+            last: string;
+            /** Flows */
+            flows: components["schemas"]["Flow"][];
+            worth: components["schemas"]["AnalysisWorth"];
+            /** Positions */
+            positions: components["schemas"]["AnalysisPosition"][];
+        };
+        /** AnalysisPosition */
+        AnalysisPosition: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Institution Name */
+            institution_name: string;
+            /** Value */
+            value: string;
+            /** Share */
+            share: string | null;
+        };
+        /** AnalysisWorth */
+        AnalysisWorth: {
+            /** Currency */
+            currency: string;
+            /** Before */
+            before: string;
+            /** Change */
+            change: string;
+            /** Change Percent */
+            change_percent: string | null;
+            /** Investments Before */
+            investments_before: string;
+            /** Investments Change */
+            investments_change: string;
+            /** Complete */
+            complete: boolean;
+            /** Missing Currencies */
+            missing_currencies: string[];
+            /** Months */
+            months: components["schemas"]["AnalysisWorthMonth"][];
+        };
+        /** AnalysisWorthMonth */
+        AnalysisWorthMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Accounts */
+            accounts: string;
+            /** Investments */
+            investments: string;
+            /** Card Debt */
+            card_debt: string;
+            /** Net Worth */
+            net_worth: string;
+            /** Complete */
+            complete: boolean;
+            /** Investments Cost */
+            investments_cost: string;
+            /** Investments Gain */
+            investments_gain: string;
+        };
+        /** Flow */
+        Flow: {
+            /** Currency */
+            currency: string;
+            /** Income */
+            income: string;
+            /** Expenses */
+            expenses: string;
+            /** Result */
+            result: string;
+            /** Previous Income */
+            previous_income: string;
+            /** Previous Expenses */
+            previous_expenses: string;
+            /** Previous Result */
+            previous_result: string;
+            /** Income Change */
+            income_change: string;
+            /** Expenses Change */
+            expenses_change: string;
+            /** Result Change */
+            result_change: string;
+            /** Income Change Percent */
+            income_change_percent: string | null;
+            /** Expenses Change Percent */
+            expenses_change_percent: string | null;
+            /** Average Income */
+            average_income: string;
+            /** Average Expenses */
+            average_expenses: string;
+            /** Months */
+            months: components["schemas"]["FlowMonth"][];
+            /** Categories */
+            categories: components["schemas"]["FlowCategory"][];
+        };
+        /** FlowCategory */
+        FlowCategory: {
+            /** Category Id */
+            category_id: number | null;
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
+            /** Previous */
+            previous: string;
+            /** Change */
+            change: string;
+            /** Share */
+            share: string | null;
+            /** Average */
+            average: string;
+            /** Months */
+            months: string[];
+        };
+        /** FlowMonth */
+        FlowMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Income */
+            income: string;
+            /** Expenses */
+            expenses: string;
+        };
+        /** OriginAccount */
+        OriginAccount: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Bank Name */
+            bank_name: string;
+            /** Amount */
+            amount: string | null;
+        };
+        /** OriginCard */
+        OriginCard: {
+            /** Card Id */
+            card_id: number;
+            /** Card Name */
+            card_name: string;
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Amount */
+            amount: string | null;
+        };
+        /** OriginEntry */
+        OriginEntry: {
+            /** Transaction Id */
+            transaction_id: number;
+            /** Title */
+            title: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Flow
+             * @enum {string}
+             */
+            flow: "INCOME" | "EXPENSE";
+            /** Currency */
+            currency: string;
+            /** Category Id */
+            category_id: number | null;
+            /** Category Name */
+            category_name: string;
+            /** Amount */
+            amount: string;
+            /** Installment Number */
+            installment_number: number | null;
+            /** Installment Count */
+            installment_count: number | null;
+            /** Split */
+            split: boolean;
+        };
+        /** OriginOperation */
+        OriginOperation: {
+            /** Id */
+            id: number | null;
+            /** Position Id */
+            position_id: number;
+            /** Name */
+            name: string;
+            /** Institution Name */
+            institution_name: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "OPENING" | "DEPOSIT" | "WITHDRAWAL" | "YIELD";
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: string;
+            /** Currency */
+            currency: string;
+        };
+        /** OriginOut */
+        OriginOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Entries */
+            entries: components["schemas"]["OriginEntry"][];
+            worth: components["schemas"]["OriginWorth"];
+            /** Operations */
+            operations: components["schemas"]["OriginOperation"][];
+        };
+        /** OriginWorth */
+        OriginWorth: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Currency */
+            currency: string;
+            /** Accounts */
+            accounts: components["schemas"]["OriginAccount"][];
+            /** Positions */
+            positions: components["schemas"]["AnalysisPosition"][];
+            /** Cards */
+            cards: components["schemas"]["OriginCard"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -3950,6 +4299,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+        };
+    };
+    ledger_api_export_categories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ledger_api_import_categories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryFile"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryImportOut"];
                 };
             };
         };
@@ -5173,6 +5564,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorthOut"];
+                };
+            };
+        };
+    };
+    reports_api_read_analysis: {
+        parameters: {
+            query?: {
+                start?: string;
+                end?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisOut"];
+                };
+            };
+        };
+    };
+    reports_api_read_analysis_month: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OriginOut"];
                 };
             };
         };

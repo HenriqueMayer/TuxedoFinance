@@ -9,10 +9,11 @@ import {
   worthQuery,
 } from "../data/reports";
 import { useLanguage, useMessages } from "../i18n";
-import { monthLabel, shiftMonth, shortMonthLabel } from "../lib/dates";
+import { monthLabel, shortMonthLabel } from "../lib/dates";
 import { formatAmount } from "../lib/money";
 import { CategoryBars, DueRows } from "../routes/home";
 import { sessionQuery, useSavePreferences } from "../session";
+import { MonthPicker } from "../ui/MonthPicker";
 import { OpenWindow } from "./host";
 
 /** The analysis of one month. Its month lives in the address, so Back and a link keep it. */
@@ -39,27 +40,9 @@ export function MonthWindow(props: {
 
   return (
     <div className={`grid gap-6 ${isPlaceholderData ? "opacity-60" : ""}`}>
-      <nav aria-label={t.home.monthTitle} className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          className="button-quiet px-3"
-          aria-label={t.transactions.previousMonth}
-          onClick={() => props.onMonth(shiftMonth(month, -1))}
-        >
-          ‹
-        </button>
-        <p className="text-lg font-semibold" aria-live="polite">
-          {monthLabel(month, language)}
-        </p>
-        <button
-          type="button"
-          className="button-quiet px-3"
-          aria-label={t.transactions.nextMonth}
-          onClick={() => props.onMonth(shiftMonth(month, 1))}
-        >
-          ›
-        </button>
-      </nav>
+      <div className="flex justify-center">
+        <MonthPicker month={month} onChange={props.onMonth} align="center" />
+      </div>
 
       {data.result.length === 0 && <p className="text-muted">{t.home.noEntries}</p>}
       {data.result.map((result) => (
@@ -284,7 +267,7 @@ export function WorthWindow() {
       {!today.complete && (
         <p className="text-sm text-muted">
           {t.home.worth.incomplete(today.missing_currencies.join(", "))}{" "}
-          <OpenWindow w="rates" className="link">
+          <OpenWindow w="rates" className="action">
             {t.rates.add}
           </OpenWindow>
         </p>

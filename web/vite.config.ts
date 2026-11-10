@@ -10,7 +10,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
-    proxy: { "/api": "http://127.0.0.1:8000" },
+    // The host of the page stays in the request: Django compares it with the
+    // origin of a write, and the short form of this option would replace it.
+    proxy: { "/api": { target: "http://127.0.0.1:8000", changeOrigin: false } },
   },
   test: {
     include: ["src/**/*.test.{ts,tsx}"],

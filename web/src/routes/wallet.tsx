@@ -7,6 +7,7 @@ import type { Messages } from "../i18n/en";
 import { formatDate } from "../lib/dates";
 import { formatAmount, formatQuantity } from "../lib/money";
 import { useDateOrder } from "../session";
+import { ExchangeIcon, PlusIcon } from "../ui/icons";
 import { OpenWindow } from "../windows/host";
 
 /** What the owner has and owes: accounts by bank, each with its cards. Every card opens a window. */
@@ -18,7 +19,7 @@ export function WalletPage() {
     <>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">{t.nav.wallet}</h1>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 max-sm:*:px-3 max-sm:*:text-sm">
           {data && data.banks.length > 0 && (
             <>
               <OpenWindow w="transfer" className="button-quiet">
@@ -52,15 +53,19 @@ export function WalletPage() {
       )}
       {data && data.banks.length > 0 && (
         <>
-          <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3">
-            {data.totals.map((total) => (
-              <div key={total.currency}>
-                <dt className="text-sm text-muted">{t.wallet.total}</dt>
-                <dd className="amount text-3xl font-semibold">
+          <dl className="mt-6">
+            <dt className="text-sm text-muted">{t.wallet.total}</dt>
+            {/* One amount for each currency: they are not added together. */}
+            <div className="flex flex-wrap items-baseline gap-x-8 gap-y-1">
+              {data.totals.map((total, index) => (
+                <dd
+                  key={total.currency}
+                  className={`amount font-semibold ${index === 0 ? "text-3xl" : "text-xl text-muted"}`}
+                >
                   {formatAmount(total.balance, total.currency)}
                 </dd>
-              </div>
-            ))}
+              ))}
+            </div>
           </dl>
           {data.banks.map((bank) => (
             <section key={bank.id} className="mt-8">
@@ -108,7 +113,8 @@ function Investments() {
       {!data.complete && (
         <p className="mt-3 text-sm text-muted">
           {t.home.worth.incomplete(data.missing_currencies.join(", "))}{" "}
-          <OpenWindow w="rates" className="link">
+          <OpenWindow w="rates" className="action">
+            <ExchangeIcon />
             {t.rates.add}
           </OpenWindow>
         </p>
@@ -132,7 +138,7 @@ function Investments() {
         <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <span className="text-muted">{t.invest.archived}</span>
           {archived.map((position) => (
-            <OpenWindow key={position.id} w={`investment:${position.id}`} className="link">
+            <OpenWindow key={position.id} w={`investment:${position.id}`} className="action">
               {position.name}
             </OpenWindow>
           ))}
@@ -154,7 +160,8 @@ function Loyalty() {
   if (data.length === 0) {
     return (
       <p className="mt-8 text-sm">
-        <OpenWindow w="new-program" className="link">
+        <OpenWindow w="new-program" className="action">
+          <PlusIcon />
           {t.loyalty.add}
         </OpenWindow>
       </p>
@@ -209,8 +216,7 @@ function Investment(props: { position: Position }) {
   );
 }
 
-const CARD =
-  "block rounded-(--radius-window) border border-line bg-surface p-4 transition-shadow hover:shadow-md";
+const CARD = "block h-full rounded-(--radius-window) border border-line bg-surface p-4 card-open";
 
 /** An account and, under it, the cards that settle through it. */
 function Account(props: { account: AccountRow }) {

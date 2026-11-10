@@ -104,20 +104,34 @@ test("the month window changes month in place and keeps its address", async ({ p
   const window = page.getByRole("dialog", { name: "Month" });
   await expect(window.getByText("By category")).toBeVisible();
   await expect(window.getByRole("table")).toContainText("R$ 5.000,00");
-  const current = (await window.locator("nav p").textContent()) ?? "";
+  const label = window.getByRole("button", { name: /^Period: / });
+  const current = (await label.textContent()) ?? "";
 
   await window.getByRole("button", { name: "Previous month" }).click();
   await expect(page).toHaveURL(/w=month&wm=\d{4}-\d{2}/);
-  await expect(window.locator("nav p")).not.toHaveText(current);
+  await expect(label).not.toHaveText(current);
   await expect(window.getByText("No entries this month yet.").first()).toBeVisible();
   // The window stayed open: the same dialog, with the next-month control focused in it.
   await expect(window).toBeVisible();
 
   // The address reopens the same month.
   await page.reload();
-  await expect(window.locator("nav p")).not.toHaveText(current);
+  await expect(label).not.toHaveText(current);
   await window.getByRole("button", { name: "Next month" }).click();
-  await expect(window.locator("nav p")).toHaveText(current);
+  await expect(label).toHaveText(current);
+
+  // The label opens the months of the year. Escape closes them, not the window.
+  await label.click();
+  const months = window.getByRole("dialog", { name: "Choose a month" });
+  await expect(months).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(months).toBeHidden();
+  await expect(window).toBeVisible();
+  // A month of the list is one click away.
+  await label.click();
+  await months.getByRole("button", { name: /^January / }).click();
+  await expect(page).toHaveURL(/wm=\d{4}-01/);
+  await expect(label).toHaveText(/^January /);
 
   await page.keyboard.press("Escape");
   await expect(window).toBeHidden();

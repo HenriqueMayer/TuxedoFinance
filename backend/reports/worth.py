@@ -229,11 +229,94 @@ def net_worth(sources, as_of):
         "currency": conversion.base_currency,
         "accounts": accounts.quantize(CENTS),
         "investments": valuation["total"],
+        # What the positions cost. The value less the cost is what they earned.
+        "investments_cost": valuation["cost_total"],
         "card_credits": credits.quantize(CENTS),
         "card_debt": debt.quantize(CENTS),
         "net_worth": (assets - debt).quantize(CENTS),
         "complete": not missing,
         "missing_currencies": sorted(missing),
+    }
+
+
+def positions(sources, as_of):
+    """Return the positions that hold a value on ``as_of``, largest first.
+
+    Each row has the value in the base currency and its part of the total,
+    in percent. A position without an exchange rate is not listed.
+    """
+    valuation = value_positions(
+        sources.user,
+        replay_positions(sources.assets, sources.operations, as_of),
+        sources.prices,
+        sources.conversion.base_currency,
+        as_of,
+        historical=True,
+        conversion=sources.conversion,
+    )
+    values = defaultdict(lambda: ZERO)
+    assets = {}
+    for row in valuation["positions"]:
+        if row["base_value"]:
+            assets[row["asset"].pk] = (row["asset"], row["product"])
+            values[row["asset"].pk] += row["base_value"]
+    held = sum(values.values(), ZERO)
+    return sorted(
+        (
+            {
+                "id": asset.pk,
+                "name": asset.name,
+                "institution_name": product.bank.name,
+                "value": values[asset.pk].quantize(CENTS),
+                "share": (values[asset.pk] * 100 / held).quantize(Decimal("0.1"))
+                if held > ZERO
+                else None,
+            }
+            for asset, product in assets.values()
+        ),
+        key=lambda row: (-row["value"], row["name"]),
+    )
+
+
+def composition(sources, as_of):
+    """Return what the net worth of ``as_of`` is made of, in the base currency.
+
+    ``accounts`` are the accounts with a balance, ``positions`` the
+    investments with a value, and ``cards`` the statements that owe an
+    amount; a negative card amount is a card credit. An amount without an
+    exchange rate is None.
+    """
+    conversion = sources.conversion
+
+    def in_base(amount, currency):
+        try:
+            return conversion.convert(amount, currency, as_of=as_of).quantize(CENTS)
+        except MissingExchangeRate:
+            return None
+
+    accounts = [
+        {
+            "id": row["account"].pk,
+            "name": row["account"].name,
+            "bank_name": row["account"].bank.name,
+            "amount": in_base(row["balance"], row["account"].currency),
+        }
+        for row in account_balances(sources.user, as_of)
+        if row["balance"]
+    ]
+    cards = [
+        {
+            "card_id": row["card_id"],
+            "card_name": row["card_name"],
+            "month": row["month"],
+            "amount": in_base(row["amount"], row["currency"]),
+        }
+        for row in card_debt(sources, as_of)
+    ]
+    return {
+        "accounts": sorted(accounts, key=lambda row: (-(row["amount"] or ZERO), row["name"])),
+        "positions": positions(sources, as_of),
+        "cards": sorted(cards, key=lambda row: (row["month"], row["card_name"])),
     }
 
 

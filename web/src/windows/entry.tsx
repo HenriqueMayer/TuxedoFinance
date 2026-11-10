@@ -140,7 +140,7 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
       {entry?.is_fixed && (
         <p className="flex flex-wrap items-center justify-between gap-3 rounded-(--radius-control) bg-sheet p-3 text-sm">
           <span>{pastMonths ? t.entry.pastMonths : t.transactions.recurring}</span>
-          <OpenWindow w={`schedule:${entry.id}`} className="link font-medium">
+          <OpenWindow w={`schedule:${entry.id}`} className="action">
             {t.entry.schedule}
           </OpenWindow>
         </p>
@@ -232,7 +232,7 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
           )}
         </Field>
         <details className="group" open={installments > 1 || notes !== "" || repeats || undefined}>
-          <summary className="link w-fit cursor-pointer text-sm">{t.entry.more}</summary>
+          <summary className="action w-fit">{t.entry.more}</summary>
           <div className="mt-4 grid gap-5">
             <label className="flex items-center gap-3">
               <input

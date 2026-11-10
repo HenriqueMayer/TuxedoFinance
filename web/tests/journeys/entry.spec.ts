@@ -199,13 +199,19 @@ test("month navigation shows the billed month of an installment purchase", async
   });
   await page.reload();
 
+  // The label of the month opens the months; every month is one of the choices.
+  await page.getByRole("button", { name: /^Period: / }).click();
   await page.getByRole("button", { name: "All months" }).click();
   await expect(page).toHaveURL(/month=all/);
+  await expect(page.getByRole("button", { name: "Period: All months" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next month" })).toBeDisabled();
   await expect(row(page, "Notebook")).toContainText("−R$ 3.000,00");
   await expect(row(page, "Notebook")).toContainText("in 3 installments");
 
   // In one month, the row shows the installment of that month and the total.
+  await page.getByRole("button", { name: /^Period: / }).click();
   await page.getByRole("button", { name: "This month" }).click();
+  await expect(page).not.toHaveURL(/month=/);
   await page.getByRole("button", { name: "Next month" }).click();
   await expect(page).toHaveURL(/month=\d{4}-\d{2}/);
   await expect(row(page, "Notebook")).toContainText("−R$ 1.000,00");

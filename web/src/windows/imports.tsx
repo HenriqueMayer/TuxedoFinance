@@ -104,7 +104,7 @@ export function ImportStartWindow() {
           )}
         </Field>
         <details>
-          <summary className="link w-fit cursor-pointer text-sm">{t.imports.check}</summary>
+          <summary className="action w-fit">{t.imports.check}</summary>
           <div className="mt-4 flex flex-wrap gap-4">
             <Field
               label={t.imports.closingBalance}
@@ -178,7 +178,7 @@ export function ImportWindow(props: { id: number; onDone: () => void }) {
       {open && data.needs_opening_date && (
         <p role="alert" className="rounded-(--radius-control) bg-sheet p-4 text-sm">
           {t.imports.openingDate}{" "}
-          <OpenWindow w={`account:${data.account_id}`} className="link font-medium">
+          <OpenWindow w={`account:${data.account_id}`} className="action">
             {t.imports.openAccount}
           </OpenWindow>
         </p>

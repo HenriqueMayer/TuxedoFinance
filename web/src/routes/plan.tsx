@@ -13,11 +13,11 @@ import { useLanguage, useMessages } from "../i18n";
 import type { Messages } from "../i18n/en";
 import { monthLabel, monthOf, shortMonthLabel } from "../lib/dates";
 import { formatAmount } from "../lib/money";
+import { CheckIcon, ChevronRightIcon, PlusIcon } from "../ui/icons";
 import { Meter } from "../ui/Meter";
 import { OpenWindow } from "../windows/host";
 
-const CARD =
-  "block rounded-(--radius-window) border border-line bg-surface p-5 transition-shadow hover:shadow-md";
+const CARD = "block rounded-(--radius-window) border border-line bg-surface p-5 card-open";
 
 /** What the owner intends: the limit of the month, the category budgets and the goals. */
 export function PlanPage() {
@@ -32,8 +32,9 @@ export function PlanPage() {
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">{t.nav.plan}</h1>
         {plan.data && (
-          <p className="flex flex-wrap items-baseline gap-x-4 text-muted">
-            <OpenWindow w="closing" className="link text-sm font-medium">
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-muted">
+            <OpenWindow w="closing" className="action">
+              <CheckIcon />
               {t.closing.open}
             </OpenWindow>
             {monthLabel(monthOf(plan.data.month), language)}
@@ -76,7 +77,10 @@ function MonthLimit(props: { plan: MonthPlan }) {
         <span className="block text-lg font-medium">{t.plan.month.noLimit}</span>
         <span className="mt-1 block max-w-prose text-muted">{t.plan.month.noLimitHelp}</span>
         <span className="mt-4 flex flex-wrap items-baseline justify-between gap-3">
-          <span className="link font-medium">{t.plan.month.setLimit}</span>
+          <span className="action">
+            <PlusIcon />
+            {t.plan.month.setLimit}
+          </span>
           <span className="text-sm">
             <span className="text-muted">{t.plan.month.spent} </span>
             <span className="amount font-medium">{money(plan.expenses)}</span>
@@ -116,7 +120,8 @@ function Budgets(props: { plan: MonthPlan }) {
     <section className="mt-10">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-2">
         <h2 className="font-medium">{t.plan.budgets.title}</h2>
-        <OpenWindow w="new-budget" className="link text-sm font-medium">
+        <OpenWindow w="new-budget" className="action">
+          <PlusIcon />
           {t.plan.budgets.new}
         </OpenWindow>
       </div>
@@ -222,7 +227,7 @@ function Goals(props: { goals: Goal[] }) {
         <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <span className="text-muted">{t.plan.goals.archivedList}</span>
           {archived.map((goal) => (
-            <OpenWindow key={goal.id} w={`goal:${goal.id}`} className="link">
+            <OpenWindow key={goal.id} w={`goal:${goal.id}`} className="action">
               {goal.name}
             </OpenWindow>
           ))}
@@ -287,7 +292,10 @@ function MonthsAhead(props: { forecast: Forecast }) {
             </span>
           ))}
         </span>
-        <span className="link mt-4 block w-fit text-sm font-medium">{t.plan.ahead.open}</span>
+        <span className="action mt-4 w-fit">
+          {t.plan.ahead.open}
+          <ChevronRightIcon />
+        </span>
       </OpenWindow>
       {!forecast.complete && (
         <p className="mt-3 text-sm text-muted">
@@ -298,7 +306,7 @@ function MonthsAhead(props: { forecast: Forecast }) {
         <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <span className="text-muted">{t.plan.ahead.saved}</span>
           {sheets.data.map((sheet) => (
-            <OpenWindow key={sheet.id} w={`sheet:${sheet.id}`} className="link">
+            <OpenWindow key={sheet.id} w={`sheet:${sheet.id}`} className="action">
               {sheet.name}
             </OpenWindow>
           ))}
