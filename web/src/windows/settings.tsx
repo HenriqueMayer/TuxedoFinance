@@ -1,11 +1,10 @@
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useId } from "react";
-import { api, unwrap } from "../api/client";
 import type { components } from "../api/schema";
 import { setLanguage, useLanguage, useMessages } from "../i18n";
 import { setTheme, useTheme } from "../lib/theme";
-import { sessionQuery, useSignOut } from "../session";
+import { sessionQuery, useSavePreferences, useSignOut } from "../session";
 import { Segmented } from "../ui/Segmented";
 import { OpenWindow } from "./host";
 
@@ -18,18 +17,12 @@ export function SettingsWindow() {
   const language = useLanguage();
   const theme = useTheme();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { data: session } = useSuspenseQuery(sessionQuery);
   const signOut = useSignOut();
   const currencyId = useId();
   const dateId = useId();
 
-  const save = useMutation({
-    mutationFn: (body: components["schemas"]["PreferencesIn"]) =>
-      unwrap(api.PATCH("/api/session/preferences", { body })),
-    onSuccess: (preferences) =>
-      queryClient.setQueryData(sessionQuery.queryKey, { ...session, preferences }),
-  });
+  const save = useSavePreferences();
 
   const preferences = session.preferences;
   if (!session.user || !preferences) return null;

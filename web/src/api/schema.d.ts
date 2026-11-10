@@ -428,6 +428,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the Home blocks of the current month */
+        get: operations["reports_api_read_home"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/month": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the analysis of one month */
+        get: operations["reports_api_read_month"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -444,6 +478,8 @@ export interface components {
              * @enum {string}
              */
             date_format: "DMY" | "MDY";
+            /** Home Blocks */
+            home_blocks: ("left" | "spending" | "due")[];
         };
         /** SessionOut */
         SessionOut: {
@@ -481,6 +517,8 @@ export interface components {
             base_currency?: ("BRL" | "USD" | "EUR" | "GBP" | "JPY" | "CHF") | null;
             /** Date Format */
             date_format?: ("DMY" | "MDY") | null;
+            /** Home Blocks */
+            home_blocks?: ("left" | "spending" | "due")[] | null;
         };
         /** InstrumentOut */
         InstrumentOut: {
@@ -975,6 +1013,106 @@ export interface components {
             category_id: number | null;
             /** Instrument */
             instrument: string | null;
+        };
+        /** CategoryPart */
+        CategoryPart: {
+            /** Category Id */
+            category_id: number | null;
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
+        };
+        /** CategorySpending */
+        CategorySpending: {
+            /** Category Id */
+            category_id: number | null;
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
+            /** Currency */
+            currency: string;
+            /** Children */
+            children: components["schemas"]["CategoryPart"][];
+        };
+        /** DueRow */
+        DueRow: {
+            /** Invoice Id */
+            invoice_id: number;
+            /** Title */
+            title: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Amount */
+            amount: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "SCHEDULED" | "PARTIAL" | "OVERDUE" | "PAID";
+            /** Confirm Payments */
+            confirm_payments: boolean;
+        };
+        /** HomeOut */
+        HomeOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Result */
+            result: components["schemas"]["MonthResult"][];
+            /** Spending */
+            spending: components["schemas"]["CategorySpending"][];
+            /** Due */
+            due: components["schemas"]["DueRow"][];
+        };
+        /** MonthResult */
+        MonthResult: {
+            /** Currency */
+            currency: string;
+            /** Income */
+            income: string;
+            /** Expenses */
+            expenses: string;
+            /** Left */
+            left: string;
+            /** Previous Expenses */
+            previous_expenses: string;
+        };
+        /** MonthOut */
+        MonthOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Result */
+            result: components["schemas"]["MonthResult"][];
+            /** Spending */
+            spending: components["schemas"]["CategorySpending"][];
+            /** Trend */
+            trend: components["schemas"]["TrendRow"][];
+        };
+        /** TrendRow */
+        TrendRow: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Currency */
+            currency: string;
+            /** Income */
+            income: string;
+            /** Expenses */
+            expenses: string;
         };
     };
     responses: never;
@@ -1746,6 +1884,48 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    reports_api_read_home: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeOut"];
+                };
+            };
+        };
+    };
+    reports_api_read_month: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthOut"];
+                };
             };
         };
     };

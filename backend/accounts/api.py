@@ -12,7 +12,7 @@ from django.utils.translation import gettext as _
 from ninja import Router, Schema
 from ninja.throttling import AnonRateThrottle
 
-from accounts.models import UserPreference
+from accounts.models import HOME_BLOCKS, UserPreference
 from config.currencies import CURRENCIES
 from config.security import require_csrf
 
@@ -20,6 +20,7 @@ router = Router()
 
 CurrencyCode = Literal[tuple(CURRENCIES)]
 DateFormat = Literal["DMY", "MDY"]
+HomeBlock = Literal[HOME_BLOCKS]
 
 
 class UserOut(Schema):
@@ -30,6 +31,12 @@ class UserOut(Schema):
 class PreferencesOut(Schema):
     base_currency: CurrencyCode
     date_format: DateFormat
+    home_blocks: list[HomeBlock]
+
+    @staticmethod
+    def resolve_home_blocks(preferences):
+        # A stored name that this version no longer has is dropped.
+        return [name for name in preferences.home_blocks if name in HOME_BLOCKS]
 
 
 class SessionOut(Schema):
@@ -52,6 +59,8 @@ class SignupIn(Schema):
 class PreferencesIn(Schema):
     base_currency: CurrencyCode | None = None
     date_format: DateFormat | None = None
+    #: The shown blocks in order. An empty list hides every block.
+    home_blocks: list[HomeBlock] | None = None
 
 
 def session_of(request):
@@ -132,6 +141,9 @@ def sign_up(request, payload: SignupIn):
 def change_preferences(request, payload: PreferencesIn):
     preferences = UserPreference.for_user(request.user)
     changes = payload.dict(exclude_none=True)
+    if "home_blocks" in changes:
+        # Each block once, in the order given.
+        changes["home_blocks"] = list(dict.fromkeys(changes["home_blocks"]))
     for field, value in changes.items():
         setattr(preferences, field, value)
     if changes:

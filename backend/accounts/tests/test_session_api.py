@@ -24,7 +24,14 @@ class ReadSessionTests(SessionApiTestCase):
         self.sign_in()
         body = self.client.get("/api/session").json()
         self.assertEqual(body["user"], {"username": "ana", "email": "ana@example.test"})
-        self.assertEqual(body["preferences"], {"base_currency": "BRL", "date_format": "DMY"})
+        self.assertEqual(
+            body["preferences"],
+            {
+                "base_currency": "BRL",
+                "date_format": "DMY",
+                "home_blocks": ["left", "spending", "due"],
+            },
+        )
 
 
 class SignInTests(SessionApiTestCase):
@@ -102,7 +109,8 @@ class PreferencesTests(SessionApiTestCase):
         self.sign_in()
         response = self.patch("/api/session/preferences", {"base_currency": "USD"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"base_currency": "USD", "date_format": "DMY"})
+        self.assertEqual(response.json()["base_currency"], "USD")
+        self.assertEqual(response.json()["date_format"], "DMY")
 
     def test_unsupported_currency_is_refused(self):
         self.sign_in()
@@ -113,3 +121,30 @@ class PreferencesTests(SessionApiTestCase):
     def test_preferences_need_a_session(self):
         response = self.patch("/api/session/preferences", {"base_currency": "USD"})
         self.assertEqual(response.status_code, 401)
+
+
+class HomeBlocksTests(SessionApiTestCase):
+    def blocks(self, value):
+        return self.patch("/api/session/preferences", {"home_blocks": value})
+
+    def test_the_owner_reorders_and_hides_blocks(self):
+        self.sign_in()
+        self.assertEqual(self.blocks(["due", "left"]).json()["home_blocks"], ["due", "left"])
+        self.assertEqual(
+            self.client.get("/api/session").json()["preferences"]["home_blocks"], ["due", "left"]
+        )
+        self.assertEqual(self.blocks([]).json()["home_blocks"], [])
+
+    def test_a_repeated_block_is_kept_once_and_an_unknown_one_is_refused(self):
+        self.sign_in()
+        self.assertEqual(self.blocks(["due", "due", "left"]).json()["home_blocks"], ["due", "left"])
+        self.assertEqual(self.blocks(["due", "nonsense"]).status_code, 422)
+        self.assertEqual(self.user.preferences.home_blocks, ["due", "left"])
+
+    def test_a_stored_block_that_no_longer_exists_is_not_returned(self):
+        self.sign_in()
+        self.user.preferences.home_blocks = ["retired", "left"]
+        self.user.preferences.save()
+        self.assertEqual(
+            self.client.get("/api/session").json()["preferences"]["home_blocks"], ["left"]
+        )

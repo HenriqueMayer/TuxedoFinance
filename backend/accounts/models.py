@@ -6,6 +6,13 @@ from config.currencies import CURRENCIES, DEFAULT_CURRENCY
 CURRENCY_CHOICES = [(code, currency.name) for code, currency in CURRENCIES.items()]
 DATE_FORMAT_CHOICES = [("DMY", "DD/MM/YYYY"), ("MDY", "MM/DD/YYYY")]
 
+# The blocks that Home can show. The owner chooses which ones and their order.
+HOME_BLOCKS = ("left", "spending", "due")
+
+
+def default_home_blocks():
+    return list(HOME_BLOCKS)
+
 
 class UserPreference(models.Model):
     """Presentation preferences of one user.
@@ -21,6 +28,8 @@ class UserPreference(models.Model):
         max_length=3, choices=CURRENCY_CHOICES, default=DEFAULT_CURRENCY
     )
     date_format = models.CharField(max_length=3, choices=DATE_FORMAT_CHOICES, default="DMY")
+    #: The shown blocks of Home, in order. A block that is not listed is hidden.
+    home_blocks = models.JSONField(default=default_home_blocks)
 
     def __str__(self):
         return f"{self.user.username} ({self.base_currency})"

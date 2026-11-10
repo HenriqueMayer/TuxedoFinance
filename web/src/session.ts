@@ -42,3 +42,31 @@ export function useSignOut() {
 export function useDateOrder(): "DMY" | "MDY" {
   return useQuery(sessionQuery).data?.preferences?.date_format ?? "DMY";
 }
+
+/**
+ * Save preferences. The choice shows at once and is restored if the server
+ * refuses it, so a control answers the press that changed it.
+ */
+export function useSavePreferences() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: components["schemas"]["PreferencesIn"]) =>
+      unwrap(api.PATCH("/api/session/preferences", { body })),
+    onMutate: (body) => {
+      const before = queryClient.getQueryData(sessionQuery.queryKey);
+      const changes = Object.fromEntries(Object.entries(body).filter(([, value]) => value != null));
+      queryClient.setQueryData(sessionQuery.queryKey, (session) =>
+        session?.preferences
+          ? { ...session, preferences: { ...session.preferences, ...changes } }
+          : session,
+      );
+      return { before };
+    },
+    onError: (_error, _body, context) =>
+      queryClient.setQueryData(sessionQuery.queryKey, context?.before),
+    onSuccess: (preferences) =>
+      queryClient.setQueryData(sessionQuery.queryKey, (session) =>
+        session ? { ...session, preferences } : session,
+      ),
+  });
+}

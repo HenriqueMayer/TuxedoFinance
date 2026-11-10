@@ -5,6 +5,7 @@ import { Boundary } from "../ui/Boundary";
 import { Window } from "../ui/Window";
 import { CategoriesWindow } from "./categories";
 import { AddEntry, EditEntry } from "./entry";
+import { DueWindow, HomeBlocksWindow, MonthWindow } from "./home";
 import { SettingsWindow } from "./settings";
 import {
   AccountWindow,
@@ -27,6 +28,9 @@ export type WindowId =
   | "new-account"
   | "new-card"
   | "transfer"
+  | "month"
+  | "due"
+  | "home-blocks"
   | `transaction:${number}`
   | `account:${number}`
   | `card:${number}`
@@ -72,6 +76,8 @@ export function WindowHost() {
   // Read from the location, not from a route: this file is part of the route
   // tree's own type (router → shell → host), so a typed route lookup is circular.
   const w = useRouterState({ select: (state) => (state.location.search as { w?: string }).w });
+  // `wm` is the month of the month window. It changes without closing the window.
+  const wm = useRouterState({ select: (state) => (state.location.search as { wm?: string }).wm });
   const navigate = useNavigate();
   const router = useRouter();
 
@@ -84,7 +90,7 @@ export function WindowHost() {
       // The window came from a link or a reload: there is no page entry to go back to.
       navigate({
         to: ".",
-        search: (previous) => ({ ...previous, w: undefined }),
+        search: (previous) => ({ ...previous, w: undefined, wm: undefined }),
         replace: true,
         resetScroll: false,
       });
@@ -105,6 +111,29 @@ export function WindowHost() {
   } else if (w === "add") {
     title = t.entry.add;
     content = <AddEntry onDone={close} />;
+  } else if (w === "month") {
+    title = t.home.monthTitle;
+    content = (
+      <MonthWindow
+        month={wm}
+        onMonth={(month) =>
+          navigate({
+            to: ".",
+            search: (previous) => ({ ...previous, wm: month }),
+            replace: true,
+            resetScroll: false,
+            // Keep the mark that says this window was opened from the page.
+            state: (state) => state,
+          })
+        }
+      />
+    );
+  } else if (w === "due") {
+    title = t.home.blocks.due;
+    content = <DueWindow />;
+  } else if (w === "home-blocks") {
+    title = t.home.edit;
+    content = <HomeBlocksWindow />;
   } else if (w === "new-account") {
     title = t.wallet.newAccount;
     content = <NewAccountWindow onDone={close} />;

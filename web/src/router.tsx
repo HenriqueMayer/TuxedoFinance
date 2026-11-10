@@ -8,8 +8,10 @@ import {
 } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { useMessages } from "./i18n";
+import { isMonth } from "./lib/dates";
 import { localPath } from "./lib/paths";
 import { LoginPage, SignupPage } from "./routes/auth";
+import { HomePage } from "./routes/home";
 import { Placeholder, Shell } from "./routes/shell";
 import {
   type TransactionSearch,
@@ -63,8 +65,9 @@ const appRoute = createRoute({
     }
   },
   // `w` names the open window. It is valid on every signed-in page; see windows/host.tsx.
-  validateSearch: (search): { w?: string } => ({
+  validateSearch: (search): { w?: string; wm?: string } => ({
     w: typeof search.w === "string" ? search.w : undefined,
+    wm: isMonth(search.wm) ? search.wm : undefined,
   }),
   component: Shell,
 });
@@ -72,7 +75,7 @@ const appRoute = createRoute({
 const homeRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/",
-  component: () => <Placeholder title={useMessages().nav.home} />,
+  component: HomePage,
 });
 
 const transactionsRoute = createRoute({
