@@ -96,10 +96,11 @@ class RepeatingEntryTests(ScheduleApiTestCase):
             is_fixed=True,
             fixed_until="2026-12-31",
         )
-        titles = lambda month: {
-            row["title"]
-            for row in self.get("/api/ledger/transactions", month=month).json()["items"]
-        }  # noqa: E731
+
+        def titles(month):
+            rows = self.get("/api/ledger/transactions", month=month).json()["items"]
+            return {row["title"] for row in rows}
+
         self.assertIn("Curso", titles("2026-12"))
         self.assertNotIn("Curso", titles("2027-01"))
 
