@@ -174,6 +174,164 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/banking/wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read banks, accounts, balances and cards */
+        get: operations["banking_api_read_wallet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an account */
+        get: operations["banking_api_read_account"];
+        /** Change an account */
+        put: operations["banking_api_change_account"];
+        post?: never;
+        /** Delete an account */
+        delete: operations["banking_api_delete_account"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/credit-cards/{card_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a credit card */
+        get: operations["banking_api_read_credit_card"];
+        /** Change a credit card */
+        put: operations["banking_api_change_credit_card"];
+        post?: never;
+        /** Delete a credit card */
+        delete: operations["banking_api_delete_credit_card"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/debit-cards/{card_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Rename a debit card */
+        put: operations["banking_api_change_debit_card"];
+        post?: never;
+        /** Delete a debit card */
+        delete: operations["banking_api_delete_debit_card"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/invoices/{invoice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an invoice */
+        get: operations["banking_api_read_invoice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/invoices/{invoice_id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm an invoice payment */
+        post: operations["banking_api_pay_invoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/invoice-payments/{payment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Undo an invoice payment */
+        delete: operations["banking_api_undo_payment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transfer between two accounts */
+        post: operations["banking_api_transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/transfers/{transfer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Undo a transfer */
+        delete: operations["banking_api_undo_transfer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ledger/categories": {
         parameters: {
             query?: never;
@@ -374,6 +532,11 @@ export interface components {
             closing_day: number;
             /** Due Day */
             due_day: number;
+            /**
+             * Confirm Payments
+             * @default false
+             */
+            confirm_payments: boolean;
         };
         /** CardIn */
         CardIn: {
@@ -381,6 +544,291 @@ export interface components {
             account: string;
             /** Name */
             name: string;
+        };
+        /** AccountRow */
+        AccountRow: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Currency */
+            currency: string;
+            /** Balance */
+            balance: string;
+            /** Credit Cards */
+            credit_cards: components["schemas"]["CreditCardRow"][];
+            /** Debit Cards */
+            debit_cards: components["schemas"]["DebitCardRow"][];
+        };
+        /** BankRow */
+        BankRow: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Color */
+            color: string;
+            /** Accounts */
+            accounts: components["schemas"]["AccountRow"][];
+        };
+        /** CreditCardRow */
+        CreditCardRow: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Color */
+            color: string;
+            /** Closing Day */
+            closing_day: number;
+            /** Due Day */
+            due_day: number;
+            /** Confirm Payments */
+            confirm_payments: boolean;
+            next_invoice: components["schemas"]["InvoiceRow"] | null;
+        };
+        /** CurrencyTotal */
+        CurrencyTotal: {
+            /** Currency */
+            currency: string;
+            /** Balance */
+            balance: string;
+        };
+        /** DebitCardRow */
+        DebitCardRow: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** InvoiceRow */
+        InvoiceRow: {
+            /** Id */
+            id: number;
+            /**
+             * Reference Month
+             * Format: date
+             */
+            reference_month: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Amount */
+            amount: string;
+            /** Remaining */
+            remaining: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "SCHEDULED" | "PARTIAL" | "OVERDUE" | "PAID";
+            /** Confirm Payments */
+            confirm_payments: boolean;
+        };
+        /** WalletOut */
+        WalletOut: {
+            /** Banks */
+            banks: components["schemas"]["BankRow"][];
+            /** Totals */
+            totals: components["schemas"]["CurrencyTotal"][];
+        };
+        /** AccountOut */
+        AccountOut: {
+            /** Id */
+            id: number;
+            /** Bank Id */
+            bank_id: number;
+            /** Bank Name */
+            bank_name: string;
+            /** Name */
+            name: string;
+            /** Currency */
+            currency: string;
+            /** Opening Balance */
+            opening_balance: string;
+            /** Opening Date */
+            opening_date: string | null;
+            /** Balance */
+            balance: string;
+            /** Movements */
+            movements: components["schemas"]["MovementRow"][];
+        };
+        /** MovementRow */
+        MovementRow: {
+            /** Id */
+            id: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Label */
+            label: string;
+            /** Kind */
+            kind: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "CREDIT" | "DEBIT";
+            /** Amount */
+            amount: string;
+            /** Transfer Id */
+            transfer_id: number | null;
+        };
+        /** AccountChange */
+        AccountChange: {
+            /** Bank Name */
+            bank_name: string;
+            /** Name */
+            name: string;
+            /** Opening Balance */
+            opening_balance: number | string;
+            /** Opening Date */
+            opening_date?: string | null;
+        };
+        /** CreditCardOut */
+        CreditCardOut: {
+            /** Id */
+            id: number;
+            /** Account Id */
+            account_id: number;
+            /** Name */
+            name: string;
+            /** Currency */
+            currency: string;
+            /** Closing Day */
+            closing_day: number;
+            /** Due Day */
+            due_day: number;
+            /** Confirm Payments */
+            confirm_payments: boolean;
+            /** Invoices */
+            invoices: components["schemas"]["InvoiceRow"][];
+        };
+        /** CreditCardChange */
+        CreditCardChange: {
+            /** Name */
+            name: string;
+            /** Closing Day */
+            closing_day: number;
+            /** Due Day */
+            due_day: number;
+            /** Confirm Payments */
+            confirm_payments: boolean;
+        };
+        /** NameChange */
+        NameChange: {
+            /** Name */
+            name: string;
+        };
+        /** InvoiceLine */
+        InvoiceLine: {
+            /** Transaction Id */
+            transaction_id: number;
+            /** Title */
+            title: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Category */
+            category: string;
+            /** Amount */
+            amount: string;
+            /** Installments */
+            installments: number;
+        };
+        /** InvoiceOut */
+        InvoiceOut: {
+            /** Id */
+            id: number;
+            /**
+             * Reference Month
+             * Format: date
+             */
+            reference_month: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Amount */
+            amount: string;
+            /** Remaining */
+            remaining: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "SCHEDULED" | "PARTIAL" | "OVERDUE" | "PAID";
+            /** Confirm Payments */
+            confirm_payments: boolean;
+            /** Card Id */
+            card_id: number;
+            /** Card Name */
+            card_name: string;
+            /** Account Id */
+            account_id: number;
+            /** Currency */
+            currency: string;
+            /** Gross Amount */
+            gross_amount: string;
+            /** Credits Amount */
+            credits_amount: string;
+            /** Confirmed Amount */
+            confirmed_amount: string;
+            /** Lines */
+            lines: components["schemas"]["InvoiceLine"][];
+            /** Payments */
+            payments: components["schemas"]["PaymentRow"][];
+        };
+        /** PaymentRow */
+        PaymentRow: {
+            /** Id */
+            id: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Amount */
+            amount: string;
+            /** Account Id */
+            account_id: number;
+        };
+        /** PaymentIn */
+        PaymentIn: {
+            /** Account Id */
+            account_id: number;
+            /** Amount */
+            amount: number | string;
+            /** Date */
+            date?: string | null;
+            /**
+             * Confirmation Key
+             * Format: uuid
+             */
+            confirmation_key: string;
+        };
+        /** TransferIn */
+        TransferIn: {
+            /** Source Account Id */
+            source_account_id: number;
+            /** Destination Account Id */
+            destination_account_id: number;
+            /** Amount */
+            amount: number | string;
+            /** Date */
+            date?: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
         };
         /** CategoryOut */
         CategoryOut: {
@@ -754,6 +1202,318 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["InstrumentOut"];
                 };
+            };
+        };
+    };
+    banking_api_read_wallet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletOut"];
+                };
+            };
+        };
+    };
+    banking_api_read_account: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+        };
+    };
+    banking_api_change_account: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountChange"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+        };
+    };
+    banking_api_delete_account: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    banking_api_read_credit_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditCardOut"];
+                };
+            };
+        };
+    };
+    banking_api_change_credit_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreditCardChange"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditCardOut"];
+                };
+            };
+        };
+    };
+    banking_api_delete_credit_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    banking_api_change_debit_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameChange"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebitCardRow"];
+                };
+            };
+        };
+    };
+    banking_api_delete_debit_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    banking_api_read_invoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceOut"];
+                };
+            };
+        };
+    };
+    banking_api_pay_invoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceOut"];
+                };
+            };
+        };
+    };
+    banking_api_undo_payment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    banking_api_transfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferIn"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    banking_api_undo_transfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transfer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

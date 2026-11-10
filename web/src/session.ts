@@ -1,4 +1,4 @@
-import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap } from "./api/client";
 import type { components } from "./api/schema";
 
@@ -36,4 +36,9 @@ export function useSignOut() {
     // Another user must never see cached data of this one.
     onSuccess: () => queryClient.clear(),
   });
+}
+
+/** The owner's date order. "DMY" until the session is known. */
+export function useDateOrder(): "DMY" | "MDY" {
+  return useQuery(sessionQuery).data?.preferences?.date_format ?? "DMY";
 }

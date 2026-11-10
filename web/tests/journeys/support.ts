@@ -65,7 +65,7 @@ export async function apiPost<T>(page: Page, path: string, body: unknown): Promi
 }
 
 /** An account, a card and the first category of a fresh user. */
-export async function prepareWallet(page: Page) {
+export async function prepareWallet(page: Page, options: { confirmPayments?: boolean } = {}) {
   const account = await apiPost<{ id: string }>(page, "/api/banking/accounts", {
     bank_name: "Nubank",
     name: "Conta",
@@ -76,6 +76,7 @@ export async function prepareWallet(page: Page) {
     name: "Platinum",
     closing_day: 24,
     due_day: 1,
+    confirm_payments: options.confirmPayments ?? false,
   });
   const categories = await page.evaluate(async () =>
     (await fetch("/api/ledger/categories")).json(),

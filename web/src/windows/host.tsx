@@ -6,13 +6,31 @@ import { Window } from "../ui/Window";
 import { CategoriesWindow } from "./categories";
 import { AddEntry, EditEntry } from "./entry";
 import { SettingsWindow } from "./settings";
+import {
+  AccountWindow,
+  CardWindow,
+  InvoiceWindow,
+  NewAccountWindow,
+  NewCardWindow,
+  TransferWindow,
+} from "./wallet";
 
 /**
  * Windows live in the address as the search parameter `w`, on any page:
  * `/transactions?month=2026-11&w=settings`. So a window has an address, Back
  * closes it, and the page behind keeps its path, filters and scroll position.
  */
-export type WindowId = "settings" | "categories" | "add" | `transaction:${number}`;
+export type WindowId =
+  | "settings"
+  | "categories"
+  | "add"
+  | "new-account"
+  | "new-card"
+  | "transfer"
+  | `transaction:${number}`
+  | `account:${number}`
+  | `card:${number}`
+  | `invoice:${number}`;
 
 // The element that opened the current window. The window animates from it.
 let origin: HTMLElement | null = null;
@@ -75,7 +93,9 @@ export function WindowHost() {
 
   let title: string;
   let content: ReactNode;
-  const entryId = /^transaction:(\d+)$/.exec(w ?? "")?.[1];
+  // A window that shows one record is named "kind:id".
+  const [kind, idText] = (w ?? "").split(":");
+  const id = /^\d+$/.test(idText ?? "") ? Number(idText) : null;
   if (w === "settings") {
     title = t.settings.title;
     content = <SettingsWindow />;
@@ -85,9 +105,27 @@ export function WindowHost() {
   } else if (w === "add") {
     title = t.entry.add;
     content = <AddEntry onDone={close} />;
-  } else if (entryId) {
+  } else if (w === "new-account") {
+    title = t.wallet.newAccount;
+    content = <NewAccountWindow onDone={close} />;
+  } else if (w === "new-card") {
+    title = t.wallet.newCard;
+    content = <NewCardWindow onDone={close} />;
+  } else if (w === "transfer") {
+    title = t.wallet.transfer;
+    content = <TransferWindow onDone={close} />;
+  } else if (kind === "transaction" && id !== null) {
     title = t.entry.edit;
-    content = <EditEntry id={Number(entryId)} onDone={close} />;
+    content = <EditEntry id={id} onDone={close} />;
+  } else if (kind === "account" && id !== null) {
+    title = t.wallet.account;
+    content = <AccountWindow id={id} onDone={close} />;
+  } else if (kind === "card" && id !== null) {
+    title = t.wallet.card;
+    content = <CardWindow id={id} onDone={close} />;
+  } else if (kind === "invoice" && id !== null) {
+    title = t.wallet.invoice;
+    content = <InvoiceWindow id={id} />;
   } else {
     return null; // No window, or an id that this version does not know.
   }

@@ -16,6 +16,7 @@ import {
   TransactionsPage,
   validateTransactionSearch,
 } from "./routes/transactions";
+import { WalletPage } from "./routes/wallet";
 import { sessionQuery } from "./session";
 
 type RouterContext = { queryClient: QueryClient };
@@ -98,7 +99,7 @@ const transactionsRoute = createRoute({
 const walletRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/wallet",
-  component: () => <Placeholder title={useMessages().nav.wallet} />,
+  component: WalletPage,
 });
 
 const planRoute = createRoute({
