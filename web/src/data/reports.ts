@@ -7,10 +7,11 @@ export type MonthResult = components["schemas"]["MonthResult"];
 export type CategorySpending = components["schemas"]["CategorySpending"];
 export type DueRow = components["schemas"]["DueRow"];
 export type TrendRow = components["schemas"]["TrendRow"];
+export type WorthMonth = components["schemas"]["WorthMonth"];
 export type HomeBlock = components["schemas"]["PreferencesOut"]["home_blocks"][number];
 
 /** Every block that Home can show, in the default order. */
-export const HOME_BLOCKS: HomeBlock[] = ["left", "spending", "due"];
+export const HOME_BLOCKS: HomeBlock[] = ["left", "spending", "due", "worth"];
 
 export const homeQuery = queryOptions({
   queryKey: ["home", "blocks"],
@@ -25,3 +26,8 @@ export function monthQuery(month: string | undefined) {
     placeholderData: keepPreviousData,
   });
 }
+
+export const worthQuery = queryOptions({
+  queryKey: ["home", "worth"],
+  queryFn: () => unwrap(api.GET("/api/reports/net-worth")),
+});

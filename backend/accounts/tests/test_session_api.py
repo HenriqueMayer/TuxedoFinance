@@ -29,7 +29,7 @@ class ReadSessionTests(SessionApiTestCase):
             {
                 "base_currency": "BRL",
                 "date_format": "DMY",
-                "home_blocks": ["left", "spending", "due"],
+                "home_blocks": ["left", "spending", "due", "worth"],
             },
         )
 

@@ -41,3 +41,5 @@ ignore = ["E501"]
 "config/dates.py" = ["B904"]
 "ledger/statement_import.py" = ["B904"]
 "ledger/statement_parsers.py" = ["B904"]
+# The helpers inside the valuation loop are called in the same iteration only.
+"investments/positions.py" = ["B023"]

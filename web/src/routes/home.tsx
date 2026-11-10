@@ -81,6 +81,7 @@ function CaughtUp(props: { days: number | null }) {
 function Block(props: { block: HomeBlock; home: Home }) {
   if (props.block === "left") return <LeftBlock home={props.home} />;
   if (props.block === "spending") return <SpendingBlock rows={props.home.spending} />;
+  if (props.block === "worth") return <WorthBlock worth={props.home.worth} />;
   return <DueBlock rows={props.home.due} />;
 }
 
@@ -247,5 +248,34 @@ function DueBlock(props: { rows: DueRow[] }) {
         )}
       </div>
     </section>
+  );
+}
+
+/** The net worth of today and how it moved since the end of the month before. */
+function WorthBlock(props: { worth: Home["worth"] }) {
+  const t = useMessages();
+  const { worth } = props;
+  // The server gives the change; here it only loses its sign for the sentence.
+  const change = Number(worth.change);
+  const amount = formatAmount(worth.change.replace("-", ""), worth.currency);
+  return (
+    <OpenWindow w="worth" className={`${BLOCK} block transition-shadow hover:shadow-md`}>
+      <Title>{t.home.blocks.worth}</Title>
+      <span
+        className={`amount mt-2 block text-3xl font-semibold tracking-tight ${Number(worth.net_worth) < 0 ? "text-negative" : ""}`}
+      >
+        {formatAmount(worth.net_worth, worth.currency)}
+      </span>
+      <span className="mt-2 block text-sm text-muted">
+        {change === 0
+          ? t.home.worth.same
+          : change > 0
+            ? t.home.worth.more(amount)
+            : t.home.worth.less(amount)}
+      </span>
+      {!worth.complete && (
+        <span className="mt-2 block text-sm text-muted">{t.home.worth.incompleteShort}</span>
+      )}
+    </OpenWindow>
   );
 }

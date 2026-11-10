@@ -10,7 +10,14 @@ import { OpenWindow } from "./host";
 
 type Preferences = components["schemas"]["PreferencesOut"];
 
-const CURRENCIES: Preferences["base_currency"][] = ["BRL", "USD", "EUR", "GBP", "JPY", "CHF"];
+export const CURRENCIES: Preferences["base_currency"][] = [
+  "BRL",
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "CHF",
+];
 
 export function SettingsWindow() {
   const t = useMessages();

@@ -1,7 +1,15 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { HOME_BLOCKS, type HomeBlock, homeQuery, monthQuery, type TrendRow } from "../data/reports";
+import {
+  HOME_BLOCKS,
+  type HomeBlock,
+  homeQuery,
+  monthQuery,
+  type TrendRow,
+  type WorthMonth,
+  worthQuery,
+} from "../data/reports";
 import { useLanguage, useMessages } from "../i18n";
-import { monthLabel, shiftMonth } from "../lib/dates";
+import { monthLabel, shiftMonth, shortMonthLabel } from "../lib/dates";
 import { formatAmount } from "../lib/money";
 import { CategoryBars, DueRows } from "../routes/home";
 import { sessionQuery, useSavePreferences } from "../session";
@@ -144,7 +152,7 @@ function Bar(props: { amount: string; largest: number; currency: string; tone: s
       <span
         aria-hidden="true"
         className={`block h-2 rounded-full ${props.tone}`}
-        style={{ width: `${value === 0 ? 0 : Math.max(1, (value / props.largest) * 70)}%` }}
+        style={{ width: `${value <= 0 ? 0 : Math.max(1, (value / props.largest) * 70)}%` }}
       />
       <span className="amount">{formatAmount(props.amount, props.currency)}</span>
     </span>
@@ -232,5 +240,90 @@ export function HomeBlocksWindow() {
         </p>
       )}
     </div>
+  );
+}
+
+/** What the net worth is made of today, and its last twelve month ends. */
+export function WorthWindow() {
+  const t = useMessages();
+  const language = useLanguage();
+  const { data } = useSuspenseQuery(worthQuery);
+  const { today } = data;
+  const money = (amount: string) => formatAmount(amount, today.currency);
+  const parts = [
+    { label: t.home.worth.accounts, amount: today.accounts, sign: "" },
+    { label: t.home.worth.investments, amount: today.investments, sign: "" },
+    { label: t.home.worth.credits, amount: today.card_credits, sign: "" },
+    { label: t.home.worth.debt, amount: today.card_debt, sign: "−", help: t.home.worth.debtHelp },
+  ].filter((part) => part.label !== t.home.worth.credits || Number(part.amount) !== 0);
+  return (
+    <div className="grid gap-6">
+      <div>
+        <p className="text-sm text-muted">{t.home.blocks.worth}</p>
+        <p
+          className={`amount text-3xl font-semibold ${Number(today.net_worth) < 0 ? "text-negative" : ""}`}
+        >
+          {money(today.net_worth)}
+        </p>
+      </div>
+      <dl className="divide-y divide-line border-y border-line">
+        {parts.map((part) => (
+          <div key={part.label} className="flex items-baseline justify-between gap-4 py-2.5">
+            <dt>
+              {part.label}
+              {part.help && <span className="block text-sm text-muted">{part.help}</span>}
+            </dt>
+            <dd className="amount font-semibold">
+              {Number(part.amount) !== 0 && part.sign}
+              {money(part.amount)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {!today.complete && (
+        <p className="text-sm text-muted">
+          {t.home.worth.incomplete(today.missing_currencies.join(", "))}
+        </p>
+      )}
+      <section>
+        <h3 className="border-b border-line pb-2 text-sm font-medium text-muted">
+          {t.home.worth.trend}
+        </h3>
+        <WorthTrend rows={data.months} currency={today.currency} language={language} />
+      </section>
+    </div>
+  );
+}
+
+/** The net worth of each month end as a table with bars. Each value is text. */
+function WorthTrend(props: { rows: WorthMonth[]; currency: string; language: string }) {
+  const t = useMessages();
+  const largest = Math.max(...props.rows.map((row) => Number(row.net_worth)), 1);
+  return (
+    <table className="mt-2 w-full text-sm">
+      <thead className="sr-only">
+        <tr>
+          <th>{t.home.monthTitle}</th>
+          <th>{t.home.blocks.worth}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {props.rows.map((row) => (
+          <tr key={row.month} className="border-b border-line last:border-0">
+            <th scope="row" className="w-20 py-2 pr-3 text-left font-normal text-muted">
+              {shortMonthLabel(row.month.slice(0, 7), props.language)}
+            </th>
+            <td className={`py-2 ${Number(row.net_worth) < 0 ? "text-negative" : ""}`}>
+              <Bar
+                amount={row.net_worth}
+                largest={largest}
+                currency={props.currency}
+                tone="bg-ink"
+              />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

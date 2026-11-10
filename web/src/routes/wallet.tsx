@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { type Position, positionsQuery } from "../data/investments";
 import { type AccountRow, type CreditCardRow, type InvoiceRow, walletQuery } from "../data/wallet";
-import { useMessages } from "../i18n";
+import { useLanguage, useMessages } from "../i18n";
 import type { Messages } from "../i18n/en";
 import { formatDate } from "../lib/dates";
-import { formatAmount } from "../lib/money";
+import { formatAmount, formatQuantity } from "../lib/money";
 import { useDateOrder } from "../session";
 import { OpenWindow } from "../windows/host";
 
@@ -79,7 +80,82 @@ export function WalletPage() {
           ))}
         </>
       )}
+      {data && <Investments />}
     </>
+  );
+}
+
+/** The investments of the owner, after the accounts. Each one opens its window. */
+function Investments() {
+  const t = useMessages();
+  const { data } = useQuery(positionsQuery);
+  if (!data) return null;
+  const active = data.positions.filter((position) => !position.is_archived);
+  const archived = data.positions.filter((position) => position.is_archived);
+  return (
+    <section className="mt-10">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-2">
+        <h2 className="font-medium">{t.invest.title}</h2>
+        {data.positions.length > 0 && (
+          <p className="text-sm">
+            <span className="text-muted">{t.invest.total} </span>
+            <span className="amount font-semibold">{formatAmount(data.total, data.currency)}</span>
+          </p>
+        )}
+      </div>
+      {!data.complete && (
+        <p className="mt-3 text-sm text-muted">
+          {t.home.worth.incomplete(data.missing_currencies.join(", "))}
+        </p>
+      )}
+      <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {active.map((position) => (
+          <li key={position.id}>
+            <Investment position={position} />
+          </li>
+        ))}
+        <li>
+          <OpenWindow
+            w="new-investment"
+            className="flex h-full min-h-24 items-center justify-center rounded-(--radius-window) border border-dashed border-control p-4 font-medium hover:bg-surface"
+          >
+            {t.invest.new}
+          </OpenWindow>
+        </li>
+      </ul>
+      {archived.length > 0 && (
+        <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <span className="text-muted">{t.invest.archived}</span>
+          {archived.map((position) => (
+            <OpenWindow key={position.id} w={`investment:${position.id}`} className="link">
+              {position.name}
+            </OpenWindow>
+          ))}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Investment(props: { position: Position }) {
+  const t = useMessages();
+  const language = useLanguage();
+  const { position } = props;
+  const units = position.valuation_mode === "UNITS";
+  return (
+    <OpenWindow w={`investment:${position.id}`} className={CARD}>
+      <span className="block truncate text-sm text-muted">{position.institution_name}</span>
+      <span className="block truncate font-medium">{position.name}</span>
+      <span className="amount mt-3 block text-xl font-semibold">
+        {formatAmount(position.value, position.currency)}
+      </span>
+      {units && (
+        <span className="mt-1 block truncate text-sm text-muted">
+          {t.invest.units(formatQuantity(position.quantity ?? "0", language))}
+          {!position.has_price && ` · ${t.invest.noPriceShort}`}
+        </span>
+      )}
+    </OpenWindow>
   );
 }
 

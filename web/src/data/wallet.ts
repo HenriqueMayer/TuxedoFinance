@@ -43,7 +43,7 @@ export function invoiceQuery(id: number) {
 }
 
 /** A Wallet change can alter balances, the instruments of an entry and the rows that name them. */
-function useWalletChanged() {
+export function useWalletChanged() {
   const queryClient = useQueryClient();
   return () =>
     Promise.all(

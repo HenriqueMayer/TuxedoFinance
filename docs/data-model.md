@@ -75,6 +75,48 @@ Rules:
   the months that the owner confirmed (`ledger.commitments`).
 - A category with records is not deleted.
 
+## Investments
+
+| Record | Meaning |
+|---|---|
+| `InvestmentProduct` | A named product at a bank. It holds positions |
+| `Asset` | What is held: its currency, how it is valued, and the opening position |
+| `Investment` | One operation: a deposit, a withdrawal or a yield |
+| `PriceObservation` | A unit price that the owner recorded for a date |
+| `PositionPlanningSetting` | Whether a cash position counts in the plan. Used when Plan is built |
+
+Rules:
+
+- A **position** is one asset in one product. The API creates both together
+  (`investments.operations.create_position`), so the asset identifies the
+  position and `asset.opening_product` is its product.
+- An asset is valued as a *monetary* balance or in *units* with a price.
+- The **position replay** (`investments.positions.replay_positions`) reads
+  the opening position and the operations in date order and gives the
+  quantity, the remaining cost and the realized gain. Every reader of
+  positions uses it. A write is refused when the replay finds a withdrawal of
+  more than the position holds, on any later date too.
+- A deposit from an account and a withdrawal to an account each own one
+  account movement (`investments.services.sync_investment_ledger`). A yield
+  moves no money.
+- The value of units is the quantity times the last price recorded on or
+  before the date. Without a price, the value is the remaining cost.
+- A monetary yield can be given as the balance after it; the yield is the
+  difference from the balance before (`calculate_monetary_yield`).
+- An asset with an opening position is not deleted by the ORM
+  (`investments.signals`). `delete_position` removes a position that has no
+  operation.
+- An operation keeps the exchange rate of its date for totals in the base
+  currency (`refresh_fx_snapshot`).
+
+## Net worth
+
+`reports.worth` reads the net worth on a date: account balances plus the
+valuation of the positions, less the incurred card debt. The module docstring
+defines incurred and paid amounts. Each amount is converted to the base
+currency with the rate of that date; an amount without a rate adds nothing
+and its currency is listed.
+
 ## Preferences
 
 `accounts.UserPreference` holds the currency of totals, the date order and

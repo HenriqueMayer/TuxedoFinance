@@ -496,6 +496,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/investments/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the investments and their total */
+        get: operations["investments_api_list_positions"];
+        put?: never;
+        /** Create an investment */
+        post: operations["investments_api_create_position"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/investments/positions/{position_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an investment */
+        get: operations["investments_api_read_position"];
+        /** Rename or archive an investment */
+        put: operations["investments_api_update_position"];
+        post?: never;
+        /** Delete an investment that has no operation */
+        delete: operations["investments_api_delete_position"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/investments/positions/{position_id}/value": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record what an investment is worth today */
+        post: operations["investments_api_set_value"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/investments/positions/{position_id}/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a deposit, a withdrawal or a yield */
+        post: operations["investments_api_record_operation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/investments/operations/{operation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an operation of an investment */
+        delete: operations["investments_api_delete_operation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/home": {
         parameters: {
             query?: never;
@@ -530,6 +618,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/net-worth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the net worth and its last twelve months */
+        get: operations["reports_api_read_net_worth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -547,7 +652,7 @@ export interface components {
              */
             date_format: "DMY" | "MDY";
             /** Home Blocks */
-            home_blocks: ("left" | "spending" | "due")[];
+            home_blocks: ("left" | "spending" | "due" | "worth")[];
         };
         /** SessionOut */
         SessionOut: {
@@ -586,7 +691,7 @@ export interface components {
             /** Date Format */
             date_format?: ("DMY" | "MDY") | null;
             /** Home Blocks */
-            home_blocks?: ("left" | "spending" | "due")[] | null;
+            home_blocks?: ("left" | "spending" | "due" | "worth")[] | null;
         };
         /** InstrumentOut */
         InstrumentOut: {
@@ -1169,6 +1274,226 @@ export interface components {
             /** Amount */
             amount: number | string;
         };
+        /** OverviewOut */
+        OverviewOut: {
+            /** Positions */
+            positions: components["schemas"]["PositionOut"][];
+            /** Currency */
+            currency: string;
+            /** Total */
+            total: string;
+            /** Complete */
+            complete: boolean;
+            /** Missing Currencies */
+            missing_currencies: string[];
+        };
+        /** PositionOut */
+        PositionOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Institution Id */
+            institution_id: number;
+            /** Institution Name */
+            institution_name: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Valuation Mode
+             * @enum {string}
+             */
+            valuation_mode: "MONETARY" | "UNITS";
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "INVESTMENT" | "MONTHLY_CASH";
+            /** Is Archived */
+            is_archived: boolean;
+            /** Value */
+            value: string;
+            /** Base Value */
+            base_value: string | null;
+            /** Quantity */
+            quantity: string | null;
+            /** Cost */
+            cost: string;
+            /** Gain */
+            gain: string | null;
+            /** Yields */
+            yields: string;
+            /** Unit Price */
+            unit_price: string | null;
+            /** Price Date */
+            price_date: string | null;
+            /** Has Price */
+            has_price: boolean;
+        };
+        /** Created */
+        Created: {
+            /** Id */
+            id: number;
+        };
+        /** PositionIn */
+        PositionIn: {
+            /** Name */
+            name: string;
+            /** Institution Id */
+            institution_id?: number | null;
+            /**
+             * Institution Name
+             * @default
+             */
+            institution_name: string;
+            /**
+             * Currency
+             * @default BRL
+             * @enum {string}
+             */
+            currency: "BRL" | "USD" | "EUR" | "GBP" | "JPY" | "CHF";
+            /**
+             * Valuation Mode
+             * @default MONETARY
+             * @enum {string}
+             */
+            valuation_mode: "MONETARY" | "UNITS";
+            /**
+             * Opening Balance
+             * @default 0
+             */
+            opening_balance: number | string;
+            /**
+             * Opening Quantity
+             * @default 0
+             */
+            opening_quantity: number | string;
+            /**
+             * Opening Unit Price
+             * @default 0
+             */
+            opening_unit_price: number | string;
+            /** Opening Date */
+            opening_date?: string | null;
+        };
+        /** OpeningOut */
+        OpeningOut: {
+            /** Date */
+            date: string | null;
+            /** Value */
+            value: string;
+            /** Quantity */
+            quantity: string | null;
+        };
+        /** OperationOut */
+        OperationOut: {
+            /** Id */
+            id: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "DEPOSIT" | "WITHDRAWAL" | "YIELD";
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Value */
+            value: string;
+            /** Quantity */
+            quantity: string | null;
+            /** Unit Price */
+            unit_price: string | null;
+            /** Account Name */
+            account_name: string;
+        };
+        /** PositionDetailOut */
+        PositionDetailOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Institution Id */
+            institution_id: number;
+            /** Institution Name */
+            institution_name: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Valuation Mode
+             * @enum {string}
+             */
+            valuation_mode: "MONETARY" | "UNITS";
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "INVESTMENT" | "MONTHLY_CASH";
+            /** Is Archived */
+            is_archived: boolean;
+            /** Value */
+            value: string;
+            /** Base Value */
+            base_value: string | null;
+            /** Quantity */
+            quantity: string | null;
+            /** Cost */
+            cost: string;
+            /** Gain */
+            gain: string | null;
+            /** Yields */
+            yields: string;
+            /** Unit Price */
+            unit_price: string | null;
+            /** Price Date */
+            price_date: string | null;
+            /** Has Price */
+            has_price: boolean;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            opening: components["schemas"]["OpeningOut"] | null;
+            /** Operations */
+            operations: components["schemas"]["OperationOut"][];
+        };
+        /** PositionEdit */
+        PositionEdit: {
+            /** Name */
+            name: string;
+            /**
+             * Is Archived
+             * @default false
+             */
+            is_archived: boolean;
+        };
+        /** ValueIn */
+        ValueIn: {
+            /** Value */
+            value: number | string;
+        };
+        /** OperationIn */
+        OperationIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "DEPOSIT" | "WITHDRAWAL" | "YIELD";
+            /** Date */
+            date?: string | null;
+            /** Account Id */
+            account_id?: number | null;
+            /** Amount */
+            amount?: number | string | null;
+            /** Quantity */
+            quantity?: number | string | null;
+            /** Unit Price */
+            unit_price?: number | string | null;
+            /** Cash Amount */
+            cash_amount?: number | string | null;
+        };
         /** CategoryPart */
         CategoryPart: {
             /** Category Id */
@@ -1237,6 +1562,7 @@ export interface components {
             spending: components["schemas"]["CategorySpending"][];
             /** Due */
             due: components["schemas"]["DueRow"][];
+            worth: components["schemas"]["WorthSummary"];
             /** Days Since Last Entry */
             days_since_last_entry: number | null;
         };
@@ -1252,6 +1578,19 @@ export interface components {
             left: string;
             /** Previous Expenses */
             previous_expenses: string;
+        };
+        /** WorthSummary */
+        WorthSummary: {
+            /** Currency */
+            currency: string;
+            /** Net Worth */
+            net_worth: string;
+            /** Previous */
+            previous: string;
+            /** Change */
+            change: string;
+            /** Complete */
+            complete: boolean;
         };
         /** MonthOut */
         MonthOut: {
@@ -1280,6 +1619,54 @@ export interface components {
             income: string;
             /** Expenses */
             expenses: string;
+        };
+        /** WorthMonth */
+        WorthMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Accounts */
+            accounts: string;
+            /** Investments */
+            investments: string;
+            /** Card Debt */
+            card_debt: string;
+            /** Net Worth */
+            net_worth: string;
+            /** Complete */
+            complete: boolean;
+        };
+        /** WorthOut */
+        WorthOut: {
+            today: components["schemas"]["WorthPoint"];
+            /** Months */
+            months: components["schemas"]["WorthMonth"][];
+        };
+        /** WorthPoint */
+        WorthPoint: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Currency */
+            currency: string;
+            /** Accounts */
+            accounts: string;
+            /** Investments */
+            investments: string;
+            /** Card Debt */
+            card_debt: string;
+            /** Card Credits */
+            card_credits: string;
+            /** Net Worth */
+            net_worth: string;
+            /** Complete */
+            complete: boolean;
+            /** Missing Currencies */
+            missing_currencies: string[];
         };
     };
     responses: never;
@@ -2149,6 +2536,190 @@ export interface operations {
             };
         };
     };
+    investments_api_list_positions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverviewOut"];
+                };
+            };
+        };
+    };
+    investments_api_create_position: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PositionIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    investments_api_read_position: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionDetailOut"];
+                };
+            };
+        };
+    };
+    investments_api_update_position: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PositionEdit"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    investments_api_delete_position: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    investments_api_set_value: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValueIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    investments_api_record_operation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    investments_api_delete_operation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     reports_api_read_home: {
         parameters: {
             query?: never;
@@ -2187,6 +2758,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MonthOut"];
+                };
+            };
+        };
+    };
+    reports_api_read_net_worth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorthOut"];
                 };
             };
         };

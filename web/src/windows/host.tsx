@@ -5,7 +5,8 @@ import { Boundary } from "../ui/Boundary";
 import { Window } from "../ui/Window";
 import { CategoriesWindow } from "./categories";
 import { AddEntry, EditEntry } from "./entry";
-import { DueWindow, HomeBlocksWindow, MonthWindow } from "./home";
+import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
+import { InvestmentWindow, NewInvestmentWindow } from "./investment";
 import { ScheduleWindow } from "./schedule";
 import { SettingsWindow } from "./settings";
 import {
@@ -29,6 +30,8 @@ export type WindowId =
   | "new-account"
   | "new-card"
   | "transfer"
+  | "new-investment"
+  | "worth"
   | "month"
   | "due"
   | "home-blocks"
@@ -36,6 +39,7 @@ export type WindowId =
   | `account:${number}`
   | `card:${number}`
   | `invoice:${number}`
+  | `investment:${number}`
   | `schedule:${number}`;
 
 // The element that opened the current window. The window animates from it.
@@ -145,6 +149,15 @@ export function WindowHost() {
   } else if (w === "transfer") {
     title = t.wallet.transfer;
     content = <TransferWindow onDone={close} />;
+  } else if (w === "new-investment") {
+    title = t.invest.new;
+    content = <NewInvestmentWindow onDone={close} />;
+  } else if (w === "worth") {
+    title = t.home.blocks.worth;
+    content = <WorthWindow />;
+  } else if (kind === "investment" && id !== null) {
+    title = t.invest.investment;
+    content = <InvestmentWindow id={id} onDone={close} />;
   } else if (kind === "transaction" && id !== null) {
     title = t.entry.edit;
     content = <EditEntry id={id} onDone={close} />;

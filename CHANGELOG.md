@@ -17,17 +17,22 @@ and no upgrade from 1.x.
 - Add entry on every screen, with the key N. A known description fills the
   category and the account or card.
 - Home with blocks that the owner shows, hides and orders: Left to spend,
-  Where the money went, Due soon.
+  Where the money went, Due soon, Net worth.
 - A line on Home that says whether the records are up to date.
 - A monthly schedule for a repeating entry: confirm, skip or restore a month,
   and change the amount from a month.
 - One settlement setting for each credit card: the owner confirms each
   invoice payment, or the invoice is paid from the account on its due date.
 
+- Investments in the Wallet: a balance or units with a price, deposits and
+  withdrawals with an account, and one field for the value of today.
+- Net worth: accounts and investments less the card debt, with the last
+  twelve month ends.
+
 ### Not built yet
 
-Investments and net worth, Plan (limit, budgets, goals, sheet), loyalty
-points, accounts in other currencies, statement import and the public site.
+Plan (limit, budgets, goals, sheet), loyalty points, accounts in other
+currencies, statement import and the public site.
 
 ### Removed
 

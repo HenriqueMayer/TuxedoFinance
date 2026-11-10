@@ -1,5 +1,12 @@
 import { expect, test } from "vitest";
-import { editableAmount, formatAmount, parseAmount } from "./money";
+import {
+  editableAmount,
+  editableDecimal,
+  formatAmount,
+  formatQuantity,
+  parseAmount,
+  parseDecimal,
+} from "./money";
 
 test.each([
   ["12", "12.00"],
@@ -49,4 +56,23 @@ test("a stored amount is offered for editing with the separator of its currency"
   expect(editableAmount("1234.50", "BRL")).toBe("1234,50");
   expect(editableAmount("1234.50", "USD")).toBe("1234.50");
   expect(parseAmount(editableAmount("1234.50", "BRL"), "BRL")).toBe("1234.50");
+});
+
+test("a quantity or a unit price has up to eight decimals after a comma or a dot", () => {
+  expect(parseDecimal("2")).toBe("2");
+  expect(parseDecimal("0,00012345")).toBe("0.00012345");
+  expect(parseDecimal(" 1.234 ")).toBe("1.234");
+  expect(parseDecimal("1.234,5")).toBeNull();
+  expect(parseDecimal("0.123456789")).toBeNull();
+  expect(parseDecimal("0")).toBeNull();
+  expect(parseDecimal("-1")).toBeNull();
+  expect(parseDecimal("abc")).toBeNull();
+});
+
+test("a stored quantity is offered for editing without trailing zeros", () => {
+  expect(editableDecimal("150.50000000", "BRL")).toBe("150,5");
+  expect(editableDecimal("2.00000000", "USD")).toBe("2");
+  expect(editableDecimal("100", "BRL")).toBe("100");
+  expect(parseDecimal(editableDecimal("0.00012345", "BRL"))).toBe("0.00012345");
+  expect(formatQuantity("2.50000000", "en")).toBe("2.5");
 });

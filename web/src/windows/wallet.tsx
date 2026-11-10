@@ -27,7 +27,7 @@ import { Segmented } from "../ui/Segmented";
 import { autofocus } from "../ui/Window";
 import { OpenWindow } from "./host";
 
-function values(event: FormEvent<HTMLFormElement>) {
+export function values(event: FormEvent<HTMLFormElement>) {
   event.preventDefault();
   return Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>;
 }
@@ -41,7 +41,7 @@ function parseBalance(text: string, currency: string): string | null {
   return parsed === null ? null : `${negative ? "-" : ""}${parsed}`;
 }
 
-function Alert(props: { message?: string }) {
+export function Alert(props: { message?: string }) {
   if (!props.message) return null;
   return (
     <p role="alert" className="text-sm text-negative">
@@ -51,7 +51,7 @@ function Alert(props: { message?: string }) {
 }
 
 /** A button that asks before it acts: the first press asks, the second one acts. */
-function ConfirmButton(props: { label: string; pending: boolean; onConfirm: () => void }) {
+export function ConfirmButton(props: { label: string; pending: boolean; onConfirm: () => void }) {
   const t = useMessages();
   const [asked, setAsked] = useState(false);
   return (
@@ -363,7 +363,7 @@ function CardFields(props: {
   );
 }
 
-function AccountSelect(props: {
+export function AccountSelect(props: {
   label: string;
   name: string;
   accounts: Instrument[];

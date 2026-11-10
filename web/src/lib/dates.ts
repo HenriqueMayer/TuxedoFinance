@@ -33,6 +33,16 @@ export function monthLabel(month: string, language: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+/** "Nov 26" in the interface language, for a row of a series that spans two years. */
+export function shortMonthLabel(month: string, language: string): string {
+  const [year = 0, number = 1] = month.split("-").map(Number);
+  const label = new Intl.DateTimeFormat(language, { month: "short", year: "2-digit" })
+    .format(new Date(year, number - 1, 1))
+    .replace(". de ", "/")
+    .replace(/\.$/, "");
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 /** A date in the owner's preferred order: "10/11/2026" or "11/10/2026". */
 export function formatDate(iso: string, order: "DMY" | "MDY"): string {
   const [year, month, day] = iso.split("-");

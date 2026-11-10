@@ -86,3 +86,26 @@ export function parseAmount(text: string, currency: string): string | null {
 export function editableAmount(amount: string, currency: string): string {
   return usesDecimalComma(currency) ? amount.replace(".", ",") : amount;
 }
+
+/**
+ * Read a typed quantity or unit price: a positive number with at most eight
+ * decimals. A comma or a dot is the decimal separator; there is no thousands
+ * separator, so "1.234" is one and a fraction.
+ */
+export function parseDecimal(text: string): string | null {
+  const typed = text.trim();
+  if (!/^\d+([.,]\d{1,8})?$/.test(typed)) return null;
+  const value = typed.replace(",", ".");
+  return Number(value) > 0 ? value : null;
+}
+
+/** Show a stored quantity or unit price the way the owner types it: no trailing zeros. */
+export function editableDecimal(value: string, currency: string): string {
+  const trimmed = value.includes(".") ? value.replace(/0+$/, "").replace(/\.$/, "") : value;
+  return usesDecimalComma(currency) ? trimmed.replace(".", ",") : trimmed;
+}
+
+/** Show a quantity in the interface language, with the decimals that it has. */
+export function formatQuantity(value: string, language: string): string {
+  return Number(value).toLocaleString(language, { maximumFractionDigits: 8 });
+}
