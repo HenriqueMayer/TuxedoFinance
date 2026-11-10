@@ -147,3 +147,69 @@ export function useGrowth() {
     mutationFn: (body: Schemas["GrowthIn"]) => unwrap(api.POST("/api/plan/tools/growth", { body })),
   });
 }
+
+// The closing of a month
+
+export type Closing = Schemas["ClosingOut"];
+export type ClosingAccount = Schemas["ClosingAccount"];
+
+/** The closing review of a month ("YYYY-MM"), or of the month that waits for it. */
+export function closingQuery(month?: string) {
+  return queryOptions({
+    queryKey: ["home", "plan", "closing", month ?? "next"],
+    queryFn: () => unwrap(api.GET("/api/plan/closing", { params: { query: { month } } })),
+  });
+}
+
+/** A closing change can alter a balance, the limit and what Home asks for. */
+function useClosingChanged() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all(
+      ["home", "wallet"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+    );
+}
+
+export function useClosingBalance() {
+  const changed = useClosingChanged();
+  return useMutation({
+    mutationFn: (body: Schemas["ClosingBalanceIn"]) =>
+      unwrap(api.PUT("/api/plan/closing/balances", { body })),
+    onSuccess: changed,
+  });
+}
+
+export function useClosingAdjust() {
+  const changed = useClosingChanged();
+  return useMutation({
+    mutationFn: (body: Schemas["ClosingAdjustIn"]) =>
+      unwrap(api.POST("/api/plan/closing/adjustments", { body })),
+    onSuccess: changed,
+  });
+}
+
+export function useClosingUnadjust() {
+  const changed = useClosingChanged();
+  return useMutation({
+    mutationFn: (body: Schemas["ClosingAccountIn"]) =>
+      unwrap(api.DELETE("/api/plan/closing/adjustments", { body })),
+    onSuccess: changed,
+  });
+}
+
+export function useCloseMonth() {
+  const changed = useClosingChanged();
+  return useMutation({
+    mutationFn: (body: Schemas["CloseIn"]) => unwrap(api.POST("/api/plan/closing", { body })),
+    onSuccess: changed,
+  });
+}
+
+export function useReopenMonth() {
+  const changed = useClosingChanged();
+  return useMutation({
+    mutationFn: (body: Schemas["ClosingMonth"]) =>
+      unwrap(api.DELETE("/api/plan/closing", { body })),
+    onSuccess: changed,
+  });
+}

@@ -43,10 +43,12 @@ and no upgrade from 1.x.
   all at once, undo.
 - Points and miles in the Wallet: points earned, used and expired, and a
   redemption for money in an account.
+- Month closing: compare each account with the bank, see the result of the
+  month and set the next limit. Home asks for it once a month.
 
 ### Not built yet
 
-The month closing and the public site.
+The public site.
 
 ### Removed
 

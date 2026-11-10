@@ -21,8 +21,9 @@ from config.validation import renamed
 from ledger.categories import Category
 from ledger.consultation import requested_billed_month
 from ledger.services import ensure_ledger_current
-from planning import goals, limits, sheet, tools
+from planning import closing, goals, limits, sheet, tools
 from planning.models import FinancialGoal, SavedSheet
+from reports.api import CategorySpending, DueRow
 
 router = Router()
 
@@ -438,3 +439,140 @@ def calculate_salary(request, payload: SalaryIn):
 @router.post("/tools/growth", response=GrowthOut, summary="Calculate a balance that grows")
 def calculate_growth(request, payload: GrowthIn):
     return tools.growth(**payload.model_dump())
+
+
+# The closing of a month
+
+
+class ClosingAccount(Schema):
+    account_id: int
+    name: str
+    currency: str
+    #: The day of the comparison: the last day of the month, or today.
+    date: dt.date
+    #: The balance of the records on that day.
+    tracked: Decimal
+    #: The balance that the owner read at the bank. Null until typed.
+    statement: Decimal | None
+    #: ``statement`` minus ``tracked``.
+    difference: Decimal | None
+    #: An adjustment movement removed the difference.
+    adjusted: bool
+
+
+class ClosingResult(Schema):
+    income: Decimal
+    expenses: Decimal
+    result: Decimal
+    limit: Decimal | None
+    left: Decimal | None
+
+
+class ClosingWorth(Schema):
+    net_worth: Decimal
+    #: The change since the end of the month before.
+    change: Decimal
+    complete: bool
+
+
+class NextLimit(Schema):
+    month: dt.date
+    amount: Decimal | None
+
+
+class ClosingOut(Schema):
+    month: dt.date
+    currency: str
+    is_closed: bool
+    closed_on: dt.date | None
+    #: The income or the expenses changed after the closing.
+    changed_since: bool
+    accounts: list[ClosingAccount]
+    #: Overdue invoices and months that wait for confirmation, up to the day of the comparison.
+    open_items: list[DueRow]
+    result: ClosingResult
+    spending: list[CategorySpending]
+    worth: ClosingWorth
+    next_limit: NextLimit
+
+
+class ClosingMonth(Schema):
+    #: The first day of the month.
+    month: dt.date
+
+
+class ClosingBalanceIn(ClosingMonth):
+    account_id: int
+    #: Null removes the check.
+    balance: Decimal | None = None
+
+
+class ClosingAdjustIn(ClosingMonth):
+    account_id: int
+    #: The difference that the owner saw. Another value is refused.
+    difference: Decimal
+
+
+class ClosingAccountIn(ClosingMonth):
+    account_id: int
+
+
+class CloseIn(ClosingMonth):
+    #: A new limit from the month after. Null keeps the limit.
+    next_limit: Decimal | None = None
+
+
+def _closing(user, month):
+    return closing.review(user, month, clock.today())
+
+
+@router.get("/closing", response=ClosingOut, summary="Read the closing review of a month")
+def read_closing(request, month: str = ""):
+    requested = requested_billed_month(month.strip())
+    chosen = (
+        dt.date(*requested, 1) if requested else closing.default_month(request.user, clock.today())
+    )
+    return _closing(request.user, chosen)
+
+
+@router.put(
+    "/closing/balances", response=ClosingOut, summary="Record the bank balance of an account"
+)
+def set_closing_balance(request, payload: ClosingBalanceIn):
+    user = request.user
+    account = closing.owned_account(user, payload.account_id)
+    closing.set_balance(user, payload.month, account, payload.balance, clock.today())
+    return _closing(user, payload.month)
+
+
+@router.post(
+    "/closing/adjustments",
+    response=ClosingOut,
+    summary="Adjust the recorded balance to the bank balance",
+)
+def adjust_closing_balance(request, payload: ClosingAdjustIn):
+    user = request.user
+    account = closing.owned_account(user, payload.account_id)
+    ensure_ledger_current(user)
+    closing.adjust(user, payload.month, account, payload.difference, clock.today())
+    return _closing(user, payload.month)
+
+
+@router.delete("/closing/adjustments", response=ClosingOut, summary="Remove a balance adjustment")
+def remove_closing_adjustment(request, payload: ClosingAccountIn):
+    user = request.user
+    account = closing.owned_account(user, payload.account_id)
+    closing.remove_adjustment(user, payload.month, account, clock.today())
+    return _closing(user, payload.month)
+
+
+@router.post("/closing", response=ClosingOut, summary="Close a month")
+def close_month(request, payload: CloseIn):
+    closing.close(request.user, payload.month, clock.today(), next_limit=payload.next_limit)
+    return _closing(request.user, payload.month)
+
+
+@router.delete("/closing", response=ClosingOut, summary="Reopen a closed month")
+def reopen_month(request, payload: ClosingMonth):
+    closing.reopen(request.user, payload.month)
+    return _closing(request.user, payload.month)

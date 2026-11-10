@@ -186,3 +186,31 @@ class SavedSheet(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class MonthClosing(models.Model):
+    """A month that the owner reviewed and closed.
+
+    ``income`` and ``expenses`` are the totals that the owner saw, in
+    ``currency``. A later difference shows that the month changed since. The
+    record locks nothing.
+    """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    month = models.DateField()
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default=DEFAULT_CURRENCY)
+    income = models.DecimalField(max_digits=16, decimal_places=2)
+    expenses = models.DecimalField(max_digits=16, decimal_places=2)
+    closed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-month"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "month"], name="planning_one_closing_a_month"),
+            models.CheckConstraint(
+                condition=models.Q(month__day=1), name="planning_closing_first_day"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.month:%Y-%m}"

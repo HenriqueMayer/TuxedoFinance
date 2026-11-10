@@ -6,6 +6,7 @@ import {
   formatQuantity,
   parseAmount,
   parseDecimal,
+  sameAmount,
 } from "./money";
 
 test.each([
@@ -75,4 +76,12 @@ test("a stored quantity is offered for editing without trailing zeros", () => {
   expect(editableDecimal("100", "BRL")).toBe("100");
   expect(parseDecimal(editableDecimal("0.00012345", "BRL"))).toBe("0.00012345");
   expect(formatQuantity("2.50000000", "en")).toBe("2.5");
+});
+
+test("a typed amount equals a stored one when only the decimals are written differently", () => {
+  expect(sameAmount("2500.00", "2500.00")).toBe(true);
+  expect(sameAmount("0", "0.00")).toBe(true);
+  expect(sameAmount("-20.5", "-20.50")).toBe(true);
+  expect(sameAmount("2500.00", "2500.01")).toBe(false);
+  expect(sameAmount("2500.00", null)).toBe(false);
 });

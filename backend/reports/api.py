@@ -8,7 +8,7 @@ from ninja import Router, Schema
 
 from config import clock
 from ledger.consultation import requested_billed_month
-from planning import goals, limits
+from planning import closing, goals, limits
 from reports import home, worth
 
 router = Router()
@@ -85,8 +85,18 @@ class HomeGoal(Schema):
     monthly_needed: Decimal | None
 
 
+class HomeClosing(Schema):
+    """The month before the current one, while it waits for the owner."""
+
+    month: dt.date
+    #: False: the month is not closed. True: it is closed and its entries changed since.
+    changed: bool
+
+
 class HomeOut(Schema):
     month: dt.date
+    #: Null when no month waits for its closing.
+    closing: HomeClosing | None
     result: list[MonthResult]
     #: Null when the owner set no limit for the month.
     limit: HomeLimit | None
@@ -161,6 +171,7 @@ def read_home(request):
             **{name: plan[name] for name in ("currency", "expenses", "income", "left", "per_day")},
         },
         "goals": goals.home_goals(request.user, clock.today()),
+        "closing": closing.pending(request.user, clock.today()),
         "spending": home.spending_by_category(request.user, month),
         "due": home.due_soon(request.user, clock.today()),
         "worth": worth.summary(request.user, clock.today()),

@@ -4,6 +4,7 @@ import { useMessages } from "../i18n";
 import { Boundary } from "../ui/Boundary";
 import { Window } from "../ui/Window";
 import { CategoriesWindow } from "./categories";
+import { ClosingWindow } from "./closing";
 import { AddEntry, EditEntry } from "./entry";
 import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
 import { ImportStartWindow, ImportWindow } from "./imports";
@@ -33,6 +34,7 @@ export type WindowId =
   | "settings"
   | "categories"
   | "rates"
+  | "closing"
   | "import"
   | `import:${number}`
   | "add"
@@ -138,6 +140,9 @@ export function WindowHost() {
   } else if (w === "rates") {
     title = t.rates.title;
     content = <RatesWindow />;
+  } else if (w === "closing") {
+    title = t.closing.title;
+    content = <ClosingWindow />;
   } else if (w === "import") {
     title = t.imports.title;
     content = <ImportStartWindow />;

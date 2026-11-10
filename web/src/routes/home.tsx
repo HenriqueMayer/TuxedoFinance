@@ -8,7 +8,7 @@ import {
   homeQuery,
 } from "../data/reports";
 import { useLanguage, useMessages } from "../i18n";
-import { formatDate } from "../lib/dates";
+import { formatDate, monthLabel, monthOf } from "../lib/dates";
 import { formatAmount } from "../lib/money";
 import { sessionQuery, useDateOrder } from "../session";
 import { Meter } from "../ui/Meter";
@@ -43,6 +43,7 @@ export function HomePage() {
         </div>
       )}
       {home.data && <CaughtUp days={home.data.days_since_last_entry} />}
+      {home.data?.closing && <ClosingPrompt closing={home.data.closing} />}
       {home.data && blocks.length === 0 && <p className="py-10 text-muted">{t.home.noBlocks}</p>}
       {home.data && (
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
@@ -76,6 +77,23 @@ function CaughtUp(props: { days: number | null }) {
           {props.days === null ? t.entry.add : t.home.catchUp}
         </OpenWindow>
       )}
+    </p>
+  );
+}
+
+/** One line while the month before waits for its closing. */
+function ClosingPrompt(props: { closing: NonNullable<Home["closing"]> }) {
+  const t = useMessages();
+  const language = useLanguage();
+  const month = monthLabel(monthOf(props.closing.month), language);
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+      <span>
+        {props.closing.changed ? t.closing.homeChanged(month) : t.closing.homePrompt(month)}
+      </span>
+      <OpenWindow w="closing" className="link font-medium">
+        {props.closing.changed ? t.closing.review : t.closing.open}
+      </OpenWindow>
     </p>
   );
 }

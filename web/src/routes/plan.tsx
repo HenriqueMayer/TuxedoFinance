@@ -32,7 +32,12 @@ export function PlanPage() {
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">{t.nav.plan}</h1>
         {plan.data && (
-          <p className="text-muted">{monthLabel(monthOf(plan.data.month), language)}</p>
+          <p className="flex flex-wrap items-baseline gap-x-4 text-muted">
+            <OpenWindow w="closing" className="link text-sm font-medium">
+              {t.closing.open}
+            </OpenWindow>
+            {monthLabel(monthOf(plan.data.month), language)}
+          </p>
         )}
       </div>
       {plan.isPending && <p className="py-10 text-muted">{t.common.loading}</p>}

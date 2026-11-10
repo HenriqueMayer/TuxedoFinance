@@ -1003,6 +1003,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plan/closing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the closing review of a month */
+        get: operations["planning_api_read_closing"];
+        put?: never;
+        /** Close a month */
+        post: operations["planning_api_close_month"];
+        /** Reopen a closed month */
+        delete: operations["planning_api_reopen_month"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/closing/balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Record the bank balance of an account */
+        put: operations["planning_api_set_closing_balance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/closing/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Adjust the recorded balance to the bank balance */
+        post: operations["planning_api_adjust_closing_balance"];
+        /** Remove a balance adjustment */
+        delete: operations["planning_api_remove_closing_adjustment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/home": {
         parameters: {
             query?: never;
@@ -2723,6 +2777,75 @@ export interface components {
             /** Children */
             children: components["schemas"]["CategoryPart"][];
         };
+        /** ClosingAccount */
+        ClosingAccount: {
+            /** Account Id */
+            account_id: number;
+            /** Name */
+            name: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Tracked */
+            tracked: string;
+            /** Statement */
+            statement: string | null;
+            /** Difference */
+            difference: string | null;
+            /** Adjusted */
+            adjusted: boolean;
+        };
+        /** ClosingOut */
+        ClosingOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Currency */
+            currency: string;
+            /** Is Closed */
+            is_closed: boolean;
+            /** Closed On */
+            closed_on: string | null;
+            /** Changed Since */
+            changed_since: boolean;
+            /** Accounts */
+            accounts: components["schemas"]["ClosingAccount"][];
+            /** Open Items */
+            open_items: components["schemas"]["DueRow"][];
+            result: components["schemas"]["ClosingResult"];
+            /** Spending */
+            spending: components["schemas"]["CategorySpending"][];
+            worth: components["schemas"]["ClosingWorth"];
+            next_limit: components["schemas"]["NextLimit"];
+        };
+        /** ClosingResult */
+        ClosingResult: {
+            /** Income */
+            income: string;
+            /** Expenses */
+            expenses: string;
+            /** Result */
+            result: string;
+            /** Limit */
+            limit: string | null;
+            /** Left */
+            left: string | null;
+        };
+        /** ClosingWorth */
+        ClosingWorth: {
+            /** Net Worth */
+            net_worth: string;
+            /** Change */
+            change: string;
+            /** Complete */
+            complete: boolean;
+        };
         /** DueRow */
         DueRow: {
             /**
@@ -2755,6 +2878,81 @@ export interface components {
              * @enum {string}
              */
             status: "SCHEDULED" | "PARTIAL" | "OVERDUE" | "PAID" | "AWAITING";
+        };
+        /** NextLimit */
+        NextLimit: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Amount */
+            amount: string | null;
+        };
+        /** CloseIn */
+        CloseIn: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Next Limit */
+            next_limit?: number | string | null;
+        };
+        /** ClosingMonth */
+        ClosingMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+        };
+        /** ClosingBalanceIn */
+        ClosingBalanceIn: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Account Id */
+            account_id: number;
+            /** Balance */
+            balance?: number | string | null;
+        };
+        /** ClosingAdjustIn */
+        ClosingAdjustIn: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Account Id */
+            account_id: number;
+            /** Difference */
+            difference: number | string;
+        };
+        /** ClosingAccountIn */
+        ClosingAccountIn: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Account Id */
+            account_id: number;
+        };
+        /**
+         * HomeClosing
+         * @description The month before the current one, while it waits for the owner.
+         */
+        HomeClosing: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Changed */
+            changed: boolean;
         };
         /** HomeGoal */
         HomeGoal: {
@@ -2807,6 +3005,7 @@ export interface components {
              * Format: date
              */
             month: string;
+            closing: components["schemas"]["HomeClosing"] | null;
             /** Result */
             result: components["schemas"]["MonthResult"][];
             limit: components["schemas"]["HomeLimit"] | null;
@@ -4770,6 +4969,148 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GrowthOut"];
+                };
+            };
+        };
+    };
+    planning_api_read_closing: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosingOut"];
+                };
+            };
+        };
+    };
+    planning_api_close_month: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosingOut"];
+                };
+            };
+        };
+    };
+    planning_api_reopen_month: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClosingMonth"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosingOut"];
+                };
+            };
+        };
+    };
+    planning_api_set_closing_balance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClosingBalanceIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosingOut"];
+                };
+            };
+        };
+    };
+    planning_api_adjust_closing_balance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClosingAdjustIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosingOut"];
+                };
+            };
+        };
+    };
+    planning_api_remove_closing_adjustment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClosingAccountIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosingOut"];
                 };
             };
         };

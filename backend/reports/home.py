@@ -225,11 +225,15 @@ def _due_bills(user, today, limit):
     return rows
 
 
-def due_soon(user, today, days=DUE_WINDOW_DAYS):
-    """Return what the owner must pay soon, by date: invoices and months of repeating expenses."""
-    limit = today + timedelta(days=days)
+def due_through(user, today, limit):
+    """Return what is overdue, waits for confirmation or falls on or before ``limit``, by date."""
     rows = _due_invoices(user, today, limit) + _due_bills(user, today, limit)
     return sorted(rows, key=lambda row: (row["due_date"], row["title"]))
+
+
+def due_soon(user, today, days=DUE_WINDOW_DAYS):
+    """Return what the owner must pay soon: invoices and months of repeating expenses."""
+    return due_through(user, today, today + timedelta(days=days))
 
 
 def days_since_last_entry(user, today):

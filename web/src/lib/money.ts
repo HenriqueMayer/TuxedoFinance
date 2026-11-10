@@ -109,3 +109,13 @@ export function editableDecimal(value: string, currency: string): string {
 export function formatQuantity(value: string, language: string): string {
   return Number(value).toLocaleString(language, { maximumFractionDigits: 8 });
 }
+
+/**
+ * True when a typed amount equals a stored one. Both are decimal strings; the
+ * typed one may have fewer decimals ("0" and "0.00").
+ */
+export function sameAmount(typed: string, stored: string | null): boolean {
+  if (stored === null) return false;
+  const padded = typed.includes(".") ? typed.padEnd(typed.indexOf(".") + 3, "0") : `${typed}.00`;
+  return padded === stored;
+}

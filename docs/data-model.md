@@ -161,6 +161,13 @@ confirmed payment, and the expected months of repeating entries. It applies
 the changes to a copy in memory and returns the rows and the totals. The API
 calls `ensure_ledger_current` first, so the derived rows cover the months.
 
+`planning.MonthClosing` records a closed month with the income and the
+expenses that the owner saw. `closing.review` reads a month; a closed month
+whose totals differ from the record is reported as changed. The balance step
+uses `banking.BalanceCheckpoint` and `banking.reconciliation`: a check holds
+the bank balance of one account on one day, and `record_adjustment` writes
+one `ADJUSTMENT` movement only for the difference that the owner saw.
+
 `planning.tools` holds the calculators. `planning.tax_rules` holds one
 payroll table for each year, with its review date and sources.
 

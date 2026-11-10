@@ -214,6 +214,29 @@ Plan is one page for what the owner intends. It shows the current month.
   each year.
 - A calculator reads no record and saves nothing.
 
+### Month closing
+
+The closing is a short review of one month. Home asks for it while the month
+before the current one is not closed, and Plan has a link to it.
+
+1. **Balances.** For each account, the owner can type the balance that the
+   bank shows on the last day of the month (or today, for the current
+   month). The window shows the difference to the recorded balance. The owner
+   can record what is missing, or ask for one adjustment that makes the
+   recorded balance equal to the bank. An adjustment is not income and not an
+   expense, and it can be removed. An empty field skips the account.
+2. **Result.** The income, the expenses and their difference; the limit of
+   the month; the net worth at the end of the month and its change; the
+   largest categories; and what the month left open (overdue invoices and
+   months that wait for confirmation).
+3. **Next limit.** The limit from the month after. An empty field keeps it.
+
+Closing records the month with the totals that the owner saw. It locks
+nothing: the entries of a closed month can still change. When they change,
+Home says that the month changed after its closing, and the owner reviews it
+and closes it again. A closed month can be reopened. The window moves to
+another month in place.
+
 ## Home
 
 The owner shows, hides and orders the blocks.
@@ -242,6 +265,9 @@ second day without an entry, the line says how many days passed and offers
 Add. The day that counts is the day of recording, not the date written on
 the entry.
 
+A second line appears while the month before waits for its closing, or
+changed after it.
+
 ## Languages and formats
 
 The interface is in English and Brazilian Portuguese. An amount is written
@@ -257,7 +283,6 @@ this branch yet, except where noted.
 |---|---|
 | Automatic alerts of 1.x (duplicates, subscription increases, cash shortage) | Not planned for 2.0. A budget and a goal show their own state |
 | Points bought with an account or a card, IOF on a redemption, a deposit paid with points | Domain moved, no screen. Not planned for 2.0 unless asked |
-| Balance checks (reconciliation), invoice credits | Domain moved, no API or screen |
+| Invoice credits | Domain moved, no API or screen |
 | Investment fees, and the edit of a recorded operation | Domain moved, no screen. An operation is undone and recorded again |
-| Month closing | Not built |
 | Public site with the demonstration | Not built; `preview/` is the 1.x page |

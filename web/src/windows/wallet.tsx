@@ -36,7 +36,7 @@ export function values(event: FormEvent<HTMLFormElement>) {
 }
 
 /** Read a typed balance, which may be zero or negative. Null when it is not a number. */
-function parseBalance(text: string, currency: string): string | null {
+export function parseBalance(text: string, currency: string): string | null {
   const typed = text.trim();
   if (typed === "" || /^-?0+([.,]0*)?$/.test(typed)) return "0";
   const negative = typed.startsWith("-");
