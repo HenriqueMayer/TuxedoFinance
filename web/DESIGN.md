@@ -34,6 +34,8 @@ lifts off the sheet into a window.
 - **Close.** Red light, Escape, a click on the backdrop, or Back. Focus returns
   to the element that opened it.
 - **Phone.** The window fills the screen. The expand light is hidden.
+- **Wide content.** A window with a wide table (the sheet) opens at full size.
+  The green light still restores the size.
 
 ## Themes
 

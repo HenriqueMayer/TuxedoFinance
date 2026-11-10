@@ -33,15 +33,21 @@ and no upgrade from 1.x.
   balance.
 - Left to spend counts from the limit of the month when there is one.
 - A Goals block on Home.
+- Months ahead on Plan: the cash that the records expect, and the balance at
+  the end of each month.
+- A sheet to try changes on those months, with saved sheets.
+- Calculators: net CLT salary and compound growth.
 
 ### Not built yet
 
-Plan (limit, budgets, goals, sheet), loyalty points, accounts in other
-currencies, statement import and the public site.
+Loyalty points, accounts in other currencies, statement import and the
+public site.
 
 ### Removed
 
 - The assistant.
+- The automatic alerts (possible duplicates, subscription increases, cash
+  shortage, goals behind). A budget and a goal show their own state.
 - Pages that work without JavaScript.
 - The Django admin.
 

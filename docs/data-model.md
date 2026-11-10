@@ -137,6 +137,18 @@ Rules:
   the account or the asset deletes its reservations.
 - These records never create a movement.
 
+`planning.SavedSheet` holds a name, a count of months and the changes of a
+sheet as JSON: changed cells by row key and month, and the added rows.
+
+`sheet.compose` reads the months ahead from rows that the ledger already
+derived: the bank movements dated after today, the invoices that wait for a
+confirmed payment, and the expected months of repeating entries. It applies
+the changes to a copy in memory and returns the rows and the totals. The API
+calls `ensure_ledger_current` first, so the derived rows cover the months.
+
+`planning.tools` holds the calculators. `planning.tax_rules` holds one
+payroll table for each year, with its review date and sources.
+
 ## Net worth
 
 `reports.worth` reads the net worth on a date: account balances plus the

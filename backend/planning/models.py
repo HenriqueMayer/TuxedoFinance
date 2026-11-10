@@ -164,3 +164,25 @@ class GoalAllocation(models.Model):
             errors["asset"] = _("A goal can reserve a balance, not units.")
         if errors:
             raise ValidationError(errors)
+
+
+class SavedSheet(models.Model):
+    """A named set of changes for the sheet of the months ahead.
+
+    ``changes`` holds the changed cells and the added rows
+    (``planning.sheet``). The recorded values are not stored: an opened sheet
+    reads them again, so it follows the records.
+    """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    name = models.CharField(max_length=120)
+    months = models.PositiveSmallIntegerField(default=6)
+    changes = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at", "-pk"]
+
+    def __str__(self):
+        return self.name

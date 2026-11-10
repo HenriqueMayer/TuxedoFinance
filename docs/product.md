@@ -120,6 +120,42 @@ Plan is one page for what the owner intends. It shows the current month.
 - A balance with a reservation keeps its currency. An investment with a
   reservation also keeps its kind.
 
+### Months ahead
+
+- The page shows the cash of the current month and the five months after it:
+  income, expenses, their result and the balance of the accounts at the end
+  of each month.
+- It counts what the records already expect after today: repeating entries,
+  entries with a later date, card invoices on their due date, and months that
+  wait for confirmation. An amount that is already late counts in the current
+  month. A transfer between accounts does not count.
+- The first balance is the balance of the accounts today. Amounts are in the
+  currency of totals, with the exchange rate of today. An amount without a
+  rate is left out and its currency is named.
+
+### Sheet
+
+- The sheet is the same reading as a table: one row for each source, one
+  column for each month, for 6 or 12 months.
+- A typed value replaces the recorded value of a cell in the sheet only. An
+  emptied cell returns to the recorded value. The owner can add rows; an
+  added row has one amount for each month.
+- The sheet shows the balance with the changes and the balance without them.
+- A sheet can be saved under a name. A saved sheet stores the changes only,
+  so it follows the records when it opens again.
+- Nothing in the sheet creates or changes a financial record.
+
+### Calculators
+
+- **Net salary (CLT)** gives the net pay of a Brazilian employee from the
+  gross salary: INSS, income tax, optional deductions, the 13th salary, the
+  vacation month, the year and the FGTS deposit. It uses the tables of the
+  current year, or the latest ones and says so. Tables exist for 2026.
+- **Compound growth** gives a balance after a count of months, from an
+  initial amount, a contribution for each month and a rate for each month or
+  each year.
+- A calculator reads no record and saves nothing.
+
 ## Home
 
 The owner shows, hides and orders the blocks.
@@ -161,7 +197,6 @@ this branch yet, except where noted.
 
 | Area | State |
 |---|---|
-| Plan: the months ahead, the sheet, the salary and yield calculators | Not built |
 | Automatic alerts of 1.x (duplicates, subscription increases, cash shortage) | Not planned for 2.0. A budget and a goal show their own state |
 | Loyalty points and miles | Domain moved, no API or screen. A deposit paid with points waits for it |
 | Accounts in other currencies and exchange rates | Domain moved; the screens create BRL accounts only, and no screen records a rate. An investment can have another currency |

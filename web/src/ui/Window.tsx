@@ -14,12 +14,14 @@ export function Window(props: {
   /** The element that opened the window. Without it the window fades in. */
   origin: HTMLElement | null;
   onClose: () => void;
+  /** Open at full size. Used for a wide table. The green light still restores the size. */
+  wide?: boolean;
   children: ReactNode;
 }) {
   const t = useMessages();
   const titleId = useId();
   const dialog = useRef<HTMLDialogElement>(null);
-  const [full, setFull] = useState(false);
+  const [full, setFull] = useState(props.wide ?? false);
   const closing = useRef(false);
   const { origin, onClose } = props;
 

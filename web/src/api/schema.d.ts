@@ -671,6 +671,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plan/forecast": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the cash of the months ahead */
+        get: operations["planning_api_read_forecast"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/sheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Calculate the sheet with a set of changes */
+        post: operations["planning_api_compose_sheet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/sheets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the saved sheets */
+        get: operations["planning_api_list_sheets"];
+        put?: never;
+        /** Save a sheet */
+        post: operations["planning_api_create_sheet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/sheets/{sheet_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a saved sheet */
+        get: operations["planning_api_read_sheet"];
+        /** Replace a saved sheet */
+        put: operations["planning_api_update_sheet"];
+        post?: never;
+        /** Delete a saved sheet */
+        delete: operations["planning_api_delete_sheet"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/tools/salary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Calculate the net pay of a CLT salary */
+        post: operations["planning_api_calculate_salary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/tools/growth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Calculate a balance that grows */
+        post: operations["planning_api_calculate_growth"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/home": {
         parameters: {
             query?: never;
@@ -1738,6 +1843,290 @@ export interface components {
             source: string;
             /** Amount */
             amount: number | string;
+        };
+        /** ForecastOut */
+        ForecastOut: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Currency */
+            currency: string;
+            /** Opening Balance */
+            opening_balance: string;
+            /** Months */
+            months: components["schemas"]["SheetTotal"][];
+            /** Complete */
+            complete: boolean;
+            /** Missing Currencies */
+            missing_currencies: string[];
+        };
+        /** SheetTotal */
+        SheetTotal: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Income */
+            income: string;
+            /** Expenses */
+            expenses: string;
+            /** Result */
+            result: string;
+            /** Balance */
+            balance: string;
+            /** Live Balance */
+            live_balance: string;
+        };
+        /** SheetCell */
+        SheetCell: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Live */
+            live: string;
+            /** Value */
+            value: string;
+            /** Changed */
+            changed: boolean;
+        };
+        /** SheetOut */
+        SheetOut: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Currency */
+            currency: string;
+            /** Opening Balance */
+            opening_balance: string;
+            /** Rows */
+            rows: components["schemas"]["SheetRow"][];
+            /** Totals */
+            totals: components["schemas"]["SheetTotal"][];
+            /** Complete */
+            complete: boolean;
+            /** Missing Currencies */
+            missing_currencies: string[];
+        };
+        /** SheetRow */
+        SheetRow: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /**
+             * Section
+             * @enum {string}
+             */
+            section: "income" | "expense";
+            /** Manual */
+            manual: boolean;
+            /** Cells */
+            cells: components["schemas"]["SheetCell"][];
+        };
+        /** ManualRow */
+        ManualRow: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /**
+             * Section
+             * @enum {string}
+             */
+            section: "income" | "expense";
+            /** Amount */
+            amount?: number | string | null;
+        };
+        /** SheetChanges */
+        SheetChanges: {
+            /**
+             * Cells
+             * @default {}
+             */
+            cells: {
+                [key: string]: {
+                    [key: string]: number | string;
+                };
+            };
+            /**
+             * Manual
+             * @default []
+             */
+            manual: components["schemas"]["ManualRow"][];
+        };
+        /** SheetIn */
+        SheetIn: {
+            /**
+             * Months
+             * @default 6
+             * @enum {integer}
+             */
+            months: 6 | 12;
+            /**
+             * @default {
+             *       "cells": {},
+             *       "manual": []
+             *     }
+             */
+            changes: components["schemas"]["SheetChanges"];
+        };
+        /** SavedSheetBrief */
+        SavedSheetBrief: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** SavedSheetIn */
+        SavedSheetIn: {
+            /** Name */
+            name: string;
+            /**
+             * Months
+             * @default 6
+             * @enum {integer}
+             */
+            months: 6 | 12;
+            /**
+             * @default {
+             *       "cells": {},
+             *       "manual": []
+             *     }
+             */
+            changes: components["schemas"]["SheetChanges"];
+        };
+        /** SavedSheetOut */
+        SavedSheetOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Months */
+            months: number;
+            changes: components["schemas"]["SheetChanges"];
+        };
+        /** PayPeriod */
+        PayPeriod: {
+            /** Gross */
+            gross: string;
+            /** Inss */
+            inss: string;
+            /** Irrf */
+            irrf: string;
+            /** Deductions */
+            deductions: string;
+            /** Net */
+            net: string;
+        };
+        /** SalaryOut */
+        SalaryOut: {
+            /** Year */
+            year: number;
+            /** Assumed */
+            assumed: boolean;
+            month: components["schemas"]["PayPeriod"];
+            thirteenth: components["schemas"]["PayPeriod"];
+            vacation: components["schemas"]["PayPeriod"];
+            /** Annual Net */
+            annual_net: string;
+            /** Annual Fgts */
+            annual_fgts: string;
+            /** Monthly Average Net */
+            monthly_average_net: string;
+        };
+        /** SalaryIn */
+        SalaryIn: {
+            /** Gross */
+            gross: number | string;
+            /**
+             * Dependents
+             * @default 0
+             */
+            dependents: number;
+            /**
+             * Pension
+             * @default 0
+             */
+            pension: number | string;
+            /**
+             * Transport
+             * @default 0
+             */
+            transport: number | string;
+            /**
+             * Food
+             * @default 0
+             */
+            food: number | string;
+            /**
+             * Health
+             * @default 0
+             */
+            health: number | string;
+            /**
+             * Other
+             * @default 0
+             */
+            other: number | string;
+        };
+        /** GrowthOut */
+        GrowthOut: {
+            /** Monthly Rate */
+            monthly_rate: string;
+            /** Ending */
+            ending: string;
+            /** Contributed */
+            contributed: string;
+            /** Total Yield */
+            total_yield: string;
+            /** Rows */
+            rows: components["schemas"]["GrowthRow"][];
+        };
+        /** GrowthRow */
+        GrowthRow: {
+            /** Month */
+            month: number;
+            /** Gain */
+            gain: string;
+            /** Contribution */
+            contribution: string;
+            /** Balance */
+            balance: string;
+        };
+        /** GrowthIn */
+        GrowthIn: {
+            /**
+             * Initial
+             * @default 0
+             */
+            initial: number | string;
+            /**
+             * Contribution
+             * @default 0
+             */
+            contribution: number | string;
+            /** Rate */
+            rate: number | string;
+            /**
+             * Rate Period
+             * @default monthly
+             * @enum {string}
+             */
+            rate_period: "monthly" | "annual";
+            /** Months */
+            months: number;
         };
         /** CategoryPart */
         CategoryPart: {
@@ -3170,6 +3559,210 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    planning_api_read_forecast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ForecastOut"];
+                };
+            };
+        };
+    };
+    planning_api_compose_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SheetIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SheetOut"];
+                };
+            };
+        };
+    };
+    planning_api_list_sheets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSheetBrief"][];
+                };
+            };
+        };
+    };
+    planning_api_create_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedSheetIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    planning_api_read_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sheet_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSheetOut"];
+                };
+            };
+        };
+    };
+    planning_api_update_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sheet_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedSheetIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    planning_api_delete_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sheet_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    planning_api_calculate_salary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalaryIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryOut"];
+                };
+            };
+        };
+    };
+    planning_api_calculate_growth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrowthIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GrowthOut"];
                 };
             };
         };

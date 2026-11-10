@@ -151,3 +151,103 @@ test("the owner creates a goal and reserves a balance for it", async ({ page }) 
   await page.goto("/plan");
   await expect(page.getByRole("link", { name: "Japão" })).toBeVisible();
 });
+
+test("the months ahead follow the records and the sheet tries a change", async ({ page }) => {
+  await freshUser(page);
+  const wallet = await prepareWallet(page);
+  const categories: { id: number; name: string }[] = await page.evaluate(async () =>
+    (await fetch("/api/ledger/categories")).json(),
+  );
+  // A repeating expense that starts next month: every month ahead has it.
+  const next = new Date();
+  next.setDate(1);
+  next.setMonth(next.getMonth() + 1);
+  const date = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-05`;
+  await apiPost(page, "/api/ledger/transactions", {
+    title: "Aluguel",
+    amount: "300.00",
+    category_id: categories.find((item) => item.name === "Services")?.id,
+    instrument: wallet.account,
+    date,
+    is_fixed: true,
+  });
+  await page.goto("/plan");
+  await expect(page.getByText("Accounts today: R$ 1.000,00")).toBeVisible();
+  const card = page.getByRole("link", { name: /Open the sheet/ });
+  await expect(card).toContainText("R$ 700,00");
+  await expect(card).toContainText("R$ 400,00");
+
+  // The sheet opens at full size with one row for the repeating expense.
+  await card.click();
+  const window = page.getByRole("dialog", { name: "Sheet" });
+  const cells = window.getByRole("textbox", { name: /^Aluguel, / });
+  await expect(cells).toHaveCount(6);
+  await expect(cells.nth(1)).toHaveValue("300,00");
+  await expect(window.getByRole("row", { name: /Balance at the end/ })).toContainText("R$ 700,00");
+
+  // A changed cell changes the balance in the sheet, and the recorded balance stays in view.
+  await cells.nth(1).fill("500");
+  await cells.nth(1).press("Enter");
+  await expect(window.getByRole("row", { name: /Balance at the end/ })).toContainText("R$ 500,00");
+  await expect(window.getByRole("row", { name: /Balance without the changes/ })).toContainText(
+    "R$ 700,00",
+  );
+  await cells.nth(2).fill("abc");
+  await cells.nth(2).press("Enter");
+  await expect(cells.nth(2)).toHaveAttribute("aria-invalid", "true");
+  await cells.nth(2).fill("");
+  await cells.nth(2).press("Enter");
+
+  // An added row has its amount in every month.
+  await window.getByLabel("Name", { exact: true }).fill("Freela");
+  await window.getByLabel("Kind").selectOption("income");
+  await window.getByLabel("Amount for each month").fill("1.000,00");
+  await window.getByRole("button", { name: "Add a row" }).click();
+  await expect(window.getByRole("textbox", { name: /^Freela, / }).first()).toHaveValue("1000,00");
+  await expect(window.getByRole("row", { name: /^Income R\$/ })).toContainText("R$ 1.000,00");
+
+  // The sheet is saved under a name and opens again with its changes. No record changed.
+  await window.getByLabel("Name of the sheet").fill("Plano B");
+  await window.getByRole("button", { name: "Save sheet" }).click();
+  await expect(window.getByRole("button", { name: "Delete sheet" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(window).toBeHidden();
+  await expect(card).toContainText("R$ 700,00");
+  await page.getByRole("link", { name: "Plano B" }).click();
+  await expect(window.getByRole("textbox", { name: /^Aluguel, / }).nth(1)).toHaveValue("500,00");
+  await expect(window.getByRole("textbox", { name: /^Freela, / })).toHaveCount(6);
+  await window.getByText("12 months").click();
+  await expect(window.getByRole("textbox", { name: /^Aluguel, / })).toHaveCount(12);
+  await window.getByRole("button", { name: "Delete sheet" }).click();
+  await window.getByRole("button", { name: "Delete for good" }).click();
+  await expect(window).toBeHidden();
+  await expect(page.getByRole("link", { name: "Plano B" })).toBeHidden();
+});
+
+test("the calculators answer without saving", async ({ page }) => {
+  await freshUser(page);
+  await page.goto("/plan");
+  await page.getByRole("link", { name: /Net salary/ }).click();
+  const salary = page.getByRole("dialog", { name: "Net salary (CLT)" });
+  await expect(salary.getByLabel(/Gross salary/)).toBeFocused();
+  await salary.getByRole("button", { name: "Calculate" }).click();
+  await expect(salary.getByText("Enter a number.")).toBeVisible();
+  await salary.getByLabel(/Gross salary/).fill("5.000,00");
+  await salary.getByRole("button", { name: "Calculate" }).click();
+  // 5000.00 less 501.51 of INSS; the 2026 reduction leaves no income tax.
+  await expect(salary.getByText("R$ 4.498,49").first()).toBeVisible();
+  await expect(salary.getByText("Tables of 2026.")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(salary).toBeHidden();
+
+  await page.getByRole("link", { name: /Compound growth/ }).click();
+  const growth = page.getByRole("dialog", { name: "Compound growth" });
+  await growth.getByLabel(/Initial amount/).fill("100");
+  await growth.getByLabel("Contribution for each month").fill("100");
+  await growth.getByLabel("Rate (%)").fill("1");
+  await growth.getByText("for each month", { exact: true }).click();
+  await growth.getByLabel("Months").fill("2");
+  await growth.getByRole("button", { name: "Calculate" }).click();
+  await expect(growth.getByText("R$ 303,01").first()).toBeVisible();
+  await expect(growth.getByText("R$ 3,01")).toBeVisible();
+});

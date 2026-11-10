@@ -1,5 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { type Budget, type Goal, goalsQuery, type MonthPlan, planQuery } from "../data/plan";
+import {
+  type Budget,
+  type Forecast,
+  forecastQuery,
+  type Goal,
+  goalsQuery,
+  type MonthPlan,
+  planQuery,
+  savedSheetsQuery,
+} from "../data/plan";
 import { useLanguage, useMessages } from "../i18n";
 import type { Messages } from "../i18n/en";
 import { monthLabel, monthOf, shortMonthLabel } from "../lib/dates";
@@ -16,6 +25,7 @@ export function PlanPage() {
   const language = useLanguage();
   const plan = useQuery(planQuery);
   const goals = useQuery(goalsQuery);
+  const forecast = useQuery(forecastQuery);
 
   return (
     <>
@@ -44,6 +54,8 @@ export function PlanPage() {
       {plan.data && <MonthLimit plan={plan.data} />}
       {plan.data && <Budgets plan={plan.data} />}
       {goals.data && <Goals goals={goals.data.goals} />}
+      {forecast.data && <MonthsAhead forecast={forecast.data} />}
+      {plan.data && <Tools />}
     </>
   );
 }
@@ -121,7 +133,9 @@ function Budgets(props: { plan: MonthPlan }) {
               className="rounded-full border border-dashed border-control px-3 py-1 hover:bg-surface"
             >
               {row.name}
-              <span className="text-muted"> · {t.plan.budgets.average(money(row.average))}</span>
+              {Number(row.average) > 0 && (
+                <span className="text-muted"> · {t.plan.budgets.average(money(row.average))}</span>
+              )}
             </OpenWindow>
           ))}
         </p>
@@ -230,5 +244,85 @@ function GoalCard(props: { goal: Goal }) {
       </span>
       <span className="mt-2 block text-sm text-muted">{goalStatus(goal, t, language)}</span>
     </OpenWindow>
+  );
+}
+
+/** The cash of the next months, from the records. The card opens the sheet. */
+function MonthsAhead(props: { forecast: Forecast }) {
+  const t = useMessages();
+  const language = useLanguage();
+  const sheets = useQuery(savedSheetsQuery);
+  const { forecast } = props;
+  const money = (amount: string) => formatAmount(amount, forecast.currency);
+  const tone = (amount: string) => (Number(amount) < 0 ? "text-negative" : "");
+  const wide = "max-sm:hidden";
+  return (
+    <section className="mt-10">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-2">
+        <h2 className="font-medium">{t.plan.ahead.title}</h2>
+        <p className="text-sm text-muted">{t.plan.ahead.today(money(forecast.opening_balance))}</p>
+      </div>
+      <p className="mt-3 max-w-prose text-sm text-muted">{t.plan.ahead.help}</p>
+      <OpenWindow w="sheet" className={`${CARD} mt-4`}>
+        <span className="grid grid-cols-[auto_1fr_1fr] gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_1fr_1fr_1fr_1fr]">
+          <span className="text-muted">{t.plan.ahead.month}</span>
+          <span className={`text-right text-muted ${wide}`}>{t.plan.ahead.income}</span>
+          <span className={`text-right text-muted ${wide}`}>{t.plan.ahead.expenses}</span>
+          <span className="text-right text-muted">{t.plan.ahead.result}</span>
+          <span className="text-right text-muted">{t.plan.ahead.balance}</span>
+          {forecast.months.map((row) => (
+            <span key={row.month} className="contents">
+              <span>{shortMonthLabel(monthOf(row.month), language)}</span>
+              <span className={`amount text-right ${wide}`}>{money(row.income)}</span>
+              <span className={`amount text-right ${wide}`}>{money(row.expenses)}</span>
+              <span className={`amount text-right ${tone(row.result)}`}>{money(row.result)}</span>
+              <span className={`amount text-right font-semibold ${tone(row.balance)}`}>
+                {money(row.balance)}
+              </span>
+            </span>
+          ))}
+        </span>
+        <span className="link mt-4 block w-fit text-sm font-medium">{t.plan.ahead.open}</span>
+      </OpenWindow>
+      {!forecast.complete && (
+        <p className="mt-3 text-sm text-muted">
+          {t.plan.ahead.incomplete(forecast.missing_currencies.join(", "))}
+        </p>
+      )}
+      {sheets.data && sheets.data.length > 0 && (
+        <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <span className="text-muted">{t.plan.ahead.saved}</span>
+          {sheets.data.map((sheet) => (
+            <OpenWindow key={sheet.id} w={`sheet:${sheet.id}`} className="link">
+              {sheet.name}
+            </OpenWindow>
+          ))}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** The calculators. They read no record and save nothing. */
+function Tools() {
+  const t = useMessages();
+  return (
+    <section className="mt-10">
+      <h2 className="border-b border-line pb-2 font-medium">{t.plan.tools.title}</h2>
+      <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+        <li>
+          <OpenWindow w="salary" className={`${CARD} h-full`}>
+            <span className="block font-medium">{t.plan.tools.salary}</span>
+            <span className="mt-1 block text-sm text-muted">{t.plan.tools.salaryHelp}</span>
+          </OpenWindow>
+        </li>
+        <li>
+          <OpenWindow w="growth" className={`${CARD} h-full`}>
+            <span className="block font-medium">{t.plan.tools.growth}</span>
+            <span className="mt-1 block text-sm text-muted">{t.plan.tools.growthHelp}</span>
+          </OpenWindow>
+        </li>
+      </ul>
+    </section>
   );
 }

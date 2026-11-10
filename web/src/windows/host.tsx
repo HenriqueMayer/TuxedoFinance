@@ -10,6 +10,8 @@ import { InvestmentWindow, NewInvestmentWindow } from "./investment";
 import { BudgetWindow, GoalWindow, LimitWindow, NewBudgetWindow, NewGoalWindow } from "./plan";
 import { ScheduleWindow } from "./schedule";
 import { SettingsWindow } from "./settings";
+import { SheetWindow } from "./sheet";
+import { GrowthWindow, SalaryWindow } from "./tools";
 import {
   AccountWindow,
   CardWindow,
@@ -39,6 +41,10 @@ export type WindowId =
   | "limit"
   | "new-budget"
   | "new-goal"
+  | "sheet"
+  | "salary"
+  | "growth"
+  | `sheet:${number}`
   | `budget:${number}`
   | `goal:${number}`
   | `transaction:${number}`
@@ -111,6 +117,7 @@ export function WindowHost() {
 
   let title: string;
   let content: ReactNode;
+  let wide = false; // A window with a wide table opens at full size.
   // A window that shows one record is named "kind:id".
   const [kind, idText] = (w ?? "").split(":");
   const id = /^\d+$/.test(idText ?? "") ? Number(idText) : null;
@@ -170,6 +177,16 @@ export function WindowHost() {
   } else if (w === "new-goal") {
     title = t.plan.goals.new;
     content = <NewGoalWindow />;
+  } else if (w === "sheet" || (kind === "sheet" && id !== null)) {
+    title = t.plan.sheet.title;
+    content = <SheetWindow id={id ?? undefined} onDone={close} />;
+    wide = true;
+  } else if (w === "salary") {
+    title = t.plan.tools.salary;
+    content = <SalaryWindow />;
+  } else if (w === "growth") {
+    title = t.plan.tools.growth;
+    content = <GrowthWindow />;
   } else if (kind === "budget" && id !== null) {
     title = t.plan.budgets.budget;
     content = <BudgetWindow id={id} onDone={close} />;
@@ -199,7 +216,7 @@ export function WindowHost() {
   }
   // The key remounts the window when the address names another one.
   return (
-    <Window key={w} title={title} origin={origin} onClose={close}>
+    <Window key={w} title={title} origin={origin} onClose={close} wide={wide}>
       <Boundary>{content}</Boundary>
     </Window>
   );

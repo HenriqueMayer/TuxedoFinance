@@ -1,15 +1,17 @@
-"""Plan operations of the API: the limit of a month, the category budgets and the goals.
+"""Plan operations of the API: limits, goals, the months ahead and the calculators.
 
-An operation reads a schema and calls ``planning.limits`` or
-``planning.goals``. The amounts that it returns are calculated there.
+An operation reads a schema and calls ``planning.limits``, ``planning.goals``,
+``planning.sheet`` or ``planning.tools``. The amounts that it returns are
+calculated there.
 """
 
 import datetime as dt
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
 from django.core.exceptions import ValidationError
 from ninja import Router, Schema
+from pydantic import Field
 
 from accounts.models import UserPreference
 from config import clock
@@ -18,8 +20,9 @@ from config.ownership import owned, owned_choice
 from config.validation import renamed
 from ledger.categories import Category
 from ledger.consultation import requested_billed_month
-from planning import goals, limits
-from planning.models import FinancialGoal
+from ledger.services import ensure_ledger_current
+from planning import goals, limits, sheet, tools
+from planning.models import FinancialGoal, SavedSheet
 
 router = Router()
 
@@ -211,3 +214,227 @@ def set_reservation(request, goal_id: int, payload: ReservationIn):
     goal = owned(FinancialGoal, request.user, goal_id)
     goals.set_reservation(goal, payload.source, payload.amount)
     return {"id": goal.pk}
+
+
+# The months ahead and the sheet
+
+Amount = Annotated[Decimal, Field(ge=0, le=sheet.MAX_AMOUNT)]
+MonthKey = Annotated[str, Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")]
+RowKey = Annotated[str, Field(min_length=1, max_length=100)]
+
+
+class ManualRow(Schema):
+    id: Annotated[str, Field(pattern=r"^[a-z0-9]{1,16}$")]
+    label: Annotated[str, Field(min_length=1, max_length=80)]
+    section: Literal["income", "expense"]
+    #: The amount of each month. A changed cell replaces it in its month.
+    amount: Amount | None = None
+
+
+class SheetChanges(Schema):
+    #: ``{row key: {"YYYY-MM": amount}}``: a value that replaces the recorded one.
+    cells: dict[RowKey, dict[MonthKey, Amount]] = {}
+    manual: Annotated[list[ManualRow], Field(max_length=sheet.MAX_MANUAL)] = []
+
+
+class SheetIn(Schema):
+    months: Literal[6, 12] = 6
+    changes: SheetChanges = SheetChanges()
+
+
+class SheetCell(Schema):
+    month: dt.date
+    #: What the records expect.
+    live: Decimal
+    #: What the sheet counts: the changed value, or the recorded one.
+    value: Decimal
+    changed: bool
+
+
+class SheetRow(Schema):
+    #: ``transaction:<id>``, ``card:<id>``, ``other:<section>`` or ``manual:<id>``.
+    key: str
+    #: Empty for the ``other`` rows; the client names them.
+    label: str
+    section: Literal["income", "expense"]
+    manual: bool
+    cells: list[SheetCell]
+
+
+class SheetTotal(Schema):
+    month: dt.date
+    income: Decimal
+    expenses: Decimal
+    result: Decimal
+    #: The balance of the accounts at the end of the month.
+    balance: Decimal
+    #: The same balance without the changes of the sheet.
+    live_balance: Decimal
+
+
+class ForecastOut(Schema):
+    today: dt.date
+    currency: str
+    #: The balances of the accounts today.
+    opening_balance: Decimal
+    months: list[SheetTotal]
+    complete: bool
+    missing_currencies: list[str]
+
+
+class SheetOut(Schema):
+    today: dt.date
+    currency: str
+    opening_balance: Decimal
+    rows: list[SheetRow]
+    totals: list[SheetTotal]
+    complete: bool
+    missing_currencies: list[str]
+
+
+class SavedSheetIn(Schema):
+    name: str
+    months: Literal[6, 12] = 6
+    changes: SheetChanges = SheetChanges()
+
+
+class SavedSheetBrief(Schema):
+    id: int
+    name: str
+    updated_at: dt.datetime
+
+
+class SavedSheetOut(Schema):
+    id: int
+    name: str
+    months: int
+    changes: SheetChanges
+
+
+@router.get("/forecast", response=ForecastOut, summary="Read the cash of the months ahead")
+def read_forecast(request):
+    ensure_ledger_current(request.user)
+    composed = sheet.compose(request.user, clock.today())
+    return {**composed, "months": composed["totals"]}
+
+
+@router.post("/sheet", response=SheetOut, summary="Calculate the sheet with a set of changes")
+def compose_sheet(request, payload: SheetIn):
+    ensure_ledger_current(request.user)
+    return sheet.compose(request.user, clock.today(), payload.months, payload.changes.model_dump())
+
+
+@router.get("/sheets", response=list[SavedSheetBrief], summary="List the saved sheets")
+def list_sheets(request):
+    return SavedSheet.objects.filter(user=request.user)
+
+
+@router.post("/sheets", response=Created, summary="Save a sheet")
+def create_sheet(request, payload: SavedSheetIn):
+    saved = sheet.save_sheet(
+        request.user,
+        name=payload.name,
+        months=payload.months,
+        changes=payload.changes.model_dump(),
+    )
+    return {"id": saved.pk}
+
+
+@router.get("/sheets/{sheet_id}", response=SavedSheetOut, summary="Read a saved sheet")
+def read_sheet(request, sheet_id: int):
+    return owned(SavedSheet, request.user, sheet_id)
+
+
+@router.put("/sheets/{sheet_id}", response=Created, summary="Replace a saved sheet")
+def update_sheet(request, sheet_id: int, payload: SavedSheetIn):
+    saved = owned(SavedSheet, request.user, sheet_id)
+    sheet.save_sheet(
+        request.user,
+        name=payload.name,
+        months=payload.months,
+        changes=payload.changes.model_dump(),
+        sheet=saved,
+    )
+    return {"id": saved.pk}
+
+
+@router.delete("/sheets/{sheet_id}", response={204: None}, summary="Delete a saved sheet")
+def delete_sheet(request, sheet_id: int):
+    owned(SavedSheet, request.user, sheet_id).delete()
+    return 204, None
+
+
+# Calculators
+
+Money = Annotated[Decimal, Field(ge=0, le=tools.MAX_AMOUNT)]
+
+
+class SalaryIn(Schema):
+    gross: Annotated[Decimal, Field(gt=0, le=tools.MAX_AMOUNT)]
+    dependents: Annotated[int, Field(ge=0, le=30)] = 0
+    #: A private pension contribution. It lowers the income-tax base.
+    pension: Money = Decimal("0")
+    #: The cost of the transport benefit. The employee pays up to 6% of the gross salary.
+    transport: Money = Decimal("0")
+    food: Money = Decimal("0")
+    health: Money = Decimal("0")
+    other: Money = Decimal("0")
+
+
+class PayPeriod(Schema):
+    gross: Decimal
+    inss: Decimal
+    irrf: Decimal
+    deductions: Decimal
+    net: Decimal
+
+
+class SalaryOut(Schema):
+    #: The year of the tax tables.
+    year: int
+    #: True when the current year has no table and the latest one was used.
+    assumed: bool
+    month: PayPeriod
+    thirteenth: PayPeriod
+    vacation: PayPeriod
+    annual_net: Decimal
+    annual_fgts: Decimal
+    monthly_average_net: Decimal
+
+
+class GrowthIn(Schema):
+    initial: Money = Decimal("0")
+    contribution: Money = Decimal("0")
+    #: A percentage for each month or for each year.
+    rate: Annotated[Decimal, Field(ge=-100, le=1000)]
+    rate_period: Literal["monthly", "annual"] = "monthly"
+    months: int
+
+
+class GrowthRow(Schema):
+    month: int
+    #: The yield of the month.
+    gain: Decimal
+    contribution: Decimal
+    balance: Decimal
+
+
+class GrowthOut(Schema):
+    #: The percentage for each month that the calculation used.
+    monthly_rate: Decimal
+    ending: Decimal
+    #: The initial amount plus the contributions.
+    contributed: Decimal
+    total_yield: Decimal
+    rows: list[GrowthRow]
+
+
+@router.post("/tools/salary", response=SalaryOut, summary="Calculate the net pay of a CLT salary")
+def calculate_salary(request, payload: SalaryIn):
+    values = payload.model_dump()
+    return tools.salary(values.pop("gross"), clock.today().year, **values)
+
+
+@router.post("/tools/growth", response=GrowthOut, summary="Calculate a balance that grows")
+def calculate_growth(request, payload: GrowthIn):
+    return tools.growth(**payload.model_dump())

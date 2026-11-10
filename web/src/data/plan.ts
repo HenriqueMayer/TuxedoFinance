@@ -1,4 +1,4 @@
-import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap } from "../api/client";
 import type { components } from "../api/schema";
 
@@ -73,5 +73,77 @@ export function useReserve(id: number) {
         }),
       ),
     onSuccess: changed,
+  });
+}
+
+// The months ahead, the sheet and the calculators
+
+export type Forecast = Schemas["ForecastOut"];
+export type Sheet = Schemas["SheetOut"];
+export type SheetChanges = Required<Schemas["SheetChanges"]>;
+export type SheetMonths = 6 | 12;
+export type Salary = Schemas["SalaryOut"];
+export type Growth = Schemas["GrowthOut"];
+
+export const forecastQuery = queryOptions({
+  queryKey: ["home", "plan", "forecast"],
+  queryFn: () => unwrap(api.GET("/api/plan/forecast")),
+});
+
+/** The sheet for a set of changes. The server calculates it; nothing is saved. */
+export function sheetQuery(months: SheetMonths, changes: SheetChanges) {
+  return queryOptions({
+    queryKey: ["home", "plan", "sheet", months, changes],
+    queryFn: () => unwrap(api.POST("/api/plan/sheet", { body: { months, changes } })),
+    // A change keeps the table on screen until the new values arrive.
+    placeholderData: keepPreviousData,
+  });
+}
+
+export const savedSheetsQuery = queryOptions({
+  queryKey: ["plan-sheets"],
+  queryFn: () => unwrap(api.GET("/api/plan/sheets")),
+});
+
+export function savedSheetQuery(id: number) {
+  return queryOptions({
+    queryKey: ["plan-sheets", id],
+    queryFn: () =>
+      unwrap(api.GET("/api/plan/sheets/{sheet_id}", { params: { path: { sheet_id: id } } })),
+  });
+}
+
+/** Save the changes of a sheet under a name: a new saved sheet, or the one with `id`. */
+export function useSaveSheet(id?: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Schemas["SavedSheetIn"]) =>
+      unwrap(
+        id === undefined
+          ? api.POST("/api/plan/sheets", { body })
+          : api.PUT("/api/plan/sheets/{sheet_id}", { params: { path: { sheet_id: id } }, body }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plan-sheets"] }),
+  });
+}
+
+export function useDeleteSheet(id: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      unwrap(api.DELETE("/api/plan/sheets/{sheet_id}", { params: { path: { sheet_id: id } } })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plan-sheets"] }),
+  });
+}
+
+export function useSalary() {
+  return useMutation({
+    mutationFn: (body: Schemas["SalaryIn"]) => unwrap(api.POST("/api/plan/tools/salary", { body })),
+  });
+}
+
+export function useGrowth() {
+  return useMutation({
+    mutationFn: (body: Schemas["GrowthIn"]) => unwrap(api.POST("/api/plan/tools/growth", { body })),
   });
 }
