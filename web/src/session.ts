@@ -1,0 +1,39 @@
+import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api, unwrap } from "./api/client";
+import type { components } from "./api/schema";
+
+export type Session = components["schemas"]["SessionOut"];
+
+/** The session of the browser. Reading it also sets the CSRF cookie. */
+export const sessionQuery = queryOptions({
+  queryKey: ["session"],
+  queryFn: () => unwrap(api.GET("/api/session")),
+  staleTime: Number.POSITIVE_INFINITY, // Changes only through the mutations below.
+});
+
+export function useSignIn() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: components["schemas"]["LoginIn"]) =>
+      unwrap(api.POST("/api/session/login", { body })),
+    onSuccess: (session) => queryClient.setQueryData(sessionQuery.queryKey, session),
+  });
+}
+
+export function useSignUp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: components["schemas"]["SignupIn"]) =>
+      unwrap(api.POST("/api/session/signup", { body })),
+    onSuccess: (session) => queryClient.setQueryData(sessionQuery.queryKey, session),
+  });
+}
+
+export function useSignOut() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(api.POST("/api/session/logout")),
+    // Another user must never see cached data of this one.
+    onSuccess: () => queryClient.clear(),
+  });
+}

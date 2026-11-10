@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* Placeholder tokens of part 0. Part 1 defines the visual language. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --color-page: #f7f5ef;
+  --color-ink: #17251f;
+  --color-muted: #5c6b64;
+  --color-line: #d9d5c8;
+  --color-accent: #1f4d3a;
+  --color-danger: #a3271f;
+}
+
+:root[data-theme="dark"] {
+  --color-page: #101714;
+  --color-ink: #ece9df;
+  --color-muted: #9aa8a1;
+  --color-line: #2a3631;
+  --color-accent: #8fc7a9;
+  --color-danger: #f0958d;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: system-ui, sans-serif;
+}
+
+@utility field {
+  @apply w-full rounded-md border border-line bg-transparent px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent;
+}
+
+@utility button-primary {
+  @apply rounded-md bg-accent px-4 py-2 font-medium text-page disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+}
+
+@utility link {
+  @apply text-accent underline underline-offset-2;
+}

@@ -63,3 +63,13 @@ SPRINT_BRAND.md
 # Collected static files and Docker installation configuration
 /staticfiles/
 .env.docker
+
+# Private local notes, agent tool state and the restructuring process record
+/.agents/
+/.claude/
+/how-fable-solve-problems/
+
+# 2.0 structure: tool outputs and builds
+/backend/var/
+/web/dist/
+/web/var/
