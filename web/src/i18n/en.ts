@@ -612,6 +612,10 @@ export const en = {
     closeAgain: "Close again with the month as it is",
     reopen: "Reopen the month",
   },
+  demo: {
+    banner: "Demonstration with fictional data. Nothing is saved.",
+    readOnly: "This is the demonstration: it shows fictional data and saves nothing.",
+  },
   errors: {
     network: "The server did not answer. Check the connection and try again.",
     unexpected: "Something went wrong. Try again.",

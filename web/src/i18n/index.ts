@@ -20,6 +20,11 @@ export function setLanguage(next: Language) {
   document.documentElement.lang = next;
 }
 
+/** The messages of the selected language, for code that is not a component. */
+export function currentMessages(): Messages {
+  return MESSAGES[language.get()];
+}
+
 /** The messages of the selected language. The component renders again when the language changes. */
 export function useMessages(): Messages {
   return MESSAGES[language.use()];

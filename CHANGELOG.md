@@ -23,7 +23,6 @@ and no upgrade from 1.x.
   and change the amount from a month.
 - One settlement setting for each credit card: the owner confirms each
   invoice payment, or the invoice is paid from the account on its due date.
-
 - Investments in the Wallet: a balance or units with a price, deposits and
   withdrawals with an account, and one field for the value of today.
 - Net worth: accounts and investments less the card debt, with the last
@@ -45,10 +44,8 @@ and no upgrade from 1.x.
   redemption for money in an account.
 - Month closing: compare each account with the bank, see the result of the
   month and set the next limit. Home asks for it once a month.
-
-### Not built yet
-
-The public site.
+- A public page that runs the application with fictional data, in the
+  browser, without a server. It replaces the 1.x preview page.
 
 ### Removed
 

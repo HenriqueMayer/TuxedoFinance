@@ -20,7 +20,7 @@ Version 2.0 is in development on this branch. It is a new application on the
 | Plan: limit of the month, category budgets, goals, months ahead, sheet, calculators | Built |
 | Other currencies and exchange rates, statement import, points and miles | Built |
 | Month closing | Built |
-| The public site | Not built yet |
+| The public site with the demonstration (`site/`) | Built, not published |
 
 2.0 has a new database. There is no upgrade from 1.x. The last 1.x release is
 the tag [`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.0).

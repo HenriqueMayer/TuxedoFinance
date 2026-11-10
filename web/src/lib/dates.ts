@@ -1,7 +1,19 @@
 /** Calendar dates travel as ISO strings ("2026-11-10"). They are never converted to instants. */
 
+let frozen: string | null = null;
+
+/**
+ * Make `todayIso()` return one day. The public demonstration shows the day
+ * of its recorded data, not the day of the visit.
+ */
+export function freezeToday(iso: string | null): void {
+  frozen = iso;
+}
+
 /** Today's calendar date on this device, as an ISO string. */
-export function todayIso(now = new Date()): string {
+export function todayIso(given?: Date): string {
+  if (!given && frozen) return frozen;
+  const now = given ?? new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${now.getFullYear()}-${month}-${day}`;

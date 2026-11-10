@@ -5,8 +5,8 @@ Read [docs/architecture.md](docs/architecture.md) and
 
 ## Layout
 
-`backend/` Django API and domain. `web/` React client. `docs/` current
-reference. `preview/` the 1.x public page, until the 2.0 site replaces it.
+`backend/` Django API and domain. `web/` React client. `site/` public page
+with the demonstration. `docs/` current reference.
 
 ## Commands
 
@@ -17,6 +17,7 @@ reference. `preview/` the 1.x public page, until the 2.0 site replaces it.
 | `web/` | `npm run lint && npm run typecheck && npm test` |
 | `web/` | `npx vite build && npm run journeys` |
 | `web/` | `npm run api:types` after any change of the API |
+| `site/` | `npm run build && npm test` after a change of `site/`, of `web/src/demo/` or of `backend/reports/demo.py` |
 
 ## Rules
 

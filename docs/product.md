@@ -14,7 +14,7 @@ and the Add action. Settings opens from the rail or from the phone header.
 | Home | How is this month? | Blocks that the owner chooses and orders |
 | Transactions | What did I record? | The entries of a month, with search and filters |
 | Wallet | What do I have and what do I owe? | Accounts by bank, cards, invoices, transfers, investments |
-| Plan | What do I intend? | Not built yet |
+| Plan | What do I intend? | The limit of the month, category budgets, goals, the months ahead, the sheet, calculators and the month closing |
 
 ## The window
 
@@ -274,10 +274,15 @@ The interface is in English and Brazilian Portuguese. An amount is written
 the way its currency writes it, in either language. The owner chooses the
 date order.
 
-## Not built yet in 2.0
+## The public page
 
-These areas exist in 1.x and are planned for 2.0. Their domain code is not in
-this branch yet, except where noted.
+The public page (`site/`) runs this application in the browser with the data
+of a fictional owner. It is read-only: a save is refused with a message, and
+nothing leaves the browser.
+
+## Not in 2.0
+
+These parts of 1.x have no screen in 2.0.
 
 | Area | State |
 |---|---|
@@ -285,4 +290,3 @@ this branch yet, except where noted.
 | Points bought with an account or a card, IOF on a redemption, a deposit paid with points | Domain moved, no screen. Not planned for 2.0 unless asked |
 | Invoice credits | Domain moved, no API or screen |
 | Investment fees, and the edit of a recorded operation | Domain moved, no screen. An operation is undone and recorded again |
-| Public site with the demonstration | Not built; `preview/` is the 1.x page |

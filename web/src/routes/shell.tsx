@@ -105,6 +105,11 @@ export function Shell() {
       </nav>
       <main className="min-h-dvh bg-sheet px-5 py-6 max-md:rounded-t-(--radius-sheet) max-md:pb-24 md:rounded-l-(--radius-sheet) md:px-10 md:py-9">
         <div className="mx-auto max-w-5xl">
+          {import.meta.env.MODE === "demo" && (
+            <p className="mb-5 rounded-(--radius-control) border border-line bg-surface px-3 py-2 text-sm text-muted">
+              {t.demo.banner}
+            </p>
+          )}
           <Outlet />
         </div>
       </main>
@@ -112,5 +117,3 @@ export function Shell() {
     </div>
   );
 }
-
-/** A destination whose content is not built yet. Removed when the last part lands. */

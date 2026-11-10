@@ -48,7 +48,17 @@ const headers: Middleware = {
  * The typed API client. Its `fetch` option is the single seam for data: the
  * public demonstration replaces it with an in-browser implementation.
  */
-export const api = createClient<paths>({ baseUrl: "", credentials: "same-origin" });
+export const api = createClient<paths>({
+  baseUrl: "",
+  credentials: "same-origin",
+  // The demonstration build answers from recorded data. Another build has no such code.
+  ...(import.meta.env.MODE === "demo"
+    ? {
+        fetch: (request: Request) =>
+          import("../demo/fetch").then((demo) => demo.demoFetch(request)),
+      }
+    : {}),
+});
 api.use(headers);
 
 /** Return the data of a call, or throw `ApiError`. */

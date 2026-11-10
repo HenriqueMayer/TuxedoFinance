@@ -615,6 +615,10 @@ export const ptBR: Messages = {
     closeAgain: "Fechar de novo com o mês como está",
     reopen: "Reabrir o mês",
   },
+  demo: {
+    banner: "Demonstração com dados fictícios. Nada é gravado.",
+    readOnly: "Esta é a demonstração: ela mostra dados fictícios e não grava nada.",
+  },
   errors: {
     network: "O servidor não respondeu. Verifique a conexão e tente de novo.",
     unexpected: "Algo deu errado. Tente de novo.",

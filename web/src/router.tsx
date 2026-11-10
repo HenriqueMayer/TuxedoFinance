@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import {
+  createHashHistory,
   createRootRouteWithContext,
   createRoute,
   createRouter,
@@ -118,7 +119,13 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 export function createAppRouter(queryClient: QueryClient) {
-  return createRouter({ routeTree, context: { queryClient }, defaultPreload: "intent" });
+  return createRouter({
+    routeTree,
+    context: { queryClient },
+    defaultPreload: "intent",
+    // Static hosting serves one document, so the demonstration keeps its address after "#".
+    ...(import.meta.env.MODE === "demo" ? { history: createHashHistory() } : {}),
+  });
 }
 
 declare module "@tanstack/react-router" {

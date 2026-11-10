@@ -41,6 +41,7 @@ Run the checks of the folder that you changed.
 | `backend/` | `uv run python manage.py makemigrations --check --dry-run` | No missing migration |
 | `web/` | `npm run lint && npm run typecheck && npm test` | Lint, types, unit tests |
 | `web/` | `npx vite build && npm run journeys` | Browser journeys |
+| `site/` | `npm run build && npm test` | The public site and its demonstration, from static files |
 
 Backend commands need `SECRET_KEY`. Without a `.env` file, set it for the
 command: `SECRET_KEY=dev uv run python manage.py test`.

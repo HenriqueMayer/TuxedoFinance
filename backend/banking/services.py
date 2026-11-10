@@ -18,6 +18,7 @@ from banking.models import (
 from config import clock
 
 ZERO = Decimal("0.00")
+CENTS = Decimal("0.01")
 
 
 class MissingExchangeRate(LookupError):
@@ -79,7 +80,10 @@ def account_balances(user, as_of=None):
     return [
         {
             "account": account,
-            "balance": opening_balance_as_of(account, as_of) + totals.get(account.pk, ZERO),
+            # SQLite returns a sum with more decimal places; amounts are whole cents.
+            "balance": (
+                opening_balance_as_of(account, as_of) + totals.get(account.pk, ZERO)
+            ).quantize(CENTS),
         }
         for account in BankAccount.objects.filter(user=user).select_related("bank")
     ]

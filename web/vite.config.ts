@@ -4,7 +4,9 @@ import { defineConfig } from "vitest/config";
 
 // In development the client runs on its own port and sends /api to Django.
 // In production Django serves the built files, so both share one origin.
-export default defineConfig({
+// The demonstration (`--mode demo`) is static files under any path, so its URLs are relative.
+export default defineConfig(({ mode }) => ({
+  base: mode === "demo" ? "./" : "/",
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
@@ -13,4 +15,4 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.{ts,tsx}"],
   },
-});
+}));

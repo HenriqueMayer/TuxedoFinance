@@ -1,0 +1,435 @@
+/*
+ * The public page of Tuxedo Finance. The decisions are in site/README.md.
+ * The colors are the roles of the application (web/src/styles.css): the page
+ * is the jacket, and the reading part is the sheet.
+ */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("./fonts/inter-latin-variable.woff2") format("woff2");
+}
+
+:root {
+  --jacket: #14261f;
+  --jacket-raised: #1d332a;
+  --jacket-ink: #ece8dc;
+  --jacket-muted: #a9b8b0;
+  --jacket-line: rgb(236 232 220 / 0.14);
+  --sheet: #faf8f3;
+  --surface: #ffffff;
+  --ink: #1a2e26;
+  --muted: #55665d;
+  --line: #e3ded1;
+  --accent: #b88a59;
+  --accent-ink: #855427;
+  --on-accent: #1a2e26;
+  --page: 73.75rem;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--jacket);
+  color: var(--jacket-ink);
+  font-family: "Inter", system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+dl,
+dd,
+ul,
+ol,
+pre {
+  margin: 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+
+.wrap {
+  width: 100%;
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -4rem;
+  z-index: 10;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--jacket-ink);
+  color: var(--jacket);
+}
+
+.skip:focus {
+  top: 0.75rem;
+}
+
+/* Header */
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding-block: 1.25rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.top nav {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9375rem;
+}
+
+.top nav a {
+  color: var(--jacket-muted);
+  text-decoration: none;
+}
+
+.top nav a:hover {
+  color: var(--jacket-ink);
+}
+
+/* First view: one sentence, then the product. */
+
+.hero {
+  padding-block: clamp(1.5rem, 5vw, 3.5rem) clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.hero h1 {
+  max-width: 18ch;
+  font-size: clamp(2.125rem, 5.4vw, 3.75rem);
+  font-weight: 650;
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+
+.hero .lead {
+  max-width: 38rem;
+  margin-top: 1.125rem;
+  color: var(--jacket-muted);
+  font-size: clamp(1.0625rem, 1.6vw, 1.1875rem);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  margin-top: 1.75rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.125rem;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.button:hover {
+  filter: brightness(1.06);
+}
+
+.quiet {
+  color: var(--jacket-ink);
+  text-underline-offset: 0.2em;
+}
+
+/* The signature: the live product in the window of the product. */
+
+.window {
+  overflow: hidden;
+  border: 1px solid var(--jacket-line);
+  border-radius: 0.875rem;
+  background: var(--sheet);
+  box-shadow:
+    0 32px 80px -24px rgb(0 0 0 / 0.6),
+    0 2px 8px rgb(0 0 0 / 0.25);
+}
+
+.window-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 2.75rem;
+  padding-inline: 0.875rem;
+  background: var(--jacket-raised);
+  font-size: 0.875rem;
+}
+
+.lights {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lights span {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--jacket-line);
+}
+
+.lights span:first-child {
+  background: #ec6a5e;
+}
+
+.lights span:last-child {
+  background: #61c554;
+}
+
+.window-title {
+  position: absolute;
+  inset-inline: 6rem;
+  overflow: hidden;
+  color: var(--jacket-ink);
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.window-bar a {
+  color: var(--jacket-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.window-bar a:hover {
+  color: var(--jacket-ink);
+}
+
+.window iframe {
+  display: block;
+  width: 100%;
+  height: clamp(32.5rem, 78svh, 51rem);
+  border: 0;
+  background: var(--jacket);
+}
+
+.caption {
+  margin-top: 0.875rem;
+  color: var(--jacket-muted);
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 40rem) {
+  .window-bar a span {
+    display: none;
+  }
+}
+
+/* The sheet: the part to read. */
+
+.sheet {
+  margin-top: clamp(3rem, 7vw, 5rem);
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: var(--sheet);
+  color: var(--ink);
+  color-scheme: light;
+}
+
+.sheet section {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+/* A hairline between sections, as wide as the content. */
+.sheet section + section {
+  background: linear-gradient(var(--line), var(--line)) top / calc(100% - 2 * var(--gutter)) 1px
+    no-repeat;
+}
+
+.sheet h2 {
+  max-width: 24ch;
+  font-size: clamp(1.5rem, 3vw, 2.125rem);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.places {
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  border-top: 1px solid var(--line);
+}
+
+.places > div {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 0.5rem 2.5rem;
+  padding-block: 1.375rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.places dt {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.places .name {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.places .question {
+  font-size: clamp(1.125rem, 2vw, 1.375rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.places dd {
+  max-width: 34rem;
+  color: var(--muted);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 1.5rem 2.5rem;
+}
+
+.limits {
+  display: grid;
+  gap: 0.875rem;
+  max-width: 34rem;
+}
+
+.limits li {
+  padding-left: 1.125rem;
+  border-left: 2px solid var(--line);
+}
+
+.prose {
+  max-width: 34rem;
+  color: var(--muted);
+}
+
+.prose + .prose {
+  margin-top: 0.875rem;
+}
+
+pre {
+  overflow-x: auto;
+  margin-top: 1.25rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: 0.75rem;
+  background: var(--jacket);
+  color: var(--jacket-ink);
+  color-scheme: dark;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+.sheet .links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.sheet a {
+  color: var(--accent-ink);
+  font-weight: 500;
+  text-underline-offset: 0.2em;
+}
+
+@media (max-width: 46rem) {
+  .places > div,
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+footer {
+  background: var(--sheet);
+  color: var(--muted);
+  color-scheme: light;
+  font-size: 0.875rem;
+}
+
+footer .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-block: 1.5rem 2.5rem;
+  background: linear-gradient(var(--line), var(--line)) top / calc(100% - 2 * var(--gutter)) 1px
+    no-repeat;
+}
+
+footer a {
+  color: var(--accent-ink);
+}
+
+/* The page that does not exist. */
+
+.lost {
+  display: grid;
+  min-height: 70svh;
+  place-content: center;
+  gap: 1rem;
+  text-align: center;
+}

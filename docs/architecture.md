@@ -5,7 +5,7 @@
 ```
 backend/    Django project: domain, API, tests
 web/        React and TypeScript client
-preview/    Public page of 1.x, until the 2.0 site replaces it
+site/       Public page with the demonstration (Astro)
 docs/       This documentation
 .github/    CI workflows
 ```
@@ -81,3 +81,23 @@ CI has two workflows with path filters: `backend.yml` and `web.yml` (two
 parallel jobs). A change that touches only documentation runs neither.
 
 A journey creates its own user, so journeys do not depend on each other.
+
+## Public site
+
+`site/` is an Astro project that builds static pages for GitHub Pages. A
+page embeds the client, built in demonstration mode, in an `iframe`.
+
+- **One seam for data.** The client reaches the API through the `fetch`
+  option of `web/src/api/client.ts`. The demonstration build replaces it with
+  `web/src/demo/fetch.ts`, which answers from a recorded file. No other
+  module knows about the demonstration, except the shell (one line of text),
+  the router (the address after `#`) and the entry file (it waits for the
+  data).
+- **Recorded answers.** `backend/reports/demo.py` creates a fictional owner
+  through the API and reads every screen through the API. The site serves
+  those answers, so the demonstration shows what the real rules calculate.
+- **Read-only.** A request that would change a record is refused in the
+  browser with a message.
+
+See [site/README.md](../site/README.md).
+
