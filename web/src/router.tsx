@@ -6,9 +6,10 @@ import {
   Outlet,
   redirect,
 } from "@tanstack/react-router";
+import { useMessages } from "./i18n";
 import { localPath } from "./lib/paths";
 import { LoginPage, SignupPage } from "./routes/auth";
-import { HomePage, Shell } from "./routes/shell";
+import { Placeholder, Shell } from "./routes/shell";
 import { sessionQuery } from "./session";
 
 type RouterContext = { queryClient: QueryClient };
@@ -54,19 +55,41 @@ const appRoute = createRoute({
       throw redirect({ to: "/login", search: { redirect: location.href } });
     }
   },
+  // `w` names the open window. It is valid on every signed-in page; see windows/host.tsx.
+  validateSearch: (search): { w?: string } => ({
+    w: typeof search.w === "string" ? search.w : undefined,
+  }),
   component: Shell,
 });
 
 const homeRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/",
-  component: HomePage,
+  component: () => <Placeholder title={useMessages().nav.home} />,
+});
+
+const transactionsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/transactions",
+  component: () => <Placeholder title={useMessages().nav.transactions} />,
+});
+
+const walletRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/wallet",
+  component: () => <Placeholder title={useMessages().nav.wallet} />,
+});
+
+const planRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/plan",
+  component: () => <Placeholder title={useMessages().nav.plan} />,
 });
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
   signupRoute,
-  appRoute.addChildren([homeRoute]),
+  appRoute.addChildren([homeRoute, transactionsRoute, walletRoute, planRoute]),
 ]);
 
 export function createAppRouter(queryClient: QueryClient) {

@@ -31,6 +31,12 @@ class ClientRouteTests(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertNotIn(b"<title>client</title>", response.content)
 
+    def test_missing_file_is_a_404_and_not_the_entry_document(self):
+        with override_settings(CLIENT_DIR=self.client_dir):
+            response = self.client.get("/assets/index-old-build.js")
+        self.assertEqual(response.status_code, 404)
+        self.assertNotIn(b"<title>client</title>", response.content)
+
     def test_missing_build_is_a_404(self):
         with override_settings(CLIENT_DIR=self.client_dir / "absent"):
             self.assertEqual(self.client.get("/").status_code, 404)

@@ -1,40 +1,149 @@
 @import "tailwindcss";
 
-/* Placeholder tokens of part 0. Part 1 defines the visual language. */
+/*
+ * Visual language of Tuxedo Finance. The decisions and their reasons are in
+ * web/DESIGN.md. Colors are roles, not hues: change a role here and every
+ * screen follows.
+ */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("./assets/fonts/inter-latin-variable.woff2") format("woff2");
+}
+
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --color-page: #f7f5ef;
-  --color-ink: #17251f;
-  --color-muted: #5c6b64;
-  --color-line: #d9d5c8;
-  --color-accent: #1f4d3a;
-  --color-danger: #a3271f;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* The jacket: the dark frame that holds navigation. */
+  --color-jacket: #14261f;
+  --color-jacket-ink: #ece8dc;
+  --color-jacket-muted: #a9b8b0;
+
+  /* The shirt: the light sheet where work happens. */
+  --color-sheet: #faf8f3;
+  --color-surface: #ffffff;
+  --color-ink: #1a2e26;
+  --color-muted: #55665d;
+  --color-line: #e3ded1;
+  --color-control: #848d85;
+
+  /* The bow tie: the Add action and keyboard focus. Nothing else. */
+  --color-accent: #b88a59;
+  --color-accent-ink: #855427;
+  --color-on-accent: #1a2e26;
+
+  /* Meaning of an amount. Used on amounts only. */
+  --color-positive: #176b52;
+  --color-negative: #b42318;
+
+  --radius-sheet: 1.25rem;
+  --radius-window: 0.75rem;
+  --radius-control: 0.5rem;
+  --shadow-window: 0 24px 64px -16px rgb(10 20 16 / 0.45), 0 2px 8px rgb(10 20 16 / 0.2);
 }
 
 :root[data-theme="dark"] {
-  --color-page: #101714;
-  --color-ink: #ece9df;
-  --color-muted: #9aa8a1;
-  --color-line: #2a3631;
-  --color-accent: #8fc7a9;
-  --color-danger: #f0958d;
+  --color-jacket: #0b1210;
+  --color-jacket-ink: #ece8dc;
+  --color-jacket-muted: #93a29b;
+  --color-sheet: #121b17;
+  --color-surface: #1a2620;
+  --color-ink: #ece8dc;
+  --color-muted: #9fada6;
+  --color-line: #2a3832;
+  --color-control: #6f7d76;
+  --color-accent: #d4ad86;
+  --color-accent-ink: #d4ad86;
+  --color-on-accent: #14261f;
+  --color-positive: #64d8b1;
+  --color-negative: #ff8a80;
+  color-scheme: dark;
+}
+
+:root {
+  color-scheme: light;
 }
 
 body {
-  background: var(--color-page);
+  background: var(--color-jacket);
   color: var(--color-ink);
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One focus treatment for every control: the bow-tie color. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Amounts align in columns and do not change width when a digit changes. */
+@utility amount {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 @utility field {
-  @apply w-full rounded-md border border-line bg-transparent px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  @apply w-full rounded-(--radius-control) border border-control bg-surface px-3 py-2 text-ink placeholder:text-muted;
 }
 
 @utility button-primary {
-  @apply rounded-md bg-accent px-4 py-2 font-medium text-page disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-(--radius-control) bg-ink px-4 py-2 font-medium text-sheet disabled:opacity-60;
+}
+
+@utility button-quiet {
+  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-(--radius-control) border border-control px-4 py-2 font-medium text-ink;
 }
 
 @utility link {
-  @apply text-accent underline underline-offset-2;
+  @apply text-accent-ink underline underline-offset-2;
+}
+
+/* The window: a native modal dialog. See src/ui/Window.tsx. */
+dialog.window {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-window);
+  box-shadow: var(--shadow-window);
+  padding: 0;
+  margin: auto;
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: min(48rem, calc(100dvh - 2rem));
+  overflow: hidden;
+  transform-origin: center;
+}
+
+dialog.window[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog.window[data-size="full"] {
+  width: calc(100vw - 2rem);
+  height: calc(100dvh - 2rem);
+  max-height: none;
+}
+
+dialog.window::backdrop {
+  background: rgb(10 20 16 / 0.45);
+}
+
+/* On a phone a window takes the whole screen; the title bar still closes it. */
+@media (width < 40rem) {
+  dialog.window,
+  dialog.window[data-size="full"] {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
 }

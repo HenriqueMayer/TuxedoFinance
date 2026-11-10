@@ -118,6 +118,9 @@ USE_TZ = True
 # fallback view in ``config.urls`` returns ``index.html`` for client routes.
 CLIENT_DIR = Path(os.environ.get("TUXEDO_CLIENT_DIR", BASE_DIR.parent / "web" / "dist"))
 WHITENOISE_ROOT = CLIENT_DIR if CLIENT_DIR.is_dir() else None
+# In development a new build is served without a restart. In production the
+# files are listed once at startup.
+WHITENOISE_AUTOREFRESH = DEBUG
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "var" / "staticfiles"
 

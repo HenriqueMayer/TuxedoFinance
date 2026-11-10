@@ -2,7 +2,17 @@ import type { Messages } from "./en";
 
 export const ptBR: Messages = {
   app: { name: "Tuxedo Finance" },
-  nav: { home: "Início", signOut: "Sair" },
+  nav: {
+    main: "Principal",
+    home: "Início",
+    transactions: "Transações",
+    wallet: "Carteira",
+    plan: "Planejar",
+    settings: "Ajustes",
+    signOut: "Sair",
+  },
+  window: { close: "Fechar", expand: "Expandir para tela cheia", restore: "Restaurar tamanho" },
+  common: { comingSoon: "Esta área está em construção." },
   login: {
     title: "Entrar",
     username: "Usuário",
@@ -24,5 +34,16 @@ export const ptBR: Messages = {
     unexpected: "Algo deu errado. Tente de novo.",
     tooMany: "Muitas tentativas. Aguarde um minuto e tente de novo.",
   },
-  settings: { language: "Idioma", theme: "Tema", light: "Claro", dark: "Escuro" },
+  settings: {
+    title: "Ajustes",
+    language: "Idioma",
+    theme: "Tema",
+    light: "Claro",
+    dark: "Escuro",
+    currency: "Moeda dos totais",
+    currencyHelp: "Usada só nos totais consolidados. Cada registro mantém a própria moeda.",
+    dateFormat: "Ordem da data",
+    signedInAs: "Conectado como",
+    saveFailed: "A alteração não foi salva. Tente de novo.",
+  },
 };

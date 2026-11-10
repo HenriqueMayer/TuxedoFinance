@@ -1,5 +1,7 @@
 """URL routes: the API under ``/api/`` and the client for every other path."""
 
+from pathlib import PurePosixPath
+
 from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.urls import path, re_path
@@ -17,7 +19,13 @@ def client(request):
     WhiteNoise serves the client's files. A path that is not a file, such as
     ``/transactions``, is a route of the client and gets ``index.html``. The
     document is not cached, because it names the hashed files of one build.
+
+    A path with a file extension, such as ``/assets/app.js``, names a file. If
+    WhiteNoise did not serve it, it does not exist: the answer is 404, never
+    the entry document with the wrong content type.
     """
+    if PurePosixPath(request.path).suffix:
+        raise Http404("No such file.")
     index = settings.CLIENT_DIR / "index.html"
     if not index.is_file():
         raise Http404("The client is not built. Run the build in web/.")

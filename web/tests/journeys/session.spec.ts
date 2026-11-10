@@ -19,6 +19,7 @@ test("the owner signs in, reloads and signs out", async ({ page }) => {
   await page.reload();
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
 
+  await page.getByRole("navigation").getByRole("link", { name: "Settings" }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login/);
   await page.goto("/");

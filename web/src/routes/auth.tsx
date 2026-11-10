@@ -3,6 +3,7 @@ import { type FormEvent, type ReactNode, useId } from "react";
 import { useMessages } from "../i18n";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { type Session, useSignIn, useSignUp } from "../session";
+import { Mark } from "../ui/icons";
 
 function Field(props: {
   label: string;
@@ -29,7 +30,7 @@ function Field(props: {
         className="field"
       />
       {errors.length > 0 && (
-        <p id={`${id}-error`} className="text-sm text-danger">
+        <p id={`${id}-error`} className="text-sm text-negative">
           {errors.join(" ")}
         </p>
       )}
@@ -37,13 +38,17 @@ function Field(props: {
   );
 }
 
+/** Sign-in and sign-up share one frame: a single sheet on the jacket. */
 function AuthPage(props: { title: string; children: ReactNode }) {
   const t = useMessages();
   return (
-    <main className="grid min-h-dvh place-items-center p-4">
-      <div className="w-full max-w-sm grid gap-6">
-        <p className="text-sm font-semibold tracking-wide text-muted">{t.app.name}</p>
-        <h1 className="text-2xl font-semibold">{props.title}</h1>
+    <main className="grid min-h-dvh place-items-center bg-jacket p-4">
+      <div className="grid w-full max-w-sm gap-6 rounded-(--radius-sheet) bg-sheet p-8 text-ink">
+        <p className="flex items-center gap-2.5 text-sm font-semibold">
+          <Mark />
+          {t.app.name}
+        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{props.title}</h1>
         {props.children}
       </div>
     </main>
@@ -80,7 +85,7 @@ export function LoginPage(props: { redirect?: string; session: Session }) {
           autoComplete="current-password"
         />
         {message && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-sm text-negative">
             {message}
           </p>
         )}
@@ -139,7 +144,7 @@ export function SignupPage(props: { session: Session }) {
             errors={fieldMessages(signUp.error, "password")}
           />
           {message && (
-            <p role="alert" className="text-sm text-danger">
+            <p role="alert" className="text-sm text-negative">
               {message}
             </p>
           )}
