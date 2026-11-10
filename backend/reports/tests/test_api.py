@@ -245,3 +245,60 @@ class DueSoonTests(ReportsApiTestCase):
         self.record(amount="60.00", instrument=f"credit:{self.card.pk}")
         self.set_today(date(2026, 12, 6))
         self.assertEqual(self.due(), [("Black", "2026-12-05", "200.00", "OVERDUE")])
+
+
+class DueBillTests(ReportsApiTestCase):
+    def bills(self):
+        rows = self.get("/api/reports/home").json()["due"]
+        return [
+            (row["kind"], row["title"], row["due_date"], row["amount"], row["status"])
+            for row in rows
+        ]
+
+    def test_a_repeating_expense_is_listed_until_its_date_each_month(self):
+        self.record(title="Internet", amount="110.00", date="2026-10-20", is_fixed=True)
+        # October passed and needs no confirmation. November and December are inside 45 days.
+        self.assertEqual(
+            self.bills(),
+            [
+                ("bill", "Internet", "2026-11-20", "110.00", "SCHEDULED"),
+                ("bill", "Internet", "2026-12-20", "110.00", "SCHEDULED"),
+            ],
+        )
+
+    def test_a_month_that_waits_for_confirmation_is_listed_after_its_date(self):
+        self.set_today(date(2026, 10, 1))
+        item = self.record(
+            title="Aluguel",
+            amount="1500.00",
+            date="2026-10-05",
+            is_fixed=True,
+            requires_confirmation=True,
+        )
+        self.set_today(TODAY)
+        self.assertEqual(
+            self.bills(),
+            [
+                ("bill", "Aluguel", "2026-10-05", "1500.00", "AWAITING"),
+                ("bill", "Aluguel", "2026-11-05", "1500.00", "AWAITING"),
+                ("bill", "Aluguel", "2026-12-05", "1500.00", "SCHEDULED"),
+            ],
+        )
+        with self.captureOnCommitCallbacks(execute=True):
+            self.post(f"/api/ledger/transactions/{item['id']}/schedule/2026-10/confirm")
+        self.assertEqual([row[2] for row in self.bills()], ["2026-11-05", "2026-12-05"])
+
+    def test_repeating_income_and_card_expenses_are_not_bills(self):
+        self.record(
+            title="Salário",
+            amount="5000.00",
+            date="2026-11-20",
+            is_fixed=True,
+            transaction_type="INCOME",
+            category_id=self.salary.pk,
+        )
+        self.record(
+            title="Streaming", amount="40.00", is_fixed=True, instrument=f"credit:{self.card.pk}"
+        )
+        rows = self.get("/api/reports/home").json()["due"]
+        self.assertEqual([row["kind"] for row in rows], ["invoice"])

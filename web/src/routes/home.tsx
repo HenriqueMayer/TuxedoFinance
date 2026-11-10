@@ -173,9 +173,14 @@ export function DueRows(props: { rows: DueRow[] }) {
   return (
     <ul className="divide-y divide-line">
       {props.rows.map((row) => (
-        <li key={row.invoice_id}>
+        <li key={`${row.kind}-${row.invoice_id ?? row.transaction_id}-${row.month}`}>
           <OpenWindow
-            w={`invoice:${row.invoice_id}`}
+            // An invoice opens its window; a month of a repeating expense opens its schedule.
+            w={
+              row.kind === "invoice"
+                ? `invoice:${row.invoice_id ?? 0}`
+                : `schedule:${row.transaction_id ?? 0}`
+            }
             className="-mx-2 flex items-center gap-3 rounded-(--radius-control) px-2 py-2.5 hover:bg-sheet"
           >
             <span className="min-w-0 flex-1">

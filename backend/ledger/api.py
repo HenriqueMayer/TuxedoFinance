@@ -21,6 +21,7 @@ from banking.api import InstrumentOut
 from banking.instruments import KINDS, instrument_of, resolve
 from config import clock
 from config.ownership import owned, owned_choice
+from ledger import commitments, schedule
 from ledger.categories import Category
 from ledger.consultation import billed_month_occurrence, requested_billed_month
 from ledger.models import Transaction, attach_schedule_rows
@@ -116,7 +117,12 @@ class TransactionOut(Schema):
     category: CategoryRef
     instrument: InstrumentOut
     installments: int
+    #: True for an entry that repeats every month.
     is_fixed: bool
+    #: The last month of a repeating entry, or null when it has no end.
+    fixed_until: dt.date | None
+    #: True when the owner confirms each month of a repeating entry.
+    requires_confirmation: bool
     notes: str
     #: A record that another operation generated. It is changed at its source.
     locked: bool
@@ -152,6 +158,9 @@ class TransactionIn(Schema):
     category_id: int
     instrument: str
     installments: int = 1
+    is_fixed: bool = False
+    fixed_until: dt.date | None = None
+    requires_confirmation: bool = False
     notes: str = ""
 
 
@@ -214,9 +223,31 @@ def _apply_transaction(item, user, payload: TransactionIn):
         errors.update(error.message_dict)
     item.transaction_type = payload.transaction_type
     item.title = payload.title.strip()
+    new_date = payload.date or clock.today()
+    if item.pk and item.is_fixed and payload.is_fixed and _has_past_month(item):
+        # The stored amount and date give every past month of a repeating
+        # entry. Changing them here would rewrite those months.
+        if payload.amount != item.amount:
+            errors["amount"] = [
+                _(
+                    "This entry has past months. Change its amount from a month in the monthly schedule."
+                )
+            ]
+        if new_date != item.date:
+            errors["date"] = [_("This entry has past months. Its first date cannot change.")]
     item.amount = payload.amount
-    item.date = payload.date or clock.today()
+    item.date = new_date
     item.installments = payload.installments
+    item.is_fixed = payload.is_fixed
+    item.fixed_until = payload.fixed_until if payload.is_fixed else None
+    confirm = payload.is_fixed and payload.requires_confirmation
+    if confirm and not item.requires_confirmation:
+        # Confirmation starts with the current month, or with the first month
+        # of an entry that starts later. Earlier months stay as recorded.
+        item.confirmation_start = max(item.date, clock.today()).replace(day=1)
+    elif not confirm:
+        item.confirmation_start = None
+    item.requires_confirmation = confirm
     item.notes = payload.notes.strip()
     try:
         # A reference that is already refused is left out of the model checks.
@@ -235,6 +266,11 @@ def _apply_transaction(item, user, payload: TransactionIn):
     return item
 
 
+def _has_past_month(item):
+    """Return whether a saved repeating entry has a month before the current one."""
+    return item.date.replace(day=1) < clock.today().replace(day=1)
+
+
 def _instrument_errors(error):
     """Report errors of the channel and record fields on the one field the client has."""
     errors = dict(error.message_dict)
@@ -243,6 +279,8 @@ def _instrument_errors(error):
             errors.setdefault("instrument", []).extend(errors.pop(name))
     if "category" in errors:
         errors["category_id"] = errors.pop("category")
+    if "confirmation_start" in errors:
+        errors.setdefault("requires_confirmation", []).extend(errors.pop("confirmation_start"))
     return errors
 
 
@@ -359,3 +397,134 @@ def _owned_transaction(user, transaction_id):
     if item is None:
         raise Http404
     return item
+
+
+# The monthly schedule of a repeating entry
+
+
+class ScheduleMonth(Schema):
+    month: dt.date
+    amount: Decimal
+    scheduled_amount: Decimal
+    status: Literal["SCHEDULED", "ADJUSTED", "EXPECTED", "CONFIRMED", "SKIPPED"]
+    #: The month waits for the owner: it is expected and its date has passed.
+    awaiting: bool
+    cash_date: dt.date | None
+    can_skip: bool
+    can_confirm: bool
+    can_restore: bool
+    can_change_from: bool
+
+
+class AmountChange(Schema):
+    month: dt.date
+    amount: Decimal
+
+
+class ScheduleOut(Schema):
+    transaction_id: int
+    title: str
+    currency: str
+    transaction_type: TransactionType
+    requires_confirmation: bool
+    months: list[ScheduleMonth]
+    amount_changes: list[AmountChange]
+    #: The month that "change the amount from" offers first.
+    default_change_month: dt.date
+
+
+class AmountChangeIn(Schema):
+    month: str  # YYYY-MM
+    amount: Decimal
+
+
+SCHEDULE_MONTHS = 12
+
+
+def _commitment(user, transaction_id):
+    """Return the owned repeating entry, or 404. An entry that does not repeat has no schedule."""
+    item = _owned_transaction(user, transaction_id)
+    if not item.is_commitment_source or item.reward_redemption_id:
+        raise Http404
+    return item
+
+
+def _month_or_404(value):
+    requested = requested_billed_month(value)
+    if requested is None:
+        raise Http404
+    return dt.date(*requested, 1)
+
+
+def _schedule_out(user, transaction_id):
+    # Read again: the services change rows that the loaded instance caches.
+    item = _commitment(user, transaction_id)
+    today = clock.today()
+    first = schedule.offset_month(today, -2)
+    last = schedule.offset_month(first, SCHEDULE_MONTHS - 1)
+    source = item.schedule_source()
+    return {
+        "transaction_id": item.pk,
+        "title": item.display_title,
+        "currency": item.native_currency,
+        "transaction_type": item.transaction_type,
+        "requires_confirmation": item.requires_confirmation,
+        "months": commitments.schedule_months(item, first, last, today=today),
+        "amount_changes": [
+            {"month": month, "amount": amount}
+            for month, amount in schedule.amount_steps(source)[1:]
+        ],
+        "default_change_month": commitments.default_change_month(item, today),
+    }
+
+
+@router.get(
+    "/transactions/{transaction_id}/schedule",
+    response=ScheduleOut,
+    summary="Read the months of a repeating entry",
+)
+def read_schedule(request, transaction_id: int):
+    return _schedule_out(request.user, transaction_id)
+
+
+@router.post(
+    "/transactions/{transaction_id}/schedule/{month}/{action}",
+    response=ScheduleOut,
+    summary="Confirm, skip or restore one month",
+)
+def change_month(
+    request, transaction_id: int, month: str, action: Literal["confirm", "skip", "restore"]
+):
+    item = _commitment(request.user, transaction_id)
+    service = {
+        "confirm": commitments.confirm_occurrence,
+        "skip": commitments.skip_occurrence,
+        "restore": commitments.restore_occurrence,
+    }[action]
+    service(item, _month_or_404(month), user=request.user)
+    return _schedule_out(request.user, transaction_id)
+
+
+@router.post(
+    "/transactions/{transaction_id}/schedule-amounts",
+    response=ScheduleOut,
+    summary="Change the amount from a month",
+)
+def change_amount(request, transaction_id: int, payload: AmountChangeIn):
+    item = _commitment(request.user, transaction_id)
+    requested = requested_billed_month(payload.month.strip())
+    if requested is None:
+        raise ValidationError({"month": _("Choose a month.")})
+    commitments.change_amount_from(item, dt.date(*requested, 1), payload.amount, user=request.user)
+    return _schedule_out(request.user, transaction_id)
+
+
+@router.delete(
+    "/transactions/{transaction_id}/schedule-amounts/{month}",
+    response=ScheduleOut,
+    summary="Remove an amount change",
+)
+def remove_amount(request, transaction_id: int, month: str):
+    item = _commitment(request.user, transaction_id)
+    commitments.remove_amount_change(item, _month_or_404(month), user=request.user)
+    return _schedule_out(request.user, transaction_id)

@@ -16,13 +16,15 @@ from decimal import Decimal
 
 from banking.models import CardInvoice
 from banking.settlements import attach_invoice_states
-from ledger import schedule
+from ledger import commitments, schedule
 from ledger.categories import Category
 from ledger.models import Transaction, attach_schedule_rows
 
 ZERO = Decimal("0.00")
 TREND_MONTHS = 6
 DUE_WINDOW_DAYS = 45
+# How far back a month that waits for confirmation is still listed.
+AWAITING_MONTHS = 12
 
 
 def _occurrences(user, first, last):
@@ -143,13 +145,12 @@ def spending_by_category(user, month):
     return sorted(rows, key=lambda row: (row["currency"], -row["amount"], row["name"]))
 
 
-def due_soon(user, today, days=DUE_WINDOW_DAYS):
-    """Return the invoices with an amount to pay that are overdue or due within ``days`` days.
+def _due_invoices(user, today, limit):
+    """Invoices with an amount to pay that are overdue or due on or before ``limit``.
 
     An invoice that settles from its account on the due date is listed until
     that date, because the money leaves the account then.
     """
-    limit = today + timedelta(days=days)
     invoices = attach_invoice_states(
         CardInvoice.objects.filter(user=user, due_date__lte=limit, amount__gt=0)
         .select_related("card__account")
@@ -163,13 +164,68 @@ def due_soon(user, today, days=DUE_WINDOW_DAYS):
             continue
         rows.append(
             {
+                "kind": "invoice",
                 "invoice_id": invoice.pk,
+                "transaction_id": None,
+                "month": invoice.reference_month,
                 "title": invoice.card.name,
                 "due_date": invoice.due_date,
                 "amount": state.remaining_amount,
                 "currency": invoice.card.account.currency,
                 "status": state.status,
-                "confirm_payments": state.manual_settlement,
             }
         )
     return rows
+
+
+def _due_bills(user, today, limit):
+    """Months of repeating expenses that wait for confirmation or fall on or before ``limit``.
+
+    A repeating expense on a credit card is not listed: it is part of an
+    invoice. A month that needs no confirmation is listed until its date.
+    """
+    items = attach_schedule_rows(
+        Transaction.objects.filter(
+            user=user,
+            transaction_type="EXPENSE",
+            is_fixed=True,
+            installments=1,
+            reward_redemption__isnull=True,
+        )
+        .exclude(payment_channel="CREDIT_CARD")
+        .select_related("bank_account", "debit_card__account")
+        .with_schedule_flags()
+        .order_by("pk")
+    )
+    first = schedule.offset_month(today, -AWAITING_MONTHS)
+    rows = []
+    for item in items:
+        for month in commitments.schedule_months(item, first, limit, today=today):
+            upcoming = (
+                month.status in (schedule.SCHEDULED, schedule.ADJUSTED, schedule.EXPECTED)
+                and month.cash_date is not None
+                and today <= month.cash_date <= limit
+            )
+            if not (month.awaiting or upcoming):
+                continue
+            rows.append(
+                {
+                    "kind": "bill",
+                    "invoice_id": None,
+                    "transaction_id": item.pk,
+                    "month": month.month,
+                    "title": item.title,
+                    "due_date": month.cash_date,
+                    "amount": month.amount,
+                    "currency": item.native_currency,
+                    "status": "AWAITING" if month.awaiting else "SCHEDULED",
+                }
+            )
+    return rows
+
+
+def due_soon(user, today, days=DUE_WINDOW_DAYS):
+    """Return what the owner must pay soon, by date: invoices and months of repeating expenses."""
+    limit = today + timedelta(days=days)
+    rows = _due_invoices(user, today, limit) + _due_bills(user, today, limit)
+    return sorted(rows, key=lambda row: (row["due_date"], row["title"]))

@@ -7,6 +7,8 @@ export type TransactionInput = components["schemas"]["TransactionIn"];
 export type Category = components["schemas"]["CategoryOut"];
 export type CategoryInput = components["schemas"]["CategoryIn"];
 export type Instrument = components["schemas"]["InstrumentOut"];
+export type Schedule = components["schemas"]["ScheduleOut"];
+export type ScheduleMonth = components["schemas"]["ScheduleMonth"];
 
 export type TransactionFilters = {
   month?: string;
@@ -141,5 +143,58 @@ export function useDeleteCategory() {
         }),
       ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
+  });
+}
+
+export function scheduleQuery(id: number) {
+  return queryOptions({
+    queryKey: ["transactions", "schedule", id],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/ledger/transactions/{transaction_id}/schedule", {
+          params: { path: { transaction_id: id } },
+        }),
+      ),
+  });
+}
+
+/** Confirm, skip or restore one month of a repeating entry. */
+export function useMonthAction(id: number) {
+  const changed = useLedgerChanged();
+  return useMutation({
+    mutationFn: (input: { month: string; action: "confirm" | "skip" | "restore" }) =>
+      unwrap(
+        api.POST("/api/ledger/transactions/{transaction_id}/schedule/{month}/{action}", {
+          params: { path: { transaction_id: id, month: input.month, action: input.action } },
+        }),
+      ),
+    onSuccess: changed,
+  });
+}
+
+export function useChangeAmountFrom(id: number) {
+  const changed = useLedgerChanged();
+  return useMutation({
+    mutationFn: (body: components["schemas"]["AmountChangeIn"]) =>
+      unwrap(
+        api.POST("/api/ledger/transactions/{transaction_id}/schedule-amounts", {
+          params: { path: { transaction_id: id } },
+          body,
+        }),
+      ),
+    onSuccess: changed,
+  });
+}
+
+export function useRemoveAmountChange(id: number) {
+  const changed = useLedgerChanged();
+  return useMutation({
+    mutationFn: (month: string) =>
+      unwrap(
+        api.DELETE("/api/ledger/transactions/{transaction_id}/schedule-amounts/{month}", {
+          params: { path: { transaction_id: id, month } },
+        }),
+      ),
+    onSuccess: changed,
   });
 }

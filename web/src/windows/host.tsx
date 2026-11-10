@@ -6,6 +6,7 @@ import { Window } from "../ui/Window";
 import { CategoriesWindow } from "./categories";
 import { AddEntry, EditEntry } from "./entry";
 import { DueWindow, HomeBlocksWindow, MonthWindow } from "./home";
+import { ScheduleWindow } from "./schedule";
 import { SettingsWindow } from "./settings";
 import {
   AccountWindow,
@@ -34,7 +35,8 @@ export type WindowId =
   | `transaction:${number}`
   | `account:${number}`
   | `card:${number}`
-  | `invoice:${number}`;
+  | `invoice:${number}`
+  | `schedule:${number}`;
 
 // The element that opened the current window. The window animates from it.
 let origin: HTMLElement | null = null;
@@ -155,6 +157,9 @@ export function WindowHost() {
   } else if (kind === "invoice" && id !== null) {
     title = t.wallet.invoice;
     content = <InvoiceWindow id={id} />;
+  } else if (kind === "schedule" && id !== null) {
+    title = t.schedule.title;
+    content = <ScheduleWindow id={id} />;
   } else {
     return null; // No window, or an id that this version does not know.
   }

@@ -19,6 +19,7 @@ import { editableAmount, parseAmount } from "../lib/money";
 import { Field } from "../ui/Field";
 import { Segmented } from "../ui/Segmented";
 import { autofocus } from "../ui/Window";
+import { OpenWindow } from "./host";
 
 type Kind = "EXPENSE" | "INCOME";
 
@@ -51,6 +52,12 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
   const [date, setDate] = useState(entry?.date ?? todayIso());
   const [installments, setInstallments] = useState(entry?.installments ?? 1);
   const [notes, setNotes] = useState(entry?.notes ?? "");
+  const [repeats, setRepeats] = useState(entry?.is_fixed ?? false);
+  const [until, setUntil] = useState(entry?.fixed_until?.slice(0, 7) ?? "");
+  const [confirmEach, setConfirmEach] = useState(entry?.requires_confirmation ?? false);
+  // The stored amount and date give every past month of a repeating entry,
+  // so they change in the monthly schedule, not here.
+  const pastMonths = Boolean(entry?.is_fixed && entry.date.slice(0, 7) < todayIso().slice(0, 7));
   const [amountError, setAmountError] = useState(false);
   // What the owner chose by hand is never replaced by a suggestion.
   const touched = useRef({ instrument: Boolean(entry), category: Boolean(entry) });
@@ -100,7 +107,7 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    const parsed = parseAmount(amount, currency);
+    const parsed = pastMonths && entry ? entry.amount : parseAmount(amount, currency);
     setAmountError(parsed === null);
     if (parsed === null) return;
     save.mutate(
@@ -111,7 +118,10 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
         date,
         category_id: Number(category) || 0,
         instrument,
-        installments: isCredit && kind === "EXPENSE" ? installments : 1,
+        installments: isCredit && kind === "EXPENSE" && !repeats ? installments : 1,
+        is_fixed: repeats,
+        fixed_until: repeats && until ? `${until}-01` : null,
+        requires_confirmation: repeats && confirmEach && !isCredit,
         notes,
       },
       { onSuccess: props.onDone },
@@ -126,6 +136,14 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
     <form onSubmit={submit} className="grid gap-5" noValidate>
       {locked && (
         <p className="rounded-(--radius-control) bg-sheet p-3 text-sm">{t.entry.locked}</p>
+      )}
+      {entry?.is_fixed && (
+        <p className="flex flex-wrap items-center justify-between gap-3 rounded-(--radius-control) bg-sheet p-3 text-sm">
+          <span>{pastMonths ? t.entry.pastMonths : t.transactions.recurring}</span>
+          <OpenWindow w={`schedule:${entry.id}`} className="link font-medium">
+            {t.entry.schedule}
+          </OpenWindow>
+        </p>
       )}
       <fieldset disabled={locked || save.isPending} className="grid gap-5">
         <Segmented
@@ -144,8 +162,9 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
               {...autofocus}
               inputMode="decimal"
               autoComplete="off"
-              className="field amount text-2xl font-semibold"
+              className="field amount text-2xl font-semibold disabled:opacity-60"
               value={amount}
+              disabled={pastMonths}
               onChange={(event) => setAmount(event.target.value)}
             />
           )}
@@ -205,16 +224,65 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
             <input
               {...control}
               type="date"
-              className="field"
+              className="field disabled:opacity-60"
               value={date}
+              disabled={pastMonths}
               onChange={(event) => setDate(event.target.value)}
             />
           )}
         </Field>
-        <details className="group" open={installments > 1 || notes !== "" || undefined}>
+        <details className="group" open={installments > 1 || notes !== "" || repeats || undefined}>
           <summary className="link w-fit cursor-pointer text-sm">{t.entry.more}</summary>
           <div className="mt-4 grid gap-5">
-            {isCredit && kind === "EXPENSE" && (
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="size-4"
+                checked={repeats}
+                onChange={(event) => setRepeats(event.target.checked)}
+              />
+              <span className="font-medium">{t.entry.repeats}</span>
+            </label>
+            {repeats && (
+              <div className="grid gap-5 pl-7">
+                <Field
+                  label={t.entry.until}
+                  help={t.entry.untilHelp}
+                  errors={fieldMessages(error, "fixed_until")}
+                  className="w-fit"
+                >
+                  {(control) => (
+                    <input
+                      {...control}
+                      type="month"
+                      className="field"
+                      value={until}
+                      onChange={(event) => setUntil(event.target.value)}
+                    />
+                  )}
+                </Field>
+                {!isCredit && (
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 size-4"
+                      checked={confirmEach}
+                      onChange={(event) => setConfirmEach(event.target.checked)}
+                    />
+                    <span>
+                      <span className="block font-medium">{t.entry.confirmEach}</span>
+                      <span className="block text-sm text-muted">{t.entry.confirmEachHelp}</span>
+                    </span>
+                  </label>
+                )}
+                {fieldMessages(error, "requires_confirmation").length > 0 && (
+                  <p role="alert" className="text-sm text-negative">
+                    {fieldMessages(error, "requires_confirmation").join(" ")}
+                  </p>
+                )}
+              </div>
+            )}
+            {isCredit && kind === "EXPENSE" && !repeats && (
               <Field
                 label={t.entry.installments}
                 help={t.entry.installmentsHelp}

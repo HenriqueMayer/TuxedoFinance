@@ -33,13 +33,17 @@ class CategorySpending(CategoryPart):
 
 
 class DueRow(Schema):
-    invoice_id: int
+    #: An invoice of a credit card, or one month of a repeating expense.
+    kind: Literal["invoice", "bill"]
+    invoice_id: int | None
+    transaction_id: int | None
+    month: dt.date
     title: str
     due_date: dt.date
     amount: Decimal
     currency: str
-    status: Literal["SCHEDULED", "PARTIAL", "OVERDUE", "PAID"]
-    confirm_payments: bool
+    #: AWAITING: a month of a repeating expense that waits for confirmation.
+    status: Literal["SCHEDULED", "PARTIAL", "OVERDUE", "PAID", "AWAITING"]
 
 
 class HomeOut(Schema):

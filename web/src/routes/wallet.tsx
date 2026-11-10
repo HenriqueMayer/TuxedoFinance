@@ -140,9 +140,12 @@ function CreditCard(props: { card: CreditCardRow; currency: string; accountName:
 }
 
 /** The state of an invoice in words. Color only adds to the words. */
-export function StatusLabel(props: { invoice: Pick<InvoiceRow, "status">; t: Messages }) {
+export function StatusLabel(props: {
+  invoice: { status: InvoiceRow["status"] | "AWAITING" };
+  t: Messages;
+}) {
   const tone =
-    props.invoice.status === "OVERDUE"
+    props.invoice.status === "OVERDUE" || props.invoice.status === "AWAITING"
       ? "text-negative"
       : props.invoice.status === "PAID"
         ? "text-positive"

@@ -428,6 +428,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ledger/transactions/{transaction_id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the months of a repeating entry */
+        get: operations["ledger_api_read_schedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/transactions/{transaction_id}/schedule/{month}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm, skip or restore one month */
+        post: operations["ledger_api_change_month"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/transactions/{transaction_id}/schedule-amounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change the amount from a month */
+        post: operations["ledger_api_change_amount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/transactions/{transaction_id}/schedule-amounts/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove an amount change */
+        delete: operations["ledger_api_remove_amount"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/home": {
         parameters: {
             query?: never;
@@ -956,6 +1024,10 @@ export interface components {
             installments: number;
             /** Is Fixed */
             is_fixed: boolean;
+            /** Fixed Until */
+            fixed_until: string | null;
+            /** Requires Confirmation */
+            requires_confirmation: boolean;
             /** Notes */
             notes: string;
             /** Locked */
@@ -1002,6 +1074,18 @@ export interface components {
              */
             installments: number;
             /**
+             * Is Fixed
+             * @default false
+             */
+            is_fixed: boolean;
+            /** Fixed Until */
+            fixed_until?: string | null;
+            /**
+             * Requires Confirmation
+             * @default false
+             */
+            requires_confirmation: boolean;
+            /**
              * Notes
              * @default
              */
@@ -1013,6 +1097,77 @@ export interface components {
             category_id: number | null;
             /** Instrument */
             instrument: string | null;
+        };
+        /** AmountChange */
+        AmountChange: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Amount */
+            amount: string;
+        };
+        /** ScheduleMonth */
+        ScheduleMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Amount */
+            amount: string;
+            /** Scheduled Amount */
+            scheduled_amount: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "SCHEDULED" | "ADJUSTED" | "EXPECTED" | "CONFIRMED" | "SKIPPED";
+            /** Awaiting */
+            awaiting: boolean;
+            /** Cash Date */
+            cash_date: string | null;
+            /** Can Skip */
+            can_skip: boolean;
+            /** Can Confirm */
+            can_confirm: boolean;
+            /** Can Restore */
+            can_restore: boolean;
+            /** Can Change From */
+            can_change_from: boolean;
+        };
+        /** ScheduleOut */
+        ScheduleOut: {
+            /** Transaction Id */
+            transaction_id: number;
+            /** Title */
+            title: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Transaction Type
+             * @enum {string}
+             */
+            transaction_type: "INCOME" | "EXPENSE";
+            /** Requires Confirmation */
+            requires_confirmation: boolean;
+            /** Months */
+            months: components["schemas"]["ScheduleMonth"][];
+            /** Amount Changes */
+            amount_changes: components["schemas"]["AmountChange"][];
+            /**
+             * Default Change Month
+             * Format: date
+             */
+            default_change_month: string;
+        };
+        /** AmountChangeIn */
+        AmountChangeIn: {
+            /** Month */
+            month: string;
+            /** Amount */
+            amount: number | string;
         };
         /** CategoryPart */
         CategoryPart: {
@@ -1038,8 +1193,20 @@ export interface components {
         };
         /** DueRow */
         DueRow: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "invoice" | "bill";
             /** Invoice Id */
-            invoice_id: number;
+            invoice_id: number | null;
+            /** Transaction Id */
+            transaction_id: number | null;
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
             /** Title */
             title: string;
             /**
@@ -1055,9 +1222,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "SCHEDULED" | "PARTIAL" | "OVERDUE" | "PAID";
-            /** Confirm Payments */
-            confirm_payments: boolean;
+            status: "SCHEDULED" | "PARTIAL" | "OVERDUE" | "PAID" | "AWAITING";
         };
         /** HomeOut */
         HomeOut: {
@@ -1884,6 +2049,101 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ledger_api_read_schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleOut"];
+                };
+            };
+        };
+    };
+    ledger_api_change_month: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+                month: string;
+                action: "confirm" | "skip" | "restore";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleOut"];
+                };
+            };
+        };
+    };
+    ledger_api_change_amount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmountChangeIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleOut"];
+                };
+            };
+        };
+    };
+    ledger_api_remove_amount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleOut"];
+                };
             };
         };
     };
