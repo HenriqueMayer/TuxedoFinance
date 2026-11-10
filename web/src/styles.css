@@ -94,11 +94,20 @@ body {
 }
 
 @utility button-primary {
-  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-(--radius-control) bg-ink px-4 py-2 font-medium text-sheet disabled:opacity-60;
+  @apply inline-flex whitespace-nowrap min-h-10 items-center justify-center gap-2 rounded-(--radius-control) bg-ink px-4 py-2 font-medium text-sheet disabled:opacity-60;
 }
 
 @utility button-quiet {
-  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-(--radius-control) border border-control px-4 py-2 font-medium text-ink;
+  @apply inline-flex whitespace-nowrap min-h-10 items-center justify-center gap-2 rounded-(--radius-control) border border-control px-4 py-2 font-medium text-ink;
+}
+
+/* The bow tie: only the Add action and the save of an entry use it. */
+@utility button-accent {
+  @apply inline-flex whitespace-nowrap min-h-10 items-center justify-center gap-2 rounded-(--radius-control) bg-accent px-4 py-2 font-semibold text-on-accent disabled:opacity-60;
+}
+
+@utility button-danger {
+  @apply inline-flex whitespace-nowrap min-h-10 items-center justify-center gap-2 rounded-(--radius-control) bg-negative px-4 py-2 font-medium text-surface;
 }
 
 @utility link {

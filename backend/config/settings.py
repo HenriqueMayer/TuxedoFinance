@@ -27,6 +27,9 @@ def env_flag(name, default):
 DEBUG = env_flag("DEBUG", "False")
 ALLOW_SIGNUPS = env_flag("ALLOW_SIGNUPS", "True")
 HTTPS = env_flag("HTTPS", "False")
+# Attempts to sign in or sign up, for each address. The browser journeys raise
+# it, because they create many users from one address.
+AUTH_THROTTLE = os.environ.get("TUXEDO_AUTH_THROTTLE", "10/m").strip()
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "").strip()
 if not SECRET_KEY:
@@ -44,6 +47,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "ninja",
     "accounts",
+    "banking",
+    "ledger",
 ]
 
 MIDDLEWARE = [
@@ -122,7 +127,6 @@ WHITENOISE_ROOT = CLIENT_DIR if CLIENT_DIR.is_dir() else None
 # files are listed once at startup.
 WHITENOISE_AUTOREFRESH = DEBUG
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "var" / "staticfiles"
 
 # Scripts and styles come only from this installation. Inline style attributes
 # stay allowed because the client positions windows and charts with them.
@@ -163,6 +167,10 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {"app": {"format": "[{asctime}] {levelname} {name}: {message}", "style": "{"}},
-    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "app"}},
+    # The level is on the handler: records that propagate from Django's own
+    # loggers do not pass through the level of the root logger.
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "app", "level": LOG_LEVEL}
+    },
     "root": {"handlers": ["console"], "level": LOG_LEVEL},
 }

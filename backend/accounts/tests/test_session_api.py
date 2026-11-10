@@ -1,29 +1,11 @@
-import json
-
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
-from django.test import Client, TestCase, override_settings
+from django.test import override_settings
 
-PASSWORD = "a-long-test-passphrase-42"
+from config.testing import PASSWORD, ApiTestCase
 
 
-class SessionApiTestCase(TestCase):
-    """Base with a JSON client that enforces CSRF like a browser session."""
-
-    def setUp(self):
-        cache.clear()  # The sign-in throttle counts requests in the cache.
-        self.client = Client(enforce_csrf_checks=True)
-        self.user = get_user_model().objects.create_user("ana", "ana@example.test", PASSWORD)
-
-    def csrf(self):
-        self.client.get("/api/session")
-        return self.client.cookies["csrftoken"].value
-
-    def post(self, path, payload=None, csrf=True, method="post"):
-        headers = {"X-CSRFToken": self.csrf()} if csrf else {}
-        return getattr(self.client, method)(
-            path, data=json.dumps(payload or {}), content_type="application/json", headers=headers
-        )
+class SessionApiTestCase(ApiTestCase):
+    signed_in = False
 
     def sign_in(self, username="ana", password=PASSWORD):
         return self.post("/api/session/login", {"username": username, "password": password})
@@ -91,13 +73,13 @@ class SignOutTests(SessionApiTestCase):
 
 
 class SignUpTests(SessionApiTestCase):
-    new_user = {"username": "bia", "email": "bia@example.test", "password": PASSWORD}
+    new_user = {"username": "caio", "email": "caio@example.test", "password": PASSWORD}
 
     def test_sign_up_creates_the_user_and_opens_a_session(self):
         response = self.post("/api/session/signup", self.new_user)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["user"]["username"], "bia")
-        self.assertTrue(get_user_model().objects.get(username="bia").check_password(PASSWORD))
+        self.assertEqual(response.json()["user"]["username"], "caio")
+        self.assertTrue(get_user_model().objects.get(username="caio").check_password(PASSWORD))
 
     def test_weak_password_and_taken_username_are_field_errors(self):
         response = self.post(
@@ -105,29 +87,29 @@ class SignUpTests(SessionApiTestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(set(response.json()["errors"]), {"username", "email", "password"})
-        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(get_user_model().objects.count(), 2)
 
     @override_settings(ALLOW_SIGNUPS=False)
     def test_closed_registration_refuses_sign_up(self):
         response = self.post("/api/session/signup", self.new_user)
         self.assertEqual(response.status_code, 400)
-        self.assertFalse(get_user_model().objects.filter(username="bia").exists())
+        self.assertFalse(get_user_model().objects.filter(username="caio").exists())
         self.assertFalse(self.client.get("/api/session").json()["allow_signups"])
 
 
 class PreferencesTests(SessionApiTestCase):
     def test_owner_changes_one_preference_and_keeps_the_other(self):
         self.sign_in()
-        response = self.post("/api/session/preferences", {"base_currency": "USD"}, method="patch")
+        response = self.patch("/api/session/preferences", {"base_currency": "USD"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"base_currency": "USD", "date_format": "DMY"})
 
     def test_unsupported_currency_is_refused(self):
         self.sign_in()
-        response = self.post("/api/session/preferences", {"base_currency": "XXX"}, method="patch")
+        response = self.patch("/api/session/preferences", {"base_currency": "XXX"})
         self.assertEqual(response.status_code, 422)
         self.assertEqual(self.user.preferences.base_currency, "BRL")
 
     def test_preferences_need_a_session(self):
-        response = self.post("/api/session/preferences", {"base_currency": "USD"}, method="patch")
+        response = self.patch("/api/session/preferences", {"base_currency": "USD"})
         self.assertEqual(response.status_code, 401)

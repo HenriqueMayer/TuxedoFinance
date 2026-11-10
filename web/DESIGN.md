@@ -12,13 +12,13 @@ lifts off the sheet into a window.
 
 ## Decisions
 
-| Decision | Rule | Follows from |
-|---|---|---|
-| Layout | Navigation lives on the jacket: a rail on a wide screen, a dock on a phone. The page lives on the sheet, which has one rounded edge against the jacket. | Jacket and shirt |
-| Color roles | Forest is structure and text. Cream is the work surface. Caramel (`accent`) is used for the Add action and keyboard focus only. Green and red (`positive`, `negative`) are used on amounts only. | One bow tie for each outfit |
-| Type | Inter, bundled with the client. Amounts use tabular figures (`amount`). The answer to a question is the largest text of its block. | The product answers questions with numbers |
-| Signature | The window: a title bar with the three macOS lights. Red closes. Green expands to full size. The middle light is inactive, because a window cannot be minimized. | Objects lift off the sheet |
-| Density | A list is rows with hairlines on the sheet. A card is used only for an object that opens. | If it is a card, it opens |
+| Decision    | Rule                                                                                                                                                                                             | Follows from                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| Layout      | Navigation lives on the jacket: a rail on a wide screen, a dock on a phone. The page lives on the sheet, which has one rounded edge against the jacket.                                          | Jacket and shirt                           |
+| Color roles | Forest is structure and text. Cream is the work surface. Caramel (`accent`) is used for the Add action and keyboard focus only. Green and red (`positive`, `negative`) are used on amounts only. | One bow tie for each outfit                |
+| Type        | Inter, bundled with the client. Amounts use tabular figures (`amount`). The answer to a question is the largest text of its block.                                                               | The product answers questions with numbers |
+| Signature   | The window: a title bar with the three macOS lights. Red closes. Green expands to full size. The middle light is inactive, because a window cannot be minimized.                                 | Objects lift off the sheet                 |
+| Density     | A list is rows with hairlines on the sheet. A card is used only for an object that opens.                                                                                                        | If it is a card, it opens                  |
 
 ## The window
 

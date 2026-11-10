@@ -1,7 +1,10 @@
 import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useMessages } from "../i18n";
+import { Boundary } from "../ui/Boundary";
 import { Window } from "../ui/Window";
+import { CategoriesWindow } from "./categories";
+import { AddEntry, EditEntry } from "./entry";
 import { SettingsWindow } from "./settings";
 
 /**
@@ -9,7 +12,7 @@ import { SettingsWindow } from "./settings";
  * `/transactions?month=2026-11&w=settings`. So a window has an address, Back
  * closes it, and the page behind keeps its path, filters and scroll position.
  */
-export type WindowId = "settings";
+export type WindowId = "settings" | "categories" | "add" | `transaction:${number}`;
 
 // The element that opened the current window. The window animates from it.
 let origin: HTMLElement | null = null;
@@ -70,12 +73,28 @@ export function WindowHost() {
     }
   }
 
+  let title: string;
+  let content: ReactNode;
+  const entryId = /^transaction:(\d+)$/.exec(w ?? "")?.[1];
   if (w === "settings") {
-    return (
-      <Window key={w} title={t.settings.title} origin={origin} onClose={close}>
-        <SettingsWindow />
-      </Window>
-    );
+    title = t.settings.title;
+    content = <SettingsWindow />;
+  } else if (w === "categories") {
+    title = t.categories.title;
+    content = <CategoriesWindow />;
+  } else if (w === "add") {
+    title = t.entry.add;
+    content = <AddEntry onDone={close} />;
+  } else if (entryId) {
+    title = t.entry.edit;
+    content = <EditEntry id={Number(entryId)} onDone={close} />;
+  } else {
+    return null; // No window, or an id that this version does not know.
   }
-  return null;
+  // The key remounts the window when the address names another one.
+  return (
+    <Window key={w} title={title} origin={origin} onClose={close}>
+      <Boundary>{content}</Boundary>
+    </Window>
+  );
 }

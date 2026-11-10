@@ -31,6 +31,9 @@ export function Window(props: {
     const element = dialog.current;
     if (!element) return;
     element.showModal();
+    // showModal() focuses the first control, which is the close light. A form
+    // marks the control where typing starts.
+    element.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     travel(element, origin, "in");
     return () => element.close();
   }, []);
@@ -136,3 +139,13 @@ function travel(element: HTMLElement, origin: HTMLElement | null, direction: "in
   // A cancelled animation rejects; the window still closes or stays open correctly.
   return animation.finished.catch(() => undefined);
 }
+
+/**
+ * Attributes for the control where typing starts in a window. The window
+ * focuses a marked control when it opens. The ref covers content that arrives
+ * later, for example after its data has loaded.
+ */
+export const autofocus = {
+  "data-autofocus": true,
+  ref: (element: HTMLElement | null) => element?.focus(),
+};

@@ -34,3 +34,10 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# These modules turn a parsing error into a validation message for the owner.
+# The cause is deliberately not chained.
+"config/dates.py" = ["B904"]
+"ledger/statement_import.py" = ["B904"]
+"ledger/statement_parsers.py" = ["B904"]

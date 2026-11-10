@@ -1,0 +1,1072 @@
+import uuid
+from datetime import date
+from decimal import Decimal
+
+from django.conf import settings
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.db import models
+from django.db.models import Case, DecimalField, F, Sum, Value, When
+from django.db.models.functions import Coalesce
+from django.utils import timezone
+from django.utils.translation import gettext as gettext
+from django.utils.translation import gettext_lazy as _
+
+from banking import card_calendar
+from config import clock
+from config.currencies import CURRENCIES
+
+CURRENCY_NAMES = {
+    "BRL": _("Brazilian Real"),
+    "USD": _("US Dollar"),
+    "EUR": _("Euro"),
+    "GBP": _("British Pound"),
+    "JPY": _("Japanese Yen"),
+    "CHF": _("Swiss Franc"),
+}
+CURRENCY_CHOICES = [(code, CURRENCY_NAMES[code]) for code in CURRENCIES]
+ZERO = Decimal("0.00")
+POSITIVE = MinValueValidator(Decimal("0.01"))
+NON_NEGATIVE = MinValueValidator(ZERO)
+# Source-key prefix of the adjustment movement of a balance check.
+CHECKPOINT_KEY_PREFIX = "checkpoint:"
+CARD_COLOR = RegexValidator(r"^#[0-9a-fA-F]{6}$", _("Enter a color in #RRGGBB format."))
+
+
+class TimestampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Bank(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="banks"
+    )
+    name = models.CharField(max_length=100)
+    color = models.CharField(
+        max_length=7,
+        default="#B88D57",
+        blank=True,
+        validators=[RegexValidator(r"^#[0-9a-fA-F]{6}$", _("Enter a color in #RRGGBB format."))],
+    )
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "name"], name="banking_unique_bank_user_name")
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class BankAccount(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="bank_accounts",
+    )
+    bank = models.ForeignKey(Bank, on_delete=models.PROTECT, related_name="accounts")
+    name = models.CharField(max_length=100)
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    opening_balance = models.DecimalField(max_digits=16, decimal_places=2, default=ZERO)
+    opening_date = models.DateField(null=True, blank=True)
+    pix_enabled = models.BooleanField(default=True)
+    planning_enabled = models.BooleanField(default=True)
+    reserved_amount = models.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        default=ZERO,
+        validators=[NON_NEGATIVE],
+        help_text=_("Money to keep outside monthly planning, in this account currency."),
+    )
+
+    class Meta:
+        ordering = ["bank__name", "name", "currency"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["bank", "name", "currency"],
+                name="banking_unique_account_bank_name_currency",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(reserved_amount__gte=0),
+                name="banking_account_reserved_amount_gte_zero",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.bank.name} - {self.name} ({self.currency})"
+
+    def clean(self):
+        if self.bank_id and self.user_id and self.bank.user_id != self.user_id:
+            raise ValidationError({"bank": _("The bank must belong to the account owner.")})
+        if self.pk:
+            previous_currency = (
+                BankAccount.objects.filter(pk=self.pk).values_list("currency", flat=True).first()
+            )
+            # A reserve is denominated in its source currency, including when
+            # its goal is archived. Reinterpreting it would invent funding.
+            if previous_currency != self.currency and self.goal_allocations.exists():
+                raise ValidationError(
+                    {
+                        "currency": _(
+                            "Currency cannot change while this account has goal reservations."
+                        )
+                    }
+                )
+
+    def current_balance(self, as_of=None):
+        from banking.services import account_balance
+
+        return account_balance(self, as_of=as_of)
+
+    def predates_opening(self, effective_date):
+        """Unknown legacy baselines never acquire an inferred start date."""
+        return bool(
+            self.opening_date
+            and isinstance(effective_date, date)
+            and effective_date < self.opening_date
+        )
+
+
+class DebitCard(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="debit_cards"
+    )
+    account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="debit_cards")
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=7, default="#253330", validators=[CARD_COLOR])
+    gradient_end = models.CharField(max_length=7, blank=True, validators=[CARD_COLOR])
+    gradient_angle = models.PositiveSmallIntegerField(
+        default=135, validators=[MinValueValidator(0), MaxValueValidator(359)]
+    )
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "name"], name="banking_unique_debit_card_account_name"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(gradient_angle__gte=0, gradient_angle__lte=359),
+                name="banking_debit_card_gradient_angle_range",
+            ),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    def clean(self):
+        if self.account_id and self.user_id and self.account.user_id != self.user_id:
+            raise ValidationError({"account": _("The account must belong to the card owner.")})
+
+
+class CreditCard(TimestampedModel):
+    class CardType(models.TextChoices):
+        PHYSICAL = "PHYSICAL", _("Physical")
+        VIRTUAL = "VIRTUAL", _("Virtual")
+        ADDITIONAL = "ADDITIONAL", _("Additional")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="credit_cards"
+    )
+    account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="credit_cards")
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=7, default="#253330", validators=[CARD_COLOR])
+    gradient_end = models.CharField(max_length=7, blank=True, validators=[CARD_COLOR])
+    gradient_angle = models.PositiveSmallIntegerField(
+        default=135, validators=[MinValueValidator(0), MaxValueValidator(359)]
+    )
+    card_type = models.CharField(max_length=10, choices=CardType.choices, default=CardType.PHYSICAL)
+    closing_day = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(31)]
+    )
+    due_day = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(31)]
+    )
+    manual_settlement_from = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_(
+            "Confirm payments for invoices due on or after this date. Earlier invoices retain automatic settlement."
+        ),
+    )
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "name"], name="banking_unique_credit_card_account_name"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(gradient_angle__gte=0, gradient_angle__lte=359),
+                name="banking_credit_card_gradient_angle_range",
+            ),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    def clean(self):
+        if self.account_id and self.user_id and self.account.user_id != self.user_id:
+            raise ValidationError({"account": _("The account must belong to the card owner.")})
+
+    def statement_month(self, purchase_date, override=None):
+        """Return the statement month of a purchase (banking.card_calendar.statement_month)."""
+        return card_calendar.statement_month(self.closing_day, purchase_date, override)
+
+    @property
+    def best_purchase_day(self):
+        """The card's configured best day for purchases."""
+        return self.closing_day
+
+    def due_date_for(self, reference_month):
+        """Return the due date of a statement month (banking.card_calendar.due_date)."""
+        return card_calendar.due_date(self.closing_day, self.due_day, reference_month)
+
+
+class CardInvoice(TimestampedModel):
+    class Status(models.TextChoices):
+        SCHEDULED = "SCHEDULED", _("Scheduled")
+        PARTIAL = "PARTIAL", _("Partially paid")
+        OVERDUE = "OVERDUE", _("Overdue")
+        PAID = "PAID", _("Paid")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="card_invoices"
+    )
+    card = models.ForeignKey(CreditCard, on_delete=models.PROTECT, related_name="invoices")
+    reference_month = models.DateField()
+    due_date = models.DateField()
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[NON_NEGATIVE])
+    # status and paid_at are a cache: the state as of LedgerSyncState.synced_on,
+    # written only by synchronization and the payment services. The state
+    # changes with the date, so product code reads current_status and
+    # current_state instead (tests/tooling/test_invoice_status_reads.py).
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.SCHEDULED)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    manual_settlement = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-reference_month", "card__name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["card", "reference_month"],
+                name="banking_unique_invoice_card_month",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(amount__gte=0), name="banking_invoice_amount_gte_zero"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.card.name} - {self.reference_month:%Y-%m}"
+
+    @property
+    def account(self):
+        return self.card.account
+
+    @property
+    def current_state(self):
+        """The settlement state as of today (banking.settlements.invoice_state).
+
+        A state that ``banking.settlements.attach_invoice_states`` kept on this
+        instance is used while its date is today. Otherwise each read
+        calculates the state again, with up to two queries for a manual
+        invoice without prefetched payments.
+        """
+        today = clock.today()
+        attached = getattr(self, "_attached_settlement_state", None)
+        if attached is not None and attached[0] == today:
+            return attached[1]
+        from banking.settlements import invoice_state
+
+        return invoice_state(self, today)
+
+    @property
+    def current_status(self):
+        """The ``Status`` value as of today; the stored ``status`` can be older."""
+        return self.current_state.status
+
+    @property
+    def status_label(self):
+        """The translated label of ``current_status``."""
+        return self.Status(self.current_status).label
+
+    @property
+    def is_overdue(self):
+        return self.current_state.is_overdue
+
+    @property
+    def confirmed_amount(self):
+        # Match settlement and cash cutoffs, regardless of the host's timezone.
+        today = clock.today()
+        return sum(
+            (payment.amount for payment in self.payments.all() if payment.date <= today), ZERO
+        )
+
+    @property
+    def remaining_amount(self):
+        return (
+            max(ZERO, self.amount - self.confirmed_amount)
+            if self.manual_settlement
+            else (ZERO if self.current_status == self.Status.PAID else self.amount)
+        )
+
+    @property
+    def overpaid_amount(self):
+        return max(ZERO, self.confirmed_amount - self.amount) if self.manual_settlement else ZERO
+
+    @property
+    def credits_amount(self):
+        from banking.credits import invoice_credit_totals
+
+        return invoice_credit_totals(
+            self.user,
+            card_id=self.card_id,
+            reference_month=self.reference_month,
+        )
+
+    @property
+    def gross_amount(self):
+        from banking.credits import invoice_gross_amount
+
+        return invoice_gross_amount(self)
+
+    @property
+    def credit_balance(self):
+        # Credit beyond this statement's purchases remains a card asset. It
+        # must not become income, a payment or a fabricated bank movement.
+        return max(ZERO, self.credits_amount - self.gross_amount)
+
+    def clean(self):
+        errors = {}
+        if self.card_id and self.user_id and self.card.user_id != self.user_id:
+            errors["card"] = _("The card must belong to the invoice owner.")
+        if self.reference_month and self.reference_month.day != 1:
+            errors["reference_month"] = _("Reference month must be the first day of a month.")
+        if errors:
+            raise ValidationError(errors)
+
+
+class CardInvoiceCredit(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="card_invoice_credits",
+    )
+    card = models.ForeignKey(
+        CreditCard,
+        on_delete=models.PROTECT,
+        related_name="invoice_credits",
+    )
+    category = models.ForeignKey(
+        "ledger.Category",
+        on_delete=models.PROTECT,
+        related_name="invoice_credits",
+    )
+    title = models.CharField(max_length=150)
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    date = models.DateField()
+    reference_month = models.DateField()
+    notes = models.TextField(blank=True)
+    idempotency_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    class Meta:
+        ordering = ["-date", "-pk"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0),
+                name="banking_invoice_credit_amount_gt_zero",
+            ),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def clean(self):
+        errors = {}
+        if self.card_id and self.user_id:
+            card = self.card
+            if any(
+                owner != self.user_id
+                for owner in (
+                    card.user_id,
+                    card.account.user_id,
+                    card.account.bank.user_id,
+                )
+            ):
+                errors["card"] = _("The card must belong to the invoice owner.")
+            if card.account.predates_opening(self.date):
+                errors["date"] = _("The operation cannot precede the account opening balance date.")
+        if self.category_id:
+            if self.user_id and self.category.user_id != self.user_id:
+                errors["category"] = _("This category must belong to the credit owner.")
+            elif self.category.transaction_type not in (None, "", "EXPENSE"):
+                errors["category"] = _(
+                    "Choose an expense or unclassified category for an invoice credit."
+                )
+        if self.reference_month and self.reference_month.day != 1:
+            errors["reference_month"] = _("Reference month must be the first day of a month.")
+        if errors:
+            raise ValidationError(errors)
+
+
+class BankTransfer(TimestampedModel):
+    class FxSnapshotStatus(models.TextChoices):
+        UNKNOWN = "UNKNOWN", _("Unknown")
+        RECONSTRUCTED = "RECONSTRUCTED", _("Reconstructed")
+        CAPTURED = "CAPTURED", _("Captured")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="bank_transfers"
+    )
+    source_account = models.ForeignKey(
+        BankAccount, on_delete=models.PROTECT, related_name="outgoing_transfers"
+    )
+    destination_account = models.ForeignKey(
+        BankAccount, on_delete=models.PROTECT, related_name="incoming_transfers"
+    )
+    source_amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    destination_amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    fx_rate = models.DecimalField(max_digits=20, decimal_places=8, null=True, blank=True)
+    fx_source_currency = models.CharField(max_length=3, blank=True)
+    fx_target_currency = models.CharField(max_length=3, blank=True)
+    fx_effective_date = models.DateField(null=True, blank=True)
+    fx_source_rate = models.ForeignKey(
+        "ExchangeRate",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="transfer_snapshots",
+    )
+    fx_snapshot_status = models.CharField(
+        max_length=15, choices=FxSnapshotStatus.choices, default=FxSnapshotStatus.UNKNOWN
+    )
+    date = models.DateField()
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(source_amount__gt=0),
+                name="banking_transfer_source_amount_gt_zero",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(destination_amount__gt=0),
+                name="banking_transfer_destination_amount_gt_zero",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(source_account=F("destination_account")),
+                name="banking_transfer_accounts_differ",
+            ),
+        ]
+
+    def __str__(self):
+        return gettext("%(source)s to %(destination)s") % {
+            "source": self.source_account,
+            "destination": self.destination_account,
+        }
+
+    def clean(self):
+        errors = {}
+        if self.source_account_id and self.destination_account_id:
+            if self.source_account_id == self.destination_account_id:
+                errors["destination_account"] = _("Source and destination must differ.")
+            if self.source_account.user_id != self.destination_account.user_id:
+                errors["destination_account"] = _("Both accounts must have the same owner.")
+        for field in ("source_account", "destination_account"):
+            account = getattr(self, field, None)
+            if account and self.user_id and account.user_id != self.user_id:
+                errors[field] = _("The account must belong to the transfer owner.")
+            if account and account.predates_opening(self.date):
+                errors["date"] = _("The operation cannot precede the account opening balance date.")
+        if (
+            self.source_account_id
+            and self.destination_account_id
+            and self.source_account.currency == self.destination_account.currency
+            and self.source_amount is not None
+            and self.destination_amount is not None
+            and self.source_amount != self.destination_amount
+        ):
+            # Own-account transfers cannot create an unexplained same-currency
+            # gain or loss. Record any fee as its own categorized expense.
+            errors["destination_amount"] = _(
+                "Transfers in the same currency require equal source and destination amounts."
+            )
+        if errors:
+            raise ValidationError(errors)
+
+
+class BankMovement(TimestampedModel):
+    class Direction(models.TextChoices):
+        CREDIT = "CREDIT", _("Credit")
+        DEBIT = "DEBIT", _("Debit")
+
+    class Kind(models.TextChoices):
+        INCOME = "INCOME", _("Income")
+        EXPENSE = "EXPENSE", _("Expense")
+        TRANSFER = "TRANSFER", _("Transfer")
+        INVOICE = "INVOICE", _("Invoice")
+        INVESTMENT = "INVESTMENT", _("Investment")
+        REWARD = "REWARD", _("Reward")
+        ADJUSTMENT = "ADJUSTMENT", _("Adjustment")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="bank_movements"
+    )
+    account = models.ForeignKey(BankAccount, on_delete=models.PROTECT, related_name="movements")
+    direction = models.CharField(max_length=6, choices=Direction.choices)
+    kind = models.CharField(max_length=12, choices=Kind.choices)
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    effective_date = models.DateField()
+    description = models.CharField(max_length=255, blank=True)
+    invoice = models.OneToOneField(
+        CardInvoice,
+        on_delete=models.PROTECT,
+        related_name="settlement_movement",
+        null=True,
+        blank=True,
+    )
+    transfer = models.ForeignKey(
+        BankTransfer,
+        on_delete=models.PROTECT,
+        related_name="movements",
+        null=True,
+        blank=True,
+    )
+    source_key = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0), name="banking_movement_amount_gt_zero"
+            ),
+            models.UniqueConstraint(
+                fields=["user", "source_key"],
+                condition=~models.Q(source_key=""),
+                name="banking_unique_movement_source_key",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_direction_display()} {self.amount} {self.account.currency}"
+
+    @property
+    def signed_amount(self):
+        return self.amount if self.direction == self.Direction.CREDIT else -self.amount
+
+    @staticmethod
+    def invoice_label(card_name, reference_month):
+        """Return the label of an automatic invoice settlement in the active language."""
+        return gettext("%(card_name)s invoice %(reference_month)s") % {
+            "card_name": card_name,
+            "reference_month": reference_month.strftime("%Y-%m"),
+        }
+
+    @property
+    def label(self):
+        """Return the text that pages and exports show for this movement.
+
+        Synchronization stores the automatic settlement of an invoice without
+        a description, so its stored row does not depend on the language of
+        the synchronizing request. Its label comes from the linked invoice in
+        the active language. Load ``invoice__card`` with ``select_related``
+        to avoid two queries for each such movement. Other movements show
+        their stored description, which an explicit action wrote once.
+        """
+        if self.kind == self.Kind.INVOICE and self.invoice_id:
+            return self.invoice_label(self.invoice.card.name, self.invoice.reference_month)
+        if self.kind == self.Kind.ADJUSTMENT and self.source_key.startswith(CHECKPOINT_KEY_PREFIX):
+            # The adjustment of a balance check stores no text either.
+            return gettext("Balance check adjustment")
+        return self.description
+
+    def clean(self):
+        errors = {}
+        if self.account_id and self.user_id and self.account.user_id != self.user_id:
+            errors["account"] = _("The account must belong to the movement owner.")
+        if self.invoice_id:
+            if self.user_id and self.invoice.user_id != self.user_id:
+                errors["invoice"] = _("The invoice must belong to the movement owner.")
+            elif self.account_id and self.invoice.account_id != self.account_id:
+                errors["invoice"] = _("The invoice must settle from its linked account.")
+            if self.kind != self.Kind.INVOICE or self.direction != self.Direction.DEBIT:
+                errors["invoice"] = _("Invoice settlements must be INVOICE debit movements.")
+        if self.transfer_id:
+            if self.user_id and self.transfer.user_id != self.user_id:
+                errors["transfer"] = _("The transfer must belong to the movement owner.")
+            if self.kind != self.Kind.TRANSFER:
+                errors["kind"] = _("A transfer-linked movement must have TRANSFER kind.")
+        if errors:
+            raise ValidationError(errors)
+
+
+class BalanceCheckpoint(TimestampedModel):
+    """The balance that the bank shows for an account at the end of one day (R8).
+
+    The owner enters ``statement_balance`` from the bank statement or the bank
+    app. The difference to the tracked balance is calculated each time it is
+    read (``banking.reconciliation``). ``adjustment`` is the optional movement
+    that the owner confirmed to remove that difference. Only
+    ``banking.reconciliation.record_adjustment`` creates it.
+
+    ``checked_difference`` and ``checked_at`` are the baseline: the difference
+    when the owner last saved the date or the balance, or recorded or removed
+    the adjustment. A different current difference shows that the tracked
+    balance changed after the check.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="balance_checkpoints"
+    )
+    account = models.ForeignKey(
+        BankAccount, on_delete=models.PROTECT, related_name="balance_checkpoints"
+    )
+    date = models.DateField()
+    # Negative values are valid: an overdraft.
+    statement_balance = models.DecimalField(max_digits=16, decimal_places=2)
+    note = models.CharField(max_length=255, blank=True)
+    adjustment = models.OneToOneField(
+        BankMovement,
+        on_delete=models.PROTECT,
+        related_name="balance_checkpoint",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    # The difference of two 16-digit amounts can have 17 digits.
+    checked_difference = models.DecimalField(
+        max_digits=17, decimal_places=2, editable=False, default=ZERO
+    )
+    checked_at = models.DateTimeField(editable=False, default=timezone.now)
+
+    class Meta:
+        ordering = ["-date", "-pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "date"], name="banking_unique_checkpoint_account_date"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.account} {self.date.isoformat()}"
+
+    @property
+    def adjustment_key(self):
+        return f"{CHECKPOINT_KEY_PREFIX}{self.pk}"
+
+    def clean(self):
+        errors = {}
+        account = self.account if self.account_id else None
+        if account and self.user_id and account.user_id != self.user_id:
+            # The check forms have no account field, so this is not a field error.
+            errors[NON_FIELD_ERRORS] = [_("The account must belong to the balance check owner.")]
+        if isinstance(self.date, date):
+            if self.date > clock.today():
+                errors["date"] = _("The check date cannot be after today.")
+            elif account and account.predates_opening(self.date):
+                errors["date"] = _("The check cannot precede the account opening balance date.")
+            elif (
+                account
+                and BalanceCheckpoint.objects.filter(account=account, date=self.date)
+                .exclude(pk=self.pk)
+                .exists()
+            ):
+                errors["date"] = _("This account already has a balance check on this date.")
+        if self.adjustment_id:
+            movement = self.adjustment
+            if (
+                movement.user_id != self.user_id
+                or movement.account_id != self.account_id
+                or movement.kind != BankMovement.Kind.ADJUSTMENT
+                or movement.source_key != self.adjustment_key
+                or movement.effective_date != self.date
+                or movement.invoice_id
+                or movement.transfer_id
+            ):
+                errors.setdefault(NON_FIELD_ERRORS, []).append(
+                    _("The adjustment movement does not match this balance check.")
+                )
+        if errors:
+            raise ValidationError(errors)
+
+
+class InvoicePayment(TimestampedModel):
+    """A confirmed cash payment, distinct from a projected invoice debit."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="invoice_payments"
+    )
+    invoice = models.ForeignKey(CardInvoice, on_delete=models.PROTECT, related_name="payments")
+    account = models.ForeignKey(
+        BankAccount, on_delete=models.PROTECT, related_name="invoice_payments"
+    )
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    date = models.DateField()
+    notes = models.TextField(blank=True)
+    confirmation_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    movement = models.OneToOneField(
+        BankMovement,
+        on_delete=models.PROTECT,
+        related_name="confirmed_invoice_payment",
+        null=True,
+        editable=False,
+    )
+
+    class Meta:
+        ordering = ["date", "created_at", "pk"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0), name="banking_invoice_payment_gt_zero"
+            )
+        ]
+
+    def clean(self):
+        errors = {}
+        for name in ("invoice", "account"):
+            related = getattr(self, name) if getattr(self, name + "_id") else None
+            if related and self.user_id and related.user_id != self.user_id:
+                errors[name] = _("This selection must belong to the payment owner.")
+        if (
+            self.invoice_id
+            and self.account_id
+            and self.invoice.account.currency != self.account.currency
+        ):
+            errors["account"] = _("Choose an account in the invoice currency.")
+        if self.invoice_id and not self.invoice.manual_settlement:
+            errors["invoice"] = _("This invoice uses automatic settlement.")
+        if self.date and self.date > clock.today():
+            errors["date"] = _("Confirmed payments cannot be dated in the future.")
+        if self.account_id and self.account.predates_opening(self.date):
+            errors["date"] = _("The payment cannot precede the account opening balance date.")
+        if errors:
+            raise ValidationError(errors)
+
+
+class LoyaltyProgram(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="loyalty_programs",
+    )
+    name = models.CharField(max_length=100)
+    bank = models.ForeignKey(
+        Bank,
+        on_delete=models.SET_NULL,
+        related_name="loyalty_programs",
+        null=True,
+        blank=True,
+    )
+    cards = models.ManyToManyField(CreditCard, related_name="loyalty_programs", blank=True)
+    unit_name = models.CharField(max_length=30, default="Points")
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "name"], name="banking_unique_loyalty_user_name"
+            )
+        ]
+
+    def __str__(self):
+        return self.name
+
+    def clean(self):
+        if self.bank_id and self.user_id and self.bank.user_id != self.user_id:
+            raise ValidationError({"bank": _("The bank must belong to the program owner.")})
+
+    def validate_cards(self, cards):
+        if any(card.user_id != self.user_id for card in cards):
+            raise ValidationError({"cards": _("Every card must belong to the program owner.")})
+
+    @property
+    def balance(self):
+        amount_field = DecimalField(max_digits=16, decimal_places=2)
+        return self.entries.aggregate(
+            total=Coalesce(
+                Sum(
+                    Case(
+                        When(direction=LoyaltyEntry.Direction.CREDIT, then=F("amount")),
+                        default=-F("amount"),
+                        output_field=amount_field,
+                    )
+                ),
+                Value(ZERO),
+                output_field=amount_field,
+            )
+        )["total"]
+
+
+class LoyaltyEntry(models.Model):
+    class Direction(models.TextChoices):
+        CREDIT = "CREDIT", _("Credit")
+        DEBIT = "DEBIT", _("Debit")
+
+    class Kind(models.TextChoices):
+        INVOICE_AWARD = "INVOICE_AWARD", _("Invoice award")
+        PURCHASE = "PURCHASE", _("Purchase")
+        ADJUSTMENT = "ADJUSTMENT", _("Adjustment")
+        EXPIRATION = "EXPIRATION", _("Expiration")
+        REDEMPTION = "REDEMPTION", _("Redemption")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="loyalty_entries"
+    )
+    program = models.ForeignKey(LoyaltyProgram, on_delete=models.PROTECT, related_name="entries")
+    direction = models.CharField(max_length=6, choices=Direction.choices)
+    kind = models.CharField(max_length=13, choices=Kind.choices)
+    amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    date = models.DateField()
+    invoice = models.ForeignKey(
+        CardInvoice,
+        on_delete=models.SET_NULL,
+        related_name="loyalty_entries",
+        null=True,
+        blank=True,
+    )
+    funding_account = models.ForeignKey(
+        BankAccount,
+        on_delete=models.PROTECT,
+        related_name="funded_loyalty_entries",
+        null=True,
+        blank=True,
+    )
+    funding_credit_card = models.ForeignKey(
+        CreditCard,
+        on_delete=models.PROTECT,
+        related_name="funded_loyalty_entries",
+        null=True,
+        blank=True,
+    )
+    cash_amount = models.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        validators=[POSITIVE],
+        null=True,
+        blank=True,
+    )
+    funding_movement = models.OneToOneField(
+        BankMovement,
+        on_delete=models.SET_NULL,
+        related_name="loyalty_purchase",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-date", "-pk"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0), name="banking_loyalty_amount_gt_zero"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.program.name}: {self.direction} {self.amount}"
+
+    def clean(self):
+        errors = {}
+        if self.program_id and self.user_id and self.program.user_id != self.user_id:
+            errors["program"] = _("The program must belong to the entry owner.")
+        if self.invoice_id and self.user_id and self.invoice.user_id != self.user_id:
+            errors["invoice"] = _("The invoice must belong to the entry owner.")
+        if self.invoice_id and self.kind != self.Kind.INVOICE_AWARD:
+            errors["invoice"] = _("Only invoice awards may reference an invoice.")
+        if self.invoice_id and self.program_id:
+            linked_card_ids = set(self.program.cards.values_list("pk", flat=True))
+            if linked_card_ids and self.invoice.card_id not in linked_card_ids:
+                errors["invoice"] = _("The invoice card is not linked to this program.")
+
+        funding_count = int(self.funding_account_id is not None) + int(
+            self.funding_credit_card_id is not None
+        )
+        if self.kind == self.Kind.PURCHASE:
+            if self.direction != self.Direction.CREDIT:
+                errors["direction"] = _("Purchased points must be a credit.")
+            if funding_count != 1:
+                errors["funding_account"] = _("A purchase requires exactly one funding instrument.")
+            if self.cash_amount is None or self.cash_amount <= ZERO:
+                errors["cash_amount"] = _("A purchase requires a positive cash amount.")
+        elif funding_count or self.cash_amount is not None:
+            errors["funding_account"] = _("Funding fields are only used when purchasing points.")
+
+        if self.kind == self.Kind.INVOICE_AWARD and self.direction != self.Direction.CREDIT:
+            errors["direction"] = _("Invoice points must be a credit.")
+        if (
+            self.kind in {self.Kind.EXPIRATION, self.Kind.REDEMPTION}
+            and self.direction != self.Direction.DEBIT
+        ):
+            errors["direction"] = _("Expiration and redemption entries must be debits.")
+
+        for field in ("funding_account", "funding_credit_card"):
+            instrument = getattr(self, field, None)
+            if instrument and self.user_id and instrument.user_id != self.user_id:
+                errors[field] = _("The funding instrument must belong to the entry owner.")
+            account = (
+                instrument.account if field == "funding_credit_card" and instrument else instrument
+            )
+            if account and account.predates_opening(self.date):
+                errors["date"] = _("The operation cannot precede the account opening balance date.")
+        if errors:
+            raise ValidationError(errors)
+
+
+class RewardRedemption(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="reward_redemptions",
+    )
+    program = models.ForeignKey(
+        LoyaltyProgram, on_delete=models.PROTECT, related_name="redemptions"
+    )
+    points = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    target_account = models.ForeignKey(
+        BankAccount, on_delete=models.PROTECT, related_name="reward_redemptions"
+    )
+    target_amount = models.DecimalField(max_digits=16, decimal_places=2, validators=[POSITIVE])
+    iof_amount = models.DecimalField(
+        max_digits=16, decimal_places=2, default=ZERO, validators=[NON_NEGATIVE]
+    )
+    iof_account = models.ForeignKey(
+        BankAccount,
+        on_delete=models.PROTECT,
+        related_name="iof_reward_redemptions",
+        null=True,
+        blank=True,
+    )
+    iof_credit_card = models.ForeignKey(
+        CreditCard,
+        on_delete=models.PROTECT,
+        related_name="iof_reward_redemptions",
+        null=True,
+        blank=True,
+    )
+    date = models.DateField()
+    notes = models.TextField(blank=True)
+    loyalty_entry = models.OneToOneField(
+        LoyaltyEntry,
+        on_delete=models.PROTECT,
+        related_name="reward_redemption",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    reward_movement = models.OneToOneField(
+        BankMovement,
+        on_delete=models.PROTECT,
+        related_name="reward_redemption",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    iof_movement = models.OneToOneField(
+        BankMovement,
+        on_delete=models.PROTECT,
+        related_name="reward_iof_redemption",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(points__gt=0), name="banking_redemption_points_gt_zero"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(target_amount__gt=0),
+                name="banking_redemption_target_amount_gt_zero",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(iof_amount__gte=0),
+                name="banking_redemption_iof_amount_gte_zero",
+            ),
+        ]
+
+    def __str__(self):
+        return gettext("%(program)s: %(points)s points") % {
+            "program": self.program.name,
+            "points": self.points,
+        }
+
+    @property
+    def has_pending_credit_card_iof(self):
+        """True when IOF settles through a card invoice instead of an immediate debit."""
+        return self.iof_amount > ZERO and self.iof_credit_card_id is not None
+
+    def clean(self):
+        errors = {}
+        owned = {
+            "program": self.program if self.program_id else None,
+            "target_account": self.target_account if self.target_account_id else None,
+            "iof_account": self.iof_account if self.iof_account_id else None,
+            "iof_credit_card": self.iof_credit_card if self.iof_credit_card_id else None,
+        }
+        for field, obj in owned.items():
+            if obj and self.user_id and obj.user_id != self.user_id:
+                errors[field] = _("This funding instrument must belong to the redemption owner.")
+            if field == "program":
+                continue
+            account = obj.account if field == "iof_credit_card" and obj else obj
+            if account and account.predates_opening(self.date):
+                errors["date"] = _("The operation cannot precede the account opening balance date.")
+        funding_count = int(self.iof_account_id is not None) + int(
+            self.iof_credit_card_id is not None
+        )
+        if self.iof_amount is not None:
+            if self.iof_amount > ZERO and funding_count != 1:
+                errors["iof_amount"] = _("Positive IOF requires exactly one funding instrument.")
+            elif self.iof_amount == ZERO and funding_count:
+                errors["iof_amount"] = _("Do not select an IOF instrument when IOF is zero.")
+        if errors:
+            raise ValidationError(errors)
+
+
+class ExchangeRate(TimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="banking_exchange_rates",
+    )
+    from_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    to_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    rate = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        validators=[MinValueValidator(Decimal("0.00000001"))],
+    )
+    effective_date = models.DateField()
+    notes = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "from_currency", "to_currency", "effective_date"],
+                name="banking_unique_exchange_pair_date",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(rate__gt=0), name="banking_exchange_rate_gt_zero"
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(from_currency=F("to_currency")),
+                name="banking_exchange_currencies_differ",
+            ),
+        ]
+
+    def __str__(self):
+        return f"1 {self.from_currency} = {self.rate} {self.to_currency}"
+
+    def clean(self):
+        if self.from_currency and self.from_currency == self.to_currency:
+            raise ValidationError({"to_currency": _("Currencies must differ.")})

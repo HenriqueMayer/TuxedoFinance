@@ -122,16 +122,17 @@ test.describe("with reduced motion", () => {
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 375, height: 760 } });
 
-  test("the dock holds the same destinations and a window fills the screen", async ({ page }) => {
+  test("the dock holds the destinations and Add; a window fills the screen", async ({ page }) => {
     await signIn(page);
     const nav = page.getByRole("navigation", { name: "Main" });
-    for (const name of ["Home", "Transactions", "Wallet", "Plan", "Settings"]) {
+    for (const name of ["Home", "Transactions", "Add entry (N)", "Wallet", "Plan"]) {
       await expect(nav.getByRole("link", { name })).toBeVisible();
     }
     // The page does not scroll sideways at this width.
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
 
-    await nav.getByRole("link", { name: "Settings" }).click();
+    // Settings is in the header on a phone.
+    await page.getByRole("banner").getByRole("link", { name: "Settings" }).click();
     const window = page.getByRole("dialog", { name: "Settings" });
     await expect(window).toBeVisible();
     await expect

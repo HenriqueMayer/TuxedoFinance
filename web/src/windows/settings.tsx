@@ -7,6 +7,7 @@ import { setLanguage, useLanguage, useMessages } from "../i18n";
 import { setTheme, useTheme } from "../lib/theme";
 import { sessionQuery, useSignOut } from "../session";
 import { Segmented } from "../ui/Segmented";
+import { OpenWindow } from "./host";
 
 type Preferences = components["schemas"]["PreferencesOut"];
 
@@ -90,6 +91,9 @@ export function SettingsWindow() {
           <option value="MDY">MM/DD/YYYY</option>
         </select>
       </div>
+      <OpenWindow w="categories" className="link w-fit">
+        {t.categories.manage}
+      </OpenWindow>
       {save.isError && (
         <p role="alert" className="text-sm text-negative">
           {t.settings.saveFailed}

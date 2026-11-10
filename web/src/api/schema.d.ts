@@ -106,6 +106,170 @@ export interface paths {
         patch: operations["accounts_api_change_preferences"];
         trace?: never;
     };
+    "/api/banking/instruments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List accounts and cards */
+        get: operations["banking_api_list_instruments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an account */
+        post: operations["banking_api_create_account"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/credit-cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a credit card */
+        post: operations["banking_api_create_credit_card"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/banking/debit-cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a debit card */
+        post: operations["banking_api_create_debit_card"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List categories */
+        get: operations["ledger_api_list_categories"];
+        put?: never;
+        /** Create a category */
+        post: operations["ledger_api_create_category"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/categories/{category_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change a category */
+        put: operations["ledger_api_change_category"];
+        post?: never;
+        /** Delete a category */
+        delete: operations["ledger_api_delete_category"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List transactions */
+        get: operations["ledger_api_list_transactions"];
+        put?: never;
+        /** Record a transaction */
+        post: operations["ledger_api_create_transaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/transactions/suggestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suggest values for a title
+         * @description Return the category and instrument of the latest entry with the same title.
+         *
+         *     Without a title, return the instrument of the latest entry, so the form
+         *     starts with the instrument that the owner used last.
+         */
+        get: operations["ledger_api_suggest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/transactions/{transaction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a transaction */
+        get: operations["ledger_api_read_transaction"];
+        /** Change a transaction */
+        put: operations["ledger_api_change_transaction"];
+        post?: never;
+        /** Delete a transaction */
+        delete: operations["ledger_api_delete_transaction"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -159,6 +323,210 @@ export interface components {
             base_currency?: ("BRL" | "USD" | "EUR" | "GBP" | "JPY" | "CHF") | null;
             /** Date Format */
             date_format?: ("DMY" | "MDY") | null;
+        };
+        /** InstrumentOut */
+        InstrumentOut: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "account" | "debit" | "credit";
+            /** Name */
+            name: string;
+            /** Bank Name */
+            bank_name: string;
+            /** Account Name */
+            account_name: string;
+            /** Currency */
+            currency: string;
+            /** Color */
+            color: string;
+        };
+        /** AccountIn */
+        AccountIn: {
+            /** Bank Name */
+            bank_name: string;
+            /** Name */
+            name: string;
+            /**
+             * Currency
+             * @default BRL
+             * @enum {string}
+             */
+            currency: "BRL" | "USD" | "EUR" | "GBP" | "JPY" | "CHF";
+            /**
+             * Opening Balance
+             * @default 0
+             */
+            opening_balance: number | string;
+            /** Opening Date */
+            opening_date?: string | null;
+        };
+        /** CreditCardIn */
+        CreditCardIn: {
+            /** Account */
+            account: string;
+            /** Name */
+            name: string;
+            /** Closing Day */
+            closing_day: number;
+            /** Due Day */
+            due_day: number;
+        };
+        /** CardIn */
+        CardIn: {
+            /** Account */
+            account: string;
+            /** Name */
+            name: string;
+        };
+        /** CategoryOut */
+        CategoryOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Transaction Type */
+            transaction_type: ("INCOME" | "EXPENSE") | null;
+            /** Parent Id */
+            parent_id: number | null;
+        };
+        /** CategoryIn */
+        CategoryIn: {
+            /** Name */
+            name: string;
+            /** Transaction Type */
+            transaction_type?: ("INCOME" | "EXPENSE") | null;
+            /** Parent Id */
+            parent_id?: number | null;
+        };
+        /** TransactionFilters */
+        TransactionFilters: {
+            /**
+             * Q
+             * @default
+             */
+            q: string;
+            /**
+             * Month
+             * @default
+             */
+            month: string;
+            /**
+             * Type
+             * @default
+             */
+            type: string;
+            /** Category */
+            category?: number | null;
+            /**
+             * Instrument
+             * @default
+             */
+            instrument: string;
+            /**
+             * Sort
+             * @default newest
+             */
+            sort: string;
+            /**
+             * Page
+             * @default 1
+             */
+            page: number;
+        };
+        /** CategoryRef */
+        CategoryRef: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** TransactionOut */
+        TransactionOut: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Amount */
+            amount: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Transaction Type
+             * @enum {string}
+             */
+            transaction_type: "INCOME" | "EXPENSE";
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            category: components["schemas"]["CategoryRef"];
+            instrument: components["schemas"]["InstrumentOut"];
+            /** Installments */
+            installments: number;
+            /** Is Fixed */
+            is_fixed: boolean;
+            /** Notes */
+            notes: string;
+            /** Locked */
+            locked: boolean;
+            /** Month Amount */
+            month_amount?: string | null;
+        };
+        /** TransactionPage */
+        TransactionPage: {
+            /** Items */
+            items: components["schemas"]["TransactionOut"][];
+            /** Count */
+            count: number;
+            /** Page */
+            page: number;
+            /** Pages */
+            pages: number;
+            /** Income */
+            income: string;
+            /** Expense */
+            expense: string;
+        };
+        /** TransactionIn */
+        TransactionIn: {
+            /**
+             * Transaction Type
+             * @default EXPENSE
+             * @enum {string}
+             */
+            transaction_type: "INCOME" | "EXPENSE";
+            /** Title */
+            title: string;
+            /** Amount */
+            amount: number | string;
+            /** Date */
+            date?: string | null;
+            /** Category Id */
+            category_id: number;
+            /** Instrument */
+            instrument: string;
+            /**
+             * Installments
+             * @default 1
+             */
+            installments: number;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+        };
+        /** SuggestionOut */
+        SuggestionOut: {
+            /** Category Id */
+            category_id: number | null;
+            /** Instrument */
+            instrument: string | null;
         };
     };
     responses: never;
@@ -294,6 +662,330 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PreferencesOut"];
                 };
+            };
+        };
+    };
+    banking_api_list_instruments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentOut"][];
+                };
+            };
+        };
+    };
+    banking_api_create_account: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentOut"];
+                };
+            };
+        };
+    };
+    banking_api_create_credit_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreditCardIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentOut"];
+                };
+            };
+        };
+    };
+    banking_api_create_debit_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstrumentOut"];
+                };
+            };
+        };
+    };
+    ledger_api_list_categories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryOut"][];
+                };
+            };
+        };
+    };
+    ledger_api_create_category: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+        };
+    };
+    ledger_api_change_category: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryOut"];
+                };
+            };
+        };
+    };
+    ledger_api_delete_category: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ledger_api_list_transactions: {
+        parameters: {
+            query?: {
+                q?: string;
+                month?: string;
+                type?: string;
+                category?: number | null;
+                instrument?: string;
+                sort?: string;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionPage"];
+                };
+            };
+        };
+    };
+    ledger_api_create_transaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+        };
+    };
+    ledger_api_suggest: {
+        parameters: {
+            query?: {
+                title?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionOut"];
+                };
+            };
+        };
+    };
+    ledger_api_read_transaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+        };
+    };
+    ledger_api_change_transaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionOut"];
+                };
+            };
+        };
+    };
+    ledger_api_delete_transaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

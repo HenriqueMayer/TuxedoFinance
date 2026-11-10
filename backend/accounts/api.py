@@ -75,7 +75,7 @@ def read_session(request):
     "/login",
     auth=None,
     response=SessionOut,
-    throttle=[AnonRateThrottle("10/m")],
+    throttle=[AnonRateThrottle(settings.AUTH_THROTTLE)],
     summary="Sign in",
 )
 def sign_in(request, payload: LoginIn):
@@ -98,7 +98,7 @@ def sign_out(request):
     "/signup",
     auth=None,
     response=SessionOut,
-    throttle=[AnonRateThrottle("10/m")],
+    throttle=[AnonRateThrottle(settings.AUTH_THROTTLE)],
     summary="Create a user and sign in",
 )
 def sign_up(request, payload: SignupIn):

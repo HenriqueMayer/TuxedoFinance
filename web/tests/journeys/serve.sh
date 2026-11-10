@@ -12,6 +12,7 @@ export SECRET_KEY=journeys-only-not-a-real-secret
 export TUXEDO_ENV_FILE=/dev/null
 export TUXEDO_DATA_DIR="$data_dir"
 export DEBUG=False
+export TUXEDO_AUTH_THROTTLE=1000/m
 export DJANGO_SUPERUSER_USERNAME=journey
 export DJANGO_SUPERUSER_PASSWORD=journey-passphrase-42
 export DJANGO_SUPERUSER_EMAIL=journey@example.test

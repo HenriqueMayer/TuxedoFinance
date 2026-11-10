@@ -6,10 +6,16 @@ import {
   Outlet,
   redirect,
 } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { useMessages } from "./i18n";
 import { localPath } from "./lib/paths";
 import { LoginPage, SignupPage } from "./routes/auth";
 import { Placeholder, Shell } from "./routes/shell";
+import {
+  type TransactionSearch,
+  TransactionsPage,
+  validateTransactionSearch,
+} from "./routes/transactions";
 import { sessionQuery } from "./session";
 
 type RouterContext = { queryClient: QueryClient };
@@ -71,7 +77,22 @@ const homeRoute = createRoute({
 const transactionsRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/transactions",
-  component: () => <Placeholder title={useMessages().nav.transactions} />,
+  validateSearch: validateTransactionSearch,
+  component: function Transactions() {
+    const search = transactionsRoute.useSearch();
+    const navigate = transactionsRoute.useNavigate();
+    // A filter change replaces the address and never moves the page.
+    const onChange = useCallback(
+      (changes: TransactionSearch) =>
+        navigate({
+          search: (previous) => ({ ...previous, ...changes }),
+          replace: true,
+          resetScroll: false,
+        }),
+      [navigate],
+    );
+    return <TransactionsPage search={search} onChange={onChange} />;
+  },
 });
 
 const walletRoute = createRoute({
