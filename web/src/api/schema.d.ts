@@ -1176,6 +1176,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/items/investment/{position_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the analysis of one investment over twelve months */
+        get: operations["reports_api_read_investment_item"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/items/account/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the analysis of one account over twelve months */
+        get: operations["reports_api_read_account_item"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/items/card/{card_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the analysis of one credit card over twelve months */
+        get: operations["reports_api_read_card_item"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1192,6 +1243,11 @@ export interface components {
              * @enum {string}
              */
             date_format: "DMY" | "MDY";
+            /**
+             * Number Format
+             * @enum {string}
+             */
+            number_format: "COMMA" | "POINT";
             /** Home Blocks */
             home_blocks: ("left" | "spending" | "due" | "worth" | "goals")[];
         };
@@ -1231,6 +1287,8 @@ export interface components {
             base_currency?: ("BRL" | "USD" | "EUR" | "GBP" | "JPY" | "CHF") | null;
             /** Date Format */
             date_format?: ("DMY" | "MDY") | null;
+            /** Number Format */
+            number_format?: ("COMMA" | "POINT") | null;
             /** Home Blocks */
             home_blocks?: ("left" | "spending" | "due" | "worth" | "goals")[] | null;
         };
@@ -3470,6 +3528,157 @@ export interface components {
             /** Cards */
             cards: components["schemas"]["OriginCard"][];
         };
+        /** InvestmentItemOut */
+        InvestmentItemOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Institution Name */
+            institution_name: string;
+            /** Currency */
+            currency: string;
+            /** Base Currency */
+            base_currency: string;
+            /** Months */
+            months: components["schemas"]["InvestmentMonth"][];
+            /** Value */
+            value: string;
+            /** Gain */
+            gain: string | null;
+            /** Deposits */
+            deposits: string;
+            /** Withdrawals */
+            withdrawals: string;
+            /** Yields */
+            yields: string;
+            share: components["schemas"]["ItemShare"];
+        };
+        /** InvestmentMonth */
+        InvestmentMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Value */
+            value: string;
+            /** Deposits */
+            deposits: string;
+            /** Withdrawals */
+            withdrawals: string;
+            /** Yields */
+            yields: string;
+        };
+        /** ItemShare */
+        ItemShare: {
+            /** Value */
+            value: string;
+            /** Total */
+            total: string;
+            /** Percent */
+            percent: string | null;
+            /** Items */
+            items: components["schemas"]["ShareItem"][];
+        };
+        /** ShareItem */
+        ShareItem: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Detail */
+            detail: string;
+            /** Value */
+            value: string;
+            /** Share */
+            share: string | null;
+            /** Current */
+            current: boolean;
+        };
+        /** AccountItemOut */
+        AccountItemOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Bank Name */
+            bank_name: string;
+            /** Currency */
+            currency: string;
+            /** Base Currency */
+            base_currency: string;
+            /** Months */
+            months: components["schemas"]["AccountMonth"][];
+            /** Balance */
+            balance: string;
+            /** Change */
+            change: string;
+            /** Inflow */
+            inflow: string;
+            /** Outflow */
+            outflow: string;
+            share: components["schemas"]["ItemShare"];
+        };
+        /** AccountMonth */
+        AccountMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Balance */
+            balance: string;
+            /** Inflow */
+            inflow: string;
+            /** Outflow */
+            outflow: string;
+        };
+        /** CardCategory */
+        CardCategory: {
+            /** Category Id */
+            category_id: number | null;
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
+            /** Share */
+            share: string | null;
+        };
+        /** CardItemOut */
+        CardItemOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Account Name */
+            account_name: string;
+            /** Currency */
+            currency: string;
+            /** Base Currency */
+            base_currency: string;
+            /** Months */
+            months: components["schemas"]["CardMonth"][];
+            /** Total */
+            total: string;
+            /** Average */
+            average: string;
+            /** Owed */
+            owed: string;
+            /** Categories */
+            categories: components["schemas"]["CardCategory"][];
+            share: components["schemas"]["ItemShare"];
+        };
+        /** CardMonth */
+        CardMonth: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Amount */
+            amount: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -5609,6 +5818,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OriginOut"];
+                };
+            };
+        };
+    };
+    reports_api_read_investment_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestmentItemOut"];
+                };
+            };
+        };
+    };
+    reports_api_read_account_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountItemOut"];
+                };
+            };
+        };
+    };
+    reports_api_read_card_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardItemOut"];
                 };
             };
         };

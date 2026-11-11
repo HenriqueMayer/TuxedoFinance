@@ -86,9 +86,54 @@ export const ChartIcon = () => (
   </Icon>
 );
 
+export const SearchIcon = () => (
+  <Icon size={16}>
+    <circle cx="11" cy="11" r="6" />
+    <path d="m15.5 15.5 4 4" />
+  </Icon>
+);
+
+export const CalendarIcon = () => (
+  <Icon size={16}>
+    <rect x="4" y="5.5" width="16" height="14" rx="2.5" />
+    <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
+  </Icon>
+);
+
+export const RepeatIcon = () => (
+  <Icon size={16}>
+    <path d="M5 11V9.5A2.5 2.5 0 0 1 7.5 7H19M16 4l3 3-3 3M19 13v1.5a2.5 2.5 0 0 1-2.5 2.5H5M8 20l-3-3 3-3" />
+  </Icon>
+);
+
+export const SplitIcon = () => (
+  <Icon size={16}>
+    <rect x="4" y="5" width="16" height="14" rx="2.5" />
+    <path d="M9.33 5v14M14.67 5v14" />
+  </Icon>
+);
+
+export const NoteIcon = () => (
+  <Icon size={16}>
+    <path d="M6 5h12v9l-5 5H6zM18 14h-5v5M9 9.5h6M9 13h3" />
+  </Icon>
+);
+
 export const CloseIcon = () => (
   <Icon size={16}>
     <path d="m6.5 6.5 11 11M17.5 6.5l-11 11" />
+  </Icon>
+);
+
+export const TrendIcon = () => (
+  <Icon size={16}>
+    <path d="m4 16.5 5.5-5.5 3.5 3.5 7-7M15 7.5h5v5" />
+  </Icon>
+);
+
+export const WorthIcon = () => (
+  <Icon size={16}>
+    <path d="M4 19.5h16M6.5 19.5v-9M10.25 19.5v-9M13.75 19.5v-9M17.5 19.5v-9M3.5 10.5 12 5l8.5 5.5z" />
   </Icon>
 );
 

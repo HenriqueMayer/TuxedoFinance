@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /** The user that tests/journeys/serve.sh creates. */
 export const USER = { username: "journey", password: "journey-passphrase-42" };
@@ -82,4 +82,56 @@ export async function prepareWallet(page: Page, options: { confirmPayments?: boo
     (await fetch("/api/ledger/categories")).json(),
   );
   return { account: account.id, card: card.id, category: categories[0].id as number };
+}
+
+/** Choose an option of a select by its text: open the list, then press the option. */
+export async function choose(control: Locator, option: string | RegExp) {
+  await control.click();
+  await control.page().getByRole("option", { name: option, exact: true }).click();
+}
+
+/** Choose an option of a select by its value. */
+export async function chooseValue(control: Locator, value: string) {
+  await control.click();
+  await control.page().locator(`[role="option"][data-value="${value}"]`).click();
+}
+
+/** Choose a date in the calendar of a date field: its month, then its day. */
+export async function pickDate(control: Locator, iso: string) {
+  const [year = 1970, month = 1, day = 1] = iso.split("-").map(Number);
+  const date = new Date(year, month - 1, day, 12);
+  await control.click();
+  const calendar = control.page().getByRole("dialog", { name: "Choose a date" });
+  await calendar.getByRole("button", { name: /^Choose a month: / }).click();
+  for (let step = 0; step < 30; step += 1) {
+    const shown = Number(await calendar.locator("p.amount").first().textContent());
+    if (shown === year) break;
+    await calendar
+      .getByRole("button", { name: shown > year ? "Previous year" : "Next year" })
+      .click();
+  }
+  const named = (options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat("en", options).format(date);
+  await calendar
+    .getByRole("button", { name: named({ month: "long", year: "numeric" }), exact: true })
+    .click();
+  await calendar.getByRole("button", { name: named({ dateStyle: "full" }), exact: true }).click();
+}
+
+/** Choose a month ("YYYY-MM") in the months of a month field. */
+export async function pickMonth(control: Locator, month: string) {
+  const [year = 1970, number = 1] = month.split("-").map(Number);
+  await control.click();
+  const months = control.page().getByRole("dialog", { name: "Choose a month" });
+  for (let step = 0; step < 30; step += 1) {
+    const shown = Number(await months.locator("p.amount").first().textContent());
+    if (shown === year) break;
+    await months
+      .getByRole("button", { name: shown > year ? "Previous year" : "Next year" })
+      .click();
+  }
+  const name = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(
+    new Date(year, number - 1, 1),
+  );
+  await months.getByRole("button", { name, exact: true }).click();
 }

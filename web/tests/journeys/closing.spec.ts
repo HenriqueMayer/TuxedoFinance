@@ -31,7 +31,11 @@ test("the owner closes the month before: balances, result and the next limit", a
   // The bank shows 20 less than the records: the difference is named and adjusted.
   await expect(window.getByText("Recorded: R$ 900,00")).toBeVisible();
   const bank = window.getByLabel("At the bank: Nubank · Conta");
+  // Letters do not enter a field for an amount.
   await bank.fill("abc");
+  await expect(bank).toHaveValue("");
+  // A minus sign alone is not a balance.
+  await bank.fill("-");
   await bank.press("Enter");
   await expect(window.getByText("Enter a balance.")).toBeVisible();
   await bank.fill("880,00");
@@ -47,7 +51,7 @@ test("the owner closes the month before: balances, result and the next limit", a
   await window.getByLabel(/Limit for each month/).fill("2.500,00");
   await window.getByRole("button", { name: `Close ${name}` }).click();
   await expect(window.getByText(/^Closed on /)).toBeVisible();
-  await expect(window.getByLabel(/Limit for each month/)).toHaveValue("2500,00");
+  await expect(window.getByLabel(/Limit for each month/)).toHaveValue("2.500,00");
   await page.keyboard.press("Escape");
   await expect(window).toBeHidden();
 
@@ -76,7 +80,7 @@ test("the owner closes the month before: balances, result and the next limit", a
   await expect(window.getByText(/A short review/)).toBeVisible();
 
   // The window moves to another month in place.
-  await window.getByRole("button", { name: "Month after" }).click();
+  await window.getByRole("button", { name: "Next month" }).click();
   await expect(window.getByText(name, { exact: true })).toBeHidden();
-  await expect(window.getByRole("button", { name: "Month after" })).toBeDisabled();
+  await expect(window.getByRole("button", { name: "Next month" })).toBeDisabled();
 });

@@ -20,6 +20,7 @@ router = Router()
 
 CurrencyCode = Literal[tuple(CURRENCIES)]
 DateFormat = Literal["DMY", "MDY"]
+NumberFormat = Literal["COMMA", "POINT"]
 HomeBlock = Literal[HOME_BLOCKS]
 
 
@@ -31,6 +32,8 @@ class UserOut(Schema):
 class PreferencesOut(Schema):
     base_currency: CurrencyCode
     date_format: DateFormat
+    #: COMMA: 1.234,56. POINT: 1,234.56. For every number that is shown or typed.
+    number_format: NumberFormat
     home_blocks: list[HomeBlock]
 
     @staticmethod
@@ -59,6 +62,7 @@ class SignupIn(Schema):
 class PreferencesIn(Schema):
     base_currency: CurrencyCode | None = None
     date_format: DateFormat | None = None
+    number_format: NumberFormat | None = None
     #: The shown blocks in order. An empty list hides every block.
     home_blocks: list[HomeBlock] | None = None
 

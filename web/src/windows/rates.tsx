@@ -7,9 +7,11 @@ import { formatDate, todayIso } from "../lib/dates";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { parseDecimal } from "../lib/money";
 import { sessionQuery, useDateOrder } from "../session";
+import { DateField } from "../ui/DateField";
 import { Field } from "../ui/Field";
+import { Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
-import { CURRENCIES } from "./settings";
+import { CURRENCIES, useCurrencyChoices } from "./settings";
 import { Alert, values } from "./wallet";
 
 type Currency = (typeof CURRENCIES)[number];
@@ -27,6 +29,7 @@ export function RatesWindow() {
   const [invalid, setInvalid] = useState(false);
   const base = session.preferences?.base_currency ?? "BRL";
   const others = CURRENCIES.filter((code) => code !== base);
+  const currencies = useCurrencyChoices(others);
   const missing = worth.today.missing_currencies;
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -56,18 +59,12 @@ export function RatesWindow() {
       >
         <Field label={t.rates.from} errors={fieldMessages(record.error, "from_currency")}>
           {(control) => (
-            <select
+            <Select
               {...control}
               name="from"
-              className="field"
               defaultValue={missing[0] ?? others[0]}
-            >
-              {others.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </select>
+              options={currencies}
+            />
           )}
         </Field>
         <Field
@@ -87,15 +84,7 @@ export function RatesWindow() {
           )}
         </Field>
         <Field label={t.entry.date} errors={fieldMessages(record.error, "effective_date")}>
-          {(control) => (
-            <input
-              {...control}
-              type="date"
-              name="date"
-              className="field"
-              defaultValue={todayIso()}
-            />
-          )}
+          {(control) => <DateField {...control} name="date" defaultValue={todayIso()} />}
         </Field>
         <button type="submit" className="button-primary mt-[1.625rem]" disabled={record.isPending}>
           {t.rates.record}

@@ -11,6 +11,7 @@ import {
 import { useMessages } from "../i18n";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { DownloadIcon, PlusIcon, TrashIcon, UploadIcon } from "../ui/icons";
+import { Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
 
 type Kind = "" | "EXPENSE" | "INCOME";
@@ -209,16 +210,17 @@ function KindSelect(props: {
       <label htmlFor={id} className={props.hideLabel ? "sr-only" : "text-sm font-medium"}>
         {props.label}
       </label>
-      <select
+      <Select
         id={id}
-        className={props.fill ? "field w-full sm:w-auto" : "field w-auto"}
+        className={props.fill ? "w-full sm:w-44" : "w-44"}
         value={props.value}
-        onChange={(event) => props.onChange(event.target.value as Kind)}
-      >
-        <option value="EXPENSE">{t.entry.expense}</option>
-        <option value="INCOME">{t.entry.income}</option>
-        <option value="">{t.categories.any}</option>
-      </select>
+        options={[
+          { value: "EXPENSE", label: t.entry.expense },
+          { value: "INCOME", label: t.entry.income },
+          { value: "", label: t.categories.any },
+        ]}
+        onChange={(value) => props.onChange(value as Kind)}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import {
   type Category,
   categoriesQuery,
@@ -16,8 +16,12 @@ import { useMessages } from "../i18n";
 import { todayIso } from "../lib/dates";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { editableAmount, parseAmount } from "../lib/money";
+import { AmountInput } from "../ui/AmountInput";
+import { DateField, MonthField } from "../ui/DateField";
 import { Field } from "../ui/Field";
+import { NoteIcon, RepeatIcon, SplitIcon } from "../ui/icons";
 import { Segmented } from "../ui/Segmented";
+import { type Choice, Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
 import { OpenWindow } from "./host";
 
@@ -55,6 +59,9 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
   const [repeats, setRepeats] = useState(entry?.is_fixed ?? false);
   const [until, setUntil] = useState(entry?.fixed_until?.slice(0, 7) ?? "");
   const [confirmEach, setConfirmEach] = useState(entry?.requires_confirmation ?? false);
+  // The options that the owner turned on. Each one shows its field.
+  const [split, setSplit] = useState((entry?.installments ?? 1) > 1);
+  const [noted, setNoted] = useState(Boolean(entry?.notes));
   // The stored amount and date give every past month of a repeating entry,
   // so they change in the monthly schedule, not here.
   const pastMonths = Boolean(entry?.is_fixed && entry.date.slice(0, 7) < todayIso().slice(0, 7));
@@ -91,6 +98,8 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
   }
 
   const isCredit = instrument.startsWith("credit:");
+  // A purchase on a credit card can be paid in monthly parts.
+  const canSplit = isCredit && kind === "EXPENSE";
   const usable = instruments.filter((item) => kind === "EXPENSE" || item.kind === "account");
   const choices = categories.filter((item) => allows(item, kind));
   const locked = entry?.locked ?? false;
@@ -118,7 +127,7 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
         date,
         category_id: Number(category) || 0,
         instrument,
-        installments: isCredit && kind === "EXPENSE" && !repeats ? installments : 1,
+        installments: canSplit && split && !repeats ? installments : 1,
         is_fixed: repeats,
         fixed_until: repeats && until ? `${until}-01` : null,
         requires_confirmation: repeats && confirmEach && !isCredit,
@@ -157,15 +166,14 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
         />
         <Field label={`${t.entry.amount} (${currency})`} errors={amountErrors}>
           {(control) => (
-            <input
+            <AmountInput
+              currency={currency}
               {...control}
               {...autofocus}
-              inputMode="decimal"
-              autoComplete="off"
               className="field amount text-2xl font-semibold disabled:opacity-60"
               value={amount}
               disabled={pastMonths}
-              onChange={(event) => setAmount(event.target.value)}
+              onChange={setAmount}
             />
           )}
         </Field>
@@ -185,125 +193,139 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label={t.entry.instrument} errors={fieldMessages(error, "instrument")}>
             {(control) => (
-              <select
+              <Select
                 {...control}
-                className="field"
                 value={instrument}
-                onChange={(event) => {
+                options={instrumentChoices(usable, t)}
+                onChange={(value) => {
                   touched.current.instrument = true;
-                  setInstrument(event.target.value);
+                  setInstrument(value);
                 }}
-              >
-                <InstrumentOptions instruments={usable} />
-              </select>
+              />
             )}
           </Field>
           <Field label={t.entry.category} errors={fieldMessages(error, "category_id")}>
             {(control) => (
-              <select
+              <Select
                 {...control}
-                className="field"
                 value={category}
-                onChange={(event) => {
+                placeholder={t.entry.chooseCategory}
+                options={categoryChoices(choices, categories)}
+                onChange={(value) => {
                   touched.current.category = true;
-                  setCategory(event.target.value);
+                  setCategory(value);
                 }}
-              >
-                <option value="">{t.entry.chooseCategory}</option>
-                {choices.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {categoryLabel(item, categories)}
-                  </option>
-                ))}
-              </select>
+              />
             )}
           </Field>
         </div>
-        <Field label={t.entry.date} errors={fieldMessages(error, "date")} className="w-fit">
+        <Field label={t.entry.date} errors={fieldMessages(error, "date")} className="w-48">
           {(control) => (
-            <input
-              {...control}
-              type="date"
-              className="field disabled:opacity-60"
-              value={date}
-              disabled={pastMonths}
-              onChange={(event) => setDate(event.target.value)}
-            />
+            <DateField {...control} value={date} disabled={pastMonths} onChange={setDate} />
           )}
         </Field>
-        <details className="group" open={installments > 1 || notes !== "" || repeats || undefined}>
-          <summary className="action w-fit">{t.entry.more}</summary>
-          <div className="mt-4 grid gap-5">
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                className="size-4"
-                checked={repeats}
-                onChange={(event) => setRepeats(event.target.checked)}
-              />
-              <span className="font-medium">{t.entry.repeats}</span>
-            </label>
-            {repeats && (
-              <div className="grid gap-5 pl-7">
-                <Field
-                  label={t.entry.until}
-                  help={t.entry.untilHelp}
-                  errors={fieldMessages(error, "fixed_until")}
-                  className="w-fit"
-                >
-                  {(control) => (
-                    <input
-                      {...control}
-                      type="month"
-                      className="field"
-                      value={until}
-                      onChange={(event) => setUntil(event.target.value)}
-                    />
-                  )}
-                </Field>
-                {!isCredit && (
-                  <label className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      className="mt-1 size-4"
-                      checked={confirmEach}
-                      onChange={(event) => setConfirmEach(event.target.checked)}
-                    />
-                    <span>
-                      <span className="block font-medium">{t.entry.confirmEach}</span>
-                      <span className="block text-sm text-muted">{t.entry.confirmEachHelp}</span>
-                    </span>
-                  </label>
-                )}
-                {fieldMessages(error, "requires_confirmation").length > 0 && (
-                  <p role="alert" className="text-sm text-negative">
-                    {fieldMessages(error, "requires_confirmation").join(" ")}
-                  </p>
-                )}
-              </div>
+        {/* The options of an entry are in view. Each one shows its field when it is on. */}
+        <div className="grid">
+          {/* biome-ignore lint/a11y/useSemanticElements: a row of toggle buttons with one name. */}
+          <div role="group" aria-label={t.entry.more} className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={repeats}
+              onClick={() => setRepeats(!repeats)}
+            >
+              <RepeatIcon />
+              {t.entry.repeats}
+            </button>
+            {canSplit && (
+              <button
+                type="button"
+                className="chip"
+                aria-pressed={split && !repeats}
+                disabled={repeats}
+                onClick={() => {
+                  setSplit(!split);
+                  setInstallments(split ? 1 : Math.max(installments, 2));
+                }}
+              >
+                <SplitIcon />
+                {t.entry.split}
+              </button>
             )}
-            {isCredit && kind === "EXPENSE" && !repeats && (
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={noted}
+              onClick={() => {
+                setNoted(!noted);
+                if (noted) setNotes("");
+              }}
+            >
+              <NoteIcon />
+              {t.entry.notes}
+            </button>
+          </div>
+          <Reveal open={repeats}>
+            <div className="grid gap-4 rounded-(--radius-control) bg-sheet p-4">
               <Field
-                label={t.entry.installments}
-                help={t.entry.installmentsHelp}
-                errors={fieldMessages(error, "installments")}
-                className="w-40"
+                label={t.entry.until}
+                errors={fieldMessages(error, "fixed_until")}
+                className="w-56"
               >
                 {(control) => (
-                  <input
+                  <MonthField
                     {...control}
-                    type="number"
-                    min={1}
-                    max={48}
-                    className="field"
-                    value={installments}
-                    onChange={(event) =>
-                      setInstallments(Math.max(1, Number(event.target.value) || 1))
-                    }
+                    value={until}
+                    min={date.slice(0, 7)}
+                    empty={t.entry.noEnd}
+                    onChange={setUntil}
                   />
                 )}
               </Field>
-            )}
+              {!isCredit && (
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="mt-1 size-4"
+                    checked={confirmEach}
+                    onChange={(event) => setConfirmEach(event.target.checked)}
+                  />
+                  <span>
+                    <span className="block font-medium">{t.entry.confirmEach}</span>
+                    <span className="block text-sm text-muted">{t.entry.confirmEachHelp}</span>
+                  </span>
+                </label>
+              )}
+              {fieldMessages(error, "requires_confirmation").length > 0 && (
+                <p role="alert" className="text-sm text-negative">
+                  {fieldMessages(error, "requires_confirmation").join(" ")}
+                </p>
+              )}
+            </div>
+          </Reveal>
+          <Reveal open={canSplit && split && !repeats}>
+            <Field
+              label={t.entry.installments}
+              help={t.entry.installmentsHelp}
+              errors={fieldMessages(error, "installments")}
+              className="w-40"
+            >
+              {(control) => (
+                <input
+                  {...control}
+                  type="number"
+                  min={2}
+                  max={48}
+                  className="field"
+                  value={installments}
+                  onChange={(event) =>
+                    setInstallments(Math.max(1, Number(event.target.value) || 1))
+                  }
+                />
+              )}
+            </Field>
+          </Reveal>
+          <Reveal open={noted}>
             <Field label={t.entry.notes} errors={fieldMessages(error, "notes")}>
               {(control) => (
                 <textarea
@@ -315,8 +337,8 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
                 />
               )}
             </Field>
-          </div>
-        </details>
+          </Reveal>
+        </div>
       </fieldset>
       {message && (
         <p role="alert" className="text-sm text-negative">
@@ -355,26 +377,43 @@ function DeleteEntry(props: { id: number; onDone: () => void }) {
   );
 }
 
-function InstrumentOptions(props: { instruments: Instrument[] }) {
-  const t = useMessages();
-  const groups: [Instrument["kind"], string][] = [
+/**
+ * A field that an option of the form shows. It opens downward in a short
+ * motion. While it is closed, the keyboard does not reach it.
+ */
+function Reveal(props: { open: boolean; children: ReactNode }) {
+  return (
+    <div className="reveal" data-open={props.open ? "" : undefined} inert={!props.open}>
+      <div>
+        <div className="pt-4">{props.children}</div>
+      </div>
+    </div>
+  );
+}
+
+/** The accounts and the cards as the choices of a select, under their headings. */
+export function instrumentChoices(
+  instruments: Instrument[],
+  t: ReturnType<typeof useMessages>,
+): Choice[] {
+  const headings: [Instrument["kind"], string][] = [
     ["account", t.entry.accounts],
     ["debit", t.entry.debitCards],
     ["credit", t.entry.creditCards],
   ];
-  return groups.map(([kind, label]) => {
-    const items = props.instruments.filter((item) => item.kind === kind);
-    if (items.length === 0) return null;
-    return (
-      <optgroup key={kind} label={label}>
-        {items.map((item) => (
-          <option key={item.id} value={item.id}>
-            {instrumentLabel(item)}
-          </option>
-        ))}
-      </optgroup>
-    );
-  });
+  return headings.flatMap(([kind, group]) =>
+    instruments
+      .filter((item) => item.kind === kind)
+      .map((item) => ({ value: item.id, label: instrumentLabel(item), group })),
+  );
+}
+
+/** Categories as the choices of a select. `all` gives the parent of a subcategory. */
+export function categoryChoices(categories: Category[], all: Category[]): Choice[] {
+  // By the whole name, so that a subcategory follows its parent.
+  return categories
+    .map((item) => ({ value: String(item.id), label: categoryLabel(item, all) }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 export function instrumentLabel(item: Instrument): string {
@@ -452,13 +491,7 @@ function FirstAccount() {
         className="w-48"
       >
         {(control) => (
-          <input
-            {...control}
-            name="balance"
-            inputMode="decimal"
-            className="field amount"
-            autoComplete="off"
-          />
+          <AmountInput currency={"BRL"} {...control} name="balance" className="field amount" />
         )}
       </Field>
       {message && (

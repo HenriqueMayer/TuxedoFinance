@@ -62,8 +62,10 @@ test("the analysis shows a period with its charts, and the owner changes the per
   const reading = chart.locator("[data-reading]");
   await expect(reading).toContainText("R$ 5.000,00");
   await expect(reading).toContainText("R$ 180,00");
+  // Both are measured now: the window can still settle after it opens.
   const label = (await reading.boundingBox()) ?? { y: 0, height: 0 };
-  expect(label.y + label.height).toBeLessThanOrEqual(box.y + 1);
+  const plotNow = (await plot.boundingBox()) ?? box;
+  expect(label.y + label.height).toBeLessThanOrEqual(plotNow.y + 1);
 
   // A click on a month opens what its values are made of, in a window above the analysis.
   await page.mouse.click(monthX(5), middle);
@@ -84,11 +86,16 @@ test("the analysis shows a period with its charts, and the owner changes the per
   await expect(window.getByText("· 6 months")).toBeVisible();
 
   // A drag over months gives their figures, from the server.
+  // The chart is measured again each time: a press elsewhere can scroll the window.
   const drag = async () => {
-    await page.mouse.move(monthX(2), middle);
+    await plot.scrollIntoViewIfNeeded();
+    const now = (await plot.boundingBox()) ?? box;
+    const x = (index: number) => now.x + 48 + ((now.width - 56) / 6) * (index + 0.5);
+    const y = now.y + now.height / 2;
+    await page.mouse.move(x(2), y);
     await page.mouse.down();
-    await page.mouse.move(monthX(3), middle, { steps: 4 });
-    await page.mouse.move(monthX(4), middle, { steps: 4 });
+    await page.mouse.move(x(3), y, { steps: 4 });
+    await page.mouse.move(x(4), y, { steps: 4 });
     await page.mouse.up();
   };
   await drag();
@@ -155,5 +162,5 @@ test("the analysis shows a period with its charts, and the owner changes the per
   await page.goto(`/?w=analysis&wp=${month}_${month}`);
   await expect(window.getByText(/Each change is against/)).toBeVisible();
   // Expenses: 180,00 now, 80,00 the month before.
-  await expect(window.getByText("+R$ 100,00 · +125.0%")).toBeVisible();
+  await expect(window.getByText("+R$ 100,00 · +125,0%")).toBeVisible();
 });

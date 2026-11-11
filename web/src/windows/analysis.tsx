@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { type Analysis, analysisQuery } from "../data/reports";
 import { useLanguage, useMessages } from "../i18n";
 import { monthLabel, monthOf, shiftMonth, shortMonthLabel } from "../lib/dates";
@@ -13,7 +13,15 @@ import {
   presetPeriod,
 } from "../lib/period";
 import { BarChart, CHART, LineChart, type Run, type Series } from "../ui/charts";
-import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "../ui/icons";
+import {
+  ChartIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CloseIcon,
+  TagIcon,
+  TrendIcon,
+  WorthIcon,
+} from "../ui/icons";
 import { RangeSlider } from "../ui/RangeSlider";
 import { Segmented } from "../ui/Segmented";
 import { OpenWindow, useOpenAbove } from "./host";
@@ -33,7 +41,9 @@ type Tools = {
 /** False when the period before starts before the records: no change is shown. */
 const Comparable = createContext(true);
 
-const HEADING = "border-b border-line pb-2 font-medium";
+/** The areas of the analysis, in their order on the page. */
+const AREAS = ["flows", "categories", "worth", "investments"] as const;
+type AreaId = (typeof AREAS)[number];
 const SHOWN_CATEGORIES = 8;
 /**
  * The analysis of a period of months: income and expenses, categories, net
@@ -115,7 +125,7 @@ export function AnalysisWindow(props: {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-8">
+    <div className="grid grid-cols-1 gap-5">
       <section aria-label={t.analysis.period} className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <Segmented
@@ -183,10 +193,20 @@ export function AnalysisWindow(props: {
         </p>
       </section>
 
+      <AreaBar
+        areas={[
+          { id: "flows", title: t.analysis.flows, icon: <ChartIcon /> },
+          { id: "categories", title: t.analysis.categories, icon: <TagIcon /> },
+          { id: "worth", title: t.home.blocks.worth, icon: <WorthIcon /> },
+          { id: "investments", title: t.home.worth.investments, icon: <TrendIcon /> },
+        ]}
+        period={`${short(from)} – ${short(to)}`}
+      />
+
       <Comparable value={data.comparable}>
         {/* A slow answer dims the old figures; a quick one does not flicker. */}
         <div
-          className={`grid grid-cols-1 gap-10 transition-opacity duration-200 ${
+          className={`grid grid-cols-1 gap-6 transition-opacity duration-200 ${
             isPlaceholderData ? "opacity-55 delay-200" : ""
           }`}
         >
@@ -196,6 +216,93 @@ export function AnalysisWindow(props: {
         </div>
       </Comparable>
     </div>
+  );
+}
+
+/**
+ * One area of the analysis: a block with its name and its mark in a band at
+ * the top, so that the owner sees where one area ends and the next begins.
+ */
+function Area(props: {
+  id: AreaId;
+  title: string;
+  icon: ReactNode;
+  /** A control of the whole area, at the end of its band. */
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section id={`area-${props.id}`} data-area={props.id} aria-label={props.title} className="area">
+      <header className="area-head">
+        <span aria-hidden="true" className="area-mark">
+          {props.icon}
+        </span>
+        <h3 className="font-semibold">{props.title}</h3>
+        {props.aside && <span className="ml-auto">{props.aside}</span>}
+      </header>
+      <div className="grid gap-4 p-4 sm:p-5">{props.children}</div>
+    </section>
+  );
+}
+
+/**
+ * The areas of the analysis in one bar that stays at the top of the window.
+ * A press goes to an area; the bar marks the area that is at the top.
+ */
+function AreaBar(props: {
+  areas: { id: AreaId; title: string; icon: ReactNode }[];
+  /** The period on screen, as a reminder while the controls are out of view. */
+  period: string;
+}) {
+  const t = useMessages();
+  const bar = useRef<HTMLElement>(null);
+  const [current, setCurrent] = useState<AreaId>("flows");
+
+  // The area at the top of the window is the current one.
+  useEffect(() => {
+    const root = bar.current?.closest(".overflow-y-auto");
+    if (!root) return;
+    const seen = new Map<string, boolean>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          seen.set((entry.target as HTMLElement).dataset.area ?? "", entry.isIntersecting);
+        }
+        const first = AREAS.find((id) => seen.get(id));
+        if (first) setCurrent(first);
+      },
+      // An area counts while it crosses a band below the bar.
+      { root, rootMargin: "-72px 0px -55% 0px" },
+    );
+    for (const area of root.querySelectorAll("[data-area]")) observer.observe(area);
+    return () => observer.disconnect();
+  }, []);
+
+  function go(id: AreaId) {
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document
+      .getElementById(`area-${id}`)
+      ?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+  }
+
+  return (
+    <nav ref={bar} aria-label={t.analysis.areas} className="area-bar">
+      {props.areas.map((area) => (
+        <button
+          key={area.id}
+          type="button"
+          className="area-tab"
+          aria-current={area.id === current ? "true" : undefined}
+          onClick={() => go(area.id)}
+        >
+          {area.icon}
+          {area.title}
+        </button>
+      ))}
+      <span className="ml-auto pl-3 text-sm whitespace-nowrap text-muted max-sm:hidden">
+        {props.period}
+      </span>
+    </nav>
   );
 }
 
@@ -332,10 +439,9 @@ function Flows(tools: Tools) {
   const flow = data.flows.find((row) => row.currency === currency) ?? data.flows[0];
   if (!flow) {
     return (
-      <section>
-        <h3 className={HEADING}>{t.analysis.flows}</h3>
-        <p className="mt-4 text-muted">{t.analysis.noFlows}</p>
-      </section>
+      <Area id="flows" title={t.analysis.flows} icon={<ChartIcon />}>
+        <p className="text-muted">{t.analysis.noFlows}</p>
+      </Area>
     );
   }
   const money = (amount: string) => formatAmount(amount, flow.currency);
@@ -363,10 +469,12 @@ function Flows(tools: Tools) {
 
   return (
     <>
-      <section className="grid gap-4">
-        <div className={`flex flex-wrap items-end justify-between gap-3 ${HEADING}`}>
-          <h3>{t.analysis.flows}</h3>
-          {data.flows.length > 1 && (
+      <Area
+        id="flows"
+        title={t.analysis.flows}
+        icon={<ChartIcon />}
+        aside={
+          data.flows.length > 1 && (
             <Segmented
               inline
               hideLabel
@@ -375,8 +483,9 @@ function Flows(tools: Tools) {
               onChange={setCurrency}
               options={data.flows.map((row) => ({ value: row.currency, label: row.currency }))}
             />
-          )}
-        </div>
+          )
+        }
+      >
         <dl className="flex flex-wrap gap-x-10 gap-y-4">
           <Stat label={t.home.income} value={money(flow.income)} tone="text-positive">
             <Change
@@ -422,7 +531,7 @@ function Flows(tools: Tools) {
             { name: t.analysis.result, text: figure(part?.result) },
           ])}
         />
-      </section>
+      </Area>
       <Categories tools={tools} flow={flow} labels={labels} partial={partial} />
     </>
   );
@@ -451,8 +560,7 @@ function Categories(props: {
     ?.categories.find((row) => row.category_id === category.category_id);
 
   return (
-    <section className="grid gap-4">
-      <h3 className={HEADING}>{t.analysis.categories}</h3>
+    <Area id="categories" title={t.analysis.categories} icon={<TagIcon />}>
       <div className="grid grid-cols-1 gap-x-10 gap-y-6 lg:grid-cols-2">
         <div>
           <ul className="grid gap-1">
@@ -527,7 +635,7 @@ function Categories(props: {
           />
         </div>
       </div>
-    </section>
+    </Area>
   );
 }
 
@@ -561,8 +669,7 @@ function Worth(tools: Tools) {
   ];
   const part = selection.part?.worth;
   return (
-    <section className="grid gap-4">
-      <h3 className={HEADING}>{t.home.blocks.worth}</h3>
+    <Area id="worth" title={t.home.blocks.worth} icon={<WorthIcon />}>
       <dl className="flex flex-wrap gap-x-10 gap-y-4">
         <Stat
           label={t.analysis.worthAtEnd}
@@ -601,7 +708,7 @@ function Worth(tools: Tools) {
           },
         ])}
       />
-    </section>
+    </Area>
   );
 }
 
@@ -616,10 +723,9 @@ function Investments(tools: Tools) {
   const held = worth.months.some((row) => Number(row.investments) !== 0);
   if (!last || (!held && positions.length === 0)) {
     return (
-      <section>
-        <h3 className={HEADING}>{t.home.worth.investments}</h3>
-        <p className="mt-4 text-muted">{t.analysis.noInvestments}</p>
-      </section>
+      <Area id="investments" title={t.home.worth.investments} icon={<TrendIcon />}>
+        <p className="text-muted">{t.analysis.noInvestments}</p>
+      </Area>
     );
   }
   const months = tools.data.months.map(monthOf);
@@ -641,8 +747,7 @@ function Investments(tools: Tools) {
   ];
   const part = selection.part?.worth;
   return (
-    <section className="grid gap-4">
-      <h3 className={HEADING}>{t.home.worth.investments}</h3>
+    <Area id="investments" title={t.home.worth.investments} icon={<TrendIcon />}>
       <dl className="flex flex-wrap gap-x-10 gap-y-4">
         <Stat label={t.analysis.valueAtEnd} value={money(last.investments)}>
           <Change amount={worth.investments_change} currency={worth.currency} good="up" />
@@ -677,7 +782,7 @@ function Investments(tools: Tools) {
           </div>
         )}
       </div>
-    </section>
+    </Area>
   );
 }
 

@@ -26,10 +26,14 @@ import {
   parseDecimal,
 } from "../lib/money";
 import { sessionQuery, useDateOrder } from "../session";
+import { AmountInput } from "../ui/AmountInput";
+import { DateField } from "../ui/DateField";
 import { Field } from "../ui/Field";
 import { Segmented } from "../ui/Segmented";
+import { Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
-import { CURRENCIES } from "./settings";
+import { AnalyzeButton } from "./insight";
+import { type CURRENCIES, useCurrencyChoices } from "./settings";
 import { AccountSelect, Alert, ConfirmButton, values } from "./wallet";
 
 type Mode = PositionDetail["valuation_mode"];
@@ -38,6 +42,7 @@ type Currency = (typeof CURRENCIES)[number];
 /** Create an investment: where it is, how it is valued, and what it already holds. */
 export function NewInvestmentWindow(props: { onDone: () => void }) {
   const t = useMessages();
+  const currencies = useCurrencyChoices();
   const { data: session } = useSuspenseQuery(sessionQuery);
   const { data: wallet } = useSuspenseQuery(walletQuery);
   const { data: portfolio } = useSuspenseQuery(positionsQuery);
@@ -141,18 +146,12 @@ export function NewInvestmentWindow(props: { onDone: () => void }) {
       </div>
       <Field label={t.invest.currency} className="w-fit">
         {(control) => (
-          <select
+          <Select
             {...control}
-            className="field"
             value={currency}
-            onChange={(event) => setCurrency(event.target.value as Currency)}
-          >
-            {CURRENCIES.map((code) => (
-              <option key={code} value={code}>
-                {code}
-              </option>
-            ))}
-          </select>
+            options={currencies}
+            onChange={(value) => setCurrency(value as Currency)}
+          />
         )}
       </Field>
       <fieldset className="grid gap-4 rounded-(--radius-control) bg-sheet p-4">
@@ -166,12 +165,11 @@ export function NewInvestmentWindow(props: { onDone: () => void }) {
               className="w-48"
             >
               {(control) => (
-                <input
+                <AmountInput
+                  currency={currency}
                   {...control}
                   name="balance"
-                  inputMode="decimal"
                   className="field amount"
-                  autoComplete="off"
                 />
               )}
             </Field>
@@ -211,14 +209,7 @@ export function NewInvestmentWindow(props: { onDone: () => void }) {
           )}
           <Field label={t.invest.since} errors={fieldMessages(create.error, "opening_date")}>
             {(control) => (
-              <input
-                {...control}
-                type="date"
-                name="date"
-                className="field"
-                defaultValue={todayIso()}
-                max={todayIso()}
-              />
+              <DateField {...control} name="date" defaultValue={todayIso()} max={todayIso()} />
             )}
           </Field>
         </div>
@@ -245,8 +236,11 @@ export function InvestmentWindow(props: { id: number; onDone: () => void }) {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <div>
-        <p className="text-sm text-muted">
+      <div className="relative">
+        <span className="absolute top-0 right-0">
+          <AnalyzeButton kind="investment" id={position.id} />
+        </span>
+        <p className="pr-28 text-sm text-muted">
           {position.institution_name} · {position.name}
         </p>
         <p className="amount text-3xl font-semibold">{money(position.value)}</p>
@@ -343,23 +337,31 @@ function ValueForm(props: { position: PositionDetail }) {
           errors={invalid ? [t.invest.numberInvalid] : fieldMessages(save.error, "value")}
           className="w-48"
         >
-          {(control) => (
-            <input
-              {...control}
-              {...autofocus}
-              name="value"
-              inputMode="decimal"
-              className="field amount"
-              defaultValue={
-                units
-                  ? position.unit_price
-                    ? editableDecimal(position.unit_price, position.currency)
-                    : ""
-                  : editableAmount(position.value, position.currency)
-              }
-              autoComplete="off"
-            />
-          )}
+          {(control) =>
+            units ? (
+              // A unit price has up to eight decimals: it is not written as an amount.
+              <input
+                {...control}
+                {...autofocus}
+                name="value"
+                inputMode="decimal"
+                className="field amount"
+                defaultValue={
+                  position.unit_price ? editableDecimal(position.unit_price, position.currency) : ""
+                }
+                autoComplete="off"
+              />
+            ) : (
+              <AmountInput
+                {...control}
+                {...autofocus}
+                name="value"
+                className="field amount"
+                currency={position.currency}
+                defaultValue={editableAmount(position.value, position.currency)}
+              />
+            )
+          }
         </Field>
         <button type="submit" className="button-primary" disabled={save.isPending}>
           {t.common.save}
@@ -474,13 +476,12 @@ function OperationForm(props: {
             className="w-40"
           >
             {(control) => (
-              <input
+              <AmountInput
+                currency={position.currency}
                 {...control}
                 {...autofocus}
                 name="amount"
-                inputMode="decimal"
                 className="field amount"
-                autoComplete="off"
               />
             )}
           </Field>
@@ -496,14 +497,7 @@ function OperationForm(props: {
         </div>
         <Field label={t.entry.date} errors={fieldMessages(record.error, "date")}>
           {(control) => (
-            <input
-              {...control}
-              type="date"
-              name="date"
-              className="field"
-              defaultValue={todayIso()}
-              max={todayIso()}
-            />
+            <DateField {...control} name="date" defaultValue={todayIso()} max={todayIso()} />
           )}
         </Field>
       </div>

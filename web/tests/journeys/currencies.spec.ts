@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { freshUser, prepareWallet } from "./support";
+import { choose, chooseValue, freshUser, prepareWallet } from "./support";
 
 test("an account in another currency counts in the totals after its rate", async ({ page }) => {
   await freshUser(page);
@@ -11,11 +11,11 @@ test("an account in another currency counts in the totals after its rate", async
   const create = page.getByRole("dialog", { name: "New account" });
   await create.getByLabel("Bank").fill("Wise");
   await create.getByLabel("Name").fill("Dollars");
-  await create.getByLabel("Currency").selectOption("USD");
+  await chooseValue(create.getByLabel("Currency"), "USD");
   await create.getByLabel("Opening balance (USD)").fill("100");
   await create.getByRole("button", { name: /Create/ }).click();
   await expect(create).toBeHidden();
-  await expect(page.getByRole("link", { name: /Dollars/ })).toContainText("$100.00");
+  await expect(page.getByRole("link", { name: /Dollars/ })).toContainText("$100,00");
 
   // Without a rate, the net worth leaves the dollars out and says so.
   await page.goto("/");
@@ -29,7 +29,7 @@ test("an account in another currency counts in the totals after its rate", async
   // The rate is typed once and the totals follow.
   const rates = page.getByRole("dialog", { name: "Exchange rates" });
   await expect(rates.getByText("Without a rate: USD.")).toBeVisible();
-  await expect(rates.getByLabel("Currency")).toHaveValue("USD");
+  await expect(rates.getByLabel("Currency")).toHaveAttribute("data-value", "USD");
   await rates.getByLabel(/1 unit in BRL/).fill("abc");
   await rates.getByRole("button", { name: "Record rate" }).click();
   await expect(rates.getByText("Enter a rate greater than zero.")).toBeVisible();
@@ -45,8 +45,8 @@ test("an account in another currency counts in the totals after its rate", async
   await page.goto("/wallet");
   await page.getByRole("link", { name: "Transfer" }).click();
   const transfer = page.getByRole("dialog", { name: "Transfer" });
-  await transfer.getByLabel("From").selectOption({ label: "Nubank · Conta" });
-  await transfer.getByLabel("To", { exact: true }).selectOption({ label: "Wise · Dollars" });
+  await choose(transfer.getByLabel("From"), "Nubank · Conta");
+  await choose(transfer.getByLabel("To", { exact: true }), "Wise · Dollars");
   await transfer.getByLabel("Amount (BRL)").fill("525");
   await transfer.getByRole("button", { name: "Transfer" }).click();
   await expect(transfer.getByLabel("Amount received (USD)")).toHaveAttribute(
@@ -56,7 +56,7 @@ test("an account in another currency counts in the totals after its rate", async
   await transfer.getByLabel("Amount received (USD)").fill("100");
   await transfer.getByRole("button", { name: "Transfer" }).click();
   await expect(transfer).toBeHidden();
-  await expect(page.getByRole("link", { name: /Dollars/ })).toContainText("$200.00");
+  await expect(page.getByRole("link", { name: /Dollars/ })).toContainText("$200,00");
   await expect(page.getByRole("link", { name: /Conta/ }).first()).toContainText("R$ 475,00");
 
   // The rates are reached from Settings too, and a rate can be deleted.

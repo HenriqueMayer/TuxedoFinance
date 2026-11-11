@@ -17,6 +17,8 @@ import { formatDate, todayIso } from "../lib/dates";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { formatAmount, formatQuantity, parseAmount, parseDecimal } from "../lib/money";
 import { useDateOrder } from "../session";
+import { AmountInput } from "../ui/AmountInput";
+import { DateField as DateControl } from "../ui/DateField";
 import { Field } from "../ui/Field";
 import { Segmented } from "../ui/Segmented";
 import { autofocus } from "../ui/Window";
@@ -158,14 +160,7 @@ function DateField(props: { errors: string[] }) {
   return (
     <Field label={t.entry.date} errors={props.errors}>
       {(control) => (
-        <input
-          {...control}
-          type="date"
-          name="date"
-          className="field"
-          defaultValue={todayIso()}
-          max={todayIso()}
-        />
+        <DateControl {...control} name="date" defaultValue={todayIso()} max={todayIso()} />
       )}
     </Field>
   );
@@ -267,13 +262,7 @@ function RedeemForm(props: { program: ProgramDetail }) {
           className="w-48"
         >
           {(control) => (
-            <input
-              {...control}
-              name="money"
-              inputMode="decimal"
-              className="field amount"
-              autoComplete="off"
-            />
+            <AmountInput currency={currency} {...control} name="money" className="field amount" />
           )}
         </Field>
       </div>

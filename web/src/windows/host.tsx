@@ -9,6 +9,7 @@ import { ClosingWindow } from "./closing";
 import { AddEntry, EditEntry } from "./entry";
 import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
 import { ImportStartWindow, ImportWindow } from "./imports";
+import { InsightWindow } from "./insight";
 import { InvestmentWindow, NewInvestmentWindow } from "./investment";
 import { NewProgramWindow, ProgramWindow } from "./loyalty";
 import { OriginWindow } from "./origin";
@@ -66,7 +67,8 @@ export type WindowId =
   | `invoice:${number}`
   | `investment:${number}`
   | `schedule:${number}`
-  | `origin:${string}`;
+  | `origin:${string}`
+  | `insight:${"investment" | "account" | "card"}:${number}`;
 
 /**
  * A window can have one window above it: the address names the first in `w`
@@ -265,6 +267,9 @@ function Layer(props: { level: Level; w: string | undefined }) {
   } else if (w === "worth") {
     title = t.home.blocks.worth;
     content = <WorthWindow />;
+  } else if (kind === "insight") {
+    title = t.insight.title;
+    content = <InsightWindow id={w ?? ""} />;
   } else if (kind === "origin") {
     title = t.analysis.originTitle;
     content = <OriginWindow id={w ?? ""} />;

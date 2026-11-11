@@ -69,6 +69,15 @@ class DemoExportTests(TransactionTestCase):
         first, year = default["first"][:7], f"{month[:4]}-01"
         for start, end in ((month, month), (first, month), (year, month), (first, first)):
             self.assertIn(f"GET /api/reports/analysis?end={end}&start={start}", answers)
+        # Each item of the Wallet has its analysis.
+        accounts = answers["GET /api/banking/wallet"]["banks"][0]["accounts"]
+        account = answers[f"GET /api/reports/items/account/{accounts[0]['id']}"]
+        self.assertEqual(len(account["months"]), 12)
+        card = accounts[0]["credit_cards"][0]
+        self.assertTrue(answers[f"GET /api/reports/items/card/{card['id']}"]["categories"])
+        position = answers["GET /api/investments/positions"]["positions"][0]
+        share = answers[f"GET /api/reports/items/investment/{position['id']}"]["share"]
+        self.assertGreater(len(share["items"]), 1)
         # A click on a month of a chart has its answer too.
         origin = answers[f"GET /api/reports/analysis/month?month={month}"]
         self.assertTrue(origin["entries"])

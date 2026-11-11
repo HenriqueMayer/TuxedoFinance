@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { apiPost, freshUser, prepareWallet, settled } from "./support";
+import { apiPost, choose, freshUser, prepareWallet, settled } from "./support";
 
 const row = (page: Page, title: string) => page.getByRole("link", { name: new RegExp(title) });
 
@@ -20,7 +20,7 @@ test("first use: the owner creates an account and records an expense", async ({ 
   await expect(window.getByLabel(/Amount/)).toBeFocused();
   await window.getByLabel(/Amount/).fill("45,90");
   await window.getByLabel("Description").fill("Feira");
-  await window.getByLabel("Category").selectOption({ label: "Groceries" });
+  await choose(window.getByLabel("Category"), "Groceries");
   await window.getByRole("button", { name: "Save" }).click();
 
   await expect(window).toBeHidden();
@@ -48,8 +48,8 @@ test("a known description fills the category, so an entry needs two typed values
   await window.getByLabel("Description").fill("padaria");
   await window.getByLabel("Description").press("Tab");
   // The category and the card of the earlier entry are suggested.
-  await expect(window.getByLabel("Category")).not.toHaveValue("");
-  await expect(window.getByLabel("Account or card")).toHaveValue(wallet.card);
+  await expect(window.getByLabel("Category")).not.toHaveAttribute("data-value", "");
+  await expect(window.getByLabel("Account or card")).toHaveAttribute("data-value", wallet.card);
   await window.getByLabel("Description").press("Enter");
 
   await expect(window).toBeHidden();
@@ -93,10 +93,45 @@ test("income goes to an account and is shown as a gain", async ({ page }) => {
   const window = page.getByRole("dialog", { name: "Add entry" });
   await window.getByText("Income", { exact: true }).click();
   // A card cannot receive income: only the account is offered.
-  await expect(window.getByLabel("Account or card").locator("option")).toHaveCount(1);
-  await window.getByLabel(/Amount/).fill("5000");
+  await window.getByLabel("Account or card").click();
+  await expect(page.getByRole("option")).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  // The amount takes its separators while it is typed, and its decimals when the field is left.
+  const amount = window.getByLabel(/Amount/);
+  await amount.pressSequentially("12345");
+  await expect(amount).toHaveValue("12.345");
+  // Backspace on the separator deletes the digit before it.
+  await amount.press("ArrowLeft");
+  await amount.press("ArrowLeft");
+  await amount.press("ArrowLeft");
+  await amount.press("Backspace");
+  await expect(amount).toHaveValue("1.345");
+  // The two keys are different: the point groups thousands and the comma starts the decimals.
+  await amount.fill("");
+  await amount.pressSequentially("2.000,50");
+  await expect(amount).toHaveValue("2.000,50");
+  await amount.fill("");
+  await amount.pressSequentially("5000,5");
+  await expect(amount).toHaveValue("5.000,5");
+  // A point is the thousands separator here: it shows when typed, and "12.5" left as it is
+  // is one hundred and twenty-five.
+  await amount.fill("");
+  await amount.pressSequentially("12.5");
+  await expect(amount).toHaveValue("12.5");
+  await amount.blur();
+  await expect(amount).toHaveValue("125,00");
+  // Backspace after the decimal comma deletes the comma alone.
+  await amount.fill("");
+  await amount.pressSequentially("7,");
+  await amount.press("Backspace");
+  await expect(amount).toHaveValue("7");
+  await amount.fill("5000");
+  await expect(amount).toHaveValue("5.000");
+  await amount.blur();
+  await expect(amount).toHaveValue("5.000,00");
   await window.getByLabel("Description").fill("Salário");
-  await window.getByLabel("Category").selectOption({ index: 1 });
+  await window.getByLabel("Category").click();
+  await page.getByRole("option").first().click();
   await window.getByRole("button", { name: "Save" }).click();
   await expect(row(page, "Salário")).toContainText("+R$ 5.000,00");
 });

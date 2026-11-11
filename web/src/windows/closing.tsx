@@ -11,12 +11,14 @@ import {
   useReopenMonth,
 } from "../data/plan";
 import { useLanguage, useMessages } from "../i18n";
-import { formatDate, monthLabel, monthOf, shiftMonth, todayIso } from "../lib/dates";
+import { formatDate, monthLabel, monthOf, todayIso } from "../lib/dates";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { editableAmount, formatAmount, parseAmount, sameAmount } from "../lib/money";
 import { CategoryBars, DueRows } from "../routes/home";
 import { useDateOrder } from "../session";
+import { AmountInput } from "../ui/AmountInput";
 import { Field } from "../ui/Field";
+import { MonthPicker } from "../ui/MonthPicker";
 import { Alert, parseBalance, values } from "./wallet";
 
 /**
@@ -41,29 +43,9 @@ export function ClosingWindow() {
   return (
     <div className="grid grid-cols-1 gap-8">
       <div>
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-lg font-medium">{name}</p>
-          <div className="flex gap-1">
-            <button
-              type="button"
-              className="button-quiet min-h-9 px-3"
-              aria-label={t.closing.previousMonth}
-              onClick={() => setMonth(shiftMonth(month, -1))}
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              className="button-quiet min-h-9 px-3"
-              aria-label={t.closing.nextMonth}
-              disabled={month >= todayIso().slice(0, 7)}
-              onClick={() => setMonth(shiftMonth(month, 1))}
-            >
-              ›
-            </button>
-          </div>
-        </div>
-        <p className="mt-1 max-w-prose text-sm text-muted">
+        {/* A month after the current one has nothing to close. */}
+        <MonthPicker month={month} onChange={setMonth} max={todayIso().slice(0, 7)} align="start" />
+        <p className="mt-3 max-w-prose text-sm text-muted">
           {data.is_closed && data.closed_on
             ? `${t.closing.closedOn(formatDate(data.closed_on, order))}${data.changed_since ? ` ${t.closing.changed}` : ""}`
             : t.closing.intro}
@@ -185,12 +167,12 @@ function AccountCheck(props: { month: string; account: ClosingAccount }) {
           <p className="truncate font-medium">{account.name}</p>
           <p className="amount text-sm text-muted">{t.closing.inApp(money(account.tracked))}</p>
         </div>
-        <input
+        <AmountInput
+          currency={account.currency}
+          signed
           aria-label={t.closing.atBank(account.name)}
           aria-invalid={invalid}
           placeholder={t.closing.bankBalance}
-          inputMode="decimal"
-          autoComplete="off"
           className="field amount w-56"
           disabled={busy}
           defaultValue={
@@ -281,14 +263,13 @@ function CloseForm(props: { data: Closing; name: string }) {
         className="max-w-sm"
       >
         {(control) => (
-          <input
+          <AmountInput
+            currency={data.currency}
             {...control}
             // The key shows the saved limit after the closing.
             key={next.amount ?? ""}
             name="limit"
-            inputMode="decimal"
             className="field amount"
-            autoComplete="off"
             defaultValue={next.amount === null ? "" : editableAmount(next.amount, data.currency)}
           />
         )}

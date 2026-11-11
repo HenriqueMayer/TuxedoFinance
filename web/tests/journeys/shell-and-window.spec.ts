@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { settled, signIn } from "./support";
+import { chooseValue, settled, signIn } from "./support";
 
 test("the four destinations are reachable and show which one is current", async ({ page }) => {
   await signIn(page);
@@ -88,15 +88,15 @@ test("language and theme change at once and survive a reload; currency is saved 
   await window.getByText("Escuro").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
-  await window.getByLabel("Moeda dos totais").selectOption("USD");
+  await chooseValue(window.getByLabel("Moeda dos totais"), "USD");
   await page.reload();
   await expect(page.getByRole("dialog", { name: "Ajustes" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByLabel("Moeda dos totais")).toHaveValue("USD");
+  await expect(page.getByLabel("Moeda dos totais")).toHaveAttribute("data-value", "USD");
 
   // Leave the shared server state as the other journeys expect it.
-  await page.getByLabel("Moeda dos totais").selectOption("BRL");
-  await expect(page.getByLabel("Moeda dos totais")).toHaveValue("BRL");
+  await chooseValue(page.getByLabel("Moeda dos totais"), "BRL");
+  await expect(page.getByLabel("Moeda dos totais")).toHaveAttribute("data-value", "BRL");
 });
 
 test.describe("with reduced motion", () => {

@@ -5,6 +5,7 @@ import { useLanguage, useMessages } from "../i18n";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { formatAmount, parseAmount } from "../lib/money";
 import { sessionQuery } from "../session";
+import { AmountInput } from "../ui/AmountInput";
 import { Field } from "../ui/Field";
 import { Segmented } from "../ui/Segmented";
 import { autofocus } from "../ui/Window";
@@ -19,6 +20,8 @@ function optionalAmount(text: string | undefined, currency: string): string | nu
 
 function AmountField(props: {
   name: string;
+  /** The currency of the amount. Without it, the real. */
+  currency?: string;
   label: string;
   errors: string[];
   first?: boolean;
@@ -27,13 +30,12 @@ function AmountField(props: {
   return (
     <Field label={props.label} errors={props.errors} className={props.className ?? "w-48"}>
       {(control) => (
-        <input
+        <AmountInput
+          currency={props.currency ?? "BRL"}
           {...control}
           {...(props.first ? autofocus : {})}
           name={props.name}
-          inputMode="decimal"
           className="field amount"
-          autoComplete="off"
         />
       )}
     </Field>
@@ -200,12 +202,14 @@ export function GrowthWindow() {
         <div className="flex flex-wrap gap-4">
           <AmountField
             name="initial"
+            currency={currency}
             label={`${t.plan.tools.initial} (${currency})`}
             errors={errors("initial")}
             first
           />
           <AmountField
             name="contribution"
+            currency={currency}
             label={t.plan.tools.contribution}
             errors={errors("contribution")}
             className="w-52"

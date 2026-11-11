@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { apiPost, freshUser, prepareWallet } from "./support";
+import { apiPost, choose, freshUser, prepareWallet } from "./support";
 
 test("the owner creates an account and a card in the Wallet", async ({ page }) => {
   await freshUser(page, "/wallet");
@@ -111,8 +111,8 @@ test("the owner transfers between accounts and undoes it", async ({ page }) => {
   await page.getByRole("link", { name: "Transfer" }).click();
   const window = page.getByRole("dialog", { name: "Transfer" });
   await window.getByLabel("Amount", { exact: true }).fill("250");
-  await window.getByLabel("From", { exact: true }).selectOption({ label: "Nubank · Conta" });
-  await window.getByLabel("To", { exact: true }).selectOption({ label: "Nubank · Reserva" });
+  await choose(window.getByLabel("From", { exact: true }), "Nubank · Conta");
+  await choose(window.getByLabel("To", { exact: true }), "Nubank · Reserva");
   await window.getByRole("button", { name: "Transfer" }).click();
   await expect(window).toBeHidden();
 

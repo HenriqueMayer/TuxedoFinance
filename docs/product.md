@@ -13,7 +13,7 @@ and the Add action. Settings opens from the rail or from the phone header.
 |---|---|---|
 | Home | How is this month? | Blocks that the owner chooses and orders |
 | Transactions | What did I record? | The entries of a month, with search and filters |
-| Wallet | What do I have and what do I owe? | Accounts by bank, cards, invoices, transfers, investments |
+| Wallet | What do I have and what do I owe? | Accounts by bank, credit and debit cards, invoices, transfers, investments, points and miles, accounts in other currencies |
 | Plan | What do I intend? | The limit of the month, category budgets, goals, the months ahead, the sheet, calculators and the month closing |
 
 ## The window
@@ -30,6 +30,14 @@ A window has an address, so Back closes it and a link reopens it. See
   category. The date is today unless changed.
 - A description that was used before fills the category and the account or
   card of that earlier entry.
+- The amount is written with its separators while it is typed: 2000 is
+  2.000, and 2.000,00 when the field is left. Every field for an amount of
+  money does the same.
+- The account or card and the category are chosen from a list with a
+  search box. The date is chosen in a calendar.
+- Three options are in view under the date: repeat every month, pay in
+  installments (for a credit card) and a note. Each one shows its field when
+  it is on.
 - A credit-card purchase can be paid in installments. Each installment counts
   in the month of its statement.
 - An entry can repeat every month, with an optional last month. A repeating
@@ -41,11 +49,12 @@ A window has an address, so Back closes it and a link reopens it. See
 ### Categories
 
 A category has a name, an optional type (expense or income) and an optional
-parent. Settings opens the list. The list is exported to a CSV file and
-imported from one, with the columns `name`, `transaction_type` and
-`parent_category`. An import creates the names that the owner does not have
-and changes nothing else, so the export of one installation is the import of
-another.
+parent. Settings and the menu of Transactions open the list. The list is
+exported to a CSV file and imported from one, with the columns `name`,
+`transaction_type` and `parent_category`. An import creates the names that
+the owner does not have and changes nothing else, so the export of one
+installation is the import of another. A file has at most 2 MiB and 500
+rows, and a name at most 100 characters.
 
 ### Statement import
 
@@ -95,11 +104,30 @@ and invoices use this one rule, so their totals agree.
 - An account has an opening balance. Its balance is that amount plus its
   movements up to today.
 - A credit card belongs to an account. Each statement month has an invoice.
+- A debit card belongs to an account too. An entry paid with it leaves the
+  account on its date; the card only names how it was paid.
 - A card has one settlement setting. With "I confirm each invoice payment"
   on, an invoice stays open until a payment is recorded. With it off, the
   invoice is paid from the account on its due date.
 - A transfer moves an amount between two accounts. Between two currencies,
   the owner types the amount that left and the amount that arrived.
+
+### Analysis of one item
+
+The window of an account, of a credit card and of an investment has
+**Analysis**. It opens above that window and covers the twelve months to the
+current one.
+
+| Item | Shows |
+|---|---|
+| Investment | The value at each month end; the deposits, withdrawals and yields of each month; the gain of the units held |
+| Account | The balance at each month end; what entered and left in each month; the change of the period |
+| Credit card | The statement of each month; what the card owes today; the categories where it was used |
+
+Each analysis ends with the item beside every item of its kind: its value
+of the total (for example R$ 100 of R$ 1,000 invested), one bar that compares
+the two, and the list of the items with the part of each. The comparison is
+in the currency of totals.
 
 ### Other currencies
 
@@ -292,6 +320,10 @@ months. It answers four questions, each with a chart and its figures.
 | Net worth | The net worth at each month end, with accounts, investments and card debt |
 | Investments | The value against the cost at each month end, and the positions at the end of the period with the part of each one |
 
+Each section is a block with its name in a band at the top. A bar with the
+four names stays at the top of the window: a press goes to a section, and
+the bar marks the section in view.
+
 The owner chooses the period with a preset (3, 6 or 12 months, this year,
 all) or with the two handles of a slider, and moves it one month at a time.
 A handle follows the pointer and comes to rest on the nearest month. Each
@@ -330,9 +362,18 @@ window.
 
 ## Languages and formats
 
-The interface is in English and Brazilian Portuguese. An amount is written
-the way its currency writes it, in either language. The owner chooses the
-date order.
+The interface is in English and Brazilian Portuguese. The owner chooses the
+date order and how numbers are written: 1.234,56 or 1,234.56. The choice
+holds for every amount, percentage and quantity that is shown, and for every
+amount that is typed. An amount keeps the symbol of its currency and the
+place of that symbol. A new owner starts with 1.234,56.
+
+In a field for an amount, the two separator keys keep the meaning of the
+choice. With 1.234,56, the point groups thousands and the comma starts the
+decimals: "2.000,50" typed key by key is two thousand and fifty cents, and
+"12.5" is one hundred and twenty-five. With 1,234.56 the keys change places.
+A typed thousands separator shows at once, and Backspace deletes a typed
+separator alone.
 
 ## The public page
 
@@ -346,7 +387,8 @@ These parts of 1.x have no screen in 2.0.
 
 | Area | State |
 |---|---|
-| Automatic alerts of 1.x (duplicates, subscription increases, cash shortage) | Not planned for 2.0. A budget and a goal show their own state |
+| Automatic alerts of 1.x (duplicates, subscription increases, cash shortage, goals behind) | Not planned for 2.0. A budget and a goal show their own state |
+| An entry divided between categories (a split) | Domain moved, no API or screen. The reads count a split in each of its categories |
 | Points bought with an account or a card, IOF on a redemption, a deposit paid with points | Domain moved, no screen. Not planned for 2.0 unless asked |
 | Invoice credits | Domain moved, no API or screen |
 | Investment fees, and the edit of a recorded operation | Domain moved, no screen. An operation is undone and recorded again |

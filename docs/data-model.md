@@ -98,7 +98,7 @@ Rules:
 | `Asset` | What is held: its currency, how it is valued, and the opening position |
 | `Investment` | One operation: a deposit, a withdrawal or a yield |
 | `PriceObservation` | A unit price that the owner recorded for a date |
-| `PositionPlanningSetting` | Whether a cash position counts in the plan. Used when Plan is built |
+| `PositionPlanningSetting` | Whether a cash position counts in the plan. A model of 1.x: no screen and no Plan rule of 2.0 reads it |
 
 Rules:
 
@@ -179,8 +179,23 @@ defines incurred and paid amounts. Each amount is converted to the base
 currency with the rate of that date; an amount without a rate adds nothing
 and its currency is listed.
 
+## Analysis
+
+The analysis has no model. `reports.analysis` reads a period of whole months
+with the rules above: flows by billed month and currency, top-level
+categories, and the net worth at each month end. It also gives the period
+before, of the same length, and every change, average and percentage, so the
+client calculates nothing. `reports.analysis.origin` lists what one month is
+made of: one row for each entry and top-level category, the parts of the net
+worth, and the investment operations.
+
+`reports.items` reads twelve months of one investment, account or credit
+card, and the item beside every item of its kind. The amounts of the item
+are in its own currency; the comparison is in the base currency with the
+rates of today.
+
 ## Preferences
 
-`accounts.UserPreference` holds the currency of totals, the date order and
-the Home blocks. Preferences change how values are shown. They never change
-the currency or the date of a record.
+`accounts.UserPreference` holds the currency of totals, the date order, the
+number format and the Home blocks. Preferences change how values are shown.
+They never change the currency or the date of a record.

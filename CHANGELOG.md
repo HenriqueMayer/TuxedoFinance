@@ -13,9 +13,18 @@ and no upgrade from 1.x.
 - A React client and a JSON API replace the server-rendered pages.
 - One month control in Transactions and in the month window: a step to each
   side, and the months of a year behind the name of the month.
+- Lists with a search box, a calendar and a file field of the application in
+  every form, in place of the controls of the browser. On a phone they open
+  as a sheet at the bottom of the screen.
+- A field for an amount writes its separators while the owner types.
+- A setting for how numbers are written: 1.234,56 or 1,234.56.
+- The options of an entry (repeat, installments, note) are in view.
+- An analysis of one account, card or investment, opened from its window:
+  twelve months of the item and its part of the total of its kind.
 - An analysis window, opened from Home: income and expenses, categories, net
   worth and investments over a period of months, against the period before.
 - Four destinations: Home, Transactions, Wallet and Plan.
+- Debit cards in the Wallet, beside accounts and credit cards.
 - Every object opens in a window above the current page. A window has an
   address, and the page behind keeps its position and filters.
 - Add entry on every screen, with the key N. A known description fills the
@@ -64,6 +73,6 @@ and no upgrade from 1.x.
 
 ## 1.x
 
-Versions 0.3.0 to 1.0.0 were a server-rendered Django application. Their
+The versions before 2.0 were a server-rendered Django application. Their
 notes are in the changelog of the tag
 [`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/blob/v1.0.0/CHANGELOG.md).

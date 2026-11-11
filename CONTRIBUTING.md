@@ -6,7 +6,7 @@ Read [Development](docs/development.md) for setup and commands, and
 ## A change
 
 1. Write the test that proves the behavior. See it fail.
-2. Make the change in the folder that owns it (`backend/` or `web/`).
+2. Make the change in the folder that owns it (`backend/`, `web/` or `site/`).
 3. Run the checks of that folder. They are listed in
    [Development](docs/development.md#checks).
 4. Update the documentation file of the subject in the same change.
@@ -15,9 +15,14 @@ Read [Development](docs/development.md) for setup and commands, and
 
 ## What a pull request runs
 
-`backend.yml` runs for a change in `backend/`. `web.yml` runs for a change in
-`web/` or `backend/`, because the client depends on the API schema and the
-journeys use the real backend. A change of documentation alone runs neither.
+| Workflow | Runs for a change in |
+|---|---|
+| `backend.yml` | `backend/` |
+| `web.yml` | `web/` or `backend/`: the client depends on the API schema, and the journeys use the real backend |
+| `docker.yml` | `backend/`, `web/`, `Dockerfile` or `.dockerignore`: it builds the image and starts it |
+| `pages.yml` | `site/`, `web/` or `backend/`: it builds and checks the public site, and does not publish it |
+
+A change of documentation alone runs none of them.
 
 ## Rules that the checks cannot enforce
 

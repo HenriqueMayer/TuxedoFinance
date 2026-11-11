@@ -6,8 +6,9 @@ import { setLanguage, useLanguage, useMessages } from "../i18n";
 import { currencySymbol } from "../lib/money";
 import { setTheme, useTheme } from "../lib/theme";
 import { sessionQuery, useSavePreferences, useSignOut } from "../session";
-import { ChevronDownIcon, ChevronRightIcon, ExchangeIcon, TagIcon } from "../ui/icons";
+import { ChevronRightIcon, ExchangeIcon, TagIcon } from "../ui/icons";
 import { Segmented } from "../ui/Segmented";
+import { type Choice, Select } from "../ui/Select";
 import { OpenWindow } from "./host";
 
 type Preferences = components["schemas"]["PreferencesOut"];
@@ -24,6 +25,16 @@ export const CURRENCIES: Preferences["base_currency"][] = [
 const ROW_LINK =
   "flex items-center gap-2.5 text-sm font-medium transition-colors duration-150 hover:text-accent-ink";
 
+/** The currencies as the choices of a select: the code, and the name in the interface language. */
+export function useCurrencyChoices(codes: readonly string[] = CURRENCIES): Choice[] {
+  const language = useLanguage();
+  const names = new Intl.DisplayNames([language], { type: "currency" });
+  return codes.map((code) => {
+    const name = names.of(code) ?? "";
+    return { value: code, label: code, hint: name.charAt(0).toUpperCase() + name.slice(1) };
+  });
+}
+
 export function SettingsWindow() {
   const t = useMessages();
   const language = useLanguage();
@@ -34,6 +45,7 @@ export function SettingsWindow() {
   const currencyId = useId();
 
   const save = useSavePreferences();
+  const currencies = useCurrencyChoices();
 
   const preferences = session.preferences;
   if (!session.user || !preferences) return null;
@@ -71,32 +83,31 @@ export function SettingsWindow() {
               {t.settings.currencyHelp}
             </p>
           </div>
-          {/* The symbol of the chosen currency, then its code. */}
-          <span className="relative inline-flex h-8 shrink-0 items-center rounded-(--radius-control) border border-control bg-surface text-sm has-focus-visible:outline-2 has-focus-visible:outline-accent has-focus-visible:outline-offset-2">
-            <span
-              aria-hidden="true"
-              className="amount grid h-full min-w-9 place-items-center border-line border-r px-2 font-medium text-muted"
-            >
-              {currencySymbol(preferences.base_currency)}
-            </span>
-            <select
-              id={currencyId}
-              className="h-full cursor-pointer appearance-none rounded-r-(--radius-control) bg-surface pr-7 pl-2.5 font-medium outline-none"
-              value={preferences.base_currency}
-              aria-describedby={`${currencyId}-help`}
-              onChange={(event) =>
-                save.mutate({ base_currency: event.target.value as Preferences["base_currency"] })
-              }
-            >
-              {CURRENCIES.map((code) => (
-                <option key={code}>{code}</option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-2 text-muted">
-              <ChevronDownIcon />
-            </span>
-          </span>
+          {/* One control: the symbol of the chosen currency, then its code. */}
+          <Select
+            compact
+            id={currencyId}
+            aria-describedby={`${currencyId}-help`}
+            className="shrink-0"
+            lead={currencySymbol(preferences.base_currency)}
+            value={preferences.base_currency}
+            options={currencies}
+            onChange={(value) =>
+              save.mutate({ base_currency: value as Preferences["base_currency"] })
+            }
+          />
         </div>
+        <Segmented
+          inline
+          label={t.settings.numberFormat}
+          value={preferences.number_format}
+          onChange={(value) => save.mutate({ number_format: value })}
+          // An example number shows each format: the thousands and the decimals.
+          options={[
+            { value: "COMMA", label: "1.234,56" },
+            { value: "POINT", label: "1,234.56" },
+          ]}
+        />
         <Segmented
           inline
           label={t.settings.dateFormat}

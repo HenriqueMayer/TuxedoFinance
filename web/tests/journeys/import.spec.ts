@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { apiPost, freshUser, prepareWallet } from "./support";
+import { apiPost, choose, chooseValue, freshUser, pickDate, prepareWallet } from "./support";
 
 /** The first days of the current month, so every row is on or before today. */
 function day(number: number) {
@@ -55,32 +55,41 @@ test("a CSV statement is read, reviewed, confirmed and undone", async ({ page })
   await window.getByRole("link", { name: "Open the account" }).click();
   const account = page.getByRole("dialog", { name: "Account" });
   await account.getByText("Edit account").click();
-  await account.getByLabel(/Opening date/).fill(`${new Date().getFullYear() - 1}-01-01`);
+  await pickDate(account.getByLabel(/Opening date/), `${new Date().getFullYear() - 1}-01-01`);
   await account.getByRole("button", { name: "Save" }).click();
   await page.goto(`/transactions?month=all&w=${batch}`);
 
   // The columns are proposed from the names in the file.
   await expect(window.getByText(/opening balance without a date/)).toBeHidden();
-  await expect(window.getByLabel("Date", { exact: true })).toHaveValue("Data");
-  await expect(window.getByLabel("Description")).toHaveValue("Histórico");
-  await expect(window.getByLabel("Amount")).toHaveValue("Valor");
-  await expect(window.getByLabel("Dates are written as")).toHaveValue("%d/%m/%Y");
-  await expect(window.getByLabel("Decimals use")).toHaveValue(",");
+  await expect(window.getByLabel("Date", { exact: true })).toHaveAttribute("data-value", "Data");
+  await expect(window.getByLabel("Description")).toHaveAttribute("data-value", "Histórico");
+  await expect(window.getByLabel("Amount")).toHaveAttribute("data-value", "Valor");
+  await expect(window.getByLabel("Dates are written as")).toHaveAttribute("data-value", "%d/%m/%Y");
+  await expect(window.getByLabel("Decimals use")).toHaveAttribute("data-value", ",");
   await window.getByRole("button", { name: "Read the rows" }).click();
 
   // The recorded row is matched and the known description has its category.
-  await expect(window.getByLabel("Decision for FEIRA LIVRE")).toHaveValue("MATCH");
-  await expect(window.getByLabel("Decision for Feira", { exact: true })).toHaveValue("CREATE");
-  await expect(window.getByLabel("Category: Feira", { exact: true })).not.toHaveValue("");
+  await expect(window.getByLabel("Decision for FEIRA LIVRE")).toHaveAttribute(
+    "data-value",
+    "MATCH",
+  );
+  await expect(window.getByLabel("Decision for Feira", { exact: true })).toHaveAttribute(
+    "data-value",
+    "CREATE",
+  );
+  await expect(window.getByLabel("Category: Feira", { exact: true })).not.toHaveAttribute(
+    "data-value",
+    "",
+  );
   await expect(window.getByText("2 rows wait for a decision.")).toBeVisible();
   await expect(window.getByRole("button", { name: "Confirm the import" })).toBeDisabled();
 
-  await window.getByLabel("Decision for Salário").selectOption("CREATE");
-  await window.getByLabel("Category: Salário").selectOption({ label: "Services" });
+  await chooseValue(window.getByLabel("Decision for Salário"), "CREATE");
+  await choose(window.getByLabel("Category: Salário"), "Services");
   await expect(window.getByText("1 row waits for a decision.")).toBeVisible();
   await window.getByRole("button", { name: "Skip the rows without a decision" }).click();
   await expect(window.getByText("Every row has a decision.")).toBeVisible();
-  await expect(window.getByLabel("Decision for Tarifa")).toHaveValue("SKIP");
+  await expect(window.getByLabel("Decision for Tarifa")).toHaveAttribute("data-value", "SKIP");
 
   await window.getByRole("button", { name: "Confirm the import" }).click();
   await expect(window.getByText("3 rows were imported.")).toBeVisible();

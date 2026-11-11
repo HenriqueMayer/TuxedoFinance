@@ -4,12 +4,15 @@ import datetime as dt
 from decimal import Decimal
 from typing import Literal
 
+from django.http import Http404
 from ninja import Router, Schema
 
+from banking.models import BankAccount, CreditCard
 from config import clock
+from config.ownership import owned
 from ledger.consultation import requested_billed_month
 from planning import closing, goals, limits
-from reports import analysis, home, worth
+from reports import analysis, home, items, worth
 
 router = Router()
 
@@ -364,3 +367,131 @@ class OriginOut(Schema):
 )
 def read_analysis_month(request, month: str = ""):
     return analysis.origin(request.user, month, clock.today())
+
+
+class ShareItem(Schema):
+    id: int
+    name: str
+    #: The institution of an investment, the bank of an account, the account of a card.
+    detail: str
+    #: In the base currency.
+    value: Decimal
+    share: Decimal | None
+    #: True for the item of the analysis.
+    current: bool
+
+
+class ItemShare(Schema):
+    #: The item and the total of its kind, in the base currency.
+    value: Decimal
+    total: Decimal
+    percent: Decimal | None
+    items: list[ShareItem]
+
+
+class InvestmentMonth(Schema):
+    month: dt.date
+    value: Decimal
+    deposits: Decimal
+    withdrawals: Decimal
+    yields: Decimal
+
+
+class InvestmentItemOut(Schema):
+    id: int
+    name: str
+    institution_name: str
+    currency: str
+    base_currency: str
+    months: list[InvestmentMonth]
+    value: Decimal
+    #: The value less the cost of the units held. Null for a balance.
+    gain: Decimal | None
+    #: What moved in the twelve months.
+    deposits: Decimal
+    withdrawals: Decimal
+    yields: Decimal
+    share: ItemShare
+
+
+class AccountMonth(Schema):
+    month: dt.date
+    balance: Decimal
+    inflow: Decimal
+    outflow: Decimal
+
+
+class AccountItemOut(Schema):
+    id: int
+    name: str
+    bank_name: str
+    currency: str
+    base_currency: str
+    months: list[AccountMonth]
+    balance: Decimal
+    #: From the end of the month before the period to today.
+    change: Decimal
+    inflow: Decimal
+    outflow: Decimal
+    share: ItemShare
+
+
+class CardMonth(Schema):
+    month: dt.date
+    #: The statement of the month.
+    amount: Decimal
+
+
+class CardCategory(Schema):
+    category_id: int | None
+    name: str
+    amount: Decimal
+    share: Decimal | None
+
+
+class CardItemOut(Schema):
+    id: int
+    name: str
+    account_name: str
+    currency: str
+    base_currency: str
+    months: list[CardMonth]
+    total: Decimal
+    #: The total for each of the twelve months.
+    average: Decimal
+    #: What the card owes today, with the later installments.
+    owed: Decimal
+    categories: list[CardCategory]
+    share: ItemShare
+
+
+@router.get(
+    "/items/investment/{position_id}",
+    response=InvestmentItemOut,
+    summary="Read the analysis of one investment over twelve months",
+)
+def read_investment_item(request, position_id: int):
+    asset = items.investment_of(request.user, position_id)
+    if asset is None:
+        raise Http404
+    return items.investment(asset, clock.today())
+
+
+@router.get(
+    "/items/account/{account_id}",
+    response=AccountItemOut,
+    summary="Read the analysis of one account over twelve months",
+)
+def read_account_item(request, account_id: int):
+    account = owned(BankAccount, request.user, account_id, select_related=("bank",))
+    return items.account(account, clock.today())
+
+
+@router.get(
+    "/items/card/{card_id}",
+    response=CardItemOut,
+    summary="Read the analysis of one credit card over twelve months",
+)
+def read_card_item(request, card_id: int):
+    card = owned(CreditCard, request.user, card_id, select_related=("account",))
+    return items.card(card, clock.today())

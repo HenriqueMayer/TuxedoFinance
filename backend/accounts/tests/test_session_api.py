@@ -29,6 +29,7 @@ class ReadSessionTests(SessionApiTestCase):
             {
                 "base_currency": "BRL",
                 "date_format": "DMY",
+                "number_format": "COMMA",
                 "home_blocks": ["left", "spending", "due", "worth", "goals"],
             },
         )
@@ -111,6 +112,24 @@ class PreferencesTests(SessionApiTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["base_currency"], "USD")
         self.assertEqual(response.json()["date_format"], "DMY")
+
+    def test_owner_chooses_how_numbers_are_written(self):
+        self.sign_in()
+        response = self.patch("/api/session/preferences", {"number_format": "POINT"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["number_format"], "POINT")
+        # The choice is stored, and it is the owner's own.
+        self.assertEqual(
+            self.client.get("/api/session").json()["preferences"]["number_format"], "POINT"
+        )
+        self.assertEqual(self.user.preferences.base_currency, "BRL")
+
+    def test_an_unknown_number_format_is_refused(self):
+        self.sign_in()
+        response = self.patch("/api/session/preferences", {"number_format": "SPACE"})
+        self.assertEqual(response.status_code, 422)
+        self.user.preferences.refresh_from_db()
+        self.assertEqual(self.user.preferences.number_format, "COMMA")
 
     def test_unsupported_currency_is_refused(self):
         self.sign_in()

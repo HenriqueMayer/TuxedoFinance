@@ -54,14 +54,22 @@ docker compose up -d
 ```
 
 The container applies migrations when it starts and serves on port 8000,
-published on `127.0.0.1` only. The database is in the `data` volume.
+published on `127.0.0.1` only. `TUXEDO_PORT` in `.env` changes the published
+port. The database is in the `data` volume.
 
-The Docker workflow builds the image, starts it and asks for its health.
+A release publishes the image as `ghcr.io/henriquemayer/tuxedofinance` with
+the tag of the release (for example `v2.0.0`). There is no `latest` tag. The
+release also has `compose.yaml` and `docker.env.example` as files, so an
+installation needs no checkout: set `TUXEDO_IMAGE` to the released image.
+
+The Docker workflow builds the image, starts it, asks for its health, reads
+the client from it and restarts it.
 
 ## Repair
 
 `python manage.py reconcile_ledger` derives account movements and invoices
 again from the recorded entries. Use it after a direct database edit.
+`--user` with a username does it for one owner.
 
 ## Release
 
@@ -73,8 +81,9 @@ A release is a tag on `main` and a GitHub release of that tag.
    site run. The public site is published from `main`.
 3. Tag the merge commit `v` plus the version (`v2.0.0`) and publish a GitHub
    release of the tag. The Docker workflow checks that the tag names the
-   version and is on `main`, builds the image for both architectures, starts
-   it, and pushes it.
+   version and is on `main`, builds the image for both architectures and
+   starts it. For a release that is not a prerelease, it then pushes the
+   tested images and attaches the installation files.
 
 The repository setting "Pages, Source" must be "GitHub Actions" for the
 public site.

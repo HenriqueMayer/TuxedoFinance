@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { freshUser, prepareWallet } from "./support";
+import { choose, freshUser, pickDate, pickMonth, prepareWallet } from "./support";
 
 /** "YYYY-MM-DD" of the first day of the month that is `offset` months from now. */
 function firstOfMonth(offset: number): string {
@@ -27,10 +27,14 @@ test("the owner records a monthly bill, confirms a month and changes its amount"
   const add = page.getByRole("dialog", { name: "Add entry" });
   await add.getByLabel(/Amount/).fill("1500");
   await add.getByLabel("Description").fill("Aluguel");
-  await add.getByLabel("Category").selectOption({ label: "Services" });
-  await add.getByLabel("Date").fill(firstOfMonth(-1));
-  await add.getByText("More options").click();
-  await add.getByLabel("Repeats every month").check();
+  await choose(add.getByLabel("Category"), "Services");
+  await pickDate(add.getByLabel("Date"), firstOfMonth(-1));
+  // The options of an entry are in view: one press turns one on and shows its field.
+  await add.getByRole("button", { name: "Repeats every month" }).click();
+  await expect(add.getByRole("button", { name: "Repeats every month" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await add.getByLabel("Ask me to confirm each month").check();
   await add.getByRole("button", { name: "Save" }).click();
   await expect(add).toBeHidden();
@@ -67,7 +71,7 @@ test("the owner records a monthly bill, confirms a month and changes its amount"
   await expect(row(2)).not.toContainText("Skipped");
 
   // A new amount applies from next month and leaves this month as it was.
-  await schedule.getByLabel("From").fill(firstOfMonth(1).slice(0, 7));
+  await pickMonth(schedule.getByLabel("From"), firstOfMonth(1).slice(0, 7));
   await schedule.getByLabel(/New amount/).fill("1650");
   await schedule.getByRole("button", { name: "Apply" }).click();
   await expect(schedule.getByText(`from ${label(1)}`)).toBeVisible();

@@ -485,6 +485,16 @@ def record(user, language):
         for end in reachable[index:]:
             get("/api/reports/analysis", start=start, end=end)
 
+    # The analysis of each item of the Wallet.
+    wallet = answers.get("GET /api/banking/wallet") or get("/api/banking/wallet")
+    for bank in wallet["banks"]:
+        for account in bank["accounts"]:
+            get(f"/api/reports/items/account/{account['id']}")
+            for card in account["credit_cards"]:
+                get(f"/api/reports/items/card/{card['id']}")
+    for position in get("/api/investments/positions")["positions"]:
+        get(f"/api/reports/items/investment/{position['id']}")
+
     for title in sorted(titles):
         get("/api/ledger/transactions/suggestion", title=title)
 

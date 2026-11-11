@@ -38,10 +38,20 @@ Run the checks of the folder that you changed.
 |---|---|---|
 | `backend/` | `uv run ruff check . && uv run ruff format --check .` | Lint and format |
 | `backend/` | `uv run python manage.py test` | Domain and API tests |
-| `backend/` | `uv run python manage.py makemigrations --check --dry-run` | No missing migration |
+| `backend/` | `uv run python manage.py check && uv run python manage.py makemigrations --check --dry-run` | The Django system check, and no missing migration |
 | `web/` | `npm run lint && npm run typecheck && npm test` | Lint, types, unit tests |
 | `web/` | `npx vite build && npm run journeys` | Browser journeys |
 | `site/` | `npm run build && npm test` | The public site and its demonstration, from static files |
+
+`npm run format` in `web/` writes the format that `npm run lint` checks.
+
+The journeys and the site checks need a browser of Playwright once:
+`npx playwright install chromium`, in `web/` and in `site/`.
+
+CI runs the same commands on a clean checkout, and three more checks of the
+backend: the tests with branch coverage (`coverage run manage.py test`, then
+`coverage report --fail-under=84`), and the compiled translations, which must
+equal the tracked `django.mo`.
 
 Backend commands need `SECRET_KEY`. Without a `.env` file, set it for the
 command: `SECRET_KEY=dev uv run python manage.py test`.

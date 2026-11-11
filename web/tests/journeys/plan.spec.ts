@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { apiPost, freshUser, prepareWallet } from "./support";
+import { apiPost, choose, chooseValue, freshUser, prepareWallet } from "./support";
 
 async function spend(page: Page, instrument: string, title: string, amount: string, name: string) {
   const categories: { id: number; name: string }[] = await page.evaluate(async () =>
@@ -49,7 +49,7 @@ test("the owner sets a limit and Left to spend follows it", async ({ page }) => 
   // A limit below the expenses is named as exceeded; removing it returns the first answer.
   await page.goto("/plan");
   await limit.click();
-  await expect(amount).toHaveValue("3000,00");
+  await expect(amount).toHaveValue("3.000,00");
   await amount.fill("150");
   await window.getByRole("button", { name: "Save" }).click();
   await expect(window).toBeHidden();
@@ -81,7 +81,7 @@ test("a category budget shows what the category spent", async ({ page }) => {
   // Another category is chosen from the list of all categories.
   await page.getByRole("link", { name: "New budget" }).click();
   const create = page.getByRole("dialog", { name: "New budget" });
-  await create.getByLabel("Category").selectOption({ label: "Hobbies & Entertainment" });
+  await choose(create.getByLabel("Category"), "Hobbies & Entertainment");
   await create.getByLabel(/Limit for each month/).fill("50");
   await create.getByRole("button", { name: "Save" }).click();
   await expect(create).toBeHidden();
@@ -192,18 +192,20 @@ test("the months ahead follow the records and the sheet tries a change", async (
   await expect(window.getByRole("row", { name: /Balance without the changes/ })).toContainText(
     "R$ 700,00",
   );
+  // Letters do not enter a cell, and an amount is written with its separators.
   await cells.nth(2).fill("abc");
-  await cells.nth(2).press("Enter");
-  await expect(cells.nth(2)).toHaveAttribute("aria-invalid", "true");
+  await expect(cells.nth(2)).toHaveValue("");
+  await cells.nth(2).pressSequentially("1500");
+  await expect(cells.nth(2)).toHaveValue("1.500");
   await cells.nth(2).fill("");
   await cells.nth(2).press("Enter");
 
   // An added row has its amount in every month.
   await window.getByLabel("Name", { exact: true }).fill("Freela");
-  await window.getByLabel("Kind").selectOption("income");
+  await chooseValue(window.getByLabel("Kind"), "income");
   await window.getByLabel("Amount for each month").fill("1.000,00");
   await window.getByRole("button", { name: "Add a row" }).click();
-  await expect(window.getByRole("textbox", { name: /^Freela, / }).first()).toHaveValue("1000,00");
+  await expect(window.getByRole("textbox", { name: /^Freela, / }).first()).toHaveValue("1.000,00");
   await expect(window.getByRole("row", { name: /^Income R\$/ })).toContainText("R$ 1.000,00");
 
   // The sheet is saved under a name and opens again with its changes. No record changed.

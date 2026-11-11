@@ -15,8 +15,10 @@ import { useLanguage, useMessages } from "../i18n";
 import { monthOf, shortMonthLabel } from "../lib/dates";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { editableAmount, formatAmount, parseAmount } from "../lib/money";
+import { AmountInput } from "../ui/AmountInput";
 import { Field } from "../ui/Field";
 import { Segmented } from "../ui/Segmented";
+import { Select } from "../ui/Select";
 import { Alert, ConfirmButton, values } from "./wallet";
 
 type Saved = components["schemas"]["SavedSheetOut"];
@@ -178,20 +180,24 @@ function SheetEditor(props: { saved?: Saved; onDone: () => void }) {
         </Field>
         <Field label={t.plan.sheet.rowKind}>
           {(control) => (
-            <select {...control} name="section" className="field" defaultValue="expense">
-              <option value="income">{t.plan.sheet.incomeSection}</option>
-              <option value="expense">{t.plan.sheet.expenseSection}</option>
-            </select>
+            <Select
+              {...control}
+              name="section"
+              defaultValue="expense"
+              options={[
+                { value: "income", label: t.plan.sheet.incomeSection },
+                { value: "expense", label: t.plan.sheet.expenseSection },
+              ]}
+            />
           )}
         </Field>
         <Field label={t.plan.sheet.rowAmount} className="w-44">
           {(control) => (
-            <input
+            <AmountInput
+              currency={sheet.data?.currency ?? "BRL"}
               {...control}
               name="amount"
-              inputMode="decimal"
               className="field amount"
-              autoComplete="off"
             />
           )}
         </Field>
@@ -400,7 +406,8 @@ function CellInput(props: {
   const [invalid, setInvalid] = useState(false);
   const shown = cell.changed || cell.value !== "0.00";
   return (
-    <input
+    <AmountInput
+      currency={props.currency}
       aria-label={props.label}
       aria-invalid={invalid}
       title={
@@ -410,8 +417,6 @@ function CellInput(props: {
             ? t.plan.sheet.recorded(formatAmount(cell.live, props.currency))
             : undefined
       }
-      inputMode="decimal"
-      autoComplete="off"
       placeholder="–"
       defaultValue={shown ? editableAmount(cell.value, props.currency) : ""}
       className={`amount w-full min-w-24 rounded-(--radius-control) border bg-transparent px-2 py-1.5 text-right ${

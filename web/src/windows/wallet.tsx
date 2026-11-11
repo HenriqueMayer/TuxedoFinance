@@ -22,11 +22,15 @@ import { fieldMessages, formMessage } from "../lib/errors";
 import { editableAmount, formatAmount, parseAmount } from "../lib/money";
 import { StatusLabel } from "../routes/wallet";
 import { sessionQuery, useDateOrder } from "../session";
+import { AmountInput } from "../ui/AmountInput";
+import { DateField } from "../ui/DateField";
 import { Field } from "../ui/Field";
 import { Segmented } from "../ui/Segmented";
+import { Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
 import { OpenWindow } from "./host";
-import { CURRENCIES } from "./settings";
+import { AnalyzeButton } from "./insight";
+import { type CURRENCIES, useCurrencyChoices } from "./settings";
 
 type Currency = (typeof CURRENCIES)[number];
 
@@ -85,6 +89,7 @@ function AccountFields(props: {
   onCurrency?: (currency: Currency) => void;
 }) {
   const t = useMessages();
+  const currencies = useCurrencyChoices();
   return (
     <>
       <Field label={t.firstAccount.bank}>
@@ -115,18 +120,12 @@ function AccountFields(props: {
         {props.onCurrency && (
           <Field label={t.wallet.currency}>
             {(control) => (
-              <select
+              <Select
                 {...control}
-                className="field"
                 value={props.currency}
-                onChange={(event) => props.onCurrency?.(event.target.value as Currency)}
-              >
-                {CURRENCIES.map((code) => (
-                  <option key={code} value={code}>
-                    {code}
-                  </option>
-                ))}
-              </select>
+                options={currencies}
+                onChange={(value) => props.onCurrency?.(value as Currency)}
+              />
             )}
           </Field>
         )}
@@ -140,13 +139,13 @@ function AccountFields(props: {
           className="w-48"
         >
           {(control) => (
-            <input
+            <AmountInput
+              currency={props.currency}
+              signed
               {...control}
               name="balance"
-              inputMode="decimal"
               className="field amount"
               defaultValue={props.balance}
-              autoComplete="off"
             />
           )}
         </Field>
@@ -157,11 +156,10 @@ function AccountFields(props: {
             errors={fieldMessages(props.error, "opening_date")}
           >
             {(control) => (
-              <input
+              <DateField
                 {...control}
-                type="date"
                 name="opening_date"
-                className="field w-fit"
+                empty={t.dates.none}
                 defaultValue={props.openingDate ?? ""}
               />
             )}
@@ -236,15 +234,18 @@ export function AccountWindow(props: { id: number; onDone: () => void }) {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <div>
-        <p className="text-sm text-muted">
-          {account.bank_name} · {account.name}
-        </p>
-        <p
-          className={`amount text-3xl font-semibold ${Number(account.balance) < 0 ? "text-negative" : ""}`}
-        >
-          {formatAmount(account.balance, account.currency)}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted">
+            {account.bank_name} · {account.name}
+          </p>
+          <p
+            className={`amount text-3xl font-semibold ${Number(account.balance) < 0 ? "text-negative" : ""}`}
+          >
+            {formatAmount(account.balance, account.currency)}
+          </p>
+        </div>
+        <AnalyzeButton kind="account" id={account.id} />
       </div>
 
       <section>
@@ -401,17 +402,22 @@ export function AccountSelect(props: {
   accounts: Instrument[];
   errors?: string[];
   defaultValue?: string;
+  /** Called with the id of the account when the owner chooses another one. */
+  onChange?: (id: string) => void;
 }) {
   return (
     <Field label={props.label} errors={props.errors}>
       {(control) => (
-        <select {...control} name={props.name} className="field" defaultValue={props.defaultValue}>
-          {props.accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {account.bank_name} · {account.name}
-            </option>
-          ))}
-        </select>
+        <Select
+          {...control}
+          name={props.name}
+          defaultValue={props.defaultValue}
+          onChange={props.onChange}
+          options={props.accounts.map((account) => ({
+            value: account.id,
+            label: `${account.bank_name} · ${account.name}`,
+          }))}
+        />
       )}
     </Field>
   );
@@ -491,9 +497,10 @@ export function CardWindow(props: { id: number; onDone: () => void }) {
   return (
     <div className="grid grid-cols-1 gap-6">
       <section>
-        <h3 className="border-b border-line pb-2 text-sm font-medium text-muted">
-          {t.wallet.invoices}
-        </h3>
+        <div className="flex items-end justify-between gap-3 border-b border-line pb-2">
+          <h3 className="text-sm font-medium text-muted">{t.wallet.invoices}</h3>
+          <AnalyzeButton kind="card" id={card.id} />
+        </div>
         {card.invoices.length === 0 && <p className="py-4 text-muted">{t.wallet.noInvoices}</p>}
         <ul className="divide-y divide-line">
           {card.invoices.map((invoice) => (
@@ -638,13 +645,12 @@ export function InvoiceWindow(props: { id: number }) {
               className="w-40"
             >
               {(control) => (
-                <input
+                <AmountInput
+                  currency={invoice.currency}
                   {...control}
                   name="amount"
-                  inputMode="decimal"
                   className="field amount"
                   defaultValue={editableAmount(invoice.remaining, invoice.currency)}
-                  autoComplete="off"
                 />
               )}
             </Field>
@@ -659,14 +665,7 @@ export function InvoiceWindow(props: { id: number }) {
             </div>
             <Field label={t.entry.date} errors={fieldMessages(pay.error, "date")}>
               {(control) => (
-                <input
-                  {...control}
-                  type="date"
-                  name="date"
-                  className="field"
-                  defaultValue={todayIso()}
-                  max={todayIso()}
-                />
+                <DateField {...control} name="date" defaultValue={todayIso()} max={todayIso()} />
               )}
             </Field>
           </div>
@@ -792,13 +791,12 @@ export function TransferWindow(props: { onDone: () => void }) {
         errors={amountInvalid ? [t.entry.amountInvalid] : fieldMessages(transfer.error, "amount")}
       >
         {(control) => (
-          <input
+          <AmountInput
+            currency={sent}
             {...control}
             {...autofocus}
             name="amount"
-            inputMode="decimal"
             className="field amount text-2xl font-semibold"
-            autoComplete="off"
           />
         )}
       </Field>
@@ -830,20 +828,17 @@ export function TransferWindow(props: { onDone: () => void }) {
           className="w-56"
         >
           {(control) => (
-            <input
+            <AmountInput
+              currency={received}
               {...control}
               name="received"
-              inputMode="decimal"
               className="field amount"
-              autoComplete="off"
             />
           )}
         </Field>
       )}
       <Field label={t.entry.date} errors={fieldMessages(transfer.error, "date")} className="w-fit">
-        {(control) => (
-          <input {...control} type="date" name="date" className="field" defaultValue={todayIso()} />
-        )}
+        {(control) => <DateField {...control} name="date" defaultValue={todayIso()} />}
       </Field>
       <Alert message={formMessage(transfer.error, t)} />
       <button type="submit" className="button-primary w-fit" disabled={transfer.isPending}>

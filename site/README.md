@@ -16,6 +16,7 @@ Run them in `site/`. The build needs the dependencies of `backend/`
 | `npm test` | Checks of `dist/` in a browser, served under the base path |
 | `npm run dev` | The pages with reload. The window is empty until one build wrote `public/app/` |
 | `npm run pages` | The pages only, with the `public/app/` that exists |
+| `npm run preview` | Serves the built `dist/` to look at it, under the base path |
 
 ## How the demonstration works
 
@@ -65,5 +66,4 @@ The page loads no script of its own except one line that stores the language,
 no outside resource and no tracker. `npm test` fails when a request leaves
 the origin.
 
-Not decided here: the owner did not review this page before it was built. The
-copy in `src/copy.ts` is a proposal.
+The text of the page, in both languages, is in `src/copy.ts`.

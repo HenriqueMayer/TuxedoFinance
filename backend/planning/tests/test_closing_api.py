@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
+from config import clock
 from config.testing import ApiTestCase
 from planning.models import MonthClosing
 from reports.tests.test_api import ReportsApiTestCase
@@ -162,11 +163,13 @@ class CloseTests(ClosingTestCase):
         self.assertEqual(response.status_code, 200, response.content)
         review = response.json()
         self.assertTrue(review["is_closed"])
-        self.assertEqual(review["closed_on"], "2026-11-10")
+        closing = MonthClosing.objects.get(user=self.user)
+        # The closing is stamped with the real instant, not with the fixed day
+        # of these tests: the answer is the date of that instant.
+        self.assertEqual(review["closed_on"], clock.local_date(closing.closed_at).isoformat())
         self.assertEqual(review["next_limit"], {"month": "2026-11-01", "amount": "2500.00"})
         self.assertIsNone(review["result"]["limit"])  # October keeps its own value.
         self.assertEqual(self.get("/api/plan/month").json()["limit"], "2500.00")
-        closing = MonthClosing.objects.get(user=self.user)
         self.assertEqual((closing.month, closing.expenses), (date(2026, 10, 1), Decimal("100.00")))
 
     def test_closing_without_a_limit_keeps_the_limit(self):

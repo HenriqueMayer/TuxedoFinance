@@ -12,13 +12,13 @@ lifts off the sheet into a window.
 
 ## Decisions
 
-| Decision    | Rule                                                                                                                                                                                             | Follows from                               |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
-| Layout      | Navigation lives on the jacket: a rail on a wide screen, a dock on a phone. The page lives on the sheet, which has one rounded edge against the jacket.                                          | Jacket and shirt                           |
-| Color roles | Forest is structure and text. Cream is the work surface. Caramel (`accent`) is used for the Add action and keyboard focus only. Green and red (`positive`, `negative`) are used on amounts only. | One bow tie for each outfit                |
-| Type        | Inter, bundled with the client. Amounts use tabular figures (`amount`). The answer to a question is the largest text of its block.                                                               | The product answers questions with numbers |
-| Signature   | The window: a title bar with the three macOS lights. Red closes. Green expands to full size. The middle light is inactive, because a window cannot be minimized.                                 | Objects lift off the sheet                 |
-| Density     | A list is rows with hairlines on the sheet. A card is used only for an object that opens.                                                                                                        | If it is a card, it opens                  |
+| Decision    | Rule                                                                                                                                                                                                                                                                                                    | Follows from                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Layout      | Navigation lives on the jacket: a rail on a wide screen, a dock on a phone. The page lives on the sheet, which has one rounded edge against the jacket.                                                                                                                                                 | Jacket and shirt                           |
+| Color roles | Forest is structure and text. Cream is the work surface. Caramel (`accent`) marks one thing at a time: the Add action, keyboard focus, the text of a link, today in a calendar, and the place where a moving handle or a selection is. Green and red (`positive`, `negative`) are used on amounts only. | One bow tie for each outfit                |
+| Type        | Inter, bundled with the client. Amounts use tabular figures (`amount`). The answer to a question is the largest text of its block.                                                                                                                                                                      | The product answers questions with numbers |
+| Signature   | The window: a title bar with the three macOS lights. Red closes. Green expands to full size. The middle light is inactive, because a window cannot be minimized.                                                                                                                                        | Objects lift off the sheet                 |
+| Density     | A list is rows with hairlines on the sheet. A card is used only for an object that opens.                                                                                                                                                                                                               | If it is a card, it opens                  |
 
 ## Controls
 
@@ -27,10 +27,16 @@ lifts off the sheet into a window.
 | Primary button | The one action that completes the form or the screen                                                  | `button-primary` |
 | Accent button  | Add entry, and the save of an entry                                                                   | `button-accent`  |
 | Quiet button   | A second action beside a primary one                                                                  | `button-quiet`   |
+| Danger button  | The second press of a deletion, after the first press asked                                           | `button-danger`  |
 | Action         | A small button beside a title, inside a row or inside a card: open, add, undo, remove, import, export | `action`         |
 | Link           | Text that leads to another place: another page or a document                                          | `link`           |
 | Menu           | The rare actions of a page, behind one "More actions" button: `src/ui/Menu.tsx`                       | `menu-item`      |
 | Month control  | The month that a page or a window shows: `src/ui/MonthPicker.tsx`                                     |                  |
+
+Small parts with one job each: `Segmented` (a choice of two to four values),
+`Meter` (a bar that compares an amount with its total), `Field` (a label, a
+control and its errors) and `Boundary` (the message of a window that failed
+to load), all in `src/ui/`.
 
 An action on the same screen is never underlined text. It is a button, and a
 frequent one carries a 16px line icon before its label (after it, for a
@@ -42,7 +48,8 @@ a button beside the title. It is an item of the menu of its page.
 
 The month control is one piece: a step to each side and, between them, the
 month. The month opens the twelve months of a year, "This month" and, where
-the page allows it, "All months". No page has a second way to change a month.
+the page allows it, "All months". A page or a window that changes a month
+uses this control; `max` stops it at the last month that has a meaning.
 
 A window of settings is a list of rows: the name on the left and a small
 control on the right (a segmented choice, or a 32 px select). A currency
@@ -50,6 +57,69 @@ select shows the symbol of the chosen currency before its code.
 
 A card that opens a window lifts under the pointer (`card-open`). Cards in one
 row have one height.
+
+## Fields that open a panel
+
+No form shows a list, a calendar or a file control of the browser. Their
+looks and their words change with the browser and the system, and a long
+list of the browser has no search.
+
+| Field                | Component                             | Panel                                                                                 |
+| -------------------- | ------------------------------------- | ------------------------------------------------------------------------------------- |
+| One choice of a list | `Select` in `src/ui/Select.tsx`       | The choices under their headings. A list of eight or more has a search box            |
+| A date               | `DateField` in `src/ui/DateField.tsx` | One month of days. The name of the month opens the months of the year                 |
+| A month              | `MonthField` in the same file         | The months of a year, from `src/ui/Months.tsx`, which the month control also uses     |
+| A file               | `FileField` in `src/ui/FileField.tsx` | None: a button and the name of the file, in the language of the interface. For a form |
+
+- `src/ui/Panel.tsx` places every panel. On a wide screen the panel sits
+  under its control, or above it without room below. On a phone it is a sheet
+  at the bottom of the screen, with its name as the title.
+- Escape and a press outside close a panel. Inside a window, Escape closes
+  the panel and the window stays.
+- A choice of two to four fixed values that the owner compares is a segmented
+  control, not a select.
+- A select shows words for "no choice" in two ways: `placeholder` is the text
+  before a choice, and the owner cannot return to it; `empty` is a real
+  choice at the top of the list.
+- The search ignores case and accents, and looks in the name, the second
+  line and the heading of a choice.
+
+## A field for an amount
+
+`AmountInput` in `src/ui/AmountInput.tsx` is the field of every amount of
+money. It writes the amount as the application shows it: "2000" is "2.000"
+while the owner types, and "2.000,00" when the owner leaves the field. The
+separators are the owner's choice in Settings: a point for thousands and a
+comma for decimals, or the reverse.
+
+- Letters do not enter. Zeros before the first digit leave.
+- The two separator keys keep their meaning: one groups the thousands and
+  the other starts the decimals, as chosen in Settings. A typed thousands
+  separator shows at once and stays where it was typed while the digits after
+  it can complete a group of three ("1," then "1,0", "1,00", "1,000"). A
+  number left in the middle of a group is its digits: "1,00" with a comma for
+  thousands is one hundred.
+- Backspace on a thousands separator that the field wrote deletes the digit
+  before it. A separator that the owner typed, and the decimal separator, are
+  deleted alone. The caret stays beside the character that changed.
+- A pasted amount is read with either separator. A typed amount is read by
+  the meaning of its keys only: `parseAmount` reads by the format that
+  `setNumberFormat` holds.
+- A balance can start with a minus sign (`signed`).
+
+A quantity, a unit price, an exchange rate and points are not amounts of
+money. They have up to eight decimals and keep a plain field.
+
+The rules are `typedAmount`, `finishedAmount`, `pastedAmount` and
+`editableAmount` in
+`src/lib/money.ts`. They write text; they calculate nothing.
+
+## Options of a form
+
+An option that most entries do not use is a chip in view, not a field behind
+"More options": repeat every month, pay in installments, add a note. A chip
+is a toggle button. When it is on, it is dark and its field opens below it;
+when the owner turns it off, the field closes and its value is cleared.
 
 ## Motion
 
@@ -64,6 +134,8 @@ Motion has three jobs here, and nothing moves without one of them.
 | A menu or the months, from their control        | Orientation: which control opened the panel    | 140 ms                                 |
 | The marks of a chart on a change of period      | Orientation: the same months, new values       | 260 ms                                 |
 | A handle of a slider coming to rest on a month  | Feedback: the handle follows, then settles     | 140 ms                                 |
+| A sheet from the bottom of a phone screen       | Orientation: the panel belongs to its control  | 240 ms                                 |
+| A field that an option of a form shows          | Orientation: the field belongs to its option   | 220 ms                                 |
 
 With a reduced-motion preference the page, the bars and the lift of a card do
 not move, and the window fades.
@@ -71,8 +143,9 @@ not move, and the window fades.
 ## Charts
 
 `src/ui/charts.tsx` draws every chart, in SVG, with no chart library. The
-analysis window is the only place with drawn charts. A summary on a page
-stays a row with a bar and its value as text.
+windows of analysis are the only places with drawn charts: the analysis of
+a period, the origin of a month and the analysis of one Wallet item. A
+summary on a page stays a row with a bar and its value as text.
 
 | Question              | Form                                  | Rule                                                                     |
 | --------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
@@ -104,6 +177,14 @@ stays a row with a bar and its value as text.
 - A chart only draws. Every total, change, average and percentage comes
   calculated from the server.
 
+## A long window
+
+A window with several subjects (the analysis) divides them into areas. An
+area is a block with a band at the top: a round mark, then the name. A bar
+with the names of the areas stays at the top while the window scrolls; a
+press goes to an area and the bar marks the one in view. The areas stay on
+one page, so that two of them can be read together.
+
 ## The window
 
 `src/ui/Window.tsx` is the only implementation. It is a native modal
@@ -118,11 +199,13 @@ stays a row with a bar and its value as text.
 - **Close.** Red light, Escape, a click on the backdrop, or Back. Focus returns
   to the element that opened it.
 - **Phone.** The window fills the screen. The expand light is hidden.
-- **Wide content.** A window with a wide table (the sheet) opens at full size.
+- **Wide content.** A window with a wide table or with charts (the sheet, the
+  review of an import, the analysis) opens at full size.
   The green light still restores the size.
 - **A window above a window.** A window can hold one window above it, named
   in the search parameter `w2`. It is for a detail of the window below that
-  the owner reads and leaves: the origin of a month of the analysis. The
+  the owner reads and leaves: the origin of a month of the analysis, or the
+  analysis of an item of the Wallet. The
   window below stays open, dimmed, with its state. Back, Escape and the red
   light act on the window above. A link inside the window above takes its
   place, at the same level. There is no third level.
@@ -143,9 +226,3 @@ Light and dark share every role. Dark keeps the forest hue: the jacket is
 near-black green and the sheet is dark green. Contrast was calculated for each
 text role on its surface (WCAG 2.2 SC 1.4.3) before the tokens were written;
 every pair is at least 4.5:1, and control borders are at least 3:1.
-
-## Not decided here
-
-The owner did not review this direction; it was chosen during the overnight run
-of 2026-11-10. It keeps the 1.0.0 palette and mark. A different premise needs
-only new token values and a new shell layout.

@@ -19,10 +19,13 @@ import { fieldMessages, formMessage } from "../lib/errors";
 import { editableAmount, formatAmount, parseAmount } from "../lib/money";
 import { goalStatus } from "../routes/plan";
 import { sessionQuery } from "../session";
+import { AmountInput } from "../ui/AmountInput";
+import { DateField } from "../ui/DateField";
 import { Field } from "../ui/Field";
 import { Meter } from "../ui/Meter";
+import { Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
-import { CURRENCIES } from "./settings";
+import { type CURRENCIES, useCurrencyChoices } from "./settings";
 import { Alert, ConfirmButton, values } from "./wallet";
 
 type Currency = (typeof CURRENCIES)[number];
@@ -63,13 +66,12 @@ function LimitForm(props: {
         className="max-w-sm"
       >
         {(control) => (
-          <input
+          <AmountInput
+            currency={props.currency}
             {...control}
             {...autofocus}
             name="amount"
-            inputMode="decimal"
             className="field amount"
-            autoComplete="off"
             defaultValue={props.current ? editableAmount(props.current, props.currency) : ""}
           />
         )}
@@ -174,16 +176,12 @@ export function NewBudgetWindow(props: { onDone: () => void }) {
     >
       <Field label={t.plan.budgets.category} className="max-w-sm">
         {(control) => (
-          <select {...control} name="category" className="field" defaultValue="">
-            <option value="" disabled>
-              {t.plan.budgets.choose}
-            </option>
-            {choices.map((row) => (
-              <option key={row.id} value={row.id}>
-                {row.label}
-              </option>
-            ))}
-          </select>
+          <Select
+            {...control}
+            name="category"
+            placeholder={t.plan.budgets.choose}
+            options={choices.map((row) => ({ value: String(row.id), label: row.label }))}
+          />
         )}
       </Field>
     </LimitForm>
@@ -193,6 +191,7 @@ export function NewBudgetWindow(props: { onDone: () => void }) {
 /** Create a goal, then open it to reserve a balance. */
 export function NewGoalWindow() {
   const t = useMessages();
+  const currencies = useCurrencyChoices();
   const navigate = useNavigate();
   const { data: session } = useSuspenseQuery(sessionQuery);
   const create = useCreateGoal();
@@ -246,29 +245,17 @@ export function NewGoalWindow() {
           className="w-48"
         >
           {(control) => (
-            <input
-              {...control}
-              name="target"
-              inputMode="decimal"
-              className="field amount"
-              autoComplete="off"
-            />
+            <AmountInput currency={currency} {...control} name="target" className="field amount" />
           )}
         </Field>
         <Field label={t.plan.goals.currency}>
           {(control) => (
-            <select
+            <Select
               {...control}
-              className="field"
               value={currency}
-              onChange={(event) => setCurrency(event.target.value as Currency)}
-            >
-              {CURRENCIES.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </select>
+              options={currencies}
+              onChange={(value) => setCurrency(value as Currency)}
+            />
           )}
         </Field>
       </div>
@@ -278,9 +265,7 @@ export function NewGoalWindow() {
         help={t.plan.goals.dateHelp}
         className="w-fit"
       >
-        {(control) => (
-          <input {...control} type="date" name="date" className="field" min={todayIso()} />
-        )}
+        {(control) => <DateField {...control} name="date" empty={t.dates.none} min={todayIso()} />}
       </Field>
       <Alert message={formMessage(create.error, t)} />
       <button type="submit" className="button-primary w-fit" disabled={create.isPending}>
@@ -360,21 +345,19 @@ function ReserveForm(props: { goal: Goal; sources: GoalSource[] }) {
           className="min-w-0 flex-1 basis-56"
         >
           {(control) => (
-            <select
+            <Select
               {...control}
-              className="field"
               value={key}
-              onChange={(event) => {
-                setKey(event.target.value);
+              options={sources.map((row) => ({
+                value: row.key,
+                label: row.label,
+                hint: t.plan.goals.free(formatAmount(row.free, row.currency)),
+              }))}
+              onChange={(value) => {
+                setKey(value);
                 reserve.reset();
               }}
-            >
-              {sources.map((row) => (
-                <option key={row.key} value={row.key}>
-                  {row.label} · {t.plan.goals.free(formatAmount(row.free, row.currency))}
-                </option>
-              ))}
-            </select>
+            />
           )}
         </Field>
         <Field
@@ -383,14 +366,13 @@ function ReserveForm(props: { goal: Goal; sources: GoalSource[] }) {
           className="w-48"
         >
           {(control) => (
-            <input
+            <AmountInput
+              currency={source.currency}
               {...control}
               // The key shows what this balance already holds when the balance changes.
               key={`${key}-${held?.amount ?? ""}`}
               name="amount"
-              inputMode="decimal"
               className="field amount"
-              autoComplete="off"
               defaultValue={held ? editableAmount(held.amount, source.currency) : ""}
             />
           )}
@@ -488,23 +470,21 @@ function EditGoal(props: { goal: Goal; onDone: () => void }) {
             className="w-48"
           >
             {(control) => (
-              <input
+              <AmountInput
+                currency={goal.currency}
                 {...control}
                 name="target"
-                inputMode="decimal"
                 className="field amount"
-                autoComplete="off"
                 defaultValue={editableAmount(goal.target_amount, goal.currency)}
               />
             )}
           </Field>
           <Field label={t.plan.goals.date} errors={fieldMessages(change.error, "target_date")}>
             {(control) => (
-              <input
+              <DateField
                 {...control}
-                type="date"
                 name="date"
-                className="field"
+                empty={t.dates.none}
                 defaultValue={goal.target_date ?? ""}
               />
             )}

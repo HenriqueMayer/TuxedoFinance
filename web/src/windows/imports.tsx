@@ -22,8 +22,12 @@ import { formatDate, monthLabel, monthOf, todayIso } from "../lib/dates";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { formatAmount, parseAmount } from "../lib/money";
 import { useDateOrder } from "../session";
+import { AmountInput } from "../ui/AmountInput";
+import { DateField } from "../ui/DateField";
 import { Field } from "../ui/Field";
-import { categoryLabel } from "./entry";
+import { FileField } from "../ui/FileField";
+import { Select } from "../ui/Select";
+import { categoryChoices } from "./entry";
 import { OpenWindow } from "./host";
 import { AccountSelect, Alert, ConfirmButton, values } from "./wallet";
 
@@ -38,6 +42,8 @@ export function ImportStartWindow() {
   const { data: imports } = useSuspenseQuery(importsQuery);
   const accounts = instruments.filter((item) => item.kind === "account");
   const upload = useUpload();
+  // The account of the form: its currency writes the balance of the statement.
+  const [chosen, setChosen] = useState(accounts[0]?.id ?? "");
   const [missing, setMissing] = useState(false);
   const [balanceInvalid, setBalanceInvalid] = useState(false);
 
@@ -86,6 +92,7 @@ export function ImportStartWindow() {
           label={t.imports.account}
           name="account"
           accounts={accounts}
+          onChange={setChosen}
           errors={fieldMessages(upload.error, "account_id")}
           defaultValue={accounts[0]?.id}
         />
@@ -93,15 +100,7 @@ export function ImportStartWindow() {
           label={t.imports.file}
           errors={missing ? [t.imports.fileMissing] : fieldMessages(upload.error, "content")}
         >
-          {(control) => (
-            <input
-              {...control}
-              type="file"
-              name="file"
-              accept=".ofx,.qfx,.csv,text/csv"
-              className="field h-auto py-2"
-            />
-          )}
+          {(control) => <FileField {...control} name="file" accept=".ofx,.qfx,.csv,text/csv" />}
         </Field>
         <details>
           <summary className="action w-fit">{t.imports.check}</summary>
@@ -112,18 +111,17 @@ export function ImportStartWindow() {
               className="w-48"
             >
               {(control) => (
-                <input
+                <AmountInput
                   {...control}
                   name="balance"
-                  inputMode="decimal"
                   className="field amount"
-                  autoComplete="off"
+                  currency={accounts.find((item) => item.id === chosen)?.currency ?? "BRL"}
                 />
               )}
             </Field>
             <Field label={t.imports.closingDate}>
               {(control) => (
-                <input {...control} type="date" name="date" className="field" max={todayIso()} />
+                <DateField {...control} name="date" empty={t.dates.none} max={todayIso()} />
               )}
             </Field>
           </div>
@@ -227,14 +225,14 @@ function Columns(props: { batch: ImportDetail }) {
   const column = (name: string, label: string, value: string | undefined, optional = false) => (
     <Field label={label} className="min-w-40">
       {(control) => (
-        <select {...control} name={name} className="field" defaultValue={value ?? ""}>
-          {(optional || !value) && <option value="">{optional ? t.imports.none : ""}</option>}
-          {batch.headers.map((header) => (
-            <option key={header} value={header}>
-              {header}
-            </option>
-          ))}
-        </select>
+        <Select
+          {...control}
+          name={name}
+          defaultValue={value ?? ""}
+          empty={optional ? t.imports.none : undefined}
+          placeholder={!optional && !value ? t.common.choose : undefined}
+          options={batch.headers.map((header) => ({ value: header, label: header }))}
+        />
       )}
     </Field>
   );
@@ -265,31 +263,25 @@ function Columns(props: { batch: ImportDetail }) {
       <div className="flex flex-wrap gap-4">
         <Field label={t.imports.dateFormat}>
           {(control) => (
-            <select
+            <Select
               {...control}
               name="format"
-              className="field"
               defaultValue={proposal?.date_format}
-            >
-              {DATE_FORMATS.map(([format, example]) => (
-                <option key={format} value={format}>
-                  {example}
-                </option>
-              ))}
-            </select>
+              options={DATE_FORMATS.map(([format, example]) => ({ value: format, label: example }))}
+            />
           )}
         </Field>
         <Field label={t.imports.decimalMark}>
           {(control) => (
-            <select
+            <Select
               {...control}
               name="mark"
-              className="field"
               defaultValue={proposal?.decimal_mark}
-            >
-              <option value=",">{t.imports.comma}</option>
-              <option value=".">{t.imports.point}</option>
-            </select>
+              options={[
+                { value: ",", label: t.imports.comma },
+                { value: ".", label: t.imports.point },
+              ]}
+            />
           )}
         </Field>
       </div>
@@ -484,113 +476,79 @@ function RowDecision(props: {
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <select
+        <Select
+          compact
           aria-label={label}
-          className="field w-auto"
           value={action}
           disabled={save.isPending}
-          onChange={(event) => choose(event.target.value as Action)}
-        >
-          {action === "" && <option value="">{t.imports.choose}</option>}
-          {offered.map((item) => (
-            <option key={item} value={item}>
-              {t.imports.actions[item]}
-            </option>
-          ))}
-        </select>
+          placeholder={t.imports.choose}
+          options={offered.map((item) => ({ value: item, label: t.imports.actions[item] }))}
+          onChange={(value) => choose(value as Action)}
+        />
         {action === "CREATE" && (
-          <select
+          <Select
+            compact
             aria-label={`${t.entry.category}: ${row.description}`}
-            className="field w-auto max-w-full"
-            defaultValue={row.category_id ?? ""}
+            defaultValue={row.category_id ? String(row.category_id) : ""}
             disabled={save.isPending}
-            onChange={(event) =>
-              send({ action: "CREATE", category_id: Number(event.target.value) })
-            }
-          >
-            <option value="" disabled>
-              {t.entry.chooseCategory}
-            </option>
-            {choices.map((item) => (
-              <option key={item.id} value={item.id}>
-                {categoryLabel(item, props.categories)}
-              </option>
-            ))}
-          </select>
+            placeholder={t.entry.chooseCategory}
+            options={categoryChoices(choices, props.categories)}
+            onChange={(value) => send({ action: "CREATE", category_id: Number(value) })}
+          />
         )}
         {action === "MATCH" && (
-          <select
+          <Select
+            compact
             aria-label={`${t.imports.movement}: ${row.description}`}
-            className="field w-auto max-w-full"
-            defaultValue={row.matched_movement_id ?? ""}
+            defaultValue={row.matched_movement_id ? String(row.matched_movement_id) : ""}
             disabled={save.isPending}
-            onChange={(event) =>
-              send({ action: "MATCH", matched_movement_id: Number(event.target.value) })
-            }
-          >
-            <option value="" disabled>
-              {t.imports.choose}
-            </option>
-            {row.matches.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
+            placeholder={t.imports.choose}
+            options={row.matches.map((item) => ({ value: String(item.id), label: item.label }))}
+            onChange={(value) => send({ action: "MATCH", matched_movement_id: Number(value) })}
+          />
         )}
         {action === "PAY_INVOICE" && (
-          <select
+          <Select
+            compact
             aria-label={`${t.imports.invoice}: ${row.description}`}
-            className="field w-auto max-w-full"
-            defaultValue={row.invoice_id ?? ""}
+            defaultValue={row.invoice_id ? String(row.invoice_id) : ""}
             disabled={save.isPending}
-            onChange={(event) =>
-              send({ action: "PAY_INVOICE", invoice_id: Number(event.target.value) })
-            }
-          >
-            <option value="" disabled>
-              {t.imports.choose}
-            </option>
-            {batch.invoices.map((item) => (
-              <option key={item.id} value={item.id}>
-                {t.imports.invoiceOption(
-                  item.card_name,
-                  monthLabel(monthOf(item.month), language),
-                  formatAmount(item.remaining, batch.currency),
-                )}
-              </option>
-            ))}
-          </select>
+            placeholder={t.imports.choose}
+            options={batch.invoices.map((item) => ({
+              value: String(item.id),
+              label: t.imports.invoiceOption(
+                item.card_name,
+                monthLabel(monthOf(item.month), language),
+                formatAmount(item.remaining, batch.currency),
+              ),
+            }))}
+            onChange={(value) => send({ action: "PAY_INVOICE", invoice_id: Number(value) })}
+          />
         )}
         {action === "TRANSFER" && (
-          <select
+          <Select
+            compact
             aria-label={`${t.imports.otherAccount}: ${row.description}`}
-            className="field w-auto max-w-full"
             value={account}
             disabled={save.isPending}
-            onChange={(event) => {
-              setAccount(event.target.value);
-              transfer(event.target.value);
+            placeholder={t.imports.choose}
+            options={props.others.map((item) => ({
+              value: item.id,
+              label: `${item.bank_name} · ${item.name}`,
+            }))}
+            onChange={(value) => {
+              setAccount(value);
+              transfer(value);
             }}
-          >
-            <option value="" disabled>
-              {t.imports.choose}
-            </option>
-            {props.others.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.bank_name} · {item.name}
-              </option>
-            ))}
-          </select>
+          />
         )}
         {action === "TRANSFER" && exchange && other && (
-          <input
+          <AmountInput
+            currency={other.currency}
             aria-label={t.imports.otherAmount(other.currency)}
             aria-invalid={amountInvalid}
             placeholder={t.imports.otherAmount(other.currency)}
-            inputMode="decimal"
             className="field amount w-56"
-            autoComplete="off"
             defaultValue={row.counterparty_amount ?? ""}
             onBlur={(event) => transfer(account, event.currentTarget.value)}
           />

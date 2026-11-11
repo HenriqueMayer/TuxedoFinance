@@ -12,6 +12,8 @@ import { formatDate, monthLabel } from "../lib/dates";
 import { fieldMessages, formMessage } from "../lib/errors";
 import { formatAmount, parseAmount } from "../lib/money";
 import { useDateOrder } from "../session";
+import { AmountInput } from "../ui/AmountInput";
+import { MonthField } from "../ui/DateField";
 import { Field } from "../ui/Field";
 
 /** The months of a repeating entry: confirm, skip or restore a month, and change the amount from a month. */
@@ -69,11 +71,9 @@ export function ScheduleWindow(props: { id: number }) {
         <div className="flex flex-wrap items-end gap-4">
           <Field label={t.schedule.from} errors={fieldMessages(change.error, "month")}>
             {(control) => (
-              <input
+              <MonthField
                 {...control}
-                type="month"
                 name="month"
-                className="field"
                 defaultValue={data.default_change_month.slice(0, 7)}
               />
             )}
@@ -84,12 +84,11 @@ export function ScheduleWindow(props: { id: number }) {
             className="w-40"
           >
             {(control) => (
-              <input
+              <AmountInput
+                currency={data.currency}
                 {...control}
                 name="amount"
-                inputMode="decimal"
                 className="field amount"
-                autoComplete="off"
               />
             )}
           </Field>

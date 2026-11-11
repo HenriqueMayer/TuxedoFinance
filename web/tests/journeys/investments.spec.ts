@@ -31,14 +31,14 @@ test("the owner updates the value of an investment and the net worth follows", a
   await card.click();
   const window = page.getByRole("dialog", { name: "Investment" });
   const balance = window.getByLabel(/Balance today/);
-  await expect(balance).toHaveValue("2000,00");
+  await expect(balance).toHaveValue("2.000,00");
   await balance.fill("2.150,00");
   await window.getByRole("button", { name: "Save" }).click();
   await expect(window.getByText("R$ 2.150,00").first()).toBeVisible();
   await expect(window.getByRole("listitem").filter({ hasText: "Yield" })).toContainText(
     "+R$ 150,00",
   );
-  await expect(balance).toHaveValue("2150,00");
+  await expect(balance).toHaveValue("2.150,00");
 
   // A lower balance is refused with the reason, and nothing changes.
   await balance.fill("1.000,00");
