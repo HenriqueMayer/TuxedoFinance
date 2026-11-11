@@ -9,6 +9,7 @@ import { ClosingWindow } from "./closing";
 import { AddEntry, EditEntry } from "./entry";
 import { DueWindow, HomeBlocksWindow, MonthWindow, WorthWindow } from "./home";
 import { ImportStartWindow, ImportWindow } from "./imports";
+import { IncomeWindow } from "./income";
 import { InsightWindow } from "./insight";
 import { InvestmentWindow, NewInvestmentWindow } from "./investment";
 import { NewProgramWindow, ProgramWindow } from "./loyalty";
@@ -55,12 +56,14 @@ export type WindowId =
   | "limit"
   | "new-budget"
   | "new-goal"
+  | "new-income"
   | "sheet"
   | "salary"
   | "growth"
   | `sheet:${number}`
   | `budget:${number}`
   | `goal:${number}`
+  | `income:${number}`
   | `transaction:${number}`
   | `account:${number}`
   | `card:${number}`
@@ -299,6 +302,9 @@ function Layer(props: { level: Level; w: string | undefined }) {
   } else if (kind === "budget" && id !== null) {
     title = t.plan.budgets.budget;
     content = <BudgetWindow id={id} onDone={close} />;
+  } else if (w === "new-income" || (kind === "income" && id !== null)) {
+    title = id === null ? t.plan.incomes.new : t.plan.incomes.income;
+    content = <IncomeWindow key={w} id={id ?? undefined} onDone={close} />;
   } else if (kind === "goal" && id !== null) {
     title = t.plan.goals.goal;
     content = <GoalWindow id={id} onDone={close} />;

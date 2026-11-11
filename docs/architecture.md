@@ -31,8 +31,8 @@ Rules:
 
 - A domain module does not import the web layer.
 - The operations of an application are in its `api.py`. `banking` and
-  `ledger` have a second file for a second subject (`loyalty_api.py`,
-  `import_api.py`). An operation reads a schema, calls the model or service
+  `ledger` have a file for each further subject (`loyalty_api.py`,
+  `import_api.py`, `income_api.py`). An operation reads a schema, calls the model or service
   that owns the rule, and returns a schema. No financial rule lives in an API
   file.
 - Every operation needs the Django session, except four: the health read, the
@@ -56,8 +56,9 @@ every operation with its schemas.
 | `/api/loyalty` | Points programs and their entries |
 | `/api/ledger` | Transactions, the monthly schedule of a repeating entry, categories with their CSV export and import |
 | `/api/imports` | Statement import: upload, mapping, review, confirmation, undo |
+| `/api/incomes` | Recurring incomes with their receipts |
 | `/api/investments` | Positions and their operations |
-| `/api/plan` | The month plan, the limit and budgets, goals, the forecast, the sheet and saved sheets, the calculators, the month closing |
+| `/api/plan` | The month plan, the limit and budgets, goals, the forecast, the sheet and saved sheets, the calculators (with the two receipts of a CLT salary), the month closing |
 | `/api/reports` | `home`, `month`, `net-worth`, `analysis`, `analysis/month`, `items/{investment,account,card}/{id}` |
 | `/api/health` | Says that the server answers. The container health check reads it |
 

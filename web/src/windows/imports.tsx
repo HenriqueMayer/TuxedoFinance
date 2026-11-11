@@ -127,7 +127,11 @@ export function ImportStartWindow() {
           </div>
         </details>
         <Alert message={formMessage(upload.error, t)} />
-        <button type="submit" className="button-primary w-fit" disabled={upload.isPending}>
+        <button
+          type="submit"
+          className="button-primary w-fit justify-self-end"
+          disabled={upload.isPending}
+        >
           {t.imports.upload}
         </button>
       </form>
@@ -314,7 +318,11 @@ function Columns(props: { batch: ImportDetail }) {
         </div>
       </section>
       <Alert message={formMessage(save.error, t)} />
-      <button type="submit" className="button-primary w-fit" disabled={save.isPending}>
+      <button
+        type="submit"
+        className="button-primary w-fit justify-self-end"
+        disabled={save.isPending}
+      >
         {t.imports.readRows}
       </button>
     </form>

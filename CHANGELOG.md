@@ -5,6 +5,35 @@ Changes that the owner of an installation can notice. Versions follow
 
 ## Unreleased
 
+### Added
+
+- The analysis of a period has an area for the credit cards: the statements
+  of each month for every card or for one card, what the cards owe today,
+  the statements after the current month, and the categories where the cards
+  were used.
+
+- Recurring income in Plan: a salary or another income of every month, with
+  one receipt or more (a day and an amount each). The two receipts of a CLT
+  salary with an advance can be calculated. Each receipt is a repeating
+  entry that the income controls.
+
+### Fixed
+
+- The window of an account lists its movements up to today; it no longer
+  starts with the months ahead of repeating entries and of later invoices.
+- The window of a card starts with the open invoice; the later invoices are
+  in their own list.
+- The debit of an invoice names its month in words ("Platinum invoice
+  October 2026").
+- The bank of an account and the institution of an investment are chosen
+  from a list of the application. Options of a form are chips, and the
+  button that completes a window is on the right.
+- In the analysis, a preset that gives the same months as another one (for
+  example "All" and "This year" when the records start in January) can be
+  chosen, and the mark under the track has its name.
+- In the analysis, a press on the name of an area no longer moves the title
+  and the bar of areas out of the window, and the bar marks the area in view.
+
 ## 2.0.0 — 2026-11-11
 
 2.0 is a new application on the 1.x financial rules. It has a new database

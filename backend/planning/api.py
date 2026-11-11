@@ -10,6 +10,7 @@ from decimal import Decimal
 from typing import Annotated, Literal
 
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
 from ninja import Router, Schema
 from pydantic import Field
 
@@ -434,6 +435,42 @@ class GrowthOut(Schema):
 def calculate_salary(request, payload: SalaryIn):
     values = payload.model_dump()
     return tools.salary(values.pop("gross"), clock.today().year, **values)
+
+
+class SalarySplitIn(SalaryIn):
+    #: The part of the gross salary that the advance pays, in percent.
+    advance_percent: Annotated[Decimal, Field(gt=0, lt=100)]
+
+
+class SalarySplitOut(Schema):
+    year: int
+    assumed: bool
+    gross: Decimal
+    inss: Decimal
+    irrf: Decimal
+    deductions: Decimal
+    #: The net pay of the month: the two receipts added.
+    net: Decimal
+    advance: Decimal
+    #: The net pay less the advance.
+    remainder: Decimal
+
+
+@router.post(
+    "/tools/salary-split",
+    response=SalarySplitOut,
+    summary="Calculate the advance and the rest of a CLT salary",
+)
+def calculate_salary_split(request, payload: SalarySplitIn):
+    values = payload.model_dump()
+    result = tools.salary_split(
+        values.pop("gross"), clock.today().year, values.pop("advance_percent"), **values
+    )
+    if result["remainder"] <= 0:
+        raise ValidationError(
+            {"advance_percent": _("The advance takes the whole net pay. Choose a smaller part.")}
+        )
+    return result
 
 
 @router.post("/tools/growth", response=GrowthOut, summary="Calculate a balance that grows")

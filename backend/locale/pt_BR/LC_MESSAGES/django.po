@@ -1292,3 +1292,30 @@ msgstr "Informe uma taxa acima de -100%."
 
 msgid "The balance exceeds the supported amount."
 msgstr "O saldo supera o valor suportado."
+msgid "This entry is a part of a recurring income. Change the income."
+msgstr "Este lançamento é uma parte de uma receita recorrente. Altere a receita."
+
+msgid "Add one part at least."
+msgstr "Adicione pelo menos uma parte."
+
+#, python-format
+msgid "An income has at most %(count)s parts."
+msgstr "Uma receita tem no máximo %(count)s partes."
+
+msgid "The day of a part is from 1 to 31."
+msgstr "O dia de uma parte vai de 1 a 31."
+
+msgid "The amount of a part is greater than zero."
+msgstr "O valor de uma parte é maior que zero."
+
+msgid "Choose the parts of this income."
+msgstr "Escolha as partes desta receita."
+
+msgid "A part with past months keeps its day. Remove it and add a part with the new day."
+msgstr "Uma parte com meses passados mantém o dia. Remova a parte e adicione outra com o novo dia."
+
+msgid "The advance takes the whole net pay. Choose a smaller part."
+msgstr "O adiantamento consome todo o salário líquido. Escolha uma parte menor."
+
+msgid "The file has no category."
+msgstr "O arquivo não tem nenhuma categoria."

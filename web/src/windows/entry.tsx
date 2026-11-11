@@ -20,6 +20,7 @@ import { AmountInput } from "../ui/AmountInput";
 import { DateField, MonthField } from "../ui/DateField";
 import { Field } from "../ui/Field";
 import { NoteIcon, RepeatIcon, SplitIcon } from "../ui/icons";
+import { OptionChip } from "../ui/OptionChip";
 import { Segmented } from "../ui/Segmented";
 import { type Choice, Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
@@ -143,9 +144,17 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
 
   return (
     <form onSubmit={submit} className="grid gap-5" noValidate>
-      {locked && (
-        <p className="rounded-(--radius-control) bg-sheet p-3 text-sm">{t.entry.locked}</p>
-      )}
+      {locked &&
+        (entry?.recurring_income_id ? (
+          <p className="flex flex-wrap items-center justify-between gap-3 rounded-(--radius-control) bg-sheet p-3 text-sm">
+            <span>{t.plan.incomes.lockedEntry}</span>
+            <OpenWindow w={`income:${entry.recurring_income_id}`} className="action">
+              {t.plan.incomes.open}
+            </OpenWindow>
+          </p>
+        ) : (
+          <p className="rounded-(--radius-control) bg-sheet p-3 text-sm">{t.entry.locked}</p>
+        ))}
       {entry?.is_fixed && (
         <p className="flex flex-wrap items-center justify-between gap-3 rounded-(--radius-control) bg-sheet p-3 text-sm">
           <span>{pastMonths ? t.entry.pastMonths : t.transactions.recurring}</span>
@@ -283,18 +292,12 @@ function EntryForm(props: { instruments: Instrument[]; entry?: Transaction; onDo
                 )}
               </Field>
               {!isCredit && (
-                <label className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    className="mt-1 size-4"
-                    checked={confirmEach}
-                    onChange={(event) => setConfirmEach(event.target.checked)}
-                  />
-                  <span>
-                    <span className="block font-medium">{t.entry.confirmEach}</span>
-                    <span className="block text-sm text-muted">{t.entry.confirmEachHelp}</span>
-                  </span>
-                </label>
+                <OptionChip
+                  label={t.entry.confirmEach}
+                  on={confirmEach}
+                  onChange={setConfirmEach}
+                  help={t.entry.confirmEachHelp}
+                />
               )}
               {fieldMessages(error, "requires_confirmation").length > 0 && (
                 <p role="alert" className="text-sm text-negative">

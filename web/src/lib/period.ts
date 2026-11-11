@@ -34,14 +34,47 @@ export function presetPeriod(preset: Preset, first: string, last: string): [stri
   return [shiftMonth(last, -(Number(preset) - 1)), last];
 }
 
-/** The preset that gives this period, or "" for a period that the owner set by hand. */
-export function presetOf(start: string, end: string, first: string, last: string): Preset | "" {
-  return (
-    PRESETS.find((preset) => {
-      const [from, to] = presetPeriod(preset, first, last);
-      return from === start && to === end;
-    }) ?? ""
-  );
+/**
+ * The preset that gives this period, or "" for a period that the owner set by
+ * hand. Two presets can give the same months, for example "this year" and
+ * "all" when the records start in January: `chosen`, the preset that the
+ * owner pressed, then names the period. Without it, the first one in the list does.
+ */
+export function presetOf(
+  start: string,
+  end: string,
+  first: string,
+  last: string,
+  chosen: Preset | "" = "",
+): Preset | "" {
+  const gives = (preset: Preset) => {
+    const [from, to] = presetPeriod(preset, first, last);
+    return from === start && to === end;
+  };
+  if (chosen && gives(chosen)) return chosen;
+  return PRESETS.find(gives) ?? "";
+}
+
+/**
+ * Where the period of each preset starts on a track of months. A preset that
+ * starts before the track has no mark. Presets that start at the same month
+ * share one mark: the active one, or the first one in the list.
+ */
+export function presetMarks(
+  track: string[],
+  first: string,
+  last: string,
+  active: Preset | "",
+): { preset: Preset; position: number; on: boolean }[] {
+  const marks = PRESETS.map((preset) => ({
+    preset,
+    position: track.indexOf(presetPeriod(preset, first, last)[0]),
+    on: preset === active,
+  })).filter((mark) => mark.position >= 0);
+  return marks.filter((mark, index) => {
+    const shared = marks.filter((other) => other.position === mark.position);
+    return shared.some((other) => other.on) ? mark.on : marks.indexOf(shared[0] ?? mark) === index;
+  });
 }
 
 /** "2026-06_2026-11": a period as one value of the address. */

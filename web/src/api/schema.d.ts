@@ -757,6 +757,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/incomes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the recurring incomes */
+        get: operations["ledger_income_api_list_incomes"];
+        put?: never;
+        /** Create a recurring income with its parts */
+        post: operations["ledger_income_api_create_income"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/incomes/{income_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a recurring income */
+        get: operations["ledger_income_api_read_income"];
+        /** Change a recurring income and its parts */
+        put: operations["ledger_income_api_change_income"];
+        post?: never;
+        /** Delete a recurring income with every entry of its parts */
+        delete: operations["ledger_income_api_delete_income"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/investments/positions": {
         parameters: {
             query?: never;
@@ -1014,6 +1051,23 @@ export interface paths {
         put?: never;
         /** Calculate the net pay of a CLT salary */
         post: operations["planning_api_calculate_salary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plan/tools/salary-split": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Calculate the advance and the rest of a CLT salary */
+        post: operations["planning_api_calculate_salary_split"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1517,6 +1571,8 @@ export interface components {
             confirm_payments: boolean;
             /** Invoices */
             invoices: components["schemas"]["InvoiceRow"][];
+            /** Later Invoices */
+            later_invoices: components["schemas"]["InvoiceRow"][];
         };
         /** CreditCardChange */
         CreditCardChange: {
@@ -1879,6 +1935,8 @@ export interface components {
             notes: string;
             /** Locked */
             locked: boolean;
+            /** Recurring Income Id */
+            recurring_income_id: number | null;
             /** Month Amount */
             month_amount?: string | null;
         };
@@ -2235,6 +2293,103 @@ export interface components {
         ConfirmIn: {
             /** Digest */
             digest: string;
+        };
+        /** CurrencyAmount */
+        CurrencyAmount: {
+            /** Currency */
+            currency: string;
+            /** Amount */
+            amount: string;
+        };
+        /** IncomeAccount */
+        IncomeAccount: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Bank Name */
+            bank_name: string;
+        };
+        /** IncomeOut */
+        IncomeOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            category: components["schemas"]["Named"];
+            account: components["schemas"]["IncomeAccount"];
+            /** Currency */
+            currency: string;
+            /** Until */
+            until: string | null;
+            /** Confirm */
+            confirm: boolean;
+            /** Gross */
+            gross: string | null;
+            /** Advance Percent */
+            advance_percent: string | null;
+            /** Total */
+            total: string;
+            /** Parts */
+            parts: components["schemas"]["PartOut"][];
+        };
+        /** IncomesOut */
+        IncomesOut: {
+            /** Items */
+            items: components["schemas"]["IncomeOut"][];
+            /** Totals */
+            totals: components["schemas"]["CurrencyAmount"][];
+        };
+        /** Named */
+        Named: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** PartOut */
+        PartOut: {
+            /** Id */
+            id: number;
+            /** Day */
+            day: number;
+            /** Amount */
+            amount: string;
+            /** Next Date */
+            next_date: string | null;
+        };
+        /** IncomeIn */
+        IncomeIn: {
+            /** Name */
+            name: string;
+            /** Category Id */
+            category_id: number;
+            /** Account Id */
+            account_id: number;
+            /** Start */
+            start?: string | null;
+            /** Until */
+            until?: string | null;
+            /**
+             * Confirm
+             * @default false
+             */
+            confirm: boolean;
+            /** Gross */
+            gross?: number | string | null;
+            /** Advance Percent */
+            advance_percent?: number | string | null;
+            /** Parts */
+            parts: components["schemas"]["PartIn"][];
+        };
+        /** PartIn */
+        PartIn: {
+            /** Id */
+            id?: number | null;
+            /** Day */
+            day: number;
+            /** Amount */
+            amount: number | string;
         };
         /** OverviewOut */
         OverviewOut: {
@@ -2846,6 +3001,64 @@ export interface components {
              */
             other: number | string;
         };
+        /** SalarySplitOut */
+        SalarySplitOut: {
+            /** Year */
+            year: number;
+            /** Assumed */
+            assumed: boolean;
+            /** Gross */
+            gross: string;
+            /** Inss */
+            inss: string;
+            /** Irrf */
+            irrf: string;
+            /** Deductions */
+            deductions: string;
+            /** Net */
+            net: string;
+            /** Advance */
+            advance: string;
+            /** Remainder */
+            remainder: string;
+        };
+        /** SalarySplitIn */
+        SalarySplitIn: {
+            /** Gross */
+            gross: number | string;
+            /**
+             * Dependents
+             * @default 0
+             */
+            dependents: number;
+            /**
+             * Pension
+             * @default 0
+             */
+            pension: number | string;
+            /**
+             * Transport
+             * @default 0
+             */
+            transport: number | string;
+            /**
+             * Food
+             * @default 0
+             */
+            food: number | string;
+            /**
+             * Health
+             * @default 0
+             */
+            health: number | string;
+            /**
+             * Other
+             * @default 0
+             */
+            other: number | string;
+            /** Advance Percent */
+            advance_percent: number | string;
+        };
         /** GrowthOut */
         GrowthOut: {
             /** Monthly Rate */
@@ -3259,6 +3472,77 @@ export interface components {
             /** Missing Currencies */
             missing_currencies: string[];
         };
+        /** AnalysisCard */
+        AnalysisCard: {
+            /** Months */
+            months: string[];
+            /** Total */
+            total: string;
+            /** Previous */
+            previous: string;
+            /** Change */
+            change: string;
+            /** Change Percent */
+            change_percent: string | null;
+            /** Average */
+            average: string;
+            /** Owed */
+            owed: string;
+            /** Upcoming */
+            upcoming: string[];
+            /** Upcoming Total */
+            upcoming_total: string;
+            /** Categories */
+            categories: components["schemas"]["AnalysisCardCategory"][];
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Account Name */
+            account_name: string;
+            /** Share */
+            share: string | null;
+        };
+        /** AnalysisCardCategory */
+        AnalysisCardCategory: {
+            /** Category Id */
+            category_id: number | null;
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
+            /** Share */
+            share: string | null;
+        };
+        /** AnalysisCards */
+        AnalysisCards: {
+            /** Months */
+            months: string[];
+            /** Total */
+            total: string;
+            /** Previous */
+            previous: string;
+            /** Change */
+            change: string;
+            /** Change Percent */
+            change_percent: string | null;
+            /** Average */
+            average: string;
+            /** Owed */
+            owed: string;
+            /** Upcoming */
+            upcoming: string[];
+            /** Upcoming Total */
+            upcoming_total: string;
+            /** Categories */
+            categories: components["schemas"]["AnalysisCardCategory"][];
+            /** Currency */
+            currency: string;
+            /** Upcoming Months */
+            upcoming_months: string[];
+            /** Cards */
+            cards: components["schemas"]["AnalysisCard"][];
+        };
         /** AnalysisOut */
         AnalysisOut: {
             /**
@@ -3292,6 +3576,8 @@ export interface components {
             last: string;
             /** Flows */
             flows: components["schemas"]["Flow"][];
+            /** Cards */
+            cards: components["schemas"]["AnalysisCards"][];
             worth: components["schemas"]["AnalysisWorth"];
             /** Positions */
             positions: components["schemas"]["AnalysisPosition"][];
@@ -3465,6 +3751,8 @@ export interface components {
             category_id: number | null;
             /** Category Name */
             category_name: string;
+            /** Card Id */
+            card_id: number | null;
             /** Amount */
             amount: string;
             /** Installment Number */
@@ -5023,6 +5311,118 @@ export interface operations {
             };
         };
     };
+    ledger_income_api_list_incomes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomesOut"];
+                };
+            };
+        };
+    };
+    ledger_income_api_create_income: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncomeIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeOut"];
+                };
+            };
+        };
+    };
+    ledger_income_api_read_income: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                income_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeOut"];
+                };
+            };
+        };
+    };
+    ledger_income_api_change_income: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                income_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncomeIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeOut"];
+                };
+            };
+        };
+    };
+    ledger_income_api_delete_income: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                income_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     investments_api_list_positions: {
         parameters: {
             query?: never;
@@ -5545,6 +5945,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SalaryOut"];
+                };
+            };
+        };
+    };
+    planning_api_calculate_salary_split: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalarySplitIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalarySplitOut"];
                 };
             };
         };

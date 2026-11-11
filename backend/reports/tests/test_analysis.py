@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
+from banking.models import CreditCard
 from ledger.models import TransactionSplit
 from reports.tests.test_api import ReportsApiTestCase
 
@@ -254,6 +255,132 @@ class WorthTests(AnalysisTestCase):
         # At the end of September the second position did not exist.
         positions = self.analysis(start="2026-09", end="2026-09")["positions"]
         self.assertEqual([row["name"] for row in positions], ["Reserva"])
+
+
+class CardsTests(AnalysisTestCase):
+    """The credit cards of a period: statements, debt, later statements and categories."""
+
+    def setUp(self):
+        super().setUp()
+        card = f"credit:{self.card.pk}"
+        self.record(title="Cinema", amount="60.00", category_id=self.fun.pk, instrument=card)
+        self.record(title="Notebook", amount="900.00", instrument=card, installments=3)
+        self.record(
+            title="Livro",
+            amount="50.00",
+            category_id=self.fun.pk,
+            instrument=card,
+            date="2026-10-05",
+        )
+        self.record(title="Jantar", amount="40.00", instrument=f"credit:{self.manual.pk}")
+        # An expense of the account is not of a card.
+        self.record(title="Feira", amount="100.00")
+
+    def cards(self, **query):
+        rows = self.analysis(**query)["cards"]
+        self.assertEqual(len(rows), 1, rows)
+        return rows[0]
+
+    def test_the_statements_of_each_month_add_up_to_the_total(self):
+        row = self.cards()
+        self.assertEqual(row["currency"], "BRL")
+        self.assertEqual(row["months"], ["0.00", "0.00", "0.00", "0.00", "50.00", "400.00"])
+        self.assertEqual((row["total"], row["average"]), ("450.00", "75.00"))
+
+    def test_the_total_comes_with_the_period_before(self):
+        row = self.cards(start="2026-11", end="2026-11")
+        self.assertEqual(
+            (row["total"], row["previous"], row["change"], row["change_percent"]),
+            ("400.00", "50.00", "350.00", "700.0"),
+        )
+        # Nothing in the period before: no percentage.
+        self.assertIsNone(self.cards()["change_percent"])
+
+    def test_each_card_has_its_statements_and_its_part_of_the_total(self):
+        row = self.cards()
+        self.assertEqual(
+            [(card["id"], card["name"], card["account_name"]) for card in row["cards"]],
+            [(self.card.pk, "Platinum", "Conta"), (self.manual.pk, "Black", "Conta")],
+        )
+        platinum, black = row["cards"]
+        self.assertEqual(platinum["months"][-2:], ["50.00", "360.00"])
+        self.assertEqual(
+            (platinum["total"], platinum["average"], platinum["share"]),
+            ("410.00", "68.33", "91.1"),
+        )
+        self.assertEqual((black["total"], black["share"]), ("40.00", "8.9"))
+        one = self.cards(start="2026-11", end="2026-11")["cards"][0]
+        self.assertEqual(
+            (one["previous"], one["change"], one["change_percent"]), ("50.00", "310.00", "620.0")
+        )
+
+    def test_the_statements_of_a_card_agree_with_the_analysis_of_the_card(self):
+        row = self.cards(start="2025-12", end="2026-11")
+        for card in row["cards"]:
+            item = self.get(f"/api/reports/items/card/{card['id']}").json()
+            self.assertEqual(card["months"], [month["amount"] for month in item["months"]])
+            self.assertEqual((card["total"], card["owed"]), (item["total"], item["owed"]))
+
+    def test_what_the_cards_owe_today_counts_the_later_installments(self):
+        row = self.cards()
+        # The October statement left the account on its due date: it is not owed.
+        self.assertEqual(row["owed"], "1000.00")
+        self.assertEqual([card["owed"] for card in row["cards"]], ["960.00", "40.00"])
+        # The debt is of today: another period does not change it.
+        self.assertEqual(self.cards(start="2026-08", end="2026-09")["owed"], "1000.00")
+
+    def test_the_later_statements_are_the_months_after_the_current_one(self):
+        row = self.cards()
+        # The list ends at the last month that has an amount.
+        self.assertEqual(row["upcoming_months"], ["2026-12-01", "2027-01-01"])
+        self.assertEqual((row["upcoming"], row["upcoming_total"]), (["300.00", "300.00"], "600.00"))
+        self.assertEqual(
+            [(card["upcoming"], card["upcoming_total"]) for card in row["cards"]],
+            [(["300.00", "300.00"], "600.00"), (["0.00", "0.00"], "0.00")],
+        )
+        # They follow today, not the period.
+        self.assertEqual(self.cards(start="2026-08", end="2026-09")["upcoming"], row["upcoming"])
+
+    def test_the_categories_of_the_cards_and_of_each_card_are_listed_by_amount(self):
+        row = self.cards()
+        self.assertEqual(
+            [(part["name"], part["amount"], part["share"]) for part in row["categories"]],
+            [("Alimentação", "340.00", "75.6"), ("Lazer", "110.00", "24.4")],
+        )
+        self.assertEqual(
+            [
+                (part["name"], part["amount"], part["share"])
+                for part in row["cards"][0]["categories"]
+            ],
+            [("Alimentação", "300.00", "73.2"), ("Lazer", "110.00", "26.8")],
+        )
+
+    def test_a_card_without_an_amount_is_not_listed(self):
+        row = self.cards(start="2026-10", end="2026-10")
+        # Black has nothing in October, and it owes its November statement.
+        self.assertEqual([card["name"] for card in row["cards"]], ["Platinum", "Black"])
+        self.assertEqual(row["cards"][1]["total"], "0.00")
+        CreditCard.objects.create(
+            user=self.user, account=self.account, name="Novo", closing_day=10, due_day=20
+        )
+        self.assertEqual(len(self.cards()["cards"]), 2)
+
+    def test_the_cards_are_the_owners_only(self):
+        self.client.force_login(self.other)
+        self.assertEqual(self.analysis()["cards"], [])
+
+    def test_an_entry_of_the_origin_names_its_card(self):
+        response = self.get("/api/reports/analysis/month", month="2026-11")
+        cards = {row["title"]: row["card_id"] for row in response.json()["entries"]}
+        self.assertEqual(
+            cards,
+            {
+                "Cinema": self.card.pk,
+                "Notebook": self.card.pk,
+                "Jantar": self.manual.pk,
+                "Feira": None,
+            },
+        )
 
 
 class AccessTests(AnalysisTestCase):

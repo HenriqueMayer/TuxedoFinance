@@ -99,6 +99,19 @@ docker compose up -d
 Open http://127.0.0.1:8000 and create your account. The settings of an
 installation are in [Operations](docs/operations.md).
 
+## Suggested categories
+
+A new account starts with nine categories. To start with a fuller set,
+download the file [categories.en.csv](docs/categories/categories.en.csv) and
+import it in **Settings → Manage categories → Import**. The import creates the
+names that you do not have and changes nothing else, so you can run it again.
+Expense subcategories are added up in their parent in the
+[analysis](docs/product.md#analysis). Rename or delete what does not fit you
+in the same window.
+
+The same set in Brazilian Portuguese is
+[categories.pt-BR.csv](docs/categories/categories.pt-BR.csv).
+
 ## Your data
 
 All records are in one SQLite file on the computer that runs the

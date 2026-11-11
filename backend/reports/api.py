@@ -243,6 +243,49 @@ class Flow(Schema):
     categories: list[FlowCategory]
 
 
+class AnalysisCardCategory(Schema):
+    category_id: int | None
+    name: str
+    amount: Decimal
+    #: The part of the statements of the period, in percent. Null without an amount.
+    share: Decimal | None
+
+
+class AnalysisCardTotals(Schema):
+    #: The statement of each month of the period, in the order of ``months``.
+    months: list[Decimal]
+    total: Decimal
+    #: The total of the period before.
+    previous: Decimal
+    change: Decimal
+    change_percent: Decimal | None
+    #: The total for each month of the period.
+    average: Decimal
+    #: What is owed today, with the later installments. It does not follow the period.
+    owed: Decimal
+    #: The statement of each month of ``upcoming_months``.
+    upcoming: list[Decimal]
+    upcoming_total: Decimal
+    #: Top-level categories of the statements of the period, largest first.
+    categories: list[AnalysisCardCategory]
+
+
+class AnalysisCard(AnalysisCardTotals):
+    id: int
+    name: str
+    account_name: str
+    #: The part of the total of the cards of this currency, in percent.
+    share: Decimal | None
+
+
+class AnalysisCards(AnalysisCardTotals):
+    currency: str
+    #: The months after the current one, up to the last one with an amount.
+    upcoming_months: list[dt.date]
+    #: The cards with an amount, from the largest total of the period.
+    cards: list[AnalysisCard]
+
+
 class AnalysisWorthMonth(WorthMonth):
     #: What the positions cost. The value less the cost is what they earned.
     investments_cost: Decimal
@@ -287,6 +330,8 @@ class AnalysisOut(Schema):
     last: dt.date
     #: One row for each currency with an amount. Amounts are not converted.
     flows: list[Flow]
+    #: The credit cards: one row for each currency of an account with a card.
+    cards: list[AnalysisCards]
     worth: AnalysisWorth
     positions: list[AnalysisPosition]
 
@@ -309,6 +354,8 @@ class OriginEntry(Schema):
     #: The top-level category. A split entry has one row for each category.
     category_id: int | None
     category_name: str
+    #: The credit card that bills the entry. Null for an entry of an account.
+    card_id: int | None
     amount: Decimal
     installment_number: int | None
     installment_count: int | None

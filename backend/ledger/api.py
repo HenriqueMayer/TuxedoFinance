@@ -175,6 +175,8 @@ class TransactionOut(Schema):
     notes: str
     #: A record that another operation generated. It is changed at its source.
     locked: bool
+    #: The recurring income that this entry is a part of, which changes it.
+    recurring_income_id: int | None
     #: The amount that falls in the requested month, when the list has a month.
     month_amount: Decimal | None = None
 
@@ -192,7 +194,7 @@ class TransactionOut(Schema):
 
     @staticmethod
     def resolve_locked(item):
-        return item.reward_redemption_id is not None
+        return item.reward_redemption_id is not None or item.recurring_income_id is not None
 
     @staticmethod
     def resolve_month_amount(item):
@@ -253,6 +255,8 @@ def _transactions(user):
 def _apply_transaction(item, user, payload: TransactionIn):
     if item.reward_redemption_id:
         raise ValidationError(_("This record is generated. Change the redemption that created it."))
+    if item.recurring_income_id:
+        raise ValidationError(_("This entry is a part of a recurring income. Change the income."))
     # Every error is reported in one answer, so the owner corrects the form once.
     errors = {}
     for _channel, name, _model in KINDS.values():
@@ -438,6 +442,8 @@ def delete_transaction(request, transaction_id: int):
     item = _owned_transaction(request.user, transaction_id)
     if item.reward_redemption_id:
         raise ValidationError(_("This record is generated. Delete the redemption that created it."))
+    if item.recurring_income_id:
+        raise ValidationError(_("This entry is a part of a recurring income. Change the income."))
     item.delete()
     return 204, None
 

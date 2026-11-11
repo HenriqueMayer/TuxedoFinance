@@ -19,9 +19,10 @@ const PART_COLORS = [CHART.ink, CHART.accent, CHART.positive];
 
 /** The name of an origin window: what a click on a month of the analysis opens. */
 export function originId(
-  section: "flows" | "category" | "worth" | "investments",
+  section: "flows" | "category" | "cards" | "worth" | "investments",
   month: string,
   currency = "",
+  /** The category of "category", or the card of "cards". */
   category: number | null = null,
 ): `origin:${string}` {
   return `origin:${section}:${month}:${currency}:${category ?? ""}`;
@@ -33,7 +34,8 @@ export function originId(
  *
  * The id is "origin:section:month:currency:category". The section says which
  * chart the owner clicked: the entries of the month, the entries of one
- * category, the parts of the net worth, or the investment operations.
+ * category, the card entries (of one card, in the place of the category, or
+ * of every card), the parts of the net worth, or the investment operations.
  */
 export function OriginWindow(props: { id: string }) {
   const t = useMessages();
@@ -62,6 +64,14 @@ export function OriginWindow(props: { id: string }) {
           month={month}
           type="EXPENSE"
         />
+      ) : section === "cards" ? (
+        <EntryList
+          rows={expenses.filter(
+            (row) => row.card_id !== null && (category === null || row.card_id === category),
+          )}
+          month={month}
+          type="EXPENSE"
+        />
       ) : section === "worth" ? (
         <WorthOrigin worth={data.worth} />
       ) : section === "investments" ? (
@@ -86,8 +96,13 @@ export function OriginWindow(props: { id: string }) {
   );
 }
 
-function sectionKey(section: string | undefined): "flows" | "category" | "worth" | "investments" {
-  return section === "category" || section === "worth" || section === "investments"
+function sectionKey(
+  section: string | undefined,
+): "flows" | "category" | "cards" | "worth" | "investments" {
+  return section === "category" ||
+    section === "cards" ||
+    section === "worth" ||
+    section === "investments"
     ? section
     : "flows";
 }

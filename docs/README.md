@@ -11,6 +11,7 @@ of behavior updates its file in the same change.
 | Setup, commands and checks | [Development](development.md) |
 | Settings, data, backup, Docker and a release | [Operations](operations.md) |
 | The public page and its demonstration | [Site](../site/README.md) |
+| Suggested categories to import, in English and Portuguese | [categories/](categories/) |
 
 The interface decisions are in [`web/DESIGN.md`](../web/DESIGN.md). The API
 reference is the OpenAPI schema: `/api/openapi.json` on a running server,

@@ -62,6 +62,7 @@ Rules:
 |---|---|
 | `Category` | A name for classifying entries, with an optional type and parent |
 | `Transaction` | An income or an expense on an account, a debit card or a credit card |
+| `RecurringIncome` | An income of every month. Its receipts are repeating income entries (`Transaction.recurring_income`), which it changes and deletes. The rules are in `ledger.incomes` |
 | `TransactionSplit` | A part of a transaction in another category |
 | `ScheduleAmount` | A new amount of a repeating entry from a month |
 | `OccurrenceOverride` | A change of one month of a repeating entry: skipped, adjusted or confirmed |
@@ -183,10 +184,13 @@ and its currency is listed.
 
 The analysis has no model. `reports.analysis` reads a period of whole months
 with the rules above: flows by billed month and currency, top-level
-categories, and the net worth at each month end. It also gives the period
+categories, the statements of the credit cards by currency of their account
+(with what the cards owe today and the statements after the current month),
+and the net worth at each month end. It also gives the period
 before, of the same length, and every change, average and percentage, so the
 client calculates nothing. `reports.analysis.origin` lists what one month is
-made of: one row for each entry and top-level category, the parts of the net
+made of: one row for each entry and top-level category, with the credit card
+that bills it, the parts of the net
 worth, and the investment operations.
 
 `reports.items` reads twelve months of one investment, account or credit
