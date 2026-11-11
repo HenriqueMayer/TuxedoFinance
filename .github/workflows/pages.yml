@@ -1,41 +1,85 @@
-name: Deploy interface preview
+name: Public site
 
+# The site embeds the client and the answers of the backend for a fictional
+# owner, so a change in any of the three builds it again. A pull request
+# builds and checks the site without publishing it.
 on:
   push:
     branches: [main]
     paths:
-      - 'preview/**'
-      - '.github/workflows/pages.yml'
+      - "site/**"
+      - "web/**"
+      - "backend/**"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    paths:
+      - "site/**"
+      - "web/**"
+      - "backend/**"
+      - ".github/workflows/pages.yml"
+  schedule:
+    # The demonstration shows the latest 18th. The 19th of each month moves it on.
+    - cron: "0 9 19 * *"
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    name: Publish static preview
+  build:
+    name: Build and check the site
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            site/package-lock.json
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install locked dependencies
+        run: |
+          (cd backend && uv sync --locked)
+          (cd web && npm ci)
+          (cd site && npm ci)
+      - name: Build the demonstration and the pages
+        run: npm run build
+        working-directory: site
+      - name: The site runs from its static files
+        run: |
+          npx playwright install --with-deps chromium
+          npm test
+        working-directory: site
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+      - name: Upload the site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/dist
+
+  deploy:
+    name: Publish to GitHub Pages
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Check out source
-        uses: actions/checkout@v6
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload preview artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: preview
-
       - name: Deploy GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

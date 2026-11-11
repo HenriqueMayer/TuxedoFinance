@@ -1,65 +1,44 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.egg-info/
-*.egg
+.venv/
 .ruff_cache/
 
-# Virtual environments
-.venv/
-venv/
-env/
-
-# Django
-# Each installation owns its local database. Keep the root database and its
-# transient journal/WAL files out of version control.
-/db.sqlite3
-/assistant-private/
-db.sqlite3-journal
-db.sqlite3-shm
-db.sqlite3-wal
-# Guard backups from the documented Docker workflow against accidental commits.
-backup-*.sqlite3*
-# Root-anchored so it matches Django's MEDIA_ROOT without also excluding
-# `docs/media/`.
-/media/
-*.log
-local_settings.py
-.coverage
-coverage.xml
-htmlcov/
-
-# Frontend development and browser-test artifacts
-# Keep new local tool outputs together; retain legacy ignores without moving
-# any existing artifacts, databases, environments, or backups.
-/.local/
+# Node
 node_modules/
-playwright-report/
-test-results/
 
-# Raw screen recordings (~70 MB, above GitHub's push limit). The compressed
-# re-encodes beside them are the ones committed.
-docs/media/*.mp4
+# Tool outputs, builds and local data of the 2.0 structure
+/backend/var/
+/web/dist/
+/web/var/
 
-# Editors / OS
+# Environment files hold secrets. The examples are tracked.
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+# Local databases and their backups
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Local files of a 1.x installation in this folder, and old tool outputs
+/.local/
+/media/
+/staticfiles/
+*.log
+
+# Editors and operating system
 .vscode/
 .idea/
 *.swp
 .DS_Store
 
-# Environment variables
-.env
-
-# Other (development-only documents, intentionally kept out of the public repo)
+# Private local notes, agent tool state and the restructuring process record
+/.agents/
+/.claude/
 .codex
 .opencode
-project_review.md
-RELEASE_PLAN.md
-roadmap_brand.md
-ROADMAP.md
-SPRINT_BRAND.md
-
-# Collected static files and Docker installation configuration
-/staticfiles/
-.env.docker
+/how-fable-solve-problems/

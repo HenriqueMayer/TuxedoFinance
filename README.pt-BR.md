@@ -1,124 +1,132 @@
-[English](README.md) · [Português (Brasil)](README.pt-BR.md)
+[English](README.md) · [Português (Brasil)](README.pt-BR.md) · **[Prévia ao vivo ↗](https://henriquemayer.github.io/TuxedoFinance/pt-br/)**
 
 <h1><img src="docs/assets/readme-cover.svg" alt="Tuxedo Finance" width="1240"></h1>
 
-<a id="-controle-dos-dados"></a>
-
-Receitas, despesas, contas, cartões e investimentos em um app local.
-Você instala no seu computador e usa em português ou inglês, com tema claro ou
-escuro. Seus registros ficam na sua instalação.
-
-<a id="prévia-da-interface"></a>
-
 <p align="center">
-  <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/"><img src="docs/assets/preview-link.svg" width="200" height="40" alt="Abrir o preview da interface do Tuxedo Finance"></a>
+  <b>Finanças pessoais que rodam no seu computador.</b><br>
+  Você lança o que aconteceu, em poucos segundos, e o Início responde às perguntas do mês:<br>
+  quanto resta, para onde foi o dinheiro e o que vence.
 </p>
 
-<p>
-  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=flat&amp;label=CI&amp;labelColor=1A2E26&amp;color=176B52" alt="Status da integração contínua"></a>
-  <img src="https://img.shields.io/badge/version-1.0.2-B88A59?style=flat&amp;labelColor=1A2E26" alt="Versão 1.0.2">
+<p align="center">
+  <a href="https://henriquemayer.github.io/TuxedoFinance/pt-br/"><img src="docs/assets/preview-link.pt-br.svg" width="285" height="48" alt="Abrir a prévia ao vivo do Tuxedo Finance"></a>
+</p>
+
+<p align="center">
+  <sub>A prévia é o próprio aplicativo, no seu navegador, com os registros de um dono fictício.<br>
+  Nada para instalar. Nada é salvo.</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=flat&amp;labelColor=1A2E26&amp;color=176B52&amp;label=checks" alt="Checagens do backend e do cliente, e jornadas de navegador"></a>
+  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/pages.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/pages.yml?branch=main&amp;style=flat&amp;labelColor=1A2E26&amp;color=176B52&amp;label=site" alt="Construção do site público"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-B88A59?style=flat&amp;labelColor=1A2E26" alt="Licença PolyForm Noncommercial"></a>
 </p>
 
-[Instalação](#instalação) · [Documentação](docs/README.md) · [Alterações](CHANGELOG.md)
+<p align="center">
+  <a href="#o-que-tem-no-app">O que tem no app</a> ·
+  <a href="#análise">Análise</a> ·
+  <a href="#como-rodar">Como rodar</a> ·
+  <a href="docs/README.md">Documentação</a> ·
+  <a href="CHANGELOG.md">Mudanças</a>
+</p>
 
-<a id="-funcionalidades"></a>
-<a id="cinco-áreas"></a>
-<a id="seis-áreas"></a>
+<p align="center">
+  <sub>Todas as imagens desta página vêm da prévia. Clique na imagem para abri-la.</sub>
+</p>
+
+| Seus registros ficam com você | Um lançamento leva segundos | Cada tela responde a uma pergunta |
+|---|---|---|
+| Um arquivo SQLite no computador que roda a aplicação. Sem conexão com banco e sem conta em serviço nenhum. | Um título, um valor e uma data. Parcelas, repetição mensal ou extrato do banco (OFX ou CSV) quando você precisa. | Quatro destinos. Cada objeto abre em uma janela sobre a página, e a página mantém a posição. |
 
 ## O que tem no app
 
-A tabela descreve o código atual do projeto. Os comandos Docker abaixo usam
-a release **v1.0.2**.
+Quatro destinos, uma pergunta para cada.
 
-| Área | O que você pode fazer |
+| Destino | Responde | O que você faz ali |
+|---|---|---|
+| **Início** | Como está este mês? | Lê quanto resta para gastar, para onde foi o dinheiro, o que vence, seu patrimônio e suas metas. Você escolhe os blocos e a ordem. |
+| **Transações** | O que eu registrei? | Lança em poucos segundos, com parcelas ou repetição mensal. Importa um extrato do banco (OFX ou CSV) e revisa linha a linha. |
+| **Carteira** | O que eu tenho e o que eu devo? | Mantém contas, cartões de crédito e de débito, faturas, transferências, investimentos, pontos e milhas, e contas em outras moedas. |
+| **Planejar** | O que eu pretendo? | Define um limite para o mês e orçamentos por categoria, reserva saldos reais para metas, olha os próximos meses e fecha cada mês. |
+
+| Planejar | Uma janela |
 |---|---|
-| **Início** | Conferir recursos disponíveis, indicadores do mês e compromissos próximos. |
-| **Transações** | Registrar receitas e despesas, dividir categorias, gerenciar recorrências e parcelas, exportar CSV. |
-| **Contas** | Gerenciar contas, PIX, transferências e cartões; conferir faturas, créditos, pagamentos, fidelidade e câmbio local. |
-| **Investimentos** | Acompanhar aplicações e cofrinhos, operações e preços locais datados; configurar investimentos e escolher um emoji por aplicação. |
-| **Planejar** | Definir limites mensais por categoria, reservar saldos existentes para metas, comparar cenários de salário/rendimento e conferir alertas locais. |
-| **Análises** | Explorar gráficos financeiros e de investimentos, despesas por categoria, atividade por conta/cartão e projeções de fluxo. |
+| <img src="docs/images/pt-br/plan.png" alt="Planejar: o limite do mês, orçamentos por categoria e metas" width="610"> | <img src="docs/images/pt-br/window.png" alt="A janela do mês, aberta a partir do Início" width="610"> |
 
-O [assistente Tuxedo](docs/apps/assistant.md) opcional pode consultar suas finanças
-salvas, simular cenários e preparar as alterações disponíveis para sua confirmação.
-A conexão com o ChatGPT vem desativada. Quando habilitada, registros relevantes e
-o histórico necessário da conversa são enviados à OpenAI. O Open Finance permanece
-no [roadmap](docs/roadmap.md#personal-open-finance-study).
+A interface está em português do Brasil e em inglês, com tema claro e
+escuro, no computador e no celular. Em Ajustes ficam a moeda base, a ordem da
+data e a forma de escrever um número (`1.234,56` ou `1,234.56`).
 
-<a id="-instalação-inicial"></a>
+## Análise
 
-## Instalação
+**Analisar**, no Início, abre um período de até 60 meses em quatro áreas:
+receitas e despesas, para onde foi o dinheiro, patrimônio e investimentos.
+Cada valor é comparado com o período anterior. Um clique em um mês abre a
+origem dos valores, e arrastar sobre os meses mostra os valores deles.
 
-### Docker
+Na Carteira, uma conta, um cartão e um investimento têm cada um uma análise
+dos últimos doze meses, com o item ao lado de todos os itens do mesmo tipo.
 
-Requer Docker Engine 28+ (ou Docker Desktop atualizado), Compose v2+ e um
-shell POSIX (WSL no Windows). Não é necessário clonar o repositório nem instalar
-Python ou Node.js no computador.
-Aguarde a conclusão do workflow Docker da release e a disponibilidade dos
-arquivos de instalação antes de instalar.
-Baixe [compose.yaml](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.2/compose.yaml)
-e [docker.env.example](https://github.com/HenriqueMayer/TuxedoFinance/releases/download/v1.0.2/docker.env.example)
-da release **v1.0.2** para uma nova pasta de instalação. Abra um terminal
-nessa pasta e execute:
+| Um período | Uma conta |
+|---|---|
+| <img src="docs/images/pt-br/analysis.png" alt="A janela de análise: receitas e despesas de cinco meses, com o controle de período" width="610"> | <img src="docs/images/pt-br/insight.png" alt="A análise de uma conta: o saldo e o que entrou e saiu em cada mês" width="610"> |
 
-```bash
-image=ghcr.io/henriquemayer/tuxedofinance:v1.0.2
-docker pull "$image"
-(
-  umask 077
-  set -o noclobber
-  docker run --rm --entrypoint python -e TUXEDO_IMAGE="$image" "$image" -c \
-    'import os,secrets; print("TUXEDO_IMAGE="+os.environ["TUXEDO_IMAGE"]); print("SECRET_KEY="+secrets.token_urlsafe(64))' > .env.docker
-)
-docker compose --env-file .env.docker up -d --wait
-```
+## Como rodar
 
-Abra [127.0.0.1:8000](http://127.0.0.1:8000/). A configuração preserva um
-`.env.docker` existente; mantenha sua chave de assinatura, a pasta de instalação
-e o volume de dados nas atualizações. Consulte o [guia de Docker](docs/docker.md)
-para configuração, atualizações e backups. Esses comandos instalam a release
-publicada; alterações do checkout exigem uma
-[compilação local da imagem](docs/docker.md#build-from-a-checkout).
-
-<a id="código-em-desenvolvimento"></a>
-
-<a id="python-e-uv"></a>
-
-**Python 3.12 + [uv](https://docs.astral.sh/uv/getting-started/installation/):**
-para uma nova instalação a partir do código:
+**A partir do código.** Requisitos: Python 3.12 com
+[uv](https://docs.astral.sh/uv/) e Node.js 22.
 
 ```bash
 git clone https://github.com/HenriqueMayer/TuxedoFinance.git
-cd TuxedoFinance
-uv sync --locked
-uv run python scripts/init_local.py
+cd TuxedoFinance/web && npm ci && npx vite build
+cd ../backend && cp .env.example .env    # defina SECRET_KEY no .env
+uv sync
 uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
-Abra [127.0.0.1:8000](http://127.0.0.1:8000/), crie um usuário e adicione um banco
-e uma conta bancária. Node.js é necessário apenas nas ferramentas de desenvolvimento.
-Antes de atualizar uma instalação existente, siga o
-[procedimento de backup e migração](docs/operations.md#updating-a-native-installation).
-Preserve o banco de dados e a chave de assinatura.
+**Com Docker.**
 
-<a id="dados-de-demonstração-opcionais"></a><a id="-configuração"></a><a id="-desenvolvimento"></a><a id="-documentação"></a><a id="-contribuição"></a>
+```bash
+git clone https://github.com/HenriqueMayer/TuxedoFinance.git
+cd TuxedoFinance
+docker build -t tuxedo-finance:local .
+cp .env.docker.example .env              # defina TUXEDO_IMAGE e SECRET_KEY
+docker compose up -d
+```
 
-## Guias
+Abra http://127.0.0.1:8000 e crie a sua conta. As configurações de uma
+instalação estão em [Operations](docs/operations.md).
 
-[Configuração e operação](docs/operations.md) · [Dados de demonstração](docs/demo-data.md) ·
-[Design system](docs/design-system.html) · [Como contribuir](CONTRIBUTING.md) ·
-[Roadmap](docs/roadmap.md) · [Segurança](SECURITY.md)
+## Seus dados
 
-<a id="-tecnologia"></a>
+Todos os registros ficam em um arquivo SQLite no computador que roda a
+aplicação. Cópia e restauração são dois comandos: veja
+[Operations](docs/operations.md#data).
 
-Desenvolvido com **Django, SQLite, HTMX e assets servidos localmente**.
-O [índice da documentação](docs/README.md) reúne os detalhes técnicos e financeiros,
-em inglês.
+## Documentação
 
----
+A documentação técnica está em inglês.
 
-<a id="-licença"></a>
+| Assunto | Arquivo |
+|---|---|
+| O que é o produto e o que cada área faz | [Product](docs/product.md) |
+| Estrutura do repositório, a API, o cliente e os testes | [Architecture](docs/architecture.md) |
+| Registros e regras financeiras | [Data model](docs/data-model.md) |
+| Preparação, comandos e checagens | [Development](docs/development.md) |
+| Configurações, dados, Docker e lançamento de versão | [Operations](docs/operations.md) |
+| A página pública e a demonstração | [Site](site/README.md) |
+| Como propor uma mudança | [Contributing](CONTRIBUTING.md) |
 
-Copyright © 2026 Henrique Mayer. [PolyForm Noncommercial 1.0.0](LICENSE).
+## Estado
+
+A versão 2.0 é uma aplicação nova sobre as regras financeiras da 1.x: uma
+API Django e um cliente React. Ainda não foi lançada. Ela tem um banco de
+dados novo, e não há atualização a partir da 1.x. A última versão 1.x é a
+tag [`v1.0.2`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.2).
+
+## Licença
+
+[PolyForm Noncommercial 1.0.0](LICENSE): gratuito para uso pessoal e não
+comercial.

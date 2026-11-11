@@ -1,0 +1,839 @@
+@import "tailwindcss";
+
+/*
+ * Visual language of Tuxedo Finance. The decisions and their reasons are in
+ * web/DESIGN.md. Colors are roles, not hues: change a role here and every
+ * screen follows.
+ */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("./assets/fonts/inter-latin-variable.woff2") format("woff2");
+}
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* The jacket: the dark frame that holds navigation. */
+  --color-jacket: #14261f;
+  --color-jacket-ink: #ece8dc;
+  --color-jacket-muted: #a9b8b0;
+
+  /* The shirt: the light sheet where work happens. */
+  --color-sheet: #faf8f3;
+  --color-surface: #ffffff;
+  --color-ink: #1a2e26;
+  --color-muted: #55665d;
+  --color-line: #e3ded1;
+  --color-control: #848d85;
+
+  /* The bow tie: the Add action and keyboard focus. Nothing else. */
+  --color-accent: #b88a59;
+  --color-accent-ink: #855427;
+  --color-on-accent: #1a2e26;
+
+  /* Meaning of an amount. Used on amounts only. */
+  --color-positive: #176b52;
+  --color-negative: #b42318;
+
+  --radius-sheet: 1.25rem;
+  --radius-window: 0.75rem;
+  --radius-control: 0.5rem;
+  --shadow-window: 0 24px 64px -16px rgb(10 20 16 / 0.45), 0 2px 8px rgb(10 20 16 / 0.2);
+}
+
+:root[data-theme="dark"] {
+  --color-jacket: #0b1210;
+  --color-jacket-ink: #ece8dc;
+  --color-jacket-muted: #93a29b;
+  --color-sheet: #121b17;
+  --color-surface: #1a2620;
+  --color-ink: #ece8dc;
+  --color-muted: #9fada6;
+  --color-line: #2a3832;
+  --color-control: #6f7d76;
+  --color-accent: #d4ad86;
+  --color-accent-ink: #d4ad86;
+  --color-on-accent: #14261f;
+  --color-positive: #64d8b1;
+  --color-negative: #ff8a80;
+  color-scheme: dark;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-jacket);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One focus treatment for every control: the bow-tie color. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Amounts align in columns and do not change width when a digit changes. */
+@utility amount {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@utility field {
+  @apply w-full rounded-(--radius-control) border border-control bg-surface px-3 py-2 text-ink placeholder:text-muted;
+}
+
+@utility button-primary {
+  @apply inline-flex whitespace-nowrap min-h-10 items-center justify-center gap-2 rounded-(--radius-control) bg-ink px-4 py-2 font-medium text-sheet disabled:opacity-60;
+}
+
+@utility button-quiet {
+  @apply inline-flex whitespace-nowrap min-h-10 items-center justify-center gap-2 rounded-(--radius-control) border border-control px-4 py-2 font-medium text-ink;
+}
+
+/* The bow tie: only the Add action and the save of an entry use it. */
+@utility button-accent {
+  @apply inline-flex whitespace-nowrap min-h-10 items-center justify-center gap-2 rounded-(--radius-control) bg-accent px-4 py-2 font-semibold text-on-accent disabled:opacity-60;
+}
+
+@utility button-danger {
+  @apply inline-flex whitespace-nowrap min-h-10 items-center justify-center gap-2 rounded-(--radius-control) bg-negative px-4 py-2 font-medium text-surface;
+}
+
+/* A link leads to another place. An action on the same screen is a button. */
+@utility link {
+  @apply text-accent-ink underline underline-offset-2;
+}
+
+/* A small button for an action beside a title or inside a row. */
+@utility action {
+  @apply inline-flex min-h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-(--radius-control) border border-line bg-surface px-2.5 py-1 text-sm font-medium text-ink disabled:cursor-default disabled:opacity-60;
+}
+
+/* A panel that opens beside its control: a menu or the months of a year. */
+@utility popover {
+  @apply rounded-(--radius-window) border border-line bg-surface text-ink;
+  box-shadow:
+    0 16px 40px -16px rgb(10 20 16 / 0.35),
+    0 2px 6px rgb(10 20 16 / 0.08);
+}
+
+/* One action of a menu. */
+@utility menu-item {
+  @apply flex w-full cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-[calc(var(--radius-control)-2px)] px-2.5 py-2 text-sm text-ink;
+  transition: background-color 140ms ease;
+
+  &:hover,
+  &:focus-visible {
+    background-color: color-mix(in srgb, var(--color-ink) 7%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+/* The control of a select or of a date: a field that opens a panel. */
+.select-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.select-control:hover:not(:disabled) {
+  border-color: var(--color-ink);
+}
+
+.select-control[data-empty] {
+  color: var(--color-muted);
+}
+
+.select-control:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* A date has a known length: its control does not grow with the form. */
+.date-control {
+  width: 13rem;
+  max-width: 100%;
+}
+
+/* A number is typed. The steps of the browser are not shown. */
+input[type="number"] {
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+/* A small select, for a row of a table or of a list of settings. */
+.select-compact {
+  min-height: 2rem;
+  border: 1px solid var(--color-control);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 0.25rem 0.5rem 0.25rem 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* The search box of a list has no control of the browser inside it. The
+   panel around it shows where the focus is. */
+input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.select-search:focus-visible,
+[role="listbox"]:focus-visible {
+  outline: none;
+}
+
+/* A short mark before the choice, with a line after it. */
+.select-lead {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  min-width: 1.75rem;
+  margin: -0.25rem 0.125rem -0.25rem -0.625rem;
+  border-right: 1px solid var(--color-line);
+  padding-inline: 0.5rem;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+/* One choice of a list. The arrows and the pointer light the same one. */
+.select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: calc(var(--radius-control) - 2px);
+  padding: 0.5rem 0.625rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+}
+
+.select-option[data-active] {
+  background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+
+.select-option[aria-selected="true"] {
+  font-weight: 600;
+}
+
+/* One day of a calendar. */
+.day {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-inline: auto;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.day:hover:not(:disabled, .day-chosen) {
+  background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+
+.day:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.day-today {
+  color: var(--color-accent-ink);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+}
+
+.day-chosen {
+  background: var(--color-ink);
+  color: var(--color-sheet);
+  font-weight: 600;
+}
+
+/* On a phone a panel is a sheet at the bottom of the screen. */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgb(10 20 16 / 0.45);
+}
+
+.sheet {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 31;
+  display: flex;
+  flex-direction: column;
+  max-height: 78dvh;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 -12px 40px -12px rgb(10 20 16 / 0.4);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* An option of a form that the owner turns on: it shows its field below. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  padding: 0.25rem 0.875rem 0.25rem 0.75rem;
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 90ms ease;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--color-control);
+  color: var(--color-ink);
+}
+
+.chip:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.chip[aria-pressed="true"],
+.chip[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-sheet);
+}
+
+.chip:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* A field that an option shows: it opens downward and closes the same way. */
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 160ms ease;
+}
+
+.reveal[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.reveal > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* An open field shows its focus ring whole. */
+.reveal[data-open] > * {
+  overflow: visible;
+}
+
+/* A checkbox and a radio take the ink of the product. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-ink);
+}
+
+/* One area of the analysis: a block with a band at the top for its name. */
+.area {
+  overflow: clip;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-window);
+  background: var(--color-surface);
+  /* A press on the bar of areas brings the area below the bar. */
+  scroll-margin-top: 3.75rem;
+}
+
+.area-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 3rem;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-sheet);
+  padding: 0.5rem 1.25rem;
+}
+
+.area-mark {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--color-ink);
+  color: var(--color-sheet);
+}
+
+/* The areas in one bar that stays at the top of the window while it scrolls. */
+.area-bar {
+  position: sticky;
+  top: -1.25rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline: -1.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface);
+  padding: 0.5rem 1.25rem;
+  scrollbar-width: none;
+}
+
+.area-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.area-tab:hover {
+  color: var(--color-ink);
+}
+
+.area-tab[aria-current="true"] {
+  background: var(--color-ink);
+  color: var(--color-sheet);
+}
+
+/* Two handles on one track: see src/ui/RangeSlider.tsx. */
+.range {
+  position: relative;
+  height: 2rem;
+}
+
+.range-track,
+.range-chosen {
+  position: absolute;
+  top: calc(50% - 2px);
+  height: 4px;
+  border-radius: 2px;
+}
+
+.range-track {
+  inset-inline: 0;
+  background: var(--color-line);
+}
+
+.range-chosen {
+  background: var(--color-ink);
+}
+
+/* With named positions, their names sit under the track. */
+.range-marked {
+  margin-bottom: 1.25rem;
+}
+
+/* One dot for each position where a handle can stop. */
+.range-stop {
+  position: absolute;
+  top: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--color-control);
+  pointer-events: none;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease;
+}
+
+.range-stop[data-in] {
+  background: var(--color-surface);
+}
+
+/* The position where a moving handle will come to rest. */
+.range-stop[data-near] {
+  background: var(--color-accent);
+  transform: scale(3);
+}
+
+.range-mark {
+  position: absolute;
+  top: 100%;
+  transform: translateX(-50%);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: color 140ms ease;
+}
+
+.range-mark::before {
+  position: absolute;
+  top: -0.45rem;
+  left: 50%;
+  width: 2px;
+  height: 0.35rem;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--color-control);
+  content: "";
+}
+
+.range-mark[data-on] {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+/* A name at an end of the track starts or ends with the track. */
+.range-mark[data-edge="start"] {
+  transform: none;
+  margin-left: -9px;
+}
+
+.range-mark[data-edge="start"]::before {
+  left: 9px;
+}
+
+.range-mark[data-edge="end"] {
+  transform: translateX(-100%);
+  margin-left: 9px;
+}
+
+.range-mark[data-edge="end"]::before {
+  left: calc(100% - 9px);
+}
+
+.range-mark[data-on]::before {
+  background: var(--color-accent);
+}
+
+.range input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  /* Only the handles take the pointer, so each input reaches its own. */
+  pointer-events: none;
+  outline: none;
+}
+
+.range input[type="range"]::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+}
+
+.range input[type="range"]::-moz-range-track {
+  height: 100%;
+  background: transparent;
+}
+
+.range input[type="range"]::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: 7px;
+  appearance: none;
+  border: 2px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-surface);
+  cursor: grab;
+  pointer-events: auto;
+  transition: transform 140ms ease;
+}
+
+.range input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-surface);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.range input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+  cursor: grabbing;
+}
+
+.range input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.range input[type="range"]:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* A card that opens a window: it lifts under the pointer. */
+@utility card-open {
+  transition:
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    border-color 160ms ease;
+
+  &:hover {
+    border-color: var(--color-control);
+    box-shadow: 0 8px 24px -12px rgb(10 20 16 / 0.28);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+}
+
+/* Every control answers the pointer in the same way. */
+:where(.button-primary, .button-quiet, .button-accent, .button-danger, .action) {
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    filter 140ms ease,
+    transform 90ms ease;
+}
+
+:where(.button-primary, .button-quiet, .button-accent, .button-danger, .action):active:not(
+  :disabled
+) {
+  transform: scale(0.97);
+}
+
+:where(.button-primary, .button-accent, .button-danger):hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+:where(.button-quiet, .action):hover:not(:disabled) {
+  border-color: var(--color-ink);
+  background-color: color-mix(in srgb, var(--color-ink) 5%, var(--color-surface));
+}
+
+:where(button, .button-primary, .button-quiet, .button-accent, .button-danger, .action):disabled {
+  cursor: default;
+}
+
+/* An "Edit" section that opens in place: the summary is a button with a mark that turns. */
+summary.action {
+  list-style: none;
+}
+
+summary.action::-webkit-details-marker {
+  display: none;
+}
+
+summary.action::after {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-left: 0.125rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-1px) rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+details[open] > summary.action::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+/* Motion. Each rule is small and has one job; none runs with reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  /* A bar grows to its value when it appears. */
+  .meter-fill {
+    transform-origin: left center;
+    animation: meter-grow 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* The marks of a chart follow a change of period. */
+  .chart-mark {
+    transition:
+      x 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      y 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      cx 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      cy 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      height 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      width 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      d 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  /* The band of a selected run follows the pointer without a jump. */
+  .chart-run {
+    transition:
+      x 110ms ease-out,
+      width 110ms ease-out;
+  }
+
+  /* A sheet comes up from the bottom of a phone screen. */
+  .sheet {
+    animation: sheet-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .sheet-backdrop {
+    animation: backdrop-in 200ms ease-out both;
+  }
+
+  /* A menu or the months open from their control. */
+  .popover {
+    transform-origin: top;
+    animation: pop-in 140ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* The page of a destination replaces the page before it. The frame stays. */
+  .page {
+    view-transition-name: page;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+
+  ::view-transition-old(page) {
+    animation: page-out 90ms ease-in both;
+  }
+
+  ::view-transition-new(page) {
+    animation: page-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  dialog.window::backdrop {
+    animation: backdrop-in 220ms ease-out both;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes meter-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.button-primary, .button-quiet, .button-accent, .button-danger, .action, .card-open) {
+    transition: none;
+  }
+
+  :where(.button-primary, .button-quiet, .button-accent, .button-danger, .action):active,
+  .card-open:hover {
+    transform: none;
+  }
+}
+
+/* The window: a native modal dialog. See src/ui/Window.tsx. */
+dialog.window {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-window);
+  box-shadow: var(--shadow-window);
+  padding: 0;
+  margin: auto;
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: min(48rem, calc(100dvh - 2rem));
+  overflow: hidden;
+  transform-origin: center;
+}
+
+dialog.window[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog.window[data-size="full"] {
+  width: calc(100vw - 2rem);
+  height: calc(100dvh - 2rem);
+  max-height: none;
+}
+
+dialog.window::backdrop {
+  background: rgb(10 20 16 / 0.45);
+}
+
+/* On a phone a window takes the whole screen; the title bar still closes it. */
+@media (width < 40rem) {
+  dialog.window,
+  dialog.window[data-size="full"] {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+}

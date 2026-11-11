@@ -1,0 +1,46 @@
+---
+import "../styles.css";
+import { COPY, type Language } from "../copy";
+import font from "../fonts/inter-latin-variable.woff2?url";
+
+interface Props {
+  language: Language;
+  /** The path of this page under the base, for the canonical address. */
+  path: string;
+}
+
+const { language, path } = Astro.props;
+const text = COPY[language];
+const root = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const canonical = new URL(`${root}${path}`, Astro.site);
+---
+
+<!doctype html>
+<html lang={text.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>{text.title}</title>
+    <meta name="description" content={text.description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href={new URL(root, Astro.site)} />
+    <link rel="alternate" hreflang="pt-BR" href={new URL(`${root}pt-br/`, Astro.site)} />
+    <link rel="icon" type="image/svg+xml" href={`${root}favicon.svg`} />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={font}
+      crossorigin
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={text.title} />
+    <meta property="og:description" content={text.description} />
+    <meta property="og:url" content={canonical} />
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

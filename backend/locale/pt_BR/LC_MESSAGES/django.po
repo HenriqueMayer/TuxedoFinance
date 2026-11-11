@@ -1,0 +1,1294 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Tuxedo Finance\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-10 14:53-0300\n"
+"PO-Revision-Date: 2026-10-16 00:12+0000\n"
+"Last-Translator: Tuxedo Finance contributors\n"
+"Language-Team: Brazilian Portuguese\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "The username or the password is not correct."
+msgstr "O usuário ou a senha não está correto."
+
+msgid "Registration is closed on this installation."
+msgstr "O cadastro está fechado nesta instalação."
+
+msgid "This field is required."
+msgstr "Este campo é obrigatório."
+
+msgid ""
+"This account has records. Delete or move its entries and cards before you "
+"delete it."
+msgstr "Esta conta tem registros. Exclua ou mova os lançamentos e os cartões dela antes de excluir."
+
+msgid "This card has purchases or invoices. Delete its entries first."
+msgstr "Este cartão tem compras ou faturas. Exclua os lançamentos dele primeiro."
+
+msgid "This card has entries. Delete or move them first."
+msgstr "Este cartão tem lançamentos. Exclua ou mova esses lançamentos primeiro."
+
+#
+msgid "Enter the amount that the destination account receives."
+msgstr "Informe o valor que a conta de destino recebe."
+
+msgid "This invoice credit must belong to you."
+msgstr "Este crédito de fatura deve pertencer a você."
+
+msgid "The invoice credit confirmation cannot be changed."
+msgstr "A confirmação do crédito de fatura não pode ser alterada."
+
+msgid ""
+"This credit confirmation was already used. Reload before submitting another "
+"credit."
+msgstr ""
+"Esta confirmação de crédito já foi utilizada. Recarregue antes de enviar "
+"outro crédito."
+
+msgid "Save the invoice credit before deleting it."
+msgstr "Salve o crédito de fatura antes de excluí-lo."
+
+msgid "Choose one of your accounts or cards."
+msgstr "Escolha uma das suas contas ou um dos seus cartões."
+
+msgid "Enter a name."
+msgstr "Informe um nome."
+
+msgid "A program with this name already exists."
+msgstr "Já existe um programa com este nome."
+
+msgid "This program has entries. Undo them first."
+msgstr "Este programa tem lançamentos. Desfaça esses lançamentos primeiro."
+
+msgid "Enter an amount greater than zero."
+msgstr "Informe um valor maior que zero."
+
+msgid "The program does not have enough points."
+msgstr "O programa não tem pontos suficientes."
+
+#, python-format
+msgid "Points redemption: %(program)s"
+msgstr "Resgate de pontos: %(program)s"
+
+msgid "This entry cannot be undone here."
+msgstr "Este lançamento não pode ser desfeito aqui."
+
+msgid "Later entries use these points. Undo them first."
+msgstr "Lançamentos posteriores usam estes pontos. Desfaça esses lançamentos primeiro."
+
+msgid "Brazilian Real"
+msgstr "Real brasileiro"
+
+msgid "US Dollar"
+msgstr "Dólar americano"
+
+msgid "Euro"
+msgstr "Euro"
+
+msgid "British Pound"
+msgstr "Libra esterlina"
+
+msgid "Japanese Yen"
+msgstr "Iene japonês"
+
+msgid "Swiss Franc"
+msgstr "Franco suíço"
+
+msgid "Enter a color in #RRGGBB format."
+msgstr "Informe uma cor no formato #RRGGBB."
+
+msgid "Money to keep outside monthly planning, in this account currency."
+msgstr "Dinheiro a manter fora do planejamento mensal, na moeda desta conta."
+
+msgid "The bank must belong to the account owner."
+msgstr "O banco deve pertencer ao titular da conta."
+
+msgid "Currency cannot change while this account has goal reservations."
+msgstr ""
+"A moeda não pode ser alterada enquanto esta conta tiver reservas para metas."
+
+msgid "The account must belong to the card owner."
+msgstr "A conta deve pertencer ao titular do cartão."
+
+msgid "Physical"
+msgstr "Físico"
+
+msgid "Virtual"
+msgstr "Virtual"
+
+msgid "Additional"
+msgstr "Adicional"
+
+msgid ""
+"Confirm payments for invoices due on or after this date. Earlier invoices "
+"retain automatic settlement."
+msgstr ""
+"Confirme pagamentos de faturas com vencimento nesta data ou depois dela. "
+"Faturas anteriores mantêm a liquidação automática."
+
+msgid "Scheduled"
+msgstr "Agendada"
+
+msgid "Partially paid"
+msgstr "Parcialmente paga"
+
+msgid "Overdue"
+msgstr "Vencida"
+
+msgid "Paid"
+msgstr "Paga"
+
+msgid "The card must belong to the invoice owner."
+msgstr "O cartão deve pertencer ao titular da fatura."
+
+msgid "Reference month must be the first day of a month."
+msgstr "O mês de referência deve ser o primeiro dia de um mês."
+
+msgid "The operation cannot precede the account opening balance date."
+msgstr "A operação não pode ser anterior à data do saldo inicial da conta."
+
+msgid "This category must belong to the credit owner."
+msgstr "Esta categoria deve pertencer ao titular do crédito."
+
+msgid "Choose an expense or unclassified category for an invoice credit."
+msgstr ""
+"Escolha uma categoria de despesa ou sem tipo exclusivo para o crédito de "
+"fatura."
+
+msgid "Unknown"
+msgstr "Desconhecida"
+
+msgid "Reconstructed"
+msgstr "Reconstruída"
+
+msgid "Captured"
+msgstr "Capturada"
+
+#, python-format
+msgid "%(source)s to %(destination)s"
+msgstr "%(source)s para %(destination)s"
+
+msgid "Source and destination must differ."
+msgstr "A origem e o destino devem ser diferentes."
+
+msgid "Both accounts must have the same owner."
+msgstr "As duas contas devem ter o mesmo titular."
+
+msgid "The account must belong to the transfer owner."
+msgstr "A conta deve pertencer ao titular da transferência."
+
+msgid ""
+"Transfers in the same currency require equal source and destination amounts."
+msgstr ""
+"Transferências na mesma moeda exigem valores iguais na origem e no destino."
+
+msgid "Credit"
+msgstr "Crédito"
+
+msgid "Debit"
+msgstr "Débito"
+
+msgid "Income"
+msgstr "Receita"
+
+msgid "Expense"
+msgstr "Despesa"
+
+msgid "Transfer"
+msgstr "Transferência"
+
+msgid "Invoice"
+msgstr "Fatura"
+
+msgid "Investment"
+msgstr "Investimento"
+
+msgid "Reward"
+msgstr "Recompensa"
+
+msgid "Adjustment"
+msgstr "Ajuste"
+
+#, python-format
+msgid "%(card_name)s invoice %(reference_month)s"
+msgstr "Fatura de %(card_name)s de %(reference_month)s"
+
+msgid "Balance check adjustment"
+msgstr "Ajuste de conferência de saldo"
+
+msgid "The account must belong to the movement owner."
+msgstr "A conta deve pertencer ao titular da movimentação."
+
+msgid "The invoice must belong to the movement owner."
+msgstr "A fatura deve pertencer ao titular da movimentação."
+
+msgid "The invoice must settle from its linked account."
+msgstr "A fatura deve ser liquidada pela conta vinculada a ela."
+
+msgid "Invoice settlements must be INVOICE debit movements."
+msgstr ""
+"Liquidações de fatura devem ser movimentações de débito do tipo INVOICE."
+
+msgid "The transfer must belong to the movement owner."
+msgstr "A transferência deve pertencer ao titular da movimentação."
+
+msgid "A transfer-linked movement must have TRANSFER kind."
+msgstr ""
+"Uma movimentação vinculada a uma transferência deve ter o tipo TRANSFER."
+
+msgid "The account must belong to the balance check owner."
+msgstr "A conta deve pertencer ao titular da conferência de saldo."
+
+msgid "The check date cannot be after today."
+msgstr "A data da conferência não pode ser posterior a hoje."
+
+msgid "The check cannot precede the account opening balance date."
+msgstr "A conferência não pode ser anterior à data do saldo inicial da conta."
+
+msgid "This account already has a balance check on this date."
+msgstr "Esta conta já tem uma conferência de saldo nesta data."
+
+msgid "The adjustment movement does not match this balance check."
+msgstr "A movimentação de ajuste não corresponde a esta conferência de saldo."
+
+msgid "This selection must belong to the payment owner."
+msgstr "Esta seleção deve pertencer ao titular do pagamento."
+
+msgid "Choose an account in the invoice currency."
+msgstr "Escolha uma conta na moeda da fatura."
+
+msgid "This invoice uses automatic settlement."
+msgstr "Esta fatura usa liquidação automática."
+
+msgid "Confirmed payments cannot be dated in the future."
+msgstr "Pagamentos confirmados não podem ter data futura."
+
+msgid "The payment cannot precede the account opening balance date."
+msgstr "O pagamento não pode ser anterior à data do saldo inicial da conta."
+
+msgid "The bank must belong to the program owner."
+msgstr "O banco deve pertencer ao titular do programa."
+
+msgid "Every card must belong to the program owner."
+msgstr "Todos os cartões devem pertencer ao titular do programa."
+
+msgid "Invoice award"
+msgstr "Pontos da fatura"
+
+msgid "Purchase"
+msgstr "Compra"
+
+msgid "Expiration"
+msgstr "Expiração"
+
+msgid "Redemption"
+msgstr "Resgate"
+
+msgid "The program must belong to the entry owner."
+msgstr "O programa deve pertencer ao titular do lançamento."
+
+msgid "The invoice must belong to the entry owner."
+msgstr "A fatura deve pertencer ao titular do lançamento."
+
+msgid "Only invoice awards may reference an invoice."
+msgstr ""
+"Somente a concessão de pontos de fatura pode fazer referência a uma fatura."
+
+msgid "The invoice card is not linked to this program."
+msgstr "O cartão da fatura não está vinculado a este programa."
+
+msgid "Purchased points must be a credit."
+msgstr "Pontos comprados devem ser um crédito."
+
+msgid "A purchase requires exactly one funding instrument."
+msgstr "Uma compra exige exatamente um meio de pagamento."
+
+msgid "A purchase requires a positive cash amount."
+msgstr "Uma compra exige um valor monetário positivo."
+
+msgid "Funding fields are only used when purchasing points."
+msgstr "Os campos de pagamento são usados somente na compra de pontos."
+
+msgid "Invoice points must be a credit."
+msgstr "Pontos de fatura devem ser um crédito."
+
+msgid "Expiration and redemption entries must be debits."
+msgstr "Lançamentos de expiração e resgate devem ser débitos."
+
+msgid "The funding instrument must belong to the entry owner."
+msgstr "O meio de pagamento deve pertencer ao titular do lançamento."
+
+#, python-format
+msgid "%(program)s: %(points)s points"
+msgstr "%(program)s: %(points)s pontos"
+
+msgid "This funding instrument must belong to the redemption owner."
+msgstr "Este meio de pagamento deve pertencer ao titular do resgate."
+
+msgid "Positive IOF requires exactly one funding instrument."
+msgstr "Um IOF positivo exige exatamente um meio de pagamento."
+
+msgid "Do not select an IOF instrument when IOF is zero."
+msgstr "Não selecione um meio de pagamento do IOF quando o IOF for zero."
+
+msgid "Currencies must differ."
+msgstr "As moedas devem ser diferentes."
+
+msgid "Remove the adjustment to change the date or the statement balance."
+msgstr "Remova o ajuste para mudar a data ou o saldo do extrato."
+
+msgid ""
+"This account has movements of another owner. Review them before you record "
+"an adjustment."
+msgstr ""
+"Esta conta tem movimentações de outro titular. Revise-as antes de registrar "
+"um ajuste."
+
+msgid "The difference is too large for an adjustment."
+msgstr "A diferença é grande demais para um ajuste."
+
+msgid ""
+"This adjustment is linked to a bank statement import. Resolve the import "
+"before removing it."
+msgstr ""
+"Este ajuste está vinculado a uma importação de extrato. Resolva a importação "
+"antes de removê-lo."
+
+#, python-format
+msgid "Points purchase: %(program)s"
+msgstr "Compra de pontos: %(program)s"
+
+msgid "One or more transfer accounts no longer exist."
+msgstr "Uma ou mais contas da transferência não existem mais."
+
+msgid ""
+"This transfer is linked to a bank statement. Resolve its import or "
+"reconciliation before correcting it."
+msgstr ""
+"Esta transferência está vinculada a um extrato. Resolva sua importação ou "
+"conciliação antes de corrigi-la."
+
+msgid ""
+"The transfer movement pair is inconsistent. Review its sources before "
+"correcting it."
+msgstr ""
+"O par de movimentações da transferência está inconsistente. Revise suas "
+"fontes antes de corrigi-lo."
+
+#, python-format
+msgid ""
+"No %(from_currency)s/%(to_currency)s exchange rate is available as of "
+"%(date)s."
+msgstr ""
+"Não há taxa de câmbio %(from_currency)s/%(to_currency)s disponível até "
+"%(date)s."
+
+#, python-format
+msgid "IOF on reward redemption: %(notes)s"
+msgstr "IOF sobre resgate de recompensa: %(notes)s"
+
+msgid ""
+"This confirmation was already used. Reload the invoice before submitting "
+"another payment."
+msgstr ""
+"Esta confirmação já foi utilizada. Recarregue a fatura antes de enviar outro "
+"pagamento."
+
+msgid "Payments cannot exceed the current invoice amount."
+msgstr "Os pagamentos não podem exceder o valor atual da fatura."
+
+#, python-format
+msgid "%(card)s confirmed invoice payment"
+msgstr "Pagamento confirmado da fatura de %(card)s"
+
+msgid "Enter a month as YYYY-MM, between 1901 and 9988."
+msgstr "Informe um mês no formato AAAA-MM, entre 1901 e 9988."
+
+msgid "Enter a valid date."
+msgstr "Informe uma data válida."
+
+msgid "Choose one of your own records."
+msgstr "Escolha um dos seus registros."
+
+msgid "An investment with this name already exists at this institution."
+msgstr "Já existe um investimento com este nome nesta instituição."
+
+msgid "Enter the institution."
+msgstr "Informe a instituição."
+
+msgid "This investment is archived. Restore it to record an operation."
+msgstr "Este investimento está arquivado. Restaure para registrar uma operação."
+
+msgid "Choose the account."
+msgstr "Escolha a conta."
+
+msgid "Investments"
+msgstr "Investimentos"
+
+msgid "Remunerated cash"
+msgstr "Caixa remunerado"
+
+msgid "Manual"
+msgstr "Manual"
+
+msgid "Monthly rate (Coming soon)"
+msgstr "Taxa mensal (Em breve)"
+
+msgid "Annual rate (Coming soon)"
+msgstr "Taxa anual (Em breve)"
+
+msgid "The bank must belong to the product owner."
+msgstr "O banco deve pertencer ao titular do produto."
+
+msgid "Monthly cash pots can only hold monetary assets."
+msgstr "Cofrinhos para o mês só podem conter ativos monetários."
+
+msgid "Monetary value"
+msgstr "Valor monetário"
+
+msgid "Units and price"
+msgstr "Unidades e preço"
+
+msgid "Liquidity"
+msgstr "Liquidez"
+
+msgid "Currency"
+msgstr "Moeda"
+
+msgid "Crypto"
+msgstr "Cripto"
+
+msgid "Fixed income"
+msgstr "Renda fixa"
+
+msgid "Equity"
+msgstr "Ação"
+
+msgid "Other"
+msgstr "Outro"
+
+msgid "Archived"
+msgstr "Arquivado"
+
+msgid "Existing balance before the first recorded operation."
+msgstr "Saldo existente antes da primeira operação registrada."
+
+msgid "Existing units before the first recorded operation."
+msgstr "Unidades existentes antes da primeira operação registrada."
+
+msgid "Unit price of the existing units."
+msgstr "Preço unitário das unidades existentes."
+
+msgid "Product that holds the opening balance."
+msgstr "Produto que mantém o saldo inicial."
+
+msgid "Opening position date"
+msgstr "Data da posição inicial"
+
+msgid "This asset has an opening position and cannot be deleted."
+msgstr "Este ativo possui uma posição inicial e não pode ser excluído."
+
+msgid "This asset has investment history and cannot be deleted."
+msgstr "Este ativo possui histórico de investimentos e não pode ser excluído."
+
+msgid "Currency cannot be changed while this asset has goal reservations."
+msgstr "A moeda não pode ser alterada enquanto este ativo tiver reservas para metas."
+
+msgid ""
+"Valuation mode cannot be changed while this asset has goal reservations."
+msgstr "O modo de avaliação não pode ser alterado enquanto este ativo tiver reservas para metas."
+
+msgid "Currency cannot be changed after this asset has price observations."
+msgstr ""
+"A moeda não pode ser alterada depois que este ativo tiver cotações "
+"registradas."
+
+msgid ""
+"Valuation mode cannot be changed after this asset has price observations."
+msgstr ""
+"O modo de avaliação não pode ser alterado depois que este ativo tiver "
+"cotações registradas."
+
+msgid "Enter the date of the opening position."
+msgstr "Informe a data da posição inicial."
+
+msgid "An opening date requires an opening position."
+msgstr "Uma data de abertura exige uma posição inicial."
+
+msgid "The opening date cannot follow an existing operation."
+msgstr "A data de abertura não pode ser posterior a uma operação existente."
+
+msgid "Only monetary assets can have an opening balance."
+msgstr "Somente ativos monetários podem ter saldo inicial."
+
+msgid "Opening quantity and unit price must be provided together."
+msgstr "A quantidade e o preço unitário iniciais devem ser informados juntos."
+
+msgid "Select the product that holds the opening units."
+msgstr "Selecione o produto que mantém as unidades iniciais."
+
+msgid "Select the product that holds the opening balance."
+msgstr "Selecione o produto que mantém o saldo inicial."
+
+msgid "Only unit-based assets can have opening units."
+msgstr "Somente ativos baseados em unidades podem ter unidades iniciais."
+
+msgid "Only unit-based assets can have an opening unit price."
+msgstr "Somente ativos baseados em unidades podem ter preço unitário inicial."
+
+msgid "The opening product must belong to the asset owner."
+msgstr "O produto inicial deve pertencer ao titular do ativo."
+
+msgid "Select a product that belongs to you."
+msgstr "Selecione um produto que pertença a você."
+
+msgid "Planning exclusions apply only to remunerated cash positions."
+msgstr ""
+"A exclusão do planejamento se aplica apenas a posições de saldo remunerado."
+
+msgid "Select an asset that belongs to you."
+msgstr "Selecione um ativo que pertença a você."
+
+msgid "Planning exclusions apply only to monetary assets."
+msgstr "A exclusão do planejamento se aplica apenas a ativos monetários."
+
+msgid "Deposit"
+msgstr "Aporte"
+
+msgid "Withdrawal"
+msgstr "Resgate"
+
+msgid "Yield"
+msgstr "Rendimento"
+
+msgid "Position value for monetary assets."
+msgstr "Valor da posição para ativos monetários."
+
+msgid "Fees are in the asset currency"
+msgstr "As taxas estão na moeda do ativo"
+
+msgid ""
+"Include these fees in acquisition cost or sale results. Leave unchecked when "
+"their currency is unknown. This never changes the bank amount."
+msgstr ""
+"Inclua estas taxas no custo de aquisição ou nos resultados da venda. Deixe "
+"desmarcado quando a moeda delas for desconhecida. Isso nunca altera o valor "
+"bancário."
+
+msgid "Native amount debited from or credited to the selected account."
+msgstr "Valor nativo debitado ou creditado na conta selecionada."
+
+msgid "This selection must belong to the operation owner."
+msgstr "Esta seleção deve pertencer ao titular da operação."
+
+msgid "The product bank must belong to the operation owner."
+msgstr "O banco do produto deve pertencer ao titular da operação."
+
+msgid "Restore this asset before recording a new operation."
+msgstr "Restaure este ativo antes de registrar uma nova operação."
+
+msgid "Fee cost allocation is for unit-based assets."
+msgstr "A alocação das taxas no custo se aplica a ativos por unidade."
+
+msgid "Monetary assets require a positive investment amount."
+msgstr "Ativos monetários exigem um valor de investimento positivo."
+
+msgid "Monetary assets do not use quantity."
+msgstr "Ativos monetários não usam quantidade."
+
+msgid "Monetary assets do not use a unit price."
+msgstr "Ativos monetários não usam preço unitário."
+
+msgid "Unit-based assets require a positive quantity."
+msgstr "Ativos baseados em unidades exigem uma quantidade positiva."
+
+msgid "Unit-based assets require a positive unit price."
+msgstr "Ativos baseados em unidades exigem um preço unitário positivo."
+
+msgid "Unit-based assets derive value from quantity and unit price."
+msgstr ""
+"Ativos baseados em unidades derivam valor da quantidade e do preço unitário."
+
+msgid "Deposit requires exactly one funding source."
+msgstr "O aporte exige exatamente uma fonte de recursos."
+
+msgid "Deposit does not use a destination account."
+msgstr "O aporte não usa uma conta de destino."
+
+msgid "Account-funded deposit requires a positive cash amount."
+msgstr "O aporte financiado por conta exige um valor monetário positivo."
+
+msgid "Account-funded deposit does not use points."
+msgstr "O aporte financiado por conta não usa pontos."
+
+msgid "Program-funded deposit requires positive points."
+msgstr "O aporte financiado por programa exige pontos positivos."
+
+msgid "Withdrawal requires a destination account."
+msgstr "O resgate exige uma conta de destino."
+
+msgid "Withdrawal requires a positive cash amount."
+msgstr "O resgate exige um valor monetário positivo."
+
+msgid "Withdrawal does not use a funding account."
+msgstr "O resgate não usa uma conta de origem."
+
+msgid "Withdrawal does not use a loyalty program."
+msgstr "O resgate não usa um programa de fidelidade."
+
+msgid "Withdrawal does not use points."
+msgstr "O resgate não usa pontos."
+
+msgid "Yield is internal and does not use cash or funding fields."
+msgstr ""
+"O rendimento é interno e não usa campos monetários nem de origem dos "
+"recursos."
+
+msgid "Observation date"
+msgstr "Data da cotação"
+
+msgid "Observed unit price"
+msgstr "Preço unitário observado"
+
+msgid "Source"
+msgstr "Fonte"
+
+msgid ""
+"For example, the statement or quotation you consulted. Prices are entered "
+"locally."
+msgstr ""
+"Por exemplo, o extrato ou a cotação que você consultou. Os preços são "
+"registrados localmente."
+
+msgid "Price observations are for unit-based assets."
+msgstr "As cotações se aplicam a ativos por unidade."
+
+msgid ""
+"This investment has operations. Delete them first, or archive the investment."
+msgstr "Este investimento tem operações. Exclua as operações primeiro, ou arquive o investimento."
+
+msgid "Withdrawal exceeds the available position on this date."
+msgstr "O resgate excede a posição disponível nesta data."
+
+msgid "Enter a value greater than zero."
+msgstr "Informe um valor maior que zero."
+
+msgid "This investment is archived. Restore it to record a new value."
+msgstr "Este investimento está arquivado. Restaure para registrar um novo valor."
+
+msgid "Typed in the Wallet"
+msgstr "Informado na Carteira"
+
+#, python-format
+msgid "Operation %(id)s exceeds the available position on %(date)s."
+msgstr "A operação %(id)s excede a posição disponível em %(date)s."
+
+#, python-format
+msgid "Investment %(id)s: %(product)s"
+msgstr "Investimento %(id)s: %(product)s"
+
+msgid "The investment operation must be saved before synchronization."
+msgstr "A operação de investimento deve ser salva antes da sincronização."
+
+msgid "Enter the new investment balance."
+msgstr "Informe o novo saldo do investimento."
+
+msgid "Enter the yield amount."
+msgstr "Informe o valor do rendimento."
+
+msgid "The new balance must be greater than the previous balance."
+msgstr "O novo saldo deve ser maior que o saldo anterior."
+
+msgid ""
+"The new balance is lower than the previous balance. Record a withdrawal "
+"instead."
+msgstr ""
+"O novo saldo é menor que o saldo anterior. Registre um resgate em vez disso."
+
+msgid "Enter a positive yield amount."
+msgstr "Informe um valor de rendimento positivo."
+
+msgid "Choose how to enter the yield."
+msgstr "Escolha como informar o rendimento."
+
+msgid "This cash position is unavailable."
+msgstr "Esta aplicação de saldo está indisponível."
+
+msgid ""
+"This category has records. Move them to another category before you delete "
+"it."
+msgstr "Esta categoria tem registros. Mova os registros para outra categoria antes de excluir."
+
+msgid "This record is generated. Change the redemption that created it."
+msgstr "Este registro é gerado. Altere o resgate que o criou."
+
+msgid ""
+"This entry has past months. Change its amount from a month in the monthly "
+"schedule."
+msgstr "Este lançamento tem meses passados. Altere o valor a partir de um mês na programação mensal."
+
+msgid "This entry has past months. Its first date cannot change."
+msgstr "Este lançamento tem meses passados. A primeira data não pode mudar."
+
+msgid "This record is generated. Delete the redemption that created it."
+msgstr "Este registro é gerado. Exclua o resgate que o criou."
+
+msgid "Choose a month."
+msgstr "Escolha um mês."
+
+msgid "Choose a parent category that does not create a circular hierarchy."
+msgstr "Escolha uma categoria pai que não crie uma hierarquia circular."
+
+msgid "The parent category must belong to you."
+msgstr "A categoria pai deve pertencer a você."
+
+msgid "Optional. Unclassified categories can be used for income and expenses."
+msgstr ""
+"Opcional. Categorias sem classificação podem ser usadas para receitas e "
+"despesas."
+
+msgid ""
+"This category has transactions of another type and cannot be classified that "
+"way."
+msgstr ""
+"Esta categoria possui transações de outro tipo e não pode receber essa "
+"classificação."
+
+msgid "This category has splits of another transaction type."
+msgstr "Esta categoria tem divisões de outro tipo de transação."
+
+msgid ""
+"This category has invoice credits and must remain available for expenses."
+msgstr ""
+"Esta categoria possui créditos de fatura e deve continuar disponível para "
+"despesas."
+
+msgid "Groceries"
+msgstr "Mercado"
+
+msgid "Food & Dining"
+msgstr "Alimentação"
+
+msgid "Subscriptions"
+msgstr "Assinaturas"
+
+msgid "Education"
+msgstr "Educação"
+
+msgid "Fitness"
+msgstr "Academia"
+
+msgid "Transportation"
+msgstr "Transporte"
+
+msgid "Pets"
+msgstr "Animais de estimação"
+
+msgid "Hobbies & Entertainment"
+msgstr "Hobbies e entretenimento"
+
+msgid "Services"
+msgstr "Serviços"
+
+msgid "The category CSV must be no larger than 2 MiB."
+msgstr "O CSV de categorias deve ter no máximo 2 MiB."
+
+msgid "The CSV file must use UTF-8 encoding."
+msgstr "O arquivo CSV deve usar a codificação UTF-8."
+
+msgid "The CSV header must be: name,transaction_type,parent_category."
+msgstr "O cabeçalho do CSV deve ser: name,transaction_type,parent_category."
+
+msgid "Import at most 500 category rows per CSV file."
+msgstr "Importe no máximo 500 linhas de categorias por arquivo CSV."
+
+#, python-format
+msgid "Line %(line)s must contain exactly three columns."
+msgstr "A linha %(line)s deve conter exatamente três colunas."
+
+#, python-format
+msgid "Line %(line)s has no category name."
+msgstr "A linha %(line)s não possui um nome de categoria."
+
+#, python-format
+msgid "Line %(line)s contains a name longer than 100 characters."
+msgstr "A linha %(line)s contém um nome com mais de 100 caracteres."
+
+#, python-format
+msgid "Line %(line)s has an invalid transaction type."
+msgstr "A linha %(line)s possui um tipo de transação inválido."
+
+#, python-format
+msgid "The category \"%(name)s\" appears more than once."
+msgstr "A categoria \"%(name)s\" aparece mais de uma vez."
+
+#, python-format
+msgid "Parent category not found: %(name)s."
+msgstr "Categoria principal não encontrada: %(name)s."
+
+#
+msgid "Use the first day of the month."
+msgstr "Use o primeiro dia do mês."
+
+msgid "This selection must belong to the transaction owner."
+msgstr "Esta seleção deve pertencer ao titular da transação."
+
+msgid "Installment plans keep their amounts."
+msgstr "Parcelamentos mantêm seus valores."
+
+#
+msgid "Only monthly recurring transactions have a monthly schedule."
+msgstr "Somente transações recorrentes mensais têm programação mensal."
+
+msgid "This month has no amount change."
+msgstr "Este mês não tem mudança de valor."
+
+#
+msgid "Change the amount or the date, or cancel."
+msgstr "Altere o valor ou a data, ou cancele."
+
+#
+msgid "This month has no change to undo."
+msgstr "Este mês não tem alteração a desfazer."
+
+msgid "The file could not be read."
+msgstr "Não foi possível ler o arquivo."
+
+msgid "A confirmed import is undone, not discarded."
+msgstr "Uma importação confirmada é desfeita, não descartada."
+
+msgid "Bank account"
+msgstr "Conta bancária"
+
+msgid "PIX"
+msgstr "PIX"
+
+msgid "Debit card"
+msgstr "Cartão de débito"
+
+msgid "Credit card"
+msgstr "Cartão de crédito"
+
+msgid "Current bill"
+msgstr "Fatura atual"
+
+msgid "Next bill"
+msgstr "Próxima fatura"
+
+msgid "IOF on reward redemption"
+msgstr "IOF sobre resgate de pontos"
+
+#, python-format
+msgid "%(payment_channel)s requires only %(instrument)s."
+msgstr "%(payment_channel)s exige somente %(instrument)s."
+
+#, python-format
+msgid "This category is available only for %(transaction_type)s transactions."
+msgstr ""
+"Esta categoria está disponível somente para transações de "
+"%(transaction_type)s."
+
+msgid "Income must be received in a bank account or by PIX."
+msgstr "A receita deve ser recebida em uma conta bancária ou por PIX."
+
+msgid "PIX is disabled for this account."
+msgstr "O PIX está desabilitado para esta conta."
+
+msgid "Installments are only available for credit cards."
+msgstr "Parcelas estão disponíveis somente para cartões de crédito."
+
+msgid "A fixed transaction cannot use installments."
+msgstr "Uma transação fixa não pode usar parcelas."
+
+msgid "The first tracked installment cannot exceed the installment count."
+msgstr "A primeira parcela no controle não pode superar o número de parcelas."
+
+msgid ""
+"A later starting installment requires a non-recurring credit-card purchase."
+msgstr ""
+"Iniciar por uma parcela posterior exige uma compra no cartão de crédito sem "
+"recorrência."
+
+msgid "Bill choice is only available for credit cards."
+msgstr "A escolha da fatura está disponível somente para cartões de crédito."
+
+msgid "Only fixed transactions can have an end date."
+msgstr "Somente transações fixas podem ter uma data final."
+
+msgid "The end month cannot precede the start month."
+msgstr "O mês final não pode ser anterior ao mês inicial."
+
+msgid ""
+"Confirmation is available only for monthly recurring transactions paid from "
+"an account, by PIX or by debit card."
+msgstr ""
+"A confirmação só está disponível para transações recorrentes mensais pagas "
+"por conta, PIX ou cartão de débito."
+
+#
+msgid "Choose the first month to confirm."
+msgstr "Escolha o primeiro mês a confirmar."
+
+msgid "The transaction cannot precede the account opening balance date."
+msgstr "A transação não pode ser anterior à data do saldo inicial da conta."
+
+msgid "This category must belong to the transaction owner."
+msgstr "Esta categoria deve pertencer ao titular da transação."
+
+msgid "Choose a category compatible with the transaction type."
+msgstr "Escolha uma categoria compatível com o tipo de transação."
+
+msgid ""
+"Choose a month after the first month of this schedule. To change every "
+"month, edit the transaction."
+msgstr ""
+"Escolha um mês posterior ao primeiro mês desta programação. Para alterar "
+"todos os meses, edite a transação."
+
+msgid "This month is after the end of the schedule."
+msgstr "Este mês é posterior ao fim da programação."
+
+#
+msgid "This amount already applies from that month."
+msgstr "Este valor já vale a partir desse mês."
+
+#
+msgid "Skipped"
+msgstr "Pulada"
+
+#
+msgid "Adjusted"
+msgstr "Ajustada"
+
+msgid "Confirmed"
+msgstr "Confirmado"
+
+msgid "This month has no occurrence of the schedule."
+msgstr "Este mês não tem ocorrência da programação."
+
+#
+msgid "A card purchase keeps its statement; only its amount can change."
+msgstr "Uma compra no cartão mantém a fatura; só o valor pode mudar."
+
+#, python-format
+msgid "The date must be in %(month)s."
+msgstr "A data deve estar em %(month)s."
+
+#
+msgid "This transaction does not ask for confirmation."
+msgstr "Esta transação não pede confirmação."
+
+#
+msgid "This month is before the first month to confirm."
+msgstr "Este mês é anterior ao primeiro mês a confirmar."
+
+#
+msgid "A confirmation date cannot be in the future."
+msgstr "A data de confirmação não pode estar no futuro."
+
+#, python-format
+msgid "The confirmation date cannot precede %(month)s."
+msgstr "A data de confirmação não pode ser anterior a %(month)s."
+
+msgid "A schedule change of a transaction belongs to another owner."
+msgstr ""
+"Uma alteração de programação pertence a uma transação de outro usuário."
+
+#, python-format
+msgid ""
+"This recurring transaction would generate more than %(limit)s monthly "
+"occurrences. Review its start and end dates."
+msgstr ""
+"Esta transação recorrente geraria mais de %(limit)s ocorrências mensais. "
+"Revise as datas de início e término."
+
+msgid "This plan has too many cash events. Reduce its accounts or duration."
+msgstr "Este plano tem eventos de caixa demais. Reduza as contas ou a duração."
+
+msgid "Choose an account that belongs to you."
+msgstr "Escolha uma conta que pertença a você."
+
+msgid "The statement entry precedes this account opening balance date."
+msgstr "O registro do extrato é anterior à data do saldo inicial desta conta."
+
+msgid ""
+"Review and date the existing opening balance in account settings before "
+"confirming this statement. No opening date or balance will be inferred."
+msgstr ""
+"Revise e informe a data do saldo inicial existente nas configurações da "
+"conta antes de confirmar este extrato. Nenhuma data ou saldo inicial será "
+"presumido."
+
+msgid "Import between 1 and 500 entries."
+msgstr "Importe de 1 a 500 registros."
+
+msgid "The statement currency does not match the selected account."
+msgstr "A moeda do extrato não corresponde à conta selecionada."
+
+msgid "Choose CSV or OFX and a supported encoding."
+msgstr "Escolha CSV ou OFX e uma codificação compatível."
+
+msgid "The statement must be no larger than 2 MiB."
+msgstr "O extrato deve ter no máximo 2 MiB."
+
+msgid "Enter both the closing balance and its date."
+msgstr "Informe o saldo final e sua data."
+
+msgid "Only an unconfirmed CSV statement can change its mapping."
+msgstr "Apenas um extrato CSV não confirmado pode ter seu mapeamento alterado."
+
+msgid "Choose an action for every entry, including entries to skip."
+msgstr ""
+"Escolha uma ação para cada registro, incluindo os que devem ser ignorados."
+
+msgid ""
+"The account currency changed after staging. Upload the statement for the "
+"correct account."
+msgstr ""
+"A moeda da conta mudou após a preparação. Envie o extrato para a conta "
+"correta."
+
+msgid "Statement cash entries cannot be dated in the future."
+msgstr "Os registros de caixa do extrato não podem ter data futura."
+
+msgid ""
+"This bank identifier was already confirmed. Review the previous import and "
+"choose Skip for this entry."
+msgstr ""
+"Este identificador bancário já foi confirmado. Revise a importação anterior "
+"e escolha Ignorar para este registro."
+
+msgid "Choose an owned category for the new entry."
+msgstr "Escolha uma categoria própria para o novo registro."
+
+msgid "Choose a category compatible with the statement amount direction."
+msgstr "Escolha uma categoria compatível com o sentido do valor do extrato."
+
+msgid ""
+"Choose an existing movement with the same account, date, direction and "
+"amount."
+msgstr ""
+"Escolha um movimento existente com a mesma conta, data, sentido e valor."
+
+msgid "An invoice payment must be a debit."
+msgstr "Um pagamento de fatura deve ser um débito."
+
+msgid "Choose an owned manual invoice."
+msgstr "Escolha uma fatura própria de confirmação manual."
+
+msgid "Choose another owned account and enter its actual positive amount."
+msgstr "Escolha outra conta própria e informe seu valor positivo efetivo."
+
+msgid "Only an unconfirmed mapped statement can be reviewed."
+msgstr "Apenas um extrato mapeado e não confirmado pode ser revisado."
+
+msgid "Review all statement entries."
+msgstr "Revise todos os registros do extrato."
+
+msgid "The review changed. Reload and inspect it before confirming."
+msgstr "A revisão mudou. Recarregue e confira antes de confirmar."
+
+msgid ""
+"The same bank identifier occurs more than once in this statement. Choose "
+"Skip for the duplicate."
+msgstr ""
+"O mesmo identificador bancário aparece mais de uma vez neste extrato. "
+"Escolha Ignorar para a duplicata."
+
+msgid "One cash movement cannot represent two entries in the same statement."
+msgstr ""
+"Um movimento de caixa não pode representar dois registros no mesmo extrato."
+
+msgid "Only a confirmed import can be undone."
+msgstr "Apenas uma importação confirmada pode ser desfeita."
+
+msgid ""
+"An imported source was edited or removed. Undo is refused to preserve those "
+"changes."
+msgstr ""
+"Um registro de origem importado foi editado ou removido. A operação de "
+"desfazer foi recusada para preservar essas alterações."
+
+msgid ""
+"Another confirmed statement uses this cash evidence. Review that import "
+"before undoing this one."
+msgstr ""
+"Outro extrato confirmado usa esta evidência de caixa. Revise essa importação "
+"antes de desfazer esta."
+
+msgid "The file encoding is invalid. Choose UTF-8 or Windows-1252."
+msgstr "A codificação do arquivo é inválida. Escolha UTF-8 ou Windows-1252."
+
+msgid "The file contains invalid null characters."
+msgstr "O arquivo contém caracteres nulos inválidos."
+
+msgid "Use unique, nonempty CSV column names (at most 40)."
+msgstr "Use nomes únicos e não vazios para as colunas CSV (no máximo 40)."
+
+msgid ""
+"This is a Tuxedo transaction report, not a bank statement. Import a "
+"statement with signed cash amounts instead."
+msgstr ""
+"Este é um relatório de transações do Tuxedo, não um extrato bancário. "
+"Importe um extrato com valores de caixa com sinal."
+
+#, python-format
+msgid "CSV row %(row)s has a different number of columns."
+msgstr "A linha %(row)s do CSV tem uma quantidade diferente de colunas."
+
+msgid "Import at most 500 entries per statement."
+msgstr "Importe no máximo 500 registros por extrato."
+
+msgid "The CSV file is empty or malformed."
+msgstr "O arquivo CSV está vazio ou malformado."
+
+msgid "The statement contains no entries."
+msgstr "O extrato não contém registros."
+
+msgid "The numeric amount is too long."
+msgstr "O valor numérico é longo demais."
+
+msgid "Choose the decimal convention explicitly."
+msgstr "Escolha explicitamente a convenção decimal."
+
+msgid ""
+"Invalid numeric amount. Currency symbols and ambiguous separators are not "
+"accepted."
+msgstr ""
+"Valor numérico inválido. Símbolos de moeda e separadores ambíguos não são "
+"aceitos."
+
+msgid "Invalid numeric amount."
+msgstr "Valor numérico inválido."
+
+msgid "Use a finite cash amount with at most two decimal places."
+msgstr "Use um valor monetário finito com no máximo duas casas decimais."
+
+msgid "Select valid date, description and amount columns."
+msgstr "Selecione colunas válidas de data, descrição e valor."
+
+msgid "Choose a supported date format."
+msgstr "Escolha um formato de data compatível."
+
+msgid ""
+"Separate debit and credit columns must be nonnegative, with only one filled "
+"per row."
+msgstr ""
+"As colunas separadas de débito e crédito devem ter valores não negativos, "
+"com apenas uma preenchida por linha."
+
+msgid "A cash entry must have a nonzero amount."
+msgstr "Um registro de caixa deve ter valor diferente de zero."
+
+msgid "Use a description up to 1000 characters and an identifier up to 255."
+msgstr ""
+"Use uma descrição de até 1000 caracteres e um identificador de até 255."
+
+msgid "Invalid date for the selected format."
+msgstr "Data inválida para o formato selecionado."
+
+#, python-format
+msgid "CSV row %(row)s: %(detail)s"
+msgstr "Linha %(row)s do CSV: %(detail)s"
+
+msgid "OFX entity declarations are not supported."
+msgstr "Declarações de entidades OFX não são compatíveis."
+
+msgid "The OFX statement contains no complete transaction records."
+msgstr "O extrato OFX não contém registros completos de transações."
+
+msgid "The OFX statement has missing or repeated required fields."
+msgstr "O extrato OFX tem campos obrigatórios ausentes ou repetidos."
+
+msgid "The OFX identifier or description is invalid."
+msgstr "O identificador ou a descrição OFX é inválido."
+
+msgid "Invalid OFX posting date."
+msgstr "Data de lançamento OFX inválida."
+
+#, python-format
+msgid "OFX entry %(row)s: %(detail)s"
+msgstr "Registro %(row)s do OFX: %(detail)s"
+
+msgid "The OFX closing balance date is invalid."
+msgstr "A data do saldo final OFX é inválida."
+
+msgid "Choose columns"
+msgstr "Escolher colunas"
+
+msgid "Review entries"
+msgstr "Revisar registros"
+
+msgid "Undone"
+msgstr "Desfeito"
+
+msgid "Skip"
+msgstr "Ignorar"
+
+msgid "Create income or expense"
+msgstr "Criar receita ou despesa"
+
+msgid "Match existing cash movement"
+msgstr "Vincular a movimento de caixa existente"
+
+msgid "Confirm invoice payment"
+msgstr "Confirmar pagamento de fatura"
+
+msgid "Transfer between my accounts"
+msgstr "Transferência entre minhas contas"
+
+#
+msgid "Choose the first day of a month."
+msgstr "Escolha o primeiro dia de um mês."
+
+msgid "This month has not started."
+msgstr "Este mês ainda não começou."
+
+msgid "The difference changed. Read the balances again."
+msgstr "A diferença mudou. Leia os saldos de novo."
+
+msgid "Choose one of your accounts or balance investments."
+msgstr "Escolha uma das suas contas ou um investimento de saldo."
+
+msgid "An archived goal cannot reserve a balance."
+msgstr "Uma meta arquivada não pode reservar saldo."
+
+msgid "Enter zero or a positive amount."
+msgstr "Informe zero ou um valor positivo."
+
+#, python-format
+msgid "This balance has %(amount)s free for this goal."
+msgstr "Este saldo tem %(amount)s livres para esta meta."
+
+msgid "A budget cannot use an income category."
+msgstr "Um orçamento não pode usar uma categoria de receita."
+
+msgid "Choose one account or one balance investment."
+msgstr "Escolha uma conta ou um investimento de saldo."
+
+msgid "A goal can reserve a balance, not units."
+msgstr "Uma meta pode reservar um saldo, não unidades."
+
+msgid "A sheet has at most 40 added rows."
+msgstr "Uma planilha tem no máximo 40 linhas adicionadas."
+
+msgid "A saved sheet with this name already exists."
+msgstr "Já existe uma planilha salva com este nome."
+
+msgid "Enter from 1 to 600 months."
+msgstr "Informe de 1 a 600 meses."
+
+msgid "Enter a rate above -100%."
+msgstr "Informe uma taxa acima de -100%."
+
+msgid "The balance exceeds the supported amount."
+msgstr "O saldo supera o valor suportado."

@@ -1,0 +1,35 @@
+{
+  "name": "tuxedo-finance-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "api:types": "cd ../backend && SECRET_KEY=schema-export TUXEDO_ENV_FILE=/dev/null uv run python -B manage.py export_openapi_schema --api config.api.api --output ../web/src/api/schema.json && cd ../web && openapi-typescript src/api/schema.json -o src/api/schema.d.ts",
+    "journeys": "playwright test"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.107.1",
+    "@tanstack/react-router": "^1.170.46",
+    "openapi-fetch": "^0.17.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.6",
+    "@playwright/test": "1.62.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "openapi-typescript": "^7.13.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
+  }
+}

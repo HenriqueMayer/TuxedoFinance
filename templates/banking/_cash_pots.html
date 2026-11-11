@@ -1,8 +1,0 @@
-{% load i18n %}
-{% if pots %}
-<section class="space-y-3">
-    <h2 class="section-title">{% translate 'Cash pots to redeem' %}</h2>
-    <p class="subtle-copy">{% translate 'Redeem to an account before paying.' %}</p>
-    <ul class="cash-pot-grid">{% for pot in pots %}{% include 'banking/_cash_pot_row.html' %}{% endfor %}</ul>
-</section>
-{% endif %}

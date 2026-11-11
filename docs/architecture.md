@@ -1,351 +1,126 @@
 # Architecture
 
-The current architecture for Tuxedo Finance uses Django's full-stack delivery
-model and explicit banking and ledger domain concepts.
-This guide covers the `0.10.0` release baseline and the implemented Unreleased
-local-finance evolution; it does not imply that branch changes are published.
+## Layout
 
-## Stack
-
-| Layer | Technology |
-|---|---|
-| Language | Python 3.12 |
-| Framework | Django 6 full stack |
-| Frontend | Django Template Language + TailwindCSS |
-| Database | SQLite |
-| Authentication | Native `django.contrib.auth` |
-| Dependency management | `uv` |
-| Views | Class-based views plus focused function views for imports, exports, and bulk actions |
-| Supported runtime | Native `runserver`; Docker with Gunicorn and WhiteNoise |
-| Localization | Django gettext (`en`, `pt-br`) |
-
-Public registration is a deployment-level policy, not a separate account model:
-`ALLOW_SIGNUPS` is read from the process environment (default `True`). The
-accounts signup view enforces it on every request, while public templates merely
-mirror the state by showing or hiding signup calls to action. Existing login
-flows are independent of this switch.
-
-Docker uses one non-root web container with a local named SQLite volume and
-loopback-only port publication by default. Static assets are collected at build
-time; migrations run before the single server starts. See [Docker operations](docker.md).
-
-## Domain apps
-
-```text
-core/          # settings, root URLs, currency registry and shared formatting
-pages/         # public landing page
-accounts/      # authentication and presentation preferences
-categories/    # income and expense classification
-banking/       # banks, accounts, movements, PIX, cards, invoices and loyalty
-transactions/  # categorized economic events and recurrence schedules
-dashboard/     # ledger, cash-flow, invoice and net-worth read models
-investments/   # products, assets, position operations and valuation
-planning/      # category budgets, existing-cash goals and local review signals
-ingestion/     # explicitly reviewed local statements and guarded import undo
-sandbox/       # private planning drafts and isolated simulations
-assistant/     # local chat, owned consultations, provider transport and reviewed actions
+```
+backend/    Django project: domain, API, tests
+web/        React and TypeScript client
+site/       Public page with the demonstration (Astro)
+docs/       This documentation
+.github/    CI workflows
 ```
 
-`banking/` owns every settlement instrument and the account ledger. `Bank` is
-shared with `investments`.
+One Docker image holds both: Django serves the API under `/api/` and the
+built client for every other path.
 
-## Python module ownership
+## Backend
 
-App packages, model labels and migration paths are stable. Split a Python
-module when it contains distinct workflows; cohesive modules do not need a
-package solely to reduce line counts.
+Django 6 with django-ninja. Each application owns its models and rules.
 
-- `banking.forms` and `banking.views` expose explicit public imports, with
-  implementations for accounts/cards, invoices, loyalty, transfers, exchange
-  rates and shared form/workspace behavior.
-- `investments.forms` and `investments.views` separate portfolio consultation,
-  operations, product/asset configuration and local prices. Position replay and
-  financial synchronization retain their existing service modules.
-- `transactions.views` separates consultation/export from editing and split
-  controls. `transactions.projection` owns arithmetic schedule windows and
-  occurrence validation; its middleware handles refused-projection recovery.
-  `categories.importing` owns bounded CSV parsing and atomic hierarchy
-  imports; category views retain HTTP, messages and response handling.
-- `assistant.context` normalizes/signs authorized page scopes and collects
-  bounded stored evidence without calling workspace views or ledger projection.
-  `assistant.consultation` and `assistant.simulation_tools` provide targeted
-  read-only evidence and canonical monthly calculations.
-  `assistant.providers.base` owns the provider-neutral streaming/cancellation
-  interface; `assistant.actions` retains legacy shape-only previews.
-  `assistant.tooling` dispatches bounded reads and review preparation, while
-  `assistant.action_service` executes a separately confirmed proposal through
-  canonical domain forms/services. `assistant.prompts` owns versioned instructions.
-- Each app owns `tests/test_*.py` and the support modules it needs. Test package
-  initializers do not reexport test classes. The [test index](../tests/README.md)
-  explains discovery, fixture imports and isolated execution.
-
-Public package initializers provide compatibility imports, not proxy globals.
-Implementation modules import their direct dependencies; they do not import
-their partially initialized package. Existing optional cross-domain imports
-remain deferred where required to avoid cycles. See each owning app guide for
-the detailed file map.
-
-## Dependency direction
-
-```text
-dashboard views ──> transactions synchronization ──> banking models
-       │
-       └──> dashboard queries ──> banking / transactions / investments
-transactions models ──> banking / categories
-investments ──> banking
-banking views ──> transactions synchronization
-
-Arrows mean "calls or imports", not ownership.
-```
-
-- `banking` owns settlement truth and can exist without categorized transactions.
-- `transactions` references banking instruments to describe how an economic
-  event settles; it does not calculate account balances.
-- `investments` reuses `Bank` and `BankAccount` for providers and cash legs, but
-  keeps its position ledger independent from `Transaction`.
-- `planning` owns limits, earmarks and review decisions, reading existing
-  transactions and cash sources without posting financial activity.
-- `ingestion` owns statement evidence and import decisions. Only explicit
-  confirmation calls canonical transaction, payment or transfer services;
-  matching an existing movement does not create a second source.
-- `assistant` owns conversation data and server-built owned context. Context
-  reads and simulations never synchronize the ledger or call mutation services.
-  Its provider defaults off. A separate owner/session-bound confirmation can
-  execute one of the supported local proposals through domain services; model
-  text and read tools cannot authorize that execution.
-- `dashboard` query services compose the ledgers without posting records. Its
-  views first call transaction synchronization, which can write derived banking
-  records. The app owns no financial model.
-
-Imports must avoid a model cycle. Cross-domain optional links that would create
-one use string model references or a dedicated service boundary; posting an
-event and its movements runs in one database transaction.
-
-## Sources of truth
-
-| Question | Source |
+| Application | Owns |
 |---|---|
-| What cash is available? | The applicable dated `BankAccount` opening + signed `BankMovement` amounts effective through the requested date. |
-| What was income or expense? | Categorized `Transaction`, with exact `TransactionSplit` allocations when present. |
-| What is billed on credit cards? | Derived `CardInvoice` totals; default automatic due-date movements or explicitly confirmed manual `InvoicePayment` rows. |
-| What card debt is incurred at a date? | Purchase and realized recurrence sources through that date, including future installments, less effective settlements; excess payment remains card credit. |
-| What investment quantity and cost are held? | Dated opening plus chronological `Investment` replay per product/asset; unit disposals remove weighted cost, not signed proceeds. |
-| What is a position worth at a date? | Remaining quantity × latest local `PriceObservation` by that date, or disclosed remaining-cost fallback; monetary positions use their balance. |
-| What is reserved for a goal? | `GoalAllocation` backed by existing positive account/cash-pot balances; no new financial asset is created. |
-| What did an imported statement establish? | Owned `ImportBatch`/`ImportedRow` evidence and explicit source links, not a replacement bank ledger. |
-| What can assistant context establish? | A timestamped, bounded snapshot of authorized local sources and warnings; conversation/model text is not financial truth. |
-| How many loyalty points exist? | Signed `LoyaltyEntry` rows. |
-| What was a transfer or investment worth historically? | Its persisted FX snapshot, including source/target currencies, rate, effective date, and status. |
-| What is another amount worth now? | User's `UserPreference.base_currency` plus a current `ExchangeRate`, shown as a labeled current valuation. |
+| `config` | Settings, URL routes, the API mount, currencies, the financial clock |
+| `accounts` | The preferences of a user, the session operations |
+| `banking` | Banks, accounts, cards, invoices, payments, transfers, movements, loyalty, exchange rates |
+| `ledger` | Transactions, categories, the occurrence engine, repeating entries, the ledger synchronization, statement-import models |
+| `investments` | Investment products, assets, operations, price observations, the position replay and its valuation |
+| `planning` | Spending limits from a month on, goals and their reserved balances, the sheet of the months ahead, the calculators, the month closing |
+| `reports` | Reads: the Home blocks, the month, the net worth, the analysis of a period, the origin of a month, the analysis of one Wallet item. Also the export of the demonstration data |
 
-This separation prevents credit purchases from reducing cash before the invoice
-is paid and prevents the later invoice debit from counting the same spending a
-second time.
+Rules:
 
-## Request-time synchronization
+- A domain module does not import the web layer.
+- The operations of an application are in its `api.py`. `banking` and
+  `ledger` have a second file for a second subject (`loyalty_api.py`,
+  `import_api.py`). An operation reads a schema, calls the model or service
+  that owns the rule, and returns a schema. No financial rule lives in an API
+  file.
+- Every operation needs the Django session, except four: the health read, the
+  session read, sign in and sign up. Cookie authentication checks the CSRF
+  token on unsafe methods. Sign in and sign up change state without a
+  session, so they call `config.security.require_csrf`.
+- A record of another user answers 404 when it is named in the address, and a
+  field error when it is named in the request body (`config.ownership`).
+- Errors have one shape: `{"detail": ..., "errors": {field: [messages]}}`.
+  Messages without a field use the key `__all__`. Keys follow the request
+  fields.
+- Amounts travel as decimal strings. Calendar dates travel as ISO strings.
 
-`transactions.services.sync_user_ledger` owns the idempotent projection of
-transactions into banking movements and card invoices. Transaction mutations
-call it within an atomic save/delete workflow. Dashboard and report views, bank
-list/account detail views, and relevant loyalty operations also invoke it.
-These page reads can therefore update, create, or delete derived rows.
+The routers are mounted in `backend/config/api.py`. `/api/openapi.json` has
+every operation with its schemas.
 
-The default projection horizon is twelve months beyond today. Future-effective
-movements may already exist in storage; balance queries filter by effective
-date so they do not become realized cash early. Recurrences derive movements
-and invoice amounts from their source transaction, without creating additional
-`Transaction` rows. Default automatic invoice status is derived from the due
-date and synchronization cutoff, not confirmation from an external bank.
-Cards may opt into manual settlement from a due-date boundary; those invoices
-have no projected settlement movement and derive status from explicit payments.
-Manual mode is sticky per invoice so later settings changes do not erase
-confirmed evidence. Payment-bearing invoices survive source/horizon cleanup.
+| Mount | Subject |
+|---|---|
+| `/api/session` | The session, sign in, sign up, sign out, preferences |
+| `/api/banking` | Accounts, credit and debit cards, invoices and their payments, transfers, exchange rates, the Wallet read, the instruments of an entry |
+| `/api/loyalty` | Points programs and their entries |
+| `/api/ledger` | Transactions, the monthly schedule of a repeating entry, categories with their CSV export and import |
+| `/api/imports` | Statement import: upload, mapping, review, confirmation, undo |
+| `/api/investments` | Positions and their operations |
+| `/api/plan` | The month plan, the limit and budgets, goals, the forecast, the sheet and saved sheets, the calculators, the month closing |
+| `/api/reports` | `home`, `month`, `net-worth`, `analysis`, `analysis/month`, `items/{investment,account,card}/{id}` |
+| `/api/health` | Says that the server answers. The container health check reads it |
 
-Projection calculates each source's actual monthly window arithmetically,
-preserving sparse ancient schedules without traversing empty calendar gaps.
-Existing installment cents, billing offsets and effective-date attribution
-remain authoritative. Each fixed transaction is limited to 1,200 applicable
-monthly occurrences through the requested horizon. Model validation rejects
-an excessive schedule, and the service repeats a read-only preflight before
-entering its own atomic block and acquiring SQLite's writer. It then reloads
-and revalidates source state under the transaction before any projection write,
-including legacy IOF backfill. A caller may already own an atomic source
-mutation; guard failure rolls that ordinary workflow back.
+## Client
 
-`transactions.middleware.LedgerProjectionMiddleware` recovers guard failures
-through the authorized Transactions list, using a full redirect for HTMX.
-Financial GETs that require synchronization therefore cannot present stale
-balances after a refused projection. The ordinary list remains available for
-source review. Explicit correction or deletion of an excessive source may be
-saved individually while other excessive sources remain; a warning explains
-that the derived ledger stays unchanged and synchronized financial consultation
-remains blocked. The final repair permits full reconciliation. No automated
-date change, history alteration or schedule truncation resolves the guard.
-The [Transactions guide](apps/transactions.md#recurrence-projection-and-recovery)
-owns the limit and recovery workflow.
+Vite, React 19, TypeScript in strict mode, Tailwind 4.
 
-The projection compares existing movements and invoices to their desired
-fields, saving only changed values and deleting only stale derived rows.
-Repeated unchanged synchronization retains identifiers and timestamps and
-does not repeat unchanged writes. It still reads and folds source history;
-this is diff reconciliation, not incremental event processing or a persisted
-cache. Atomic workflows and `select_for_update` support row locking where the
-database provides it. SQLite serializes writers; neither that call nor fewer
-writes makes concurrent SQLite writers independent.
+| Concern | Where |
+|---|---|
+| API types | Generated from the OpenAPI schema: `npm run api:types` writes `src/api/schema.d.ts` |
+| Server data | TanStack Query. Hooks are in `src/data/` |
+| Routes | TanStack Router, defined in code in `src/router.tsx` |
+| Filters | Search parameters of the route. A change replaces the address and does not move the page |
+| Windows | The search parameter `w`, and `w2` for one window above it. `wm` is the month of the month window and `wp` the period of the analysis. See `src/windows/host.tsx` |
+| Messages | Typed objects in `src/i18n/`. English defines the keys |
+| Language and theme | Saved in the browser. Currency, date order, number format and Home blocks are saved on the server |
 
-This keeps a local installation synchronized without a scheduler. As records
-and recurrence history grow, measure request latency, query counts, and SQLite
-write-lock time before changing the synchronization boundary. No asynchronous
-worker, cache, or extra service is required by the current repository structure.
+Rules:
 
-## Assistant and integration boundary
+- A module does nothing to the page when it is imported.
+- The client never calculates money. It shows amounts and reads what the
+  owner types (`src/lib/money.ts`). A bar length may compare two amounts.
+- A page component gets its filters and a change function as properties. The
+  route in `src/router.tsx` connects them to the address.
 
-The [assistant app](apps/assistant.md) adds a utility panel and native page backed
-by local, owner-scoped UUID conversations. A signed, expiring local route/query
-scope is bound to the current Django user; the collector resolves only
-allowlisted financial routes, rechecks referenced ownership and returns explicit
-cutoff/currency/evidence warnings. It never scrapes DOM/form contents or invokes
-`sync_user_ledger`. Opening assistant context therefore cannot materialize or
-repair financial projections.
+## Tests
 
-The assistant's implemented provider follows the separate authorization/inference
-gates in its owning guide. With both enabled, the selected eligible account can
-answer using bounded owned read/calculation tools. Six local changes have a
-separate [review and confirmation](assistant/actions.md) boundary; the provider
-has no confirmation tool, real payment or bank-transfer capability.
-The explicit [Inter bill pilot](open-finance-pilot.md) is an operator-only
-ingestion command, outside the assistant and all web routes. Its fixed-origin
-provider client and private artifact store perform no database queries or ledger
-writes. One-shot hidden credentials are not assistant-vault data, and the
-personal proxy's original bank remains operator-attested. The
-[Open Finance research](open-finance-research.md)
-describes the separate unresolved PF/cadence feasibility requirements. Neither assistant
-contracts nor external research enable the paused ingestion interface.
+A test exists where a defect would cost money or data. Its cost follows the
+size of the change.
 
-## Posting workflows
-
-Services, rather than views or templates, own atomic posting:
-
-1. **PIX/debit/account transaction:** validate ownership and currency; save
-   the categorized transaction and synchronize its effective-date movement atomically.
-2. **Credit transaction:** save the source transaction and synchronize invoice
-   totals plus automatic due-date movements where applicable; create no
-   purchase-date account debit.
-3. **Invoice settlement:** default automatic mode creates one due-date debit.
-   Optional manual confirmation atomically saves `InvoicePayment` and its
-   actual-date debit, with a unique confirmation UUID preventing repeat posting.
-   Partial payment changes settlement evidence, not the source purchase amount.
-4. **Own transfer:** create two movements sharing a transfer identifier. The
-   movements use kind `TRANSFER`, not income/expense; cross-currency pairs retain both
-   native amounts and their persisted FX snapshot when conversion is available.
-5. **Investment deposit/withdrawal:** create the `Investment` and its required
-   account movement or points-ledger entry atomically. Deposits accept exactly
-   one account or loyalty-program source; withdrawals require a destination
-   account. Yield remains internal.
-6. **Loyalty redemption:** create a `RewardRedemption`, its points debit and the
-   target-account reward credit atomically. Account-funded IOF posts immediately;
-   credit-card IOF enters the invoice synchronization path.
-7. **Statement import:** stage and review bounded local evidence without
-   financial mutation; confirm all explicit decisions atomically through these
-   same source services and synchronize once. Matching posts nothing. Guarded
-   undo deletes only unchanged sources created by that import.
-8. **Budget/goal/quote:** save owned limits, reservations or local prices without
-   a cash posting. A quote changes valuation evidence; a goal names a portion of
-   existing cash. Neither is income or an additional bank movement.
-
-Personal financial entries are editable; audit-grade reversal workflows are out
-of scope.
-
-## Multicurrency
-
-`accounts.UserPreference.base_currency` selects the reporting currency for the
-authenticated user. The preference is initialized to BRL for new and existing
-users and is changed through the authenticated Settings route. Accounts and
-events retain native currencies and amounts; changing the preference affects
-presentation totals only. Services return native totals plus converted totals
-and explicit missing-rate metadata. They never add unlike currencies directly.
-Bank transfers and investment operations that require conversion persist an FX
-snapshot. Missing rates preserve native data and produce an explicit incomplete
-status. Existing transfers and investments are reconstructed only where an
-authoritative rate provides evidence; otherwise no rate is invented. Other
-financial entities use labeled read-time conversion, at the current or selected
-cutoff date, until a future scope extends captured snapshot coverage. Editing
-amount, currency, fees, or date refreshes the snapshot; descriptive edits preserve it.
-
-`banking.services.ConversionContext` caches pair/date lookup results within one
-owned request, including missing evidence, and rejects reuse for another user.
-Dashboard composition and portfolio series can share it. It is not a global
-rate cache and cannot replace an operation's captured FX evidence. Dated account,
-card and quote valuations request the cutoff rate; cost-based historical
-investment components retain their operation evidence. Missing valuation or
-performance evidence is carried separately rather than silently summed away.
-
-Report chart islands also reuse a single request-local list of categorized
-sources and prefetched splits. Services reject shared lists containing another
-user's records. Each island still applies its own month/window filters; this is
-read reuse, not an authoritative or persisted financial cache. The
-[reporting performance guide](reporting-performance.md#measurement-method)
-defines the reproducible workload and measurement limits.
-
-New nonzero account and asset openings require dates. Incremental migrations
-leave older unknown opening dates null, retaining current holdings with an
-explicit incomplete-baseline warning. Replay and derived read models are
-editable reconstructions, not immutable statement snapshots; they do not infer
-annualized or cash-flow-adjusted returns.
-
-## Routes
-
-The route namespaces remain domain-based:
-
-| Prefix | App | Scope |
+| Layer | Proves | Runs |
 |---|---|---|
-| `/accounts/` | `accounts` | signup, login, POST logout, and authenticated preferences |
-| `/dashboard/` | `dashboard` | overview and reports; dated-wealth interface paused |
-| `/transactions/` | `transactions` | categorized event CRUD/search |
-| `/categories/` | `categories` | category CRUD |
-| `/banking/` | `banking` | banks, accounts, ledger, PIX, cards, invoices, loyalty |
-| `/investments/` | `investments` | portfolio, products, assets, operations, local prices and charts |
-| `/planning/` | `planning` | operational budgets, backed goals, reservations and local signals |
-| `/imports/` | `ingestion` | paused CSV/OFX operations; owned posted history remains read-only |
-| `/sandbox/` | `sandbox` | authenticated planning workspace and explicit draft persistence |
-| `/assistant/` | `assistant` | owned local conversations, targeted consultations/simulations, separately gated ChatGPT-plan streaming, saved model/effort and reviewed local changes; no browsing, bank connection or unattended execution |
-| `/i18n/setlang/` | Django i18n | persist the selected interface language and redirect back |
+| Domain tests (`backend/*/tests/`) | Financial rules | Each backend change |
+| API tests (`test_api.py` and similar) | Each operation: session, ownership, validation, and the balance or invoice after a write | Each backend change |
+| Client unit tests (`web/src/**/*.test.ts`) | Pure logic: amounts and their typing, dates, periods, paths, error messages | Each client change |
+| Journeys (`web/tests/journeys/`) | Complete tasks in a browser against the real backend with a temporary database | Each change of `web/` or `backend/` |
 
-All authenticated CBVs constrain root querysets to `request.user`; forms also
-scope every foreign-key choice. Ownership is revalidated in posting services,
-not assumed from browser options.
+CI has three workflows. `ci.yml` runs the backend checks, the client checks
+and the journeys as parallel jobs, and `docker.yml` builds and starts the
+image for two architectures; every pull request runs both, because the rule
+of the branches requires their checks. `pages.yml` builds the public site for
+a change in `site/`, `web/` or `backend/`. A push to `main` runs `ci.yml`.
 
-`core.features.review_gate` checks paused operation routes on GET and POST;
-hiding a navigation link is not the gate. Current default settings keep imports
-and the net-worth interface paused, while their financial sources and read
-models remain intact. Follow the [roadmap](roadmap.md) and owning app guides
-for availability; do not infer it from a model or URL pattern alone.
+A journey creates its own user, so journeys do not depend on each other. The
+journeys of the session and of the shell use one shared user, and leave its
+preferences as they found them.
 
-## Localization request flow
+## Public site
 
-`SessionMiddleware` runs before `LocaleMiddleware`. The locale middleware uses
-Django's native language cookie when present, otherwise negotiates the initial
-supported language from the browser and falls back to English. It activates the
-language before URL resolution and view/template rendering, including HTMX
-fragment requests. The URLconf deliberately does not use `i18n_patterns()`, so
-all domain URLs remain stable across languages.
+`site/` is an Astro project that builds static pages for GitHub Pages. A
+page embeds the client, built in demonstration mode, in an `iframe`.
 
-Translation concerns stop at fixed interface and system copy. Python uses
-`gettext_lazy` for deferred declarations and `gettext` at runtime; templates
-use `translate` and `blocktranslate`. The project-level Portuguese catalog is
-`locale/pt_BR/LC_MESSAGES/django.po`/`django.mo`. The nine default category
-names are resolved once through gettext in the language active when the account
-is created, then stored as ordinary user-owned data. Existing and user-entered
-categories are never translated automatically. Currency is a separate axis:
-parallel `core.formats.en` and
-`core.formats.pt_BR` modules both resolve separators from currency metadata.
+- **One seam for data.** The client reaches the API through the `fetch`
+  option of `web/src/api/client.ts`. The demonstration build replaces it with
+  `web/src/demo/fetch.ts`, which answers from a recorded file. No other
+  module knows about the demonstration, except the shell (one line of text),
+  the router (the address after `#`) and the entry file (it waits for the
+  data).
+- **Recorded answers.** `backend/reports/demo.py` creates a fictional owner
+  through the API and reads every screen through the API. The site serves
+  those answers, so the demonstration shows what the real rules calculate.
+- **Read-only.** A request that would change a record is refused in the
+  browser with a message.
 
-## Delivery and compatibility
+See [site/README.md](../site/README.md).
 
-Settings, middleware, authentication, precompiled Tailwind delivery and the
-server-rendered request flow remain deliberately small and local-first. The
-browser receives a versioned static stylesheet and never compiles utility
-classes during navigation.
-Released installations use incremental migrations that preserve their records.
-The original pre-release clean reset is historical and does not apply to ordinary
-updates. See [release compatibility](data-model.md#release-compatibility).

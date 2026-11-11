@@ -1,5 +1,0 @@
-{% extends 'base.html' %}
-{% load i18n assets %}
-{% block title %}{{ bank.name }} - Tuxedo Finance{% endblock %}
-{% block content %}{% include 'banking/_workspace.html' %}{% endblock %}
-{% block extra_js %}<script src="{% asset 'js/bank-details.js' %}" defer></script><script src="{% asset 'js/bank-workspace.js' %}" defer></script>{% endblock %}
