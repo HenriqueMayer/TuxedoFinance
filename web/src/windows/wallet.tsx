@@ -15,6 +15,7 @@ import {
   useTransfer,
   useUndoPayment,
   useUndoTransfer,
+  walletQuery,
 } from "../data/wallet";
 import { useLanguage, useMessages } from "../i18n";
 import { formatDate, monthLabel, todayIso } from "../lib/dates";
@@ -25,6 +26,8 @@ import { sessionQuery, useDateOrder } from "../session";
 import { AmountInput } from "../ui/AmountInput";
 import { DateField } from "../ui/DateField";
 import { Field } from "../ui/Field";
+import { NameChoice } from "../ui/NameChoice";
+import { OptionChip } from "../ui/OptionChip";
 import { Segmented } from "../ui/Segmented";
 import { Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
@@ -90,18 +93,20 @@ function AccountFields(props: {
 }) {
   const t = useMessages();
   const currencies = useCurrencyChoices();
+  const { data: wallet } = useSuspenseQuery(walletQuery);
   return (
     <>
-      <Field label={t.firstAccount.bank}>
+      <Field label={t.firstAccount.bank} errors={fieldMessages(props.error, "bank_name")}>
         {(control) => (
-          <input
-            {...control}
-            {...autofocus}
+          <NameChoice
+            control={control}
             name="bank"
-            className="field"
+            options={wallet.banks.map((bank) => bank.name)}
             defaultValue={props.bank}
+            other={t.wallet.otherBank}
+            otherLabel={t.wallet.newBank}
             placeholder={t.firstAccount.bankPlaceholder}
-            autoComplete="off"
+            focus
           />
         )}
       </Field>
@@ -203,7 +208,11 @@ export function NewAccountWindow(props: { onDone: () => void }) {
         onCurrency={setCurrency}
       />
       <Alert message={formMessage(create.error, t)} />
-      <button type="submit" className="button-primary w-fit" disabled={create.isPending}>
+      <button
+        type="submit"
+        className="button-primary w-fit justify-self-end"
+        disabled={create.isPending}
+      >
         {t.firstAccount.create}
       </button>
     </form>
@@ -378,18 +387,12 @@ function CardFields(props: {
               )}
             </Field>
           </div>
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              name="confirm"
-              defaultChecked={props.confirm}
-              className="mt-1 size-4"
-            />
-            <span>
-              <span className="block font-medium">{t.wallet.confirmPayments}</span>
-              <span className="block text-sm text-muted">{t.wallet.confirmPaymentsHelp}</span>
-            </span>
-          </label>
+          <OptionChip
+            name="confirm"
+            label={t.wallet.confirmPayments}
+            defaultOn={props.confirm}
+            help={t.wallet.confirmPaymentsHelp}
+          />
         </>
       )}
     </>
@@ -469,7 +472,11 @@ export function NewCardWindow(props: { onDone: () => void }) {
       />
       <CardFields error={active.error} credit={kind === "credit"} confirm focusName />
       <Alert message={formMessage(active.error, t)} />
-      <button type="submit" className="button-primary w-fit" disabled={active.isPending}>
+      <button
+        type="submit"
+        className="button-primary w-fit justify-self-end"
+        disabled={active.isPending}
+      >
         {t.common.add}
       </button>
     </form>
@@ -494,6 +501,36 @@ export function CardWindow(props: { id: number; onDone: () => void }) {
     });
   }
 
+  const invoiceRows = (rows: typeof card.invoices) => (
+    <ul className="divide-y divide-line">
+      {rows.map((invoice) => (
+        <li key={invoice.id}>
+          <OpenWindow
+            w={`invoice:${invoice.id}`}
+            className="-mx-2 flex items-center gap-3 rounded-(--radius-control) px-2 py-2.5 hover:bg-sheet"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">
+                {monthLabel(invoice.reference_month.slice(0, 7), language)}
+              </span>
+              <span className="block text-sm text-muted">
+                {t.wallet.due(formatDate(invoice.due_date, order))}
+              </span>
+            </span>
+            <span className="text-right">
+              <span className="amount block font-semibold">
+                {formatAmount(invoice.amount, card.currency)}
+              </span>
+              <span className="block text-sm">
+                <StatusLabel invoice={invoice} t={t} />
+              </span>
+            </span>
+          </OpenWindow>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <div className="grid grid-cols-1 gap-6">
       <section>
@@ -501,35 +538,20 @@ export function CardWindow(props: { id: number; onDone: () => void }) {
           <h3 className="text-sm font-medium text-muted">{t.wallet.invoices}</h3>
           <AnalyzeButton kind="card" id={card.id} />
         </div>
-        {card.invoices.length === 0 && <p className="py-4 text-muted">{t.wallet.noInvoices}</p>}
-        <ul className="divide-y divide-line">
-          {card.invoices.map((invoice) => (
-            <li key={invoice.id}>
-              <OpenWindow
-                w={`invoice:${invoice.id}`}
-                className="-mx-2 flex items-center gap-3 rounded-(--radius-control) px-2 py-2.5 hover:bg-sheet"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block font-medium">
-                    {monthLabel(invoice.reference_month.slice(0, 7), language)}
-                  </span>
-                  <span className="block text-sm text-muted">
-                    {t.wallet.due(formatDate(invoice.due_date, order))}
-                  </span>
-                </span>
-                <span className="text-right">
-                  <span className="amount block font-semibold">
-                    {formatAmount(invoice.amount, card.currency)}
-                  </span>
-                  <span className="block text-sm">
-                    <StatusLabel invoice={invoice} t={t} />
-                  </span>
-                </span>
-              </OpenWindow>
-            </li>
-          ))}
-        </ul>
+        {card.invoices.length === 0 && card.later_invoices.length === 0 && (
+          <p className="py-4 text-muted">{t.wallet.noInvoices}</p>
+        )}
+        {invoiceRows(card.invoices)}
       </section>
+      {card.later_invoices.length > 0 && (
+        <section>
+          <div className="border-b border-line pb-2">
+            <h3 className="text-sm font-medium text-muted">{t.wallet.laterInvoices}</h3>
+            <p className="text-sm text-muted">{t.wallet.laterInvoicesHelp}</p>
+          </div>
+          {invoiceRows(card.later_invoices)}
+        </section>
+      )}
 
       <details>
         <summary className="action w-fit">{t.wallet.editCard}</summary>
@@ -787,7 +809,7 @@ export function TransferWindow(props: { onDone: () => void }) {
       noValidate
     >
       <Field
-        label={exchange ? `${t.entry.amount} (${sent})` : t.entry.amount}
+        label={`${t.entry.amount} (${sent})`}
         errors={amountInvalid ? [t.entry.amountInvalid] : fieldMessages(transfer.error, "amount")}
       >
         {(control) => (
@@ -841,7 +863,11 @@ export function TransferWindow(props: { onDone: () => void }) {
         {(control) => <DateField {...control} name="date" defaultValue={todayIso()} />}
       </Field>
       <Alert message={formMessage(transfer.error, t)} />
-      <button type="submit" className="button-primary w-fit" disabled={transfer.isPending}>
+      <button
+        type="submit"
+        className="button-primary w-fit justify-self-end"
+        disabled={transfer.isPending}
+      >
         {t.wallet.transfer}
       </button>
     </form>

@@ -14,7 +14,7 @@ and the Add action. Settings opens from the rail or from the phone header.
 | Home | How is this month? | Blocks that the owner chooses and orders |
 | Transactions | What did I record? | The entries of a month, with search and filters |
 | Wallet | What do I have and what do I owe? | Accounts by bank, credit and debit cards, invoices, transfers, investments, points and miles, accounts in other currencies |
-| Plan | What do I intend? | The limit of the month, category budgets, goals, the months ahead, the sheet, calculators and the month closing |
+| Plan | What do I intend? | The limit of the month, category budgets, goals, recurring income, the months ahead, the sheet, calculators and the month closing |
 
 ## The window
 
@@ -103,7 +103,14 @@ and invoices use this one rule, so their totals agree.
   with its last one.
 - An account has an opening balance. Its balance is that amount plus its
   movements up to today.
+- The window of an account lists its latest movements up to today. A
+  movement with a later date, for example a month of a repeating entry, is
+  not in the balance yet and is not listed.
 - A credit card belongs to an account. Each statement month has an invoice.
+  The window of a card lists the invoices up to the open statement, newest
+  first, and the later statements apart, next month first.
+- The bank of a new account and the institution of a new investment are
+  chosen from the banks that the owner has, or typed as a new name.
 - A debit card belongs to an account too. An entry paid with it leaves the
   account on its date; the card only names how it was paid.
 - A card has one settlement setting. With "I confirm each invoice payment"
@@ -218,6 +225,38 @@ Plan is one page for what the owner intends. It shows the current month.
 - A balance with a reservation keeps its currency. An investment with a
   reservation also keeps its kind.
 
+### Recurring income
+
+- A recurring income is a salary or another income that arrives every
+  month. It has a name, the account that receives it, a category and one
+  receipt or more. A receipt is a day of the month and an amount: a salary
+  with an advance has two.
+- The category is an income category or one without a type; expense
+  categories are not listed, and the form says so. A new income category is
+  created in the form, with its name, and becomes the choice. Without a
+  category to list, the form asks for that name at once.
+- Each receipt is an entry that repeats every month, so Transactions, the
+  balances and the months ahead count it as any repeating entry. A receipt
+  whose day already passed in the first month is recorded on that day.
+- The income controls its entries. An entry of a receipt is not changed or
+  deleted in Transactions; its window leads to the income. The months of a
+  receipt stay in its monthly schedule: skip, adjust or confirm one month.
+- **Calculate from a CLT salary** asks the server for the two receipts of a
+  Brazilian employee: the advance is a percentage of the gross salary, and
+  the rest is the net pay of the month less the advance, so INSS, income tax
+  and the other deductions leave the second receipt. The result fills the
+  receipts and the owner can change them. The income keeps the amounts, and
+  the gross salary and the percentage to calculate again; it does not follow
+  a new salary or the tables of a new year by itself.
+- With "Confirm each receipt", a receipt changes the balance only after the
+  owner confirms its month.
+- An income can have a last month. With past months, a new amount holds from
+  the next receipt, the day of a receipt does not change, and a removed
+  receipt ends in the month before the current one. Deleting an income
+  removes every month of its entries.
+- The page lists the incomes with their receipts and the total of a month,
+  by currency.
+
 ### Months ahead
 
 - The page shows the cash of the current month and the five months after it:
@@ -311,26 +350,42 @@ changed after it.
 ### Analysis
 
 **Analyze**, beside the title of Home, opens the analysis of a period of
-months. It answers four questions, each with a chart and its figures.
+months. It answers five questions, each with a chart and its figures.
 
 | Section | Shows |
 |---|---|
 | Income and expenses | The totals and the result of the period, the expenses for each month, and one pair of bars for each month |
 | Where the money went | The top-level categories, largest first, with the part of the expenses that each one takes. One category opens month by month |
+| Cards | The statements of the period for the credit cards, what the cards owe today, the statements after the current month, and the categories where the cards were used |
 | Net worth | The net worth at each month end, with accounts, investments and card debt |
 | Investments | The value against the cost at each month end, and the positions at the end of the period with the part of each one |
 
 Each section is a block with its name in a band at the top. A bar with the
-four names stays at the top of the window: a press goes to a section, and
-the bar marks the section in view.
+five names stays at the top of the window: a press goes to a section, and
+the bar marks the section in view. Only the content under the bar scrolls;
+a section near the end, which cannot reach the top, is marked after its press.
+
+**Cards** opens with every credit card together: the total of the
+statements, one series for each card in the chart (for up to three cards;
+with more, the chart has their total), and one row for each card with its
+part of the total and what it owes. A press on a card shows that card alone:
+its figures, its statements and its categories. A statement is the card
+expenses that its month bills, as in the invoices. "Owed today" counts the
+later installments, and "Later statements" shows what the statements after
+the current month already have, for up to twelve months; these two follow
+today and not the period. A click on a month opens the card entries of its
+statement. Cards of accounts in two currencies are not added: the owner
+chooses the currency.
 
 The owner chooses the period with a preset (3, 6 or 12 months, this year,
 all) or with the two handles of a slider, and moves it one month at a time.
 A handle follows the pointer and comes to rest on the nearest month. Each
 month is a dot on the track; the dot where a moving handle will rest is lit
 and has the name of its month, and the positions of the presets have their
-names under the track. The track covers the records and twelve months at
-least. A period ends at the current month at the latest and has at most 60
+names under the track. Two presets can give the same months, for example
+this year and all when the records start in January: the preset that the
+owner pressed is the marked one, and its name is under the track. The track
+covers the records and twelve months at least. A period ends at the current month at the latest and has at most 60
 months. The address keeps the period.
 
 In each chart:
@@ -338,7 +393,7 @@ In each chart:
 - Under the pointer, a label with the values of one month floats above the
   plot. It does not cover the marks.
 - A click on a month opens the origin of its values in a window above the
-  analysis: the entries of the month (or of one category), the accounts,
+  analysis: the entries of the month (or of one category, or of the cards), the accounts,
   investments and card statements of the month end, or the investment
   operations of the month. Each row opens its record in the place of that
   window. Back or Escape returns to the origin, then to the analysis, which

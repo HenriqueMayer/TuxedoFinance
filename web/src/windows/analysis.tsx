@@ -9,11 +9,13 @@ import {
   oldestStart,
   PRESETS,
   type Preset,
+  presetMarks,
   presetOf,
   presetPeriod,
 } from "../lib/period";
-import { BarChart, CHART, LineChart, type Run, type Series } from "../ui/charts";
+import { BarChart, CHART, LineChart, type Run, type Series, Swatch } from "../ui/charts";
 import {
+  CardIcon,
   ChartIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -41,13 +43,12 @@ type Tools = {
 /** False when the period before starts before the records: no change is shown. */
 const Comparable = createContext(true);
 
-/** The areas of the analysis, in their order on the page. */
-const AREAS = ["flows", "categories", "worth", "investments"] as const;
-type AreaId = (typeof AREAS)[number];
+/** The areas of the analysis. */
+type AreaId = "flows" | "categories" | "cards" | "worth" | "investments";
 const SHOWN_CATEGORIES = 8;
 /**
- * The analysis of a period of months: income and expenses, categories, net
- * worth and investments, each against the period before. The period lives in
+ * The analysis of a period of months: income and expenses, categories, cards,
+ * net worth and investments, each against the period before. The period lives in
  * the address ("2026-06_2026-11"), so Back and a link keep it.
  *
  * In each chart, a click on a month opens a window with what its values are
@@ -79,6 +80,9 @@ export function AnalysisWindow(props: {
     );
   }, [shownStart, shownEnd]);
 
+  // The preset that the owner pressed: it names a period that two presets give.
+  const [pressed, setPressed] = useState<Preset | "">("");
+
   const openAbove = useOpenAbove();
 
   if (isError) {
@@ -102,15 +106,12 @@ export function AnalysisWindow(props: {
   const [trackStart = oldest] = [oldest, shiftMonth(last, -11)].sort();
   const track = monthsBetween(trackStart, last);
   // Where the first handle rests for each preset, named under the track.
-  const preset = presetOf(from, to, first, last);
-  const marks = PRESETS.map((name) => ({
-    position: track.indexOf(presetPeriod(name, first, last)[0]),
-    label: t.analysis.presetsShort[name],
-    on: name === preset,
-  })).filter(
-    (mark, index, all) =>
-      mark.position >= 0 && all.findIndex((other) => other.position === mark.position) === index,
-  );
+  const preset = presetOf(from, to, first, last, pressed);
+  const marks = presetMarks(track, first, last, preset).map((mark) => ({
+    position: mark.position,
+    label: t.analysis.presetsShort[mark.preset],
+    on: mark.on,
+  }));
   const choose = (next: [string, string]) => {
     setDraft(null);
     onPeriod(next.join("_"));
@@ -133,7 +134,11 @@ export function AnalysisWindow(props: {
             label={t.analysis.period}
             hideLabel
             value={preset}
-            onChange={(preset) => preset && choose(presetPeriod(preset as Preset, first, last))}
+            onChange={(preset) => {
+              if (!preset) return;
+              setPressed(preset);
+              choose(presetPeriod(preset, first, last));
+            }}
             options={PRESETS.map((preset) => ({
               value: preset,
               label: t.analysis.presets[preset],
@@ -197,6 +202,7 @@ export function AnalysisWindow(props: {
         areas={[
           { id: "flows", title: t.analysis.flows, icon: <ChartIcon /> },
           { id: "categories", title: t.analysis.categories, icon: <TagIcon /> },
+          { id: "cards", title: t.analysis.cards, icon: <CardIcon /> },
           { id: "worth", title: t.home.blocks.worth, icon: <WorthIcon /> },
           { id: "investments", title: t.home.worth.investments, icon: <TrendIcon /> },
         ]}
@@ -211,6 +217,7 @@ export function AnalysisWindow(props: {
           }`}
         >
           <Flows {...tools} />
+          <Cards {...tools} />
           <Worth {...tools} />
           <Investments {...tools} />
         </div>
@@ -257,32 +264,96 @@ function AreaBar(props: {
   const t = useMessages();
   const bar = useRef<HTMLElement>(null);
   const [current, setCurrent] = useState<AreaId>("flows");
+  // The area that a press asked for, until the owner scrolls: an area near
+  // the end of the window cannot reach the top, and it is still the current one.
+  const pressed = useRef<AreaId | null>(null);
+  // True while the scroll of a press runs.
+  const moving = useRef(false);
+  const settle = useRef(0);
 
-  // The area at the top of the window is the current one.
+  // The current area is the last one that starts above the line under the bar.
   useEffect(() => {
-    const root = bar.current?.closest(".overflow-y-auto");
-    if (!root) return;
-    const seen = new Map<string, boolean>();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          seen.set((entry.target as HTMLElement).dataset.area ?? "", entry.isIntersecting);
-        }
-        const first = AREAS.find((id) => seen.get(id));
-        if (first) setCurrent(first);
-      },
-      // An area counts while it crosses a band below the bar.
-      { root, rootMargin: "-72px 0px -55% 0px" },
-    );
-    for (const area of root.querySelectorAll("[data-area]")) observer.observe(area);
-    return () => observer.disconnect();
+    const nav = bar.current;
+    const root = nav?.closest<HTMLElement>(".overflow-y-auto");
+    if (!nav || !root) return;
+    let frame = 0;
+    const read = () => {
+      if (pressed.current) return setCurrent(pressed.current);
+      const areas = [...root.querySelectorAll<HTMLElement>("[data-area]")];
+      const line = nav.getBoundingClientRect().bottom + 16;
+      const atEnd =
+        root.scrollTop > 0 && root.scrollTop + root.clientHeight >= root.scrollHeight - 2;
+      const above = areas.filter((area) => area.getBoundingClientRect().top <= line);
+      const area = atEnd ? areas.at(-1) : (above.at(-1) ?? areas[0]);
+      if (area) setCurrent(area.dataset.area as AreaId);
+    };
+    const onScroll = () => {
+      // A scroll that no press started is of the owner: the position decides again.
+      if (!moving.current) pressed.current = null;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(read);
+    };
+    const onEnd = () => {
+      moving.current = false;
+    };
+    root.addEventListener("scroll", onScroll, { passive: true });
+    root.addEventListener("scrollend", onEnd);
+    // The areas change their height with the data and with the width.
+    const sizes = new ResizeObserver(onScroll);
+    for (const area of root.querySelectorAll("[data-area]")) sizes.observe(area);
+    read();
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(settle.current);
+      sizes.disconnect();
+      root.removeEventListener("scroll", onScroll);
+      root.removeEventListener("scrollend", onEnd);
+    };
   }, []);
 
-  function go(id: AreaId) {
+  // On a narrow window the bar scrolls sideways: the current name stays in view.
+  useEffect(() => {
+    const nav = bar.current;
+    const tab = nav?.querySelector<HTMLElement>(`[data-tab="${current}"]`);
+    if (!nav || !tab) return;
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    document
-      .getElementById(`area-${id}`)
-      ?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+    nav.scrollTo({
+      left: tab.offsetLeft - (nav.clientWidth - tab.offsetWidth) / 2,
+      behavior: still ? "auto" : "smooth",
+    });
+  }, [current]);
+
+  /**
+   * Bring an area under the bar. Only the content of the window scrolls:
+   * `scrollIntoView` also scrolls the window itself when the area cannot
+   * reach the top, and that hides the title and this bar.
+   */
+  function go(id: AreaId) {
+    const nav = bar.current;
+    const root = nav?.closest<HTMLElement>(".overflow-y-auto");
+    const area = root?.querySelector<HTMLElement>(`[data-area="${id}"]`);
+    if (!nav || !root || !area) return;
+    pressed.current = id;
+    setCurrent(id);
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const top =
+      root.scrollTop +
+      area.getBoundingClientRect().top -
+      root.getBoundingClientRect().top -
+      nav.offsetHeight -
+      10;
+    const limit = root.scrollHeight - root.clientHeight;
+    const target = Math.round(Math.min(Math.max(top, 0), limit));
+    // The scroll of a press ends with `scrollend`. A browser without that
+    // event gets a pause, and a press that needs no scroll has no end.
+    clearTimeout(settle.current);
+    moving.current = Math.abs(target - root.scrollTop) > 1;
+    if (moving.current && !("onscrollend" in (root as object))) {
+      settle.current = window.setTimeout(() => {
+        moving.current = false;
+      }, 1200);
+    }
+    root.scrollTo({ top: target, behavior: still ? "auto" : "smooth" });
   }
 
   return (
@@ -292,6 +363,7 @@ function AreaBar(props: {
           key={area.id}
           type="button"
           className="area-tab"
+          data-tab={area.id}
           aria-current={area.id === current ? "true" : undefined}
           onClick={() => go(area.id)}
         >
@@ -633,6 +705,230 @@ function Categories(props: {
               },
             ])}
           />
+        </div>
+      </div>
+    </Area>
+  );
+}
+
+/** The cards that take a color of their own in a chart. With more cards, the chart has their total. */
+const CARD_COLORS = [CHART.ink, CHART.accent, CHART.quiet];
+
+/**
+ * The credit cards: the statements of the period, what the cards owe today
+ * and the statements after the current month. The owner reads every card
+ * together, one series for each, or presses one card to read it alone.
+ */
+function Cards(tools: Tools) {
+  const t = useMessages();
+  const language = useLanguage();
+  const { data } = tools;
+  const [currency, setCurrency] = useState("");
+  const [chosen, setChosen] = useState<number | null>(null);
+  const [all, setAll] = useState(false);
+  const selection = useRun(data);
+  const row = data.cards.find((item) => item.currency === currency) ?? data.cards[0];
+  if (!row) {
+    return (
+      <Area id="cards" title={t.analysis.cards} icon={<CardIcon />}>
+        <p className="text-muted">{t.analysis.noCards}</p>
+      </Area>
+    );
+  }
+  const money = (amount: string) => formatAmount(amount, row.currency);
+  // One card alone needs no choice. A chosen card that left the period gives its place to all.
+  const card = row.cards.length === 1 ? row.cards[0] : row.cards.find((item) => item.id === chosen);
+  const scope = card ?? row;
+  const name = card?.name ?? t.analysis.allCards;
+  const months = data.months.map(monthOf);
+  const partial = data.end === data.last ? data.months.length - 1 : undefined;
+  // Every card together: one series for each card while each one can take a color.
+  const compared = !card && row.cards.length <= CARD_COLORS.length;
+  const series = (read: (source: typeof scope) => string[]): Series[] =>
+    compared
+      ? row.cards.map((item, index) => ({
+          name: item.name,
+          color: CARD_COLORS[index] ?? CHART.ink,
+          values: read(item).map(Number),
+          texts: read(item).map(money),
+        }))
+      : [
+          {
+            name,
+            color: CHART.ink,
+            values: read(scope).map(Number),
+            texts: read(scope).map(money),
+          },
+        ];
+  // The figures of a selected run. A run without a statement has no row: its figures are zero.
+  const loaded = selection.part !== undefined;
+  const part = selection.part?.cards.find((item) => item.currency === row.currency);
+  const figure = (id: number | null) => {
+    if (!loaded) return undefined;
+    const found = id === null ? part : part?.cards.find((item) => item.id === id);
+    return money(found?.total ?? "0");
+  };
+  const runRows: RunRow[] = compared
+    ? [
+        ...row.cards.map((item, index) => ({
+          name: item.name,
+          text: figure(item.id),
+          color: CARD_COLORS[index],
+        })),
+        { name: t.analysis.allCards, text: figure(null) },
+      ]
+    : [{ name, text: figure(card?.id ?? null), color: CHART.ink }];
+  const categories = all ? scope.categories : scope.categories.slice(0, SHOWN_CATEGORIES);
+  const choice =
+    "grid w-full gap-1.5 rounded-(--radius-control) px-2.5 py-2 text-left transition-colors duration-150 hover:bg-ink/5";
+
+  return (
+    <Area
+      id="cards"
+      title={t.analysis.cards}
+      icon={<CardIcon />}
+      aside={
+        data.cards.length > 1 && (
+          <Segmented
+            inline
+            hideLabel
+            label={t.settings.currency}
+            value={row.currency}
+            onChange={setCurrency}
+            options={data.cards.map((item) => ({ value: item.currency, label: item.currency }))}
+          />
+        )
+      }
+    >
+      <div className="grid gap-2">
+        <p className="font-medium">{name}</p>
+        <dl className="flex flex-wrap gap-x-10 gap-y-4">
+          <Stat label={t.analysis.cardsTotal} value={money(scope.total)}>
+            <Change
+              amount={scope.change}
+              percent={scope.change_percent}
+              currency={row.currency}
+              good="down"
+            />
+          </Stat>
+          <Stat label={t.analysis.cardsAverage} value={money(scope.average)} quiet />
+          <Stat label={t.analysis.cardsOwed} value={money(scope.owed)} quiet />
+          <Stat label={t.analysis.cardsUpcoming} value={money(scope.upcoming_total)} quiet />
+        </dl>
+      </div>
+      <div className="grid grid-cols-1 gap-x-10 gap-y-6 lg:grid-cols-2">
+        <ul className="grid content-start gap-1">
+          {row.cards.length > 1 && (
+            <li>
+              <button
+                type="button"
+                aria-pressed={!card}
+                onClick={() => setChosen(null)}
+                className={`${choice} ${card ? "" : "bg-ink/5"}`}
+              >
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="truncate font-medium">{t.analysis.allCards}</span>
+                  <span className="amount font-semibold">{money(row.total)}</span>
+                </span>
+                <span className="text-sm text-muted">{t.analysis.cardOwes(money(row.owed))}</span>
+              </button>
+            </li>
+          )}
+          {row.cards.map((item, index) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                aria-pressed={item === card}
+                onClick={() => setChosen(item.id)}
+                className={`${choice} ${item === card ? "bg-ink/5" : ""}`}
+              >
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2 font-medium">
+                    {row.cards.length <= CARD_COLORS.length && (
+                      <Swatch color={CARD_COLORS[index] ?? CHART.ink} />
+                    )}
+                    <span className="truncate">{item.name}</span>
+                  </span>
+                  <span className="amount font-semibold">{money(item.total)}</span>
+                </span>
+                <span className="block h-1.5 rounded-full bg-line">
+                  <span
+                    className="chart-mark block h-full rounded-full bg-ink"
+                    style={{ width: `${Math.min(Number(item.share ?? 0), 100)}%` }}
+                  />
+                </span>
+                <span className="flex items-baseline justify-between gap-3 text-sm text-muted">
+                  <span>
+                    {item.share === null ? "" : `${formatPercent(item.share, language)} · `}
+                    {t.analysis.cardOwes(money(item.owed))}
+                  </span>
+                  <Change amount={item.change} currency={row.currency} good="down" />
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <BarChart
+          title={t.analysis.statementsByMonth(name)}
+          labels={months.map((month) => shortMonthLabel(month, language))}
+          series={series((source) => source.months)}
+          partial={partial}
+          partialNote={t.analysis.partial}
+          height={220}
+          axisText={axisText(language)}
+          onPick={(index) =>
+            tools.open(originId("cards", months[index] ?? "", row.currency, card?.id ?? null))
+          }
+          {...runProps(selection, tools, runRows)}
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-x-10 gap-y-6 border-t border-line pt-4 lg:grid-cols-2">
+        <div className="grid content-start gap-3">
+          <p className="font-medium">{t.analysis.cardCategories(name)}</p>
+          {scope.categories.length === 0 && <p className="text-muted">{t.analysis.noEntries}</p>}
+          <ul className="grid gap-3">
+            {categories.map((part) => (
+              <li key={part.category_id ?? "none"} className="grid gap-1.5">
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="truncate">{part.name}</span>
+                  <span className="amount font-semibold">{money(part.amount)}</span>
+                </span>
+                <span className="block h-1.5 rounded-full bg-line">
+                  <span
+                    className="chart-mark block h-full rounded-full bg-ink"
+                    style={{ width: `${Math.min(Number(part.share ?? 0), 100)}%` }}
+                  />
+                </span>
+                {part.share !== null && (
+                  <span className="text-sm text-muted">{formatPercent(part.share, language)}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          {scope.categories.length > SHOWN_CATEGORIES && (
+            <button type="button" className="action w-fit" onClick={() => setAll(!all)}>
+              {all ? t.analysis.fewer : t.analysis.allCategories(scope.categories.length)}
+            </button>
+          )}
+        </div>
+        <div className="grid content-start gap-3">
+          <div>
+            <p className="font-medium">{t.analysis.cardsUpcoming}</p>
+            <p className="text-sm text-muted">
+              {t.analysis.cardsUpcomingHelp(shortMonthLabel(monthOf(data.last), language))}
+            </p>
+          </div>
+          {row.upcoming_months.length === 0 ? (
+            <p className="text-muted">{t.analysis.noUpcoming}</p>
+          ) : (
+            <BarChart
+              title={t.analysis.laterStatementsOf(name)}
+              labels={row.upcoming_months.map((month) => shortMonthLabel(monthOf(month), language))}
+              series={series((source) => source.upcoming)}
+              height={200}
+              axisText={axisText(language)}
+            />
+          )}
         </div>
       </div>
     </Area>

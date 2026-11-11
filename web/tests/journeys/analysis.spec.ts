@@ -164,3 +164,137 @@ test("the analysis shows a period with its charts, and the owner changes the per
   // Expenses: 180,00 now, 80,00 the month before.
   await expect(window.getByText("+R$ 100,00 · +125,0%")).toBeVisible();
 });
+
+test("a preset that gives the months of another one can be chosen", async ({ page }) => {
+  await freshUser(page);
+  const wallet = await prepareWallet(page);
+  // The records start two months ago: "3 months" and "All" are the same months.
+  for (const back of [0, 2]) {
+    await apiPost(page, "/api/ledger/transactions", {
+      title: "Feira",
+      amount: "100.00",
+      category_id: wallet.category,
+      instrument: wallet.account,
+      date: day5(back),
+    });
+  }
+  await page.goto("/?w=analysis");
+  const window = page.getByRole("dialog", { name: "Analysis" });
+  const preset = (name: string) => window.locator("label").filter({ hasText: name });
+  await preset("3 months").click();
+  await expect(window.getByRole("radio", { name: "3 months" })).toBeChecked();
+  await preset("All").click();
+  await expect(window.getByRole("radio", { name: "All" })).toBeChecked();
+  await expect(window.getByText("· 3 months")).toBeVisible();
+  // The mark under the track has the name of the chosen preset.
+  await expect(window.locator(".range-mark[data-on]")).toHaveText("All");
+  await preset("3 months").click();
+  await expect(window.getByRole("radio", { name: "3 months" })).toBeChecked();
+  await expect(window.locator(".range-mark[data-on]")).toHaveText("3 mo");
+});
+
+test("the bar of areas stays in the window, goes to an area and marks the area in view", async ({
+  page,
+}) => {
+  await freshUser(page);
+  await seed(page);
+  await page.goto("/?w=analysis");
+  const window = page.getByRole("dialog", { name: "Analysis" });
+  const bar = window.getByRole("navigation", { name: "Areas of the analysis" });
+  const tab = (name: string) => bar.getByRole("button", { name });
+  await expect(tab("Income and expenses")).toHaveAttribute("aria-current", "true");
+
+  // The last area is short: it cannot reach the top of the window. A press
+  // still scrolls only the content, so the title and the bar stay in place.
+  for (const name of ["Investments", "Net worth", "Where the money went"]) {
+    await tab(name).click();
+    await expect(tab(name)).toHaveAttribute("aria-current", "true");
+    await expect(window.getByRole("heading", { name, exact: true })).toBeInViewport();
+    await expect(window.getByRole("heading", { name: "Analysis" })).toBeInViewport();
+    await expect(bar).toBeInViewport();
+    expect(await window.evaluate((element) => element.scrollTop)).toBe(0);
+  }
+
+  // The wheel moves the content under the bar, and the mark follows.
+  await window.getByRole("heading", { name: "Where the money went" }).hover();
+  await page.mouse.wheel(0, -5000);
+  await expect(tab("Income and expenses")).toHaveAttribute("aria-current", "true");
+  await expect(bar).toBeInViewport();
+  await page.mouse.wheel(0, 5000);
+  await expect(tab("Investments")).toHaveAttribute("aria-current", "true");
+  await expect(bar).toBeInViewport();
+});
+
+test("the cards of a period: every card together, one card alone and the later statements", async ({
+  page,
+}) => {
+  await freshUser(page);
+  const wallet = await prepareWallet(page);
+  const gold = await apiPost<{ id: string }>(page, "/api/banking/credit-cards", {
+    account: wallet.account,
+    name: "Gold",
+    closing_day: 24,
+    due_day: 1,
+    confirm_payments: false,
+  });
+  const purchase = (title: string, amount: string, more: object) =>
+    apiPost(page, "/api/ledger/transactions", {
+      title,
+      amount,
+      category_id: wallet.category,
+      ...more,
+    });
+  // Three installments: one in the statement of this month, two in the later ones.
+  await purchase("Notebook", "900.00", { instrument: wallet.card, installments: 3 });
+  await purchase("Jantar", "100.00", { instrument: gold.id, date: day5(1) });
+  // An expense of the account is not of a card.
+  await purchase("Feira", "50.00", { instrument: wallet.account });
+
+  await page.goto("/?w=analysis");
+  const window = page.getByRole("dialog", { name: "Analysis" });
+  await window
+    .getByRole("navigation", { name: "Areas of the analysis" })
+    .getByRole("button", { name: "Cards" })
+    .click();
+  const cards = window.getByRole("region", { name: "Cards" });
+  await expect(cards.getByRole("heading", { name: "Cards" })).toBeInViewport();
+
+  // Every card together: the totals, the debt of today and one row for each card.
+  const all = cards.getByRole("button", { name: /All cards/ });
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+  await expect(all).toContainText("R$ 400,00");
+  await expect(all).toContainText("owes R$ 900,00");
+  await expect(cards.getByRole("button", { name: /Platinum/ })).toContainText("75,0%");
+  await expect(cards.getByRole("button", { name: /Gold/ })).toContainText("R$ 100,00");
+  const statements = cards.getByRole("table", { name: "All cards, the statement of each month" });
+  await expect(statements.getByRole("row").last()).toContainText("R$ 300,00");
+  // The statements after this month already have the two other installments.
+  const later = cards.getByRole("table", { name: "All cards, later statements" });
+  await expect(later.getByRole("row")).toHaveCount(3);
+  await expect(later.getByRole("row").last()).toContainText("R$ 300,00");
+
+  // One card alone: its figures, its chart and its categories.
+  await cards.getByRole("button", { name: /Gold/ }).click();
+  await expect(cards.getByRole("button", { name: /Gold/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(cards.getByText("Where it was used: Gold")).toBeVisible();
+  await expect(
+    cards.getByRole("table", { name: "Gold, the statement of each month" }),
+  ).toContainText("R$ 100,00");
+  await expect(
+    cards.getByRole("table", { name: "Gold, later statements" }).getByRole("row").last(),
+  ).toContainText("R$ 0,00");
+
+  // A click on a month opens the card entries that its statement bills.
+  await cards.getByRole("button", { name: /Platinum/ }).click();
+  const plot = cards
+    .getByRole("group", { name: "Platinum, the statement of each month" })
+    .locator("svg")
+    .first();
+  await plot.scrollIntoViewIfNeeded();
+  const box = (await plot.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  await page.mouse.click(box.x + 48 + ((box.width - 56) / 6) * 5.5, box.y + box.height / 2);
+  const origin = page.getByRole("dialog", { name: "Origin of the values" });
+  await expect(origin.getByRole("link", { name: /Notebook/ })).toContainText("R$ 300,00");
+  await expect(origin.getByRole("link", { name: /Notebook/ })).toContainText("installment 1 of 3");
+  await expect(origin.getByRole("link", { name: /Feira/ })).toHaveCount(0);
+});

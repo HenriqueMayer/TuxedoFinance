@@ -158,7 +158,7 @@ function Month(props: {
         {month.can_confirm && (
           <button
             type="button"
-            className={month.awaiting ? "button-primary min-h-9" : "button-quiet min-h-9"}
+            className={month.awaiting ? "button-primary min-h-9" : "action"}
             disabled={props.pending}
             aria-label={`${t.schedule.confirm}: ${props.label}`}
             onClick={() => props.onAction("confirm")}
@@ -169,7 +169,7 @@ function Month(props: {
         {month.can_skip && (
           <button
             type="button"
-            className="button-quiet min-h-9"
+            className="action"
             disabled={props.pending}
             aria-label={`${t.schedule.skip}: ${props.label}`}
             onClick={() => props.onAction("skip")}
@@ -180,7 +180,7 @@ function Month(props: {
         {month.can_restore && (
           <button
             type="button"
-            className="button-quiet min-h-9"
+            className="action"
             disabled={props.pending}
             aria-label={`${t.schedule.undo}: ${props.label}`}
             onClick={() => props.onAction("restore")}

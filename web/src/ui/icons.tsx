@@ -193,6 +193,13 @@ export const TagIcon = () => (
   </Icon>
 );
 
+export const CardIcon = () => (
+  <Icon size={16}>
+    <rect x="3.5" y="6" width="17" height="12" rx="2" />
+    <path d="M3.5 10h17M7 14.5h3" />
+  </Icon>
+);
+
 /** The bow tie of the brand, as a mark for the navigation frame. */
 export function Mark() {
   return (

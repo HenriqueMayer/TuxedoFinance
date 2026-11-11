@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models import Case, DecimalField, F, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.translation import gettext as gettext
 from django.utils.translation import gettext_lazy as _
 
@@ -566,7 +567,8 @@ class BankMovement(TimestampedModel):
         """Return the label of an automatic invoice settlement in the active language."""
         return gettext("%(card_name)s invoice %(reference_month)s") % {
             "card_name": card_name,
-            "reference_month": reference_month.strftime("%Y-%m"),
+            # The month in words, in the active language: "October 2026".
+            "reference_month": date_format(reference_month, "YEAR_MONTH_FORMAT"),
         }
 
     @property

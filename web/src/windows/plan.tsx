@@ -23,6 +23,7 @@ import { AmountInput } from "../ui/AmountInput";
 import { DateField } from "../ui/DateField";
 import { Field } from "../ui/Field";
 import { Meter } from "../ui/Meter";
+import { OptionChip } from "../ui/OptionChip";
 import { Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
 import { type CURRENCIES, useCurrencyChoices } from "./settings";
@@ -268,7 +269,11 @@ export function NewGoalWindow() {
         {(control) => <DateField {...control} name="date" empty={t.dates.none} min={todayIso()} />}
       </Field>
       <Alert message={formMessage(create.error, t)} />
-      <button type="submit" className="button-primary w-fit" disabled={create.isPending}>
+      <button
+        type="submit"
+        className="button-primary w-fit justify-self-end"
+        disabled={create.isPending}
+      >
         {t.plan.goals.create}
       </button>
     </form>
@@ -490,15 +495,12 @@ function EditGoal(props: { goal: Goal; onDone: () => void }) {
             )}
           </Field>
         </div>
-        <label className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            name="archived"
-            className="size-4"
-            defaultChecked={goal.is_archived}
-          />
-          <span>{t.plan.goals.archived}</span>
-        </label>
+        <OptionChip
+          name="archived"
+          label={t.plan.goals.archiveOption}
+          defaultOn={goal.is_archived}
+          help={t.plan.goals.archived}
+        />
         <Alert message={formMessage(change.error, t) ?? formMessage(remove.error, t)} />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <ConfirmButton

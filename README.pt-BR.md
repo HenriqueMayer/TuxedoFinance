@@ -99,6 +99,66 @@ docker compose up -d
 Abra http://127.0.0.1:8000 e crie a sua conta. As configurações de uma
 instalação estão em [Operations](docs/operations.md).
 
+## Sugestão de categorias
+
+Uma conta nova começa com nove categorias. Para começar com um conjunto mais
+completo, salve o arquivo abaixo como `categorias.csv` e importe em
+**Ajustes → Gerenciar categorias → Importar**. A importação cria os nomes que
+você ainda não tem e não altera mais nada, então pode ser repetida. As
+subcategorias de despesa são somadas na categoria principal na
+[análise](docs/product.md#analysis). Renomeie ou exclua, na mesma janela, o
+que não servir para você.
+
+```csv
+name,transaction_type,parent_category
+Salário,INCOME,
+13º salário,INCOME,
+Férias,INCOME,
+Freela,INCOME,
+Rendimentos,INCOME,
+Aluguel recebido,INCOME,
+Reembolsos,INCOME,
+Outras receitas,INCOME,
+Moradia,EXPENSE,
+Aluguel,EXPENSE,Moradia
+Condomínio,EXPENSE,Moradia
+Energia,EXPENSE,Moradia
+Água,EXPENSE,Moradia
+Internet,EXPENSE,Moradia
+Manutenção da casa,EXPENSE,Moradia
+Mercado,EXPENSE,
+Restaurantes,EXPENSE,
+Lanches e delivery,EXPENSE,Restaurantes
+Transporte,EXPENSE,
+Combustível,EXPENSE,Transporte
+Transporte público,EXPENSE,Transporte
+Aplicativos de corrida,EXPENSE,Transporte
+Estacionamento e pedágio,EXPENSE,Transporte
+Manutenção do carro,EXPENSE,Transporte
+Saúde,EXPENSE,
+Farmácia,EXPENSE,Saúde
+Consultas,EXPENSE,Saúde
+Plano de saúde,EXPENSE,Saúde
+Educação,EXPENSE,
+Cursos,EXPENSE,Educação
+Livros,EXPENSE,Educação
+Lazer,EXPENSE,
+Streaming,EXPENSE,Lazer
+Viagens,EXPENSE,Lazer
+Assinaturas,EXPENSE,
+Academia e esporte,EXPENSE,
+Cuidados pessoais,EXPENSE,
+Vestuário,EXPENSE,
+Pets,EXPENSE,
+Presentes e doações,EXPENSE,
+Impostos e taxas,EXPENSE,
+Imposto de renda,EXPENSE,Impostos e taxas
+Tarifas bancárias,EXPENSE,Impostos e taxas
+Outras despesas,EXPENSE,
+```
+
+O mesmo arquivo em inglês está no [README em inglês](README.md#suggested-categories).
+
 ## Seus dados
 
 Todos os registros ficam em um arquivo SQLite no computador que roda a

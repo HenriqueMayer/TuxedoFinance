@@ -99,6 +99,66 @@ docker compose up -d
 Open http://127.0.0.1:8000 and create your account. The settings of an
 installation are in [Operations](docs/operations.md).
 
+## Suggested categories
+
+A new account starts with nine categories. To start with a fuller set, save
+the file below as `categories.csv` and import it in **Settings → Manage
+categories → Import**. The import creates the names that you do not have and
+changes nothing else, so you can run it again. Expense subcategories are
+added up in their parent in the [analysis](docs/product.md#analysis). Rename
+or delete what does not fit you in the same window.
+
+```csv
+name,transaction_type,parent_category
+Salary,INCOME,
+13th salary,INCOME,
+Vacation pay,INCOME,
+Freelance,INCOME,
+Investment income,INCOME,
+Rental income,INCOME,
+Refunds,INCOME,
+Other income,INCOME,
+Housing,EXPENSE,
+Rent,EXPENSE,Housing
+Condo fees,EXPENSE,Housing
+Electricity,EXPENSE,Housing
+Water,EXPENSE,Housing
+Internet,EXPENSE,Housing
+Home maintenance,EXPENSE,Housing
+Groceries,EXPENSE,
+Food & Dining,EXPENSE,
+Restaurants,EXPENSE,Food & Dining
+Delivery,EXPENSE,Food & Dining
+Transportation,EXPENSE,
+Fuel,EXPENSE,Transportation
+Public transport,EXPENSE,Transportation
+Ride-hailing,EXPENSE,Transportation
+Parking and tolls,EXPENSE,Transportation
+Car maintenance,EXPENSE,Transportation
+Health,EXPENSE,
+Pharmacy,EXPENSE,Health
+Doctor visits,EXPENSE,Health
+Health insurance,EXPENSE,Health
+Education,EXPENSE,
+Courses,EXPENSE,Education
+Books,EXPENSE,Education
+Hobbies & Entertainment,EXPENSE,
+Streaming,EXPENSE,Hobbies & Entertainment
+Travel,EXPENSE,Hobbies & Entertainment
+Subscriptions,EXPENSE,
+Fitness,EXPENSE,
+Personal care,EXPENSE,
+Clothing,EXPENSE,
+Pets,EXPENSE,
+Gifts and donations,EXPENSE,
+Taxes and fees,EXPENSE,
+Income tax,EXPENSE,Taxes and fees
+Bank fees,EXPENSE,Taxes and fees
+Other expenses,EXPENSE,
+```
+
+The same file in Brazilian Portuguese is in the [Portuguese README](README.pt-BR.md#sugestão-de-categorias).
+
 ## Your data
 
 All records are in one SQLite file on the computer that runs the

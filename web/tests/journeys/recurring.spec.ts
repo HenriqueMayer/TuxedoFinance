@@ -35,7 +35,7 @@ test("the owner records a monthly bill, confirms a month and changes its amount"
     "aria-pressed",
     "true",
   );
-  await add.getByLabel("Ask me to confirm each month").check();
+  await add.getByRole("button", { name: "Ask me to confirm each month" }).click();
   await add.getByRole("button", { name: "Save" }).click();
   await expect(add).toBeHidden();
 

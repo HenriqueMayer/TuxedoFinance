@@ -376,8 +376,6 @@ input[type="radio"] {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-window);
   background: var(--color-surface);
-  /* A press on the bar of areas brings the area below the bar. */
-  scroll-margin-top: 3.75rem;
 }
 
 .area-head {
@@ -806,7 +804,9 @@ dialog.window {
   margin: auto;
   width: min(44rem, calc(100vw - 2rem));
   max-height: min(48rem, calc(100dvh - 2rem));
-  overflow: hidden;
+  /* Not `hidden`: a script or a focus can scroll a hidden overflow, and the
+     title bar would leave the window. Only the content scrolls. */
+  overflow: clip;
   transform-origin: center;
 }
 

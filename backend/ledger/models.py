@@ -66,6 +66,47 @@ def _wanted_rows(item):
     return bool(flags & AMOUNT_ROWS_FLAG), bool(flags & OVERRIDE_ROWS_FLAG)
 
 
+class RecurringIncome(models.Model):
+    """An income that the owner receives every month: a salary, a rent.
+
+    It has one part or more. A part is a repeating income entry
+    (``Transaction.recurring_income``) with its day of the month and its
+    amount, so the schedule, the forecast and the balances count it as any
+    repeating entry. The rules are in ``ledger.incomes``.
+
+    ``gross`` and ``advance_percent`` are what the owner typed to calculate
+    the parts of a CLT salary. They are kept to calculate again; no amount is
+    read from them.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recurring_incomes"
+    )
+    name = models.CharField(max_length=150)
+    gross = models.DecimalField(
+        max_digits=16,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
+    advance_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.01")), MaxValueValidator(Decimal("99.99"))],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name", "pk"]
+
+    def __str__(self):
+        return self.name
+
+
 class Transaction(models.Model):
     MAX_INSTALLMENTS = 48
 
@@ -135,6 +176,16 @@ class Transaction(models.Model):
         "banking.RewardRedemption",
         on_delete=models.CASCADE,
         related_name="iof_transaction",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    # The recurring income that this entry is a part of. The income changes
+    # and deletes the entry; the transaction operations refuse both.
+    recurring_income = models.ForeignKey(
+        RecurringIncome,
+        on_delete=models.CASCADE,
+        related_name="parts",
         null=True,
         blank=True,
         editable=False,
