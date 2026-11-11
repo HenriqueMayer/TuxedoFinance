@@ -77,7 +77,7 @@ A release is a tag on `main` and a GitHub release of that tag.
 
 1. Set the version in `backend/pyproject.toml` (for example `2.0.0`) and give
    the entry of the [changelog](../CHANGELOG.md) that version and its date.
-2. Merge to `main`. The workflows of the backend, the client and the public
+2. Merge to `main`. The checks (`ci.yml`) and the workflow of the public
    site run. The public site is published from `main`.
 3. Tag the merge commit `v` plus the version (`v2.0.0`) and publish a GitHub
    release of the tag. The Docker workflow checks that the tag names the

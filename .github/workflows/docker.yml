@@ -1,15 +1,10 @@
 name: Docker
 
 # Builds the image and starts it. A published release also pushes the tested
-# image for both architectures.
+# image for both architectures. Every pull request runs it, because the rule
+# of the branches `main` and `develop` requires the two jobs by their names.
 on:
   pull_request:
-    paths:
-      - "Dockerfile"
-      - ".dockerignore"
-      - "backend/**"
-      - "web/**"
-      - ".github/workflows/docker.yml"
   release:
     types: [published]
 
@@ -22,7 +17,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Build and start on Linux ${{ matrix.arch }}
+    name: Validate Linux ${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:

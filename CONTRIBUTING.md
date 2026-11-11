@@ -15,14 +15,17 @@ Read [Development](docs/development.md) for setup and commands, and
 
 ## What a pull request runs
 
-| Workflow | Runs for a change in |
-|---|---|
-| `backend.yml` | `backend/` |
-| `web.yml` | `web/` or `backend/`: the client depends on the API schema, and the journeys use the real backend |
-| `docker.yml` | `backend/`, `web/`, `Dockerfile` or `.dockerignore`: it builds the image and starts it |
-| `pages.yml` | `site/`, `web/` or `backend/`: it builds and checks the public site, and does not publish it |
+| Workflow | Runs | Jobs |
+|---|---|---|
+| `ci.yml` | For every pull request | The backend checks, the client checks and the browser journeys, then `Application and tooling checks`, which passes when the three passed |
+| `docker.yml` | For every pull request | `Validate Linux amd64` and `Validate Linux arm64`: each builds the image and starts it |
+| `pages.yml` | For a change in `site/`, `web/` or `backend/` | It builds and checks the public site, and does not publish it |
 
-A change of documentation alone runs none of them.
+The rule of the branches `main` and `develop` requires three checks by their
+names: `Application and tooling checks`, `Validate Linux amd64` and
+`Validate Linux arm64`. Do not rename these jobs, and do not add a path
+filter to their workflows: a required check that does not run blocks the
+merge.
 
 ## Rules that the checks cannot enforce
 

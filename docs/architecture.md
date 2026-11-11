@@ -95,10 +95,11 @@ size of the change.
 | Client unit tests (`web/src/**/*.test.ts`) | Pure logic: amounts and their typing, dates, periods, paths, error messages | Each client change |
 | Journeys (`web/tests/journeys/`) | Complete tasks in a browser against the real backend with a temporary database | Each change of `web/` or `backend/` |
 
-CI has four workflows: `backend.yml`, `web.yml` (two parallel jobs),
-`docker.yml` and `pages.yml`. A pull request runs the ones whose paths it
-touches; a pull request that touches only documentation runs none. A push to
-`main` always runs the backend and the client workflows.
+CI has three workflows. `ci.yml` runs the backend checks, the client checks
+and the journeys as parallel jobs, and `docker.yml` builds and starts the
+image for two architectures; every pull request runs both, because the rule
+of the branches requires their checks. `pages.yml` builds the public site for
+a change in `site/`, `web/` or `backend/`. A push to `main` runs `ci.yml`.
 
 A journey creates its own user, so journeys do not depend on each other. The
 journeys of the session and of the shell use one shared user, and leave its

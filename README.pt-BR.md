@@ -18,8 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/backend.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/backend.yml?branch=main&amp;style=flat&amp;labelColor=1A2E26&amp;color=176B52&amp;label=backend" alt="Checagens do backend"></a>
-  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/web.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/web.yml?branch=main&amp;style=flat&amp;labelColor=1A2E26&amp;color=176B52&amp;label=web" alt="Checagens do cliente e jornadas de navegador"></a>
+  <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/ci.yml?branch=main&amp;style=flat&amp;labelColor=1A2E26&amp;color=176B52&amp;label=checks" alt="Checagens do backend e do cliente, e jornadas de navegador"></a>
   <a href="https://github.com/HenriqueMayer/TuxedoFinance/actions/workflows/pages.yml"><img src="https://img.shields.io/github/actions/workflow/status/HenriqueMayer/TuxedoFinance/pages.yml?branch=main&amp;style=flat&amp;labelColor=1A2E26&amp;color=176B52&amp;label=site" alt="Construção do site público"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-B88A59?style=flat&amp;labelColor=1A2E26" alt="Licença PolyForm Noncommercial"></a>
 </p>
