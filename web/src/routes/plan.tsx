@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { type Income, incomesQuery } from "../data/incomes";
 import {
   type Budget,
   type Forecast,
@@ -26,6 +27,7 @@ export function PlanPage() {
   const plan = useQuery(planQuery);
   const goals = useQuery(goalsQuery);
   const forecast = useQuery(forecastQuery);
+  const incomes = useQuery(incomesQuery);
 
   return (
     <>
@@ -60,6 +62,7 @@ export function PlanPage() {
       {plan.data && <MonthLimit plan={plan.data} />}
       {plan.data && <Budgets plan={plan.data} />}
       {goals.data && <Goals goals={goals.data.goals} />}
+      {incomes.data && <Incomes items={incomes.data.items} totals={incomes.data.totals} />}
       {forecast.data && <MonthsAhead forecast={forecast.data} />}
       {plan.data && <Tools />}
     </>
@@ -310,6 +313,56 @@ function MonthsAhead(props: { forecast: Forecast }) {
               {sheet.name}
             </OpenWindow>
           ))}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** The incomes that arrive every month, each with its receipts. A row opens the income. */
+function Incomes(props: { items: Income[]; totals: { currency: string; amount: string }[] }) {
+  const t = useMessages();
+  const text = t.plan.incomes;
+  return (
+    <section className="mt-10">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-2">
+        <h2 className="font-medium">{text.title}</h2>
+        <OpenWindow w="new-income" className="action">
+          <PlusIcon />
+          {text.new}
+        </OpenWindow>
+      </div>
+      {props.items.length === 0 && <p className="max-w-prose py-4 text-muted">{text.empty}</p>}
+      <ul className="divide-y divide-line">
+        {props.items.map((income) => (
+          <li key={income.id}>
+            <OpenWindow
+              w={`income:${income.id}`}
+              className="-mx-2 flex items-center gap-4 rounded-(--radius-control) px-2 py-3 hover:bg-surface"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{income.name}</span>
+                <span className="block text-sm text-muted">
+                  {income.account.name}
+                  {income.parts.map(
+                    (part) =>
+                      ` · ${text.part(part.day, formatAmount(part.amount, income.currency))}`,
+                  )}
+                </span>
+              </span>
+              <span className="amount text-right font-semibold text-positive">
+                {text.perMonth(formatAmount(income.total, income.currency))}
+              </span>
+            </OpenWindow>
+          </li>
+        ))}
+      </ul>
+      {props.items.length > 1 && (
+        <p className="flex flex-wrap justify-between gap-x-4 border-t border-line pt-3 text-sm">
+          <span className="text-muted">{text.total}</span>
+          <span className="amount font-medium">
+            {props.totals.map((row) => formatAmount(row.amount, row.currency)).join(" · ")}
+          </span>
         </p>
       )}
     </section>

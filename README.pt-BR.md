@@ -99,6 +99,20 @@ docker compose up -d
 Abra http://127.0.0.1:8000 e crie a sua conta. As configurações de uma
 instalação estão em [Operations](docs/operations.md).
 
+## Sugestão de categorias
+
+Uma conta nova começa com nove categorias. Para começar com um conjunto mais
+completo, baixe o arquivo
+[categories.pt-BR.csv](docs/categories/categories.pt-BR.csv) e importe em
+**Ajustes → Gerenciar categorias → Importar**. A importação cria os nomes que
+você ainda não tem e não altera mais nada, então pode ser repetida. As
+subcategorias de despesa são somadas na categoria principal na
+[análise](docs/product.md#analysis). Renomeie ou exclua, na mesma janela, o
+que não servir para você.
+
+O mesmo conjunto em inglês é
+[categories.en.csv](docs/categories/categories.en.csv).
+
 ## Seus dados
 
 Todos os registros ficam em um arquivo SQLite no computador que roda a

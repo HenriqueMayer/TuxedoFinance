@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { freshUser, prepareWallet } from "./support";
+import { choose, freshUser, prepareWallet } from "./support";
 
 test("the owner updates the value of an investment and the net worth follows", async ({ page }) => {
   await freshUser(page);
@@ -11,7 +11,8 @@ test("the owner updates the value of an investment and the net worth follows", a
   const create = page.getByRole("dialog", { name: "New investment" });
   await expect(create.getByLabel("Name")).toBeFocused();
   await create.getByLabel("Name").fill("Reserva");
-  await expect(create.getByLabel("Institution")).toHaveValue("Nubank");
+  // The one institution of the owner is the choice already.
+  await expect(create.getByLabel("Institution")).toContainText("Nubank");
   await create.getByLabel(/Balance today/).fill("2.000,00");
   await create.getByRole("button", { name: "Create investment" }).click();
   await expect(create).toBeHidden();
@@ -63,7 +64,9 @@ test("a deposit and a withdrawal move money and keep the net worth", async ({ pa
   await page.getByRole("link", { name: "New investment" }).click();
   const create = page.getByRole("dialog", { name: "New investment" });
   await create.getByLabel("Name").fill("CDB");
-  await create.getByLabel("Institution").fill("XP");
+  // The institutions are a list of the application, and a new one is typed.
+  await choose(create.getByLabel("Institution"), "Another institution…");
+  await create.getByLabel("Name of the institution").fill("XP");
   await create.getByRole("button", { name: "Create investment" }).click();
   await expect(create).toBeHidden();
 
@@ -133,7 +136,7 @@ test("an investment in units is valued by the price of today", async ({ page }) 
   // Rename, then archive: the card leaves the grid and stays reachable.
   await window.getByText("Edit investment").click();
   await window.getByLabel("Name").fill("Ações Brasil");
-  await window.getByLabel(/Archived/).check();
+  await window.getByRole("button", { name: "Archive", exact: true }).click();
   await window.getByRole("button", { name: "Save" }).last().click();
   await expect(window.getByText(/This investment is archived/)).toBeVisible();
   await page.goto("/wallet");

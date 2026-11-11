@@ -43,6 +43,13 @@ frequent one carries a 16px line icon before its label (after it, for a
 chevron that means "more"). A section that opens in place ("Edit goal") is an
 `action` on the `summary`, with a mark that turns.
 
+The action that completes a window (save, create, transfer) is at the end
+of the form, on the right; a deletion, when there is one, is on the left of
+the same row. A form inside a window that adds one row (reserve a balance,
+record points, record a rate) keeps its button beside its fields, and a
+calculator keeps its button under its fields. An action of a row of a list
+(undo, skip, remove) is an `action`, not a full button.
+
 An action that the owner uses a few times a year (import a statement) is not
 a button beside the title. It is an item of the menu of its page.
 
@@ -78,6 +85,10 @@ list of the browser has no search.
   the panel and the window stays.
 - A choice of two to four fixed values that the owner compares is a segmented
   control, not a select.
+- A name that is an existing one or a new one (the bank of an account, the
+  institution of an investment) is `NameChoice` in `src/ui/NameChoice.tsx`:
+  a select of the existing names whose last choice opens a field for a new
+  name. No field uses the list of the browser (`datalist`).
 - A select shows words for "no choice" in two ways: `placeholder` is the text
   before a choice, and the owner cannot return to it; `empty` is a real
   choice at the top of the list.
@@ -115,6 +126,11 @@ The rules are `typedAmount`, `finishedAmount`, `pastedAmount` and
 `src/lib/money.ts`. They write text; they calculate nothing.
 
 ## Options of a form
+
+An option of a form that is on or off is a chip (`OptionChip` in
+`src/ui/OptionChip.tsx`), never a checkbox of the browser: confirm each
+invoice payment, confirm each month, archive. A checkbox stays for choosing
+rows of a list (the blocks of Home, the rows of an import).
 
 An option that most entries do not use is a chip in view, not a field behind
 "More options": repeat every month, pay in installments, add a note. A chip
@@ -155,7 +171,10 @@ summary on a page stays a row with a bar and its value as text.
 | Parts of one total    | One bar of parts, with a list         | Three parts take a color; the others share one gray                      |
 
 - A series takes its color from the tokens: ink, the bow-tie ink, positive
-  and negative. A chart has four colored series at most. A second mark goes
+  and negative. A chart has four colored series at most. Items of one kind
+  that are compared (the credit cards) take ink, the bow-tie ink and gray,
+  because green and red belong to amounts; more than three items share one
+  series with their total. A second mark goes
   with a color that carries meaning: a dashed line for a debt or a cost, a
   dashed edge for a month that is not over.
 - Every chart has a table with the same values for a screen reader.
@@ -183,7 +202,9 @@ A window with several subjects (the analysis) divides them into areas. An
 area is a block with a band at the top: a round mark, then the name. A bar
 with the names of the areas stays at the top while the window scrolls; a
 press goes to an area and the bar marks the one in view. The areas stay on
-one page, so that two of them can be read together.
+one page, so that two of them can be read together. Only the content of the
+window scrolls. On a phone the bar scrolls sideways and keeps the marked
+name in view.
 
 ## The window
 

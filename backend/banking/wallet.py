@@ -89,10 +89,14 @@ def overview(user):
     }
 
 
-def account_movements(account):
-    """Return the latest movements of an account, newest first."""
+def account_movements(account, today):
+    """Return the latest movements of an account up to ``today``, newest first.
+
+    A movement with a later date (a month of a repeating entry, the debit of
+    a later invoice) is not in the balance yet, and it is not listed.
+    """
     rows = (
-        BankMovement.objects.filter(account=account)
+        BankMovement.objects.filter(account=account, effective_date__lte=today)
         .select_related("invoice__card", "transfer")
         .order_by("-effective_date", "-created_at", "-pk")[:MOVEMENT_LIMIT]
     )
@@ -110,15 +114,26 @@ def account_movements(account):
     ]
 
 
-def card_invoices(card):
-    """Return the invoices of a card, newest month first, with their state."""
+def card_invoices(card, today):
+    """Return the invoices of a card in two lists, each with the state of its invoices.
+
+    The first list ends at the open statement, the one that bills a purchase
+    of ``today``, and has the newest month first. The second list has the
+    later statements, which installments and repeating purchases already
+    fill, with the next month first.
+    """
     invoices = attach_invoice_states(
         CardInvoice.objects.filter(card=card)
         .select_related("card")
         .prefetch_related("payments")
         .order_by("-reference_month")
     )
-    return [_invoice_row(invoice) for invoice in invoices]
+    current = card.statement_month(today)
+    rows = [(invoice.reference_month, _invoice_row(invoice)) for invoice in invoices]
+    return (
+        [row for month, row in rows if month <= current],
+        [row for month, row in reversed(rows) if month > current],
+    )
 
 
 def invoice_detail(invoice):

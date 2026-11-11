@@ -29,6 +29,8 @@ import { sessionQuery, useDateOrder } from "../session";
 import { AmountInput } from "../ui/AmountInput";
 import { DateField } from "../ui/DateField";
 import { Field } from "../ui/Field";
+import { NameChoice } from "../ui/NameChoice";
+import { OptionChip } from "../ui/OptionChip";
 import { Segmented } from "../ui/Segmented";
 import { Select } from "../ui/Select";
 import { autofocus } from "../ui/Window";
@@ -50,7 +52,7 @@ export function NewInvestmentWindow(props: { onDone: () => void }) {
   const [mode, setMode] = useState<Mode>("MONETARY");
   const [currency, setCurrency] = useState<Currency>(session.preferences?.base_currency ?? "BRL");
   const [invalid, setInvalid] = useState<string[]>([]);
-  // A typed name of a known institution means that institution.
+  // The banks and the institutions that the owner already has.
   const institutions = [
     ...new Set([
       ...wallet.banks.map((bank) => bank.name),
@@ -114,22 +116,14 @@ export function NewInvestmentWindow(props: { onDone: () => void }) {
         ]}
       >
         {(control) => (
-          <>
-            <input
-              {...control}
-              name="institution"
-              className="field"
-              list="investment-institutions"
-              placeholder={t.invest.institutionPlaceholder}
-              defaultValue={institutions.length === 1 ? institutions[0] : ""}
-              autoComplete="off"
-            />
-            <datalist id="investment-institutions">
-              {institutions.map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
-          </>
+          <NameChoice
+            control={control}
+            name="institution"
+            options={institutions}
+            other={t.invest.otherInstitution}
+            otherLabel={t.invest.newInstitution}
+            placeholder={t.invest.institutionPlaceholder}
+          />
         )}
       </Field>
       <div className="grid gap-1.5">
@@ -215,7 +209,11 @@ export function NewInvestmentWindow(props: { onDone: () => void }) {
         </div>
       </fieldset>
       <Alert message={formMessage(create.error, t)} />
-      <button type="submit" className="button-primary w-fit" disabled={create.isPending}>
+      <button
+        type="submit"
+        className="button-primary w-fit justify-self-end"
+        disabled={create.isPending}
+      >
         {t.invest.create}
       </button>
     </form>
@@ -608,15 +606,12 @@ function EditPosition(props: { position: PositionDetail; onDone: () => void }) {
             />
           )}
         </Field>
-        <label className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            name="archived"
-            className="size-4"
-            defaultChecked={position.is_archived}
-          />
-          <span>{t.invest.archive}</span>
-        </label>
+        <OptionChip
+          name="archived"
+          label={t.invest.archiveOption}
+          defaultOn={position.is_archived}
+          help={t.invest.archive}
+        />
         <Alert message={formMessage(change.error, t) ?? formMessage(remove.error, t)} />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <ConfirmButton

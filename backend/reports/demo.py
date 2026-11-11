@@ -230,14 +230,16 @@ def seed(user, language):
         )
 
     # What repeats every month.
-    entry(
-        text["salary"],
-        "7400.00",
-        salary,
-        checking,
-        _on(today, MONTHS_BACK, 5),
-        transaction_type="INCOME",
-        is_fixed=True,
+    # The salary is a recurring income with one part, on the 5th.
+    api.post(
+        "/api/incomes",
+        {
+            "name": text["salary"],
+            "category_id": salary,
+            "account_id": int(checking.split(":")[1]),
+            "start": _on(today, MONTHS_BACK, 1).isoformat(),
+            "parts": [{"day": 5, "amount": "7400.00"}],
+        },
     )
     entry(text["rent"], "2600.00", rent, checking, _on(today, MONTHS_BACK, 10), is_fixed=True)
     entry(
@@ -440,6 +442,7 @@ def record(user, language):
         "/api/banking/exchange-rates",
         "/api/plan/month",
         "/api/plan/forecast",
+        "/api/incomes",
         "/api/plan/closing",
         "/api/imports",
         "/api/ledger/transactions/suggestion",
@@ -521,6 +524,8 @@ def record(user, language):
     for program in get("/api/loyalty/programs"):
         get(f"/api/loyalty/programs/{program['id']}")
     get("/api/plan/goals")
+    for income in answers[_key("GET", "/api/incomes", {})]["items"]:
+        get(f"/api/incomes/{income['id']}")
     # The sheet is calculated by a POST. It is recorded for the two periods
     # without changes and for the changes of each saved sheet.
     empty = {"cells": {}, "manual": []}

@@ -53,7 +53,8 @@ test("the owner pays an invoice and undoes the payment", async ({ page }) => {
 
   const cardWindow = page.getByRole("dialog", { name: "Card" });
   await expect(cardWindow.getByRole("link")).toHaveCount(3); // Three statements hold the installments.
-  await cardWindow.getByRole("link").last().click(); // The oldest month is last.
+  // The open statement is first; the two later ones are in their own list.
+  await cardWindow.getByRole("link").first().click();
 
   const invoice = page.getByRole("dialog", { name: "Invoice" });
   await expect(invoice.getByRole("link", { name: /Mercado/ })).toContainText("R$ 120,00");
@@ -72,7 +73,7 @@ test("the owner pays an invoice and undoes the payment", async ({ page }) => {
 
   // Undoing the payment reopens the invoice and returns the money.
   await page.getByRole("link", { name: /Platinum/ }).click();
-  await page.getByRole("dialog", { name: "Card" }).getByRole("link").last().click();
+  await page.getByRole("dialog", { name: "Card" }).getByRole("link").first().click();
   await invoice.getByRole("button", { name: "Undo" }).click();
   await expect(invoice.getByRole("button", { name: "Record payment" })).toBeVisible();
   await page.goto("/wallet");
@@ -110,7 +111,7 @@ test("the owner transfers between accounts and undoes it", async ({ page }) => {
 
   await page.getByRole("link", { name: "Transfer" }).click();
   const window = page.getByRole("dialog", { name: "Transfer" });
-  await window.getByLabel("Amount", { exact: true }).fill("250");
+  await window.getByLabel("Amount (BRL)").fill("250");
   await choose(window.getByLabel("From", { exact: true }), "Nubank · Conta");
   await choose(window.getByLabel("To", { exact: true }), "Nubank · Reserva");
   await window.getByRole("button", { name: "Transfer" }).click();
@@ -156,4 +157,59 @@ test("the owner corrects an account and deletes an unused one", async ({ page })
   await account.getByRole("button", { name: "Delete for good" }).click();
   await expect(account).toBeHidden();
   await expect(page.getByRole("heading", { name: "Itaú" })).toBeHidden();
+});
+
+test("the windows of an account and of a card start at today, and a bank is chosen from a list", async ({
+  page,
+}) => {
+  await freshUser(page);
+  const wallet = await prepareWallet(page);
+  const categories: { id: number }[] = await page.evaluate(async () =>
+    (await fetch("/api/ledger/categories")).json(),
+  );
+  // Three installments, and a rent that repeats: both have months after this one.
+  await apiPost(page, "/api/ledger/transactions", {
+    title: "Notebook",
+    amount: "900.00",
+    category_id: categories[0]?.id,
+    instrument: wallet.card,
+    installments: 3,
+  });
+  await apiPost(page, "/api/ledger/transactions", {
+    title: "Aluguel",
+    amount: "500.00",
+    category_id: categories[0]?.id,
+    instrument: wallet.account,
+    is_fixed: true,
+  });
+
+  // The account lists what already happened: one rent, not the months ahead.
+  await page.goto(`/wallet?w=${wallet.account.replace("account", "account")}`);
+  const account = page.getByRole("dialog", { name: "Account" });
+  await expect(account.getByText("Aluguel")).toHaveCount(1);
+
+  // The card lists the open statement first, and the later ones apart.
+  await page.goto(`/wallet?w=${wallet.card.replace("credit", "card")}`);
+  const card = page.getByRole("dialog", { name: "Card" });
+  const later = card.locator("section").filter({
+    has: page.getByRole("heading", { name: "Later invoices" }),
+  });
+  await expect(later.getByRole("link")).toHaveCount(2);
+  await expect(card.locator("section").first().getByRole("link")).toHaveCount(1);
+  // The setting of the card is an option of the form.
+  await card.getByText("Card settings").click();
+  await expect(
+    card.getByRole("button", { name: "I confirm each invoice payment" }),
+  ).toHaveAttribute("aria-pressed", "false");
+
+  // A new account takes one of the banks of the owner, or a new bank.
+  await page.goto("/wallet?w=new-account");
+  const create = page.getByRole("dialog", { name: "New account" });
+  await expect(create.getByLabel("Bank", { exact: true })).toContainText("Nubank");
+  await choose(create.getByLabel("Bank", { exact: true }), "Another bank…");
+  await create.getByLabel("Name of the bank").fill("Itaú");
+  await create.getByLabel("Account name").fill("Corrente");
+  await create.getByRole("button", { name: "Create account" }).click();
+  await expect(create).toBeHidden();
+  await expect(page.getByText("Itaú").first()).toBeVisible();
 });

@@ -9,8 +9,9 @@ test("an account in another currency counts in the totals after its rate", async
   // A new account chooses its currency.
   await page.getByRole("link", { name: "New account" }).click();
   const create = page.getByRole("dialog", { name: "New account" });
-  await create.getByLabel("Bank").fill("Wise");
-  await create.getByLabel("Name").fill("Dollars");
+  await choose(create.getByLabel("Bank", { exact: true }), "Another bank…");
+  await create.getByLabel("Name of the bank").fill("Wise");
+  await create.getByLabel("Account name").fill("Dollars");
   await chooseValue(create.getByLabel("Currency"), "USD");
   await create.getByLabel("Opening balance (USD)").fill("100");
   await create.getByRole("button", { name: /Create/ }).click();

@@ -21,7 +21,9 @@ export function Field(props: {
     .filter(Boolean)
     .join(" ");
   return (
-    <div className={`grid gap-1.5 ${props.className ?? ""}`}>
+    // One column that can shrink: a control with a long text stays in the
+    // width of the field and cuts its text.
+    <div className={`grid min-w-0 grid-cols-1 gap-1.5 ${props.className ?? ""}`}>
       <label htmlFor={id} className="text-sm font-medium">
         {props.label}
       </label>

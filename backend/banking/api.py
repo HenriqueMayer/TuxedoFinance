@@ -242,7 +242,10 @@ class CreditCardOut(Schema):
     closing_day: int
     due_day: int
     confirm_payments: bool
+    #: The invoices up to the open statement, newest month first.
     invoices: list[InvoiceRow]
+    #: The statements after the open one, next month first.
+    later_invoices: list[InvoiceRow]
 
 
 class CreditCardChange(Schema):
@@ -317,11 +320,12 @@ def _account_out(account):
         "opening_balance": account.opening_balance,
         "opening_date": account.opening_date,
         "balance": account.current_balance(),
-        "movements": wallet.account_movements(account),
+        "movements": wallet.account_movements(account, clock.today()),
     }
 
 
 def _card_detail(card):
+    invoices, later = wallet.card_invoices(card, clock.today())
     return {
         "id": card.pk,
         "account_id": card.account_id,
@@ -330,7 +334,8 @@ def _card_detail(card):
         "closing_day": card.closing_day,
         "due_day": card.due_day,
         "confirm_payments": card.manual_settlement_from is not None,
-        "invoices": wallet.card_invoices(card),
+        "invoices": invoices,
+        "later_invoices": later,
     }
 
 

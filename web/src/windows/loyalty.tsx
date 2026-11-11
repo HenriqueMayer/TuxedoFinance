@@ -90,7 +90,11 @@ export function NewProgramWindow() {
     <form onSubmit={submit} className="grid gap-5" noValidate>
       <ProgramFields error={create.error} first />
       <Alert message={formMessage(create.error, t)} />
-      <button type="submit" className="button-primary w-fit" disabled={create.isPending}>
+      <button
+        type="submit"
+        className="button-primary w-fit justify-self-end"
+        disabled={create.isPending}
+      >
         {t.loyalty.create}
       </button>
     </form>

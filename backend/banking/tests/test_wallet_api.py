@@ -177,7 +177,11 @@ class CreditCardTests(WalletApiTestCase):
         body = self.get(self.path()).json()
         self.assertEqual(
             [(row["reference_month"], row["amount"]) for row in body["invoices"]],
-            [("2027-01-01", "100.00"), ("2026-12-01", "100.00"), ("2026-11-01", "100.00")],
+            [("2026-11-01", "100.00")],
+        )
+        self.assertEqual(
+            [(row["reference_month"], row["amount"]) for row in body["later_invoices"]],
+            [("2026-12-01", "100.00"), ("2027-01-01", "100.00")],
         )
 
     def test_turning_confirmation_off_keeps_existing_invoices_confirmed(self):

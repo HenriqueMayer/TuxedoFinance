@@ -143,7 +143,7 @@ test("the owner creates a goal and reserves a balance for it", async ({ page }) 
   await expect(window.getByText("No balance is reserved for this goal yet.")).toBeVisible();
   await window.getByText("Edit goal").click();
   await window.getByLabel("Name").fill("Japão");
-  await window.getByLabel(/Archived/).check();
+  await window.getByRole("button", { name: "Archive", exact: true }).click();
   await window.getByRole("button", { name: "Save" }).click();
   await expect(window.getByText(/This goal is archived/)).toBeVisible();
   await page.keyboard.press("Escape");

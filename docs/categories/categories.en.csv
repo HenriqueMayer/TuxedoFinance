@@ -1,0 +1,46 @@
+name,transaction_type,parent_category
+Salary,INCOME,
+13th salary,INCOME,
+Vacation pay,INCOME,
+Freelance,INCOME,
+Investment income,INCOME,
+Rental income,INCOME,
+Refunds,INCOME,
+Other income,INCOME,
+Housing,EXPENSE,
+Rent,EXPENSE,Housing
+Condo fees,EXPENSE,Housing
+Electricity,EXPENSE,Housing
+Water,EXPENSE,Housing
+Internet,EXPENSE,Housing
+Home maintenance,EXPENSE,Housing
+Groceries,EXPENSE,
+Food & Dining,EXPENSE,
+Restaurants,EXPENSE,Food & Dining
+Delivery,EXPENSE,Food & Dining
+Transportation,EXPENSE,
+Fuel,EXPENSE,Transportation
+Public transport,EXPENSE,Transportation
+Ride-hailing,EXPENSE,Transportation
+Parking and tolls,EXPENSE,Transportation
+Car maintenance,EXPENSE,Transportation
+Health,EXPENSE,
+Pharmacy,EXPENSE,Health
+Doctor visits,EXPENSE,Health
+Health insurance,EXPENSE,Health
+Education,EXPENSE,
+Courses,EXPENSE,Education
+Books,EXPENSE,Education
+Hobbies & Entertainment,EXPENSE,
+Streaming,EXPENSE,Hobbies & Entertainment
+Travel,EXPENSE,Hobbies & Entertainment
+Subscriptions,EXPENSE,
+Fitness,EXPENSE,
+Personal care,EXPENSE,
+Clothing,EXPENSE,
+Pets,EXPENSE,
+Gifts and donations,EXPENSE,
+Taxes and fees,EXPENSE,
+Income tax,EXPENSE,Taxes and fees
+Bank fees,EXPENSE,Taxes and fees
+Other expenses,EXPENSE,

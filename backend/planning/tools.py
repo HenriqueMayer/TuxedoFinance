@@ -119,6 +119,30 @@ def salary(
     }
 
 
+def salary_split(gross, year, advance_percent, **deductions):
+    """Return the two receipts of a CLT salary that pays an advance.
+
+    The advance is ``advance_percent`` of the gross salary, without
+    deductions. The rest is the net pay of the month less the advance, so the
+    INSS, the income tax and the other deductions leave the second receipt.
+    The rest is zero or less when the advance takes the whole net pay.
+    """
+    result = salary(gross, year, **deductions)
+    month = result["month"]
+    advance = money(gross * advance_percent / D("100"))
+    return {
+        "year": result["year"],
+        "assumed": result["assumed"],
+        "gross": month["gross"],
+        "inss": month["inss"],
+        "irrf": month["irrf"],
+        "deductions": month["deductions"],
+        "net": month["net"],
+        "advance": advance,
+        "remainder": month["net"] - advance,
+    }
+
+
 def growth(*, initial, contribution, rate, rate_period, months):
     """Return a balance that grows for ``months`` months.
 
