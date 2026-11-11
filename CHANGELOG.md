@@ -3,7 +3,9 @@
 Changes that the owner of an installation can notice. Versions follow
 [Semantic Versioning](https://semver.org/).
 
-## Unreleased — 2.0.0
+## Unreleased
+
+## 2.0.0 — 2026-11-11
 
 2.0 is a new application on the 1.x financial rules. It has a new database
 and no upgrade from 1.x.
