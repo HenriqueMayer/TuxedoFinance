@@ -1,6 +1,6 @@
 [project]
 name = "tuxedo-finance"
-version = "2.0.0.dev0"
+version = "2.0.0"
 description = "Tuxedo Finance — a self-hosted personal finance application for manual entry."
 requires-python = ">=3.12"
 dependencies = [

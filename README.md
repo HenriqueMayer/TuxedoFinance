@@ -120,8 +120,8 @@ application. Backup and restore are two commands: see
 ## State
 
 Version 2.0 is a new application on the 1.x financial rules: a Django API
-and a React client. It is not released yet. It has a new database, and there
-is no upgrade from 1.x. The last 1.x release is the tag
+and a React client. It has a new database, and there is no upgrade from 1.x.
+The last 1.x release is the tag
 [`v1.0.2`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.2).
 
 ## License
