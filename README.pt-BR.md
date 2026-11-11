@@ -125,7 +125,7 @@ A documentação técnica está em inglês.
 A versão 2.0 é uma aplicação nova sobre as regras financeiras da 1.x: uma
 API Django e um cliente React. Ainda não foi lançada. Ela tem um banco de
 dados novo, e não há atualização a partir da 1.x. A última versão 1.x é a
-tag [`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.0).
+tag [`v1.0.2`](https://github.com/HenriqueMayer/TuxedoFinance/tree/v1.0.2).
 
 ## Licença
 

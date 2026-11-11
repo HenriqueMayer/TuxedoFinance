@@ -17,4 +17,4 @@ reference is the OpenAPI schema: `/api/openapi.json` on a running server,
 or `web/src/api/schema.json` in the repository.
 
 History is not kept here. A release has one entry in the
-[changelog](../CHANGELOG.md). The 1.x documentation is in the tag `v1.0.0`.
+[changelog](../CHANGELOG.md). The 1.x documentation is in the tag `v1.0.2`.

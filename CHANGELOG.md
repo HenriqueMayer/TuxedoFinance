@@ -75,4 +75,4 @@ and no upgrade from 1.x.
 
 The versions before 2.0 were a server-rendered Django application. Their
 notes are in the changelog of the tag
-[`v1.0.0`](https://github.com/HenriqueMayer/TuxedoFinance/blob/v1.0.0/CHANGELOG.md).
+[`v1.0.2`](https://github.com/HenriqueMayer/TuxedoFinance/blob/v1.0.2/CHANGELOG.md).
