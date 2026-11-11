@@ -1,141 +1,127 @@
 name: CI
 
+# The checks of the application. Every pull request runs them, because the
+# rule of the branches `main` and `develop` requires the last job by its name.
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
-    name: Application and tooling checks
+  backend:
+    name: Lint, checks and tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      SECRET_KEY: ci-only-not-a-real-secret
+      TUXEDO_ENV_FILE: /dev/null
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: .python-version
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Install gettext
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y gettext
-
-      - name: Sync locked dependencies
+          cache-dependency-glob: backend/uv.lock
+      - name: Install locked dependencies
         run: uv sync --locked
-
-      - name: Validate project version
-        run: uv run python scripts/check_version.py
-
-      - name: Validate local documentation links and anchors
-        run: uv run python scripts/check_docs.py
-
-      - name: Install pinned frontend tools
-        run: npm ci
-
-      - name: Test repository tooling
-        run: uv run python -m unittest discover -s tests/tooling
-
-      - name: Test JavaScript amount and allocation helpers
-        run: npm run test:unit
-
-      - name: Audit pinned frontend tools
-        run: npm audit --audit-level=high
-
-      - name: Verify compiled frontend assets
+      - name: Lint and format check
         run: |
-          npm run build:css -- "$RUNNER_TEMP/app.css"
-          cmp "$RUNNER_TEMP/app.css" static/css/app.css
-          actual_htmx_sri=$(python -c "import base64, hashlib, pathlib; data=pathlib.Path('static/js/vendor/htmx.min.js').read_bytes().rstrip(b'\\n'); print(base64.b64encode(hashlib.sha384(data).digest()).decode())")
-          test "$actual_htmx_sri" = "H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V"
-
-      - name: Django system checks
-        env:
-          SECRET_KEY: ci-test-secret-key
-        run: uv run python manage.py check
-
-      - name: Check for missing migrations
-        env:
-          SECRET_KEY: ci-test-secret-key
-        run: uv run python manage.py makemigrations --check --dry-run
-
-      - name: Validate translations
-        env:
-          SECRET_KEY: ci-test-secret-key
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Translations are compiled
         run: |
-          uv run python manage.py compilemessages
-          git diff --exit-code -- locale/pt_BR/LC_MESSAGES/django.mo
-
-      - name: Run tests with branch coverage
-        env:
-          SECRET_KEY: ci-test-secret-key
-        run: uv run coverage run --branch manage.py test
-
-      - name: Publish coverage report
+          sudo apt-get update && sudo apt-get install --no-install-recommends -y gettext
+          uv run python manage.py compilemessages --ignore=.venv
+          git diff --exit-code -- locale
+      - name: Django system check and migration drift
         run: |
-          uv run coverage report --show-missing --fail-under=70
-          uv run coverage xml
-          uv run coverage html
+          uv run python manage.py check
+          uv run python manage.py makemigrations --check --dry-run
+      # The limit is two points under the measured value. The uncovered code is
+      # mostly 1.x rules without a screen: points bought with money, IOF on a
+      # redemption, invoice credits.
+      - name: Tests with branch coverage
+        run: |
+          uv run coverage run manage.py test
+          uv run coverage report --fail-under=84
 
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+  web:
+    name: Types, lint, unit tests and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          name: coverage-report
-          path: |
-            .local/coverage/coverage.xml
-            .local/coverage/html/
-          include-hidden-files: true
-
-      - name: Lint Python
-        # The repository predates a formatter configuration; keep CI focused
-        # on executable correctness until a style migration is scheduled.
-        run: uvx --from 'ruff>=0.9,<1' ruff check . --select F --ignore F401
-
-      - name: Audit locked runtime dependencies
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: npm ci
+      - name: API types match the backend schema
         run: |
-          uv export --locked --no-dev --format requirements-txt > "$RUNNER_TEMP/requirements.txt"
-          uvx --from 'pip-audit>=2.7,<3' pip-audit --strict -r "$RUNNER_TEMP/requirements.txt"
+          npm run api:types
+          git diff --exit-code -- src/api
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx vite build
 
-      - name: Install Chromium for browser smoke tests
-        run: npx playwright install --with-deps chromium
-
-      - name: Run application browser tests
-        run: npm run test:e2e
-
-      - name: Test assistant tools with the isolated synthetic provider
-        run: >-
-          npm run test:e2e -- --assistant-fixtures
-          tests/e2e/assistant/actions.spec.js
-          tests/e2e/assistant/consultation.spec.js
-          tests/e2e/assistant/copy-markdown.spec.js
-          tests/e2e/assistant/rich-text-progress.spec.js
-          tests/e2e/assistant/streaming.spec.js
-
-      - name: Test static interface preview
-        run: npm run test:preview
-
-      - name: Upload browser failure artifacts
+  journeys:
+    name: Browser journeys
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: npm ci
+      - run: npx vite build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run journeys
+      - name: Upload the report of a failed run
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: browser-test-artifacts
-          path: |
-            .local/playwright-report/
-            .local/test-results/
-          include-hidden-files: true
+          name: journeys-report
+          path: web/var/journeys/
           if-no-files-found: ignore
+
+  # A required check that was skipped counts as passed. This job always runs
+  # and fails when a job before it did not pass.
+  required:
+    name: Application and tooling checks
+    if: always()
+    needs: [backend, web, journeys]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          for result in $RESULTS; do
+            test "$result" = success
+          done

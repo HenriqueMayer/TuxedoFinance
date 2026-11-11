@@ -1,0 +1,45 @@
+[project]
+name = "tuxedo-finance"
+version = "2.0.0.dev0"
+description = "Tuxedo Finance — a self-hosted personal finance application for manual entry."
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.0.8,<6.1",
+    "django-ninja>=1.8,<2",
+    "gunicorn>=25.3,<26 ; sys_platform != 'win32'",
+    "python-dotenv>=1.1,<2",
+    "whitenoise>=6.12,<7",
+]
+
+[dependency-groups]
+dev = [
+    "coverage[toml]>=7.6,<8",
+    "ruff>=0.9,<1",
+]
+
+[tool.uv]
+package = false
+
+[tool.coverage.run]
+branch = true
+source = ["."]
+omit = ["*/migrations/*", "*/tests/*", "manage.py", "config/wsgi.py", "healthcheck.py"]
+data_file = "var/coverage/.coverage"
+
+[tool.ruff]
+cache-dir = "var/cache/ruff"
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# These modules turn a parsing error into a validation message for the owner.
+# The cause is deliberately not chained.
+"config/dates.py" = ["B904"]
+"ledger/statement_import.py" = ["B904"]
+"ledger/statement_parsers.py" = ["B904"]
+# The helpers inside the valuation loop are called in the same iteration only.
+"investments/positions.py" = ["B023"]

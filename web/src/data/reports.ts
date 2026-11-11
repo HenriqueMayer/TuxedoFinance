@@ -1,0 +1,89 @@
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { api, unwrap } from "../api/client";
+import type { components } from "../api/schema";
+
+export type Home = components["schemas"]["HomeOut"];
+export type MonthResult = components["schemas"]["MonthResult"];
+export type CategorySpending = components["schemas"]["CategorySpending"];
+export type DueRow = components["schemas"]["DueRow"];
+export type TrendRow = components["schemas"]["TrendRow"];
+export type WorthMonth = components["schemas"]["WorthMonth"];
+export type Analysis = components["schemas"]["AnalysisOut"];
+export type Origin = components["schemas"]["OriginOut"];
+export type ItemShare = components["schemas"]["ItemShare"];
+export type HomeBlock = components["schemas"]["PreferencesOut"]["home_blocks"][number];
+
+/** Every block that Home can show, in the default order. */
+export const HOME_BLOCKS: HomeBlock[] = ["left", "spending", "due", "worth", "goals"];
+
+export const homeQuery = queryOptions({
+  queryKey: ["home", "blocks"],
+  queryFn: () => unwrap(api.GET("/api/reports/home")),
+});
+
+export function monthQuery(month: string | undefined) {
+  return queryOptions({
+    queryKey: ["home", "month", month ?? "current"],
+    queryFn: () => unwrap(api.GET("/api/reports/month", { params: { query: { month } } })),
+    // Moving to another month keeps the previous one on screen until the new one arrives.
+    placeholderData: keepPreviousData,
+  });
+}
+
+export const worthQuery = queryOptions({
+  queryKey: ["home", "worth"],
+  queryFn: () => unwrap(api.GET("/api/reports/net-worth")),
+});
+
+/** The analysis of the months from `start` to `end` ("YYYY-MM"). Without them, the last six months. */
+export function analysisQuery(start: string | undefined, end: string | undefined) {
+  return queryOptions({
+    queryKey: ["home", "analysis", start ?? "", end ?? ""],
+    queryFn: () => unwrap(api.GET("/api/reports/analysis", { params: { query: { start, end } } })),
+    // Another period keeps the previous one on screen until the new one arrives.
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** What the figures of one month ("YYYY-MM") of the analysis are made of. */
+export function originQuery(month: string) {
+  return queryOptions({
+    queryKey: ["home", "analysis", "month", month],
+    queryFn: () => unwrap(api.GET("/api/reports/analysis/month", { params: { query: { month } } })),
+  });
+}
+
+/** The analysis of one investment of the Wallet over twelve months. */
+export function investmentItemQuery(id: number) {
+  return queryOptions({
+    queryKey: ["home", "item", "investment", id],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/reports/items/investment/{position_id}", {
+          params: { path: { position_id: id } },
+        }),
+      ),
+  });
+}
+
+/** The analysis of one account of the Wallet over twelve months. */
+export function accountItemQuery(id: number) {
+  return queryOptions({
+    queryKey: ["home", "item", "account", id],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/reports/items/account/{account_id}", {
+          params: { path: { account_id: id } },
+        }),
+      ),
+  });
+}
+
+/** The analysis of one credit card of the Wallet over twelve months. */
+export function cardItemQuery(id: number) {
+  return queryOptions({
+    queryKey: ["home", "item", "card", id],
+    queryFn: () =>
+      unwrap(api.GET("/api/reports/items/card/{card_id}", { params: { path: { card_id: id } } })),
+  });
+}
